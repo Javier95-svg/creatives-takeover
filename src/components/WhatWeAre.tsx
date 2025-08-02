@@ -5,7 +5,7 @@ const WhatWeAre = () => {
     <section className="py-20 bg-background">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl font-bold mb-6 gradient-text">What We Are</h2>
+          <h2 className="text-4xl font-bold mb-6 gradient-text">Who We Are</h2>
           <p className="text-xl text-muted-foreground">
             We are a revolutionary AI-powered platform dedicated to empowering creative professionals 
             with cutting-edge tools and insights to transform their creative journey.

@@ -6,7 +6,7 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { name: "What We Are", href: "#what-we-are" },
+    { name: "Who We Are", href: "#who-we-are" },
     { name: "What We Do", href: "#what-we-do" },
     { name: "AI Pillars", href: "#pillars" },
     { name: "Community", href: "#community" },
