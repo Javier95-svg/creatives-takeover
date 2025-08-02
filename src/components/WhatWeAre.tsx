@@ -13,6 +13,9 @@ const WhatWeAre = () => {
             We are a revolutionary AI-powered platform dedicated to empowering creative professionals 
             with cutting-edge tools and insights to transform their creative journey.
           </p>
+          <p className="text-lg text-muted-foreground mt-6">
+            Creatives Takeover is a vibrant community built for creators and solopreneurs ready to bring their ideas to life. We guide you step-by-step from concept to launch, helping you build powerful no-code apps together. Whether you're a first-time founder or a curious creative, we make software creation accessible, collaborative, and genuinely fun. No code, no limits, just real solutions, built by you.
+          </p>
         </div>
 
         {/* Mission and Vision First */}
