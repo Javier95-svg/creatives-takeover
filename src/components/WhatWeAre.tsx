@@ -1,4 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import innovationImage from "@/assets/innovation-leaders.jpg";
+import creativeImage from "@/assets/creative-enablers.jpg";
+import communityImage from "@/assets/community-builders.jpg";
 
 const WhatWeAre = () => {
   return (
@@ -12,45 +15,8 @@ const WhatWeAre = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          <Card className="glass border-border">
-            <CardHeader>
-              <CardTitle className="text-xl">Innovation Leaders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base">
-                At the forefront of AI technology, we pioneer new ways to enhance creative workflows 
-                and unlock unprecedented creative potential.
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-border">
-            <CardHeader>
-              <CardTitle className="text-xl">Creative Enablers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base">
-                We believe every creative has unique potential. Our mission is to provide the tools 
-                and insights needed to amplify that creativity.
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-border">
-            <CardHeader>
-              <CardTitle className="text-xl">Community Builders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base">
-                More than a platform, we're building a thriving community where creatives connect, 
-                learn, and grow together.
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Mission and Vision First */}
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
           <Card className="glass border-border">
             <CardHeader>
               <CardTitle className="text-xl">Our Vision</CardTitle>
@@ -69,6 +35,66 @@ const WhatWeAre = () => {
             <CardContent>
               <CardDescription className="text-base">
                 Our mission is to guide and support solopreneurs and creators through every stage of their journey, from spark to launch, by building an inclusive, dynamic community and offering step-by-step tools and mentorship to create powerful, no-code applications.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Target Markets with Images */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="glass border-border overflow-hidden">
+            <div className="h-48 overflow-hidden">
+              <img 
+                src={innovationImage} 
+                alt="Innovation Leaders" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <CardHeader>
+              <CardTitle className="text-xl">Innovation Leaders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base">
+                At the forefront of AI technology, we pioneer new ways to enhance creative workflows 
+                and unlock unprecedented creative potential.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="glass border-border overflow-hidden">
+            <div className="h-48 overflow-hidden">
+              <img 
+                src={creativeImage} 
+                alt="Creative Enablers" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <CardHeader>
+              <CardTitle className="text-xl">Creative Enablers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base">
+                We believe every creative has unique potential. Our mission is to provide the tools 
+                and insights needed to amplify that creativity.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="glass border-border overflow-hidden">
+            <div className="h-48 overflow-hidden">
+              <img 
+                src={communityImage} 
+                alt="Community Builders" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <CardHeader>
+              <CardTitle className="text-xl">Community Builders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base">
+                More than a platform, we're building a thriving community where creatives connect, 
+                learn, and grow together.
               </CardDescription>
             </CardContent>
           </Card>
