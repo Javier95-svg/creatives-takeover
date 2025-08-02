@@ -44,12 +44,24 @@ const Hero = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg hover-lift">
-              Join the Community
+              Join Us
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            <Button size="lg" variant="outline" className="glass border-border hover:bg-accent/10 px-8 py-4 text-lg hover-lift">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="glass border-border hover:bg-accent/10 px-8 py-4 text-lg hover-lift"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/ai-solopreneur-blueprint.pdf';
+                link.download = 'AI-Solopreneur-Blueprint.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+            >
               <Play className="mr-2 w-5 h-5" />
-              See How It Works
+              AI Solopreneur Blueprint
             </Button>
           </div>
 
