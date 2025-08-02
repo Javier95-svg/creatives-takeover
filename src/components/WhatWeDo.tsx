@@ -26,9 +26,9 @@ const WhatWeDo = () => {
   ];
 
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-20 bg-muted/30" id="what-we-do">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16">
+        <div className="max-w-4xl mx-auto text-center mb-16 animate-fade-in-up">
           <h2 className="text-4xl font-bold mb-6 gradient-text">What We Do</h2>
           <p className="text-xl text-muted-foreground">
             We provide comprehensive AI-driven solutions that transform how creatives work, 
@@ -38,9 +38,9 @@ const WhatWeDo = () => {
 
         <div className="grid md:grid-cols-2 gap-8">
           {services.map((service, index) => (
-            <Card key={index} className="glass border-border hover:shadow-lg transition-all duration-300">
+            <Card key={index} className="glass border-border hover:shadow-lg transition-all duration-500 hover-lift hover:scale-105 animate-slide-in-left" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
               <CardHeader className="flex flex-row items-start space-y-0 space-x-4">
-                <div className="flex-shrink-0 p-3 rounded-lg bg-primary/10">
+                <div className="flex-shrink-0 p-3 rounded-lg bg-primary/10 animate-pulse-glow">
                   {service.icon}
                 </div>
                 <div>

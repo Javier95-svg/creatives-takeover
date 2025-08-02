@@ -43,14 +43,14 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg hover-lift">
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic">
               Join Us
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="glass border-border hover:bg-accent/10 px-8 py-4 text-lg hover-lift"
+              className="glass border-border hover:bg-accent/10 px-8 py-4 text-lg btn-magnetic"
               onClick={() => {
                 const link = document.createElement('a');
                 link.href = '/ai-solopreneur-blueprint.pdf';
@@ -67,15 +67,15 @@ const Hero = () => {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <div className="glass-card hover-lift">
+            <div className="glass-card btn-magnetic">
               <div className="text-3xl font-bold gradient-text mb-2">1000+</div>
               <div className="text-muted-foreground">Community Members</div>
             </div>
-            <div className="glass-card hover-lift">
+            <div className="glass-card btn-magnetic">
               <div className="text-3xl font-bold gradient-text mb-2">200+</div>
               <div className="text-muted-foreground">Apps Built Together</div>
             </div>
-            <div className="glass-card hover-lift">
+            <div className="glass-card btn-magnetic">
               <div className="text-3xl font-bold gradient-text mb-2">0</div>
               <div className="text-muted-foreground">Code Required</div>
             </div>

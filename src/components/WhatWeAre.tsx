@@ -5,9 +5,9 @@ import communityImage from "@/assets/community-builders.jpg";
 
 const WhatWeAre = () => {
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 bg-background" id="what-we-are">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16">
+        <div className="max-w-4xl mx-auto text-center mb-16 animate-fade-in-up">
           <h2 className="text-4xl font-bold mb-6 gradient-text">Who We Are</h2>
           <p className="text-lg font-poppins font-medium text-muted-foreground leading-relaxed">
             Creatives Takeover is a vibrant community built for creators and solopreneurs ready to bring their ideas to life. We guide you step-by-step from concept to launch, helping you build powerful no-code apps together. Whether you're a first-time founder or a curious creative, we make software creation accessible, collaborative, and genuinely fun. No code, no limits, just real solutions, built by you.
@@ -15,7 +15,7 @@ const WhatWeAre = () => {
         </div>
 
         {/* Mission and Vision First */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
+        <div className="grid md:grid-cols-2 gap-8 mb-16 animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
           <Card className="glass border-border">
             <CardHeader>
               <CardTitle className="text-xl">Our Vision</CardTitle>
@@ -40,8 +40,8 @@ const WhatWeAre = () => {
         </div>
 
         {/* Target Markets with Images */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="glass border-border overflow-hidden">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 animate-zoom-in" style={{ animationDelay: '0.4s' }}>
+          <Card className="glass border-border overflow-hidden hover-lift transform transition-all duration-500 hover:scale-105">
             <div className="h-48 overflow-hidden">
               <img 
                 src={innovationImage} 
@@ -60,7 +60,7 @@ const WhatWeAre = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass border-border overflow-hidden">
+          <Card className="glass border-border overflow-hidden hover-lift transform transition-all duration-500 hover:scale-105">
             <div className="h-48 overflow-hidden">
               <img 
                 src={creativeImage} 
@@ -79,7 +79,7 @@ const WhatWeAre = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass border-border overflow-hidden">
+          <Card className="glass border-border overflow-hidden hover-lift transform transition-all duration-500 hover:scale-105">
             <div className="h-48 overflow-hidden">
               <img 
                 src={communityImage} 
