@@ -30,7 +30,7 @@ const Hero = () => {
             <span className="gradient-text">Creatives</span>{" "}
             <span className="text-foreground">Takeover</span>
             <br />
-            <span className="text-3xl md:text-5xl font-normal text-muted-foreground">
+            <span className="text-xl md:text-3xl font-normal text-muted-foreground">
               From Idea to Execution – Let AI Handle the Grind
             </span>
           </h1>
