@@ -3,7 +3,6 @@ import Hero from "@/components/Hero";
 import WhatWeAre from "@/components/WhatWeAre";
 import WhatWeDo from "@/components/WhatWeDo";
 import AIPillars from "@/components/AIPillars";
-import ResultsDashboard from "@/components/ResultsDashboard";
 import FreeResources from "@/components/FreeResources";
 
 const Index = () => {
@@ -19,9 +18,6 @@ const Index = () => {
       </div>
       <div id="pillars">
         <AIPillars />
-      </div>
-      <div id="results">
-        <ResultsDashboard />
       </div>
       <div id="resources">
         <FreeResources />
