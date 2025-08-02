@@ -12,7 +12,7 @@ const WhatWeAre = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           <Card className="glass border-border">
             <CardHeader>
               <CardTitle className="text-xl">Innovation Leaders</CardTitle>
@@ -45,6 +45,30 @@ const WhatWeAre = () => {
               <CardDescription className="text-base">
                 More than a platform, we're building a thriving community where creatives connect, 
                 learn, and grow together.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card className="glass border-border">
+            <CardHeader>
+              <CardTitle className="text-xl">Our Vision</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base">
+                Empower a new wave of creators by making it effortless for anyone, anywhere to turn unique ideas into impactful software—without code, without barriers.
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="glass border-border">
+            <CardHeader>
+              <CardTitle className="text-xl">Our Mission</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base">
+                Our mission is to guide and support solopreneurs and creators through every stage of their journey, from spark to launch, by building an inclusive, dynamic community and offering step-by-step tools and mentorship to create powerful, no-code applications.
               </CardDescription>
             </CardContent>
           </Card>
