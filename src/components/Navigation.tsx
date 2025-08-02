@@ -9,6 +9,7 @@ const Navigation = () => {
     { name: "What We Are", href: "#what-we-are" },
     { name: "What We Do", href: "#what-we-do" },
     { name: "AI Pillars", href: "#pillars" },
+    { name: "Community", href: "#community" },
     { name: "Resources", href: "#resources" },
     { name: "Pricing", href: "#pricing" }
   ];
