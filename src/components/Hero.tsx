@@ -31,7 +31,7 @@ const Hero = () => {
             <span className="text-foreground">Takeover</span>
             <br />
             <span className="text-3xl md:text-5xl font-normal text-muted-foreground">
-              Only For Mavericks
+              From Idea to Execution – Let AI Handle the Grind
             </span>
           </h1>
 
