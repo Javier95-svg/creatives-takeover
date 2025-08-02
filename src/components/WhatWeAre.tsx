@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import innovationImage from "@/assets/innovation-leaders-conventional.jpg";
+import innovationImage from "@/assets/innovation-leaders-unique.jpg";
 import creativeImage from "@/assets/creative-enablers.jpg";
 import communityImage from "@/assets/community-builders.jpg";
 
