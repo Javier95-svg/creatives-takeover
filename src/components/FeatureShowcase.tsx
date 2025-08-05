@@ -37,12 +37,12 @@ const FeatureShowcase = () => {
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <div className="text-center mb-16 animate-fade-in">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 animate-slide-up">
             Revolutionary Features for
             <span className="text-primary"> Modern Creators</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
             Experience the next generation of app development with tools designed 
             for the future of creativity and innovation.
           </p>
@@ -50,7 +50,11 @@ const FeatureShowcase = () => {
 
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           {features.map((feature, index) => (
-            <Card key={index} className={`p-8 hover:shadow-xl transition-all duration-300 border-border/50 bg-gradient-to-br ${feature.gradient} backdrop-blur-sm`}>
+            <Card 
+              key={index} 
+              className={`p-8 hover:shadow-xl hover:scale-105 transition-all duration-500 border-border/50 bg-gradient-to-br ${feature.gradient} backdrop-blur-sm animate-fade-in hover:animate-glow`}
+              style={{ animationDelay: `${index * 0.3}s` }}
+            >
               <div className="flex items-start gap-4 mb-6">
                 {feature.icon}
                 <div>
@@ -60,16 +64,16 @@ const FeatureShowcase = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-primary">{feature.stats}</span>
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
-                  Learn More <ArrowRight className="w-4 h-4 ml-1" />
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:scale-110 transition-all duration-300">
+                  Learn More <ArrowRight className="w-4 h-4 ml-1 animate-pulse" />
                 </Button>
               </div>
             </Card>
           ))}
         </div>
 
-        <div className="text-center">
-          <Button size="lg" className="bg-primary hover:bg-primary/90">
+        <div className="text-center animate-slide-up" style={{ animationDelay: '1.2s' }}>
+          <Button size="lg" className="bg-primary hover:bg-primary/90 hover:scale-105 transition-all duration-300 animate-glow">
             Start Building Today
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>

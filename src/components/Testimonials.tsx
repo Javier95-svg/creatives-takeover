@@ -37,19 +37,23 @@ const Testimonials = () => {
   return (
     <section className="py-24 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <div className="text-center mb-16 animate-fade-in">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 animate-slide-up">
             Loved by Creators
             <span className="text-primary"> Worldwide</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
             Join thousands of creators who have transformed their ideas into reality
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 bg-background/80 backdrop-blur-sm border-border/50">
+            <Card 
+              key={index} 
+              className="p-6 hover:shadow-lg hover:scale-105 transition-all duration-500 bg-background/80 backdrop-blur-sm border-border/50 animate-slide-up hover:animate-glow"
+              style={{ animationDelay: `${index * 0.2}s` }}
+            >
               <div className="flex mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />

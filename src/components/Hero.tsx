@@ -1,23 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
-import heroImage from "@/assets/hero-bg.jpg";
+import heroImage from "@/assets/hero-bg-animated.jpg";
 
 const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
+      {/* Animated Background with Multiple Layers */}
       <div 
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center animate-pulse-glow"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
       
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float" />
-      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-float" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-float" style={{ animationDelay: '2s' }} />
+      {/* Animated Floating Elements with More Variety */}
+      <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-80" />
+      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-pulse-glow opacity-60" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-bounce-subtle opacity-70" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/50 rounded-full animate-float" style={{ animationDelay: '3s' }} />
+      <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/40 rounded-full animate-glow" style={{ animationDelay: '4s' }} />
+      <div className="absolute top-1/3 right-10 w-8 h-8 bg-gradient-to-r from-primary/30 to-secondary/30 rounded-full animate-float opacity-50" style={{ animationDelay: '5s' }} />
+      <div className="absolute bottom-1/3 left-10 w-6 h-6 bg-gradient-to-r from-accent/40 to-primary/40 rounded-full animate-pulse-glow opacity-40" style={{ animationDelay: '6s' }} />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 glass-card mb-8 animate-fade-in">
