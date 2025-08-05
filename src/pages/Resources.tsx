@@ -1,13 +1,13 @@
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
+import FreeResources from "@/components/FreeResources";
 
-const Index = () => {
+const Resources = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <Hero />
+      <FreeResources />
     </div>
   );
 };
 
-export default Index;
+export default Resources;

@@ -6,12 +6,12 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { name: "Who We Are", href: "#who-we-are" },
-    { name: "What We Do", href: "#what-we-do" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "Community", href: "#community" },
-    { name: "Resources", href: "#resources" },
-    { name: "FAQ", href: "#faq" }
+    { name: "About", href: "/about" },
+    { name: "Services", href: "/services" },
+    { name: "Pricing", href: "/pricing" },
+    { name: "Community", href: "/community" },
+    { name: "Resources", href: "/resources" },
+    { name: "FAQ", href: "/faq" }
   ];
 
   return (
@@ -20,7 +20,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <span className="text-2xl font-bold gradient-text">Creatives Takeover</span>
+            <a href="/" className="text-2xl font-bold gradient-text">Creatives Takeover</a>
           </div>
 
           {/* Desktop Navigation */}

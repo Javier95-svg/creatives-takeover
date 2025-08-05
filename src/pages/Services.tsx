@@ -1,13 +1,13 @@
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
+import WhatWeDo from "@/components/WhatWeDo";
 
-const Index = () => {
+const Services = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <Hero />
+      <WhatWeDo />
     </div>
   );
 };
 
-export default Index;
+export default Services;

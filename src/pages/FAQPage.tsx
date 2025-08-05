@@ -1,13 +1,13 @@
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
+import FAQ from "@/components/FAQ";
 
-const Index = () => {
+const FAQPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <Hero />
+      <FAQ />
     </div>
   );
 };
 
-export default Index;
+export default FAQPage;
