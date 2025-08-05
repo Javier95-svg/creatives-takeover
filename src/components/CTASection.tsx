@@ -44,8 +44,8 @@ const CTASection = () => {
               <p className="text-muted-foreground">Free Trial</p>
             </div>
             <div className="hover:scale-105 transition-all duration-300">
-              <h3 className="text-2xl font-bold text-primary mb-2 animate-pulse-glow" style={{ animationDelay: '0.2s' }}>No Credit Card</h3>
-              <p className="text-muted-foreground">Required</p>
+              <h3 className="text-2xl font-bold text-primary mb-2 animate-pulse-glow" style={{ animationDelay: '0.2s' }}>No Previous Experience</h3>
+              <p className="text-muted-foreground">Needed</p>
             </div>
             <div className="hover:scale-105 transition-all duration-300">
               <h3 className="text-2xl font-bold text-primary mb-2 animate-pulse-glow" style={{ animationDelay: '0.4s' }}>24/7</h3>
