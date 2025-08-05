@@ -1,21 +1,27 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Pricing from "@/components/Pricing";
+import PricingComparison from "@/components/PricingComparison";
+import PricingCTA from "@/components/PricingCTA";
 
 const PricingPage = () => {
   return (
     <>
       <Helmet>
-        <title>Pricing | Affordable Creative Platform Pricing | Creatives Takeover</title>
+        <title>AI Solopreneur Pricing Plans | Choose Your Creative Journey | Creatives Takeover</title>
         <meta 
           name="description" 
-          content="Affordable creative platform pricing with flexible membership tiers. Choose from Starter, Plus, or Family plans." 
+          content="Discover AI solopreneur pricing plans designed for creative professionals. Choose from Starter, Plus, or Family plans with AI-powered tools and unlimited design access." 
         />
-        <meta name="keywords" content="affordable creative platform pricing, creative subscription pricing, unlimited design pricing" />
+        <meta name="keywords" content="AI solopreneur pricing plans, creative subscription pricing, AI tools pricing, solopreneur software plans, creative platform pricing" />
+        <meta property="og:title" content="AI Solopreneur Pricing Plans | Creative Platform" />
+        <meta property="og:description" content="Flexible AI solopreneur pricing plans for creative professionals. Start your journey with our affordable subscription tiers." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
         <Pricing />
+        <PricingComparison />
+        <PricingCTA />
       </div>
     </>
   );
