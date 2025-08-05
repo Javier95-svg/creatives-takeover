@@ -50,9 +50,9 @@ const TeamSection = () => {
   return (
     <section className="py-20 bg-background" id="team">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-6 gradient-text">Meet Our Team</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+        <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
+          <h2 className="text-4xl font-bold mb-6 gradient-text animate-text-shimmer">Meet Our Team</h2>
+          <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             The passionate people behind Creatives Takeover, united by a shared vision 
             of empowering creators worldwide
           </p>
@@ -62,13 +62,13 @@ const TeamSection = () => {
           {teamMembers.map((member, index) => (
             <Card 
               key={member.name} 
-              className="glass border-border group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="glass border-border group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 animate-zoom-in hover-lift btn-magnetic"
+              style={{ animationDelay: `${index * 0.15}s` }}
             >
               <CardContent className="p-6">
                 <div className="text-center mb-6">
-                  <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
-                    <AvatarImage src={member.image} alt={member.name} />
+                  <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all hover-lift animate-float">
+                    <AvatarImage src={member.image} alt={member.name} className="group-hover:scale-110 transition-transform duration-300" />
                     <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">
                       {member.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>

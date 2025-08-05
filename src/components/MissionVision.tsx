@@ -5,21 +5,21 @@ const MissionVision = () => {
   return (
     <section className="py-20 bg-background/50" id="mission-vision">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-6 gradient-text">Our Mission & Vision</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+        <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
+          <h2 className="text-4xl font-bold mb-6 gradient-text animate-text-shimmer">Our Mission & Vision</h2>
+          <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             Driven by purpose, guided by vision—discover what makes Creatives Takeover unique
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           {/* Mission */}
-          <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-left">
+          <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-left hover-lift btn-magnetic">
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300 animate-float">
                 <Target className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl gradient-text">Our Mission</CardTitle>
+              <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Mission</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-base leading-relaxed text-center">
@@ -31,12 +31,12 @@ const MissionVision = () => {
           </Card>
 
           {/* Vision */}
-          <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-right">
+          <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-right hover-lift btn-magnetic" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300 animate-float-reverse">
                 <Eye className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl gradient-text">Our Vision</CardTitle>
+              <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Vision</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-base leading-relaxed text-center">
@@ -50,11 +50,11 @@ const MissionVision = () => {
 
         {/* Core Values */}
         <div className="max-w-5xl mx-auto">
-          <h3 className="text-3xl font-bold text-center mb-12 gradient-text">Our Core Values</h3>
+          <h3 className="text-3xl font-bold text-center mb-12 gradient-text animate-text-shimmer" style={{ animationDelay: '0.4s' }}>Our Core Values</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
-            <Card className="glass border-border group hover:shadow-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <Card className="glass border-border group hover:shadow-lg transition-all duration-300 animate-zoom-in hover-lift btn-magnetic" style={{ animationDelay: '0.1s' }}>
               <CardHeader className="flex flex-row items-center space-y-0 pb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors animate-float">
                   <Heart className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-xl">Community First</CardTitle>
@@ -66,9 +66,9 @@ const MissionVision = () => {
               </CardContent>
             </Card>
 
-            <Card className="glass border-border group hover:shadow-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <Card className="glass border-border group hover:shadow-lg transition-all duration-300 animate-zoom-in hover-lift btn-magnetic" style={{ animationDelay: '0.2s' }}>
               <CardHeader className="flex flex-row items-center space-y-0 pb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors animate-float-reverse" style={{ animationDelay: '1s' }}>
                   <Lightbulb className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-xl">Innovation & Accessibility</CardTitle>

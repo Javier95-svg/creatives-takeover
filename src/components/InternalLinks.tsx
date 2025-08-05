@@ -31,9 +31,9 @@ const InternalLinks = () => {
   return (
     <section className="py-20 bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-6 gradient-text">Continue Your Journey</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+        <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
+          <h2 className="text-4xl font-bold mb-6 gradient-text animate-text-shimmer">Continue Your Journey</h2>
+          <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             Ready to dive deeper? Explore everything Creatives Takeover has to offer
           </p>
         </div>
@@ -42,11 +42,11 @@ const InternalLinks = () => {
           {links.map((link, index) => (
             <Card 
               key={link.title}
-              className="glass border-border group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="glass border-border group hover:shadow-xl transition-all duration-500 hover:-translate-y-2 animate-zoom-in hover-lift btn-magnetic"
+              style={{ animationDelay: `${index * 0.15}s` }}
             >
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
+                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300 animate-float" style={{ animationDelay: `${index * 0.5}s` }}>
                   <link.icon className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-xl gradient-text">{link.title}</CardTitle>
