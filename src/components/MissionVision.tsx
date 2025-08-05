@@ -16,7 +16,7 @@ const MissionVision = () => {
           {/* Mission */}
           <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-left hover-lift btn-magnetic">
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300 animate-float">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
                 <Target className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Mission</CardTitle>
@@ -33,7 +33,7 @@ const MissionVision = () => {
           {/* Vision */}
           <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-right hover-lift btn-magnetic" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300 animate-float-reverse">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
                 <Eye className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Vision</CardTitle>
@@ -54,7 +54,7 @@ const MissionVision = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
             <Card className="glass border-border group hover:shadow-lg transition-all duration-300 animate-zoom-in hover-lift btn-magnetic" style={{ animationDelay: '0.1s' }}>
               <CardHeader className="flex flex-row items-center space-y-0 pb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors animate-float">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors">
                   <Heart className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-xl">Community First</CardTitle>
@@ -68,7 +68,7 @@ const MissionVision = () => {
 
             <Card className="glass border-border group hover:shadow-lg transition-all duration-300 animate-zoom-in hover-lift btn-magnetic" style={{ animationDelay: '0.2s' }}>
               <CardHeader className="flex flex-row items-center space-y-0 pb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors animate-float-reverse" style={{ animationDelay: '1s' }}>
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors">
                   <Lightbulb className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-xl">Innovation & Accessibility</CardTitle>
