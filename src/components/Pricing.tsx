@@ -62,9 +62,26 @@ const Pricing = () => {
   ];
 
   return (
-    <section className="py-24 bg-gradient-to-b from-background to-background/50">
+    <>
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center animate-fade-in">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
+              Pricing
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+              Affordable pricing plans designed for every creative. Choose the perfect 
+              membership tier and unlock unlimited design potential.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-24 bg-gradient-to-b from-background to-background/50" id="pricing-plans">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16 animate-fade-in" id="pricing-plans">
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
             Choose Your Creative Journey
           </h2>
@@ -171,6 +188,7 @@ const Pricing = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 
