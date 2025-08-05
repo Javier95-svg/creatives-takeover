@@ -5,6 +5,7 @@ import WhatWeDo from "@/components/WhatWeDo";
 import Pricing from "@/components/Pricing";
 import Community from "@/components/Community";
 import FreeResources from "@/components/FreeResources";
+import FAQ from "@/components/FAQ";
 
 const Index = () => {
   return (
@@ -25,6 +26,9 @@ const Index = () => {
       </div>
       <div id="resources">
         <FreeResources />
+      </div>
+      <div id="faq">
+        <FAQ />
       </div>
     </div>
   );
