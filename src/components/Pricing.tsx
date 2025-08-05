@@ -68,7 +68,7 @@ const Pricing = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center animate-fade-in">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
-              Pricing
+              Choose Your Creative Journey
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               Affordable pricing plans designed for every creative. Choose the perfect 
@@ -83,7 +83,7 @@ const Pricing = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
-            Choose Your Creative Journey
+            Flexible Pricing Plans
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Unlock your creative potential with flexible plans designed for every level of ambition
