@@ -46,7 +46,7 @@ const InternalLinks = () => {
               style={{ animationDelay: `${index * 0.15}s` }}
             >
               <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300 animate-float" style={{ animationDelay: `${index * 0.5}s` }}>
+                <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
                   <link.icon className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-xl gradient-text">{link.title}</CardTitle>
