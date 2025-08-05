@@ -1,0 +1,98 @@
+import { Button } from "@/components/ui/button";
+import teamHeroImage from "@/assets/team-hero.jpg";
+import { ArrowRight } from "lucide-react";
+
+const AboutHero = () => {
+  return (
+    <section className="relative pt-32 pb-20 bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="floating-dots">
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={i}
+              className={`floating-dot floating-dot-${(i % 8) + 1}`}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 10}s`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Text Content */}
+            <div className="space-y-8 animate-fade-in">
+              <div>
+                <h1 className="text-5xl lg:text-6xl font-bold mb-6 gradient-text leading-tight">
+                  About Creatives Takeover
+                </h1>
+                <p className="text-xl text-muted-foreground leading-relaxed font-poppins">
+                  We're a passionate team dedicated to empowering creators and solopreneurs 
+                  to bring their boldest ideas to life—without code, without limits.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  Founded on the belief that everyone has the potential to create something extraordinary, 
+                  Creatives Takeover bridges the gap between imagination and implementation. We're not just 
+                  a platform—we're your creative partners on the journey from concept to launch.
+                </p>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  Join thousands of creators who've discovered that the future belongs to those who dare to build it.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg" 
+                  className="group bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Meet Our Team
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button variant="outline" size="lg">
+                  Our Story
+                </Button>
+              </div>
+            </div>
+
+            {/* Hero Image */}
+            <div className="relative animate-slide-in-right">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <img 
+                  src={teamHeroImage} 
+                  alt="Creatives Takeover team collaborating" 
+                  className="w-full h-auto object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              
+              {/* Floating Stats */}
+              <div className="absolute -top-6 -right-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
+                <div className="text-center">
+                  <h3 className="text-3xl font-bold text-primary">10K+</h3>
+                  <p className="text-sm text-muted-foreground">Creators Empowered</p>
+                </div>
+              </div>
+              
+              <div className="absolute -bottom-6 -left-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
+                <div className="text-center">
+                  <h3 className="text-3xl font-bold text-primary">500+</h3>
+                  <p className="text-sm text-muted-foreground">Apps Built</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default AboutHero;
