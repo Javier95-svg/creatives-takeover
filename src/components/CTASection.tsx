@@ -40,7 +40,7 @@ const CTASection = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
             <div className="hover:scale-105 transition-all duration-300">
-              <h3 className="text-2xl font-bold text-primary mb-2 animate-pulse-glow">14-Day</h3>
+              <h3 className="text-2xl font-bold text-primary mb-2 animate-pulse-glow">7-Day</h3>
               <p className="text-muted-foreground">Free Trial</p>
             </div>
             <div className="hover:scale-105 transition-all duration-300">
