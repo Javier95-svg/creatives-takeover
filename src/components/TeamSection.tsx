@@ -67,8 +67,8 @@ const TeamSection = () => {
             >
               <CardContent className="p-6">
                 <div className="text-center mb-6">
-                  <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all hover-lift animate-float">
-                    <AvatarImage src={member.image} alt={member.name} className="group-hover:scale-110 transition-transform duration-300" />
+                  <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                    <AvatarImage src={member.image} alt={member.name} />
                     <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">
                       {member.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>

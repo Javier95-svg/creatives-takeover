@@ -76,26 +76,26 @@ const AboutHero = () => {
 
           {/* Hero Image */}
           <div className="relative animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl hover-lift">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img 
                 src={teamHeroImage} 
                 alt="Creatives Takeover team collaborating" 
-                className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
+                className="w-full h-auto object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent animate-pulse-glow" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
               
-            {/* Floating Stats with Enhanced Animations */}
-            <div className="absolute -top-6 -right-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border animate-float hover-lift">
+            {/* Floating Stats */}
+            <div className="absolute -top-6 -right-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
               <div className="text-center">
-                <h3 className="text-3xl font-bold text-primary animate-pulse-glow">10K+</h3>
+                <h3 className="text-3xl font-bold text-primary">10K+</h3>
                 <p className="text-sm text-muted-foreground">Creators Empowered</p>
               </div>
             </div>
             
-            <div className="absolute -bottom-6 -left-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border animate-float-reverse hover-lift" style={{ animationDelay: '2s' }}>
+            <div className="absolute -bottom-6 -left-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
               <div className="text-center">
-                <h3 className="text-3xl font-bold text-primary animate-pulse-glow">500+</h3>
+                <h3 className="text-3xl font-bold text-primary">500+</h3>
                 <p className="text-sm text-muted-foreground">Apps Built</p>
               </div>
             </div>
