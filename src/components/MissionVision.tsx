@@ -16,7 +16,7 @@ const MissionVision = () => {
           {/* Mission */}
           <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-left hover-lift btn-magnetic">
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                 <Target className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Mission</CardTitle>
@@ -33,7 +33,7 @@ const MissionVision = () => {
           {/* Vision */}
           <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-right hover-lift btn-magnetic" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110 duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                 <Eye className="h-8 w-8 text-primary" />
               </div>
               <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Vision</CardTitle>
