@@ -64,7 +64,7 @@ const Pricing = () => {
   return (
     <section className="py-24 bg-gradient-to-b from-background to-background/50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16 animate-fade-in">
+        <div className="text-center mb-16 animate-fade-in" id="pricing-plans">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
             Choose Your Creative Journey
           </h2>
