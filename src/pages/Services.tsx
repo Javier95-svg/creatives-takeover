@@ -1,21 +1,28 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
-import WhatWeDo from "@/components/WhatWeDo";
+import ServicesHero from "@/components/ServicesHero";
+import SubscriptionFeatures from "@/components/SubscriptionFeatures";
+import ServicesNavigation from "@/components/ServicesNavigation";
 
 const Services = () => {
   return (
     <>
       <Helmet>
-        <title>Services | Creative Subscription Services | Creatives Takeover</title>
+        <title>Creative Subscription Services | Unlimited Design Platform | Creatives Takeover</title>
         <meta 
           name="description" 
-          content="Discover our creative subscription services offering unlimited design, AI-powered tools, and comprehensive creative platform solutions." 
+          content="Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives." 
         />
-        <meta name="keywords" content="creative subscription services, unlimited design, creative platform, design subscription, AI creative tools" />
+        <meta name="keywords" content="creative subscription, creative subscription service, unlimited design platform, creative tools subscription, design subscription" />
+        <meta property="og:title" content="Creative Subscription Services | Unlimited Design Platform" />
+        <meta property="og:description" content="Join thousands of creatives with our all-in-one creative subscription service. Unlimited design access and premium tools." />
+        <link rel="canonical" href="/services" />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
-        <WhatWeDo />
+        <ServicesHero />
+        <SubscriptionFeatures />
+        <ServicesNavigation />
       </div>
     </>
   );
