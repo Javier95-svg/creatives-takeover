@@ -166,18 +166,145 @@ export default {
 				},
 				'float': {
 					'0%, 100%': {
-						transform: 'translateY(0px)'
+						transform: 'translate3d(0, 0px, 0) rotate(0deg)',
+						opacity: '0.7'
+					},
+					'25%': {
+						transform: 'translate3d(20px, -15px, 0) rotate(90deg)',
+						opacity: '1'
 					},
 					'50%': {
-						transform: 'translateY(-10px)'
+						transform: 'translate3d(-10px, -25px, 0) rotate(180deg)',
+						opacity: '0.8'
+					},
+					'75%': {
+						transform: 'translate3d(-20px, -10px, 0) rotate(270deg)',
+						opacity: '0.9'
+					}
+				},
+				'float-reverse': {
+					'0%, 100%': {
+						transform: 'translate3d(0, 0px, 0) rotate(360deg)',
+						opacity: '0.6'
+					},
+					'25%': {
+						transform: 'translate3d(-25px, 20px, 0) rotate(270deg)',
+						opacity: '1'
+					},
+					'50%': {
+						transform: 'translate3d(15px, 30px, 0) rotate(180deg)',
+						opacity: '0.7'
+					},
+					'75%': {
+						transform: 'translate3d(25px, 10px, 0) rotate(90deg)',
+						opacity: '0.8'
+					}
+				},
+				'drift': {
+					'0%': {
+						transform: 'translateX(-100px) translateY(0) rotate(0deg)',
+						opacity: '0'
+					},
+					'10%': {
+						opacity: '1'
+					},
+					'90%': {
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'translateX(calc(100vw + 100px)) translateY(-50px) rotate(360deg)',
+						opacity: '0'
+					}
+				},
+				'spiral': {
+					'0%': {
+						transform: 'rotate(0deg) translateX(30px) rotate(0deg)',
+						opacity: '0.5'
+					},
+					'50%': {
+						transform: 'rotate(180deg) translateX(50px) rotate(-180deg)',
+						opacity: '1'
+					},
+					'100%': {
+						transform: 'rotate(360deg) translateX(30px) rotate(-360deg)',
+						opacity: '0.5'
+					}
+				},
+				'diagonal-float': {
+					'0%, 100%': {
+						transform: 'translate3d(0, 0, 0) scale(1)',
+						opacity: '0.6'
+					},
+					'33%': {
+						transform: 'translate3d(30px, -30px, 0) scale(1.2)',
+						opacity: '1'
+					},
+					'66%': {
+						transform: 'translate3d(-20px, 20px, 0) scale(0.8)',
+						opacity: '0.8'
+					}
+				},
+				'figure-eight': {
+					'0%': {
+						transform: 'translate(0, 0) rotate(0deg)'
+					},
+					'12.5%': {
+						transform: 'translate(20px, -15px) rotate(45deg)'
+					},
+					'25%': {
+						transform: 'translate(0, -30px) rotate(90deg)'
+					},
+					'37.5%': {
+						transform: 'translate(-20px, -15px) rotate(135deg)'
+					},
+					'50%': {
+						transform: 'translate(0, 0) rotate(180deg)'
+					},
+					'62.5%': {
+						transform: 'translate(20px, 15px) rotate(225deg)'
+					},
+					'75%': {
+						transform: 'translate(0, 30px) rotate(270deg)'
+					},
+					'87.5%': {
+						transform: 'translate(-20px, 15px) rotate(315deg)'
+					},
+					'100%': {
+						transform: 'translate(0, 0) rotate(360deg)'
+					}
+				},
+				'orbit': {
+					'0%': {
+						transform: 'rotate(0deg) translateX(40px) rotate(0deg)'
+					},
+					'100%': {
+						transform: 'rotate(360deg) translateX(40px) rotate(-360deg)'
+					}
+				},
+				'zigzag': {
+					'0%, 100%': {
+						transform: 'translateX(0) translateY(0)'
+					},
+					'25%': {
+						transform: 'translateX(20px) translateY(-20px)'
+					},
+					'50%': {
+						transform: 'translateX(-15px) translateY(-10px)'
+					},
+					'75%': {
+						transform: 'translateX(25px) translateY(-30px)'
 					}
 				},
 				'pulse-glow': {
 					'0%, 100%': {
-						boxShadow: '0 0 20px rgba(0, 212, 255, 0.3)'
+						opacity: '0.4',
+						transform: 'scale(1)',
+						boxShadow: '0 0 0 0 rgba(0, 212, 255, 0.3)'
 					},
 					'50%': {
-						boxShadow: '0 0 40px rgba(0, 212, 255, 0.6)'
+						opacity: '1',
+						transform: 'scale(1.1)',
+						boxShadow: '0 0 30px 10px rgba(0, 212, 255, 0.6)'
 					}
 				}
 			},
@@ -192,8 +319,15 @@ export default {
 				'zoom-in': 'zoom-in 0.5s ease-out',
 				'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
 				'glow': 'glow 2s ease-in-out infinite',
-				'float': 'float 3s ease-in-out infinite',
-				'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
+				'float': 'float 6s ease-in-out infinite',
+				'float-reverse': 'float-reverse 8s ease-in-out infinite',
+				'drift': 'drift 10s linear infinite',
+				'spiral': 'spiral 12s linear infinite',
+				'diagonal-float': 'diagonal-float 7s ease-in-out infinite',
+				'figure-eight': 'figure-eight 15s ease-in-out infinite',
+				'orbit': 'orbit 20s linear infinite',
+				'zigzag': 'zigzag 8s ease-in-out infinite',
+				'pulse-glow': 'pulse-glow 3s ease-in-out infinite'
 			}
 		}
 	},
