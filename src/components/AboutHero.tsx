@@ -41,7 +41,7 @@ const AboutHero = () => {
           <div className="space-y-8 animate-slide-up">
             <div>
               <h1 className="text-5xl lg:text-6xl font-bold mb-6 gradient-text leading-tight animate-text-shimmer">
-                About Creatives Takeover
+                About Us
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 We're a passionate team dedicated to empowering creators and solopreneurs 
