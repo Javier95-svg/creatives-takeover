@@ -26,42 +26,36 @@ const Hero = () => {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-            <span className="gradient-text">Creatives</span>{" "}
-            <span className="text-foreground">Takeover</span>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
+            <span className="text-foreground">Turn Your</span>{" "}
+            <span className="gradient-text">Creative Ideas</span>
             <br />
-            <span className="text-xl md:text-3xl font-normal text-muted-foreground">
-              From Idea to Execution – Let AI Handle the Grind
+            <span className="text-foreground">Into Real Apps</span>
+            <br />
+            <span className="text-lg md:text-2xl font-normal text-muted-foreground">
+              No coding skills required – AI does the heavy lifting
             </span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            Join our vibe coding community where we guide creators from idea to software. 
-            Build powerful no-code applications and transform your concepts into reality.
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            For creators, entrepreneurs, and visionaries who want to build software without learning to code. 
+            Our AI-powered platform transforms your concepts into fully functional applications in minutes.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic">
-              Join Us
+              Start Free
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               className="glass border-border hover:bg-accent/10 px-8 py-4 text-lg btn-magnetic"
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/ai-solopreneur-blueprint.pdf';
-                link.download = 'AI-Solopreneur-Blueprint.pdf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
             >
               <Play className="mr-2 w-5 h-5" />
-              AI Solopreneur Blueprint
+              See It in Action
             </Button>
           </div>
 
