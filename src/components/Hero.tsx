@@ -53,10 +53,7 @@ const Hero = () => {
 
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
-            <span className="text-foreground">Turn Your</span>{" "}
-            <span className="gradient-text">Creative Ideas</span>
-            <br />
-            <span className="text-foreground">Into Real Apps</span>
+            <span className="gradient-text">From the Idea to the Startup</span>
             <br />
             <span className="text-lg md:text-2xl font-normal text-muted-foreground">
               No coding skills required – AI does the heavy lifting
