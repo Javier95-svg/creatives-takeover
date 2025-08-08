@@ -4,7 +4,7 @@ import heroImage from "@/assets/hero-bg-animated.jpg";
 
 const Hero = () => {
   return (
-    <section id="overview" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center animate-pulse-glow"

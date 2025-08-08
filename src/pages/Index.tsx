@@ -7,6 +7,7 @@ import CTASection from "@/components/CTASection";
 import StickySectionNav from "@/components/StickySectionNav";
 import HowWeWork from "@/components/HowWeWork";
 import Benefits from "@/components/Benefits";
+import { Helmet } from "react-helmet-async";
 
 const Index = () => {
   return (

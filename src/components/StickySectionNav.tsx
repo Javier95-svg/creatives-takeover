@@ -60,6 +60,7 @@ const StickySectionNav: React.FC = () => {
               key={item.id}
               href={item.href}
               onClick={(e) => handleAnchorClick(e, item.href)}
+              aria-current={active === item.id ? "page" : undefined}
               className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors hover:bg-accent/30 hover:text-foreground/90 story-link ${
                 active === item.id ? "bg-accent/40 text-primary border border-primary/30" : "border border-transparent"
               }`}
@@ -71,6 +72,7 @@ const StickySectionNav: React.FC = () => {
           <div className="ml-auto flex items-center gap-2">
             <Link
               to="/pricing"
+              aria-current={location.pathname === "/pricing" ? "page" : undefined}
               className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors hover:bg-accent/30 hover:text-foreground/90 story-link ${
                 location.pathname === "/pricing" ? "bg-accent/40 text-primary border border-primary/30" : "border border-transparent"
               }`}
@@ -79,6 +81,7 @@ const StickySectionNav: React.FC = () => {
             </Link>
             <Link
               to="/contact"
+              aria-current={location.pathname === "/contact" ? "page" : undefined}
               className={`px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors hover:bg-accent/30 hover:text-foreground/90 story-link ${
                 location.pathname === "/contact" ? "bg-accent/40 text-primary border border-primary/30" : "border border-transparent"
               }`}
