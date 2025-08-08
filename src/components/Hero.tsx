@@ -53,7 +53,7 @@ const Hero = () => {
 
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
-            <span className="gradient-text">turn your business ideas into startups with AI-Assistance</span>
+            <span className="gradient-text">Accelerate your business vision into a startup using AI innovation.</span>
             <br />
             <span className="text-lg md:text-2xl font-normal text-muted-foreground">
               No coding skills required – AI does the heavy lifting
