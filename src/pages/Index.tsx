@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Rocket, Workflow, Users, Sparkles, ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
 import { useState } from "react";
-import heroBg from "@/assets/hero-bg-animated.jpg";
 import creatorsImg from "@/assets/community-builders.jpg";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -51,10 +50,10 @@ const Index = () => {
           {/* Hero Section */}
           <section className="relative overflow-hidden rounded-xl border border-border p-8 md:p-12">
             <div className="absolute inset-0 -z-10">
-              <img src={heroBg} alt="Vivid animated abstract tech background" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
-              <div className="absolute -top-10 -left-10 w-64 h-64 bg-primary/30 blur-3xl rounded-full pulse" />
-              <div className="absolute -bottom-12 -right-10 w-72 h-72 bg-secondary/30 blur-3xl rounded-full pulse" />
+              <div className="animated-wallpaper w-full h-full" aria-hidden="true" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/45 to-background/80" aria-hidden="true" />
+              <div className="absolute -top-16 -left-16 blob blob-1" aria-hidden="true" />
+              <div className="absolute -bottom-20 -right-16 blob blob-2" aria-hidden="true" />
             </div>
             <div className="grid gap-10 md:grid-cols-2 items-center">
               <div className="space-y-6">
