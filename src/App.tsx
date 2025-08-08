@@ -11,6 +11,13 @@ import CommunityPage from "./pages/CommunityPage";
 import Resources from "./pages/Resources";
 import FAQPage from "./pages/FAQPage";
 import NotFound from "./pages/NotFound";
+import HowItWorks from "./pages/HowItWorks";
+import Software from "./pages/Software";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import IPPolicy from "./pages/IPPolicy";
+
 
 const queryClient = new QueryClient();
 
@@ -22,11 +29,17 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/software" element={<Software />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/ip-policy" element={<IPPolicy />} />
           <Route path="/faq" element={<FAQPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
