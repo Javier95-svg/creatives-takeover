@@ -62,8 +62,8 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            For creators, entrepreneurs, and visionaries who want to build software without learning to code. 
-            Our AI-powered platform transforms your concepts into fully functional applications in minutes.
+            For creators, entrepreneurs, and polymaths who want to build systems without the technical complexity, our AI platform helps turn ideas into scalable solutions—quickly and without coding.
+            Focus on your vision while AI simplifies the process
           </p>
 
           {/* CTA Buttons */}
