@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Rocket, Workflow, Users, Sparkles, ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import heroBg from "@/assets/hero-bg-animated.jpg";
 import creatorsImg from "@/assets/community-builders.jpg";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -48,70 +49,78 @@ const Index = () => {
         <Navigation />
         <main className="container mx-auto px-6 pt-24 pb-16">
           {/* Hero Section */}
-          <header className="grid gap-10 md:grid-cols-2 items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center rounded-full border border-border px-3 py-1 text-sm text-muted-foreground bg-accent/30">
-                <Sparkles className="mr-2 h-4 w-4" /> AI-Powered Startup Builder
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                From idea to startup — powered by AI.
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
-                We turn your concepts into real, functional startups by automating your operations.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button asChild size="lg">
-                  <a href="#start-now" aria-label="Start Your Idea">
-                    Start Your Idea
-                    <ArrowRight className="ml-2" />
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <a href="#how-it-works" aria-label="See How It Works">See How It Works</a>
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground">Free to start. No credit card required.</p>
+          <section className="relative overflow-hidden rounded-xl border border-border p-8 md:p-12">
+            <div className="absolute inset-0 -z-10">
+              <img src={heroBg} alt="Vivid animated abstract tech background" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
+              <div className="absolute -top-10 -left-10 w-64 h-64 bg-primary/30 blur-3xl rounded-full pulse" />
+              <div className="absolute -bottom-12 -right-10 w-72 h-72 bg-secondary/30 blur-3xl rounded-full pulse" />
             </div>
+            <div className="grid gap-10 md:grid-cols-2 items-center">
+              <div className="space-y-6">
+                <div className="inline-flex items-center rounded-full border border-border px-3 py-1 text-sm text-muted-foreground bg-accent/30">
+                  <Sparkles className="mr-2 h-4 w-4" /> AI-Powered Startup Builder
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+                  From idea to startup — powered by AI.
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+                  We turn your concepts into real, functional startups by automating your operations.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button asChild size="lg">
+                    <a href="#start-now" aria-label="Start Your Idea">
+                      Start Your Idea
+                      <ArrowRight className="ml-2" />
+                    </a>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <a href="#how-it-works" aria-label="See How It Works">See How It Works</a>
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">Free to start. No credit card required.</p>
+              </div>
 
-            {/* Right: Interactive mockup */}
-            <div className="relative">
-              <Card className="p-6 h-full animate-fade-in">
-                <div className="mb-4 flex items-center gap-2">
-                  <Workflow className="h-5 w-5" />
-                  <span className="font-medium">AI Workflow Preview</span>
-                </div>
-                <div className="space-y-4">
-                  <div className="rounded-md border border-dashed border-border p-4">
-                    <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-semibold">Capture Idea</p>
-                        <p className="text-sm text-muted-foreground">Summarize goals, target users, and value.</p>
+              {/* Right: Interactive mockup */}
+              <div className="relative">
+                <Card className="p-6 h-full animate-fade-in">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Workflow className="h-5 w-5" />
+                    <span className="font-medium">AI Workflow Preview</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="rounded-md border border-dashed border-border p-4">
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-semibold">Capture Idea</p>
+                          <p className="text-sm text-muted-foreground">Summarize goals, target users, and value.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-dashed border-border p-4">
+                      <div className="flex items-start gap-3">
+                        <Workflow className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-semibold">Generate Operations</p>
+                          <p className="text-sm text-muted-foreground">AI sets up tools, workflows, and templates.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-dashed border-border p-4">
+                      <div className="flex items-start gap-3">
+                        <Rocket className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-semibold">Launch & Iterate</p>
+                          <p className="text-sm text-muted-foreground">Deploy your MVP and refine with feedback.</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-md border border-dashed border-border p-4">
-                    <div className="flex items-start gap-3">
-                      <Workflow className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-semibold">Generate Operations</p>
-                        <p className="text-sm text-muted-foreground">AI sets up tools, workflows, and templates.</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="rounded-md border border-dashed border-border p-4">
-                    <div className="flex items-start gap-3">
-                      <Rocket className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-semibold">Launch & Iterate</p>
-                        <p className="text-sm text-muted-foreground">Deploy your MVP and refine with feedback.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
             </div>
-          </header>
+          </section>
 
           {/* How We Operate */}
           <section id="how-it-works" className="mt-24">
