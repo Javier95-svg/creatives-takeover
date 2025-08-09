@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three flexible pricing plans: Starter ($9.99/month), Plus ($19.99/month), and Family ($29.99/month). All plans include our core creative tools, with additional features and team capabilities in higher tiers. You can save 20% by choosing annual billing.",
+      answer: "We offer three flexible pricing plans: Starter ($9.99/month), Elite ($19.99/month), and Teams ($29.99/month). All plans include our core creative tools, with additional features and team capabilities in higher tiers. You can save 20% by choosing annual billing.",
       popular: true,
       tags: ["pricing", "plans", "subscription"]
     },
@@ -198,7 +198,7 @@ const SearchableFAQ = () => {
       id: 20,
       category: "Features",
       question: "How much cloud storage do I get?",
-      answer: "Storage varies by plan: Starter includes 10GB, Plus includes 100GB, and Family includes 500GB. All plans include automatic backup and sync across devices. Additional storage can be purchased if needed.",
+      answer: "Storage varies by plan: Starter includes 10GB, Elite includes 100GB, and Teams includes 500GB. All plans include automatic backup and sync across devices. Additional storage can be purchased if needed.",
       popular: false,
       tags: ["storage", "cloud", "backup", "sync", "plans"]
     }

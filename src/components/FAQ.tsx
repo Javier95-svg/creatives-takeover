@@ -9,7 +9,7 @@ const FAQ = () => {
   const faqs = [
     {
       question: "How does pricing work?",
-      answer: "Choose from three flexible plans: Starter ($9.99/month), Plus ($19.99/month), or Family ($29.99/month). Save 20% with annual billing. All plans include a 7-day free trial with no commitment."
+      answer: "Choose from three flexible plans: Starter ($9.99/month), Elite ($19.99/month), or Teams ($29.99/month). Save 20% with annual billing. All plans include a 7-day free trial with no commitment."
     },
     {
       question: "Can I cancel anytime?",

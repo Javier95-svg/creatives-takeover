@@ -11,7 +11,7 @@ const PricingPage = () => {
         <title>AI Solopreneur Pricing Plans | Choose Your Creative Journey | Creatives Takeover</title>
         <meta 
           name="description" 
-          content="Discover AI solopreneur pricing plans designed for creative professionals. Choose from Starter, Plus, or Family plans with AI-powered tools and unlimited design access." 
+          content="Discover AI solopreneur pricing plans designed for creative professionals. Choose from Starter, Elite, or Teams plans with AI-powered tools and unlimited design access." 
         />
         <meta name="keywords" content="AI solopreneur pricing plans, creative subscription pricing, AI tools pricing, solopreneur software plans, creative platform pricing" />
         <meta property="og:title" content="AI Solopreneur Pricing Plans | Creative Platform" />

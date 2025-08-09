@@ -26,7 +26,7 @@ const Pricing = () => {
       popular: false
     },
     {
-      name: "Plus",
+      name: "Elite",
       title: "Unlock Endless Creativity",
       description: "Best value for serious creators who want full access and premium perks",
       monthlyPrice: 19.99,
@@ -46,7 +46,7 @@ const Pricing = () => {
       popular: true
     },
     {
-      name: "Family",
+      name: "Teams",
       title: "Create Together",
       description: "Share the creative journey with up to 6 family members",
       monthlyPrice: 29.99,

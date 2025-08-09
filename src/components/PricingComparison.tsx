@@ -10,41 +10,41 @@ const PricingComparison = () => {
     {
       category: "AI-Powered Tools",
       items: [
-        { feature: "AI Design Assistant", starter: "Basic", plus: "Advanced", family: "Advanced" },
-        { feature: "Smart Templates", starter: "50", plus: "500+", family: "500+" },
-        { feature: "AI Content Generation", starter: false, plus: true, family: true },
-        { feature: "Auto Background Removal", starter: "10/month", plus: "Unlimited", family: "Unlimited" },
-        { feature: "AI Analytics & Insights", starter: false, plus: true, family: true }
+        { feature: "AI Design Assistant", starter: "Basic", elite: "Advanced", teams: "Advanced" },
+        { feature: "Smart Templates", starter: "50", elite: "500+", teams: "500+" },
+        { feature: "AI Content Generation", starter: false, elite: true, teams: true },
+        { feature: "Auto Background Removal", starter: "10/month", elite: "Unlimited", teams: "Unlimited" },
+        { feature: "AI Analytics & Insights", starter: false, elite: true, teams: true }
       ]
     },
     {
       category: "Creative Resources",
       items: [
-        { feature: "Template Library Access", starter: "1,000+", plus: "10,000+", family: "10,000+" },
-        { feature: "Stock Photos & Images", starter: "100/month", plus: "Unlimited", family: "Unlimited" },
-        { feature: "Premium Fonts", starter: "50", plus: "500+", family: "500+" },
-        { feature: "Design Assets", starter: "Basic", plus: "Premium", family: "Premium" },
-        { feature: "Video Templates", starter: false, plus: true, family: true }
+        { feature: "Template Library Access", starter: "1,000+", elite: "10,000+", teams: "10,000+" },
+        { feature: "Stock Photos & Images", starter: "100/month", elite: "Unlimited", teams: "Unlimited" },
+        { feature: "Premium Fonts", starter: "50", elite: "500+", teams: "500+" },
+        { feature: "Design Assets", starter: "Basic", elite: "Premium", teams: "Premium" },
+        { feature: "Video Templates", starter: false, elite: true, teams: true }
       ]
     },
     {
       category: "Collaboration & Sharing",
       items: [
-        { feature: "Team Members", starter: "1", plus: "3", family: "6" },
-        { feature: "Cloud Storage", starter: "10GB", plus: "100GB", family: "500GB" },
-        { feature: "Real-time Collaboration", starter: false, plus: true, family: true },
-        { feature: "Project Sharing", starter: "Basic", plus: "Advanced", family: "Advanced" },
-        { feature: "Version History", starter: "7 days", plus: "30 days", family: "Unlimited" }
+        { feature: "Team Members", starter: "1", elite: "3", teams: "6" },
+        { feature: "Cloud Storage", starter: "10GB", elite: "100GB", teams: "500GB" },
+        { feature: "Real-time Collaboration", starter: false, elite: true, teams: true },
+        { feature: "Project Sharing", starter: "Basic", elite: "Advanced", teams: "Advanced" },
+        { feature: "Version History", starter: "7 days", elite: "30 days", teams: "Unlimited" }
       ]
     },
     {
       category: "Support & Community",
       items: [
-        { feature: "Community Access", starter: true, plus: true, family: true },
-        { feature: "Email Support", starter: true, plus: true, family: true },
-        { feature: "Priority Support", starter: false, plus: true, family: true },
-        { feature: "1-on-1 Consultations", starter: false, plus: false, family: true },
-        { feature: "Advanced Tutorials", starter: "Basic", plus: "All Access", family: "All Access" }
+        { feature: "Community Access", starter: true, elite: true, teams: true },
+        { feature: "Email Support", starter: true, elite: true, teams: true },
+        { feature: "Priority Support", starter: false, elite: true, teams: true },
+        { feature: "1-on-1 Consultations", starter: false, elite: false, teams: true },
+        { feature: "Advanced Tutorials", starter: "Basic", elite: "All Access", teams: "All Access" }
       ]
     }
   ];
@@ -79,12 +79,12 @@ const PricingComparison = () => {
 
         {/* Mobile-friendly comparison */}
         <div className="lg:hidden space-y-8 mb-16">
-          {["Starter", "Plus", "Family"].map((plan) => (
+          {["Starter", "Elite", "Teams"].map((plan) => (
             <Card key={plan} className="glass border-border">
               <CardHeader>
                 <CardTitle className="text-center text-2xl gradient-text">
                   {plan}
-                  {plan === "Plus" && (
+                  {plan === "Elite" && (
                     <Badge className="ml-2 bg-primary text-white">Most Popular</Badge>
                   )}
                 </CardTitle>
@@ -123,14 +123,14 @@ const PricingComparison = () => {
                       <div className="text-sm font-normal text-muted-foreground mt-1">$9.99/month</div>
                     </th>
                     <th className="text-center p-6 font-semibold text-lg bg-primary/5 relative">
-                      Plus
+                      Elite
                       <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs">
                         Most Popular
                       </Badge>
                       <div className="text-sm font-normal text-muted-foreground mt-1">$19.99/month</div>
                     </th>
                     <th className="text-center p-6 font-semibold text-lg">
-                      Family
+                      Teams
                       <div className="text-sm font-normal text-muted-foreground mt-1">$29.99/month</div>
                     </th>
                   </tr>
@@ -147,8 +147,8 @@ const PricingComparison = () => {
                         <tr key={item.feature} className={index % 2 === 0 ? "bg-background" : "bg-muted/20"}>
                           <td className="p-4 font-medium">{item.feature}</td>
                           <td className="p-4 text-center">{renderFeatureValue(item.starter)}</td>
-                          <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.plus)}</td>
-                          <td className="p-4 text-center">{renderFeatureValue(item.family)}</td>
+                          <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.elite)}</td>
+                          <td className="p-4 text-center">{renderFeatureValue(item.teams)}</td>
                         </tr>
                       ))}
                     </React.Fragment>
