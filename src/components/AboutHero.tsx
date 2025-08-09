@@ -57,6 +57,9 @@ const AboutHero = () => {
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Founded on the belief that everyone has the potential to create something extraordinary, Creatives Takeover bridges the gap between imagination and implementation. We're not just a platform, we're your creative partners on the journey from concept to launch.
               </p>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Go from idea to launch faster. Use AI workflows and fresh market insights to validate quickly, build what matters, and win your first customers with confidence.
+              </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up" style={{ animationDelay: '0.6s' }}>
