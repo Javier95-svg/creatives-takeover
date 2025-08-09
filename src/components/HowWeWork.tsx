@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { Lightbulb, Bot, Rocket } from "lucide-react";
 
 const steps = [
@@ -43,11 +44,11 @@ const HowWeWork = () => {
         </div>
 
         <div className="text-center mt-10">
-          <a href="#get-started" onClick={(e) => { e.preventDefault(); document.getElementById("get-started")?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+          <Link to="/pricing">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
               Get Started
             </Button>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
