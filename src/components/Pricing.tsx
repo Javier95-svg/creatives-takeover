@@ -48,7 +48,7 @@ const Pricing = () => {
     {
       name: "Teams",
       title: "Create Together",
-      description: "Share the creative journey with up to 6 family members",
+      description: "Share the creative journey with up to 4 team members",
       monthlyPrice: 29.99,
       annualPrice: 299.99,
       credits: 3000,
