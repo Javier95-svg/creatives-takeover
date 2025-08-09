@@ -198,12 +198,6 @@ const Pricing = () => {
           ))}
         </div>
 
-        {/* Reassurance */}
-        <div className="text-center mt-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-          <p className="text-muted-foreground">
-            ✨ Cancel anytime. No hidden fees. 30-day money-back guarantee.
-          </p>
-        </div>
       </div>
     </section>
     </>
