@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import AboutHero from "@/components/AboutHero";
 
 import MissionVision from "@/components/MissionVision";
-import WhatWeAre from "@/components/WhatWeAre";
+
 import HowWeWork from "@/components/HowWeWork";
 import InternalLinks from "@/components/InternalLinks";
 
@@ -26,7 +26,7 @@ const About = () => {
         <Navigation />
         <AboutHero />
         <MissionVision />
-        <WhatWeAre />
+        
         <HowWeWork />
         <InternalLinks />
       </div>
