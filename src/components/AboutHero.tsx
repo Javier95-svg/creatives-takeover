@@ -135,7 +135,7 @@ const AboutHero = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHeroGrandpa} alt="Grandfather in traditional clothes writing startup ideas in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur writing startup ideas in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
             </div>
