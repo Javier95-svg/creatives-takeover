@@ -131,7 +131,7 @@ const PricingComparison = () => {
                     </th>
                     <th className="text-center p-6 font-semibold text-lg">
                       Teams
-                      <div className="text-sm font-normal text-muted-foreground mt-1">$29.99/month</div>
+                      <div className="text-sm font-normal text-muted-foreground mt-1">$39.99/month</div>
                     </th>
                   </tr>
                 </thead>

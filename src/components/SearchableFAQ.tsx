@@ -36,7 +36,7 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three flexible pricing plans: Starter ($9.99/month), Elite ($19.99/month), and Teams ($29.99/month). All plans include our core creative tools, with additional features and team capabilities in higher tiers. You can save 20% by choosing annual billing.",
+      answer: "We offer three flexible pricing plans: Starter ($9.99/month), Elite ($19.99/month), and Teams ($39.99/month). All plans include our core creative tools, with additional features and team capabilities in higher tiers. You can save 20% by choosing annual billing.",
       popular: true,
       tags: ["pricing", "plans", "subscription"]
     },
