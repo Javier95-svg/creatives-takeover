@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -11,8 +11,10 @@ const Pricing = () => {
       name: "Starter",
       title: "Explore & Discover",
       description: "Perfect for casual creators ready to explore new horizons",
-      monthlyPrice: 9.99,
-      annualPrice: 99.99,
+      monthlyPrice: 0,
+      annualPrice: 0,
+      credits: 200,
+      integrationCredits: 2,
       features: [
         "Access to 1000+ creative templates",
         "Basic editing tools",
@@ -29,6 +31,8 @@ const Pricing = () => {
       description: "Best value for serious creators who want full access and premium perks",
       monthlyPrice: 19.99,
       annualPrice: 199.99,
+      credits: 1000,
+      integrationCredits: 10,
       features: [
         "Unlimited access to all content",
         "Premium AI-powered tools",
@@ -47,6 +51,8 @@ const Pricing = () => {
       description: "Share the creative journey with up to 6 family members",
       monthlyPrice: 29.99,
       annualPrice: 299.99,
+      credits: 3000,
+      integrationCredits: 30,
       features: [
         "Everything in Plus",
         "Up to 6 user profiles",
@@ -176,14 +182,20 @@ const Pricing = () => {
                 )}
               </div>
 
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="rounded-lg border border-border p-4 text-center">
+                  <div className="text-3xl font-bold text-primary">
+                    {plan.credits?.toLocaleString?.() ?? '—'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Credits / month</div>
+                </div>
+                <div className="rounded-lg border border-border p-4 text-center">
+                  <div className="text-3xl font-bold text-primary">
+                    {plan.integrationCredits ?? '—'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Integration credits / month</div>
+                </div>
+              </div>
 
               <Button 
                 className={`w-full py-3 font-medium btn-magnetic ${
