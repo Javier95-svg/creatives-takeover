@@ -107,7 +107,7 @@ const MissionVision = () => {
                         <p className="text-base leading-relaxed">
                           Today, entrepreneurship is undergoing a fundamental shift driven by the rapid rise of AI. Recent advancements in generative AI, automation, and no-code tools are enabling founders to validate ideas, create products, and reach global markets at unprecedented speed and scale.
                         </p>
-                        <p className="text-base leading-relaxed">
+                        <p className="text-base leading-relaxed text-foreground bg-accent/30 border border-primary/20 rounded-md p-3">
                           This evolution is dismantling the old barriers to entry and creating a new era where innovation is limited only by imagination, not resources.
                         </p>
                         <p className="text-base leading-relaxed">
