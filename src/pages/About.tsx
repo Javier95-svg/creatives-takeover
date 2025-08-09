@@ -3,6 +3,8 @@ import Navigation from "@/components/Navigation";
 import AboutHero from "@/components/AboutHero";
 
 import MissionVision from "@/components/MissionVision";
+import WhatWeAre from "@/components/WhatWeAre";
+import HowWeWork from "@/components/HowWeWork";
 import InternalLinks from "@/components/InternalLinks";
 
 const About = () => {
@@ -12,18 +14,20 @@ const About = () => {
         <title>About Creatives Takeover - Empowering Creators & Solopreneurs</title>
         <meta 
           name="description" 
-          content="Learn about Creatives Takeover's mission to empower creators and solopreneurs with no-code solutions. Meet our team and discover how we're building the future of creative technology." 
+          content="Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions. See how we work and what we do." 
         />
         <meta name="keywords" content="about Creatives Takeover, creator platform, no-code community, solopreneur tools" />
         <meta property="og:title" content="About Creatives Takeover - Empowering Creators & Solopreneurs" />
-        <meta property="og:description" content="Learn about Creatives Takeover's mission to empower creators and solopreneurs with no-code solutions." />
+        <meta property="og:description" content="Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions." />
         <meta property="og:type" content="website" />
+        <link rel="canonical" href={typeof window !== 'undefined' ? `${window.location.origin}/about` : '/about'} />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
         <AboutHero />
         <MissionVision />
-        
+        <WhatWeAre />
+        <HowWeWork />
         <InternalLinks />
       </div>
     </>
