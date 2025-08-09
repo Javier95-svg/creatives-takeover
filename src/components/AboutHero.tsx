@@ -100,7 +100,7 @@ const AboutHero = () => {
               animationDelay: '0.4s'
             }}>
               <p className="text-lg text-muted-foreground leading-relaxed">Founded on the belief that everyone has the potential to create something extraordinary, our aim is to bridge the gap between imagination and implementation. We're not just a platform, we're your creative partners on the journey from concept to launch.</p>
-              <p className="text-lg text-muted-foreground leading-relaxed">From idea validation to launch, we give you clear guidance and AI-powered tools to move faster, reduce guesswork, and ship with confidence.</p>
+              
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up" style={{
