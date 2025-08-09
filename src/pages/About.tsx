@@ -6,6 +6,7 @@ import MissionVision from "@/components/MissionVision";
 
 import HowWeWork from "@/components/HowWeWork";
 import InternalLinks from "@/components/InternalLinks";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const About = () => {
   return (
@@ -25,6 +26,7 @@ const About = () => {
       <div className="relative min-h-screen overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
+        <AnimatedBackground />
         <div className="relative z-10">
           <Navigation />
           <AboutHero />
