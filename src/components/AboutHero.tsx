@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import teamHeroImage from "@/assets/team-hero.jpg";
+import solopreneurHero from "@/assets/solopreneur-hero.jpg";
 import { ArrowRight } from "lucide-react";
 const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
@@ -119,7 +119,7 @@ const AboutHero = () => {
             animationDelay: '0.3s'
           }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img src={teamHeroImage} alt="Creatives Takeover team collaborating" className="w-full h-auto object-cover" />
+              <img src={solopreneurHero} alt="Solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
               
