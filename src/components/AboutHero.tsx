@@ -55,10 +55,7 @@ const AboutHero = () => {
               
             <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Get real-time market insights and competitor analysis so you can decide what to build and when.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                As AI helps companies do more with smaller teams, Creatives Takeover gives solo founders the same advantage: validate, build, and launch faster with fewer resources.
+                Founded on the belief that everyone has the potential to create something extraordinary, Creatives Takeover bridges the gap between imagination and implementation. We're not just a platform, we're your creative partners on the journey from concept to launch.
               </p>
             </div>
 
