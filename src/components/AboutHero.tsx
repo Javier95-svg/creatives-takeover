@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import solopreneurHero from "@/assets/solopreneur-hero.jpg";
 import solopreneurHeroMale from "@/assets/solopreneur-hero-male.jpg";
+import solopreneurHeroFemale from "@/assets/solopreneur-hero-female.jpg";
+import solopreneurHeroSketch from "@/assets/solopreneur-hero-sketch.jpg";
 import { ArrowRight } from "lucide-react";
 const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
@@ -119,17 +121,25 @@ const AboutHero = () => {
           <div className="relative animate-slide-in-right" style={{
             animationDelay: '0.3s'
           }}>
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img src={solopreneurHero} alt="Solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHero} alt="Solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHeroMale} alt="African American solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHeroFemale} alt="African American female solopreneur launching a startup in a bright workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHeroSketch} alt="Solopreneur sketching app wireframes and product ideas at a startup desk" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
             </div>
-
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl mt-6">
-              <img src={solopreneurHeroMale} alt="African American solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-            </div>
-              
-            </div>
+          </div>
           </div>
         </div>
       </div>
