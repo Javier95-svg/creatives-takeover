@@ -17,7 +17,7 @@ import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import IPPolicy from "./pages/IPPolicy";
-
+import Laboratory from "./pages/Laboratory";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +41,7 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/ip-policy" element={<IPPolicy />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/laboratory" element={<Laboratory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
