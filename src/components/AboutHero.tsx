@@ -49,8 +49,10 @@ const AboutHero = () => {
                 About Us
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                We're a passionate team dedicated to empowering creators and solopreneurs 
-                to bring their boldest ideas to life—without code, without limits.
+                Our mission is to empower anyone, anywhere, to launch their own startup by making advanced AI automation tools accessible, affordable, and easy to use. We believe entrepreneurship should not be limited by technical skills, financial barriers, or location. By combining cutting-edge AI with intuitive workflows, we aim to streamline every stage of the startup journey — from idea validation and market research to branding, product development, and launch — so individuals can focus on innovation, not limitations.
+              </p>
+              <p className="mt-4 text-lg text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{ animationDelay: '0.25s' }}>
+                We envision a world where any person with an idea can bring it to life in record time, supported by intelligent automation that reduces costs, accelerates progress, and removes complexity. Through our platform, we strive to democratize startup creation and ignite a new wave of diverse, AI-powered businesses that drive economic growth and positive change.
               </p>
             </div>
               
