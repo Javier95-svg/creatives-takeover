@@ -125,7 +125,7 @@ const AboutHero = () => {
             </div>
 
             <div className="relative rounded-2xl overflow-hidden shadow-2xl mt-6">
-              <img src={solopreneurHeroMale} alt="Male solopreneur designing a startup product in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+              <img src={solopreneurHeroMale} alt="African American solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
               
