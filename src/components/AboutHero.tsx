@@ -123,19 +123,19 @@ const AboutHero = () => {
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHero} alt="Solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHero} alt="Solopreneur in a minimalist Scandinavian home office with bright wood and clean design" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHeroMale} alt="African American solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHeroMale} alt="African American solopreneur in an industrial loft studio with exposed brick and large windows" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHeroAsianTeen} alt="Teenage Asian boy solopreneur building a startup in a bright, modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHeroAsianTeen} alt="Teenage Asian founder in a colorful Tokyo co-working space with plants and neon accents" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur writing startup ideas in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur in a warm library-style study with wood shelves and a vintage lamp" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
             </div>
