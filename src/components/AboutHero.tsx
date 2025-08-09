@@ -49,19 +49,16 @@ const AboutHero = () => {
                 About Us
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                Creatives Takeover is a platform that helps creatives and founders launch startups faster using AI-powered workflows, automation, and no-code tools.
+                Creatives Takeover is a platform that helps creatives and founders launch startups faster with AI, automation, and no-code.
               </p>
             </div>
               
             <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Make data-driven decisions with real-time market intelligence, competitive analysis, and trend reports, so you can evaluate potential, risk, and timing with clarity.
+                Get real-time market insights and competitor analysis so you can decide what to build and when.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                As AI allows large companies to operate with leaner teams, Creatives Takeover gives solo founders comparable leverage. Validate ideas, build products, and launch with fewer resources, shorter cycles, and greater confidence.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Tap into prebuilt automations for research synthesis, positioning, and go-to-market, then iterate using the metrics that matter: time to validate, cost to build, and early traction signals.
+                As AI helps companies do more with smaller teams, Creatives Takeover gives solo founders the same advantage: validate, build, and launch faster with fewer resources.
               </p>
             </div>
 
