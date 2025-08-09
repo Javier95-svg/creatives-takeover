@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 
 const Navigation = () => {
@@ -40,8 +41,8 @@ const Navigation = () => {
             <Button variant="ghost" size="sm" aria-label="Login">
               Login
             </Button>
-            <Button size="sm" className="glass bg-primary hover:bg-primary/90 text-primary-foreground" aria-label="Sign Up">
-              Sign Up
+            <Button asChild size="sm" className="glass bg-primary hover:bg-primary/90 text-primary-foreground" aria-label="Sign Up">
+              <Link to="/signup">Sign Up</Link>
             </Button>
           </div>
 
@@ -72,8 +73,8 @@ const Navigation = () => {
                 <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)}>
                   Login
                 </Button>
-                <Button size="sm" className="w-full glass bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setIsOpen(false)}>
-                  Sign Up
+                <Button asChild size="sm" className="w-full glass bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setIsOpen(false)}>
+                  <Link to="/signup">Sign Up</Link>
                 </Button>
               </div>
             </div>
