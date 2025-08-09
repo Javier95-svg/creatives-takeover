@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import AboutHero from "@/components/AboutHero";
-import TeamSection from "@/components/TeamSection";
+
 import MissionVision from "@/components/MissionVision";
 import InternalLinks from "@/components/InternalLinks";
 
@@ -23,7 +23,7 @@ const About = () => {
         <Navigation />
         <AboutHero />
         <MissionVision />
-        <TeamSection />
+        
         <InternalLinks />
       </div>
     </>
