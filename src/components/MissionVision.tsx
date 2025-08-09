@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Target, Eye } from "lucide-react";
+import { Target, Eye, CheckCircle2, Sparkles, Rocket } from "lucide-react";
 
 const MissionVision = () => {
   return (
@@ -21,16 +21,24 @@ const MissionVision = () => {
               </div>
               <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Mission</CardTitle>
             </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed text-center">
-                Our mission is to empower anyone, anywhere, to launch their own startup by making advanced AI automation tools accessible, affordable, and easy to use.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                We believe entrepreneurship should not be limited by technical skills, financial barriers, or location. By combining cutting-edge AI with intuitive workflows, we aim to streamline every stage of the startup journey, from idea validation and market research to branding, product development, and launch, so individuals can focus on innovation and creativity.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                We envision a world where any person with an idea can bring it to life in record time, supported by intelligent automation that reduces costs, accelerates progress, and removes complexity. Through our platform, we strive to democratize startup creation and ignite a new wave of diverse, AI-powered businesses that drive economic growth and positive change.
-              </CardDescription>
+            <CardContent className="px-6">
+              <p className="text-base md:text-lg leading-relaxed text-foreground/90 text-center">
+                Empower anyone, anywhere to launch—by making AI automation accessible, affordable, and easy to use.
+              </p>
+              <ul className="mt-5 space-y-3 text-left">
+                <li className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <span className="text-sm md:text-base text-muted-foreground">No technical barriers—intuitive, creator-friendly workflows from idea to launch.</span>
+                </li>
+                <li className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                  <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+                  <span className="text-sm md:text-base text-muted-foreground">Cutting-edge AI that simplifies research, branding, product build, and go-to-market.</span>
+                </li>
+                <li className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+                  <Rocket className="h-5 w-5 text-primary mt-0.5" />
+                  <span className="text-sm md:text-base text-muted-foreground">Faster progress, lower costs—so you can focus on creativity and impact.</span>
+                </li>
+              </ul>
             </CardContent>
           </Card>
 
@@ -42,16 +50,24 @@ const MissionVision = () => {
               </div>
               <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Vision</CardTitle>
             </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed text-center">
-                Today, entrepreneurship is undergoing a fundamental shift driven by the rapid rise of AI. Recent advancements in generative AI, automation, and no-code tools are enabling founders to validate ideas, create products, and reach global markets at unprecedented speed and scale.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                This evolution is dismantling the old barriers to entry and creating a new era where innovation is limited only by imagination, not resources.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                We envision a future where entrepreneurship is as universal as ambition where anyone with an idea, regardless of background, education, or resources, can turn it into a thriving business. By fully unlocking the potential of AI automation, we aim to remove the barriers that have traditionally limited startup creation: high costs, technical complexity, and access to expert knowledge.
-              </CardDescription>
+            <CardContent className="px-6">
+              <p className="text-base md:text-lg leading-relaxed text-foreground/90 text-center">
+                Entrepreneurship is accelerating with AI—making speed, scale, and access the new norm.
+              </p>
+              <ul className="mt-5 space-y-3 text-left">
+                <li className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                  <span className="text-sm md:text-base text-muted-foreground">Barriers to entry are dissolving—imagination drives momentum, not resources.</span>
+                </li>
+                <li className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                  <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+                  <span className="text-sm md:text-base text-muted-foreground">AI-powered automation unlocks global reach and rapid iteration.</span>
+                </li>
+                <li className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+                  <Rocket className="h-5 w-5 text-primary mt-0.5" />
+                  <span className="text-sm md:text-base text-muted-foreground">A future where anyone, anywhere can build—confidently and quickly.</span>
+                </li>
+              </ul>
             </CardContent>
           </Card>
         </div>
