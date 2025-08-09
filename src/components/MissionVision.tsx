@@ -44,7 +44,13 @@ const MissionVision = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-base leading-relaxed text-center">
-                We envision a world where any person with an idea can bring it to life in record time, supported by intelligent automation that reduces costs, accelerates progress, and removes complexity. Through our platform, we strive to democratize startup creation and ignite a new wave of diverse, AI-powered businesses that drive economic growth and positive change.
+                Our vision is a world where entrepreneurship is universally attainable—where intelligent automation and human creativity work in harmony to turn ideas into real businesses faster than ever, regardless of background or location.
+              </CardDescription>
+              <CardDescription className="text-base leading-relaxed text-center">
+                We see a trusted, ethical AI companion embedded in every stage of creation—illuminating research, clarifying strategy, accelerating building, and amplifying brand presence—while keeping founders in control with transparent choices and privacy by design.
+              </CardDescription>
+              <CardDescription className="text-base leading-relaxed text-center">
+                We aspire to grow a vibrant, global ecosystem that lowers costs, unlocks opportunities, and compounds learning across the community—so more diverse founders launch sustainable, high-impact companies that strengthen economies and improve lives.
               </CardDescription>
             </CardContent>
           </Card>
