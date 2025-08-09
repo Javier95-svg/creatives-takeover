@@ -1,6 +1,8 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Target, Eye } from "lucide-react";
-
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import missionImg from "@/assets/innovation-leaders-unique.jpg";
+import visionImg from "@/assets/innovation-leaders.jpg";
 const MissionVision = () => {
   return (
     <section className="py-20 bg-background/50" id="mission-vision">
@@ -8,52 +10,86 @@ const MissionVision = () => {
         <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
           <h2 className="text-4xl font-bold mb-6 gradient-text animate-text-shimmer">Our Mission & Vision</h2>
           <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            Driven by purpose, guided by vision—discover what makes Creatives Takeover unique
+            Driven by purpose and guided by vision; discover what makes Creatives Takeover unique
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          {/* Mission */}
-          <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-left hover-lift btn-magnetic">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <Target className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Mission</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed text-center">
-                Our mission is to empower anyone, anywhere, to launch their own startup by making advanced AI automation tools accessible, affordable, and easy to use.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                We believe entrepreneurship should not be limited by technical skills, financial barriers, or location. By combining cutting-edge AI with intuitive workflows, we aim to streamline every stage of the startup journey, from idea validation and market research to branding, product development, and launch, so individuals can focus on innovation and creativity.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                We envision a world where any person with an idea can bring it to life in record time, supported by intelligent automation that reduces costs, accelerates progress, and removes complexity. Through our platform, we strive to democratize startup creation and ignite a new wave of diverse, AI-powered businesses that drive economic growth and positive change.
-              </CardDescription>
-            </CardContent>
-          </Card>
+        <div className="relative max-w-6xl mx-auto">
+          <Carousel className="mb-10" opts={{ loop: true, align: "start" }}>
+            <CarouselContent>
+              <CarouselItem>
+                <Card className="glass border-border overflow-hidden">
+                  <div className="grid md:grid-cols-2">
+                    <figure className="relative">
+                      <img
+                        src={missionImg}
+                        alt="Creators using AI tools to launch startups quickly"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
+                    </figure>
+                    <div className="p-6 md:p-10">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Target className="h-5 w-5 text-primary" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Our Mission</h3>
+                      </div>
+                      <div className="space-y-4 text-muted-foreground">
+                        <p className="text-base leading-relaxed text-foreground/90">
+                          Our mission is to empower anyone, anywhere, to launch their own startup by making advanced AI automation tools accessible, affordable, and easy to use.
+                        </p>
+                        <p className="text-base leading-relaxed">
+                          We believe entrepreneurship should not be limited by technical skills, financial barriers, or location. By combining cutting-edge AI with intuitive workflows, we aim to streamline every stage of the startup journey, from idea validation and market research to branding, product development, and launch, so individuals can focus on innovation and creativity.
+                        </p>
+                        <p className="text-base leading-relaxed">
+                          We envision a world where any person with an idea can bring it to life in record time, supported by intelligent automation that reduces costs, accelerates progress, and removes complexity. Through our platform, we strive to democratize startup creation and ignite a new wave of diverse, AI-powered businesses that drive economic growth and positive change.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </CarouselItem>
 
-          {/* Vision */}
-          <Card className="glass border-border group hover:shadow-xl transition-all duration-500 animate-slide-in-right hover-lift btn-magnetic" style={{ animationDelay: '0.2s' }}>
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <Eye className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl gradient-text animate-text-shimmer">Our Vision</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed text-center">
-                Today, entrepreneurship is undergoing a fundamental shift driven by the rapid rise of AI. Recent advancements in generative AI, automation, and no-code tools are enabling founders to validate ideas, create products, and reach global markets at unprecedented speed and scale.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                This evolution is dismantling the old barriers to entry and creating a new era where innovation is limited only by imagination, not resources.
-              </CardDescription>
-              <CardDescription className="text-base leading-relaxed text-center">
-                We envision a future where entrepreneurship is as universal as ambition where anyone with an idea, regardless of background, education, or resources, can turn it into a thriving business. By fully unlocking the potential of AI automation, we aim to remove the barriers that have traditionally limited startup creation: high costs, technical complexity, and access to expert knowledge.
-              </CardDescription>
-            </CardContent>
-          </Card>
+              <CarouselItem>
+                <Card className="glass border-border overflow-hidden">
+                  <div className="grid md:grid-cols-2">
+                    <figure className="relative order-first md:order-none">
+                      <img
+                        src={visionImg}
+                        alt="Future-facing creative technology empowering global founders"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
+                    </figure>
+                    <div className="p-6 md:p-10">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Eye className="h-5 w-5 text-primary" />
+                        </div>
+                        <h3 className="text-2xl font-bold">Our Vision</h3>
+                      </div>
+                      <div className="space-y-4 text-muted-foreground">
+                        <p className="text-base leading-relaxed">
+                          Today, entrepreneurship is undergoing a fundamental shift driven by the rapid rise of AI. Recent advancements in generative AI, automation, and no-code tools are enabling founders to validate ideas, create products, and reach global markets at unprecedented speed and scale.
+                        </p>
+                        <p className="text-base leading-relaxed">
+                          This evolution is dismantling the old barriers to entry and creating a new era where innovation is limited only by imagination, not resources.
+                        </p>
+                        <p className="text-base leading-relaxed">
+                          We envision a future where entrepreneurship is as universal as ambition where anyone with an idea, regardless of background, education, or resources, can turn it into a thriving business. By fully unlocking the potential of AI automation, we aim to remove the barriers that have traditionally limited startup creation: high costs, technical complexity, and access to expert knowledge.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </CarouselItem>
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
 
       </div>
