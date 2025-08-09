@@ -105,21 +105,6 @@ const TeamSection = () => {
           ))}
         </div>
 
-        {/* Join Our Team CTA */}
-        <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
-          <Card className="glass border-border max-w-2xl mx-auto">
-            <CardContent className="p-8">
-              <h3 className="text-2xl font-bold mb-4 gradient-text">Join Our Team</h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                We're always looking for passionate individuals who share our vision 
-                of empowering creators. Think you'd be a great fit?
-              </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                View Open Positions
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </section>
   );
