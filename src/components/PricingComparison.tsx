@@ -166,7 +166,7 @@ const PricingComparison = () => {
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-6">
-              Start Free Trial
+              Get Started
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
               <Link to="/services">

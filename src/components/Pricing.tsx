@@ -20,7 +20,7 @@ const Pricing = () => {
         "Mobile app included",
         "Email support"
       ],
-      cta: "Start Free Trial",
+      cta: "Get Started",
       popular: false
     },
     {
@@ -38,7 +38,7 @@ const Pricing = () => {
         "Export in 4K quality",
         "Collaboration features"
       ],
-      cta: "Start Free Trial",
+      cta: "Get Started",
       popular: true
     },
     {
@@ -56,7 +56,7 @@ const Pricing = () => {
         "Bulk export options",
         "Family admin controls"
       ],
-      cta: "Start Free Trial",
+      cta: "Get Started",
       popular: false
     }
   ];

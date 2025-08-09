@@ -83,7 +83,7 @@ const WhatWeDo = () => {
           <div className="text-center mt-12">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
               <Link to="/pricing">
-                Start Free Trial
+                Get Started
               </Link>
             </Button>
           </div>
