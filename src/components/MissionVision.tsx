@@ -10,19 +10,28 @@ const MissionVision = () => {
   useEffect(() => {
     if (!emblaApi) return;
     let canceled = false;
-    const timer = window.setTimeout(() => {
-      if (!canceled) emblaApi.scrollTo(1);
-    }, 14000);
+    const tick = () => {
+      if (canceled || !emblaApi) return;
+      const idx = emblaApi.selectedScrollSnap();
+      if (emblaApi.canScrollNext() && idx === 0) {
+        emblaApi.scrollNext();
+      } else if (emblaApi.canScrollPrev() && idx > 0) {
+        emblaApi.scrollPrev();
+      } else {
+        emblaApi.scrollTo(idx === 0 ? 1 : 0);
+      }
+    };
+    const interval = window.setInterval(tick, 20000);
     const cancel = () => {
       if (!canceled) {
         canceled = true;
-        window.clearTimeout(timer);
+        window.clearInterval(interval);
       }
     };
     emblaApi.on("pointerDown", cancel);
     emblaApi.on("scroll", cancel);
     return () => {
-      window.clearTimeout(timer);
+      window.clearInterval(interval);
       emblaApi.off("pointerDown", cancel);
       emblaApi.off("scroll", cancel);
     };
