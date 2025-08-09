@@ -1,32 +1,24 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
-import CommunityHero from "@/components/CommunityHero";
-import UserCollaboration from "@/components/UserCollaboration";
-import CommunityTestimonials from "@/components/CommunityTestimonials";
-import CommunityEvents from "@/components/CommunityEvents";
-import CommunityNavigation from "@/components/CommunityNavigation";
+import CommunityFeed from "@/components/community/CommunityFeed";
 
 const CommunityPage = () => {
   return (
     <>
       <Helmet>
-        <title>Creative Community | Join Our Vibrant Creative Community | Creatives Takeover</title>
+        <title>Entrepreneur Stories Community | Creatives Takeover</title>
         <meta 
           name="description" 
-          content="Join our thriving creative community of 50,000+ designers, artists, and creators. Collaborate, learn, and grow with our supportive creative community platform." 
+          content="Reddit-style community to share entrepreneurial journeys: wins, failures, and lessons. Post stories, discuss, and learn together." 
         />
-        <meta name="keywords" content="creative community, creative community platform, design community, artist community, creative collaboration, creative networking" />
-        <meta property="og:title" content="Creative Community | Connect with Fellow Creatives" />
-        <meta property="og:description" content="Join thousands of creatives in our vibrant community. Share ideas, collaborate on projects, and grow together." />
+        <meta name="keywords" content="entrepreneur stories, startup lessons, founder community, reddit-style forum, share your journey" />
+        <meta property="og:title" content="Entrepreneur Stories Community" />
+        <meta property="og:description" content="Share your journey. Learn from others. A Reddit-style hub for entrepreneurs." />
         <link rel="canonical" href="/community" />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
-        <CommunityHero />
-        <UserCollaboration />
-        <CommunityTestimonials />
-        <CommunityEvents />
-        <CommunityNavigation />
+        <CommunityFeed />
       </div>
     </>
   );
