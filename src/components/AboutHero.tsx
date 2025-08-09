@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
+
 import solopreneurHero from "@/assets/solopreneur-hero.jpg";
 import solopreneurHeroMale from "@/assets/solopreneur-hero-male.jpg";
 import solopreneurHeroAsianTeen from "@/assets/solopreneur-hero-asian-teen.jpg";
 import solopreneurHeroGrandpa from "@/assets/solopreneur-hero-grandpa.jpg";
-import { ArrowRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
       {/* Animated Background with Multiple Layers */}
@@ -103,17 +103,6 @@ const AboutHero = () => {
               
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 animate-slide-up" style={{
-              animationDelay: '0.6s'
-            }}>
-              <Button size="lg" className="group bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic glass">
-                Learn More
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button variant="outline" size="lg" className="btn-magnetic glass border-border hover:bg-accent/10">
-                Our Story
-              </Button>
-            </div>
             </div>
 
           {/* Hero Image */}
@@ -137,9 +126,16 @@ const AboutHero = () => {
                 <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur in a warm library-style study with wood shelves and a vintage lamp" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
-            </div>
+          </div>
+
+          <div className="mt-10 flex justify-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
+            <a href="#mission-vision" className="inline-flex items-center gap-2 text-muted-foreground hover-scale" aria-label="Scroll to mission and vision">
+              <span className="text-sm">Scroll</span>
+              <ChevronDown className="h-5 w-5" />
+            </a>
           </div>
           </div>
+        </div>
         </div>
       </div>
     </section>;
