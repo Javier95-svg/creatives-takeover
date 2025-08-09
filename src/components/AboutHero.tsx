@@ -123,7 +123,7 @@ const AboutHero = () => {
           }}>
             <div className="grid grid-cols-2 gap-4">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHero} alt="Solopreneur in a minimalist Scandinavian home office with bright wood and clean design" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHero} alt="White woman solopreneur working from a creative beach setup under a colorful parasol" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
