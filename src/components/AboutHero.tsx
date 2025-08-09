@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import solopreneurHero from "@/assets/solopreneur-hero.jpg";
 import solopreneurHeroMale from "@/assets/solopreneur-hero-male.jpg";
-import solopreneurHeroFemale from "@/assets/solopreneur-hero-female.jpg";
+import solopreneurHeroAsianTeen from "@/assets/solopreneur-hero-asian-teen.jpg";
 import solopreneurHeroSketch from "@/assets/solopreneur-hero-sketch.jpg";
 import { ArrowRight } from "lucide-react";
 const AboutHero = () => {
@@ -131,7 +131,7 @@ const AboutHero = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
-                <img src={solopreneurHeroFemale} alt="African American female solopreneur launching a startup in a bright workspace" className="w-full h-auto object-cover" loading="lazy" />
+                <img src={solopreneurHeroAsianTeen} alt="Teenage Asian boy solopreneur building a startup in a bright, modern workspace" className="w-full h-auto object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
