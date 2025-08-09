@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const Contact = () => {
   return (
@@ -27,6 +28,7 @@ const Contact = () => {
             </article>
           </section>
         </main>
+        <Footer />
       </div>
     </>
   )

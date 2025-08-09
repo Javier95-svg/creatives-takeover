@@ -8,6 +8,7 @@ import StickySectionNav from "@/components/StickySectionNav";
 import HowWeWork from "@/components/HowWeWork";
 import Benefits from "@/components/Benefits";
 import { Helmet } from "react-helmet-async";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
@@ -25,6 +26,7 @@ const Index = () => {
           <CTASection />
         </section>
       </main>
+      <Footer />
     </div>
   );
 };

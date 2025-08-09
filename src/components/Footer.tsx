@@ -1,0 +1,93 @@
+import { Link } from "react-router-dom";
+import { Mail, Linkedin, Twitter, Youtube, Github } from "lucide-react";
+
+const Footer = () => {
+  const year = new Date().getFullYear();
+  return (
+    <footer className="border-t bg-background">
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid gap-8 md:grid-cols-3">
+          <section aria-labelledby="footer-contact">
+            <h2 id="footer-contact" className="text-sm font-semibold tracking-wide text-foreground">Contact</h2>
+            <p className="mt-3 text-sm text-muted-foreground">Questions or feedback? We’d love to hear from you.</p>
+            <a
+              href="mailto:hello@creativestakeover.com"
+              className="mt-4 inline-flex items-center gap-2 text-sm underline-offset-4 hover:underline"
+            >
+              <Mail className="h-4 w-4" aria-hidden="true" />
+              hello@creativestakeover.com
+            </a>
+          </section>
+
+          <nav aria-labelledby="footer-legal">
+            <h2 id="footer-legal" className="text-sm font-semibold tracking-wide text-foreground">Legal</h2>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>
+                <Link className="hover:underline underline-offset-4" to="/privacy-policy">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline underline-offset-4" to="/terms">
+                  Terms of Service
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          <nav aria-labelledby="footer-social">
+            <h2 id="footer-social" className="text-sm font-semibold tracking-wide text-foreground">Follow</h2>
+            <ul className="mt-3 flex flex-wrap gap-4">
+              <li>
+                <a
+                  href="https://twitter.com/creativestakeover"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X (Twitter)"
+                >
+                  <Twitter className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.linkedin.com/company/creativestakeover"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://youtube.com/@creativestakeover"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                >
+                  <Youtube className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://github.com/creativestakeover"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GitHub"
+                >
+                  <Github className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <div className="mt-8 text-xs text-muted-foreground">
+          &copy; {year} Creatives Takeover. All rights reserved.
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

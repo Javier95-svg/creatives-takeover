@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const Terms = () => {
   return (
@@ -18,6 +19,7 @@ const Terms = () => {
           </header>
           {/* ... keep existing code (full terms content to be added later) */}
         </main>
+        <Footer />
       </div>
     </>
   )

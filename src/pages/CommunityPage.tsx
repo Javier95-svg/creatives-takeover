@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import CommunityFeed from "@/components/community/CommunityFeed";
+import Footer from "@/components/Footer";
 
 const CommunityPage = () => {
   return (
@@ -19,6 +20,7 @@ const CommunityPage = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <CommunityFeed />
+        <Footer />
       </div>
     </>
   );

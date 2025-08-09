@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const IPPolicy = () => {
   return (
@@ -18,6 +19,7 @@ const IPPolicy = () => {
           </header>
           {/* ... keep existing code (full IP policy content to be added later) */}
         </main>
+        <Footer />
       </div>
     </>
   )

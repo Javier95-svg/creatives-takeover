@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const PrivacyPolicy = () => {
   return (
@@ -18,6 +19,7 @@ const PrivacyPolicy = () => {
           </header>
           {/* ... keep existing code (full policy content to be added later) */}
         </main>
+        <Footer />
       </div>
     </>
   )
