@@ -123,20 +123,6 @@ const AboutHero = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
               
-            {/* Floating Stats */}
-            <div className="absolute -top-6 -right-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
-              <div className="text-center">
-                <h3 className="text-3xl font-bold text-primary">10K+</h3>
-                <p className="text-sm text-muted-foreground">Creators Empowered</p>
-              </div>
-            </div>
-            
-            <div className="absolute -bottom-6 -left-6 bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
-              <div className="text-center">
-                <h3 className="text-3xl font-bold text-primary">500+</h3>
-                <p className="text-sm text-muted-foreground">Apps Built</p>
-              </div>
-            </div>
             </div>
           </div>
         </div>
