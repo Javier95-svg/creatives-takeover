@@ -44,13 +44,13 @@ const MissionVision = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-base leading-relaxed text-center">
-                Our vision is a world where entrepreneurship is universally attainable—where intelligent automation and human creativity work in harmony to turn ideas into real businesses faster than ever, regardless of background or location.
+                Today, entrepreneurship is undergoing a fundamental shift driven by the rapid rise of AI. Recent advancements in generative AI, automation, and no-code tools are enabling founders to validate ideas, create products, and reach global markets at unprecedented speed and scale.
               </CardDescription>
               <CardDescription className="text-base leading-relaxed text-center">
-                We see a trusted, ethical AI companion embedded in every stage of creation—illuminating research, clarifying strategy, accelerating building, and amplifying brand presence—while keeping founders in control with transparent choices and privacy by design.
+                This evolution is dismantling the old barriers to entry and creating a new era where innovation is limited only by imagination, not resources.
               </CardDescription>
               <CardDescription className="text-base leading-relaxed text-center">
-                We aspire to grow a vibrant, global ecosystem that lowers costs, unlocks opportunities, and compounds learning across the community—so more diverse founders launch sustainable, high-impact companies that strengthen economies and improve lives.
+                We envision a future where entrepreneurship is as universal as ambition where anyone with an idea, regardless of background, education, or resources, can turn it into a thriving business. By fully unlocking the potential of AI automation, we aim to remove the barriers that have traditionally limited startup creation: high costs, technical complexity, and access to expert knowledge.
               </CardDescription>
             </CardContent>
           </Card>
