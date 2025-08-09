@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import solopreneurHero from "@/assets/solopreneur-hero.jpg";
+import solopreneurHeroMale from "@/assets/solopreneur-hero-male.jpg";
 import { ArrowRight } from "lucide-react";
 const AboutHero = () => {
   return <section className="relative pt-32 pb-20 overflow-hidden">
@@ -105,7 +106,7 @@ const AboutHero = () => {
               animationDelay: '0.6s'
             }}>
               <Button size="lg" className="group bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic glass">
-                Meet Our Team
+                Learn More
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button variant="outline" size="lg" className="btn-magnetic glass border-border hover:bg-accent/10">
@@ -120,6 +121,11 @@ const AboutHero = () => {
           }}>
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img src={solopreneurHero} alt="Solopreneur building a startup in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+            </div>
+
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl mt-6">
+              <img src={solopreneurHeroMale} alt="Male solopreneur designing a startup product in a modern workspace" className="w-full h-auto object-cover" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
             </div>
               
