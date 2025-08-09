@@ -1,9 +1,32 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Target, Eye } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel";
 import missionImg from "@/assets/innovation-leaders-unique.jpg";
 import visionImg from "@/assets/innovation-leaders.jpg";
 const MissionVision = () => {
+  const [emblaApi, setEmblaApi] = useState<CarouselApi | null>(null);
+  useEffect(() => {
+    if (!emblaApi) return;
+    let canceled = false;
+    const timer = window.setTimeout(() => {
+      if (!canceled) emblaApi.scrollTo(1);
+    }, 14000);
+    const cancel = () => {
+      if (!canceled) {
+        canceled = true;
+        window.clearTimeout(timer);
+      }
+    };
+    emblaApi.on("pointerDown", cancel);
+    emblaApi.on("scroll", cancel);
+    return () => {
+      window.clearTimeout(timer);
+      emblaApi.off("pointerDown", cancel);
+      emblaApi.off("scroll", cancel);
+    };
+  }, [emblaApi]);
   return (
     <section className="py-20 bg-background/50" id="mission-vision">
       <div className="container mx-auto px-6">
@@ -15,7 +38,7 @@ const MissionVision = () => {
         </div>
 
         <div className="relative max-w-6xl mx-auto">
-          <Carousel className="mb-10" opts={{ loop: true, align: "start" }}>
+          <Carousel className="mb-10" opts={{ loop: false, align: "start" }} setApi={setEmblaApi}>
             <CarouselContent>
               <CarouselItem>
                 <Card className="glass border-border overflow-hidden">
