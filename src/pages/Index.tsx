@@ -1,10 +1,7 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import ClientLogos from "@/components/ClientLogos";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
-import Testimonials from "@/components/Testimonials";
-import StickySectionNav from "@/components/StickySectionNav";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 
@@ -17,13 +14,10 @@ const Index = () => {
         <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, GPT-5" />
       </Helmet>
       <Navigation />
-      <StickySectionNav />
       <main>
         <Hero />
-        <ClientLogos />
         <SimpleBizMapGuide />
         <Benefits />
-        <Testimonials />
       </main>
       <Footer />
     </div>
