@@ -2,14 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle } from "lucide-react";
+import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const BizMapAI = () => {
   const [message, setMessage] = useState("");
   const [conversationState, setConversationState] = useState("initial"); // initial, gathering_context, analysis
+  const [isLoading, setIsLoading] = useState(false);
   const [userContext, setUserContext] = useState({
     budget: "",
     skills: "",
@@ -19,9 +22,39 @@ const BizMapAI = () => {
   const [messages, setMessages] = useState([
     {
       type: "assistant",
-      content: "Welcome to BizMap AI! I'm here to help you transform your business ideas into actionable business plans. What's your business idea or concept you'd like to work on?"
+      content: "Welcome to BizMap AI! I'm here to help you transform your business ideas into actionable business plans powered by GPT-5. What's your business idea or concept you'd like to work on?"
     }
   ]);
+
+  const callGPT5Analysis = async (businessIdea: string, context: any) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('bizmap-analysis', {
+        body: {
+          businessIdea,
+          budget: context.budget,
+          skills: context.skills,
+          timeCommitment: context.timeCommitment
+        }
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      return data.analysis;
+    } catch (error) {
+      console.error('Error calling GPT-5 analysis:', error);
+      toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
+      
+      // Fallback to local analysis if API fails
+      return generatePersonalizedAnalysis(businessIdea, context);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const gatherContextQuestions = (businessIdea: string) => {
     return `Thanks for sharing your business idea: "${businessIdea}"
@@ -491,11 +524,11 @@ ${isPartTime ? "**Focus: 2-3 hours of high-impact activities**" : "**Focus: Foun
 • Team expansion planning (if applicable)`;
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
+  const handleSendMessage = async () => {
+    if (!message.trim() || isLoading) return;
     
     const userMessage = message;
-    setMessages([...messages, { type: "user", content: userMessage }]);
+    setMessages(prev => [...prev, { type: "user", content: userMessage }]);
     setMessage("");
     
     if (conversationState === "initial") {
@@ -512,21 +545,45 @@ ${isPartTime ? "**Focus: 2-3 hours of high-impact activities**" : "**Focus: Foun
       }, 1000);
       
     } else if (conversationState === "gathering_context") {
-      // Second message - parse context and generate analysis
+      // Second message - parse context and call GPT-5 for analysis
       const contextData = parseUserContext(userMessage);
-      setUserContext(prev => ({ ...prev, ...contextData }));
+      const fullContext = { ...userContext, ...contextData };
+      setUserContext(fullContext);
       setConversationState("analysis");
       
-      setTimeout(() => {
-        const analysis = generatePersonalizedAnalysis(userContext.businessIdea, { ...userContext, ...contextData });
-        setMessages(prev => [...prev, { 
-          type: "assistant", 
-          content: analysis
-        }]);
-      }, 2000);
+      // Add loading message
+      setMessages(prev => [...prev, { 
+        type: "assistant", 
+        content: "🤖 Analyzing your business idea with GPT-5... This may take a moment while I create your personalized business plan."
+      }]);
+      
+      try {
+        const analysis = await callGPT5Analysis(userContext.businessIdea, fullContext);
+        
+        // Replace loading message with analysis
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = { 
+            type: "assistant", 
+            content: analysis
+          };
+          return newMessages;
+        });
+        
+      } catch (error) {
+        // Replace loading message with error
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = { 
+            type: "assistant", 
+            content: "I apologize, but I encountered an issue generating your analysis. Please try again, and I'll do my best to help you with your business plan."
+          };
+          return newMessages;
+        });
+      }
       
     } else {
-      // Follow-up questions
+      // Follow-up questions - could also be enhanced with GPT-5
       setTimeout(() => {
         setMessages(prev => [...prev, { 
           type: "assistant", 
@@ -769,8 +826,8 @@ ${isPartTime ? "**Focus: 2-3 hours of high-impact activities**" : "**Focus: Foun
                         onKeyPress={handleKeyPress}
                         className="flex-1"
                       />
-                      <Button onClick={handleSendMessage} size="icon">
-                        <Send className="w-4 h-4" />
+                      <Button onClick={handleSendMessage} size="icon" disabled={isLoading}>
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2 text-center">
