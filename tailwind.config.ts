@@ -20,6 +20,7 @@ export default {
 		extend: {
 			fontFamily: {
 				'poppins': ['Poppins', 'sans-serif'],
+				'space-grotesk': ['Space Grotesk', 'Poppins', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

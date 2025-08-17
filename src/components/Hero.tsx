@@ -52,17 +52,19 @@ const Hero = () => {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
-            <span className="gradient-text">Transform ideas into startups with smart AI support.</span>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
+            <span className="takeover-gradient">Transform ideas into startups</span>
             <br />
-            <span className="text-lg md:text-2xl font-normal text-muted-foreground">
+            <span className="animated-gradient">with smart AI support.</span>
+            <br />
+            <span className="text-lg md:text-2xl font-normal text-muted-foreground font-poppins">
               No coding skills required – AI does the heavy lifting
             </span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            For creators, entrepreneurs, and polymaths who want to build systems without the technical complexity.
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up creatives-font" style={{ animationDelay: '0.2s' }}>
+            For <span className="reverse-gradient font-semibold">creators</span>, <span className="reverse-gradient font-semibold">entrepreneurs</span>, and <span className="reverse-gradient font-semibold">polymaths</span> who want to build systems without the technical complexity.
           </p>
 
           {/* CTA Buttons */}
@@ -78,15 +80,15 @@ const Hero = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">1,200+</div>
+              <div className="text-3xl font-bold takeover-gradient mb-2 creatives-font">1,200+</div>
               <div className="text-muted-foreground">Business Plans Created</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">3 Min</div>
+              <div className="text-3xl font-bold animated-gradient mb-2 creatives-font">3 Min</div>
               <div className="text-muted-foreground">Average Plan Time</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">85%</div>
+              <div className="text-3xl font-bold reverse-gradient mb-2 creatives-font">85%</div>
               <div className="text-muted-foreground">Validation Success Rate</div>
             </div>
           </div>
@@ -94,7 +96,7 @@ const Hero = () => {
           {/* Email Capture */}
           <div className="max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.8s' }}>
             <div className="glass-card p-6 text-center border-2 border-primary/20">
-              <h3 className="text-xl font-semibold mb-2 gradient-text">Get Early Access</h3>
+              <h3 className="text-xl font-semibold mb-2 takeover-gradient creatives-font">Get Early Access</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Join our beta waitlist and be the first to turn your ideas into apps
               </p>

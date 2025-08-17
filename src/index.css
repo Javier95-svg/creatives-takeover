@@ -50,6 +50,12 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(var(--electric-blue)), hsl(var(--cosmic-purple)));
     --gradient-hero: linear-gradient(180deg, hsl(var(--space-black)), hsl(240 4% 6%));
     --gradient-glass: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 95, 255, 0.1));
+    
+    /* Creatives Takeover Gradients */
+    --gradient-creatives: linear-gradient(135deg, hsl(var(--electric-blue)), hsl(var(--cosmic-purple)), hsl(var(--space-black)));
+    --gradient-takeover: linear-gradient(90deg, hsl(var(--electric-blue)) 0%, hsl(var(--cosmic-purple)) 50%, hsl(var(--space-black)) 100%);
+    --gradient-animated: linear-gradient(270deg, hsl(var(--electric-blue)), hsl(var(--cosmic-purple)), hsl(var(--electric-blue)));
+    --gradient-reverse: linear-gradient(45deg, hsl(var(--cosmic-purple)), hsl(var(--electric-blue)), hsl(var(--space-black)));
 
     /* Glass Effects */
     --glass-bg: rgba(255, 255, 255, 0.05);
@@ -140,12 +146,53 @@ All colors MUST be HSL.
     @apply glass rounded-2xl p-6;
   }
 
-  /* Gradient text effect */
+  /* Gradient text effects */
   .gradient-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Creatives Takeover Font Styles */
+  .creatives-font {
+    font-family: 'Space Grotesk', 'Poppins', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .takeover-gradient {
+    background: var(--gradient-creatives);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 300% 300%;
+    animation: gradient-flow 4s ease-in-out infinite;
+  }
+
+  .animated-gradient {
+    background: var(--gradient-animated);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 400% 400%;
+    animation: gradient-shift 6s ease-in-out infinite;
+  }
+
+  .reverse-gradient {
+    background: var(--gradient-reverse);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: gradient-pulse 3s ease-in-out infinite alternate;
+  }
+
+  .takeover-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
   }
 
   /* Hover effects */
@@ -300,4 +347,31 @@ All colors MUST be HSL.
 @keyframes pulse-slow {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }
+}
+
+/* Creatives Takeover Gradient Animations */
+@keyframes gradient-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 100% 50%; }
+  50% { background-position: 50% 100%; }
+  75% { background-position: 0% 50%; }
+  100% { background-position: 50% 0%; }
+}
+
+@keyframes gradient-pulse {
+  0% { 
+    background-position: 0% 50%; 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  100% { 
+    background-position: 100% 50%; 
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
 }
