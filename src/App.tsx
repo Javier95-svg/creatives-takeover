@@ -11,7 +11,6 @@ import CommunityPage from "./pages/CommunityPage";
 import Resources from "./pages/Resources";
 import FAQPage from "./pages/FAQPage";
 import NotFound from "./pages/NotFound";
-import HowItWorks from "./pages/HowItWorks";
 import Software from "./pages/Software";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -31,7 +30,6 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/software" element={<Software />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />

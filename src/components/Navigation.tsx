@@ -11,7 +11,6 @@ const Navigation = () => {
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/dream2plan" },
     { name: "About Us", href: "/about" },
-    { name: "How It Works", href: "/how-it-works" },
     { name: "Pricing", href: "/pricing" }
   ];
 
