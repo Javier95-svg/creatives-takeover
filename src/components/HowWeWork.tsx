@@ -6,17 +6,17 @@ const steps = [
   {
     icon: Lightbulb,
     title: "Share Your Idea",
-    desc: "Tell us your concept in minutes. We capture goals, audience, and outcomes.",
+    desc: "Simply describe your business concept, target market, and goals through our intuitive interface. Our AI captures every detail about your audience, competitive landscape, revenue model, and desired outcomes. Whether you're a first-time entrepreneur or seasoned creator, we translate your vision into actionable insights within minutes.",
   },
   {
     icon: Bot,
     title: "AI Builds Your Operations",
-    desc: "We automate workflows, tools, and templates—ready for real execution.",
+    desc: "Our advanced AI engine transforms your idea into a complete operational framework. We automatically generate custom workflows, business processes, marketing strategies, financial projections, and implementation roadmaps. Every tool, template, and system is tailored specifically to your business model and ready for immediate execution.",
   },
   {
     icon: Rocket,
     title: "Launch & Grow",
-    desc: "Deploy your startup and scale using our marketplace and expert support.",
+    desc: "Deploy your business with confidence using our comprehensive launch toolkit. Access our curated marketplace of resources, connect with industry experts, and leverage our community support network. We provide ongoing guidance, performance tracking, and scaling strategies to ensure sustainable growth from day one.",
   },
 ];
 
@@ -31,22 +31,26 @@ const HowWeWork = () => {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {steps.map(({ icon: Icon, title, desc }) => (
-            <article key={title} className="glass-card p-6 hover-scale h-full">
-              <div className="w-12 h-12 rounded-full bg-accent/30 flex items-center justify-center mb-4">
-                <Icon className="w-6 h-6 text-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {steps.map(({ icon: Icon, title, desc }, index) => (
+            <article 
+              key={title} 
+              className="glass-card p-8 hover-scale h-full animate-fade-in"
+              style={{ animationDelay: `${index * 0.2}s` }}
+            >
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                <Icon className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">{title}</h3>
-              <p className="text-sm text-muted-foreground">{desc}</p>
+              <h3 className="text-2xl font-semibold mb-4 gradient-text">{title}</h3>
+              <p className="text-base text-muted-foreground leading-relaxed">{desc}</p>
             </article>
           ))}
         </div>
 
-        <div className="text-center mt-10">
-          <Link to="/pricing">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Get Started
+        <div className="text-center mt-12 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+          <Link to="/dream2plan">
+            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-4">
+              Start Creating
             </Button>
           </Link>
         </div>
