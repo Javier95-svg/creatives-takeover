@@ -57,14 +57,14 @@ const Hero = () => {
             <br />
             <span className="animated-gradient">with smart AI support.</span>
             <br />
-            <span className="text-lg md:text-2xl font-normal text-muted-foreground font-poppins">
+            <span className="text-lg md:text-2xl font-normal text-muted-foreground">
               No coding skills required – AI does the heavy lifting
             </span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up creatives-font" style={{ animationDelay: '0.2s' }}>
-            For <span className="reverse-gradient font-semibold">creators</span>, <span className="reverse-gradient font-semibold">entrepreneurs</span>, and <span className="reverse-gradient font-semibold">polymaths</span> who want to build systems without the technical complexity.
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            For creators, entrepreneurs, and polymaths who want to build systems without the technical complexity.
           </p>
 
           {/* CTA Buttons */}
