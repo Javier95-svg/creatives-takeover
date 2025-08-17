@@ -16,19 +16,205 @@ const BizMapAI = () => {
     }
   ]);
 
+  const generateBusinessAnalysis = (userInput: string) => {
+    const input = userInput.toLowerCase();
+    
+    // Determine business type for tailored analysis
+    let businessType = "general";
+    let viabilityScore = 7;
+    let marketPotential = "";
+    let risks = "";
+    let opportunities = "";
+    let improvements = [];
+    
+    if (input.includes("e-commerce") || input.includes("online store") || input.includes("selling online")) {
+      businessType = "e-commerce";
+      viabilityScore = 8;
+      marketPotential = "High growth potential with global reach. E-commerce market continues expanding with $6.2T projected by 2024.";
+      risks = "High competition, customer acquisition costs, inventory management, payment security.";
+      opportunities = "Niche targeting, social commerce integration, subscription models, international expansion.";
+      improvements = [
+        "Focus on a specific niche or demographic to reduce competition and build brand loyalty",
+        "Implement data-driven marketing strategies using customer behavior analytics",
+        "Consider starting with dropshipping or print-on-demand to minimize initial inventory risks"
+      ];
+    } else if (input.includes("app") || input.includes("mobile") || input.includes("software")) {
+      businessType = "tech/app";
+      viabilityScore = 6;
+      marketPotential = "Large addressable market but highly competitive. Success depends on unique value proposition and execution.";
+      risks = "High development costs, user acquisition challenges, platform dependencies, rapid technology changes.";
+      opportunities = "Scalable business model, potential for viral growth, data monetization, platform partnerships.";
+      improvements = [
+        "Validate the core problem with potential users before building to ensure product-market fit",
+        "Start with an MVP focusing on one key feature rather than building a comprehensive solution",
+        "Consider freemium or subscription models for sustainable revenue streams"
+      ];
+    } else if (input.includes("restaurant") || input.includes("food") || input.includes("café") || input.includes("catering")) {
+      businessType = "food service";
+      viabilityScore = 5;
+      marketPotential = "Steady local demand but location-dependent. Food service industry worth $800B+ annually.";
+      risks = "High overhead costs, thin profit margins, food safety regulations, staffing challenges, location dependency.";
+      opportunities = "Local community building, delivery partnerships, catering expansion, unique dining experiences.";
+      improvements = [
+        "Conduct thorough location analysis including foot traffic, demographics, and competition density",
+        "Develop a unique concept or cuisine specialization to differentiate from competitors",
+        "Plan for multiple revenue streams (dine-in, delivery, catering, retail products)"
+      ];
+    } else if (input.includes("consulting") || input.includes("freelance") || input.includes("service")) {
+      businessType = "consulting";
+      viabilityScore = 8;
+      marketPotential = "Low startup costs with high profit margins. Professional services market growing steadily.";
+      risks = "Income volatility, client dependency, scaling limitations, competition from larger firms.";
+      opportunities = "Expertise monetization, recurring revenue models, digital course creation, partnership networks.";
+      improvements = [
+        "Define a specific niche where you can become recognized as an expert authority",
+        "Create standardized processes and frameworks to improve delivery efficiency and quality",
+        "Build recurring revenue through retainer agreements or productized consulting offerings"
+      ];
+    } else {
+      viabilityScore = 7;
+      marketPotential = "Market potential depends on execution, differentiation, and customer validation.";
+      risks = "Market competition, customer acquisition, operational challenges, financial management.";
+      opportunities = "Innovation potential, market gaps, customer relationship building, scalable systems.";
+      improvements = [
+        "Conduct thorough market research to identify your target customer and their specific pain points",
+        "Develop a minimum viable product (MVP) to test assumptions before full investment",
+        "Create a strong value proposition that clearly differentiates you from existing solutions"
+      ];
+    }
+
+    return `# Business Analysis Report
+
+## 💡 Idea Overview
+"${userInput}"
+
+## 📊 Viability Assessment
+
+### Market Potential
+${marketPotential}
+
+### Key Risks
+${risks}
+
+### Growth Opportunities  
+${opportunities}
+
+### **Viability Score: ${viabilityScore}/10**
+
+---
+
+## 🚀 Improvement Recommendations
+
+${improvements.map((improvement, index) => `**${index + 1}.** ${improvement}`).join('\n\n')}
+
+---
+
+## 📋 Execution Blueprint
+
+### **Phase 1: Validation (Weeks 1-4)**
+**Goal:** Validate market demand and refine your concept
+
+**Key Actions:**
+- Conduct 20+ customer interviews with target audience
+- Research competitors and analyze their strengths/weaknesses  
+- Create customer personas and pain point mapping
+- Validate pricing assumptions with potential customers
+
+**Tools & Resources:**
+- Google Forms/Typeform for surveys
+- LinkedIn/Facebook for customer outreach
+- SEMrush/Ahrefs for competitor analysis
+- Google Trends for market interest validation
+
+**Timeline:** 4 weeks
+**Success Metric:** Clear evidence of customer demand and willingness to pay
+
+### **Phase 2: MVP Development (Weeks 5-12)**
+**Goal:** Build and test minimum viable product
+
+**Key Actions:**
+- Design core features based on validation feedback
+- Develop MVP with essential functionality only
+- Set up basic business operations (legal, accounting)
+- Create initial marketing materials and website
+
+**Tools & Resources:**
+${businessType === "tech/app" ? "- No-code tools (Bubble, Webflow) or development team\n- Figma for design\n- Firebase/Supabase for backend" : 
+  businessType === "e-commerce" ? "- Shopify/WooCommerce for platform\n- Canva for product photography\n- Stripe/PayPal for payments" :
+  businessType === "food service" ? "- POS systems (Square, Toast)\n- Food supplier connections\n- Local permit and licensing\n- Kitchen equipment sourcing" :
+  "- Industry-specific tools and platforms\n- Professional website builder\n- Basic CRM system"}
+- Google Analytics for tracking
+- Basic accounting software (QuickBooks, FreshBooks)
+
+**Timeline:** 8 weeks  
+**Success Metric:** Working MVP with first paying customers
+
+### **Phase 3: Marketing & Growth (Weeks 13-24)**
+**Goal:** Scale customer acquisition and optimize operations
+
+**Key Actions:**
+- Launch digital marketing campaigns (social media, SEO, paid ads)
+- Gather customer feedback and iterate on product/service
+- Implement customer retention strategies
+- Build partnerships and referral programs
+
+**Tools & Resources:**
+- Social media management (Buffer, Hootsuite)
+- Email marketing (Mailchimp, ConvertKit)  
+- SEO tools (Google Search Console, Ubersuggest)
+- Customer feedback platforms (Intercom, Hotjar)
+- Analytics and attribution tracking
+
+**Timeline:** 12 weeks
+**Success Metric:** Predictable customer acquisition channels and positive unit economics
+
+### **Phase 4: Scaling (Weeks 25-52)**  
+**Goal:** Systematize operations and accelerate growth
+
+**Key Actions:**
+- Hire key team members for critical functions
+- Implement scalable systems and processes
+- Explore additional revenue streams or market expansion
+- Secure growth funding if needed
+
+**Tools & Resources:**
+- HR platforms (BambooHR, Gusto)
+- Project management (Asana, Monday.com)
+- Advanced analytics and reporting tools
+- Legal and compliance management
+- Investor relations platforms if pursuing funding
+
+**Timeline:** 28 weeks
+**Success Metric:** Sustainable growth rate with systematized operations
+
+---
+
+## 🎯 Next Steps
+
+1. **This Week:** Start customer interviews to validate your assumptions
+2. **This Month:** Complete market research and competitor analysis  
+3. **Next 90 Days:** Build and launch your MVP
+
+Remember: Focus on solving a real problem for real customers. Every successful business starts with understanding and serving customer needs better than anyone else.
+
+*This analysis can be copied and saved as your business planning reference document.*`;
+  };
+
   const handleSendMessage = () => {
     if (!message.trim()) return;
     
-    setMessages([...messages, { type: "user", content: message }]);
+    const userMessage = message;
+    setMessages([...messages, { type: "user", content: userMessage }]);
     setMessage("");
     
-    // Simulate AI response
+    // Generate comprehensive business analysis
     setTimeout(() => {
+      const analysis = generateBusinessAnalysis(userMessage);
       setMessages(prev => [...prev, { 
         type: "assistant", 
-        content: "That's an exciting goal! Let me help you break this down into actionable steps. First, let's clarify your vision and then we'll create a structured plan to achieve it." 
+        content: analysis
       }]);
-    }, 1000);
+    }, 1500);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
