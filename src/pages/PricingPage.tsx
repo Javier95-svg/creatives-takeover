@@ -1,8 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Pricing from "@/components/Pricing";
-import PricingComparison from "@/components/PricingComparison";
-import PricingCTA from "@/components/PricingCTA";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
 const PricingPage = () => {
@@ -23,8 +21,6 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
-          <PricingComparison />
-          <PricingCTA />
         </div>
       </div>
     </>
