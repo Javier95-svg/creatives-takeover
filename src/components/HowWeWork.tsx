@@ -26,6 +26,9 @@ const HowWeWork = () => {
       <div className="container mx-auto px-6">
         <header className="text-center max-w-2xl mx-auto mb-12 animate-slide-up">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 gradient-text animate-text-shimmer">How It Works</h2>
+          <p className="text-muted-foreground animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            Transform your ideas into reality through our streamlined three-step process.
+          </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
