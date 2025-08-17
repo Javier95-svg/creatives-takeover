@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,16 @@ const BizMapAI = () => {
       content: "Welcome to BizMap AI! I'm here to help you transform your business ideas into actionable business plans powered by GPT-5. What's your business idea or concept you'd like to work on?"
     }
   ]);
+
+  // Check for pre-populated prompt from Prompt Library
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem('bizmap_prompt');
+    if (savedPrompt) {
+      setMessage(savedPrompt);
+      localStorage.removeItem('bizmap_prompt'); // Clear it after use
+      toast.success("Prompt loaded from Prompt Library!");
+    }
+  }, []);
 
   const callGPT5Analysis = async (businessIdea: string, context: any) => {
     try {
