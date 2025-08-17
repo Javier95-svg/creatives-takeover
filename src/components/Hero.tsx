@@ -57,7 +57,7 @@ const Hero = () => {
             <br />
             <span className="animated-gradient">with smart AI support.</span>
             <br />
-            <span className="text-lg md:text-2xl font-normal text-muted-foreground">
+            <span className="text-lg md:text-2xl font-medium text-foreground/90 font-poppins">
               No coding skills required – AI does the heavy lifting
             </span>
           </h1>
