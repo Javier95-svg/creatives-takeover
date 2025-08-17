@@ -163,7 +163,7 @@ const Community = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Entrepreneur Community
+              Community
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Connect with fellow entrepreneurs, share your journey, and learn from those who've successfully built businesses using BizMap AI.
