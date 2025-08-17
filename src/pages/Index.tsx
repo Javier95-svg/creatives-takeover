@@ -1,10 +1,10 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ClientLogos from "@/components/ClientLogos";
-import FeatureShowcase from "@/components/FeatureShowcase";
+import BizMapFeatures from "@/components/BizMapFeatures";
+import HowToUseBizMap from "@/components/HowToUseBizMap";
 import Testimonials from "@/components/Testimonials";
 import StickySectionNav from "@/components/StickySectionNav";
-import HowWeWork from "@/components/HowWeWork";
 import Benefits from "@/components/Benefits";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
@@ -12,13 +12,18 @@ import Footer from "@/components/Footer";
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>BizMap AI - Turn Business Ideas Into Reality | AI-Powered Business Plans</title>
+        <meta name="description" content="Transform your business ideas into comprehensive, actionable business plans in minutes with BizMap AI. Get GPT-5 powered analysis, validation experiments, and custom execution strategies." />
+        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, GPT-5" />
+      </Helmet>
       <Navigation />
       <StickySectionNav />
       <main>
         <Hero />
         <ClientLogos />
-        <HowWeWork />
-        <FeatureShowcase />
+        <HowToUseBizMap />
+        <BizMapFeatures />
         <Benefits />
         <Testimonials />
       </main>

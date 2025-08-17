@@ -8,7 +8,8 @@ const StickySectionNav: React.FC = () => {
   const inPageItems = useMemo(
     () => [
       { id: "overview", label: "Overview", href: "#overview" },
-      { id: "how-it-works", label: "How It Works", href: "#how-it-works" },
+      { id: "how-to-use", label: "How to Use", href: "#how-to-use" },
+      { id: "features", label: "Features", href: "#features" },
       { id: "benefits", label: "Benefits", href: "#benefits" },
       
     ],

@@ -53,24 +53,29 @@ const Hero = () => {
 
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
-            <span className="gradient-text">Transform ideas into startups with smart AI support.</span>
+            <span className="gradient-text">Turn Your Business Ideas Into Reality</span>
             <br />
             <span className="text-lg md:text-2xl font-normal text-muted-foreground">
-              No coding skills required – AI does the heavy lifting
+              Get AI-powered business plans in minutes with BizMap AI
             </span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            For creators, entrepreneurs, and polymaths who want to build systems without the technical complexity.
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            Our GPT-5 powered chatbot creates comprehensive business plans tailored to your budget, skills, and time constraints. From validation experiments to scaling strategies.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic" aria-label="Start creating" asChild>
               <a href="/dream2plan">
-                Start Creating
+                Try BizMap AI Free
                 <ArrowRight className="ml-2 w-5 h-5" />
+              </a>
+            </Button>
+            <Button size="lg" variant="outline" className="glass px-8 py-4 text-lg btn-magnetic hover-scale" aria-label="Browse prompt library" asChild>
+              <a href="/prompt-library">
+                Browse Examples
               </a>
             </Button>
           </div>
@@ -78,34 +83,32 @@ const Hero = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">1000+</div>
-              <div className="text-muted-foreground">Community Members</div>
+              <div className="text-3xl font-bold gradient-text mb-2">2,400+</div>
+              <div className="text-muted-foreground">Entrepreneurs Helped</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">200+</div>
-              <div className="text-muted-foreground">Apps Built Together</div>
+              <div className="text-3xl font-bold gradient-text mb-2">1,200+</div>
+              <div className="text-muted-foreground">Business Plans Created</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">0</div>
-              <div className="text-muted-foreground">Code Required</div>
+              <div className="text-3xl font-bold gradient-text mb-2">$12M+</div>
+              <div className="text-muted-foreground">Funding Raised</div>
             </div>
           </div>
 
-          {/* Email Capture */}
-          <div className="max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.8s' }}>
-            <div className="glass-card p-6 text-center border-2 border-primary/20">
-              <h3 className="text-xl font-semibold mb-2 gradient-text">Get Early Access</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Join our beta waitlist and be the first to turn your ideas into apps
+          {/* Quick Demo */}
+          <div className="max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.8s' }}>
+            <div className="glass-card p-8 text-center border-2 border-primary/20">
+              <h3 className="text-2xl font-semibold mb-4 gradient-text">See BizMap AI in Action</h3>
+              <p className="text-muted-foreground mb-6">
+                Watch how our AI transforms a simple business idea into a comprehensive actionable plan in under 3 minutes.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  className="flex-1 px-4 py-3 rounded-lg border border-border bg-background/50 backdrop-blur-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                />
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 font-medium">
-                  Join Beta
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 font-medium hover-scale" asChild>
+                  <a href="/dream2plan">Try It Now</a>
+                </Button>
+                <Button variant="outline" className="px-8 py-3 font-medium hover-scale" asChild>
+                  <a href="/prompt-library">View Examples</a>
                 </Button>
               </div>
             </div>
