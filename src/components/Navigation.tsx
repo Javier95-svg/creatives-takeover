@@ -11,6 +11,7 @@ const Navigation = () => {
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about" },
     { name: "How It Works", href: "/how-it-works" },
+    { name: "Dream2Plan", href: "/dream2plan" },
     { name: "Pricing", href: "/pricing" }
   ];
 

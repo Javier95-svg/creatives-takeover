@@ -19,6 +19,7 @@ import Terms from "./pages/Terms";
 import IPPolicy from "./pages/IPPolicy";
 import Laboratory from "./pages/Laboratory";
 import Signup from "./pages/Signup";
+import Dream2Plan from "./pages/Dream2Plan";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/ip-policy" element={<IPPolicy />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/laboratory" element={<Laboratory />} />
+          <Route path="/dream2plan" element={<Dream2Plan />} />
           <Route path="/signup" element={<Signup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
