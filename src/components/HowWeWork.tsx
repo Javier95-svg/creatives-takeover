@@ -51,19 +51,6 @@ const HowWeWork = () => {
             </article>
           ))}
         </div>
-
-        <div className="text-center mt-16 animate-fade-in" style={{ animationDelay: '1.2s' }}>
-          <Link to="/dream2plan">
-            <Button 
-              size="lg" 
-              className="bg-primary text-primary-foreground hover:bg-primary/90 px-12 py-6 text-xl font-semibold hover-scale animate-pulse hover:animate-none hover:shadow-2xl hover:shadow-primary/25 transition-all duration-300 animate-scale-in group" 
-              style={{ animationDelay: '1.4s' }}
-            >
-              <span className="group-hover:animate-bounce">Start Creating</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
-            </Button>
-          </Link>
-        </div>
       </div>
     </section>
   );
