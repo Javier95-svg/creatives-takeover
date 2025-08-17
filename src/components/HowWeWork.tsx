@@ -25,7 +25,7 @@ const HowWeWork = () => {
     <section id="how-it-works" className="scroll-mt-24 py-20 relative">
       <div className="container mx-auto px-6">
         <header className="text-center max-w-2xl mx-auto mb-12 animate-slide-up">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 gradient-text animate-text-shimmer">How We Work</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 gradient-text animate-text-shimmer">How It Works</h2>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
