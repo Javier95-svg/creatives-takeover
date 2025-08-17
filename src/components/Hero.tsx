@@ -88,26 +88,6 @@ const Hero = () => {
               <div className="text-muted-foreground">Validation Success Rate</div>
             </div>
           </div>
-
-          {/* Email Capture */}
-          <div className="max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.8s' }}>
-            <div className="glass-card p-6 text-center border-2 border-primary/20">
-              <h3 className="text-xl font-semibold mb-2 takeover-gradient creatives-font">Get Early Access</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Join our beta waitlist and be the first to turn your ideas into apps
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  className="flex-1 px-4 py-3 rounded-lg border border-border bg-background/50 backdrop-blur-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                />
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 font-medium">
-                  Join Beta
-                </Button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
