@@ -9,7 +9,6 @@ const StickySectionNav: React.FC = () => {
     () => [
       { id: "overview", label: "Overview", href: "#overview" },
       { id: "how-to-use", label: "How to Use", href: "#how-to-use" },
-      { id: "features", label: "Features", href: "#features" },
       { id: "benefits", label: "Benefits", href: "#benefits" },
       
     ],

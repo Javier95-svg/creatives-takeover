@@ -1,11 +1,10 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ClientLogos from "@/components/ClientLogos";
-import BizMapFeatures from "@/components/BizMapFeatures";
-import HowToUseBizMap from "@/components/HowToUseBizMap";
+import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
+import Benefits from "@/components/Benefits";
 import Testimonials from "@/components/Testimonials";
 import StickySectionNav from "@/components/StickySectionNav";
-import Benefits from "@/components/Benefits";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 
@@ -22,8 +21,7 @@ const Index = () => {
       <main>
         <Hero />
         <ClientLogos />
-        <HowToUseBizMap />
-        <BizMapFeatures />
+        <SimpleBizMapGuide />
         <Benefits />
         <Testimonials />
       </main>
