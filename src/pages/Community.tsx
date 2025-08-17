@@ -20,6 +20,7 @@ import {
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const Community = () => {
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
@@ -150,19 +151,23 @@ const Community = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-hidden">
       <Helmet>
         <title>Community - Connect with Fellow Entrepreneurs | BizMap AI</title>
         <meta name="description" content="Join our thriving community of entrepreneurs. Share your journey, get feedback on your business plans, and learn from success stories." />
       </Helmet>
       
-      <Navigation />
+      {/* Animated Background */}
+      <AnimatedBackground />
       
-      <div className="pt-20 pb-16 px-4">
+      <div className="relative z-10">
+        <Navigation />
+        
+        <div className="pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font">
               Community
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -400,6 +405,7 @@ const Community = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
             </div>
           </div>
         </div>
