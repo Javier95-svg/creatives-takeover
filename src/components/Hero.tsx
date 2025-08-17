@@ -56,10 +56,6 @@ const Hero = () => {
             <span className="takeover-gradient">Transform ideas into startups</span>
             <br />
             <span className="animated-gradient">with smart AI support.</span>
-            <br />
-            <span className="text-lg md:text-2xl font-medium text-foreground/90" style={{ fontFamily: 'Arial, sans-serif' }}>
-              No coding skills required – AI does the heavy lifting
-            </span>
           </h1>
 
           {/* Subheadline */}
