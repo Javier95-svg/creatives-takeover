@@ -7,12 +7,12 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 
-const Dream2Plan = () => {
+const BizMapAI = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([
     {
       type: "assistant",
-      content: "Welcome to Dream2Plan! I'm here to help you transform your dreams into actionable plans. What's your dream or goal you'd like to work on?"
+      content: "Welcome to BizMap AI! I'm here to help you transform your business ideas into actionable business plans. What's your business idea or concept you'd like to work on?"
     }
   ]);
 
@@ -38,17 +38,17 @@ const Dream2Plan = () => {
   };
 
   const examplePrompts = [
-    "I want to start my own business",
-    "I dream of learning a new language",
-    "I want to get fit and healthy",
-    "I'd like to write a book"
+    "I want to start an e-commerce business",
+    "I have an idea for a mobile app",
+    "I want to open a local restaurant",
+    "I'm planning a consulting business"
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Dream2Plan - Transform Dreams into Action Plans</title>
-        <meta name="description" content="Turn your dreams into actionable plans with our AI-powered Dream2Plan assistant. Get step-by-step guidance to achieve your goals." />
+        <title>BizMap AI - Transform Business Ideas into Action Plans</title>
+        <meta name="description" content="Turn your business ideas into actionable business plans with our AI-powered BizMap AI assistant. Get step-by-step guidance to launch and grow your business." />
       </Helmet>
       
       <Navigation />
@@ -57,10 +57,10 @@ const Dream2Plan = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Dream2Plan
+              BizMap AI
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transform your dreams into actionable plans with AI guidance
+              Transform your business ideas into actionable plans with AI guidance
             </p>
           </div>
 
@@ -71,7 +71,7 @@ const Dream2Plan = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 text-primary" />
-                    How to Use Dream2Plan
+                    How to Use BizMap AI
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -81,8 +81,8 @@ const Dream2Plan = () => {
                         <span className="text-xs font-semibold text-primary">1</span>
                       </div>
                       <div>
-                        <h4 className="font-medium mb-1">Share Your Dream</h4>
-                        <p className="text-sm text-muted-foreground">Tell me about your goal, dream, or aspiration. Be as specific or general as you'd like.</p>
+                        <h4 className="font-medium mb-1">Share Your Business Idea</h4>
+                        <p className="text-sm text-muted-foreground">Tell me about your business concept, startup idea, or business plan. Be as specific or general as you'd like.</p>
                       </div>
                     </div>
                     
@@ -91,8 +91,8 @@ const Dream2Plan = () => {
                         <span className="text-xs font-semibold text-primary">2</span>
                       </div>
                       <div>
-                        <h4 className="font-medium mb-1">Get Strategic Guidance</h4>
-                        <p className="text-sm text-muted-foreground">I'll help you break down your dream into manageable steps and create a structured approach.</p>
+                        <h4 className="font-medium mb-1">Get Business Strategy</h4>
+                        <p className="text-sm text-muted-foreground">I'll help you break down your business idea into manageable steps and create a strategic business plan.</p>
                       </div>
                     </div>
                     
@@ -101,8 +101,8 @@ const Dream2Plan = () => {
                         <span className="text-xs font-semibold text-primary">3</span>
                       </div>
                       <div>
-                        <h4 className="font-medium mb-1">Receive Action Plan</h4>
-                        <p className="text-sm text-muted-foreground">Get a detailed roadmap with timelines, milestones, and practical next steps.</p>
+                        <h4 className="font-medium mb-1">Receive Business Plan</h4>
+                        <p className="text-sm text-muted-foreground">Get a detailed business roadmap with market analysis, financial projections, and actionable next steps.</p>
                       </div>
                     </div>
                   </div>
@@ -119,14 +119,14 @@ const Dream2Plan = () => {
                 <CardContent>
                   <div className="space-y-2">
                     {[
-                      "Career and business goals",
-                      "Personal development",
-                      "Health and fitness plans", 
-                      "Learning new skills",
-                      "Creative projects",
-                      "Financial objectives",
-                      "Relationship goals",
-                      "Travel and adventure plans"
+                      "Business strategy and planning",
+                      "Market research and analysis",
+                      "Financial planning and projections", 
+                      "Marketing and sales strategies",
+                      "Product development roadmaps",
+                      "Funding and investment guidance",
+                      "Operations and scaling plans",
+                      "Risk assessment and mitigation"
                     ].map((item, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-primary" />
@@ -173,8 +173,8 @@ const Dream2Plan = () => {
                         <Bot className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <h4 className="font-semibold">Dream2Plan Assistant</h4>
-                        <p className="text-sm text-muted-foreground">Ready to help you plan</p>
+                        <h4 className="font-semibold">BizMap AI Assistant</h4>
+                        <p className="text-sm text-muted-foreground">Ready to help you plan your business</p>
                       </div>
                     </div>
                   </div>
@@ -208,7 +208,7 @@ const Dream2Plan = () => {
                   <div className="p-4 border-t border-border/50">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Describe your dream or goal..."
+                        placeholder="Describe your business idea or business plan..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
@@ -219,7 +219,7 @@ const Dream2Plan = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2 text-center">
-                      Share your dream and I'll help you create an action plan
+                      Share your business idea and I'll help you create a business plan
                     </p>
                   </div>
                 </CardContent>
@@ -234,4 +234,4 @@ const Dream2Plan = () => {
   );
 };
 
-export default Dream2Plan;
+export default BizMapAI;
