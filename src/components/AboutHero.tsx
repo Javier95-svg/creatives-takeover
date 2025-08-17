@@ -1,49 +1,68 @@
 
-import { Sparkles, Users, Rocket } from "lucide-react";
-
+import solopreneurHero from "@/assets/solopreneur-hero.jpg";
+import solopreneurHeroMale from "@/assets/solopreneur-hero-male.jpg";
+import solopreneurHeroAsianTeen from "@/assets/solopreneur-hero-asian-teen.jpg";
+import solopreneurHeroGrandpa from "@/assets/solopreneur-hero-grandpa.jpg";
+import { ChevronDown } from "lucide-react";
 const AboutHero = () => {
-  return (
-    <section className="pt-20 pb-16 px-4">
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 glass-card mb-8 animate-fade-in">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">Empowering Creators & Entrepreneurs</span>
+  return <section className="relative pt-32 pb-20 overflow-hidden">
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Text Content */}
+          <div className="space-y-8 animate-slide-up">
+            <div>
+              <h1 className="text-5xl lg:text-6xl font-bold mb-6 gradient-text leading-tight animate-text-shimmer">
+                About Us
+              </h1>
+              <p className="text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{
+                animationDelay: '0.2s'
+              }}>Creatives Takeover is a platform that helps creatives and founders launch their startups faster with AI-powered workflows, automation, and no-code tools.</p>
+            </div>
+              
+            <div className="space-y-4 animate-slide-up" style={{
+              animationDelay: '0.4s'
+            }}>
+              <p className="text-lg text-muted-foreground leading-relaxed">Founded on the belief that everyone has the potential to create something extraordinary, our aim is to bridge the gap between imagination and implementation. We're not just a platform, we're your creative partners on the journey from concept to launch.</p>
+              
+            </div>
+
+            </div>
+
+          {/* Hero Image */}
+          <div className="relative animate-slide-in-right" style={{
+            animationDelay: '0.3s'
+          }}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHero} alt="White woman solopreneur at a creative beach workspace, looking at her laptop with a gentle, natural smile under a colorful parasol" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHeroMale} alt="African American solopreneur in an industrial loft studio with exposed brick and large windows" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHeroAsianTeen} alt="Teenage Asian founder in a colorful Tokyo co-working space with plants and neon accents" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
+                <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur in a warm library-style study with wood shelves and a vintage lamp" className="w-full h-auto object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+          </div>
+
+          <div className="mt-10 flex justify-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
+            <a href="#mission-vision" className="inline-flex items-center gap-2 text-muted-foreground hover-scale" aria-label="Scroll to mission and vision">
+              <span className="text-sm">Scroll</span>
+              <ChevronDown className="h-5 w-5" />
+            </a>
+          </div>
+          </div>
         </div>
-
-        {/* Main Headline */}
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-          <span className="takeover-gradient">Transform ideas into reality</span>
-          <br />
-          <span className="animated-gradient">with AI-powered tools</span>
-        </h1>
-
-        {/* Subheadline */}
-        <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          We bridge the gap between imagination and implementation, making advanced AI automation accessible to everyone with a vision.
-        </p>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-          <div className="glass-card btn-magnetic">
-            <Users className="w-8 h-8 text-primary mx-auto mb-3" />
-            <div className="text-3xl font-bold takeover-gradient mb-2 creatives-font">2,400+</div>
-            <div className="text-muted-foreground">Active Creators</div>
-          </div>
-          <div className="glass-card btn-magnetic">
-            <Rocket className="w-8 h-8 text-primary mx-auto mb-3" />
-            <div className="text-3xl font-bold animated-gradient mb-2 creatives-font">1,200+</div>
-            <div className="text-muted-foreground">Startups Launched</div>
-          </div>
-          <div className="glass-card btn-magnetic">
-            <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
-            <div className="text-3xl font-bold reverse-gradient mb-2 creatives-font">$12M+</div>
-            <div className="text-muted-foreground">Funding Raised</div>
-          </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default AboutHero;
