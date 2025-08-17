@@ -3,6 +3,9 @@ import Navigation from "@/components/Navigation";
 import AboutHero from "@/components/AboutHero";
 
 import MissionVision from "@/components/MissionVision";
+
+import HowWeWork from "@/components/HowWeWork";
+import InternalLinks from "@/components/InternalLinks";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
 const About = () => {
@@ -28,6 +31,9 @@ const About = () => {
           <Navigation />
           <AboutHero />
           <MissionVision />
+          
+          <HowWeWork />
+          <InternalLinks />
         </div>
       </div>
     </>
