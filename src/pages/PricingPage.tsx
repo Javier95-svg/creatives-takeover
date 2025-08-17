@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Pricing from "@/components/Pricing";
 import PricingComparison from "@/components/PricingComparison";
 import PricingCTA from "@/components/PricingCTA";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const PricingPage = () => {
   return (
@@ -17,11 +18,14 @@ const PricingPage = () => {
         <meta property="og:title" content="AI Solopreneur Pricing Plans | Creative Platform" />
         <meta property="og:description" content="Flexible AI solopreneur pricing plans for creative professionals. Start your journey with our affordable subscription tiers." />
       </Helmet>
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <Pricing />
-        <PricingComparison />
-        <PricingCTA />
+      <div className="relative min-h-screen overflow-hidden">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <Pricing />
+          <PricingComparison />
+          <PricingCTA />
+        </div>
       </div>
     </>
   );

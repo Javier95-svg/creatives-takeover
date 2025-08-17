@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import FAQHero from "@/components/FAQHero";
 import SearchableFAQ from "@/components/SearchableFAQ";
 import FAQNavigation from "@/components/FAQNavigation";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const FAQPage = () => {
   return (
@@ -18,11 +19,14 @@ const FAQPage = () => {
         <meta property="og:description" content="Find quick answers to common questions about our creative subscription service, features, and community." />
         <link rel="canonical" href="/faq" />
       </Helmet>
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <FAQHero />
-        <SearchableFAQ />
-        <FAQNavigation />
+      <div className="relative min-h-screen overflow-hidden">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <FAQHero />
+          <SearchableFAQ />
+          <FAQNavigation />
+        </div>
       </div>
     </>
   );

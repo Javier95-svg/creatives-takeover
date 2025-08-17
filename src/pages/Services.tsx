@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import ServicesHero from "@/components/ServicesHero";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import ServicesNavigation from "@/components/ServicesNavigation";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const Services = () => {
   return (
@@ -18,11 +19,14 @@ const Services = () => {
         <meta property="og:description" content="Join thousands of creatives with our all-in-one creative subscription service. Unlimited design access and premium tools." />
         <link rel="canonical" href="/services" />
       </Helmet>
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <ServicesHero />
-        <SubscriptionFeatures />
-        <ServicesNavigation />
+      <div className="relative min-h-screen overflow-hidden">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <ServicesHero />
+          <SubscriptionFeatures />
+          <ServicesNavigation />
+        </div>
       </div>
     </>
   );

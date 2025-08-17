@@ -1,6 +1,16 @@
+import heroImage from "@/assets/hero-bg-animated.jpg";
+
 const AnimatedBackground = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      {/* Animated Background with Multiple Layers */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center animate-pulse-glow"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
+      
       {/* Enhanced Animated Floating Elements with Diverse Movement Patterns */}
       <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-80 hover:opacity-100 transition-opacity duration-300" />
       <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-60" style={{ animationDelay: '1s' }} />

@@ -5,6 +5,7 @@ import TutorialsSection from "@/components/TutorialsSection";
 import GuidesSection from "@/components/GuidesSection";
 import DownloadsSection from "@/components/DownloadsSection";
 import ResourcesNavigation from "@/components/ResourcesNavigation";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const Resources = () => {
   return (
@@ -20,13 +21,16 @@ const Resources = () => {
         <meta property="og:description" content="Discover our comprehensive library of free creative resources, tutorials, and guides to enhance your creative skills." />
         <link rel="canonical" href="/resources" />
       </Helmet>
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <ResourcesHero />
-        <TutorialsSection />
-        <GuidesSection />
-        <DownloadsSection />
-        <ResourcesNavigation />
+      <div className="relative min-h-screen overflow-hidden">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <ResourcesHero />
+          <TutorialsSection />
+          <GuidesSection />
+          <DownloadsSection />
+          <ResourcesNavigation />
+        </div>
       </div>
     </>
   );

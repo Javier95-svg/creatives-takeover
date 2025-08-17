@@ -7,6 +7,7 @@ import { Eye, EyeOff, Mail, Lock, User, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -123,18 +124,14 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4">
       <Helmet>
         <title>Sign Up - BizMap AI</title>
         <meta name="description" content="Create your BizMap AI account to start transforming business ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-secondary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-accent/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+      {/* Animated Background */}
+      <AnimatedBackground />
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}

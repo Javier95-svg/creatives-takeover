@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import CommunityFeed from "@/components/community/CommunityFeed";
 import Footer from "@/components/Footer";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const CommunityPage = () => {
   return (
@@ -17,10 +18,13 @@ const CommunityPage = () => {
         <meta property="og:description" content="Share your journey. Learn from others. A Reddit-style hub for entrepreneurs." />
         <link rel="canonical" href="/community" />
       </Helmet>
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <CommunityFeed />
-        <Footer />
+      <div className="relative min-h-screen overflow-hidden">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <CommunityFeed />
+          <Footer />
+        </div>
       </div>
     </>
   );
