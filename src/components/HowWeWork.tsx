@@ -6,17 +6,17 @@ const steps = [
   {
     icon: Lightbulb,
     title: "Share Your Idea",
-    desc: "Simply describe your business concept, target market, and goals through our intuitive interface. Our AI captures every detail about your audience, competitive landscape, revenue model, and desired outcomes. Whether you're a first-time entrepreneur or seasoned creator, we translate your vision into actionable insights within minutes.",
+    desc: "Describe your business concept through our intuitive interface. Our AI captures your target market, goals, and competitive landscape, transforming your vision into actionable insights within minutes.",
   },
   {
     icon: Bot,
     title: "AI Builds Your Operations",
-    desc: "Our advanced AI engine transforms your idea into a complete operational framework. We automatically generate custom workflows, business processes, marketing strategies, financial projections, and implementation roadmaps. Every tool, template, and system is tailored specifically to your business model and ready for immediate execution.",
+    desc: "Our AI engine creates a complete operational framework including workflows, business processes, marketing strategies, and financial projections. Every tool and template is tailored to your specific business model.",
   },
   {
     icon: Rocket,
     title: "Launch & Grow",
-    desc: "Deploy your business with confidence using our comprehensive launch toolkit. Access our curated marketplace of resources, connect with industry experts, and leverage our community support network. We provide ongoing guidance, performance tracking, and scaling strategies to ensure sustainable growth from day one.",
+    desc: "Deploy with confidence using our launch toolkit. Access our marketplace, connect with experts, and leverage community support for ongoing guidance and sustainable growth strategies.",
   },
 ];
 
