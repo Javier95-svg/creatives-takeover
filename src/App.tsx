@@ -19,6 +19,7 @@ import IPPolicy from "./pages/IPPolicy";
 import Laboratory from "./pages/Laboratory";
 import Signup from "./pages/Signup";
 import BizMapAI from "./pages/Dream2Plan";
+import Login from "./pages/Login";
 import PromptLibrary from "./pages/PromptLibrary";
 import Community from "./pages/Community";
 
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/laboratory" element={<Laboratory />} />
           <Route path="/dream2plan" element={<BizMapAI />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

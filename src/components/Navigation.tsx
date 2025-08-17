@@ -40,8 +40,8 @@ const Navigation = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" aria-label="Login">
-              Login
+            <Button variant="ghost" size="sm" aria-label="Login" asChild>
+              <Link to="/login">Login</Link>
             </Button>
             <Button asChild size="sm" className="glass bg-primary hover:bg-primary/90 text-primary-foreground" aria-label="Sign Up">
               <Link to="/signup">Sign Up</Link>
@@ -72,8 +72,8 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="px-3 py-2 space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)}>
-                  Login
+                <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)} asChild>
+                  <Link to="/login">Login</Link>
                 </Button>
                 <Button asChild size="sm" className="w-full glass bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setIsOpen(false)}>
                   <Link to="/signup">Sign Up</Link>
