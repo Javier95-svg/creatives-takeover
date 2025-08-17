@@ -78,16 +78,16 @@ const Hero = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">1000+</div>
-              <div className="text-muted-foreground">Community Members</div>
+              <div className="text-3xl font-bold gradient-text mb-2">1,200+</div>
+              <div className="text-muted-foreground">Business Plans Created</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">200+</div>
-              <div className="text-muted-foreground">Apps Built Together</div>
+              <div className="text-3xl font-bold gradient-text mb-2">3 Min</div>
+              <div className="text-muted-foreground">Average Plan Time</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold gradient-text mb-2">0</div>
-              <div className="text-muted-foreground">Code Required</div>
+              <div className="text-3xl font-bold gradient-text mb-2">85%</div>
+              <div className="text-muted-foreground">Validation Success Rate</div>
             </div>
           </div>
 
