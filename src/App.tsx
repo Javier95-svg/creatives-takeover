@@ -21,7 +21,7 @@ import Signup from "./pages/Signup";
 import BizMapAI from "./pages/Dream2Plan";
 import Login from "./pages/Login";
 import PromptLibrary from "./pages/PromptLibrary";
-import Community from "./pages/Community";
+
 
 const queryClient = new QueryClient();
 
@@ -37,7 +37,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/community" element={<Community />} />
+          <Route path="/community" element={<CommunityPage />} />
           <Route path="/prompt-library" element={<PromptLibrary />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/contact" element={<Contact />} />
