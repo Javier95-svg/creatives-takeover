@@ -22,7 +22,7 @@ const Pricing = () => {
         "Mobile app included",
         "Email support"
       ],
-      cta: "Get Started",
+      cta: "Start Creating",
       popular: false
     },
     {
@@ -198,6 +198,11 @@ const Pricing = () => {
               </div>
 
               <Button 
+                onClick={() => {
+                  if (plan.name === "Starter") {
+                    window.open("https://creatives-takeover.com/bizmap-ai", "_blank");
+                  }
+                }}
                 className={`w-full py-3 font-medium btn-magnetic ${
                   plan.popular 
                     ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
