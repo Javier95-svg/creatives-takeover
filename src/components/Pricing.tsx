@@ -203,7 +203,7 @@ const Pricing = () => {
                     window.open("https://buy.stripe.com/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
                   }
                 }}
-                className={`w-full py-3 font-medium btn-magnetic ${
+                className={`w-full py-3 font-medium btn-magnetic hover-scale transition-all duration-300 ${
                   plan.popular 
                     ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
                     : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
