@@ -211,6 +211,8 @@ const Pricing = () => {
                 onClick={() => {
                   if (plan.name === "Starter") {
                     window.open("https://creatives-takeover.com/dream2plan", "_blank");
+                  } else if (plan.name === "Elite") {
+                    window.open("https://buy.stripe.com/14A3cv65X5rG6U26i70ZW00", "_blank");
                   }
                 }}
                 className={`w-full py-3 font-medium btn-magnetic ${
