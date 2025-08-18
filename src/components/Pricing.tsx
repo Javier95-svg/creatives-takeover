@@ -182,20 +182,6 @@ const Pricing = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="rounded-lg border border-border p-4 text-center">
-                  <div className="text-3xl font-bold text-primary">
-                    {plan.credits?.toLocaleString?.() ?? '—'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Credits / month</div>
-                </div>
-                <div className="rounded-lg border border-border p-4 text-center">
-                  <div className="text-3xl font-bold text-primary">
-                    {plan.integrationCredits ?? '—'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Integration credits / month</div>
-                </div>
-              </div>
 
               {/* Features List */}
               <div className="mb-8 space-y-3">
