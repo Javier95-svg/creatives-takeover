@@ -200,7 +200,7 @@ const Pricing = () => {
               <Button 
                 onClick={() => {
                   if (plan.name === "Starter") {
-                    window.open("https://creatives-takeover.com/bizmap-ai", "_blank");
+                    window.open("https://creatives-takeover.com/dream2plan", "_blank");
                   }
                 }}
                 className={`w-full py-3 font-medium btn-magnetic ${
