@@ -197,7 +197,17 @@ const Pricing = () => {
                 </div>
               </div>
 
-              <Button 
+              {/* Features List */}
+              <div className="mb-8 space-y-3">
+                {plan.features.map((feature, featureIndex) => (
+                  <div key={featureIndex} className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground leading-relaxed">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button
                 onClick={() => {
                   if (plan.name === "Starter") {
                     window.open("https://creatives-takeover.com/dream2plan", "_blank");
