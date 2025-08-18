@@ -19,7 +19,6 @@ const CommunityFeed: React.FC = () => {
       title: "From zero to first 100 customers in 90 days",
       content:
         "I launched a tiny SaaS for invoicing freelancers. Here's the 3-channel approach that got me to 100 paid users...",
-      image: heroImg,
       tags: ["saas", "marketing", "bootstrap"],
       createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
       author: { name: "Alex Rivera", avatar: team1 },
