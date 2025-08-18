@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 
 const Pricing = () => {
-  const [isAnnual, setIsAnnual] = useState(false);
 
   const plans = [
     {
@@ -112,33 +110,6 @@ const Pricing = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Unlock your creative potential with flexible plans designed for every level of ambition
           </p>
-          
-          {/* Annual/Monthly Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-12">
-            <span className={`text-sm font-medium transition-colors ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                isAnnual ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <div
-                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
-                  isAnnual ? 'translate-x-8' : 'translate-x-1'
-                }`}
-              />
-            </button>
-            <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Annual
-            </span>
-            {isAnnual && (
-              <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                Save 20%
-              </Badge>
-            )}
-          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -171,15 +142,10 @@ const Pricing = () => {
               <div className="text-center mb-8">
                 <div className="flex items-baseline justify-center gap-2">
                   <span className="text-4xl font-bold">
-                    ${isAnnual ? (plan.annualPrice / 12).toFixed(2) : plan.monthlyPrice}
+                    ${plan.monthlyPrice}
                   </span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                {isAnnual && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Billed annually (${plan.annualPrice})
-                  </p>
-                )}
               </div>
 
 
