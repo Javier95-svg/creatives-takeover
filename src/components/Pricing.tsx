@@ -166,7 +166,7 @@ const Pricing = () => {
                   } else if (plan.name === "Elite") {
                     window.open("https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00", "_blank");
                   } else if (plan.name === "Teams") {
-                    window.open("https://buy.stripe.com/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
+                    window.open("https://pay.creatives-takeover.com/b/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
                   }
                 }}
                 className={`w-full py-3 font-medium btn-magnetic hover-scale transition-all duration-300 ${
