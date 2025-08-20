@@ -765,11 +765,57 @@ ${translations.dataDisclaimer}`;
                             <SelectTrigger className="h-8 text-xs">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-48">
                               <SelectItem value="English">English</SelectItem>
+                              <SelectItem value="Mandarin Chinese">Mandarin Chinese</SelectItem>
+                              <SelectItem value="Hindi">Hindi</SelectItem>
                               <SelectItem value="Spanish">Spanish</SelectItem>
+                              <SelectItem value="Arabic">Arabic</SelectItem>
+                              <SelectItem value="Bengali">Bengali</SelectItem>
                               <SelectItem value="Portuguese">Portuguese</SelectItem>
+                              <SelectItem value="Russian">Russian</SelectItem>
+                              <SelectItem value="Japanese">Japanese</SelectItem>
+                              <SelectItem value="Punjabi">Punjabi</SelectItem>
+                              <SelectItem value="German">German</SelectItem>
+                              <SelectItem value="Javanese">Javanese</SelectItem>
+                              <SelectItem value="Wu Chinese">Wu Chinese</SelectItem>
+                              <SelectItem value="Malay">Malay</SelectItem>
+                              <SelectItem value="Telugu">Telugu</SelectItem>
+                              <SelectItem value="Vietnamese">Vietnamese</SelectItem>
+                              <SelectItem value="Korean">Korean</SelectItem>
                               <SelectItem value="French">French</SelectItem>
+                              <SelectItem value="Marathi">Marathi</SelectItem>
+                              <SelectItem value="Tamil">Tamil</SelectItem>
+                              <SelectItem value="Urdu">Urdu</SelectItem>
+                              <SelectItem value="Turkish">Turkish</SelectItem>
+                              <SelectItem value="Italian">Italian</SelectItem>
+                              <SelectItem value="Yue Chinese">Yue Chinese</SelectItem>
+                              <SelectItem value="Thai">Thai</SelectItem>
+                              <SelectItem value="Gujarati">Gujarati</SelectItem>
+                              <SelectItem value="Jin Chinese">Jin Chinese</SelectItem>
+                              <SelectItem value="Min Nan Chinese">Min Nan Chinese</SelectItem>
+                              <SelectItem value="Persian">Persian</SelectItem>
+                              <SelectItem value="Polish">Polish</SelectItem>
+                              <SelectItem value="Pashto">Pashto</SelectItem>
+                              <SelectItem value="Kannada">Kannada</SelectItem>
+                              <SelectItem value="Xiang Chinese">Xiang Chinese</SelectItem>
+                              <SelectItem value="Malayalam">Malayalam</SelectItem>
+                              <SelectItem value="Sundanese">Sundanese</SelectItem>
+                              <SelectItem value="Hausa">Hausa</SelectItem>
+                              <SelectItem value="Odia">Odia</SelectItem>
+                              <SelectItem value="Burmese">Burmese</SelectItem>
+                              <SelectItem value="Hakka Chinese">Hakka Chinese</SelectItem>
+                              <SelectItem value="Ukrainian">Ukrainian</SelectItem>
+                              <SelectItem value="Bhojpuri">Bhojpuri</SelectItem>
+                              <SelectItem value="Tagalog">Tagalog</SelectItem>
+                              <SelectItem value="Yoruba">Yoruba</SelectItem>
+                              <SelectItem value="Maithili">Maithili</SelectItem>
+                              <SelectItem value="Uzbek">Uzbek</SelectItem>
+                              <SelectItem value="Sindhi">Sindhi</SelectItem>
+                              <SelectItem value="Amharic">Amharic</SelectItem>
+                              <SelectItem value="Fula">Fula</SelectItem>
+                              <SelectItem value="Romanian">Romanian</SelectItem>
+                              <SelectItem value="Oromo">Oromo</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
