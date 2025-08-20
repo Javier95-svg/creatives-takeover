@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, FileDown } from "lucide-react";
+import { Download, FileText, FileDown, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 interface ReportDownloadProps {
   report: string;
@@ -9,6 +11,8 @@ interface ReportDownloadProps {
 }
 
 const ReportDownload = ({ report, title = "Launch Report" }: ReportDownloadProps) => {
+  const { user } = useAuth();
+
   const downloadAsText = () => {
     try {
       const blob = new Blob([report], { type: 'text/plain' });
@@ -100,6 +104,37 @@ const ReportDownload = ({ report, title = "Launch Report" }: ReportDownloadProps
 
   if (!report) {
     return null;
+  }
+
+  // Show authentication prompt if user is not logged in
+  if (!user) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Create Account to Download
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Create a free account to download your personalized launch report and access it anytime.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button asChild className="flex items-center gap-2">
+              <Link to="/signup">
+                Create Account
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="flex items-center gap-2">
+              <Link to="/login">
+                Sign In
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
