@@ -114,15 +114,29 @@ const Login = () => {
     try {
       console.log("Starting Google OAuth...");
       toast("Redirecting to Google...");
-      const { error } = await supabase.auth.signInWithOAuth({
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin }
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
+        }
       });
-      console.log("OAuth response:", { error });
+      
+      console.log("OAuth response:", { data, error });
+      
       if (error) {
         console.error("OAuth error:", error);
         toast.error(`Google sign-in error: ${error.message}`);
+        return;
       }
+      
+      // If we get here without error, the redirect should have happened
+      console.log("OAuth initiated successfully");
+      
     } catch (err) {
       console.error("Caught error:", err);
       toast.error(`Google sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
