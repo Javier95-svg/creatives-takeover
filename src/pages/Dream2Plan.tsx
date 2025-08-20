@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -22,9 +23,9 @@ const BizMapAI = () => {
     pricing: "",
     goals: ""
   });
-  const [userStage, setUserStage] = useState("");
-  const [userRegion, setUserRegion] = useState("");
-  const [userLanguage, setUserLanguage] = useState("");
+  const [userStage, setUserStage] = useState("Explore");
+  const [userRegion, setUserRegion] = useState("US");
+  const [userLanguage, setUserLanguage] = useState("English");
   const [launchReport, setLaunchReport] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -415,7 +416,7 @@ ${translations.dataDisclaimer}`;
         return `Could you provide more specific details? I need enough information to create a useful business plan for you.`;
     }
   };
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const currentAnswer = message.trim();
     if (!currentAnswer) {
       toast.error("Please provide an answer before continuing.");
@@ -465,135 +466,49 @@ ${translations.dataDisclaimer}`;
         content: `Great! Now for step ${nextStep + 1} of 7:\n\n**${wizardSteps[nextStep].title}**\n\n${wizardSteps[nextStep].question}`
       }]);
     } else {
-      // All steps completed, show stage selection
+      // All steps completed, generate launch report
+      setMessages(prev => [...prev, {
+        type: "assistant",
+        content: "Excellent! Now I'm generating your personalized Launch Report based on all your responses. This may take a moment..."
+      }]);
+
+      // Generate launch report
+      const completeAnswers = { ...userAnswers };
+      const report = await generateLaunchReport(completeAnswers, userStage, userRegion, userLanguage);
+      setLaunchReport(report);
+
+      // Add final message with report
       setMessages(prev => [...prev, {
         type: "assistant", 
-        content: "Perfect! Which stage are you at?\n\n**Options:**\n• **Explore** (idea stage)\n• **Validate** (no customers yet)\n• **Build** (MVP)\n• **Grow** (some revenue)\n\nThis helps me tailor the Validation, GTM, and Roadmap sections to your specific needs."
+        content: report
       }]);
-      setCurrentStep(wizardSteps.length); // Stage selection step
     }
   };
 
-  const handleStageSelection = () => {
-    let stage = message.trim().toLowerCase();
-    if (!stage) {
-      stage = 'Explore';
-      setMessages(prev => [...prev, { type: 'user', content: 'Explore' }]);
-    } else {
-      // Normalize stage input
-      if (stage.includes('explore') || stage.includes('idea')) {
-        stage = 'Explore';
-      } else if (stage.includes('validate') || stage.includes('no customers')) {
-        stage = 'Validate';
-      } else if (stage.includes('build') || stage.includes('mvp')) {
-        stage = 'Build';
-      } else if (stage.includes('grow') || stage.includes('revenue')) {
-        stage = 'Grow';
-      } else {
-        stage = 'Explore'; // Default fallback
-      }
-      setMessages(prev => [...prev, { type: 'user', content: stage }]);
-    }
-
-    setUserStage(stage);
-    setMessage("");
-
-    // Ask for region
-    setMessages(prev => [...prev, {
-      type: "assistant",
-      content: "Great! What region/country are you targeting primarily? (This helps me give region-specific advice)\n\nOptions: US, Europe, Latin America, Asia-Pacific, Middle East/Africa, or specify your country."
-    }]);
-    setCurrentStep(wizardSteps.length + 1); // Region selection step
-  };
-
-  const handleRegionSelection = () => {
-    let region = message.trim();
-    if (!region) {
-      region = 'Global';
-      setMessages(prev => [...prev, { type: 'user', content: 'Global' }]);
-    } else {
-      setMessages(prev => [...prev, { type: 'user', content: region }]);
-    }
-
-    setUserRegion(region);
-    setMessage("");
-
-    // Ask for language preference
-    setMessages(prev => [...prev, {
-      type: "assistant",
-      content: "Great! Now, do you prefer this report in English, Spanish, Portuguese, French, or another language?\n\nJust type your preferred language (or 'English' if you want to keep it in English)."
-    }]);
-    setCurrentStep(wizardSteps.length + 2); // Language selection step
-  };
-
-  const handleLanguageAndGenerate = async () => {
-    let language = message.trim();
-    if (!language) {
-      language = 'English';
-      setMessages(prev => [...prev, { type: 'user', content: 'English' }]);
-    } else {
-      setMessages(prev => [...prev, { type: 'user', content: language }]);
-    }
-
-    setUserLanguage(language);
-    setMessage("");
-
-    // Add loading message
-    setMessages(prev => [...prev, {
-      type: "assistant",
-      content: "Excellent! Now I'm generating your personalized Launch Report based on all your responses. This may take a moment..."
-    }]);
-
-    // Generate launch report
-    const completeAnswers = { ...userAnswers };
-    const report = await generateLaunchReport(completeAnswers, userStage, userRegion, language);
-    setLaunchReport(report);
-
-    // Add final message with report
-    setMessages(prev => [...prev, {
-      type: "assistant", 
-      content: report
-    }]);
-  };
 
   const handleSendMessage = async () => {
     if (currentStep < wizardSteps.length) {
       handleNextStep();
-    } else if (currentStep === wizardSteps.length) {
-      handleStageSelection();
-    } else if (currentStep === wizardSteps.length + 1) {
-      handleRegionSelection();
-    } else if (currentStep === wizardSteps.length + 2) {
-      await handleLanguageAndGenerate();
     }
   };
 
   const getCurrentPlaceholder = () => {
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder;
-    } else if (currentStep === wizardSteps.length) {
-      return "e.g., Explore, Validate, Build, or Grow";
-    } else if (currentStep === wizardSteps.length + 1) {
-      return "e.g., United States, Germany, Brazil, etc.";
-    } else if (currentStep === wizardSteps.length + 2) {
-      return "e.g., English, Spanish, Portuguese, French, etc.";
     }
     return "Type your message...";
   };
 
   const getProgressPercentage = () => {
-    if (currentStep >= wizardSteps.length + 2) return 100;
-    return ((currentStep + 1) / (wizardSteps.length + 3)) * 100;
+    if (currentStep >= wizardSteps.length) return 100;
+    return ((currentStep + 1) / wizardSteps.length) * 100;
   };
 
   const isCompleted = launchReport !== "";
 
   const getButtonText = () => {
     if (isLoading) return "Generating...";
-    if (currentStep < wizardSteps.length) return `Next Step (${currentStep + 2}/${wizardSteps.length + 3})`;
-    if (currentStep === wizardSteps.length) return "Next: Region";
-    if (currentStep === wizardSteps.length + 1) return "Next: Language";
-    if (currentStep === wizardSteps.length + 2) return "Generate Launch Report";
+    if (currentStep < wizardSteps.length) return `Next Step (${currentStep + 2}/${wizardSteps.length})`;
     return "Send";
   };
 
@@ -750,9 +665,7 @@ ${translations.dataDisclaimer}`;
                             <h4 className="font-semibold">BizMap AI Assistant</h4>
                             <p className="text-sm text-muted-foreground">
                               {isCompleted ? "Launch Report Complete!" : 
-                               currentStep < wizardSteps.length ? `Step ${currentStep + 1} of ${wizardSteps.length + 2}` : 
-                               currentStep === wizardSteps.length ? "Region Selection" :
-                               "Language Selection"}
+                               `Step ${currentStep + 1} of ${wizardSteps.length}`}
                             </p>
                           </div>
                         </div>
@@ -807,6 +720,62 @@ ${translations.dataDisclaimer}`;
                       )}
                     </div>
 
+                    {/* Preferences */}
+                    <div className="p-4 border-t border-border/50 bg-muted/20">
+                      <div className="grid grid-cols-3 gap-3 mb-3">
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Stage</label>
+                          <Select value={userStage} onValueChange={setUserStage}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Explore">Explore (idea stage)</SelectItem>
+                              <SelectItem value="Validate">Validate (no customers yet)</SelectItem>
+                              <SelectItem value="Build">Build (MVP)</SelectItem>
+                              <SelectItem value="Grow">Grow (some revenue)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Region</label>
+                          <Select value={userRegion} onValueChange={setUserRegion}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="US">United States</SelectItem>
+                              <SelectItem value="Europe">Europe</SelectItem>
+                              <SelectItem value="Latin America">Latin America</SelectItem>
+                              <SelectItem value="Brazil">Brazil</SelectItem>
+                              <SelectItem value="Mexico">Mexico</SelectItem>
+                              <SelectItem value="UK">United Kingdom</SelectItem>
+                              <SelectItem value="India">India</SelectItem>
+                              <SelectItem value="China">China</SelectItem>
+                              <SelectItem value="Nigeria">Nigeria</SelectItem>
+                              <SelectItem value="Kenya">Kenya</SelectItem>
+                              <SelectItem value="UAE">UAE</SelectItem>
+                              <SelectItem value="Global">Global</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Language</label>
+                          <Select value={userLanguage} onValueChange={setUserLanguage}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="English">English</SelectItem>
+                              <SelectItem value="Spanish">Spanish</SelectItem>
+                              <SelectItem value="Portuguese">Portuguese</SelectItem>
+                              <SelectItem value="French">French</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Input */}
                     <div className="p-4 border-t border-border/50">
                       <div className="flex gap-2">
@@ -829,9 +798,7 @@ ${translations.dataDisclaimer}`;
                       <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-muted-foreground">
                           {isCompleted ? "Launch Report generated! Copy and save it." :
-                           currentStep < wizardSteps.length ? `Answer to continue to step ${currentStep + 2}` :
-                           currentStep === wizardSteps.length ? "Specify your region to continue" :
-                           "Specify your language to generate Launch Report"}
+                           `Answer to continue to step ${currentStep + 2}`}
                         </p>
                         {!isCompleted && (
                           <Button 
