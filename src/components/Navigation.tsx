@@ -5,17 +5,16 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut, loading } = useAuth();
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast.error("Failed to sign out");
-    } else {
+    try {
+      await signOut();
       toast.success("Signed out successfully");
+    } catch (error) {
+      toast.error("Failed to sign out");
     }
   };
 
@@ -75,13 +74,13 @@ const Navigation = () => {
             ) : (
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/auth" className="flex items-center gap-2">
+                  <Link to="/login" className="flex items-center gap-2">
                     <LogIn className="w-4 h-4" />
                     Sign In
                   </Link>
                 </Button>
                 <Button size="sm" className="glass bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-                  <Link to="/auth">Sign Up</Link>
+                  <Link to="/signup">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -135,13 +134,13 @@ const Navigation = () => {
                 ) : (
                   <div className="space-y-2">
                     <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)} asChild>
-                      <Link to="/auth" className="flex items-center">
+                      <Link to="/login" className="flex items-center">
                         <LogIn className="w-4 h-4 mr-2" />
                         Sign In
                       </Link>
                     </Button>
                     <Button size="sm" className="w-full glass bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setIsOpen(false)} asChild>
-                      <Link to="/auth">Sign Up</Link>
+                      <Link to="/signup">Sign Up</Link>
                     </Button>
                   </div>
                 )}

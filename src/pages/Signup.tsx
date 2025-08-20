@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, User, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -25,6 +26,16 @@ const Signup = () => {
     password: "",
     confirmPassword: ""
   });
+  
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -98,17 +109,16 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { error } = await signUp(formData.email, formData.password, formData.fullName);
       
-      // For demo purposes, show success message
-      toast.success("Account created successfully! Welcome to BizMap AI.");
-      
-      // In a real app, you would redirect to dashboard or verification page
-      console.log("Signup data:", formData);
-      
+      if (error) {
+        toast.error(error.message || "Failed to create account. Please try again.");
+      } else {
+        toast.success("Account created successfully! Please check your email to verify your account.");
+        // Note: User will be redirected automatically after email verification
+      }
     } catch (error) {
-      toast.error("Failed to create account. Please try again.");
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }

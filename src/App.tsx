@@ -22,8 +22,6 @@ import Signup from "./pages/Signup";
 import BizMapAI from "./pages/Dream2Plan";
 import Login from "./pages/Login";
 import PromptLibrary from "./pages/PromptLibrary";
-import Auth from "./pages/Auth";
-
 
 const queryClient = new QueryClient();
 
@@ -34,28 +32,27 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/software" element={<Software />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/community" element={<CommunityPage />} />
-          <Route path="/prompt-library" element={<PromptLibrary />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/ip-policy" element={<IPPolicy />} />
-          <Route path="/faq" element={<FAQPage />} />
-          <Route path="/laboratory" element={<Laboratory />} />
-          <Route path="/dream2plan" element={<BizMapAI />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/software" element={<Software />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/prompt-library" element={<PromptLibrary />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/ip-policy" element={<IPPolicy />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/laboratory" element={<Laboratory />} />
+            <Route path="/dream2plan" element={<BizMapAI />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

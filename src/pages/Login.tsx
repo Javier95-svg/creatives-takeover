@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,16 @@ const Login = () => {
     email: "",
     password: ""
   });
+  
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,17 +88,16 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { error } = await signIn(formData.email, formData.password);
       
-      // For demo purposes, show success message
-      toast.success("Login successful! Welcome back.");
-      
-      // In a real app, you would redirect or update auth state here
-      console.log("Login data:", formData);
-      
+      if (error) {
+        toast.error(error.message || "Login failed. Please check your credentials.");
+      } else {
+        toast.success("Login successful! Welcome back.");
+        navigate('/');
+      }
     } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }

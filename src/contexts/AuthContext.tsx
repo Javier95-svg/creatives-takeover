@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  loading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +21,7 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,10 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Create profile if user signs up and doesn't have one
+        // Create or update profile when user signs up
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
-            createProfileIfNeeded(session.user);
+            createUserProfile(session.user);
           }, 0);
         }
       }
@@ -53,30 +53,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const createProfileIfNeeded = async (user: User) => {
+  const createUserProfile = async (user: User) => {
     try {
-      const { data: existingProfile } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!existingProfile) {
-        const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
-        await supabase
-          .from('profiles')
-          .insert([{
-            id: user.id,
-            full_name: fullName,
-            avatar_url: null
-          }]);
+        .upsert({
+          id: user.id,
+          full_name: user.user_metadata?.full_name || '',
+          avatar_url: user.user_metadata?.avatar_url || '',
+        }, {
+          onConflict: 'id'
+        });
+      
+      if (error) {
+        console.error('Error creating profile:', error);
       }
     } catch (error) {
       console.error('Error creating profile:', error);
     }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -85,34 +82,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          full_name: fullName || email.split('@')[0]
+          full_name: fullName,
         }
       }
     });
+    
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
+    
     return { error };
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    await supabase.auth.signOut();
   };
 
   const value = {
     user,
     session,
-    loading,
     signUp,
     signIn,
-    signOut
+    signOut,
+    loading,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
