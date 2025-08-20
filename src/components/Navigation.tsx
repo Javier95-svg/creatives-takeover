@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { SignupInvitationPopup } from "./SignupInvitationPopup";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showSignupPopup, setShowSignupPopup] = useState(false);
   const { user, signOut, loading } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
@@ -18,9 +21,19 @@ const Navigation = () => {
     }
   };
 
+  const handleBizMapClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (user) {
+      navigate("/dream2plan");
+    } else {
+      setShowSignupPopup(true);
+    }
+    setIsOpen(false);
+  };
+
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "BizMap AI", href: "/dream2plan" },
+    { name: "BizMap AI", href: "#", isBizMap: true },
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Community", href: "/community" },
     { name: "About Us", href: "/about" },
@@ -42,7 +55,8 @@ const Navigation = () => {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-muted-foreground hover:text-foreground transition-colors animated-underline"
+                onClick={item.isBizMap ? handleBizMapClick : undefined}
+                className="text-muted-foreground hover:text-foreground transition-colors animated-underline cursor-pointer"
               >
                 {item.name}
               </a>
@@ -111,8 +125,8 @@ const Navigation = () => {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsOpen(false)}
+                  className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  onClick={item.isBizMap ? handleBizMapClick : () => setIsOpen(false)}
                 >
                   {item.name}
                 </a>
@@ -163,6 +177,11 @@ const Navigation = () => {
           </div>
         )}
       </div>
+      
+      <SignupInvitationPopup 
+        isOpen={showSignupPopup} 
+        onClose={() => setShowSignupPopup(false)} 
+      />
     </nav>
   );
 };
