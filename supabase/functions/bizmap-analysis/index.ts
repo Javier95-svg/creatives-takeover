@@ -16,6 +16,7 @@ interface LaunchReportRequest {
     pricing: string;
     goals: string;
   };
+  stage?: string;
   region?: string;
   language?: string;
 }
@@ -26,7 +27,7 @@ serve(async (req) => {
   }
 
   try {
-    const { answers, region, language }: LaunchReportRequest = await req.json();
+    const { answers, stage, region, language }: LaunchReportRequest = await req.json();
     
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -45,8 +46,15 @@ USER'S 7-STEP RESPONSES:
 6. Pricing/Costs: ${answers.pricing}
 7. Goals: ${answers.goals}
 
+STAGE: ${stage || "Explore"}
 TARGET REGION: ${region || "Global"}
 TARGET LANGUAGE: ${language || "English"}
+
+IMPORTANT: Adapt the Validation, GTM, and Roadmap sections based on their stage:
+- **Explore (idea stage)**: Focus on idea validation, market research, and customer discovery
+- **Validate (no customers yet)**: Focus on customer interviews, MVP testing, and market validation
+- **Build (MVP)**: Focus on product development, user feedback, and iteration
+- **Grow (some revenue)**: Focus on scaling, optimization, and expansion strategies
 
 Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (\`\`\`), and keep the full report concise (aim to fit under ~3 PDF pages).
 

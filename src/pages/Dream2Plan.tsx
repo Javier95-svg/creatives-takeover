@@ -22,6 +22,7 @@ const BizMapAI = () => {
     pricing: "",
     goals: ""
   });
+  const [userStage, setUserStage] = useState("");
   const [userRegion, setUserRegion] = useState("");
   const [userLanguage, setUserLanguage] = useState("");
   const [launchReport, setLaunchReport] = useState("");
@@ -100,12 +101,17 @@ const BizMapAI = () => {
     }
   }, []);
 
-  const generateLaunchReport = async (answers: any, region: string, language: string) => {
+  const generateLaunchReport = async (answers: any, stage: string, region: string, language: string) => {
     try {
       setIsLoading(true);
       
       const { data, error } = await supabase.functions.invoke('bizmap-analysis', {
-        body: { answers, region, language }
+        body: { 
+          answers,
+          stage,
+          region,
+          language
+        }
       });
 
       if (error) {
@@ -119,13 +125,13 @@ const BizMapAI = () => {
       toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
       
       // Fallback to basic structure if API fails
-      return generateFallbackReport(answers, region, language);
+      return generateFallbackReport(answers, stage, region, language);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const generateFallbackReport = (answers: any, regionInput?: string, languageInput?: string) => {
+  const generateFallbackReport = (answers: any, stage: string, regionInput?: string, languageInput?: string) => {
     const region = (regionInput || 'Global').trim();
     const language = (languageInput || 'English').trim().toLowerCase();
     const r = region.toLowerCase();
@@ -457,13 +463,45 @@ ${translations.dataDisclaimer}`;
         content: `Great! Now for step ${nextStep + 1} of 7:\n\n**${wizardSteps[nextStep].title}**\n\n${wizardSteps[nextStep].question}`
       }]);
     } else {
-      // All steps completed, show region selection
+      // All steps completed, show stage selection
       setMessages(prev => [...prev, {
         type: "assistant", 
-        content: "Perfect! What region/country are you targeting primarily? (This helps me give region-specific advice)\n\nOptions: US, Europe, Latin America, Asia-Pacific, Middle East/Africa, or specify your country."
+        content: "Perfect! Which stage are you at?\n\n**Options:**\n• **Explore** (idea stage)\n• **Validate** (no customers yet)\n• **Build** (MVP)\n• **Grow** (some revenue)\n\nThis helps me tailor the Validation, GTM, and Roadmap sections to your specific needs."
       }]);
-      setCurrentStep(wizardSteps.length); // Region selection step
+      setCurrentStep(wizardSteps.length); // Stage selection step
     }
+  };
+
+  const handleStageSelection = () => {
+    let stage = message.trim().toLowerCase();
+    if (!stage) {
+      stage = 'Explore';
+      setMessages(prev => [...prev, { type: 'user', content: 'Explore' }]);
+    } else {
+      // Normalize stage input
+      if (stage.includes('explore') || stage.includes('idea')) {
+        stage = 'Explore';
+      } else if (stage.includes('validate') || stage.includes('no customers')) {
+        stage = 'Validate';
+      } else if (stage.includes('build') || stage.includes('mvp')) {
+        stage = 'Build';
+      } else if (stage.includes('grow') || stage.includes('revenue')) {
+        stage = 'Grow';
+      } else {
+        stage = 'Explore'; // Default fallback
+      }
+      setMessages(prev => [...prev, { type: 'user', content: stage }]);
+    }
+
+    setUserStage(stage);
+    setMessage("");
+
+    // Ask for region
+    setMessages(prev => [...prev, {
+      type: "assistant",
+      content: "Great! What region/country are you targeting primarily? (This helps me give region-specific advice)\n\nOptions: US, Europe, Latin America, Asia-Pacific, Middle East/Africa, or specify your country."
+    }]);
+    setCurrentStep(wizardSteps.length + 1); // Region selection step
   };
 
   const handleRegionSelection = () => {
@@ -483,7 +521,7 @@ ${translations.dataDisclaimer}`;
       type: "assistant",
       content: "Great! Now, do you prefer this report in English, Spanish, Portuguese, French, or another language?\n\nJust type your preferred language (or 'English' if you want to keep it in English)."
     }]);
-    setCurrentStep(wizardSteps.length + 1); // Language selection step
+    setCurrentStep(wizardSteps.length + 2); // Language selection step
   };
 
   const handleLanguageAndGenerate = async () => {
@@ -506,7 +544,7 @@ ${translations.dataDisclaimer}`;
 
     // Generate launch report
     const completeAnswers = { ...userAnswers };
-    const report = await generateLaunchReport(completeAnswers, userRegion, language);
+    const report = await generateLaunchReport(completeAnswers, userStage, userRegion, language);
     setLaunchReport(report);
 
     // Add final message with report
@@ -520,8 +558,10 @@ ${translations.dataDisclaimer}`;
     if (currentStep < wizardSteps.length) {
       handleNextStep();
     } else if (currentStep === wizardSteps.length) {
-      handleRegionSelection();
+      handleStageSelection();
     } else if (currentStep === wizardSteps.length + 1) {
+      handleRegionSelection();
+    } else if (currentStep === wizardSteps.length + 2) {
       await handleLanguageAndGenerate();
     }
   };
@@ -530,25 +570,28 @@ ${translations.dataDisclaimer}`;
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder;
     } else if (currentStep === wizardSteps.length) {
-      return "e.g., United States, Germany, Brazil, etc.";
+      return "e.g., Explore, Validate, Build, or Grow";
     } else if (currentStep === wizardSteps.length + 1) {
+      return "e.g., United States, Germany, Brazil, etc.";
+    } else if (currentStep === wizardSteps.length + 2) {
       return "e.g., English, Spanish, Portuguese, French, etc.";
     }
     return "Type your message...";
   };
 
   const getProgressPercentage = () => {
-    if (currentStep >= wizardSteps.length + 1) return 100;
-    return ((currentStep + 1) / (wizardSteps.length + 2)) * 100;
+    if (currentStep >= wizardSteps.length + 2) return 100;
+    return ((currentStep + 1) / (wizardSteps.length + 3)) * 100;
   };
 
   const isCompleted = launchReport !== "";
 
   const getButtonText = () => {
     if (isLoading) return "Generating...";
-    if (currentStep < wizardSteps.length) return `Next Step (${currentStep + 2}/${wizardSteps.length + 2})`;
-    if (currentStep === wizardSteps.length) return "Next: Language";
-    if (currentStep === wizardSteps.length + 1) return "Generate Launch Report";
+    if (currentStep < wizardSteps.length) return `Next Step (${currentStep + 2}/${wizardSteps.length + 3})`;
+    if (currentStep === wizardSteps.length) return "Next: Region";
+    if (currentStep === wizardSteps.length + 1) return "Next: Language";
+    if (currentStep === wizardSteps.length + 2) return "Generate Launch Report";
     return "Send";
   };
 
