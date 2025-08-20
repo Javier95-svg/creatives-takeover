@@ -10,6 +10,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import ReportDownload from "@/components/ReportDownload";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -788,6 +789,13 @@ ${translations.dataDisclaimer}`;
                 </Card>
               </div>
             </div>
+            
+            {/* Download Component - Show only when report is completed */}
+            {launchReport && (
+              <div className="mt-8">
+                <ReportDownload report={launchReport} title="BizMap Launch Report" />
+              </div>
+            )}
           </div>
         </div>
       </div>
