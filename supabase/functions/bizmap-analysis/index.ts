@@ -154,6 +154,8 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 
 This plan is a starting point. Execute, test, and adjust fast.
 
+**⚠️ Important Disclaimer:** BizMap AI is not a legal or financial advisor. This report gives practical guidance to kickstart your journey, but always validate with real customers and professional advice where needed.
+
 IMPORTANT GUIDELINES:
 - Be region-aware (WhatsApp for LATAM, LinkedIn for EU/US, WeChat for China)
 - **CRITICAL: Data Responsibility** - For market size, pricing, or financial estimates:

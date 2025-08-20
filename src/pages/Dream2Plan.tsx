@@ -350,6 +350,8 @@ Finally, a better way to [solve their problem]
 
 ${translations.disclaimer}
 
+**⚠️ Important Disclaimer:** BizMap AI is not a legal or financial advisor. This report gives practical guidance to kickstart your journey, but always validate with real customers and professional advice where needed.
+
 ${translations.dataDisclaimer}`;
   };
 
