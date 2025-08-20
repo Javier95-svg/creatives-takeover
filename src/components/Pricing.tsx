@@ -14,7 +14,7 @@ const Pricing = () => {
       credits: 50,
       integrationCredits: 5,
       features: [
-        "Access to BizMap AI chatbot",
+        "Access to Creatives Takeover chatbot",
         "Basic prompt library access",
         "Community forum participation",
         "Email support",
@@ -32,7 +32,7 @@ const Pricing = () => {
       credits: 500,
       integrationCredits: 50,
       features: [
-        "Unlimited BizMap AI conversations",
+        "Unlimited Creatives Takeover conversations",
         "Full prompt library access",
         "Premium community features",
         "Priority support",

@@ -7,7 +7,7 @@ const SimpleBizMapGuide = () => {
     {
       icon: MessageSquare,
       title: "Share Your Idea",
-      description: "Tell BizMap AI about your business concept"
+      description: "Tell Creatives Takeover about your business concept"
     },
     {
       icon: Target,
@@ -36,7 +36,7 @@ const SimpleBizMapGuide = () => {
       <div className="max-w-4xl mx-auto text-center relative z-10">
         <div className="animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text animate-slide-up">
-            How BizMap AI Works
+            How Creatives Takeover Works
           </h2>
           <p className="text-lg text-muted-foreground mb-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             Transform your business idea into an actionable plan in 4 simple steps
@@ -96,7 +96,7 @@ const SimpleBizMapGuide = () => {
           >
             <a href="/dream2plan" className="relative overflow-hidden">
               <span className="relative z-10 flex items-center gap-2">
-                Try BizMap AI Now
+                Try Creatives Takeover Now
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
               {/* Animated shine effect */}
