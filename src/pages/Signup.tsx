@@ -137,16 +137,20 @@ const Signup = () => {
   // Google OAuth signup
   const handleGoogleSignup = async () => {
     try {
+      console.log("Starting Google OAuth signup...");
       toast("Redirecting to Google...");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.origin }
       });
+      console.log("OAuth response:", { error });
       if (error) {
-        toast.error(error.message);
+        console.error("OAuth error:", error);
+        toast.error(`Google sign-up error: ${error.message}`);
       }
     } catch (err) {
-      toast.error("Google sign-in failed. Please try again.");
+      console.error("Caught error:", err);
+      toast.error(`Google sign-up failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
