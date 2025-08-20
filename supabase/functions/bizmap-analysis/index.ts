@@ -150,6 +150,21 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 
 **Do Next:** Send the WhatsApp/SMS message to 5 potential customers today. Track responses in a simple spreadsheet.
 
+## Feedback & Reminder
+Would you like to set a reminder to come back after trying these steps, so we can adjust your plan together?
+
+- If yes, share your email or preferred contact (e.g., email, WhatsApp, Telegram, LinkedIn).
+- Which section was most useful?
+- Which felt unclear?
+
+Reply with:
+Reminder: Yes/No
+Contact: [your email or handle]
+Most useful: [section]
+Unclear: [section]
+
+After you reply, I’ll summarize your feedback in a friendly tone and close with a short encouragement.
+
 ---
 
 This plan is a starting point. Execute, test, and adjust fast.
