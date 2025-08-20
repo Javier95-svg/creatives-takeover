@@ -50,11 +50,11 @@ STAGE: ${stage || "Explore"}
 TARGET REGION: ${region || "Global"}
 TARGET LANGUAGE: ${language || "English"}
 
-IMPORTANT: Adapt the Validation, GTM, and Roadmap sections based on their stage:
-- **Explore (idea stage)**: Focus on idea validation, market research, and customer discovery
-- **Validate (no customers yet)**: Focus on customer interviews, MVP testing, and market validation
-- **Build (MVP)**: Focus on product development, user feedback, and iteration
-- **Grow (some revenue)**: Focus on scaling, optimization, and expansion strategies
+IMPORTANT: Stage-specific adaptation across Validation Plan, Go-To-Market, Pricing, and 90-Day Roadmap. Always replace generic steps with stage-specific tasks.
+- Explore (idea only): focus on problem validation, customer interviews, cheap experiments.
+- Validate (no customers yet): emphasize landing pages, pre-sales, outreach scripts.
+- Build (MVP in progress): highlight onboarding, pricing experiments, early acquisition.
+- Grow (some revenue): double down on retention, scalable channels, cost optimization.
 
 Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (\`\`\`), and keep the full report concise (aim to fit under ~3 PDF pages).
 
@@ -86,7 +86,7 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 
 **Do Next:** Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
 
-## Validation Plan - 5 Next Steps
+## Validation Plan - 5 Stage-Specific Next Steps
 1. **[Step Name]:** [Specific action in 1-2 weeks]
 2. **[Step Name]:** [Specific action in 1-2 weeks]
 3. **[Step Name]:** [Specific action in 1-2 weeks]
@@ -95,7 +95,7 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 
 **Do Next:** Complete step 1 within the next 3 days. Set a calendar reminder right now.
 
-## Go-To-Market One-Pager
+## Go-To-Market One-Pager (Stage-Specific)
 **Primary Channel Focus:** [Single best channel for their situation]
 **First 10 Customers Plan:**
 • [Specific tactic 1]
@@ -116,7 +116,7 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 
 **Do Next:** Survey 10 potential customers about pricing this week using: "Would you pay $[X] for [solution] that [key benefit]?"
 
-## 90-Day Roadmap & KPIs
+## 90-Day Roadmap & KPIs (Stage-Specific)
 
 ### Month 1: Foundation
 **Goal:** [Specific milestone]
@@ -136,7 +136,7 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 **KPI:** [Measurable metric]
 **Do Next:** Create a launch checklist with specific dates for each task.
 
-## Copy-Paste Scripts
+## Copy-Paste Scripts (Stage-Specific)
 
 ### WhatsApp/SMS Message:
 "[Ready-to-use customer outreach message]"
