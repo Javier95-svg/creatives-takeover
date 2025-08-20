@@ -23,6 +23,7 @@ const BizMapAI = () => {
     goals: ""
   });
   const [userRegion, setUserRegion] = useState("");
+  const [userLanguage, setUserLanguage] = useState("");
   const [launchReport, setLaunchReport] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -99,12 +100,12 @@ const BizMapAI = () => {
     }
   }, []);
 
-  const generateLaunchReport = async (answers: any, region: string) => {
+  const generateLaunchReport = async (answers: any, region: string, language: string) => {
     try {
       setIsLoading(true);
       
       const { data, error } = await supabase.functions.invoke('bizmap-analysis', {
-        body: { answers, region }
+        body: { answers, region, language }
       });
 
       if (error) {
@@ -118,14 +119,15 @@ const BizMapAI = () => {
       toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
       
       // Fallback to basic structure if API fails
-      return generateFallbackReport(answers, region);
+      return generateFallbackReport(answers, region, language);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const generateFallbackReport = (answers: any, regionInput?: string) => {
+  const generateFallbackReport = (answers: any, regionInput?: string, languageInput?: string) => {
     const region = (regionInput || 'Global').trim();
+    const language = (languageInput || 'English').trim().toLowerCase();
     const r = region.toLowerCase();
 
     // Region-aware channels and currency
@@ -148,51 +150,146 @@ const BizMapAI = () => {
     else if (r.includes('us') || r.includes('united states') || r.includes('america')) { channels = ['LinkedIn', 'Email', 'Google Search']; currency = '$'; currencyLabel = 'USD'; }
     else if (r.includes('mena') || r.includes('middle east') || r.includes('uae') || r.includes('saudi')) { channels = ['WhatsApp', 'Instagram', 'LinkedIn']; currency = '﷼'; currencyLabel = 'Local'; }
 
-    return `# Launch Report
+    // Language-specific translations
+    let translations = {
+      title: "# Launch Report",
+      executiveSummary: "## Executive Summary",
+      executiveText: "Based on your responses, you have a promising business concept that addresses a real market need. Success will depend on effective customer validation and focused execution.",
+      doNext: "**Do Next:**",
+      scheduleReview: "Schedule 2 hours this week to review this entire report and identify your top 3 priorities.",
+      leanCanvas: "## Lean Canvas Snapshot",
+      problem: "**Problem:**",
+      solution: "**Solution:**",
+      keyCustomers: "**Key Customers:**",
+      channels: "**Channels:**",
+      revenueStreams: "**Revenue Streams:**",
+      keyCosts: "**Key Costs:**",
+      customerPersona: "## Customer Persona",
+      validationPlan: "## Validation Plan - 5 Next Steps",
+      goToMarket: "## Go-To-Market One-Pager",
+      pricingAnalysis: "## Simple Pricing & Breakeven Analysis",
+      roadmap: "## 90-Day Roadmap & KPIs",
+      scripts: "## Copy-Paste Scripts",
+      disclaimer: "This plan is a starting point. Execute, test, and adjust fast.",
+      dataDisclaimer: "**Data Disclaimer:** All numbers above are estimates/assumptions, not official statistics. Always validate with real market research, competitor analysis, and customer surveys before making major decisions."
+    };
 
-## Executive Summary
-Based on your responses, you have a promising business concept that addresses a real market need. Success will depend on effective customer validation and focused execution.
+    if (language.includes('spanish') || language.includes('español')) {
+      translations = {
+        title: "# Reporte de Lanzamiento",
+        executiveSummary: "## Resumen Ejecutivo", 
+        executiveText: "Basado en tus respuestas, tienes un concepto de negocio prometedor que aborda una necesidad real del mercado. El éxito dependerá de una validación efectiva del cliente y una ejecución enfocada.",
+        doNext: "**Hacer Ahora:**",
+        scheduleReview: "Programa 2 horas esta semana para revisar todo este reporte e identificar tus 3 prioridades principales.",
+        leanCanvas: "## Resumen del Lean Canvas",
+        problem: "**Problema:**",
+        solution: "**Solución:**",
+        keyCustomers: "**Clientes Clave:**",
+        channels: "**Canales:**",
+        revenueStreams: "**Fuentes de Ingresos:**",
+        keyCosts: "**Costos Clave:**",
+        customerPersona: "## Persona del Cliente",
+        validationPlan: "## Plan de Validación - 5 Próximos Pasos",
+        goToMarket: "## Estrategia de Lanzamiento",
+        pricingAnalysis: "## Análisis Simple de Precios y Punto de Equilibrio",
+        roadmap: "## Hoja de Ruta de 90 Días y KPIs",
+        scripts: "## Scripts Para Copiar y Pegar",
+        disclaimer: "Este plan es un punto de partida. Ejecuta, prueba y ajusta rápidamente.",
+        dataDisclaimer: "**Descargo de Responsabilidad:** Todos los números anteriores son estimaciones/suposiciones, no estadísticas oficiales. Siempre valida con investigación de mercado real, análisis de competidores y encuestas a clientes antes de tomar decisiones importantes."
+      };
+    } else if (language.includes('portuguese') || language.includes('português')) {
+      translations = {
+        title: "# Relatório de Lançamento",
+        executiveSummary: "## Resumo Executivo",
+        executiveText: "Com base em suas respostas, você tem um conceito de negócio promissor que atende a uma necessidade real do mercado. O sucesso dependerá da validação efetiva do cliente e execução focada.",
+        doNext: "**Fazer Agora:**",
+        scheduleReview: "Agende 2 horas esta semana para revisar todo este relatório e identificar suas 3 principais prioridades.",
+        leanCanvas: "## Resumo do Lean Canvas",
+        problem: "**Problema:**",
+        solution: "**Solução:**",
+        keyCustomers: "**Clientes-Chave:**",
+        channels: "**Canais:**",
+        revenueStreams: "**Fontes de Receita:**",
+        keyCosts: "**Custos-Chave:**",
+        customerPersona: "## Persona do Cliente",
+        validationPlan: "## Plano de Validação - 5 Próximos Passos",
+        goToMarket: "## Estratégia de Lançamento",
+        pricingAnalysis: "## Análise Simples de Preços e Ponto de Equilíbrio",
+        roadmap: "## Roteiro de 90 Dias e KPIs",
+        scripts: "## Scripts Para Copiar e Colar",
+        disclaimer: "Este plano é um ponto de partida. Execute, teste e ajuste rapidamente.",
+        dataDisclaimer: "**Isenção de Responsabilidade:** Todos os números acima são estimativas/suposições, não estatísticas oficiais. Sempre valide com pesquisa de mercado real, análise de concorrentes e pesquisas com clientes antes de tomar decisões importantes."
+      };
+    } else if (language.includes('french') || language.includes('français')) {
+      translations = {
+        title: "# Rapport de Lancement",
+        executiveSummary: "## Résumé Exécutif",
+        executiveText: "D'après vos réponses, vous avez un concept d'entreprise prometteur qui répond à un besoin réel du marché. Le succès dépendra d'une validation client efficace et d'une exécution ciblée.",
+        doNext: "**À Faire Maintenant:**",
+        scheduleReview: "Programmez 2 heures cette semaine pour examiner tout ce rapport et identifier vos 3 priorités principales.",
+        leanCanvas: "## Résumé du Lean Canvas",
+        problem: "**Problème:**",
+        solution: "**Solution:**",
+        keyCustomers: "**Clients Clés:**",
+        channels: "**Canaux:**",
+        revenueStreams: "**Sources de Revenus:**",
+        keyCosts: "**Coûts Clés:**",
+        customerPersona: "## Persona Client",
+        validationPlan: "## Plan de Validation - 5 Prochaines Étapes",
+        goToMarket: "## Stratégie de Mise sur le Marché",
+        pricingAnalysis: "## Analyse Simple des Prix et du Seuil de Rentabilité",
+        roadmap: "## Feuille de Route de 90 Jours et KPIs",
+        scripts: "## Scripts à Copier-Coller",
+        disclaimer: "Ce plan est un point de départ. Exécutez, testez et ajustez rapidement.",
+        dataDisclaimer: "**Avis de Non-Responsabilité:** Tous les chiffres ci-dessus sont des estimations/suppositions, pas des statistiques officielles. Validez toujours avec une vraie recherche de marché, une analyse des concurrents et des enquêtes clients avant de prendre des décisions importantes."
+      };
+    }
 
-**Do Next:** Schedule 2 hours this week to review this entire report and identify your top 3 priorities.
+    return `${translations.title}
 
-## Lean Canvas Snapshot
-**Problem:** ${answers.problem}
-**Solution:** ${answers.solution}
-**Key Customers:** From your market research
-**Channels:** ${answers.channels || channels.join(', ')}
-**Revenue Streams:** Based on your pricing model
-**Key Costs:** As outlined in your cost structure
+${translations.executiveSummary}
+${translations.executiveText}
 
-**Do Next:** Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
+${translations.doNext} ${translations.scheduleReview}
 
-## Customer Persona
+${translations.leanCanvas}
+${translations.problem} ${answers.problem}
+${translations.solution} ${answers.solution}
+${translations.keyCustomers} From your market research
+${translations.channels} ${answers.channels || channels.join(', ')}
+${translations.revenueStreams} Based on your pricing model
+${translations.keyCosts} As outlined in your cost structure
+
+${translations.doNext} Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
+
+${translations.customerPersona}
 **Name:** Your Ideal Customer
 **Demographics:** Based on your target market description
 **Pain Points:** Issues you identified in problem section
 **Where They Spend Time:** ${channels.join(', ')}
 **Buying Triggers:** Value propositions from your solution
 
-**Do Next:** Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
+${translations.doNext} Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
 
-## Validation Plan - 5 Next Steps
+${translations.validationPlan}
 1. **Customer Interviews:** Conduct 20 interviews with target customers
 2. **Market Research:** Analyze 3 direct competitors
 3. **Prototype Testing:** Create simple version to test core concept
 4. **Channel Test (${region}):** Run a small test on ${channels[0]} with ${currency}50–${currency}150 budget (track real costs)
 5. **Pricing Validation:** Survey 20+ potential customers on pricing (${currencyLabel}) - don't guess, ask directly
 
-**Do Next:** Complete step 1 within the next 3 days. Set a calendar reminder right now.
+${translations.doNext} Complete step 1 within the next 3 days. Set a calendar reminder right now.
 
-## Go-To-Market One-Pager
+${translations.goToMarket}
 **Primary Channel Focus (${region}):** ${channels[0]}
 **First 10 Customers Plan:**
 • Direct outreach via ${channels[0]}
 • Content marketing to establish expertise
 • Partnerships with complementary businesses
 
-**Do Next:** Create your first piece of content for ${channels[0]} this week. Post it and track engagement.
+${translations.doNext} Create your first piece of content for ${channels[0]} this week. Post it and track engagement.
 
-## Simple Pricing & Breakeven Analysis (${currencyLabel})
+${translations.pricingAnalysis} (${currencyLabel})
 **Recommended Pricing:** Example ${currency}49–${currency}199 (verify with competitor research)
 **Key Assumptions (validate these with real data):**
 • Customer acquisition cost: ~${currency}5–${currency}25 via ${channels[0]} (test with small budget)
@@ -201,9 +298,9 @@ Based on your responses, you have a promising business concept that addresses a 
 
 **Find Real Data:** Search "pricing benchmarks [your industry] ${region}" on Google, check Statista, or survey potential customers directly.
 
-**Do Next:** Survey 10 potential customers about pricing this week using: "Would you pay ${currency}[X] for [solution] that [key benefit]?"
+${translations.doNext} Survey 10 potential customers about pricing this week using: "Would you pay ${currency}[X] for [solution] that [key benefit]?"
 
-## 90-Day Roadmap & KPIs
+${translations.roadmap}
 
 ### Month 1: Foundation
 **Goal:** Validate core assumptions with real data
@@ -223,7 +320,7 @@ Based on your responses, you have a promising business concept that addresses a 
 **KPI:** First 5–15 paying customers (track real acquisition costs)
 **Do Next:** Create a launch checklist with specific dates for each task.
 
-## Copy-Paste Scripts
+${translations.scripts}
 
 ### ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} Message:
 \`\`\`
@@ -245,9 +342,9 @@ Finally, a better way to [solve their problem]
 
 ---
 
-This plan is a starting point. Execute, test, and adjust fast.
+${translations.disclaimer}
 
-**Data Disclaimer:** All numbers above are estimates/assumptions, not official statistics. Always validate with real market research, competitor analysis, and customer surveys before making major decisions.`;
+${translations.dataDisclaimer}`;
   };
 
   const isAnswerTooVague = (answer: string, stepKey: string) => {
@@ -363,25 +460,42 @@ This plan is a starting point. Execute, test, and adjust fast.
       // All steps completed, show region selection
       setMessages(prev => [...prev, {
         type: "assistant", 
-        content: "Perfect! One final question: What region/country are you targeting primarily? (This helps me give region-specific advice)\n\nOptions: US, Europe, Latin America, Asia-Pacific, Middle East/Africa, or specify your country."
+        content: "Perfect! What region/country are you targeting primarily? (This helps me give region-specific advice)\n\nOptions: US, Europe, Latin America, Asia-Pacific, Middle East/Africa, or specify your country."
       }]);
-      setCurrentStep(wizardSteps.length); // Beyond last step
+      setCurrentStep(wizardSteps.length); // Region selection step
     }
   };
 
-  const handleRegionAndGenerate = async () => {
+  const handleRegionSelection = () => {
     let region = message.trim();
-    const provided = !!region;
-    if (!provided) {
-      region = 'Global'; // default to global best practices
-      // Reflect default in chat for clarity
+    if (!region) {
+      region = 'Global';
       setMessages(prev => [...prev, { type: 'user', content: 'Global' }]);
     } else {
       setMessages(prev => [...prev, { type: 'user', content: region }]);
     }
 
     setUserRegion(region);
+    setMessage("");
 
+    // Ask for language preference
+    setMessages(prev => [...prev, {
+      type: "assistant",
+      content: "Great! Now, do you prefer this report in English, Spanish, Portuguese, French, or another language?\n\nJust type your preferred language (or 'English' if you want to keep it in English)."
+    }]);
+    setCurrentStep(wizardSteps.length + 1); // Language selection step
+  };
+
+  const handleLanguageAndGenerate = async () => {
+    let language = message.trim();
+    if (!language) {
+      language = 'English';
+      setMessages(prev => [...prev, { type: 'user', content: 'English' }]);
+    } else {
+      setMessages(prev => [...prev, { type: 'user', content: language }]);
+    }
+
+    setUserLanguage(language);
     setMessage("");
 
     // Add loading message
@@ -392,7 +506,7 @@ This plan is a starting point. Execute, test, and adjust fast.
 
     // Generate launch report
     const completeAnswers = { ...userAnswers };
-    const report = await generateLaunchReport(completeAnswers, region);
+    const report = await generateLaunchReport(completeAnswers, userRegion, language);
     setLaunchReport(report);
 
     // Add final message with report
@@ -406,7 +520,9 @@ This plan is a starting point. Execute, test, and adjust fast.
     if (currentStep < wizardSteps.length) {
       handleNextStep();
     } else if (currentStep === wizardSteps.length) {
-      await handleRegionAndGenerate();
+      handleRegionSelection();
+    } else if (currentStep === wizardSteps.length + 1) {
+      await handleLanguageAndGenerate();
     }
   };
 
@@ -415,21 +531,24 @@ This plan is a starting point. Execute, test, and adjust fast.
       return wizardSteps[currentStep].placeholder;
     } else if (currentStep === wizardSteps.length) {
       return "e.g., United States, Germany, Brazil, etc.";
+    } else if (currentStep === wizardSteps.length + 1) {
+      return "e.g., English, Spanish, Portuguese, French, etc.";
     }
     return "Type your message...";
   };
 
   const getProgressPercentage = () => {
-    if (currentStep >= wizardSteps.length) return 100;
-    return ((currentStep + 1) / wizardSteps.length) * 100;
+    if (currentStep >= wizardSteps.length + 1) return 100;
+    return ((currentStep + 1) / (wizardSteps.length + 2)) * 100;
   };
 
   const isCompleted = launchReport !== "";
 
   const getButtonText = () => {
     if (isLoading) return "Generating...";
-    if (currentStep < wizardSteps.length) return `Next Step (${currentStep + 2}/${wizardSteps.length + 1})`;
-    if (currentStep === wizardSteps.length) return "Generate Launch Report";
+    if (currentStep < wizardSteps.length) return `Next Step (${currentStep + 2}/${wizardSteps.length + 2})`;
+    if (currentStep === wizardSteps.length) return "Next: Language";
+    if (currentStep === wizardSteps.length + 1) return "Generate Launch Report";
     return "Send";
   };
 
@@ -586,8 +705,9 @@ This plan is a starting point. Execute, test, and adjust fast.
                             <h4 className="font-semibold">BizMap AI Assistant</h4>
                             <p className="text-sm text-muted-foreground">
                               {isCompleted ? "Launch Report Complete!" : 
-                               currentStep < wizardSteps.length ? `Step ${currentStep + 1} of 7` : 
-                               "Final Step: Region Selection"}
+                               currentStep < wizardSteps.length ? `Step ${currentStep + 1} of ${wizardSteps.length + 2}` : 
+                               currentStep === wizardSteps.length ? "Region Selection" :
+                               "Language Selection"}
                             </p>
                           </div>
                         </div>
@@ -665,7 +785,8 @@ This plan is a starting point. Execute, test, and adjust fast.
                         <p className="text-xs text-muted-foreground">
                           {isCompleted ? "Launch Report generated! Copy and save it." :
                            currentStep < wizardSteps.length ? `Answer to continue to step ${currentStep + 2}` :
-                           "Optionally specify your region (default: Global)"}
+                           currentStep === wizardSteps.length ? "Specify your region to continue" :
+                           "Specify your language to generate Launch Report"}
                         </p>
                         {!isCompleted && (
                           <Button 

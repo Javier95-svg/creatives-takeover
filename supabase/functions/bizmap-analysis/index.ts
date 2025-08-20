@@ -17,6 +17,7 @@ interface LaunchReportRequest {
     goals: string;
   };
   region?: string;
+  language?: string;
 }
 
 serve(async (req) => {
@@ -25,7 +26,7 @@ serve(async (req) => {
   }
 
   try {
-    const { answers, region }: LaunchReportRequest = await req.json();
+    const { answers, region, language }: LaunchReportRequest = await req.json();
     
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -45,8 +46,11 @@ USER'S 7-STEP RESPONSES:
 7. Goals: ${answers.goals}
 
 TARGET REGION: ${region || "Global"}
+TARGET LANGUAGE: ${language || "English"}
 
 Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (\`\`\`), and keep the full report concise (aim to fit under ~3 PDF pages).
+
+LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. All headings, content, instructions, and "Do Next" sections must be in ${language || "English"}.
 
 # Launch Report
 
