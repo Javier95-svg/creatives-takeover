@@ -23,9 +23,6 @@ import BizMapAI from "./pages/Dream2Plan";
 import Login from "./pages/Login";
 import PromptLibrary from "./pages/PromptLibrary";
 import AuthCallback from "./pages/AuthCallback";
-import Profile from "./pages/Profile";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { AuthDebugPanel } from "./components/AuthDebugPanel";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +33,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthDebugPanel />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/software" element={<Software />} />
@@ -52,12 +48,10 @@ const App = () => (
             <Route path="/ip-policy" element={<IPPolicy />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/laboratory" element={<Laboratory />} />
-            
+            <Route path="/dream2plan" element={<BizMapAI />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/dream2plan" element={<ProtectedRoute><BizMapAI /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
