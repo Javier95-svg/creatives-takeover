@@ -48,12 +48,12 @@ TARGET REGION: ${region || "Global"}
 
 Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (```), and keep the full report concise (aim to fit under ~3 PDF pages).
 
-# 🚀 Launch Report
+# Launch Report
 
 ## Executive Summary
 [2-3 sentences summarizing the business opportunity and key success factors]
 
-**📋 Do Next:** Schedule 2 hours this week to review this entire report and identify your top 3 priorities.
+**Do Next:** Schedule 2 hours this week to review this entire report and identify your top 3 priorities.
 
 ## Lean Canvas Snapshot
 **Problem:** [From their response]
@@ -63,7 +63,7 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 **Revenue Streams:** [Based on pricing response]
 **Key Costs:** [From pricing response + realistic estimates]
 
-**📋 Do Next:** Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
+**Do Next:** Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
 
 ## Customer Persona
 **Name:** [Give them a name]
@@ -72,7 +72,7 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 **Where They Spend Time:** [Digital platforms, physical locations]
 **Buying Triggers:** [What makes them purchase]
 
-**📋 Do Next:** Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
+**Do Next:** Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
 
 ## Validation Plan - 5 Next Steps
 1. **[Step Name]:** [Specific action in 1-2 weeks]
@@ -81,7 +81,7 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 4. **[Step Name]:** [Specific action in 1-2 weeks]
 5. **[Step Name]:** [Specific action in 1-2 weeks]
 
-**📋 Do Next:** Complete step 1 within the next 3 days. Set a calendar reminder right now.
+**Do Next:** Complete step 1 within the next 3 days. Set a calendar reminder right now.
 
 ## Go-To-Market One-Pager
 **Primary Channel Focus:** [Single best channel for their situation]
@@ -90,7 +90,7 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 • [Specific tactic 2]
 • [Specific tactic 3]
 
-**📋 Do Next:** Create your first piece of content for [primary channel] this week. Post it and track engagement.
+**Do Next:** Create your first piece of content for [primary channel] this week. Post it and track engagement.
 
 ## Simple Pricing & Breakeven Analysis
 **Recommended Pricing:** [Specific price point with ranges]
@@ -102,7 +102,7 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 **Monthly Revenue Target:** $[X-Y range]
 **Monthly Cost Estimate:** $[X-Y range]
 
-**📋 Do Next:** Survey 10 potential customers about pricing this week using: "Would you pay $[X] for [solution] that [key benefit]?"
+**Do Next:** Survey 10 potential customers about pricing this week using: "Would you pay $[X] for [solution] that [key benefit]?"
 
 ## 90-Day Roadmap & KPIs
 
@@ -110,19 +110,19 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 **Goal:** [Specific milestone]
 **Key Actions:** [3 specific tasks]
 **KPI:** [Measurable metric]
-**📋 Do Next:** Complete the first key action within 48 hours.
+**Do Next:** Complete the first key action within 48 hours.
 
 ### Month 2: Validation  
 **Goal:** [Specific milestone]
 **Key Actions:** [3 specific tasks]
 **KPI:** [Measurable metric]
-**📋 Do Next:** Set up tracking system for your KPI (spreadsheet, app, etc.)
+**Do Next:** Set up tracking system for your KPI (spreadsheet, app, etc.)
 
 ### Month 3: Launch
 **Goal:** [Specific milestone]
 **Key Actions:** [3 specific tasks]
 **KPI:** [Measurable metric]
-**📋 Do Next:** Create a launch checklist with specific dates for each task.
+**Do Next:** Create a launch checklist with specific dates for each task.
 
 ## Copy-Paste Scripts
 
@@ -136,7 +136,7 @@ Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at
 ### Landing Page Headline:
 "[Compelling headline that addresses their problem]"
 
-**📋 Do Next:** Send the WhatsApp/SMS message to 5 potential customers today. Track responses in a simple spreadsheet.
+**Do Next:** Send the WhatsApp/SMS message to 5 potential customers today. Track responses in a simple spreadsheet.
 
 ---
 
