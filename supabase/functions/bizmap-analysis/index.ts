@@ -165,6 +165,16 @@ Unclear: [section]
 
 After you reply, I’ll summarize your feedback in a friendly tone and close with a short encouragement.
 
+## Export Options
+Where would you like to export this plan?
+
+- PDF (ready to share): In your browser press Ctrl/Cmd+P → Destination: “Save as PDF”. For nicer styling, paste into Google Docs or Notion first, then File → Download/Export as PDF.
+- Notion template (importable): In Notion, click Import → Markdown & CSV and upload a saved .md of this report; or create a new page and paste—use “Turn into” to format headings/blocks.
+- Google Doc (editable): Open docs.new → Paste the report → Insert → Table of contents (optional) → Share as needed.
+- Simple text copy (for WhatsApp/email): Copy the sections you need, or ask me for a condensed text-only version and I’ll generate it.
+
+Reply with: Export: PDF / Notion / Google Doc / Text
+
 ---
 
 This plan is a starting point. Execute, test, and adjust fast.
