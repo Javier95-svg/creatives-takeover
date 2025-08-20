@@ -25,7 +25,6 @@ const BizMapAI = () => {
   });
   const [userStage, setUserStage] = useState("Explore");
   const [userRegion, setUserRegion] = useState("US");
-  const [userLanguage, setUserLanguage] = useState("English");
   const [launchReport, setLaunchReport] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -102,7 +101,7 @@ const BizMapAI = () => {
     }
   }, []);
 
-  const generateLaunchReport = async (answers: any, stage: string, region: string, language: string) => {
+  const generateLaunchReport = async (answers: any, stage: string, region: string) => {
     try {
       setIsLoading(true);
       
@@ -110,8 +109,7 @@ const BizMapAI = () => {
         body: { 
           answers,
           stage,
-          region,
-          language
+          region
         }
       });
 
@@ -126,7 +124,7 @@ const BizMapAI = () => {
       toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
       
       // Fallback to basic structure if API fails
-      return generateFallbackReport(answers, stage, region, language);
+      return generateFallbackReport(answers, stage, region);
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +143,6 @@ const BizMapAI = () => {
           answers: userAnswers,
           stage: userStage,
           region: userRegion,
-          language: userLanguage,
         }
       });
 
@@ -188,9 +185,8 @@ const BizMapAI = () => {
     await generateAsset(type);
   };
 
-  const generateFallbackReport = (answers: any, stage: string, regionInput?: string, languageInput?: string) => {
+  const generateFallbackReport = (answers: any, stage: string, regionInput?: string) => {
     const region = (regionInput || 'Global').trim();
-    const language = (languageInput || 'English').trim().toLowerCase();
     const r = region.toLowerCase();
 
     // Region-aware channels and currency
@@ -213,8 +209,8 @@ const BizMapAI = () => {
     else if (r.includes('us') || r.includes('united states') || r.includes('america')) { channels = ['LinkedIn', 'Email', 'Google Search']; currency = '$'; currencyLabel = 'USD'; }
     else if (r.includes('mena') || r.includes('middle east') || r.includes('uae') || r.includes('saudi')) { channels = ['WhatsApp', 'Instagram', 'LinkedIn']; currency = '﷼'; currencyLabel = 'Local'; }
 
-    // Language-specific translations
-    let translations = {
+    // Fixed English translations
+    const translations = {
       title: "# Launch Report",
       executiveSummary: "## Executive Summary",
       executiveText: "Based on your responses, you have a promising business concept that addresses a real market need. Success will depend on effective customer validation and focused execution.",
@@ -236,77 +232,6 @@ const BizMapAI = () => {
       disclaimer: "This plan is a starting point. Execute, test, and adjust fast.",
       dataDisclaimer: "**Data Disclaimer:** All numbers above are estimates/assumptions, not official statistics. Always validate with real market research, competitor analysis, and customer surveys before making major decisions."
     };
-
-    if (language.includes('spanish') || language.includes('español')) {
-      translations = {
-        title: "# Reporte de Lanzamiento",
-        executiveSummary: "## Resumen Ejecutivo", 
-        executiveText: "Basado en tus respuestas, tienes un concepto de negocio prometedor que aborda una necesidad real del mercado. El éxito dependerá de una validación efectiva del cliente y una ejecución enfocada.",
-        doNext: "**Hacer Ahora:**",
-        scheduleReview: "Programa 2 horas esta semana para revisar todo este reporte e identificar tus 3 prioridades principales.",
-        leanCanvas: "## Resumen del Lean Canvas",
-        problem: "**Problema:**",
-        solution: "**Solución:**",
-        keyCustomers: "**Clientes Clave:**",
-        channels: "**Canales:**",
-        revenueStreams: "**Fuentes de Ingresos:**",
-        keyCosts: "**Costos Clave:**",
-        customerPersona: "## Persona del Cliente",
-        validationPlan: "## Plan de Validación - 5 Próximos Pasos",
-        goToMarket: "## Estrategia de Lanzamiento",
-        pricingAnalysis: "## Análisis Simple de Precios y Punto de Equilibrio",
-        roadmap: "## Hoja de Ruta de 90 Días y KPIs",
-        scripts: "## Scripts Para Copiar y Pegar",
-        disclaimer: "Este plan es un punto de partida. Ejecuta, prueba y ajusta rápidamente.",
-        dataDisclaimer: "**Descargo de Responsabilidad:** Todos los números anteriores son estimaciones/suposiciones, no estadísticas oficiales. Siempre valida con investigación de mercado real, análisis de competidores y encuestas a clientes antes de tomar decisiones importantes."
-      };
-    } else if (language.includes('portuguese') || language.includes('português')) {
-      translations = {
-        title: "# Relatório de Lançamento",
-        executiveSummary: "## Resumo Executivo",
-        executiveText: "Com base em suas respostas, você tem um conceito de negócio promissor que atende a uma necessidade real do mercado. O sucesso dependerá da validação efetiva do cliente e execução focada.",
-        doNext: "**Fazer Agora:**",
-        scheduleReview: "Agende 2 horas esta semana para revisar todo este relatório e identificar suas 3 principais prioridades.",
-        leanCanvas: "## Resumo do Lean Canvas",
-        problem: "**Problema:**",
-        solution: "**Solução:**",
-        keyCustomers: "**Clientes-Chave:**",
-        channels: "**Canais:**",
-        revenueStreams: "**Fontes de Receita:**",
-        keyCosts: "**Custos-Chave:**",
-        customerPersona: "## Persona do Cliente",
-        validationPlan: "## Plano de Validação - 5 Próximos Passos",
-        goToMarket: "## Estratégia de Lançamento",
-        pricingAnalysis: "## Análise Simples de Preços e Ponto de Equilíbrio",
-        roadmap: "## Roteiro de 90 Dias e KPIs",
-        scripts: "## Scripts Para Copiar e Colar",
-        disclaimer: "Este plano é um ponto de partida. Execute, teste e ajuste rapidamente.",
-        dataDisclaimer: "**Isenção de Responsabilidade:** Todos os números acima são estimativas/suposições, não estatísticas oficiais. Sempre valide com pesquisa de mercado real, análise de concorrentes e pesquisas com clientes antes de tomar decisões importantes."
-      };
-    } else if (language.includes('french') || language.includes('français')) {
-      translations = {
-        title: "# Rapport de Lancement",
-        executiveSummary: "## Resume Executif",
-        executiveText: "D'apres vos reponses, vous avez un concept d'entreprise prometteur qui repond a un besoin reel du marche. Le succes dependra d'une validation client efficace et d'une execution ciblee.",
-        doNext: "**A Faire Maintenant:**",
-        scheduleReview: "Programmez 2 heures cette semaine pour examiner tout ce rapport et identifier vos 3 priorites principales.",
-        leanCanvas: "## Résumé du Lean Canvas",
-        problem: "**Problème:**",
-        solution: "**Solution:**",
-        keyCustomers: "**Clients Clés:**",
-        channels: "**Canaux:**",
-        revenueStreams: "**Sources de Revenus:**",
-        keyCosts: "**Coûts Clés:**",
-        customerPersona: "## Persona Client",
-        validationPlan: "## Plan de Validation - 5 Prochaines Etapes",
-        goToMarket: "## Strategie de Mise sur le Marche",
-        pricingAnalysis: "## Analyse Simple des Prix et du Seuil de Rentabilite",
-        roadmap: "## Feuille de Route de 90 Jours et KPIs",
-        scripts: "## Scripts a Copier-Coller",
-        disclaimer: "Ce plan est un point de depart. Executez, testez et ajustez rapidement.",
-        dataDisclaimer: "**Avis de Non-Responsabilite:** Tous les chiffres ci-dessus sont des estimations/suppositions, pas des statistiques officielles. Validez toujours avec une vraie recherche de marche, une analyse des concurrents et des enquetes clients avant de prendre des decisions importantes."
-      };
-    }
 
     return `${translations.title}
 
@@ -530,7 +455,7 @@ ${translations.dataDisclaimer}`;
 
       // Generate launch report
       const completeAnswers = { ...userAnswers };
-      const report = await generateLaunchReport(completeAnswers, userStage, userRegion, userLanguage);
+      const report = await generateLaunchReport(completeAnswers, userStage, userRegion);
       setLaunchReport(report);
 
       // Add final message with report
@@ -777,7 +702,7 @@ ${translations.dataDisclaimer}`;
 
                     {/* Preferences */}
                     <div className="p-4 border-t border-border/50 bg-muted/20">
-                      <div className="grid grid-cols-3 gap-3 mb-3">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
                           <label className="text-xs font-medium text-muted-foreground mb-1 block">Stage</label>
                           <Select value={userStage} onValueChange={setUserStage}>
@@ -811,41 +736,6 @@ ${translations.dataDisclaimer}`;
                               <SelectItem value="Kenya">Kenya</SelectItem>
                               <SelectItem value="UAE">UAE</SelectItem>
                               <SelectItem value="Global">Global</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Language</label>
-                          <Select value={userLanguage} onValueChange={setUserLanguage}>
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-48 bg-background border z-50">
-                              <SelectItem value="English">English</SelectItem>
-                              <SelectItem value="Mandarin Chinese">Mandarin Chinese</SelectItem>
-                              <SelectItem value="Spanish">Spanish</SelectItem>
-                              <SelectItem value="Hindi">Hindi</SelectItem>
-                              <SelectItem value="Arabic">Arabic</SelectItem>
-                              <SelectItem value="Portuguese">Portuguese</SelectItem>
-                              <SelectItem value="Bengali">Bengali</SelectItem>
-                              <SelectItem value="Russian">Russian</SelectItem>
-                              <SelectItem value="Japanese">Japanese</SelectItem>
-                              <SelectItem value="German">German</SelectItem>
-                              <SelectItem value="French">French</SelectItem>
-                              <SelectItem value="Korean">Korean</SelectItem>
-                              <SelectItem value="Italian">Italian</SelectItem>
-                              <SelectItem value="Turkish">Turkish</SelectItem>
-                              <SelectItem value="Vietnamese">Vietnamese</SelectItem>
-                              <SelectItem value="Thai">Thai</SelectItem>
-                              <SelectItem value="Polish">Polish</SelectItem>
-                              <SelectItem value="Dutch">Dutch</SelectItem>
-                              <SelectItem value="Persian">Persian</SelectItem>
-                              <SelectItem value="Malay">Malay</SelectItem>
-                              <SelectItem value="Tamil">Tamil</SelectItem>
-                              <SelectItem value="Telugu">Telugu</SelectItem>
-                              <SelectItem value="Marathi">Marathi</SelectItem>
-                              <SelectItem value="Urdu">Urdu</SelectItem>
-                              <SelectItem value="Ukrainian">Ukrainian</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

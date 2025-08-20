@@ -21,7 +21,6 @@ interface BizMapAssetsRequest {
   };
   stage?: string;
   region?: string;
-  language?: string;
 }
 
 serve(async (req) => {
@@ -31,18 +30,15 @@ serve(async (req) => {
   }
 
   try {
-    const { type, answers, stage, region, language }: BizMapAssetsRequest = await req.json();
+    const { type, answers, stage, region }: BizMapAssetsRequest = await req.json();
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    const lang = language || 'English';
-
     const baseContext = `You are BizMap AI, a pragmatic startup co-founder. Generate the requested asset using the user's earlier inputs.
 
-LANGUAGE: ${lang}
 REGION AWARE: ${region || 'Global'}
 STAGE: ${stage || 'Explore'}
 
@@ -56,7 +52,7 @@ USER INPUTS:
 7) Goals: ${answers.goals}
 
 RULES:
-- Use plain, friendly language. Output entirely in ${lang}.
+- Use plain, friendly language in English.
 - Keep it short, skimmable, and copy-paste ready.
 - Include placeholders like [Name], [Company], [Benefit] where needed.
 - If you mention numbers, provide ranges and assumptions. Do not fabricate precise stats.

@@ -18,7 +18,6 @@ interface LaunchReportRequest {
   };
   stage?: string;
   region?: string;
-  language?: string;
 }
 
 serve(async (req) => {
@@ -27,7 +26,7 @@ serve(async (req) => {
   }
 
   try {
-    const { answers, stage, region, language }: LaunchReportRequest = await req.json();
+    const { answers, stage, region }: LaunchReportRequest = await req.json();
     
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -48,7 +47,6 @@ USER'S 7-STEP RESPONSES:
 
 STAGE: ${stage || "Explore"}
 TARGET REGION: ${region || "Global"}
-TARGET LANGUAGE: ${language || "English"}
 
 IMPORTANT: Stage-specific adaptation across Validation Plan, Go-To-Market, Pricing, and 90-Day Roadmap. Always replace generic steps with stage-specific tasks.
 - Explore (idea only): focus on problem validation, customer interviews, cheap experiments.
@@ -56,9 +54,7 @@ IMPORTANT: Stage-specific adaptation across Validation Plan, Go-To-Market, Prici
 - Build (MVP in progress): highlight onboarding, pricing experiments, early acquisition.
 - Grow (some revenue): double down on retention, scalable channels, cost optimization.
 
-Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (\`\`\`), and keep the full report concise (aim to fit under ~3 PDF pages).
-
-LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. All headings, content, instructions, and "Do Next" sections must be in ${language || "English"}.
+Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (\`\`\`), and keep the full report concise (aim to fit under ~3 PDF pages). All content should be in English.
 
 # Launch Report
 
