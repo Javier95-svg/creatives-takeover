@@ -172,8 +172,8 @@ Based on your responses, you have a promising business concept that addresses a 
 1. **Customer Interviews:** Conduct 20 interviews with target customers
 2. **Market Research:** Analyze 3 direct competitors
 3. **Prototype Testing:** Create simple version to test core concept
-4. **Channel Test (${region}):** Run a small test on ${channels[0]} with a $50-${currency}100 budget equivalent
-5. **Pricing Validation:** Survey potential customers on pricing (${currencyLabel})
+4. **Channel Test (${region}):** Run a small test on ${channels[0]} with ${currency}50–${currency}150 budget (track real costs)
+5. **Pricing Validation:** Survey 20+ potential customers on pricing (${currencyLabel}) - don't guess, ask directly
 
 ## Go-To-Market One-Pager
 **Primary Channel Focus (${region}):** ${channels[0]}
@@ -183,28 +183,30 @@ Based on your responses, you have a promising business concept that addresses a 
 • Partnerships with complementary businesses
 
 ## Simple Pricing & Breakeven Analysis (${currencyLabel})
-**Recommended Pricing:** Example ${currency}49–${currency}99 (adjust to your market)
-**Key Assumptions:**
-• Customer acquisition cost: ~${currency}5–${currency}20 via ${channels[0]}
-• Monthly customers needed: Based on revenue goals
-• Break-even timeline: 6–12 months
+**Recommended Pricing:** Example ${currency}49–${currency}199 (verify with competitor research)
+**Key Assumptions (validate these with real data):**
+• Customer acquisition cost: ~${currency}5–${currency}25 via ${channels[0]} (test with small budget)
+• Monthly customers needed: Based on your revenue goals
+• Break-even timeline: 6–18 months (varies by market)
+
+**💡 Find Real Data:** Search "pricing benchmarks [your industry] ${region}" on Google, check Statista, or survey potential customers directly.
 
 ## 90-Day Roadmap & KPIs
 
 ### Month 1: Foundation
-**Goal:** Validate core assumptions
+**Goal:** Validate core assumptions with real data
 **Key Actions:** Customer interviews, competitor analysis, basic prototype
-**KPI:** 20 customer interviews completed
+**KPI:** 20 customer interviews completed + pricing range validated
 
 ### Month 2: Validation
-**Goal:** Test solution-market fit
-**Key Actions:** Refine offering, test ${channels[0]}, pricing validation in ${currencyLabel}
-**KPI:** 10 potential customers express buying intent
+**Goal:** Test solution-market fit with real customers
+**Key Actions:** Refine offering, test ${channels[0]} with ${currency}100–${currency}300 budget, validate pricing in ${currencyLabel}
+**KPI:** 10+ potential customers express buying intent at your price point
 
 ### Month 3: Launch
-**Goal:** Get first customers
+**Goal:** Get first paying customers
 **Key Actions:** Official launch, focus marketing on ${channels[0]} and ${channels[1] || channels[0]}, gather feedback
-**KPI:** First 5–10 paying customers
+**KPI:** First 5–15 paying customers (track real acquisition costs)
 
 ## Copy-Paste Scripts
 
@@ -220,7 +222,9 @@ Based on your responses, you have a promising business concept that addresses a 
 
 ---
 
-⚡ This plan is a starting point. Execute, test, and adjust fast.`;
+⚡ This plan is a starting point. Execute, test, and adjust fast.
+
+**📊 Data Disclaimer:** All numbers above are estimates/assumptions, not official statistics. Always validate with real market research, competitor analysis, and customer surveys before making major decisions.`;
   };
 
   const isAnswerTooVague = (answer: string, stepKey: string) => {

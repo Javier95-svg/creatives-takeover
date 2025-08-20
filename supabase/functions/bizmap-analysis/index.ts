@@ -127,7 +127,11 @@ Generate a LAUNCH REPORT with these EXACT sections:
 
 IMPORTANT GUIDELINES:
 - Be region-aware (WhatsApp for LATAM, LinkedIn for EU/US, WeChat for China)
-- No unrealistic market data - use ballpark figures with noted assumptions
+- **CRITICAL: Data Responsibility** - For market size, pricing, or financial estimates:
+  * Always clarify these are assumptions/estimates, not official statistics
+  * Use ranges (e.g., $10-15 per user) instead of precise fabricated numbers  
+  * When real data is missing, guide users on how to find it: "Search Google Trends, Statista, or [Industry] Association reports for [specific data] in [region]"
+  * Example: "Estimated market size: $50-200M (verify with Statista or industry reports)"
 - Focus on execution over theory
 - Use plain language, avoid jargon
 - Be practical and actionable
