@@ -286,10 +286,10 @@ const BizMapAI = () => {
     } else if (language.includes('french') || language.includes('français')) {
       translations = {
         title: "# Rapport de Lancement",
-        executiveSummary: "## Résumé Exécutif",
-        executiveText: "D'après vos réponses, vous avez un concept d'entreprise prometteur qui répond à un besoin réel du marché. Le succès dépendra d'une validation client efficace et d'une exécution ciblée.",
-        doNext: "**À Faire Maintenant:**",
-        scheduleReview: "Programmez 2 heures cette semaine pour examiner tout ce rapport et identifier vos 3 priorités principales.",
+        executiveSummary: "## Resume Executif",
+        executiveText: "D'apres vos reponses, vous avez un concept d'entreprise prometteur qui repond a un besoin reel du marche. Le succes dependra d'une validation client efficace et d'une execution ciblee.",
+        doNext: "**A Faire Maintenant:**",
+        scheduleReview: "Programmez 2 heures cette semaine pour examiner tout ce rapport et identifier vos 3 priorites principales.",
         leanCanvas: "## Résumé du Lean Canvas",
         problem: "**Problème:**",
         solution: "**Solution:**",
@@ -298,13 +298,13 @@ const BizMapAI = () => {
         revenueStreams: "**Sources de Revenus:**",
         keyCosts: "**Coûts Clés:**",
         customerPersona: "## Persona Client",
-        validationPlan: "## Plan de Validation - 5 Prochaines Étapes",
-        goToMarket: "## Stratégie de Mise sur le Marché",
-        pricingAnalysis: "## Analyse Simple des Prix et du Seuil de Rentabilité",
+        validationPlan: "## Plan de Validation - 5 Prochaines Etapes",
+        goToMarket: "## Strategie de Mise sur le Marche",
+        pricingAnalysis: "## Analyse Simple des Prix et du Seuil de Rentabilite",
         roadmap: "## Feuille de Route de 90 Jours et KPIs",
-        scripts: "## Scripts à Copier-Coller",
-        disclaimer: "Ce plan est un point de départ. Exécutez, testez et ajustez rapidement.",
-        dataDisclaimer: "**Avis de Non-Responsabilité:** Tous les chiffres ci-dessus sont des estimations/suppositions, pas des statistiques officielles. Validez toujours avec une vraie recherche de marché, une analyse des concurrents et des enquêtes clients avant de prendre des décisions importantes."
+        scripts: "## Scripts a Copier-Coller",
+        disclaimer: "Ce plan est un point de depart. Executez, testez et ajustez rapidement.",
+        dataDisclaimer: "**Avis de Non-Responsabilite:** Tous les chiffres ci-dessus sont des estimations/suppositions, pas des statistiques officielles. Validez toujours avec une vraie recherche de marche, une analyse des concurrents et des enquetes clients avant de prendre des decisions importantes."
       };
     }
 

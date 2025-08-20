@@ -155,6 +155,11 @@ Tip: You can turn this into a proper chart later in Canva, Notion, or Excel.
 **KPI:** [Measurable metric]
 **Do Next:** Create a launch checklist with specific dates for each task.
 
+Timeline (Emoji View):
+- Month 1: Foundation milestone
+- Month 2: Validation milestone  
+- Month 3: Launch milestone
+
 ## Copy-Paste Scripts (Stage-Specific)
 
 ### WhatsApp/SMS Message:
