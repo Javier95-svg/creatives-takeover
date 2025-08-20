@@ -153,6 +153,8 @@ const BizMapAI = () => {
 ## Executive Summary
 Based on your responses, you have a promising business concept that addresses a real market need. Success will depend on effective customer validation and focused execution.
 
+**📋 Do Next:** Schedule 2 hours this week to review this entire report and identify your top 3 priorities.
+
 ## Lean Canvas Snapshot
 **Problem:** ${answers.problem}
 **Solution:** ${answers.solution}
@@ -161,12 +163,16 @@ Based on your responses, you have a promising business concept that addresses a 
 **Revenue Streams:** Based on your pricing model
 **Key Costs:** As outlined in your cost structure
 
+**📋 Do Next:** Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
+
 ## Customer Persona
 **Name:** Your Ideal Customer
 **Demographics:** Based on your target market description
 **Pain Points:** Issues you identified in problem section
 **Where They Spend Time:** ${channels.join(', ')}
 **Buying Triggers:** Value propositions from your solution
+
+**📋 Do Next:** Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
 
 ## Validation Plan - 5 Next Steps
 1. **Customer Interviews:** Conduct 20 interviews with target customers
@@ -175,12 +181,16 @@ Based on your responses, you have a promising business concept that addresses a 
 4. **Channel Test (${region}):** Run a small test on ${channels[0]} with ${currency}50–${currency}150 budget (track real costs)
 5. **Pricing Validation:** Survey 20+ potential customers on pricing (${currencyLabel}) - don't guess, ask directly
 
+**📋 Do Next:** Complete step 1 within the next 3 days. Set a calendar reminder right now.
+
 ## Go-To-Market One-Pager
 **Primary Channel Focus (${region}):** ${channels[0]}
 **First 10 Customers Plan:**
 • Direct outreach via ${channels[0]}
 • Content marketing to establish expertise
 • Partnerships with complementary businesses
+
+**📋 Do Next:** Create your first piece of content for ${channels[0]} this week. Post it and track engagement.
 
 ## Simple Pricing & Breakeven Analysis (${currencyLabel})
 **Recommended Pricing:** Example ${currency}49–${currency}199 (verify with competitor research)
@@ -191,22 +201,27 @@ Based on your responses, you have a promising business concept that addresses a 
 
 **💡 Find Real Data:** Search "pricing benchmarks [your industry] ${region}" on Google, check Statista, or survey potential customers directly.
 
+**📋 Do Next:** Survey 10 potential customers about pricing this week using: "Would you pay ${currency}[X] for [solution] that [key benefit]?"
+
 ## 90-Day Roadmap & KPIs
 
 ### Month 1: Foundation
 **Goal:** Validate core assumptions with real data
 **Key Actions:** Customer interviews, competitor analysis, basic prototype
 **KPI:** 20 customer interviews completed + pricing range validated
+**📋 Do Next:** Complete the first customer interview within 48 hours.
 
 ### Month 2: Validation
 **Goal:** Test solution-market fit with real customers
 **Key Actions:** Refine offering, test ${channels[0]} with ${currency}100–${currency}300 budget, validate pricing in ${currencyLabel}
 **KPI:** 10+ potential customers express buying intent at your price point
+**📋 Do Next:** Set up tracking system for your KPI (spreadsheet, app, etc.)
 
 ### Month 3: Launch
 **Goal:** Get first paying customers
 **Key Actions:** Official launch, focus marketing on ${channels[0]} and ${channels[1] || channels[0]}, gather feedback
 **KPI:** First 5–15 paying customers (track real acquisition costs)
+**📋 Do Next:** Create a launch checklist with specific dates for each task.
 
 ## Copy-Paste Scripts
 
@@ -219,6 +234,8 @@ Based on your responses, you have a promising business concept that addresses a 
 
 ### Landing Page Headline:
 "Finally, a better way to [solve their problem]"
+
+**📋 Do Next:** Send the ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} message to 5 potential customers today. Track responses in a simple spreadsheet.
 
 ---
 
