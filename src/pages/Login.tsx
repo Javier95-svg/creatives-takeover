@@ -118,6 +118,7 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
+          redirectTo: 'https://creatives-takeover.com/dream2plan',
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
