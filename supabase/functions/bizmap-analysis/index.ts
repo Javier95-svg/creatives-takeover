@@ -46,7 +46,7 @@ USER'S 7-STEP RESPONSES:
 
 TARGET REGION: ${region || "Global"}
 
-Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction):
+Generate a LAUNCH REPORT with these EXACT sections (each section MUST include at least one specific "do next" instruction). FORMAT REQUIREMENTS: Use Markdown with clear headings (#, ##, ###), keep paragraphs brief with short bullet points, wrap all scripts/templates in fenced code blocks (```), and keep the full report concise (aim to fit under ~3 PDF pages).
 
 # 🚀 Launch Report
 

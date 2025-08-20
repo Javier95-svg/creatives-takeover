@@ -226,14 +226,20 @@ Based on your responses, you have a promising business concept that addresses a 
 ## Copy-Paste Scripts
 
 ### ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} Message:
-"Hi [Name], I'm launching a new [solution] that helps [target customer] with [problem]. Would you be interested in learning more?"
+```
+Hi [Name], I'm launching a new [solution] that helps [target customer] with [problem]. Would you be interested in learning more?
+```
 
 ### Cold Email Subject + Body:
-**Subject:** Quick question about [specific problem]
-**Body:** Hi [Name], I noticed [specific observation]. I'm working on [solution] to help with [problem]. Would you have 5 minutes to share your thoughts?
+```
+Subject: Quick question about [specific problem]
+Body: Hi [Name], I noticed [specific observation]. I'm working on [solution] to help with [problem]. Would you have 5 minutes to share your thoughts?
+```
 
 ### Landing Page Headline:
-"Finally, a better way to [solve their problem]"
+```
+Finally, a better way to [solve their problem]
+```
 
 **📋 Do Next:** Send the ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} message to 5 potential customers today. Track responses in a simple spreadsheet.
 
