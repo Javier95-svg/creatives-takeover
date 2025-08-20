@@ -130,6 +130,62 @@ const BizMapAI = () => {
     } finally {
       setIsLoading(false);
     }
+};
+
+  // Generate post-report assets (outreach email, social posts, landing page)
+  const generateAsset = async (type: 'outreach' | 'social' | 'landing') => {
+    try {
+      setIsLoading(true);
+      const label = type === 'outreach' ? 'your first outreach email' : type === 'social' ? '3 social posts' : 'a simple landing page outline';
+      setMessages(prev => [...prev, { type: 'assistant', content: `Got it. Generating ${label} based on your inputs...` }]);
+
+      const { data, error } = await supabase.functions.invoke('bizmap-assets', {
+        body: {
+          type,
+          answers: userAnswers,
+          stage: userStage,
+          region: userRegion,
+          language: userLanguage,
+        }
+      });
+
+      if (error) throw error;
+      if (data?.asset) {
+        setMessages(prev => [...prev, { type: 'assistant', content: data.asset }]);
+      } else {
+        toast.error('Sorry, I could not generate that asset right now.');
+      }
+    } catch (err) {
+      console.error('Error generating asset:', err);
+      toast.error('There was a problem generating that. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setMessage('');
+    }
+  };
+
+  const handlePostReportMessage = async () => {
+    const content = message.toLowerCase();
+    if (message.trim()) {
+      setMessages(prev => [...prev, { type: 'user', content: message.trim() }]);
+    }
+    if (content.includes('outreach') || content.includes('email')) {
+      await generateAsset('outreach');
+      return;
+    }
+    if (content.includes('social')) {
+      await generateAsset('social');
+      return;
+    }
+    if (content.includes('landing')) {
+      await generateAsset('landing');
+      return;
+    }
+    setMessages(prev => [...prev, { type: 'assistant', content: "You can ask for: 'Draft my first outreach email', 'Write 3 social media posts to test my idea', or 'Help me sketch a simple landing page'." }]);
+    setMessage('');
+  };
+  const handleQuickAction = async (type: 'outreach' | 'social' | 'landing') => {
+    await generateAsset(type);
   };
 
   const generateFallbackReport = (answers: any, stage: string, regionInput?: string, languageInput?: string) => {
@@ -489,9 +545,10 @@ ${translations.dataDisclaimer}`;
   const handleSendMessage = async () => {
     if (currentStep < wizardSteps.length) {
       handleNextStep();
+    } else {
+      await handlePostReportMessage();
     }
   };
-
   const getCurrentPlaceholder = () => {
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder;
@@ -795,8 +852,14 @@ ${translations.dataDisclaimer}`;
                       </div>
                     </div>
 
-                    {/* Input */}
                     <div className="p-4 border-t border-border/50">
+                      {isCompleted && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('outreach')}>Draft outreach email</Button>
+                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('social')}>Write 3 social posts</Button>
+                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('landing')}>Sketch landing page</Button>
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <Input
                           placeholder={getCurrentPlaceholder()}
@@ -804,12 +867,12 @@ ${translations.dataDisclaimer}`;
                           onChange={(e) => setMessage(e.target.value)}
                           onKeyPress={handleKeyPress}
                           className="flex-1"
-                          disabled={isLoading || isCompleted}
+                          disabled={isLoading}
                         />
                         <Button 
                           onClick={handleSendMessage} 
                           size="icon" 
-                          disabled={isLoading || isCompleted || (currentStep < wizardSteps.length && !message.trim())}
+                          disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
                         >
                           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
