@@ -75,6 +75,16 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 **Revenue Streams:** [Based on pricing response]
 **Key Costs:** [From pricing response + realistic estimates]
 
+Lean Canvas Summary (Table):
+| Block | Summary |
+|---|---|
+| Problem | [From their response] |
+| Solution | [From their response] |
+| Key Customers | [Based on market/problem responses] |
+| Channels | [From their response + regional recommendations] |
+| Revenue Streams | [Based on pricing response] |
+| Key Costs | [From pricing response + realistic estimates] |
+
 **Do Next:** Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
 
 ## Customer Persona
@@ -113,6 +123,15 @@ LANGUAGE REQUIREMENT: Generate the ENTIRE report in ${language || "English"}. Al
 
 **Monthly Revenue Target:** $[X-Y range]
 **Monthly Cost Estimate:** $[X-Y range]
+
+Text-based Breakeven Approximation (Months 1–6):
+Month:    1    2    3    4    5    6
+Revenue:  |    |   ||   |||  ||||  |||||  (~$[X–Y])
+Costs:    ||||||||  |||||  ||||  |||   ||    |
+
+Breakeven ≈ Month [X]
+
+Tip: You can turn this into a proper chart later in Canva, Notion, or Excel.
 
 **Do Next:** Survey 10 potential customers about pricing this week using: "Would you pay $[X] for [solution] that [key benefit]?"
 
@@ -172,6 +191,8 @@ Where would you like to export this plan?
 - Notion template (importable): In Notion, click Import → Markdown & CSV and upload a saved .md of this report; or create a new page and paste—use “Turn into” to format headings/blocks.
 - Google Doc (editable): Open docs.new → Paste the report → Insert → Table of contents (optional) → Share as needed.
 - Simple text copy (for WhatsApp/email): Copy the sections you need, or ask me for a condensed text-only version and I’ll generate it.
+
+Tip: You can easily turn this into a chart using Canva, Notion, or Excel.
 
 Reply with: Export: PDF / Notion / Google Doc / Text
 
