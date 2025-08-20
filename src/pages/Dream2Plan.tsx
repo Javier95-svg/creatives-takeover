@@ -607,14 +607,12 @@ ${translations.dataDisclaimer}`;
                   <CardContent>
                     <div className="space-y-2">
                       {[
-                        "Executive Summary",
-                        "Lean Canvas Snapshot", 
-                        "Customer Persona",
-                        "5-Step Validation Plan",
-                        "Go-To-Market Strategy",
-                        "Pricing & Breakeven Analysis",
-                        "90-Day Roadmap & KPIs",
-                        "Copy-Paste Scripts"
+                        "Personalized Launch Report",
+                        "Go-To-Market Strategy", 
+                        "90-Day Action Roadmap",
+                        "Customer Validation Plan",
+                        "Pricing & Revenue Model",
+                        "Ready-to-Use Scripts"
                       ].map((item, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-primary" />
