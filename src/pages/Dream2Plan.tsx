@@ -3,17 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2 } from "lucide-react";
+import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, Plus, History } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const BizMapAI = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentSession, setCurrentSession] = useState<any>(null);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [userAnswers, setUserAnswers] = useState({
     overview: "",
     market: "",
@@ -80,8 +86,153 @@ const BizMapAI = () => {
 
   const [message, setMessage] = useState("");
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      toast.error("Please sign in to use BizMap AI");
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
+
+  // Load user sessions
+  useEffect(() => {
+    if (user) {
+      loadUserSessions();
+    }
+  }, [user]);
+
+  const loadUserSessions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('updated_at', { ascending: false });
+      
+      if (error) throw error;
+      setSessions(data || []);
+      
+      // If there's an incomplete session, continue it
+      const incompleteSession = data?.find(s => !s.is_completed);
+      if (incompleteSession) {
+        loadSession(incompleteSession);
+      }
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+    }
+  };
+
+  const loadSession = (session: any) => {
+    setCurrentSession(session);
+    setCurrentStep(session.current_step);
+    setUserAnswers(session.answers || {
+      overview: "",
+      market: "",
+      problem: "",
+      solution: "",
+      channels: "",
+      pricing: "",
+      goals: ""
+    });
+    setLaunchReport(session.launch_report || "");
+    
+    // Reconstruct messages from session data
+    const msgs = [{
+      type: "assistant",
+      content: "Welcome to BizMap AI! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
+    }];
+    
+    // Add questions and answers based on current step
+    for (let i = 0; i <= session.current_step && i < wizardSteps.length; i++) {
+      msgs.push({
+        type: "assistant",
+        content: `**${wizardSteps[i].title}** (Step ${i + 1} of 7)\n\n${wizardSteps[i].question}`
+      });
+      
+      if (session.answers[wizardSteps[i].key]) {
+        msgs.push({
+          type: "user",
+          content: session.answers[wizardSteps[i].key]
+        });
+      }
+    }
+    
+    if (session.launch_report) {
+      msgs.push({
+        type: "assistant",
+        content: session.launch_report
+      });
+    }
+    
+    setMessages(msgs);
+  };
+
+  const saveSession = async (step: number, answers: any, report: string = "", completed: boolean = false) => {
+    if (!user) return;
+    
+    try {
+      const sessionData = {
+        user_id: user.id,
+        title: answers.overview ? `${answers.overview.substring(0, 50)}...` : 'New Chat Session',
+        current_step: step,
+        answers: answers,
+        launch_report: report,
+        is_completed: completed
+      };
+      
+      if (currentSession) {
+        // Update existing session
+        const { error } = await supabase
+          .from('chat_sessions')
+          .update(sessionData)
+          .eq('id', currentSession.id);
+        if (error) throw error;
+      } else {
+        // Create new session
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .insert([sessionData])
+          .select()
+          .single();
+        if (error) throw error;
+        setCurrentSession(data);
+      }
+    } catch (error) {
+      console.error('Error saving session:', error);
+      toast.error('Failed to save progress');
+    }
+  };
+
+  const createNewSession = () => {
+    setCurrentSession(null);
+    setCurrentStep(0);
+    setUserAnswers({
+      overview: "",
+      market: "",
+      problem: "",
+      solution: "",
+      channels: "",
+      pricing: "",
+      goals: ""
+    });
+    setLaunchReport("");
+    setMessages([
+      {
+        type: "assistant",
+        content: "Welcome to BizMap AI! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
+      },
+      {
+        type: "assistant",
+        content: `**${wizardSteps[0].title}** (Step 1 of 7)\n\n${wizardSteps[0].question}`
+      }
+    ]);
+    setMessage("");
+  };
+
   // Check for pre-populated prompt from Prompt Library
   useEffect(() => {
+    if (!user) return;
+    
     const savedPrompt = localStorage.getItem('bizmap_prompt');
     if (savedPrompt) {
       setUserAnswers(prev => ({ ...prev, overview: savedPrompt }));
@@ -89,17 +240,17 @@ const BizMapAI = () => {
       localStorage.removeItem('bizmap_prompt');
       toast.success("Prompt loaded from Prompt Library!");
     }
-  }, []);
+  }, [user]);
 
   // Add first question to messages on component mount
   useEffect(() => {
-    if (messages.length === 1) { // Only initial message
+    if (user && messages.length === 1) { // Only initial message
       setMessages(prev => [...prev, {
         type: "assistant",
         content: `**${wizardSteps[0].title}** (Step 1 of 7)\n\n${wizardSteps[0].question}`
       }]);
     }
-  }, []);
+  }, [user, messages.length]);
 
   const generateLaunchReport = async (answers: any, stage: string, region: string) => {
     try {
@@ -426,7 +577,8 @@ ${translations.dataDisclaimer}`;
     }
 
     // Answer is good enough, proceed
-    setUserAnswers(prev => ({ ...prev, [currentKey]: currentAnswer }));
+    const updatedAnswers = { ...userAnswers, [currentKey]: currentAnswer };
+    setUserAnswers(updatedAnswers);
 
     // Add user message to chat
     setMessages(prev => [...prev, {
@@ -446,6 +598,9 @@ ${translations.dataDisclaimer}`;
         type: "assistant",
         content: `Great! Now for step ${nextStep + 1} of 7:\n\n**${wizardSteps[nextStep].title}**\n\n${wizardSteps[nextStep].question}`
       }]);
+      
+      // Save progress
+      await saveSession(nextStep, updatedAnswers);
     } else {
       // All steps completed, generate launch report
       setMessages(prev => [...prev, {
@@ -454,8 +609,7 @@ ${translations.dataDisclaimer}`;
       }]);
 
       // Generate launch report
-      const completeAnswers = { ...userAnswers };
-      const report = await generateLaunchReport(completeAnswers, userStage, userRegion);
+      const report = await generateLaunchReport(updatedAnswers, userStage, userRegion);
       setLaunchReport(report);
 
       // Add final message with report
@@ -463,6 +617,10 @@ ${translations.dataDisclaimer}`;
         type: "assistant", 
         content: report
       }]);
+      
+      // Save completed session
+      await saveSession(currentStep, updatedAnswers, report, true);
+      loadUserSessions(); // Refresh sessions list
     }
   };
 
@@ -509,6 +667,18 @@ ${translations.dataDisclaimer}`;
     "I'm planning a consulting business"
   ];
 
+  // Loading state for unauthenticated users
+  if (loading || !user) {
+    return (
+      <div className="relative min-h-screen overflow-hidden flex items-center justify-center">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Helmet>
@@ -537,6 +707,52 @@ ${translations.dataDisclaimer}`;
             <div className="grid lg:grid-cols-5 gap-8">
               {/* Instructions Panel */}
               <div className="lg:col-span-2 space-y-6">
+                {/* Session Management */}
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <History className="w-5 h-5 text-primary" />
+                        Sessions
+                      </span>
+                      <Button
+                        onClick={createNewSession}
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Plus className="w-4 h-4" />
+                        New Chat
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {sessions.length > 0 ? (
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {sessions.slice(0, 5).map((session) => (
+                          <Button
+                            key={session.id}
+                            variant={currentSession?.id === session.id ? "default" : "outline"}
+                            size="sm"
+                            className="w-full justify-start text-left h-auto p-2"
+                            onClick={() => loadSession(session)}
+                          >
+                            <div>
+                              <div className="text-xs text-muted-foreground">
+                                {session.is_completed ? "✓ Complete" : `Step ${session.current_step + 1}/7`}
+                              </div>
+                              <div className="text-sm truncate">
+                                {session.title || "Untitled Session"}
+                              </div>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No previous sessions</p>
+                    )}
+                  </CardContent>
+                </Card>
+
                 <Card className="glass-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
