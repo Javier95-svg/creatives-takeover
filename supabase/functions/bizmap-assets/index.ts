@@ -73,7 +73,7 @@ Include:
 - A P.S. line
 Format:
 ## First Outreach Email
-```
+\`\`\`
 Subject: [Option A]
 
 Hi [Name],
@@ -82,7 +82,7 @@ Hi [Name],
 Best,
 [Your Name]
 P.S. [Short P.S.]
-```
+\`\`\`
 `;
         break;
       case 'social':
@@ -91,17 +91,17 @@ Each post ≤ 50 words, with 1 hook, 1 benefit, and a clear CTA. Add 2-3 relevan
 Format:
 ## 3 Social Posts
 1)
-```
+\`\`\`
 [Post text]
-```
+\`\`\`
 2)
-```
+\`\`\`
 [Post text]
-```
+\`\`\`
 3)
-```
+\`\`\`
 [Post text]
-```
+\`\`\`
 `;
         break;
       case 'landing':
@@ -114,9 +114,9 @@ Include:
 - (Optional) Pricing box: ranges with assumptions (no fabricated precision)
 Format:
 ## Simple Landing Page Outline
-```
+\`\`\`
 [Section headings + copy]
-```
+\`\`\`
 `;
         break;
       default:
