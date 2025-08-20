@@ -6,11 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AnalysisRequest {
-  businessIdea: string;
-  budget?: string;
-  skills?: string;
-  timeCommitment?: string;
+interface LaunchReportRequest {
+  answers: {
+    overview: string;
+    market: string;
+    problem: string;
+    solution: string;
+    channels: string;
+    pricing: string;
+    goals: string;
+  };
+  region?: string;
 }
 
 serve(async (req) => {
@@ -19,142 +25,113 @@ serve(async (req) => {
   }
 
   try {
-    const { businessIdea, budget, skills, timeCommitment }: AnalysisRequest = await req.json();
+    const { answers, region }: LaunchReportRequest = await req.json();
     
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Create context-aware prompt for GPT-5
-    const prompt = `You are a startup mentor and execution strategist. Analyze this business idea and provide a comprehensive, actionable business plan.
+    // Create Launch Report prompt for GPT-5
+    const prompt = `You are a global startup co-founder in chatbot form. Your mission is to guide entrepreneurs through creating a clear, actionable "Launch Report" they can follow to start and grow their business. You are practical, globally relevant, and use plain language.
 
-BUSINESS IDEA: "${businessIdea}"
+USER'S 7-STEP RESPONSES:
+1. Overview: ${answers.overview}
+2. Market: ${answers.market}
+3. Problem: ${answers.problem}
+4. Solution: ${answers.solution}
+5. Channels: ${answers.channels}
+6. Pricing/Costs: ${answers.pricing}
+7. Goals: ${answers.goals}
 
-USER CONTEXT:
-- Budget: ${budget || "Not specified"}
-- Skills: ${skills || "Not specified"}  
-- Time Commitment: ${timeCommitment || "Not specified"}
+TARGET REGION: ${region || "Global"}
 
-Provide your analysis in this EXACT format:
+Generate a LAUNCH REPORT with these EXACT sections:
 
-# 📊 Business Analysis Report
+# 🚀 Launch Report
 
-## 💡 Business Idea Overview
-"${businessIdea}"
+## Executive Summary
+[2-3 sentences summarizing the business opportunity and key success factors]
 
-## 🎯 Viability Assessment
+## Lean Canvas Snapshot
+**Problem:** [From their response]
+**Solution:** [From their response]  
+**Key Customers:** [Based on market/problem responses]
+**Channels:** [From their response + regional recommendations]
+**Revenue Streams:** [Based on pricing response]
+**Key Costs:** [From pricing response + realistic estimates]
 
-### Market Potential Analysis
-[Provide 2-3 sentences on market size, growth trends, and accessibility]
+## Customer Persona
+**Name:** [Give them a name]
+**Demographics:** [Age, location, income level]
+**Pain Points:** [Top 3 specific problems]
+**Where They Spend Time:** [Digital platforms, physical locations]
+**Buying Triggers:** [What makes them purchase]
 
-### Key Risk Factors
-[List 3-4 main risks with brief explanations]
+## Validation Plan - 5 Next Steps
+1. **[Step Name]:** [Specific action in 1-2 weeks]
+2. **[Step Name]:** [Specific action in 1-2 weeks]
+3. **[Step Name]:** [Specific action in 1-2 weeks]
+4. **[Step Name]:** [Specific action in 1-2 weeks]
+5. **[Step Name]:** [Specific action in 1-2 weeks]
 
-### Growth Opportunities
-[Identify 3-4 key opportunities for expansion/differentiation]
+## Go-To-Market One-Pager
+**Primary Channel Focus:** [Single best channel for their situation]
+**First 10 Customers Plan:**
+• [Specific tactic 1]
+• [Specific tactic 2]
+• [Specific tactic 3]
 
-### **Viability Score: X/10**
-**Reasoning:** [2-3 sentences explaining the score based on market, competition, execution difficulty, and user context]
+## Simple Pricing & Breakeven Analysis
+**Recommended Pricing:** [Specific price point]
+**Key Assumptions:**
+• Customer acquisition cost: $[X]
+• Monthly customers needed: [X]
+• Break-even timeline: [X] months
 
----
+**Monthly Revenue Target:** $[X]
+**Monthly Cost Estimate:** $[X]
 
-## 🚀 Strategic Improvements
+## 90-Day Roadmap & KPIs
 
-1. **[Improvement Title]:** [Specific actionable recommendation]
-2. **[Improvement Title]:** [Specific actionable recommendation] 
-3. **[Improvement Title]:** [Specific actionable recommendation]
+### Month 1: Foundation
+**Goal:** [Specific milestone]
+**Key Actions:** [3 specific tasks]
+**KPI:** [Measurable metric]
 
----
+### Month 2: Validation  
+**Goal:** [Specific milestone]
+**Key Actions:** [3 specific tasks]
+**KPI:** [Measurable metric]
 
-## 🧪 Quick Validation Experiments (Complete in 2 weeks)
+### Month 3: Launch
+**Goal:** [Specific milestone]
+**Key Actions:** [3 specific tasks]
+**KPI:** [Measurable metric]
 
-### Experiment 1: [Name]
-- **Method:** [Specific approach]
-- **Tools:** [Free/low-cost tools, adjust for budget]
-- **Target Metric:** [Success criteria]
-- **Budget:** [Cost estimate]
+## Copy-Paste Scripts
 
-### Experiment 2: [Name]
-- **Method:** [Specific approach]
-- **Tools:** [Free/low-cost tools]
-- **Target Metric:** [Success criteria]
-- **Budget:** [Cost estimate]
+### WhatsApp/SMS Message:
+"[Ready-to-use customer outreach message]"
 
----
+### Cold Email Subject + Body:
+**Subject:** [Compelling subject line]
+**Body:** [3-4 sentence email template]
 
-## 📋 Custom Execution Blueprint
-
-### Phase 1: Validation & Research (Weeks 1-4)
-**Objective:** [Main goal]
-**Key Actions:**
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-**Recommended Tools:** [Free/low-cost options based on budget]
-**Timeline:** [Adjust for time commitment]
-**Success Metrics:** [Measurable outcomes]
-
-### Phase 2: MVP Development (Weeks 5-12)  
-**Objective:** [Main goal]
-**Key Actions:**
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-**Recommended Tools:** [Tools appropriate for their skill level]
-**Timeline:** [Adjust for time commitment]
-**Success Metrics:** [Measurable outcomes]
-
-### Phase 3: Market Launch (Weeks 13-24)
-**Objective:** [Main goal]
-**Key Actions:**
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-**Recommended Tools:** [Marketing tools within budget]
-**Timeline:** [Adjust for time commitment]
-**Success Metrics:** [Measurable outcomes]
-
-### Phase 4: Growth & Scale (Weeks 25-52)
-**Objective:** [Main goal]
-**Key Actions:**
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-• [Action tailored to user's skills/budget]
-**Recommended Tools:** [Advanced tools as budget allows]
-**Timeline:** [Adjust for time commitment]  
-**Success Metrics:** [Measurable outcomes]
+### Landing Page Headline:
+"[Compelling headline that addresses their problem]"
 
 ---
 
-## 📅 Prioritized Next Steps
+⚡ This plan is a starting point. Execute, test, and adjust fast.
 
-### This Week (Immediate Actions)
-1. [Specific task for this week]
-2. [Specific task for this week]
-3. [Specific task for this week]
-
-### This Month (Foundation Building)
-1. [Monthly milestone]
-2. [Monthly milestone]
-3. [Monthly milestone]
-
-### This Quarter (Growth Objectives)
-1. [Quarterly goal]
-2. [Quarterly goal]
-3. [Quarterly goal]
-
----
-
-*📄 This personalized business plan is formatted for easy export and can be saved as your strategic roadmap.*
-
-IMPORTANT: 
-- Adapt ALL recommendations to the user's budget, skills, and time constraints
-- Suggest free/low-cost tools when budget is under $1,000
-- Adjust timelines if they're part-time (5-10 hours/week)
-- Leverage their existing skills and suggest partnerships for skill gaps
-- Be specific and actionable, not generic
-- Keep tone practical and supportive`;
+IMPORTANT GUIDELINES:
+- Be region-aware (WhatsApp for LATAM, LinkedIn for EU/US, WeChat for China)
+- No unrealistic market data - use ballpark figures with noted assumptions
+- Focus on execution over theory
+- Use plain language, avoid jargon
+- Be practical and actionable
+- Keep it concise but complete`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -167,7 +144,7 @@ IMPORTANT:
         messages: [
           {
             role: 'system',
-            content: 'You are a startup mentor and execution strategist. Provide practical, actionable business analysis with specific recommendations tailored to the user\'s constraints. Always use the exact formatting requested.'
+            content: 'You are a global startup co-founder in chatbot form. You guide entrepreneurs through creating clear, actionable Launch Reports. You are practical, globally relevant, use plain language, and focus on execution over theory. Always use the exact formatting requested.'
           },
           {
             role: 'user',
@@ -185,10 +162,10 @@ IMPORTANT:
     }
 
     const data = await response.json();
-    const analysis = data.choices[0].message.content;
+    const launchReport = data.choices[0].message.content;
 
     return new Response(
-      JSON.stringify({ analysis }),
+      JSON.stringify({ launchReport }),
       { 
         headers: { 
           ...corsHeaders, 
@@ -201,8 +178,8 @@ IMPORTANT:
     console.error('Error in bizmap-analysis function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to generate analysis',
-        fallback: "I apologize, but I'm having trouble connecting to the AI analysis service right now. Please try again in a moment, or feel free to describe your business idea and I'll do my best to help you manually."
+        error: error.message || 'Failed to generate launch report',
+        fallback: "I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment, or feel free to continue and I'll do my best to help you manually."
       }),
       { 
         status: 500,
