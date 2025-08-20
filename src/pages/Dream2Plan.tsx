@@ -200,6 +200,66 @@ Based on your responses, you have a promising business concept that addresses a 
 ⚡ This plan is a starting point. Execute, test, and adjust fast.`;
   };
 
+  const isAnswerTooVague = (answer: string, stepKey: string) => {
+    const trimmed = answer.trim().toLowerCase();
+    
+    // Check for obviously vague responses
+    const vagueResponses = ['idk', "i don't know", 'not sure', 'maybe', 'um', 'uh', 'dunno', '?'];
+    if (vagueResponses.includes(trimmed) || trimmed.length < 10) {
+      return true;
+    }
+
+    // Step-specific vague answer detection
+    switch (stepKey) {
+      case 'overview':
+        return trimmed.includes('a store') || trimmed.includes('an app') || trimmed.includes('a business') || trimmed.includes('a website');
+      case 'market':
+        return trimmed.includes('everyone') || trimmed.includes('anyone') || trimmed.includes('people');
+      case 'problem':
+        return !trimmed.includes('problem') && !trimmed.includes('issue') && !trimmed.includes('struggle') && !trimmed.includes('difficult');
+      case 'solution':
+        return trimmed.length < 20;
+      case 'channels':
+        return trimmed.includes('social media') && trimmed.length < 30;
+      case 'pricing':
+        return !trimmed.includes('$') && !trimmed.includes('free') && !trimmed.includes('subscription') && !trimmed.includes('commission');
+      case 'goals':
+        return !trimmed.includes('day') && !trimmed.includes('week') && !trimmed.includes('month') && !trimmed.includes('hour');
+      default:
+        return false;
+    }
+  };
+
+  const generateClarifyingQuestion = (stepKey: string, vagueAnswer: string) => {
+    switch (stepKey) {
+      case 'overview':
+        return `I need more details to help you properly. Let me give you some options to get specific:\n\n• **E-commerce:** Selling physical products online (like clothing, gadgets, food)\n• **Service Business:** Offering services (consulting, cleaning, tutoring, design)\n• **Tech/App:** Building software or mobile applications\n• **Local Business:** Restaurant, salon, retail store, etc.\n\nWhich category fits best, and what specific product/service would you offer?`;
+        
+      case 'market':
+        if (vagueAnswer.toLowerCase().includes('everyone')) {
+          return `"Everyone" isn't a target market - let's get specific! Try one of these approaches:\n\n• **Demographics:** Age range, income level, location (e.g., "Working professionals 25-40 in urban areas")\n• **Behavior:** What they currently do (e.g., "Parents who shop online for kids' clothes")\n• **Industry:** Business type (e.g., "Small restaurant owners with 10-50 employees")\n\nWho specifically would benefit most from your solution?`;
+        }
+        return `I need more specifics about your ideal customer. Help me understand:\n\n• **Who:** Age, location, income level?\n• **What:** What do they currently do related to your business?\n• **Where:** Where do they spend time online/offline?\n\nFor example: "Busy working parents in suburbs who currently use Facebook groups to find childcare."`;
+        
+      case 'problem':
+        return `I need to understand the specific problem you're solving. Try this format:\n\n• **Current Situation:** How do people handle this now?\n• **Pain Points:** What's frustrating/time-consuming/expensive?\n• **Impact:** How does this problem affect their day/business/life?\n\nFor example: "Parents waste 2+ hours searching unreliable Facebook groups for sitters, often finding no one available for urgent needs."`;
+        
+      case 'solution':
+        return `Help me understand how your solution is different and better:\n\n• **Key Feature:** What's the main thing your solution does?\n• **Advantage:** How is it better than current alternatives?\n• **Outcome:** What result does the customer get?\n\nFor example: "Our app provides verified sitters with real-time availability and instant booking - solving the problem in under 5 minutes vs hours of searching."`;
+        
+      case 'channels':
+        return `Let's get specific about how you'll reach customers. Choose your top 2-3:\n\n• **Social Media:** Which platforms? (Instagram, TikTok, LinkedIn, Facebook)\n• **Content:** Blog, YouTube, podcast, email newsletter\n• **Partnerships:** Other businesses, influencers, referrals\n• **Paid Ads:** Google, Facebook, industry publications\n• **Direct:** Cold outreach, networking, events\n\nWhere does your target customer spend the most time?`;
+        
+      case 'pricing':
+        return `I need specifics about your business model and costs:\n\n• **Revenue:** How will you charge? (one-time fee, subscription, commission, ads)\n• **Price Point:** What will you charge? (even a rough estimate)\n• **Main Costs:** Development, marketing, materials, labor?\n• **Starting Budget:** How much can you invest initially?\n\nFor example: "15% commission per booking, average $60. Main costs: app development ($5K), marketing ($2K/month). Have $10K to start."`;
+        
+      case 'goals':
+        return `Let's set specific, measurable goals:\n\n• **Revenue Target:** How much money in 90 days?\n• **Customer Target:** How many customers/users?\n• **Time Commitment:** How many hours per week can you dedicate?\n• **Launch Timeline:** When do you want to be live?\n\nFor example: "Launch MVP in 8 weeks, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week."`;
+        
+      default:
+        return `Could you provide more specific details? I need enough information to create a useful business plan for you.`;
+    }
+  };
   const handleNextStep = () => {
     const currentAnswer = message.trim();
     if (!currentAnswer) {
@@ -207,8 +267,28 @@ Based on your responses, you have a promising business concept that addresses a 
       return;
     }
 
-    // Save current answer
     const currentKey = wizardSteps[currentStep].key;
+    
+    // Check if answer is too vague
+    if (isAnswerTooVague(currentAnswer, currentKey)) {
+      // Add user's vague message to chat
+      setMessages(prev => [...prev, {
+        type: "user", 
+        content: currentAnswer
+      }]);
+
+      // Ask for clarification
+      const clarifyingQuestion = generateClarifyingQuestion(currentKey, currentAnswer);
+      setMessages(prev => [...prev, {
+        type: "assistant",
+        content: clarifyingQuestion
+      }]);
+
+      setMessage("");
+      return; // Don't advance to next step
+    }
+
+    // Answer is good enough, proceed
     setUserAnswers(prev => ({ ...prev, [currentKey]: currentAnswer }));
 
     // Add user message to chat
