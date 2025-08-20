@@ -9,6 +9,8 @@ import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import FounderStory from "@/components/FounderStory";
+import SampleReportGallery from "@/components/SampleReportGallery";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
 const BizMapAI = () => {
@@ -610,8 +612,15 @@ ${translations.dataDisclaimer}`;
             </div>
 
             <div className="grid lg:grid-cols-5 gap-8">
+              {/* Sample Reports Gallery */}
+              <div className="lg:col-span-5 mb-8">
+                <SampleReportGallery />
+              </div>
+
               {/* Instructions Panel */}
               <div className="lg:col-span-2 space-y-6">
+                <FounderStory />
+                
                 <Card className="glass-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
