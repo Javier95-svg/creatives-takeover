@@ -33,7 +33,7 @@ const Benefits = () => {
       <div className="container mx-auto px-6 relative z-10">
         <header className="text-center max-w-2xl mx-auto mb-12 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 animate-slide-up">
-            Why Choose <span className="gradient-text">Creatives Takeover</span>
+            Why Choose <span className="gradient-text">BizMap AI</span>
           </h2>
           <p className="text-muted-foreground animate-slide-up" style={{ animationDelay: '0.2s' }}>
             Clear advantages that help you move faster while staying in control.

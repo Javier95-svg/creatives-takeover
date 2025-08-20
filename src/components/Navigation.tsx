@@ -9,7 +9,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Creatives Takeover", href: "/dream2plan" },
+    { name: "BizMap AI", href: "/dream2plan" },
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Community", href: "/community" },
     { name: "About Us", href: "/about" },

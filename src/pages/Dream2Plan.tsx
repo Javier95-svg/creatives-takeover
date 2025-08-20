@@ -30,7 +30,7 @@ const BizMapAI = () => {
   const [messages, setMessages] = useState([
     {
       type: "assistant",
-      content: "Welcome to Creatives Takeover! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
+      content: "Welcome to BizMap AI! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
     }
   ]);
 
@@ -407,7 +407,7 @@ Finally, a better way to [solve their problem]
 
 ${translations.disclaimer}
 
-**⚠️ Important Disclaimer:** Creatives Takeover is not a legal or financial advisor. This report gives practical guidance to kickstart your journey, but always validate with real customers and professional advice where needed.
+**⚠️ Important Disclaimer:** BizMap AI is not a legal or financial advisor. This report gives practical guidance to kickstart your journey, but always validate with real customers and professional advice where needed.
 
 ${translations.dataDisclaimer}`;
   };
@@ -587,9 +587,9 @@ ${translations.dataDisclaimer}`;
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Helmet>
-        <title>Creatives Takeover - Turn Business Ideas Into Launch Reports | AI Business Planning</title>
+        <title>BizMap AI - Turn Business Ideas Into Launch Reports | AI Business Planning</title>
         <meta name="description" content="Transform your business ideas into comprehensive Launch Reports with our 7-step AI wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps." />
-        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, Creatives Takeover, launch report" />
+        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, launch report" />
       </Helmet>
       
       {/* Animated Background */}
@@ -602,7 +602,7 @@ ${translations.dataDisclaimer}`;
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font">
-                Creatives Takeover
+                BizMap AI
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Your global startup co-founder in chatbot form. Transform business ideas into actionable Launch Reports.
@@ -616,7 +616,7 @@ ${translations.dataDisclaimer}`;
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Lightbulb className="w-5 h-5 text-primary" />
-                      How Creatives Takeover Works
+                      How BizMap AI Works
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -717,7 +717,7 @@ ${translations.dataDisclaimer}`;
                             <Bot className="w-5 h-5 text-primary" />
                           </div>
                           <div>
-                            <h4 className="font-semibold">Creatives Takeover Assistant</h4>
+                            <h4 className="font-semibold">BizMap AI Assistant</h4>
                             <p className="text-sm text-muted-foreground">
                               {isCompleted ? "Launch Report Complete!" : 
                                `Step ${currentStep + 1} of ${wizardSteps.length}`}

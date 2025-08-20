@@ -102,7 +102,7 @@ const Signup = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // For demo purposes, show success message
-      toast.success("Account created successfully! Welcome to Creatives Takeover.");
+      toast.success("Account created successfully! Welcome to BizMap AI.");
       
       // In a real app, you would redirect to dashboard or verification page
       console.log("Signup data:", formData);
@@ -126,8 +126,8 @@ const Signup = () => {
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4">
       <Helmet>
-        <title>Sign Up - Creatives Takeover</title>
-        <meta name="description" content="Create your Creatives Takeover account to start transforming business ideas into actionable plans with AI-powered insights." />
+        <title>Sign Up - BizMap AI</title>
+        <meta name="description" content="Create your BizMap AI account to start transforming business ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
       {/* Animated Background */}
@@ -138,9 +138,9 @@ const Signup = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
             <Sparkles className="w-6 h-6" />
-            Creatives Takeover
+            BizMap AI
           </Link>
-          <h1 className="text-3xl font-bold mt-4 mb-2">Join Creatives Takeover</h1>
+          <h1 className="text-3xl font-bold mt-4 mb-2">Join BizMap AI</h1>
           <p className="text-muted-foreground">
             Start turning your business ideas into reality
           </p>

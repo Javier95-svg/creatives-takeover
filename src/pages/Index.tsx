@@ -10,8 +10,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Creatives Takeover - From Idea to Execution | AI-Powered Business Plans</title>
-        <meta name="description" content="Transform your business ideas into comprehensive, actionable business plans in minutes with Creatives Takeover. Get GPT-5 powered analysis, validation experiments, and custom execution strategies." />
-        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, Creatives Takeover, GPT-5" />
+        <meta name="description" content="Transform your business ideas into comprehensive, actionable business plans in minutes with BizMap AI. Get GPT-5 powered analysis, validation experiments, and custom execution strategies." />
+        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, GPT-5" />
       </Helmet>
       <Navigation />
       <main>

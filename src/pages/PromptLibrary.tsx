@@ -112,10 +112,10 @@ const PromptLibrary = () => {
   };
 
   const useInBizMap = (prompt: string) => {
-    // Store the prompt in localStorage so it can be used in Creatives Takeover
+    // Store the prompt in localStorage so it can be used in BizMap AI
     localStorage.setItem('bizmap_prompt', prompt);
     window.open('/dream2plan', '_blank');
-    toast.success("Opening Creatives Takeover with this prompt!");
+    toast.success("Opening BizMap AI with this prompt!");
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -130,8 +130,8 @@ const PromptLibrary = () => {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Helmet>
-        <title>Prompt Library - Ready-to-Use Business Ideas | Creatives Takeover</title>
-        <meta name="description" content="Discover curated business idea prompts for Creatives Takeover. Get inspired with proven business concepts across e-commerce, SaaS, consulting, and more." />
+        <title>Prompt Library - Ready-to-Use Business Ideas | BizMap AI</title>
+        <meta name="description" content="Discover curated business idea prompts for BizMap AI. Get inspired with proven business concepts across e-commerce, SaaS, consulting, and more." />
       </Helmet>
       
       {/* Animated Background */}
@@ -148,7 +148,7 @@ const PromptLibrary = () => {
               Prompt Library
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Get inspired with ready-to-use business idea prompts. Each prompt is crafted to help you get the most detailed and actionable business plans from Creatives Takeover.
+              Get inspired with ready-to-use business idea prompts. Each prompt is crafted to help you get the most detailed and actionable business plans from BizMap AI.
             </p>
             
             {/* Search and Filter */}
@@ -224,7 +224,7 @@ const PromptLibrary = () => {
                       className="flex-1"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
-                      Use in Creatives Takeover
+                      Use in BizMap AI
                     </Button>
                     <Button
                       variant="outline"
@@ -254,10 +254,10 @@ const PromptLibrary = () => {
                 <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
                 <h3 className="text-2xl font-bold mb-4">Ready to Build Your Business?</h3>
                 <p className="text-muted-foreground mb-6">
-                  Take any of these prompts to Creatives Takeover and get a comprehensive business plan in minutes.
+                  Take any of these prompts to BizMap AI and get a comprehensive business plan in minutes.
                 </p>
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <a href="/dream2plan">Start with Creatives Takeover</a>
+                  <a href="/dream2plan">Start with BizMap AI</a>
                 </Button>
               </CardContent>
             </Card>
