@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      chat_sessions: {
-        Row: {
-          answers: Json
-          created_at: string
-          current_step: number
-          id: string
-          is_completed: boolean
-          launch_report: string | null
-          title: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          answers?: Json
-          created_at?: string
-          current_step?: number
-          id?: string
-          is_completed?: boolean
-          launch_report?: string | null
-          title?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          answers?: Json
-          created_at?: string
-          current_step?: number
-          id?: string
-          is_completed?: boolean
-          launch_report?: string | null
-          title?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
