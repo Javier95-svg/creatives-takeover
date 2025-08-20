@@ -61,15 +61,23 @@ const Navigation = () => {
                     {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
                   </span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/profile" className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Profile
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
@@ -118,6 +126,12 @@ const Navigation = () => {
                       <User className="w-4 h-4" />
                       <span>{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
                     </div>
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)} asChild>
+                      <Link to="/profile" className="flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </Link>
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
