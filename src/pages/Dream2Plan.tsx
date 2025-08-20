@@ -118,13 +118,36 @@ const BizMapAI = () => {
       toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
       
       // Fallback to basic structure if API fails
-      return generateFallbackReport(answers);
+      return generateFallbackReport(answers, region);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const generateFallbackReport = (answers: any) => {
+  const generateFallbackReport = (answers: any, regionInput?: string) => {
+    const region = (regionInput || 'Global').trim();
+    const r = region.toLowerCase();
+
+    // Region-aware channels and currency
+    let channels = ['LinkedIn', 'Email outreach', 'Google Search'];
+    let currency = '$';
+    let currencyLabel = 'USD';
+
+    if (r.includes('latin') || r.includes('latam')) {
+      channels = ['WhatsApp', 'Instagram', 'Facebook Groups'];
+      currency = '$';
+      currencyLabel = 'USD';
+    }
+    if (r.includes('brazil')) { channels = ['WhatsApp', 'Instagram', 'Facebook']; currency = 'R$'; currencyLabel = 'BRL'; }
+    else if (r.includes('mexico')) { channels = ['WhatsApp', 'Facebook', 'Instagram']; currency = '$'; currencyLabel = 'MXN'; }
+    else if (r.includes('europe') || r.includes('germany') || r.includes('france') || r.includes('spain') || r.includes('italy') || r.includes('eu')) { channels = ['LinkedIn', 'Google Search', 'Email']; currency = '€'; currencyLabel = 'EUR'; }
+    else if (r.includes('uk') || r.includes('united kingdom') || r.includes('britain')) { channels = ['LinkedIn', 'Email', 'Events/Meetups']; currency = '£'; currencyLabel = 'GBP'; }
+    else if (r.includes('india')) { channels = ['WhatsApp', 'Instagram', 'YouTube']; currency = '₹'; currencyLabel = 'INR'; }
+    else if (r.includes('nigeria') || r.includes('kenya') || r.includes('africa')) { channels = ['WhatsApp', 'Facebook', 'Community Groups']; currency = '₦'; currencyLabel = 'Local'; }
+    else if (r.includes('china')) { channels = ['WeChat', 'Weibo', 'Douyin']; currency = '¥'; currencyLabel = 'CNY'; }
+    else if (r.includes('us') || r.includes('united states') || r.includes('america')) { channels = ['LinkedIn', 'Email', 'Google Search']; currency = '$'; currencyLabel = 'USD'; }
+    else if (r.includes('mena') || r.includes('middle east') || r.includes('uae') || r.includes('saudi')) { channels = ['WhatsApp', 'Instagram', 'LinkedIn']; currency = '﷼'; currencyLabel = 'Local'; }
+
     return `# 🚀 Launch Report
 
 ## Executive Summary
@@ -134,7 +157,7 @@ Based on your responses, you have a promising business concept that addresses a 
 **Problem:** ${answers.problem}
 **Solution:** ${answers.solution}
 **Key Customers:** From your market research
-**Channels:** ${answers.channels}
+**Channels:** ${answers.channels || channels.join(', ')}
 **Revenue Streams:** Based on your pricing model
 **Key Costs:** As outlined in your cost structure
 
@@ -142,29 +165,29 @@ Based on your responses, you have a promising business concept that addresses a 
 **Name:** Your Ideal Customer
 **Demographics:** Based on your target market description
 **Pain Points:** Issues you identified in problem section
-**Where They Spend Time:** Channels you mentioned
+**Where They Spend Time:** ${channels.join(', ')}
 **Buying Triggers:** Value propositions from your solution
 
 ## Validation Plan - 5 Next Steps
 1. **Customer Interviews:** Conduct 20 interviews with target customers
 2. **Market Research:** Analyze 3 direct competitors
 3. **Prototype Testing:** Create simple version to test core concept
-4. **Channel Testing:** Test one marketing channel with small budget
-5. **Pricing Validation:** Survey potential customers on pricing
+4. **Channel Test (${region}):** Run a small test on ${channels[0]} with a $50-${currency}100 budget equivalent
+5. **Pricing Validation:** Survey potential customers on pricing (${currencyLabel})
 
 ## Go-To-Market One-Pager
-**Primary Channel Focus:** Focus on the most promising channel from your list
+**Primary Channel Focus (${region}):** ${channels[0]}
 **First 10 Customers Plan:**
-• Direct outreach to network
+• Direct outreach via ${channels[0]}
 • Content marketing to establish expertise
 • Partnerships with complementary businesses
 
-## Simple Pricing & Breakeven Analysis
-**Recommended Pricing:** Based on your model
+## Simple Pricing & Breakeven Analysis (${currencyLabel})
+**Recommended Pricing:** Example ${currency}49–${currency}99 (adjust to your market)
 **Key Assumptions:**
-• Customer acquisition cost: To be validated
-• Monthly customers needed: Based on goals
-• Break-even timeline: 6-12 months
+• Customer acquisition cost: ~${currency}5–${currency}20 via ${channels[0]}
+• Monthly customers needed: Based on revenue goals
+• Break-even timeline: 6–12 months
 
 ## 90-Day Roadmap & KPIs
 
@@ -175,17 +198,17 @@ Based on your responses, you have a promising business concept that addresses a 
 
 ### Month 2: Validation
 **Goal:** Test solution-market fit
-**Key Actions:** Refine offering, test marketing channels, pricing validation
+**Key Actions:** Refine offering, test ${channels[0]}, pricing validation in ${currencyLabel}
 **KPI:** 10 potential customers express buying intent
 
 ### Month 3: Launch
 **Goal:** Get first customers
-**Key Actions:** Official launch, focus marketing, gather feedback
-**KPI:** First 5-10 paying customers
+**Key Actions:** Official launch, focus marketing on ${channels[0]} and ${channels[1] || channels[0]}, gather feedback
+**KPI:** First 5–10 paying customers
 
 ## Copy-Paste Scripts
 
-### WhatsApp/SMS Message:
+### ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} Message:
 "Hi [Name], I'm launching a new [solution] that helps [target customer] with [problem]. Would you be interested in learning more?"
 
 ### Cold Email Subject + Body:
@@ -320,17 +343,17 @@ Based on your responses, you have a promising business concept that addresses a 
   };
 
   const handleRegionAndGenerate = async () => {
-    const region = message.trim();
-    if (!region) {
-      toast.error("Please specify your target region.");
-      return;
+    let region = message.trim();
+    const provided = !!region;
+    if (!provided) {
+      region = 'Global'; // default to global best practices
+      // Reflect default in chat for clarity
+      setMessages(prev => [...prev, { type: 'user', content: 'Global' }]);
+    } else {
+      setMessages(prev => [...prev, { type: 'user', content: region }]);
     }
 
     setUserRegion(region);
-    setMessages(prev => [...prev, {
-      type: "user",
-      content: region
-    }]);
 
     setMessage("");
 
@@ -606,7 +629,7 @@ Based on your responses, you have a promising business concept that addresses a 
                         <Button 
                           onClick={handleSendMessage} 
                           size="icon" 
-                          disabled={isLoading || isCompleted || !message.trim()}
+                          disabled={isLoading || isCompleted || (currentStep < wizardSteps.length && !message.trim())}
                         >
                           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
@@ -615,7 +638,7 @@ Based on your responses, you have a promising business concept that addresses a 
                         <p className="text-xs text-muted-foreground">
                           {isCompleted ? "Launch Report generated! Copy and save it." :
                            currentStep < wizardSteps.length ? `Answer to continue to step ${currentStep + 2}` :
-                           "Specify your region to generate Launch Report"}
+                           "Optionally specify your region (default: Global)"}
                         </p>
                         {!isCompleted && (
                           <Button 
