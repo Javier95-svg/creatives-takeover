@@ -269,22 +269,6 @@ const ProblemSolution = () => {
           })}
         </div>
 
-        {/* Success Metrics */}
-        <div className="mt-24 text-center">
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { number: "3 min", label: "From idea to plan", icon: Zap },
-              { number: "5-7", label: "Customer segments identified", icon: Users }, 
-              { number: "12+", label: "Validation experiments", icon: Target }
-            ].map((stat, idx) => (
-              <div key={idx} className="stagger-child glass-card text-center hover-lift">
-                <stat.icon className="w-8 h-8 text-primary mx-auto mb-4" />
-                <div className="text-3xl font-bold gradient-text mb-2">{stat.number}</div>
-                <div className="text-muted-foreground font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );
