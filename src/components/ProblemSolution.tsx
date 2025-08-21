@@ -2,8 +2,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Lightbulb, Search, Target, Zap, CheckCircle, AlertCircle, TrendingUp, Users, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 
 const ProblemSolution = () => {
+  const [visibleSections, setVisibleSections] = useState<Set<number>>(new Set());
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = parseInt(entry.target.getAttribute('data-index') || '0');
+          if (entry.isIntersecting) {
+            setVisibleSections(prev => new Set(prev).add(index));
+          }
+        });
+      },
+      { threshold: 0.2, rootMargin: '-50px' }
+    );
+
+    sectionRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const transformations = [
     {
       problem: {
@@ -109,113 +133,140 @@ const ProblemSolution = () => {
 
         {/* Transformations */}
         <div className="space-y-20">
-          {transformations.map((item, index) => (
-            <div key={index} className={`stagger-child grid lg:grid-cols-12 gap-8 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-              {/* Problem Side */}
-              <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                <Card className="group glass border-destructive/30 hover-lift overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-destructive/80 to-destructive/40"></div>
-                  
-                  <CardContent className="p-8">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 group-hover:scale-110 transition-transform">
-                        <item.problem.icon className="w-8 h-8 text-destructive" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-2xl font-bold text-foreground">
-                            {item.problem.title}
-                          </h3>
-                          <AlertCircle className="w-5 h-5 text-destructive animate-bounce-subtle" />
+          {transformations.map((item, index) => {
+            const isVisible = visibleSections.has(index);
+            return (
+              <div 
+                key={index} 
+                ref={(el) => {sectionRefs.current[index] = el;}}
+                data-index={index}
+                className={`grid lg:grid-cols-12 gap-8 items-center transition-all duration-1000 ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                } ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}
+              >
+                {/* Problem Side */}
+                <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-2' : ''} ${
+                  isVisible ? 'animate-slide-in-left' : ''
+                }`}>
+                  <Card className="group glass border-destructive/30 hover:border-destructive/50 hover:shadow-2xl hover:shadow-destructive/10 transition-all duration-500 overflow-hidden transform hover:scale-105">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-destructive/80 to-destructive/40 group-hover:from-destructive group-hover:to-destructive/60 transition-colors"></div>
+                    
+                    <CardContent className="p-8">
+                      <div className="flex items-start gap-4 mb-6">
+                        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 group-hover:scale-125 group-hover:bg-destructive/20 transition-all duration-300">
+                          <item.problem.icon className="w-8 h-8 text-destructive group-hover:animate-bounce" />
                         </div>
-                        <p className="text-lg text-muted-foreground leading-relaxed">
-                          {item.problem.description}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-2xl font-bold text-foreground group-hover:text-destructive transition-colors">
+                              {item.problem.title}
+                            </h3>
+                            <AlertCircle className="w-5 h-5 text-destructive animate-pulse" />
+                          </div>
+                          <p className="text-lg text-muted-foreground leading-relaxed">
+                            {item.problem.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Pain Points */}
+                      <div className="space-y-3 mb-6">
+                        {item.problem.painPoints.map((point, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/10 hover:bg-destructive/10 transition-all duration-300 ${
+                              isVisible ? `animate-fade-in-up` : ''
+                            }`}
+                            style={{ animationDelay: isVisible ? `${idx * 150}ms` : '0ms' }}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-destructive/60 mt-2 flex-shrink-0 animate-pulse"></div>
+                            <p className="text-sm text-muted-foreground font-medium">{point}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Emotion */}
+                      <div className="p-4 rounded-xl bg-destructive/5 border-l-4 border-destructive group-hover:bg-destructive/10 group-hover:border-destructive/80 transition-all duration-300">
+                        <p className="text-lg font-semibold text-destructive group-hover:scale-105 transition-transform">
+                          {item.problem.emotion}
                         </p>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-                    {/* Pain Points */}
-                    <div className="space-y-3 mb-6">
-                      {item.problem.painPoints.map((point, idx) => (
-                        <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/10">
-                          <div className="w-2 h-2 rounded-full bg-destructive/60 mt-2 flex-shrink-0"></div>
-                          <p className="text-sm text-muted-foreground font-medium">{point}</p>
-                        </div>
-                      ))}
+                {/* Transformation Arrow */}
+                <div className="lg:col-span-2 flex justify-center">
+                  <div className={`relative ${isVisible ? 'animate-zoom-in' : ''}`}>
+                    <div className="w-20 h-20 rounded-full glass border-2 border-primary/30 flex items-center justify-center hover:border-primary/60 hover:scale-110 transition-all duration-500 animate-pulse-glow group cursor-pointer">
+                      <ArrowRight className={`w-10 h-10 text-primary transition-transform duration-300 group-hover:scale-125 ${index % 2 === 1 ? 'rotate-180 lg:rotate-0' : ''}`} />
                     </div>
-
-                    {/* Emotion */}
-                    <div className="p-4 rounded-xl bg-destructive/5 border-l-4 border-destructive">
-                      <p className="text-lg font-semibold text-destructive">
-                        {item.problem.emotion}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Transformation Arrow */}
-              <div className="lg:col-span-2 flex justify-center">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full glass border-2 border-primary/30 flex items-center justify-center animate-pulse-glow">
-                    <ArrowRight className={`w-10 h-10 text-primary ${index % 2 === 1 ? 'rotate-180 lg:rotate-0' : ''}`} />
+                    
+                    {/* Enhanced Magic Effects */}
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary/30 animate-ping"></div>
+                    <div className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-secondary/40 animate-bounce"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 animate-spiral pointer-events-none"></div>
                   </div>
-                  
-                  {/* Magic Sparkles */}
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary/20 animate-ping"></div>
-                  <div className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-secondary/30 animate-bounce-subtle"></div>
+                </div>
+
+                {/* Solution Side */}
+                <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-1' : ''} ${
+                  isVisible ? 'animate-slide-in-right' : ''
+                }`}>
+                  <Card className="group glass border-primary/30 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 overflow-hidden transform hover:scale-105">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary group-hover:from-primary/80 group-hover:to-secondary/80 transition-colors"></div>
+                    
+                    <CardContent className="p-8">
+                      <div className="flex items-start gap-4 mb-6">
+                        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 group-hover:scale-125 group-hover:bg-primary/20 transition-all duration-300">
+                          <item.solution.icon className="w-8 h-8 text-primary group-hover:animate-bounce" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                              {item.solution.title}
+                            </h3>
+                            <CheckCircle className="w-5 h-5 text-primary animate-pulse" />
+                          </div>
+                          <p className="text-lg text-muted-foreground leading-relaxed">
+                            {item.solution.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Benefits */}
+                      <div className="space-y-3 mb-6">
+                        {item.solution.benefits.map((benefit, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all duration-300 ${
+                              isVisible ? `animate-fade-in-up` : ''
+                            }`}
+                            style={{ animationDelay: isVisible ? `${(idx + 3) * 150}ms` : '0ms' }}
+                          >
+                            <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0 animate-pulse" />
+                            <p className="text-sm text-foreground font-medium">{benefit}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Result & Metrics */}
+                      <div className="space-y-3">
+                        <div className="p-4 rounded-xl bg-primary/5 border-l-4 border-primary group-hover:bg-primary/10 group-hover:border-primary/80 transition-all duration-300">
+                          <p className="text-lg font-bold gradient-text mb-1 group-hover:scale-105 transition-transform">
+                            {item.solution.result}
+                          </p>
+                          <p className="text-sm text-primary font-semibold animate-bounce-subtle">
+                            ⚡ {item.solution.metrics}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
-
-              {/* Solution Side */}
-              <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                <Card className="group glass border-primary/30 hover-lift overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
-                  
-                  <CardContent className="p-8">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 group-hover:scale-110 transition-transform">
-                        <item.solution.icon className="w-8 h-8 text-primary" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-2xl font-bold text-foreground">
-                            {item.solution.title}
-                          </h3>
-                          <CheckCircle className="w-5 h-5 text-primary animate-bounce-subtle" />
-                        </div>
-                        <p className="text-lg text-muted-foreground leading-relaxed">
-                          {item.solution.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Benefits */}
-                    <div className="space-y-3 mb-6">
-                      {item.solution.benefits.map((benefit, idx) => (
-                        <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-foreground font-medium">{benefit}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Result & Metrics */}
-                    <div className="space-y-3">
-                      <div className="p-4 rounded-xl bg-primary/5 border-l-4 border-primary">
-                        <p className="text-lg font-bold gradient-text mb-1">
-                          {item.solution.result}
-                        </p>
-                        <p className="text-sm text-primary font-semibold">
-                          ⚡ {item.solution.metrics}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Success Metrics */}
