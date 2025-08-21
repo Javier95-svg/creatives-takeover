@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import ProblemSolution from "@/components/ProblemSolution";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
 import { Helmet } from "react-helmet-async";
@@ -16,6 +17,7 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
+        <ProblemSolution />
         <SimpleBizMapGuide />
         <Benefits />
       </main>
