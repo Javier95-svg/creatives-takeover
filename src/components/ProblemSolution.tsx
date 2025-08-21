@@ -271,7 +271,7 @@ const ProblemSolution = () => {
 
         {/* Success Metrics */}
         <div className="mt-24 text-center">
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
               { number: "3 min", label: "From idea to plan", icon: Zap },
               { number: "5-7", label: "Customer segments identified", icon: Users }, 
@@ -283,41 +283,6 @@ const ProblemSolution = () => {
                 <div className="text-muted-foreground font-medium">{stat.label}</div>
               </div>
             ))}
-          </div>
-
-          {/* Final CTA */}
-          <div className="glass p-10 rounded-3xl max-w-3xl mx-auto">
-            <h3 className="text-3xl font-bold mb-4 gradient-text creatives-font">
-              Ready to Transform Your Ideas?
-            </h3>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Stop struggling with the chaos. Join thousands of entrepreneurs who've already 
-              transformed their scattered ideas into <span className="text-primary font-semibold">launch-ready businesses</span>.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                asChild 
-                size="lg" 
-                className="btn-start-creating text-lg px-8 py-6 h-auto font-semibold group"
-              >
-                <Link to="/dream2plan">
-                  Turn My Ideas Into Plans
-                  <ArrowRight className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-              
-              <Button 
-                asChild 
-                variant="outline" 
-                size="lg"
-                className="text-lg px-8 py-6 h-auto border-primary/30 hover:border-primary/50 hover:bg-primary/5"
-              >
-                <Link to="/services">
-                  See How It Works
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
       </div>
