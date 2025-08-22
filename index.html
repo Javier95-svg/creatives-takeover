@@ -7,12 +7,19 @@
     <meta name="description" content="Lovable Generated Project" />
     <meta name="author" content="Lovable" />
     
+    <!-- DNS prefetch for faster resolution -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://lovable.dev">
+    
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
     <!-- Preload critical resources to break dependency chains -->
     <link rel="modulepreload" href="/src/main.tsx">
+    <link rel="preload" href="/src/index.css" as="style">
+    <link rel="preload" href="/src/App.tsx" as="script" crossorigin>
     
     <!-- Optimized font loading -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
