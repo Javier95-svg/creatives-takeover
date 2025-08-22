@@ -23,6 +23,7 @@ import BizMapAI from "./pages/Dream2Plan";
 import Login from "./pages/Login";
 import PromptLibrary from "./pages/PromptLibrary";
 import AuthCallback from "./pages/AuthCallback";
+import Account from "./pages/Account";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/account" element={<Account />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,6 +64,17 @@ const Navigation = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
+                  asChild
+                  className="flex items-center gap-2"
+                >
+                  <Link to="/account">
+                    <Settings className="w-4 h-4" />
+                    Account
+                  </Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
                   onClick={handleSignOut}
                   className="flex items-center gap-2"
                 >
@@ -118,6 +129,18 @@ const Navigation = () => {
                       <User className="w-4 h-4" />
                       <span>{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      onClick={() => setIsOpen(false)}
+                      asChild
+                    >
+                      <Link to="/account" className="flex items-center">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Account
+                      </Link>
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
