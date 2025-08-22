@@ -1,7 +1,6 @@
 import heroImage from "@/assets/hero-bg-animated.jpg";
-import { memo } from "react";
 
-const AnimatedBackground = memo(() => {
+const AnimatedBackground = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {/* Animated Background with Multiple Layers */}
@@ -43,8 +42,6 @@ const AnimatedBackground = memo(() => {
       <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/50 rounded-full animate-spiral opacity-70" style={{ animationDelay: '14s' }} />
     </div>
   );
-});
-
-AnimatedBackground.displayName = 'AnimatedBackground';
+};
 
 export default AnimatedBackground;

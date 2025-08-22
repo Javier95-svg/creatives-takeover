@@ -168,8 +168,7 @@ export default {
 				'float': {
 					'0%, 100%': {
 						transform: 'translate3d(0, 0px, 0) rotate(0deg)',
-						opacity: '0.7',
-						willChange: 'transform, opacity'
+						opacity: '0.7'
 					},
 					'25%': {
 						transform: 'translate3d(20px, -15px, 0) rotate(90deg)',
@@ -187,8 +186,7 @@ export default {
 				'float-reverse': {
 					'0%, 100%': {
 						transform: 'translate3d(0, 0px, 0) rotate(360deg)',
-						opacity: '0.6',
-						willChange: 'transform, opacity'
+						opacity: '0.6'
 					},
 					'25%': {
 						transform: 'translate3d(-25px, 20px, 0) rotate(270deg)',
@@ -205,9 +203,8 @@ export default {
 				},
 				'drift': {
 					'0%': {
-						transform: 'translate3d(-100px, 0, 0) rotate(0deg)',
-						opacity: '0',
-						willChange: 'transform, opacity'
+						transform: 'translateX(-100px) translateY(0) rotate(0deg)',
+						opacity: '0'
 					},
 					'10%': {
 						opacity: '1'
@@ -216,7 +213,7 @@ export default {
 						opacity: '1'
 					},
 					'100%': {
-						transform: 'translate3d(calc(100vw + 100px), -50px, 0) rotate(360deg)',
+						transform: 'translateX(calc(100vw + 100px)) translateY(-50px) rotate(360deg)',
 						opacity: '0'
 					}
 				},

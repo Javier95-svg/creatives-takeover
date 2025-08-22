@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
-import { memo } from "react";
 
-const Hero = memo(() => {
+const Hero = () => {
   return (
     <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Background with Multiple Layers */}
@@ -94,8 +93,6 @@ const Hero = memo(() => {
       </div>
     </section>
   );
-});
-
-Hero.displayName = 'Hero';
+};
 
 export default Hero;
