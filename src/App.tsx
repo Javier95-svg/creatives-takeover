@@ -4,29 +4,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { Suspense, lazy } from "react";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-
-// Lazy load all route components for better performance
-const Index = lazy(() => import("./pages/Index"));
-const About = lazy(() => import("./pages/About"));
-const Services = lazy(() => import("./pages/Services"));
-const PricingPage = lazy(() => import("./pages/PricingPage"));
-const CommunityPage = lazy(() => import("./pages/CommunityPage"));
-const Resources = lazy(() => import("./pages/Resources"));
-const FAQPage = lazy(() => import("./pages/FAQPage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Software = lazy(() => import("./pages/Software"));
-const Contact = lazy(() => import("./pages/Contact"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const IPPolicy = lazy(() => import("./pages/IPPolicy"));
-const Laboratory = lazy(() => import("./pages/Laboratory"));
-const Signup = lazy(() => import("./pages/Signup"));
-const BizMapAI = lazy(() => import("./pages/Dream2Plan"));
-const Login = lazy(() => import("./pages/Login"));
-const PromptLibrary = lazy(() => import("./pages/PromptLibrary"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+import Index from "./pages/Index";
+import About from "./pages/About";
+import Services from "./pages/Services";
+import PricingPage from "./pages/PricingPage";
+import CommunityPage from "./pages/CommunityPage";
+import Resources from "./pages/Resources";
+import FAQPage from "./pages/FAQPage";
+import NotFound from "./pages/NotFound";
+import Software from "./pages/Software";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import IPPolicy from "./pages/IPPolicy";
+import Laboratory from "./pages/Laboratory";
+import Signup from "./pages/Signup";
+import BizMapAI from "./pages/Dream2Plan";
+import Login from "./pages/Login";
+import PromptLibrary from "./pages/PromptLibrary";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -37,30 +33,28 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/software" element={<Software />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/community" element={<CommunityPage />} />
-              <Route path="/prompt-library" element={<PromptLibrary />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/ip-policy" element={<IPPolicy />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/laboratory" element={<Laboratory />} />
-              <Route path="/dream2plan" element={<BizMapAI />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/software" element={<Software />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/prompt-library" element={<PromptLibrary />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/ip-policy" element={<IPPolicy />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/laboratory" element={<Laboratory />} />
+            <Route path="/dream2plan" element={<BizMapAI />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
