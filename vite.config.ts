@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Optimize for performance
     target: 'esnext',
-    minify: 'terser',
+    minify: 'esbuild',
     sourcemap: false,
     rollupOptions: {
       output: {
@@ -38,12 +38,6 @@ export default defineConfig(({ mode }) => ({
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
-    },
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production',
-      },
-    },
-  },
+    }
+  }
 }));
