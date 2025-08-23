@@ -2,6 +2,179 @@ import { BlogPost } from "@/types/blog";
 
 export const blogPosts: BlogPost[] = [
   {
+    id: "4",
+    slug: "ai-productivity-hacks-entrepreneurs",
+    title: "7 AI Productivity Hacks Every Entrepreneur Should Know",
+    excerpt: "Supercharge your workflow with these AI-powered productivity tips. From automated scheduling to smart content creation, discover how AI can give you back hours every week.",
+    content: `
+      <h2>The Productivity Revolution is Here</h2>
+      <p>As entrepreneurs, time is our most valuable resource. AI tools have evolved from simple automation to intelligent assistants that can dramatically boost productivity. Here are 7 game-changing hacks that successful entrepreneurs are using right now.</p>
+      
+      <h3>1. AI-Powered Email Management</h3>
+      <p>Use AI tools to automatically sort, prioritize, and even draft email responses. Tools like Boomerang and SaneBox can reduce email time by 70%.</p>
+      
+      <h3>2. Smart Content Generation</h3>
+      <p>Generate social media posts, blog outlines, and marketing copy in seconds. AI writing assistants can help maintain consistent content output without sacrificing quality.</p>
+      
+      <h3>3. Automated Research and Data Analysis</h3>
+      <p>Let AI scan thousands of documents, extract key insights, and present actionable intelligence for faster decision-making.</p>
+      
+      <h3>4. Intelligent Calendar Optimization</h3>
+      <p>AI scheduling tools learn your preferences and automatically find the best meeting times while protecting your focus blocks.</p>
+      
+      <h3>5. Voice-to-Text Workflow Automation</h3>
+      <p>Transform voice notes into structured tasks, emails, and documents while on the go.</p>
+      
+      <h3>6. AI-Driven Customer Support</h3>
+      <p>Implement chatbots that handle 80% of customer inquiries, freeing up time for strategic work.</p>
+      
+      <h3>7. Predictive Analytics for Planning</h3>
+      <p>Use AI to forecast trends, identify opportunities, and make data-driven strategic decisions.</p>
+      
+      <blockquote>
+        <p>"AI doesn't replace entrepreneurs—it amplifies our capabilities and frees us to focus on what humans do best: innovate and lead." - Productivity Expert</p>
+      </blockquote>
+      
+      <h3>Implementation Strategy</h3>
+      <p>Start with one area that consumes most of your time. Implement AI solutions gradually and measure the time savings. Most entrepreneurs report reclaiming 10-15 hours per week within the first month.</p>
+    `,
+    image: "/lovable-uploads/6e837c16-b2d4-400c-b8ab-b4726c162660.png",
+    date: "2024-01-25",
+    readTime: 5,
+    tags: ["AI", "Productivity", "Automation", "Efficiency"],
+    author: {
+      name: "Creatives Takeover Team"
+    }
+  },
+  {
+    id: "5",
+    slug: "growth-hacking-techniques-2024",
+    title: "Growth Hacking 2.0: Unconventional Strategies That Scale",
+    excerpt: "Move beyond traditional growth hacking. Discover cutting-edge techniques using AI, community psychology, and data science to achieve sustainable, exponential growth.",
+    content: `
+      <h2>Evolution of Growth Hacking</h2>
+      <p>Growth hacking has evolved from simple viral loops to sophisticated, data-driven strategies. Today's successful companies combine psychology, technology, and creativity to create sustainable growth engines.</p>
+      
+      <h3>The New Growth Stack</h3>
+      <p>Modern growth hackers leverage:</p>
+      <ul>
+        <li>AI-powered user segmentation</li>
+        <li>Behavioral psychology principles</li>
+        <li>Community-driven virality</li>
+        <li>Cross-platform attribution</li>
+      </ul>
+      
+      <h3>Unconventional Strategy #1: Reverse Referral Programs</h3>
+      <p>Instead of rewarding the referrer, reward the referee. This creates a pull effect where people ask to be referred to your product.</p>
+      
+      <h3>Unconventional Strategy #2: AI-Generated Micro-Experiences</h3>
+      <p>Create thousands of personalized landing pages using AI, each tailored to specific user intents and search queries.</p>
+      
+      <h3>Unconventional Strategy #3: Community-as-a-Product</h3>
+      <p>Build the community first, then introduce products. This reverses the traditional funnel and creates stronger user loyalty.</p>
+      
+      <h3>Unconventional Strategy #4: Competitive Collaboration</h3>
+      <p>Partner with indirect competitors to create win-win growth opportunities that benefit both user bases.</p>
+      
+      <h3>Data-Driven Implementation</h3>
+      <p>Every growth experiment should be:</p>
+      <ol>
+        <li>Hypothesis-driven with clear success metrics</li>
+        <li>Tested with proper statistical significance</li>
+        <li>Iterated based on user behavior data</li>
+        <li>Scaled only after validation</li>
+      </ol>
+      
+      <blockquote>
+        <p>"The best growth hacks don't feel like hacks—they feel like natural, delightful user experiences." - Growth Expert</p>
+      </blockquote>
+      
+      <h3>Measuring True Growth</h3>
+      <p>Focus on cohort retention, lifetime value, and organic growth rate rather than just acquisition metrics.</p>
+    `,
+    image: "/lovable-uploads/ced83de1-e19f-4e3e-b343-f7979fc9ee18.png",
+    date: "2024-01-22",
+    readTime: 6,
+    tags: ["Growth Hacking", "Scaling", "User Acquisition", "Data Science"],
+    author: {
+      name: "Creatives Takeover Team"
+    }
+  },
+  {
+    id: "6",
+    slug: "no-code-mvp-builders-guide",
+    title: "Build Your MVP in 48 Hours: No-Code Builder's Blueprint",
+    excerpt: "Launch faster with no-code tools. Complete step-by-step guide to building and validating your MVP using modern no-code platforms—no programming required.",
+    content: `
+      <h2>The No-Code Revolution</h2>
+      <p>Gone are the days when building a product required months of development and thousands of dollars. No-code tools have democratized product creation, allowing anyone with an idea to build and launch in days, not months.</p>
+      
+      <h3>Why No-Code for MVPs?</h3>
+      <p>No-code development offers several advantages for MVP creation:</p>
+      <ul>
+        <li>Rapid prototyping and iteration</li>
+        <li>Lower upfront costs</li>
+        <li>Easy modifications based on user feedback</li>
+        <li>Focus on validation, not code</li>
+      </ul>
+      
+      <h3>The 48-Hour MVP Framework</h3>
+      
+      <h4>Day 1: Foundation (Hours 1-24)</h4>
+      <p><strong>Hours 1-4:</strong> Define core user flow and key features</p>
+      <p><strong>Hours 5-12:</strong> Set up database and user authentication</p>
+      <p><strong>Hours 13-20:</strong> Build primary user interface</p>
+      <p><strong>Hours 21-24:</strong> Implement core functionality</p>
+      
+      <h4>Day 2: Polish & Launch (Hours 25-48)</h4>
+      <p><strong>Hours 25-32:</strong> Add payment processing and user onboarding</p>
+      <p><strong>Hours 33-40:</strong> Test user flows and fix bugs</p>
+      <p><strong>Hours 41-44:</strong> Create landing page and basic analytics</p>
+      <p><strong>Hours 45-48:</strong> Launch and gather first user feedback</p>
+      
+      <h3>Essential No-Code Tool Stack</h3>
+      <ul>
+        <li><strong>Frontend:</strong> Webflow, Bubble, or Glide</li>
+        <li><strong>Backend:</strong> Airtable, Notion API, or Firebase</li>
+        <li><strong>Payments:</strong> Stripe, PayPal, or Gumroad</li>
+        <li><strong>Analytics:</strong> Google Analytics, Hotjar</li>
+      </ul>
+      
+      <h3>Common No-Code MVP Patterns</h3>
+      <p>Most successful no-code MVPs follow these patterns:</p>
+      <ol>
+        <li>Simple user registration/login</li>
+        <li>Core value delivery in under 5 clicks</li>
+        <li>Basic user dashboard</li>
+        <li>Simple payment integration</li>
+        <li>Feedback collection mechanism</li>
+      </ol>
+      
+      <blockquote>
+        <p>"The goal of an MVP isn't to build a perfect product—it's to learn as quickly and cheaply as possible." - Lean Startup Advocate</p>
+      </blockquote>
+      
+      <h3>Validation Strategies</h3>
+      <p>Once your MVP is live, focus on these validation metrics:</p>
+      <ul>
+        <li>User registration and activation rates</li>
+        <li>Time to first value delivery</li>
+        <li>User retention after 7 and 30 days</li>
+        <li>Willingness to pay or upgrade</li>
+      </ul>
+      
+      <h3>From MVP to Product</h3>
+      <p>Use the insights from your no-code MVP to make informed decisions about custom development, feature priorities, and market positioning.</p>
+    `,
+    image: "/lovable-uploads/d357ca7d-d986-499b-b11a-7254722152ac.png",
+    date: "2024-01-20",
+    readTime: 8,
+    tags: ["No-Code", "MVP", "Product Development", "Validation"],
+    author: {
+      name: "Creatives Takeover Team"
+    }
+  },
+  {
     id: "1",
     slug: "ai-business-planning-revolution",
     title: "How AI is Revolutionizing Business Planning for Entrepreneurs",
