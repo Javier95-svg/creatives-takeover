@@ -8,9 +8,9 @@ const Blog = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Blog - Creatives Takeover | Business Tips & AI Insights</title>
+        <title>News - Creatives Takeover | Business Tips & AI Insights</title>
         <meta name="description" content="Discover expert insights on business planning, AI tools, entrepreneurship, and creative strategies. Stay updated with the latest trends in business innovation." />
-        <meta name="keywords" content="business blog, entrepreneurship tips, AI business tools, startup advice, creative business strategies" />
+        <meta name="keywords" content="business news, entrepreneurship tips, AI business tools, startup advice, creative business strategies" />
       </Helmet>
       <Navigation />
       <main>
