@@ -17,7 +17,7 @@ const BlogHero = () => {
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 gradient-text animate-fade-in-up">
-            Business Insights & AI Innovation
+            Insighta
           </h1>
           
           <p className="text-xl text-muted-foreground mb-12 animate-fade-in-up [animation-delay:0.2s] max-w-2xl mx-auto">
