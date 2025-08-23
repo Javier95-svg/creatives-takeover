@@ -10,7 +10,7 @@ const BlogGrid = () => {
   return (
     <section className="pt-0 pb-16">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
           {sortedPosts.map((post, index) => (
             <BlogCard 
               key={post.slug} 
