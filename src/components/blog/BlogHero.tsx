@@ -68,7 +68,7 @@ const BlogHero = () => {
           
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            Discover expert insights on entrepreneurship, AI tools, business planning, and creative strategies to help you build and grow your ventures.
+            A blog for builders and doers: dive into AI, smart business tips, and creative growth hacks to help you launch and scale your projects.
           </p>
 
           {/* Search Bar */}
