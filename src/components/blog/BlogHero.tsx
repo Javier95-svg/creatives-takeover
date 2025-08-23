@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Rss, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
 
@@ -85,14 +85,6 @@ const BlogHero = () => {
               Search
             </Button>
           </form>
-
-          {/* RSS Feed */}
-          <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <Button variant="ghost" className="glass-card btn-magnetic flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <Rss className="w-4 h-4" />
-              Subscribe to RSS Feed
-            </Button>
-          </div>
         </div>
       </div>
     </section>
