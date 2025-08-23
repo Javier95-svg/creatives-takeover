@@ -55,12 +55,6 @@ const BlogHero = () => {
 
       <div className="container mx-auto px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 glass-card mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Latest Business & AI Insights</span>
-          </div>
-
           {/* Main Title */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
             <span className="takeover-gradient">Insighta</span>
