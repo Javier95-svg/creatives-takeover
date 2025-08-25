@@ -3,17 +3,57 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { blogPosts } from "@/data/blogPosts";
+import { useArticles } from "@/hooks/useArticles";
 import { Calendar, Clock, Share2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  const post = blogPosts.find(p => p.slug === slug);
+  const { getArticleBySlug, loading } = useArticles();
+  const [post, setPost] = useState(null);
+
+  useEffect(() => {
+    if (!loading && slug) {
+      // First check database articles
+      const dbArticle = getArticleBySlug(slug);
+      if (dbArticle) {
+        setPost({
+          id: dbArticle.id,
+          slug: dbArticle.slug,
+          title: dbArticle.title,
+          excerpt: dbArticle.excerpt,
+          content: dbArticle.content,
+          image: dbArticle.image,
+          date: new Date(dbArticle.date).toLocaleDateString(),
+          readTime: dbArticle.read_time,
+          tags: dbArticle.tags,
+          author: {
+            name: dbArticle.author_name || 'Admin',
+            avatar: dbArticle.author_avatar,
+          },
+          externalUrl: dbArticle.external_url,
+        });
+      } else {
+        // Fall back to static blog posts
+        const staticPost = blogPosts.find(p => p.slug === slug);
+        setPost(staticPost || null);
+      }
+    }
+  }, [slug, getArticleBySlug, loading]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading article...</p>
+      </div>
+    );
+  }
 
   if (!post) {
-    return <Navigate to="/blog" replace />;
+    return <Navigate to="/news" replace />;
   }
 
   const sharePost = () => {
@@ -64,7 +104,7 @@ const BlogPost = () => {
           {/* Back Button */}
           <div className="mb-8">
             <Button variant="ghost" asChild className="hover-lift">
-              <Link to="/blog" className="flex items-center gap-2">
+              <Link to="/news" className="flex items-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Blog
               </Link>
