@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
+import { blogPosts } from "@/data/blogPosts";
 
 const BlogHero = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,6 +13,27 @@ const BlogHero = () => {
     // This will be implemented when you add search functionality
     console.log("Searching for:", searchTerm);
   };
+
+  const handleTopicClick = (topic: string) => {
+    setSearchTerm(topic);
+    console.log("Selected topic:", topic);
+  };
+
+  // Get most popular topics from blog posts
+  const getPopularTopics = () => {
+    const allTags = blogPosts.flatMap(post => post.tags || []);
+    const tagCounts = allTags.reduce((acc: { [key: string]: number }, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return Object.entries(tagCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6) // Show top 6 topics
+      .map(([tag]) => tag);
+  };
+
+  const popularTopics = getPopularTopics();
 
   return (
     <section className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -85,6 +107,24 @@ const BlogHero = () => {
               Search
             </Button>
           </form>
+
+          {/* Popular Topics */}
+          <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            <p className="text-sm text-muted-foreground mb-4">Popular topics:</p>
+            <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+              {popularTopics.map((topic) => (
+                <Button
+                  key={topic}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleTopicClick(topic)}
+                  className="glass border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-foreground transition-all duration-300"
+                >
+                  {topic}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
