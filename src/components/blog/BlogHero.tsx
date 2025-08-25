@@ -29,7 +29,7 @@ const BlogHero = () => {
     
     return Object.entries(tagCounts)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 6) // Show top 6 topics
+      .slice(0, 10) // Show top 10 topics
       .map(([tag]) => tag);
   };
 
@@ -112,13 +112,14 @@ const BlogHero = () => {
           <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <p className="text-sm text-muted-foreground mb-4">Popular topics:</p>
             <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-              {popularTopics.map((topic) => (
+              {popularTopics.map((topic, index) => (
                 <Button
                   key={topic}
                   variant="outline"
                   size="sm"
                   onClick={() => handleTopicClick(topic)}
-                  className="glass border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-foreground transition-all duration-300"
+                  className="glass border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-foreground transition-all duration-300 hover-scale animate-fade-in"
+                  style={{ animationDelay: `${0.8 + index * 0.1}s` }}
                 >
                   {topic}
                 </Button>
