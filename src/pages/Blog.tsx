@@ -4,8 +4,20 @@ import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogGrid from "@/components/blog/BlogGrid";
 import TopicsPreferences from "@/components/blog/TopicsPreferences";
+import SignupInviteModal from "@/components/blog/SignupInviteModal";
+import { useSignupInvite } from "@/hooks/useSignupInvite";
+import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
+import { useEffect } from "react";
 
 const Blog = () => {
+  const { showInvite, closeInvite } = useSignupInvite();
+  const { trackPageVisit } = useReadingAnalytics();
+
+  // Track page visit when component mounts
+  useEffect(() => {
+    trackPageVisit('Insighta Blog');
+  }, [trackPageVisit]);
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -20,6 +32,12 @@ const Blog = () => {
         <TopicsPreferences />
       </main>
       <Footer />
+      
+      {/* Signup Invite Modal */}
+      <SignupInviteModal 
+        isOpen={showInvite} 
+        onClose={closeInvite} 
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
+import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -10,6 +11,21 @@ interface BlogCardProps {
 }
 
 const BlogCard = ({ post, className = "" }: BlogCardProps) => {
+  const { trackReadingEvent } = useReadingAnalytics();
+
+  const handleCardClick = () => {
+    trackReadingEvent({
+      articleId: post.id,
+      articleTitle: post.title,
+      action: 'click',
+      metadata: {
+        tags: post.tags,
+        readTime: post.readTime,
+        externalUrl: post.externalUrl
+      }
+    });
+  };
+
   return (
     <Card className={`glass hover-lift group cursor-pointer ${className}`}>
       <a 
@@ -17,6 +33,7 @@ const BlogCard = ({ post, className = "" }: BlogCardProps) => {
         className="block"
         target={post.externalUrl ? "_blank" : "_self"}
         rel={post.externalUrl ? "noopener noreferrer" : undefined}
+        onClick={handleCardClick}
       >
         {/* Featured Image */}
         {post.image && (
