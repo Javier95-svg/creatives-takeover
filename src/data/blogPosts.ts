@@ -1,4 +1,10 @@
 import { BlogPost } from "@/types/blog";
+import aiProductivityHacks from "@/assets/ai-productivity-hacks.jpg";
+import growthHackingStrategies from "@/assets/growth-hacking-strategies.jpg";
+import noCodeMvp from "@/assets/no-code-mvp-building.jpg";
+import aiBusinessPlanning from "@/assets/ai-business-planning.jpg";
+import startupValidation from "@/assets/startup-validation.jpg";
+import creativeMarketing2024 from "@/assets/creative-marketing-2024.jpg";
 
 export const blogPosts: BlogPost[] = [
   {
@@ -38,7 +44,7 @@ export const blogPosts: BlogPost[] = [
       <h3>Implementation Strategy</h3>
       <p>Start with one area that consumes most of your time. Implement AI solutions gradually and measure the time savings. Most entrepreneurs report reclaiming 10-15 hours per week within the first month.</p>
     `,
-    image: "/lovable-uploads/6e837c16-b2d4-400c-b8ab-b4726c162660.png",
+    image: aiProductivityHacks,
     date: "2024-01-25",
     readTime: 5,
     tags: ["AI", "Productivity", "Automation", "Efficiency"],
@@ -93,7 +99,7 @@ export const blogPosts: BlogPost[] = [
       <h3>Measuring True Growth</h3>
       <p>Focus on cohort retention, lifetime value, and organic growth rate rather than just acquisition metrics.</p>
     `,
-    image: "/lovable-uploads/ced83de1-e19f-4e3e-b343-f7979fc9ee18.png",
+    image: growthHackingStrategies,
     date: "2024-01-22",
     readTime: 6,
     tags: ["Growth Hacking", "Scaling", "User Acquisition", "Data Science"],
@@ -168,7 +174,7 @@ export const blogPosts: BlogPost[] = [
       <h3>From MVP to Product</h3>
       <p>Use the insights from your no-code MVP to make informed decisions about custom development, feature priorities, and market positioning.</p>
     `,
-    image: "/lovable-uploads/d357ca7d-d986-499b-b11a-7254722152ac.png",
+    image: noCodeMvp,
     date: "2024-01-20",
     readTime: 8,
     tags: ["No-Code", "MVP", "Product Development", "Validation"],
@@ -228,7 +234,7 @@ export const blogPosts: BlogPost[] = [
       
       <p>Ready to revolutionize your business planning process? Start exploring AI-powered tools today and give your venture the competitive advantage it deserves.</p>
     `,
-    image: "/lovable-uploads/6e837c16-b2d4-400c-b8ab-b4726c162660.png",
+    image: aiBusinessPlanning,
     date: "2024-01-15",
     readTime: 8,
     tags: ["AI", "Business Planning", "Entrepreneurship", "Technology"],
@@ -292,7 +298,7 @@ export const blogPosts: BlogPost[] = [
       <h3>Conclusion</h3>
       <p>Validation isn't a one-time activity—it's an ongoing process that should continue throughout your startup journey. By implementing these strategies, you'll build a stronger foundation for your business and increase your chances of creating something people actually want.</p>
     `,
-    image: "/lovable-uploads/ced83de1-e19f-4e3e-b343-f7979fc9ee18.png",
+    image: startupValidation,
     date: "2024-01-10",
     readTime: 6,
     tags: ["Startups", "Validation", "Entrepreneurship", "MVP"],
@@ -357,7 +363,7 @@ export const blogPosts: BlogPost[] = [
       <h3>Implementation Tips</h3>
       <p>Start small with one or two strategies that align best with your brand and audience. Test, measure, and iterate based on results before expanding to additional tactics.</p>
     `,
-    image: "/lovable-uploads/d357ca7d-d986-499b-b11a-7254722152ac.png",
+    image: creativeMarketing2024,
     date: "2024-01-05",
     readTime: 7,
     tags: ["Marketing", "Digital Strategy", "Creativity", "2024 Trends"],
