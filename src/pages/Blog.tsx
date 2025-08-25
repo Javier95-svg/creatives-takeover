@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogGrid from "@/components/blog/BlogGrid";
+import TopicsPreferences from "@/components/blog/TopicsPreferences";
 
 const Blog = () => {
   return (
@@ -16,6 +17,7 @@ const Blog = () => {
       <main>
         <BlogHero />
         <BlogGrid />
+        <TopicsPreferences />
       </main>
       <Footer />
     </div>
