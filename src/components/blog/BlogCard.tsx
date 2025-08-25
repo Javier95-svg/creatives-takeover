@@ -29,7 +29,7 @@ const BlogCard = ({ post, className = "" }: BlogCardProps) => {
   return (
     <Card className={`glass hover-lift group cursor-pointer ${className}`}>
       <a 
-        href={post.externalUrl || `/blog/${post.slug}`} 
+        href={post.externalUrl || `/news/${post.slug}`} 
         className="block"
         target={post.externalUrl ? "_blank" : "_self"}
         rel={post.externalUrl ? "noopener noreferrer" : undefined}
