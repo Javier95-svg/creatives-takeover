@@ -45,7 +45,7 @@ export const blogPosts: BlogPost[] = [
     author: {
       name: "Creatives Takeover Team"
     },
-    externalUrl: "https://www.artificial-intelligence.blog/ai-news/ai-productivity-hacks-entrepreneurs"
+    externalUrl: "https://creativestakeover.com/insights/ai-productivity-hacks-entrepreneurs"
   },
   {
     id: "5",
@@ -100,7 +100,7 @@ export const blogPosts: BlogPost[] = [
     author: {
       name: "Creatives Takeover Team"
     },
-    externalUrl: "https://www.artificial-intelligence.blog/ai-news/growth-hacking-techniques-2024"
+    externalUrl: "https://creativestakeover.com/insights/growth-hacking-strategies-2024"
   },
   {
     id: "6",
@@ -175,7 +175,7 @@ export const blogPosts: BlogPost[] = [
     author: {
       name: "Creatives Takeover Team"
     },
-    externalUrl: "https://www.artificial-intelligence.blog/ai-news/no-code-mvp-builders-guide"
+    externalUrl: "https://creativestakeover.com/insights/no-code-mvp-48-hours"
   },
   {
     id: "1",
@@ -235,7 +235,7 @@ export const blogPosts: BlogPost[] = [
     author: {
       name: "Creatives Takeover Team"
     },
-    externalUrl: "https://www.artificial-intelligence.blog/ai-news/ai-business-planning-revolution"
+    externalUrl: "https://creativestakeover.com/insights/ai-business-planning-revolution"
   },
   {
     id: "2",
@@ -299,7 +299,7 @@ export const blogPosts: BlogPost[] = [
     author: {
       name: "Creatives Takeover Team"
     },
-    externalUrl: "https://www.artificial-intelligence.blog/ai-news/startup-validation-strategies"
+    externalUrl: "https://creativestakeover.com/insights/startup-validation-framework"
   },
   {
     id: "3",
@@ -364,6 +364,6 @@ export const blogPosts: BlogPost[] = [
     author: {
       name: "Creatives Takeover Team"
     },
-    externalUrl: "https://www.artificial-intelligence.blog/ai-news/creative-marketing-strategies-2024"
+    externalUrl: "https://creativestakeover.com/insights/creative-marketing-strategies-2024"
   }
 ];
