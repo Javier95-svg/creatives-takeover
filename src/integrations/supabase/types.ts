@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      articles: {
+        Row: {
+          author_avatar: string | null
+          author_name: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          date: string
+          excerpt: string
+          external_url: string | null
+          id: string
+          image: string | null
+          is_published: boolean
+          read_time: number
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_name?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          excerpt: string
+          external_url?: string | null
+          id?: string
+          image?: string | null
+          is_published?: boolean
+          read_time?: number
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_avatar?: string | null
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          excerpt?: string
+          external_url?: string | null
+          id?: string
+          image?: string | null
+          is_published?: boolean
+          read_time?: number
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_sessions: {
         Row: {
           answers: Json
