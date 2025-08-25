@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_sessions: {
+        Row: {
+          answers: Json
+          created_at: string
+          current_step: number
+          id: string
+          is_completed: boolean
+          launch_report: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          current_step?: number
+          id?: string
+          is_completed?: boolean
+          launch_report?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          current_step?: number
+          id?: string
+          is_completed?: boolean
+          launch_report?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +71,30 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_topic_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
