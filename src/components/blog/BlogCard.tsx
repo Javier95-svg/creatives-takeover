@@ -12,7 +12,12 @@ interface BlogCardProps {
 const BlogCard = ({ post, className = "" }: BlogCardProps) => {
   return (
     <Card className={`glass hover-lift group cursor-pointer ${className}`}>
-      <Link to={`/blog/${post.slug}`} className="block">
+      <a 
+        href={post.externalUrl || `/blog/${post.slug}`} 
+        className="block"
+        target={post.externalUrl ? "_blank" : "_self"}
+        rel={post.externalUrl ? "noopener noreferrer" : undefined}
+      >
         {/* Featured Image */}
         {post.image && (
           <div className="aspect-video overflow-hidden rounded-t-lg">
@@ -77,7 +82,7 @@ const BlogCard = ({ post, className = "" }: BlogCardProps) => {
             <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
           </Button>
         </CardContent>
-      </Link>
+      </a>
     </Card>
   );
 };

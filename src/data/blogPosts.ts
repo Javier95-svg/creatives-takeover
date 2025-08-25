@@ -44,7 +44,8 @@ export const blogPosts: BlogPost[] = [
     tags: ["AI", "Productivity", "Automation", "Efficiency"],
     author: {
       name: "Creatives Takeover Team"
-    }
+    },
+    externalUrl: "https://www.artificial-intelligence.blog/ai-news/ai-productivity-hacks-entrepreneurs"
   },
   {
     id: "5",
@@ -98,7 +99,8 @@ export const blogPosts: BlogPost[] = [
     tags: ["Growth Hacking", "Scaling", "User Acquisition", "Data Science"],
     author: {
       name: "Creatives Takeover Team"
-    }
+    },
+    externalUrl: "https://www.artificial-intelligence.blog/ai-news/growth-hacking-techniques-2024"
   },
   {
     id: "6",
@@ -172,7 +174,8 @@ export const blogPosts: BlogPost[] = [
     tags: ["No-Code", "MVP", "Product Development", "Validation"],
     author: {
       name: "Creatives Takeover Team"
-    }
+    },
+    externalUrl: "https://www.artificial-intelligence.blog/ai-news/no-code-mvp-builders-guide"
   },
   {
     id: "1",
@@ -231,7 +234,8 @@ export const blogPosts: BlogPost[] = [
     tags: ["AI", "Business Planning", "Entrepreneurship", "Technology"],
     author: {
       name: "Creatives Takeover Team"
-    }
+    },
+    externalUrl: "https://www.artificial-intelligence.blog/ai-news/ai-business-planning-revolution"
   },
   {
     id: "2",
@@ -294,7 +298,8 @@ export const blogPosts: BlogPost[] = [
     tags: ["Startups", "Validation", "Entrepreneurship", "MVP"],
     author: {
       name: "Creatives Takeover Team"
-    }
+    },
+    externalUrl: "https://www.artificial-intelligence.blog/ai-news/startup-validation-strategies"
   },
   {
     id: "3",
@@ -358,6 +363,7 @@ export const blogPosts: BlogPost[] = [
     tags: ["Marketing", "Digital Strategy", "Creativity", "2024 Trends"],
     author: {
       name: "Creatives Takeover Team"
-    }
+    },
+    externalUrl: "https://www.artificial-intelligence.blog/ai-news/creative-marketing-strategies-2024"
   }
 ];

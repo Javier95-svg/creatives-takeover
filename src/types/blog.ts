@@ -12,6 +12,7 @@ export interface BlogPost {
     name: string;
     avatar?: string;
   };
+  externalUrl?: string;
 }
 
 export interface BlogCategory {
