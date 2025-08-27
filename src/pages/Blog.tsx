@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
-import TabbedBlogGrid from "@/components/blog/TabbedBlogGrid";
+import BlogGrid from "@/components/blog/BlogGrid";
 import TopicsPreferences from "@/components/blog/TopicsPreferences";
 import SignupInviteModal from "@/components/blog/SignupInviteModal";
 import { useSignupInvite } from "@/hooks/useSignupInvite";
@@ -28,7 +28,7 @@ const Blog = () => {
       <Navigation />
       <main>
         <BlogHero />
-        <TabbedBlogGrid />
+        <BlogGrid />
         <TopicsPreferences />
       </main>
       <Footer />
