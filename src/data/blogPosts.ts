@@ -366,7 +366,7 @@ export const blogPosts: BlogPost[] = [
     image: creativeMarketing2024,
     date: "2024-01-05",
     readTime: 7,
-    tags: ["Marketing", "Digital Strategy", "Creativity", "2024 Trends"],
+    tags: ["Marketing", "Digital Strategy", "Creativity", "2025 Trends"],
     author: {
       name: "Creatives Takeover Team"
     },
