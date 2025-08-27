@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { useState } from "react";
 import ArticleEditor from "./ArticleEditor";
+import { MigrationButton } from "./MigrationButton";
 
 const BlogGrid = () => {
-  const { articles, loading } = useArticles();
+  const { articles, loading, refetch } = useArticles();
   const { user } = useAuth();
   const [showEditor, setShowEditor] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
@@ -77,7 +78,8 @@ const BlogGrid = () => {
     <section className="pt-0 pb-16">
       <div className="container mx-auto px-6">
         {user && (
-          <div className="flex justify-end mb-8">
+          <div className="flex flex-col items-center gap-4 mb-8">
+            <MigrationButton onMigrationComplete={() => refetch()} />
             <Button onClick={handleCreateNew} className="glass">
               <Plus className="w-4 h-4 mr-2" />
               New Article
