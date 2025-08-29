@@ -879,57 +879,78 @@ ${translations.dataDisclaimer}`;
             {/* Three Information Cards - Horizontal Layout */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* How BizMap AI Works */}
-              <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.1s' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-primary" />
+              <Card className="glass-card animate-fade-in hover-scale group relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10" style={{ animationDelay: '0.1s' }}>
+                {/* Animated background gradient on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Floating particles on hover */}
+                <div className="absolute top-4 right-4 w-2 h-2 bg-primary/30 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-float transition-all duration-300" />
+                <div className="absolute bottom-6 left-6 w-1 h-1 bg-secondary/40 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-300" style={{ animationDelay: '0.5s' }} />
+                
+                <CardHeader className="relative z-10">
+                  <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
+                    <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 animate-pulse-slow">
+                      <Lightbulb className="w-5 h-5 text-primary group-hover:animate-bounce" />
+                    </div>
                     How BizMap AI Works
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 relative z-10">
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                         <span className="text-xs font-semibold text-primary">1</span>
                       </div>
                       <div>
-                        <h4 className="font-medium mb-1">7-Step Wizard</h4>
-                        <p className="text-sm text-muted-foreground">Answer 7 structured questions about your business idea, one at a time.</p>
+                        <h4 className="font-medium mb-1 group-hover:text-primary transition-colors duration-300">7-Step Wizard</h4>
+                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">Answer 7 structured questions about your business idea, one at a time.</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                         <span className="text-xs font-semibold text-primary">2</span>
                       </div>
                       <div>
-                        <h4 className="font-medium mb-1">AI Analysis</h4>
-                        <p className="text-sm text-muted-foreground">GPT-5 analyzes your responses and creates a personalized Launch Report.</p>
+                        <h4 className="font-medium mb-1 group-hover:text-primary transition-colors duration-300">AI Analysis</h4>
+                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">GPT-5 analyzes your responses and creates a personalized Launch Report.</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                         <span className="text-xs font-semibold text-primary">3</span>
                       </div>
                       <div>
-                        <h4 className="font-medium mb-1">Launch Report</h4>
-                        <p className="text-sm text-muted-foreground">Get your complete business roadmap ready to export to PDF/Notion/Google Docs.</p>
+                        <h4 className="font-medium mb-1 group-hover:text-primary transition-colors duration-300">Launch Report</h4>
+                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">Get your complete business roadmap ready to export to PDF/Notion/Google Docs.</p>
                       </div>
                     </div>
                   </div>
                 </CardContent>
+                
+                {/* Animated bottom border */}
+                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
               </Card>
 
               {/* What You'll Get */}
-              <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.3s' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-primary" />
+              <Card className="glass-card animate-fade-in hover-scale group relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10" style={{ animationDelay: '0.3s' }}>
+                {/* Animated background gradient on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Floating particles on hover */}
+                <div className="absolute top-6 right-6 w-2 h-2 bg-secondary/30 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-float transition-all duration-300" style={{ animationDelay: '0.2s' }} />
+                <div className="absolute bottom-4 left-4 w-1 h-1 bg-primary/40 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-300" style={{ animationDelay: '0.7s' }} />
+                
+                <CardHeader className="relative z-10">
+                  <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
+                    <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 animate-pulse-slow">
+                      <Target className="w-5 h-5 text-primary group-hover:animate-spin" style={{ animationDuration: '2s' }} />
+                    </div>
                     What You'll Get
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="relative z-10">
                   <div className="space-y-2">
                     {[
                       "Personalized Launch Report",
@@ -939,38 +960,58 @@ ${translations.dataDisclaimer}`;
                       "Pricing & Revenue Model",
                       "Ready-to-Use Scripts"
                     ].map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-primary" />
-                        <span className="text-sm">{item}</span>
+                      <div key={index} className="flex items-center gap-2 animate-fade-in group-hover:translate-x-1 transition-transform duration-300" style={{ animationDelay: `${0.3 + index * 0.1}s`, transitionDelay: `${index * 0.05}s` }}>
+                        <CheckCircle className="w-4 h-4 text-primary group-hover:scale-110 transition-transform duration-300" />
+                        <span className="text-sm group-hover:text-primary transition-colors duration-300">{item}</span>
                       </div>
                     ))}
                   </div>
                 </CardContent>
+                
+                {/* Animated bottom border */}
+                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-secondary to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
               </Card>
 
               {/* Try These Examples */}
-              <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.5s' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Rocket className="w-5 h-5 text-primary" />
+              <Card className="glass-card animate-fade-in hover-scale group relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10" style={{ animationDelay: '0.5s' }}>
+                {/* Animated background gradient on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Floating particles on hover */}
+                <div className="absolute top-2 right-2 w-2 h-2 bg-accent/30 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-float transition-all duration-300" style={{ animationDelay: '0.3s' }} />
+                <div className="absolute bottom-8 left-8 w-1 h-1 bg-primary/40 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-300" style={{ animationDelay: '0.8s' }} />
+                
+                <CardHeader className="relative z-10">
+                  <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
+                    <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 animate-pulse-slow">
+                      <Rocket className="w-5 h-5 text-primary group-hover:animate-pulse" />
+                    </div>
                     Try These Examples
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="relative z-10">
                   <div className="space-y-2">
                     {examplePrompts.map((prompt, index) => (
                       <Button
                         key={index}
                         variant="outline"
                         size="sm"
-                        className="w-full justify-start text-left h-auto p-3 transition-all duration-200 hover:scale-105"
+                        className="w-full justify-start text-left h-auto p-3 transition-all duration-300 hover:scale-105 hover:shadow-md hover:border-primary/50 animate-fade-in group-hover:translate-x-1"
+                        style={{ animationDelay: `${0.5 + index * 0.1}s`, transitionDelay: `${index * 0.05}s` }}
                         onClick={() => setMessage(prompt)}
                       >
-                        "{prompt}"
+                        <span className="relative">
+                          "{prompt}"
+                          {/* Animated underline on hover */}
+                          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary transform scale-x-0 hover:scale-x-100 transition-transform duration-300 origin-left" />
+                        </span>
                       </Button>
                     ))}
                   </div>
                 </CardContent>
+                
+                {/* Animated bottom border */}
+                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-accent to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
               </Card>
             </div>
             
