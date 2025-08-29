@@ -20,6 +20,22 @@ interface LaunchReportRequest {
   region?: string;
 }
 
+// Input quality heuristic to decide when to ask clarifying questions first
+function getInputQuality(answers: Record<string, string>) {
+  const fields = ['overview','market','problem','solution','channels','pricing','goals'] as const;
+  let score = 0;
+  const reasons: string[] = [];
+  for (const k of fields) {
+    const v = (answers[k] || '').trim();
+    if (v.length < 30) { score++; reasons.push(`${k}: too short`); }
+    if (/(^|\b)(everyone|anyone|an app|a website|social media|people only)($|\b)/i.test(v)) {
+      score++; reasons.push(`${k}: vague`);
+    }
+  }
+  const quality = score >= 3 ? 'Weak' : score === 2 ? 'Fair' : 'Strong';
+  return { quality, reasons };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,6 +48,8 @@ serve(async (req) => {
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured');
     }
+
+    const { quality, reasons } = getInputQuality(answers);
 
     // Create Launch Report prompt for GPT-5
     const prompt = `You are BizMap AI — an AI-powered startup advisor designed to help entrepreneurs turn ideas into businesses.
@@ -53,6 +71,16 @@ USER'S 7-STEP RESPONSES:
 
 STAGE: ${stage || "Explore"}
 TARGET REGION: ${region || "Global"}
+
+INPUT_QUALITY: ${quality}
+INPUT_QUALITY_REASONS: ${reasons.join('; ') || 'N/A'}
+
+CLARIFY-FIRST RULE:
+- If INPUT_QUALITY is "Weak": Do NOT generate the launch report.
+- Instead, return only a single section:
+## Clarifying Questions
+- 3–5 concise questions that will make the plan specific and actionable
+- Stop after the questions. Do not include any other sections.
 
 ADVISOR RULES:
 - Always organize answers in clear sections with headings and bullet points
@@ -283,45 +311,67 @@ IMPORTANT GUIDELINES:
 - Be practical and actionable
 - Keep it concise but complete`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const wantsStream = req.headers.get('Accept')?.includes('text/event-stream');
+
+    const payload = {
+      model: 'gpt-5-2025-08-07',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a global startup co-founder in chatbot form. You guide entrepreneurs through creating clear, actionable Launch Reports. You are practical, globally relevant, use plain language, and focus on execution over theory. Always use the exact formatting requested.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_completion_tokens: 2000,
+      ...(wantsStream ? { stream: true } as const : {})
+    };
+
+    const oaRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a global startup co-founder in chatbot form. You guide entrepreneurs through creating clear, actionable Launch Reports. You are practical, globally relevant, use plain language, and focus on execution over theory. Always use the exact formatting requested.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_completion_tokens: 2000
-      }),
+      body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
+    if (!oaRes.ok) {
+      const errorData = await oaRes.json().catch(() => ({}));
       throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
-    const launchReport = data.choices[0].message.content;
+    if (wantsStream) {
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            const reader = oaRes.body!.getReader();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              controller.enqueue(value);
+            }
+            controller.close();
+          } catch (err) {
+            controller.error(err);
+          }
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
 
-    return new Response(
-      JSON.stringify({ launchReport }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    const data = await oaRes.json();
+    const launchReport = data.choices?.[0]?.message?.content || '';
+
+    return new Response(JSON.stringify({ launchReport }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
     console.error('Error in bizmap-analysis function:', error);
