@@ -83,11 +83,11 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
   if (!user) {
     return (
       <div className={cn(
-        "border-r bg-card/50 backdrop-blur-sm flex flex-col",
+        "glass-card-silver h-[700px] flex flex-col hover-lift",
         isCollapsed ? "w-16" : "w-80",
         className
       )}>
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-border/50">
           <Button
             variant="ghost"
             size="sm"
@@ -112,12 +112,12 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
 
   return (
     <div className={cn(
-      "border-r bg-card/50 backdrop-blur-sm flex flex-col transition-all duration-300",
+      "glass-card-silver h-[700px] flex flex-col hover-lift transition-all duration-300",
       isCollapsed ? "w-16" : "w-80",
       className
     )}>
       {/* Header */}
-      <div className="p-4 border-b space-y-4">
+      <div className="p-4 border-b border-border/50 space-y-4">
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
