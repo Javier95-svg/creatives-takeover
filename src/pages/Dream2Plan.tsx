@@ -547,104 +547,9 @@ ${translations.dataDisclaimer}`;
               />
             </div>
 
-            <div className="grid lg:grid-cols-5 gap-8">
-              {/* Instructions Panel */}
-              <div className="lg:col-span-2 space-y-6">
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5 text-primary" />
-                      How BizMap AI Works
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <span className="text-xs font-semibold text-primary">1</span>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-1">7-Step Wizard</h4>
-                          <p className="text-sm text-muted-foreground">Answer 7 structured questions about your business idea, one at a time.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <span className="text-xs font-semibold text-primary">2</span>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-1">AI Analysis</h4>
-                          <p className="text-sm text-muted-foreground">GPT-5 analyzes your responses and creates a personalized Launch Report.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <span className="text-xs font-semibold text-primary">3</span>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-1">Launch Report</h4>
-                          <p className="text-sm text-muted-foreground">Get your complete business roadmap ready to export to PDF/Notion/Google Docs.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-5 h-5 text-primary" />
-                      What You'll Get
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {[
-                        "Personalized Launch Report",
-                        "Go-To-Market Strategy", 
-                        "90-Day Action Roadmap",
-                        "Customer Validation Plan",
-                        "Pricing & Revenue Model",
-                        "Ready-to-Use Scripts"
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-primary" />
-                          <span className="text-sm">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Rocket className="w-5 h-5 text-primary" />
-                      Try These Examples
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {examplePrompts.map((prompt, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start text-left h-auto p-3"
-                          onClick={() => setMessage(prompt)}
-                        >
-                          "{prompt}"
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
+            <div className="w-full">
               {/* Chat Interface */}
-              <div className="lg:col-span-3">
+              <div className="w-full">
                 <Card className="glass-card h-[700px] flex flex-col">
                   <CardContent className="flex flex-col h-full p-0">
                     {/* Chat Header */}
@@ -813,6 +718,104 @@ ${translations.dataDisclaimer}`;
                           </Button>
                         )}
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Three Information Cards - Horizontal Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                {/* How BizMap AI Works */}
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-primary" />
+                      How BizMap AI Works
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-xs font-semibold text-primary">1</span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-1">7-Step Wizard</h4>
+                          <p className="text-sm text-muted-foreground">Answer 7 structured questions about your business idea, one at a time.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-xs font-semibold text-primary">2</span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-1">AI Analysis</h4>
+                          <p className="text-sm text-muted-foreground">GPT-5 analyzes your responses and creates a personalized Launch Report.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <span className="text-xs font-semibold text-primary">3</span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-1">Launch Report</h4>
+                          <p className="text-sm text-muted-foreground">Get your complete business roadmap ready to export to PDF/Notion/Google Docs.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* What You'll Get */}
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5 text-primary" />
+                      What You'll Get
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {[
+                        "Personalized Launch Report",
+                        "Go-To-Market Strategy", 
+                        "90-Day Action Roadmap",
+                        "Customer Validation Plan",
+                        "Pricing & Revenue Model",
+                        "Ready-to-Use Scripts"
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-primary" />
+                          <span className="text-sm">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Try These Examples */}
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Rocket className="w-5 h-5 text-primary" />
+                      Try These Examples
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {examplePrompts.map((prompt, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-left h-auto p-3"
+                          onClick={() => setMessage(prompt)}
+                        >
+                          "{prompt}"
+                        </Button>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
