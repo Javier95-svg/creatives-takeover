@@ -102,7 +102,7 @@ const BizMapAI = () => {
   // Session Management Functions
   const handleSessionSelect = (session: ChatSession | null) => {
     if (session) {
-      // Properly map session answers to userAnswers structure
+      // Properly map session answers to userAnswers structure  
       const mappedAnswers = {
         overview: session.answers.overview || "",
         market: session.answers.market || "",
@@ -277,7 +277,7 @@ const BizMapAI = () => {
     } finally {
       setIsLoading(false);
     }
-};
+  };
 
   // Generate post-report assets (outreach email, social posts, landing page)
   const generateAsset = async (type: 'outreach' | 'social' | 'landing') => {
@@ -546,6 +546,7 @@ ${translations.dataDisclaimer}`;
         return `Could you provide more specific details? I need enough information to create a useful business plan for you.`;
     }
   };
+  
   const handleNextStep = async () => {
     const currentAnswer = message.trim();
     if (!currentAnswer) {
@@ -558,23 +559,46 @@ ${translations.dataDisclaimer}`;
     // Internal helpers for context-aware follow-ups
     const shouldAskFollowUp = (stepKey: string, answer: string) => {
       const t = answer.toLowerCase();
+      const wordCount = answer.split(' ').length;
+      
+      // More sophisticated context analysis
+      const hasSpecifics = /(\d+|%|\$|€|£|₹|R\$)/.test(answer);
+      const hasTimeframe = /(day|week|month|year|hour|minute)/.test(t);
+      const hasLocation = /(city|town|state|country|us|uk|europe|india|brazil|mexico|nigeria|kenya|china|uae|local|global)/.test(t);
+      const hasComparison = /(better|faster|cheaper|unique|different|advantage|versus|compared|unlike)/.test(t);
+      
       switch (stepKey) {
         case 'overview':
-          return answer.length < 120;
+          // Need business model clarity and specific value prop
+          return wordCount < 25 || (!hasSpecifics && !t.includes('help') && !t.includes('solve'));
+          
         case 'market':
-          return answer.length < 100 || !/\d/.test(answer) || !/(city|town|state|country|us|uk|europe|india|brazil|mexico|nigeria|kenya|china|uae)/i.test(t);
+          // Need demographic specifics and geographic context
+          return wordCount < 20 || (!hasLocation && !hasSpecifics) || t.includes('everyone') || t.includes('anyone');
+          
         case 'problem':
-          return !/(\d|%|\$|hour|day|week|month)/i.test(t);
+          // Need quantified pain points and current solutions
+          return wordCount < 20 || (!hasSpecifics && !hasTimeframe) || !t.includes('current');
+          
         case 'solution':
-          return answer.length < 100 || !/(better|faster|cheaper|unique|differen|advantage)/i.test(t);
+          // Need differentiation and competitive analysis
+          return wordCount < 25 || !hasComparison || (!t.includes('than') && !t.includes('instead'));
+          
         case 'channels':
-          return (answer.split(',').length < 2) || !/(instagram|tiktok|linkedin|facebook|google|whatsapp|youtube|email|newsletter|events|partnership)/i.test(t);
+          // Need specific platforms and acquisition strategy
+          const channelCount = (answer.match(/,|and|\+/g) || []).length + 1;
+          return channelCount < 2 || wordCount < 15 || !/(instagram|tiktok|linkedin|facebook|google|whatsapp|youtube|email|newsletter|events|partnership|ads|seo|content)/i.test(t);
+          
         case 'pricing':
-          return !/(\$|€|£|₹|R\$|\d)/.test(answer) || !/(subscription|commission|one-time|freemium|ads)/i.test(t);
+          // Need business model and validation plan
+          return !hasSpecifics || wordCount < 20 || !/(subscription|commission|one-time|freemium|ads|revenue|cost|budget)/i.test(t);
+          
         case 'goals':
-          return !/(\d|hour|week|month|users|customers|revenue|\$)/i.test(t);
+          // Need measurable objectives and timeline
+          return !hasSpecifics || !hasTimeframe || wordCount < 20 || !/(users|customers|revenue|launch|build|grow)/i.test(t);
+          
         default:
-          return answer.length < 80;
+          return wordCount < 15;
       }
     };
 
@@ -582,23 +606,56 @@ ${translations.dataDisclaimer}`;
       const stage = userStage;
       const region = userRegion;
       const prev = userAnswers as any;
+      
+      // Analyze user's business context for smarter follow-ups
+      const businessType = prev.overview ? (
+        prev.overview.toLowerCase().includes('app') ? 'tech' :
+        prev.overview.toLowerCase().includes('service') ? 'service' :
+        prev.overview.toLowerCase().includes('store') ? 'ecommerce' :
+        prev.overview.toLowerCase().includes('restaurant') ? 'food' : 'general'
+      ) : 'general';
+      
+      const urgencyLevel = stage === 'Explore' ? 'planning' : 
+                          stage === 'Validate' ? 'testing' :
+                          stage === 'Build' ? 'launching' : 'scaling';
+      
       switch (stepKey) {
         case 'overview':
-          return `Given you're at the ${stage} stage, what's the single riskiest assumption you need to validate first for "${answer.slice(0, 120)}"?`;
+          return `Thank you for that overview! As someone in the ${stage.toLowerCase()} stage, I'd like to understand your biggest concern right now. What's the one assumption about "${answer.slice(0, 100)}..." that keeps you up at night? This will help me tailor your launch plan perfectly.`;
+          
         case 'market':
-          return `In ${region}, where do these customers hang out most online? Name 2 specific places (e.g., “Instagram Reels + local Facebook groups”).`;
+          return `Great start! Since you're targeting customers in ${region}, I need to understand their behavior better. Could you tell me: where do these specific people spend most of their time online, and what's their typical decision-making process when they need solutions like yours?`;
+          
         case 'problem':
-          return `How often does this happen and what does it cost them (time or money) today? A rough number is fine.`;
+          const problemContext = businessType === 'tech' ? 'inefficiency' : 
+                                businessType === 'service' ? 'frustration' : 'cost or time waste';
+          return `I can see this is a real issue. To help you build a compelling solution, could you quantify the impact? For example: How much time, money, or ${problemContext} does this problem typically cause your target customers each week or month?`;
+          
         case 'solution':
-          return `Compared to how they solve it now${prev.problem ? ` (“${String(prev.problem).slice(0, 80)}…”)` : ''}, what’s your strongest differentiator in 1 sentence?`;
+          const competitorContext = prev.problem ? `given the problem of "${String(prev.problem).slice(0, 80)}..."` : 'in this space';
+          return `That sounds promising! Since you're ${urgencyLevel}, I need to understand your competitive advantage clearly. What makes your approach fundamentally different from existing solutions ${competitorContext}? What's your "unfair advantage"?`;
+          
         case 'channels':
-          return `Pick your top 2 channels for ${region} and how you'd get the first 10 customers there (briefly).`;
+          const regionalChannels = region.includes('US') ? 'LinkedIn and Google' :
+                                 region.includes('India') ? 'WhatsApp and Instagram' :
+                                 region.includes('Brazil') ? 'WhatsApp and Facebook' :
+                                 region.includes('Europe') ? 'LinkedIn and email' : 'the most popular platforms';
+          return `Good thinking on channels! For ${region}, I'd recommend focusing on ${regionalChannels} initially. But I need specifics: How exactly will you get your first 10 customers through your top 2 channels? What's your step-by-step approach?`;
+          
         case 'pricing':
-          return `How will you validate willingness-to-pay next week? (e.g., 10 interviews, a pre-order page, or a “pricing question” test)`;
+          const stageAdvice = stage === 'Explore' ? 'validate willingness to pay' :
+                            stage === 'Validate' ? 'test different price points' :
+                            stage === 'Build' ? 'finalize your pricing strategy' : 'optimize pricing';
+          return `Perfect, I can see you've thought about the economics. Since you're in the ${stage.toLowerCase()} stage, you need to ${stageAdvice}. What's your specific plan to test pricing with real customers in the next 2 weeks? This is crucial for ${businessType} businesses.`;
+          
         case 'goals':
-          return `What could block you in the next 4 weeks, and how will you mitigate it?`;
+          const timelineContext = urgencyLevel === 'planning' ? 'establish foundations' :
+                                 urgencyLevel === 'testing' ? 'validate core assumptions' :
+                                 urgencyLevel === 'launching' ? 'acquire first customers' : 'scale operations';
+          return `Excellent goals! Given that you're ${urgencyLevel}, your focus should be to ${timelineContext}. What's the biggest obstacle you anticipate in the next 30 days, and what's your backup plan if things don't go as expected? This foresight will be key to your success.`;
+          
         default:
-          return `Tell me one concrete detail so I can tailor the plan better.`;
+          return `Thank you for sharing that. To give you the most relevant advice for your ${businessType} business in ${region}, could you provide one more specific detail that would help me understand your situation better?`;
       }
     };
 
@@ -707,6 +764,7 @@ ${translations.dataDisclaimer}`;
       await handlePostReportMessage();
     }
   };
+
   const getCurrentPlaceholder = () => {
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder;
