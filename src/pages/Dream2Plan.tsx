@@ -7,6 +7,7 @@ import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2 } from
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
+import InteractiveProgress from "@/components/InteractiveProgress";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -534,6 +535,16 @@ ${translations.dataDisclaimer}`;
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Your global startup co-founder in chatbot form. Transform business ideas into actionable Launch Reports.
               </p>
+            </div>
+
+            {/* Interactive Progress Visualization */}
+            <div className="mb-8">
+              <InteractiveProgress
+                currentStep={currentStep}
+                totalSteps={wizardSteps.length}
+                stepTitles={wizardSteps.map(step => step.title)}
+                isComplete={!!launchReport}
+              />
             </div>
 
             <div className="grid lg:grid-cols-5 gap-8">
