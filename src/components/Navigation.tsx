@@ -22,8 +22,8 @@ const Navigation = () => {
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/dream2plan" },
     { name: "Prompt Library", href: "/prompt-library" },
-    { name: "Community", href: "/community" },
     { name: "Insighta", href: "/news" },
+    { name: "Community", href: "/community" },
     { name: "About Us", href: "/about" },
     { name: "Pricing", href: "/pricing" }
   ];
