@@ -1,1 +1,4 @@
 project_id = "rcjlaybjnozqbsoxzboa"
+
+[functions.community-ai-moderator]
+verify_jwt = false

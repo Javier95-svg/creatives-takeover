@@ -17,6 +17,18 @@ export type Post = {
   author: { name: string; avatar?: string };
   votes: number;
   commentsCount: number;
+  // AI moderator fields (optional, populated behind the scenes)
+  aiSummary?: string;
+  aiInsights?: string[];
+  aiRelatedTopics?: string[];
+  aiStructuredIdea?: {
+    problem: string;
+    solution: string;
+    audience: string;
+    next_steps: string[];
+  };
+  aiTrendingAngle?: string;
+  aiNextStep?: string;
 };
 
 const timeAgo = (iso: string) => {

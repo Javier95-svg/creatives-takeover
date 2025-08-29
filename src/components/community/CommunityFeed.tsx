@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Example assets for demo posts
 import heroImg from "@/assets/solopreneur-hero.jpg";
@@ -91,6 +93,39 @@ const CommunityFeed: React.FC = () => {
       commentsCount: 0,
     };
     setPosts((prev) => [newPost, ...prev]);
+
+    // Behind-the-scenes AI moderation & insight generation
+    void (async () => {
+      toast.message("Analyzing your post with AI…");
+      const { data, error } = await supabase.functions.invoke('community-ai-moderator', {
+        body: {
+          title: payload.title,
+          content: payload.content,
+          tags: payload.tags,
+        },
+      });
+
+      if (error) {
+        console.error('AI moderation error', error);
+        toast.error("AI analysis failed. Your post is still published.");
+        return;
+      }
+
+      setPosts((prev) => prev.map((p) =>
+        p.id === newPost.id
+          ? {
+              ...p,
+              aiSummary: data?.tldr,
+              aiInsights: data?.insights,
+              aiRelatedTopics: data?.related_topics,
+              aiStructuredIdea: data?.structured_idea,
+              aiTrendingAngle: data?.trending_angle,
+              aiNextStep: data?.next_step,
+            }
+          : p
+      ));
+      toast.success("AI insights added to your post.");
+    })();
   };
 
   return (

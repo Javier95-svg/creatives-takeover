@@ -107,6 +107,107 @@ export type Database = {
         }
         Relationships: []
       }
+      community_posts: {
+        Row: {
+          ai_insights: string[] | null
+          ai_next_step: string | null
+          ai_processed_at: string | null
+          ai_related_topics: string[] | null
+          ai_structured_idea: Json | null
+          ai_summary: string | null
+          ai_trending_angle: string | null
+          comment_count: number | null
+          content: string
+          created_at: string
+          downvotes: number | null
+          id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_insights?: string[] | null
+          ai_next_step?: string | null
+          ai_processed_at?: string | null
+          ai_related_topics?: string[] | null
+          ai_structured_idea?: Json | null
+          ai_summary?: string | null
+          ai_trending_angle?: string | null
+          comment_count?: number | null
+          content: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_insights?: string[] | null
+          ai_next_step?: string | null
+          ai_processed_at?: string | null
+          ai_related_topics?: string[] | null
+          ai_structured_idea?: Json | null
+          ai_summary?: string | null
+          ai_trending_angle?: string | null
+          comment_count?: number | null
+          content?: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          upvotes?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          downvotes: number | null
+          id: string
+          post_id: string
+          updated_at: string
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          post_id: string
+          updated_at?: string
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          post_id?: string
+          updated_at?: string
+          upvotes?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
