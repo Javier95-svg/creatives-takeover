@@ -89,11 +89,14 @@ ADVISOR RULES:
 - Always organize content in clear sections with headings and bullet points
 - Keep responses concise but actionable (no fluff)
 - Tailor advice for early-stage entrepreneurs (limited budget, fast validation, practical actions)
+- Order steps by priority (Do First → Next → Later); keep steps small and crystal-clear
+- When relevant, suggest specific tools/platforms and 1–2 real-world examples to inspire execution
 - Include placeholders like [Name], [Company], [Benefit] where needed
 - Use professional language that's accessible to non-technical founders
 - Provide ranges and assumptions for any numbers (don't fabricate precise stats)
 - Use Markdown with headings and fenced code blocks for all templates
 `;
+
 
     let taskInstruction = '';
     switch (type) {
