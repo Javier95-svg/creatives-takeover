@@ -95,6 +95,9 @@ const BizMapAI = () => {
   ];
 
   const [message, setMessage] = useState("");
+  const [followUpState, setFollowUpState] = useState<{ active: boolean; stepKey: string | null; initialAnswer: string }>(
+    { active: false, stepKey: null, initialAnswer: "" }
+  );
 
   // Session Management Functions
   const handleSessionSelect = (session: ChatSession | null) => {
@@ -551,16 +554,90 @@ ${translations.dataDisclaimer}`;
     }
 
     const currentKey = wizardSteps[currentStep].key;
-    
+
+    // Internal helpers for context-aware follow-ups
+    const shouldAskFollowUp = (stepKey: string, answer: string) => {
+      const t = answer.toLowerCase();
+      switch (stepKey) {
+        case 'overview':
+          return answer.length < 120;
+        case 'market':
+          return answer.length < 100 || !/\d/.test(answer) || !/(city|town|state|country|us|uk|europe|india|brazil|mexico|nigeria|kenya|china|uae)/i.test(t);
+        case 'problem':
+          return !/(\d|%|\$|hour|day|week|month)/i.test(t);
+        case 'solution':
+          return answer.length < 100 || !/(better|faster|cheaper|unique|differen|advantage)/i.test(t);
+        case 'channels':
+          return (answer.split(',').length < 2) || !/(instagram|tiktok|linkedin|facebook|google|whatsapp|youtube|email|newsletter|events|partnership)/i.test(t);
+        case 'pricing':
+          return !/(\$|€|£|₹|R\$|\d)/.test(answer) || !/(subscription|commission|one-time|freemium|ads)/i.test(t);
+        case 'goals':
+          return !/(\d|hour|week|month|users|customers|revenue|\$)/i.test(t);
+        default:
+          return answer.length < 80;
+      }
+    };
+
+    const generateContextualFollowUp = (stepKey: string, answer: string) => {
+      const stage = userStage;
+      const region = userRegion;
+      const prev = userAnswers as any;
+      switch (stepKey) {
+        case 'overview':
+          return `Given you're at the ${stage} stage, what's the single riskiest assumption you need to validate first for "${answer.slice(0, 120)}"?`;
+        case 'market':
+          return `In ${region}, where do these customers hang out most online? Name 2 specific places (e.g., “Instagram Reels + local Facebook groups”).`;
+        case 'problem':
+          return `How often does this happen and what does it cost them (time or money) today? A rough number is fine.`;
+        case 'solution':
+          return `Compared to how they solve it now${prev.problem ? ` (“${String(prev.problem).slice(0, 80)}…”)` : ''}, what’s your strongest differentiator in 1 sentence?`;
+        case 'channels':
+          return `Pick your top 2 channels for ${region} and how you'd get the first 10 customers there (briefly).`;
+        case 'pricing':
+          return `How will you validate willingness-to-pay next week? (e.g., 10 interviews, a pre-order page, or a “pricing question” test)`;
+        case 'goals':
+          return `What could block you in the next 4 weeks, and how will you mitigate it?`;
+        default:
+          return `Tell me one concrete detail so I can tailor the plan better.`;
+      }
+    };
+
+    // If we're answering a pending follow-up for this step
+    if (followUpState.active && followUpState.stepKey === currentKey) {
+      // Add the follow-up answer
+      setMessages(prev => [...prev, { type: "user", content: currentAnswer }]);
+
+      // Save combined detail to the current step answer
+      const combined = `${followUpState.initialAnswer}\n\nAdditional details: ${currentAnswer}`;
+      setUserAnswers(prev => ({ ...prev, [currentKey]: combined }));
+
+      setFollowUpState({ active: false, stepKey: null, initialAnswer: "" });
+      setMessage("");
+
+      if (currentStep < wizardSteps.length - 1) {
+        const nextStep = currentStep + 1;
+        setCurrentStep(nextStep);
+        setMessages(prev => [...prev, {
+          type: "assistant",
+          content: `Great! Now for step ${nextStep + 1} of 7:\n\n**${wizardSteps[nextStep].title}**\n\n${wizardSteps[nextStep].question}`
+        }]);
+      } else {
+        setMessages(prev => [...prev, { type: "assistant", content: "Excellent! Now I'm generating your personalized Launch Report based on all your responses. This may take a moment..." }]);
+        const completeAnswers = { ...userAnswers, [currentKey]: combined };
+        const report = await generateLaunchReport(completeAnswers, userStage, userRegion);
+        setLaunchReport(report);
+        setMessages(prev => [...prev, { type: "assistant", content: report }]);
+      }
+      return;
+    }
+
     // Check if answer is too vague
     if (isAnswerTooVague(currentAnswer, currentKey)) {
-      // Add user's vague message to chat
       setMessages(prev => [...prev, {
-        type: "user", 
+        type: "user",
         content: currentAnswer
       }]);
 
-      // Ask for clarification
       const clarifyingQuestion = generateClarifyingQuestion(currentKey, currentAnswer);
       setMessages(prev => [...prev, {
         type: "assistant",
@@ -571,12 +648,22 @@ ${translations.dataDisclaimer}`;
       return; // Don't advance to next step
     }
 
+    // Smart context-aware follow-up to deepen specificity (like a real advisor)
+    if (shouldAskFollowUp(currentKey, currentAnswer)) {
+      setMessages(prev => [...prev, { type: "user", content: currentAnswer }]);
+      const followQ = generateContextualFollowUp(currentKey, currentAnswer);
+      setMessages(prev => [...prev, { type: "assistant", content: followQ }]);
+      setFollowUpState({ active: true, stepKey: currentKey, initialAnswer: currentAnswer });
+      setMessage("");
+      return; // Wait for follow-up response
+    }
+
     // Answer is good enough, proceed
     setUserAnswers(prev => ({ ...prev, [currentKey]: currentAnswer }));
 
     // Add user message to chat
     setMessages(prev => [...prev, {
-      type: "user", 
+      type: "user",
       content: currentAnswer
     }]);
 
@@ -586,7 +673,7 @@ ${translations.dataDisclaimer}`;
       // Move to next step
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
-      
+
       // Add next question to chat
       setMessages(prev => [...prev, {
         type: "assistant",
@@ -606,7 +693,7 @@ ${translations.dataDisclaimer}`;
 
       // Add final message with report
       setMessages(prev => [...prev, {
-        type: "assistant", 
+        type: "assistant",
         content: report
       }]);
     }
