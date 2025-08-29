@@ -24,6 +24,48 @@ const Pricing = () => {
       popular: false
     },
     {
+      name: "Insighta Pro",
+      title: "Premium Insights",
+      description: "Unlock exclusive content and AI-powered personalization",
+      monthlyPrice: 9.99,
+      annualPrice: 99.99,
+      credits: 200,
+      integrationCredits: 20,
+      features: [
+        "Exclusive premium articles",
+        "AI-powered content personalization",
+        "Early access to new features",
+        "Expert Q&A sessions",
+        "Advanced search filters",
+        "Bookmark unlimited content",
+        "Priority email support"
+      ],
+      cta: "Start Pro",
+      popular: false,
+      badge: "New"
+    },
+    {
+      name: "Community Insider",
+      title: "Enhanced Community",
+      description: "Unlock advanced community features and AI insights",
+      monthlyPrice: 14.99,
+      annualPrice: 149.99,
+      credits: 300,
+      integrationCredits: 30,
+      features: [
+        "Priority post visibility",
+        "Advanced AI post insights",
+        "Direct messaging with members",
+        "Exclusive discussion groups",
+        "Community analytics dashboard",
+        "Mentor matching system",
+        "Weekly community highlights"
+      ],
+      cta: "Join Insider",
+      popular: true,
+      badge: "Popular"
+    },
+    {
       name: "Elite",
       title: "Unlock Full Potential",
       description: "Best value for serious entrepreneurs who want comprehensive AI assistance",
@@ -41,7 +83,7 @@ const Pricing = () => {
         "Custom business analysis"
       ],
       cta: "Get Started",
-      popular: true
+      popular: false
     },
     {
       name: "Teams",
@@ -113,7 +155,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto stagger-child">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto stagger-child">
           {plans.map((plan, index) => (
             <div
               key={plan.name}
@@ -124,11 +166,15 @@ const Pricing = () => {
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {plan.popular && (
+              {(plan.popular || plan.badge) && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground px-4 py-1 text-sm font-medium flex items-center gap-1">
+                  <Badge className={`px-4 py-1 text-sm font-medium flex items-center gap-1 ${
+                    plan.popular 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-secondary text-secondary-foreground'
+                  }`}>
                     <Star className="w-3 h-3 fill-current" />
-                    Most Popular
+                    {plan.badge || 'Most Popular'}
                   </Badge>
                 </div>
               )}
@@ -163,6 +209,10 @@ const Pricing = () => {
                 onClick={() => {
                   if (plan.name === "Starter") {
                     window.open("https://creatives-takeover.com/dream2plan", "_blank");
+                  } else if (plan.name === "Insighta Pro") {
+                    window.open("https://pay.creatives-takeover.com/b/insighta-pro", "_blank");
+                  } else if (plan.name === "Community Insider") {
+                    window.open("https://pay.creatives-takeover.com/b/community-insider", "_blank");
                   } else if (plan.name === "Elite") {
                     window.open("https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00", "_blank");
                   } else if (plan.name === "Teams") {
