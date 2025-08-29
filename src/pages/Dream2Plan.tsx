@@ -726,7 +726,7 @@ ${translations.dataDisclaimer}`;
               {/* Three Information Cards - Horizontal Layout */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                 {/* How BizMap AI Works */}
-                <Card className="glass-card">
+                <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.1s' }}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Lightbulb className="w-5 h-5 text-primary" />
@@ -769,7 +769,7 @@ ${translations.dataDisclaimer}`;
                 </Card>
 
                 {/* What You'll Get */}
-                <Card className="glass-card">
+                <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.3s' }}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Target className="w-5 h-5 text-primary" />
@@ -796,7 +796,7 @@ ${translations.dataDisclaimer}`;
                 </Card>
 
                 {/* Try These Examples */}
-                <Card className="glass-card">
+                <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.5s' }}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Rocket className="w-5 h-5 text-primary" />
@@ -810,7 +810,7 @@ ${translations.dataDisclaimer}`;
                           key={index}
                           variant="outline"
                           size="sm"
-                          className="w-full justify-start text-left h-auto p-3"
+                          className="w-full justify-start text-left h-auto p-3 transition-all duration-200 hover:scale-105"
                           onClick={() => setMessage(prompt)}
                         >
                           "{prompt}"
