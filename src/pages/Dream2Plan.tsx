@@ -537,16 +537,6 @@ ${translations.dataDisclaimer}`;
               </p>
             </div>
 
-            {/* Interactive Progress Visualization */}
-            <div className="mb-8">
-              <InteractiveProgress
-                currentStep={currentStep}
-                totalSteps={wizardSteps.length}
-                stepTitles={wizardSteps.map(step => step.title)}
-                isComplete={!!launchReport}
-              />
-            </div>
-
             <div className="w-full">
               {/* Chat Interface */}
               <div className="w-full">
@@ -721,6 +711,16 @@ ${translations.dataDisclaimer}`;
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+              
+              {/* Interactive Progress Visualization - Synchronized with chatbot */}
+              <div className="mt-8 animate-fade-in">
+                <InteractiveProgress
+                  currentStep={currentStep}
+                  totalSteps={wizardSteps.length}
+                  stepTitles={wizardSteps.map(step => step.title)}
+                  isComplete={!!launchReport}
+                />
               </div>
               
               {/* Three Information Cards - Horizontal Layout */}
