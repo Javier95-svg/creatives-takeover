@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import TypingMessage from "@/components/TypingMessage";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -668,27 +669,44 @@ ${translations.dataDisclaimer}`;
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {messages.map((msg, index) => (
-                        <div key={index} className={`flex gap-3 ${msg.type === "user" ? "flex-row-reverse" : ""}`}>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            msg.type === "user" 
-                              ? "bg-primary text-primary-foreground" 
-                              : "bg-muted"
-                          }`}>
-                            {msg.type === "user" ? 
-                              <User className="w-4 h-4" /> : 
+                      {messages.map((msg, index) => {
+                        // For AI messages, use typing animation for the last message
+                        const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
+                        
+                        if (msg.type === "user") {
+                          return (
+                            <div key={index} className="flex gap-3 flex-row-reverse">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
+                                <User className="w-4 h-4" />
+                              </div>
+                              <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-primary text-primary-foreground rounded-br-none">
+                                {msg.content}
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        if (isLastAIMessage) {
+                          return (
+                            <TypingMessage 
+                              key={index}
+                              content={msg.content}
+                              speed={25}
+                            />
+                          );
+                        }
+                        
+                        return (
+                          <div key={index} className="flex gap-3">
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                               <Bot className="w-4 h-4" />
-                            }
+                            </div>
+                            <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-muted rounded-bl-none">
+                              {msg.content}
+                            </div>
                           </div>
-                          <div className={`max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap ${
-                            msg.type === "user"
-                              ? "bg-primary text-primary-foreground rounded-br-none"
-                              : "bg-muted rounded-bl-none"
-                          }`}>
-                            {msg.content}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {isLoading && (
                         <div className="flex gap-3">
                           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
