@@ -540,17 +540,17 @@ ${translations.dataDisclaimer}`;
             <div className="w-full">
               {/* Chat Interface */}
               <div className="w-full">
-                <Card className="glass-card h-[700px] flex flex-col">
+                <Card className="glass-card-silver h-[700px] flex flex-col hover-lift">
                   <CardContent className="flex flex-col h-full p-0">
                     {/* Chat Header */}
                     <div className="p-4 border-b border-border/50">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Bot className="w-5 h-5 text-primary" />
+                          <div className="w-10 h-10 rounded-full bg-gradient-silver-glow flex items-center justify-center shadow-lg">
+                            <Bot className="w-5 h-5 text-foreground" />
                           </div>
                           <div>
-                            <h4 className="font-semibold">BizMap AI Assistant</h4>
+                            <h4 className="font-semibold silver-gradient-text">BizMap AI Assistant</h4>
                             <p className="text-sm text-muted-foreground">
                               {isCompleted ? "Launch Report Complete!" : 
                                `Step ${currentStep + 1} of ${wizardSteps.length}`}

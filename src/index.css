@@ -45,11 +45,24 @@ All colors MUST be HSL.
     --cosmic-purple: 258 90% 66%;
     --glass-white: 0 0% 100%;
     --glass-border: 240 4% 20%;
+    
+    /* Dark Silver Theme Colors */
+    --dark-silver: 215 15% 25%;
+    --light-silver: 215 20% 65%;
+    --metallic-silver: 215 25% 45%;
+    --silver-highlight: 215 30% 85%;
+    --charcoal-silver: 215 12% 15%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--electric-blue)), hsl(var(--cosmic-purple)));
     --gradient-hero: linear-gradient(180deg, hsl(var(--space-black)), hsl(240 4% 6%));
     --gradient-glass: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(139, 95, 255, 0.1));
+    
+    /* Dark Silver Gradients */
+    --gradient-silver: linear-gradient(135deg, hsl(var(--dark-silver)), hsl(var(--metallic-silver)), hsl(var(--light-silver)));
+    --gradient-silver-subtle: linear-gradient(180deg, hsl(var(--charcoal-silver)), hsl(var(--dark-silver)));
+    --gradient-silver-glow: linear-gradient(135deg, hsl(var(--metallic-silver)), hsl(var(--silver-highlight)));
+    --gradient-silver-dark: linear-gradient(90deg, hsl(var(--charcoal-silver)), hsl(var(--dark-silver)), hsl(var(--metallic-silver)));
     
     /* Creatives Takeover Gradients */
     --gradient-creatives: linear-gradient(135deg, hsl(var(--electric-blue)), hsl(var(--cosmic-purple)), hsl(var(--space-black)));
@@ -152,6 +165,47 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  
+  /* Dark Silver Gradient Text Effects */
+  .silver-gradient-text {
+    background: var(--gradient-silver);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 300% 300%;
+    animation: silver-flow 4s ease-in-out infinite;
+  }
+  
+  .silver-glow-text {
+    background: var(--gradient-silver-glow);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(215, 215, 215, 0.3);
+  }
+
+  /* Dark Silver Chat Card */
+  .glass-card-silver {
+    background: var(--gradient-silver-subtle);
+    backdrop-filter: blur(15px);
+    border: 1px solid hsl(var(--metallic-silver) / 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+                0 0 20px rgba(215, 215, 215, 0.1);
+    @apply rounded-2xl p-6;
+  }
+
+  /* Dark Silver Background Utilities */
+  .bg-gradient-silver {
+    background: var(--gradient-silver);
+  }
+  
+  .bg-gradient-silver-glow {
+    background: var(--gradient-silver-glow);
+  }
+  
+  .bg-gradient-silver-dark {
+    background: var(--gradient-silver-dark);
   }
 
   /* Creatives Takeover Font Styles */
@@ -415,5 +469,17 @@ All colors MUST be HSL.
     background-position: 100% 50%; 
     transform: scale(1.02);
     filter: brightness(1.1);
+  }
+}
+
+/* Dark Silver Gradient Animations */
+@keyframes silver-flow {
+  0%, 100% { 
+    background-position: 0% 50%; 
+    filter: brightness(0.9);
+  }
+  50% { 
+    background-position: 100% 50%; 
+    filter: brightness(1.2);
   }
 }
