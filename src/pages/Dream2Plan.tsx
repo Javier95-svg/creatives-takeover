@@ -680,7 +680,8 @@ ${translations.dataDisclaimer}`;
               </p>
             </div>
 
-            <div className="flex gap-6">
+            {/* Chat Interface Container */}
+            <div className="flex gap-6 mb-8">
               {/* Chat Sidebar */}
               <ChatSidebar 
                 onSessionSelect={handleSessionSelect}
@@ -688,291 +689,289 @@ ${translations.dataDisclaimer}`;
                 className="hidden md:flex"
               />
 
-              {/* Main Content */}
+              {/* Main Chat Interface */}
               <div className="flex-1 min-w-0">
-                {/* Chat Interface */}
-                <div className="w-full">
-                  <Card className="glass-card-silver h-[700px] flex flex-col hover-lift">
-                    <CardContent className="flex flex-col h-full p-0">
-                      {/* Chat Header */}
-                      <div className="p-4 border-b border-border/50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-silver-glow flex items-center justify-center shadow-lg">
-                              <Bot className="w-5 h-5 text-foreground" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold silver-gradient-text">BizMap AI Assistant</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {isCompleted ? "Launch Report Complete!" : 
-                                 `Step ${currentStep + 1} of ${wizardSteps.length}`}
-                              </p>
+                <Card className="glass-card-silver h-[700px] flex flex-col hover-lift">
+                  <CardContent className="flex flex-col h-full p-0">
+                    {/* Chat Header */}
+                    <div className="p-4 border-b border-border/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-silver-glow flex items-center justify-center shadow-lg">
+                            <Bot className="w-5 h-5 text-foreground" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold silver-gradient-text">BizMap AI Assistant</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {isCompleted ? "Launch Report Complete!" : 
+                               `Step ${currentStep + 1} of ${wizardSteps.length}`}
+                            </p>
+                          </div>
+                        </div>
+                        {!isCompleted && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(getProgressPercentage())}%
+                            </span>
+                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary transition-all duration-300"
+                                style={{ width: `${getProgressPercentage()}%` }}
+                              />
                             </div>
                           </div>
-                          {!isCompleted && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">
-                                {Math.round(getProgressPercentage())}%
-                              </span>
-                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-primary transition-all duration-300"
-                                  style={{ width: `${getProgressPercentage()}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Messages */}
-                      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {messages.map((msg, index) => {
-                          // For AI messages, use typing animation for the last message
-                          const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
-                          
-                          if (msg.type === "user") {
-                            return (
-                              <div key={index} className="flex gap-3 flex-row-reverse">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
-                                  <User className="w-4 h-4" />
-                                </div>
-                                <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-primary text-primary-foreground rounded-br-none">
-                                  {msg.content}
-                                </div>
-                              </div>
-                            );
-                          }
-                          
-                          if (isLastAIMessage) {
-                            return (
-                              <TypingMessage 
-                                key={index}
-                                content={msg.content}
-                                speed={25}
-                              />
-                            );
-                          }
-                          
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {messages.map((msg, index) => {
+                        // For AI messages, use typing animation for the last message
+                        const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
+                        
+                        if (msg.type === "user") {
                           return (
-                            <div key={index} className="flex gap-3">
-                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                <Bot className="w-4 h-4" />
+                            <div key={index} className="flex gap-3 flex-row-reverse">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
+                                <User className="w-4 h-4" />
                               </div>
-                              <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-muted rounded-bl-none">
+                              <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-primary text-primary-foreground rounded-br-none">
                                 {msg.content}
                               </div>
                             </div>
                           );
-                        })}
-                        {isLoading && (
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                        }
+                        
+                        if (isLastAIMessage) {
+                          return (
+                            <TypingMessage 
+                              key={index}
+                              content={msg.content}
+                              speed={25}
+                            />
+                          );
+                        }
+                        
+                        return (
+                          <div key={index} className="flex gap-3">
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                               <Bot className="w-4 h-4" />
                             </div>
-                            <div className="bg-muted p-3 rounded-lg rounded-bl-none">
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                            <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-muted rounded-bl-none">
+                              {msg.content}
                             </div>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Preferences */}
-                      <div className="p-4 border-t border-border/50 bg-muted/20">
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground mb-1 block">Stage</label>
-                            <Select value={userStage} onValueChange={setUserStage}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Explore">Explore (idea stage)</SelectItem>
-                                <SelectItem value="Validate">Validate (no customers yet)</SelectItem>
-                                <SelectItem value="Build">Build (MVP)</SelectItem>
-                                <SelectItem value="Grow">Grow (some revenue)</SelectItem>
-                              </SelectContent>
-                            </Select>
+                        );
+                      })}
+                      {isLoading && (
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                            <Bot className="w-4 h-4" />
                           </div>
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground mb-1 block">Region</label>
-                            <Select value={userRegion} onValueChange={setUserRegion}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="US">United States</SelectItem>
-                                <SelectItem value="Europe">Europe</SelectItem>
-                                <SelectItem value="Latin America">Latin America</SelectItem>
-                                <SelectItem value="Brazil">Brazil</SelectItem>
-                                <SelectItem value="Mexico">Mexico</SelectItem>
-                                <SelectItem value="UK">United Kingdom</SelectItem>
-                                <SelectItem value="India">India</SelectItem>
-                                <SelectItem value="China">China</SelectItem>
-                                <SelectItem value="Nigeria">Nigeria</SelectItem>
-                                <SelectItem value="Kenya">Kenya</SelectItem>
-                                <SelectItem value="UAE">UAE</SelectItem>
-                                <SelectItem value="Global">Global</SelectItem>
-                              </SelectContent>
-                            </Select>
+                          <div className="bg-muted p-3 rounded-lg rounded-bl-none">
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           </div>
                         </div>
-                      </div>
+                      )}
+                    </div>
 
-                      <div className="p-4 border-t border-border/50">
-                        {isCompleted && (
-                          <div className="mb-3 flex flex-wrap gap-2">
-                            <Button size="sm" variant="secondary" onClick={() => handleQuickAction('outreach')}>Draft outreach email</Button>
-                            <Button size="sm" variant="secondary" onClick={() => handleQuickAction('social')}>Write 3 social posts</Button>
-                            <Button size="sm" variant="secondary" onClick={() => handleQuickAction('landing')}>Sketch landing page</Button>
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder={getCurrentPlaceholder()}
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            className="flex-1"
-                            disabled={isLoading}
-                          />
+                    {/* Preferences */}
+                    <div className="p-4 border-t border-border/50 bg-muted/20">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Stage</label>
+                          <Select value={userStage} onValueChange={setUserStage}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Explore">Explore (idea stage)</SelectItem>
+                              <SelectItem value="Validate">Validate (no customers yet)</SelectItem>
+                              <SelectItem value="Build">Build (MVP)</SelectItem>
+                              <SelectItem value="Grow">Grow (some revenue)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Region</label>
+                          <Select value={userRegion} onValueChange={setUserRegion}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="US">United States</SelectItem>
+                              <SelectItem value="Europe">Europe</SelectItem>
+                              <SelectItem value="Latin America">Latin America</SelectItem>
+                              <SelectItem value="Brazil">Brazil</SelectItem>
+                              <SelectItem value="Mexico">Mexico</SelectItem>
+                              <SelectItem value="UK">United Kingdom</SelectItem>
+                              <SelectItem value="India">India</SelectItem>
+                              <SelectItem value="China">China</SelectItem>
+                              <SelectItem value="Nigeria">Nigeria</SelectItem>
+                              <SelectItem value="Kenya">Kenya</SelectItem>
+                              <SelectItem value="UAE">UAE</SelectItem>
+                              <SelectItem value="Global">Global</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border-t border-border/50">
+                      {isCompleted && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('outreach')}>Draft outreach email</Button>
+                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('social')}>Write 3 social posts</Button>
+                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('landing')}>Sketch landing page</Button>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={getCurrentPlaceholder()}
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          className="flex-1"
+                          disabled={isLoading}
+                        />
+                        <Button 
+                          onClick={handleSendMessage} 
+                          size="icon" 
+                          disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
+                        >
+                          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-muted-foreground">
+                          {isCompleted ? "Launch Report generated! Copy and save it." :
+                           `Answer to continue to step ${currentStep + 2}`}
+                        </p>
+                        {!isCompleted && (
                           <Button 
-                            onClick={handleSendMessage} 
-                            size="icon" 
-                            disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
-                          >
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                          </Button>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-muted-foreground">
-                            {isCompleted ? "Launch Report generated! Copy and save it." :
-                             `Answer to continue to step ${currentStep + 2}`}
-                          </p>
-                          {!isCompleted && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={handleSendMessage}
-                              disabled={isLoading || !message.trim()}
-                            >
-                              {getButtonText()}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                {/* Interactive Progress Visualization - Synchronized with chatbot */}
-                <div className="mt-8 animate-fade-in">
-                  <InteractiveProgress
-                    currentStep={currentStep}
-                    totalSteps={wizardSteps.length}
-                    stepTitles={wizardSteps.map(step => step.title)}
-                    isComplete={!!launchReport}
-                  />
-                </div>
-                
-                {/* Three Information Cards - Horizontal Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                  {/* How BizMap AI Works */}
-                  <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.1s' }}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Lightbulb className="w-5 h-5 text-primary" />
-                        How BizMap AI Works
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                            <span className="text-xs font-semibold text-primary">1</span>
-                          </div>
-                          <div>
-                            <h4 className="font-medium mb-1">7-Step Wizard</h4>
-                            <p className="text-sm text-muted-foreground">Answer 7 structured questions about your business idea, one at a time.</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                            <span className="text-xs font-semibold text-primary">2</span>
-                          </div>
-                          <div>
-                            <h4 className="font-medium mb-1">AI Analysis</h4>
-                            <p className="text-sm text-muted-foreground">GPT-5 analyzes your responses and creates a personalized Launch Report.</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                            <span className="text-xs font-semibold text-primary">3</span>
-                          </div>
-                          <div>
-                            <h4 className="font-medium mb-1">Launch Report</h4>
-                            <p className="text-sm text-muted-foreground">Get your complete business roadmap ready to export to PDF/Notion/Google Docs.</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* What You'll Get */}
-                  <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.3s' }}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className="w-5 h-5 text-primary" />
-                        What You'll Get
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {[
-                          "Personalized Launch Report",
-                          "Go-To-Market Strategy", 
-                          "90-Day Action Roadmap",
-                          "Customer Validation Plan",
-                          "Pricing & Revenue Model",
-                          "Ready-to-Use Scripts"
-                        ].map((item, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-primary" />
-                            <span className="text-sm">{item}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Try These Examples */}
-                  <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.5s' }}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Rocket className="w-5 h-5 text-primary" />
-                        Try These Examples
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {examplePrompts.map((prompt, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
+                            variant="ghost" 
                             size="sm"
-                            className="w-full justify-start text-left h-auto p-3 transition-all duration-200 hover:scale-105"
-                            onClick={() => setMessage(prompt)}
+                            onClick={handleSendMessage}
+                            disabled={isLoading || !message.trim()}
                           >
-                            "{prompt}"
+                            {getButtonText()}
                           </Button>
-                        ))}
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+            </div>
+            
+            {/* Full Width Sections */}
+            {/* Interactive Progress Visualization - Synchronized with chatbot */}
+            <div className="animate-fade-in mb-8">
+              <InteractiveProgress
+                currentStep={currentStep}
+                totalSteps={wizardSteps.length}
+                stepTitles={wizardSteps.map(step => step.title)}
+                isComplete={!!launchReport}
+              />
+            </div>
+            
+            {/* Three Information Cards - Horizontal Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* How BizMap AI Works */}
+              <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.1s' }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-primary" />
+                    How BizMap AI Works
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                        <span className="text-xs font-semibold text-primary">1</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">7-Step Wizard</h4>
+                        <p className="text-sm text-muted-foreground">Answer 7 structured questions about your business idea, one at a time.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                        <span className="text-xs font-semibold text-primary">2</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">AI Analysis</h4>
+                        <p className="text-sm text-muted-foreground">GPT-5 analyzes your responses and creates a personalized Launch Report.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                        <span className="text-xs font-semibold text-primary">3</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-1">Launch Report</h4>
+                        <p className="text-sm text-muted-foreground">Get your complete business roadmap ready to export to PDF/Notion/Google Docs.</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* What You'll Get */}
+              <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.3s' }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-primary" />
+                    What You'll Get
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      "Personalized Launch Report",
+                      "Go-To-Market Strategy", 
+                      "90-Day Action Roadmap",
+                      "Customer Validation Plan",
+                      "Pricing & Revenue Model",
+                      "Ready-to-Use Scripts"
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-primary" />
+                        <span className="text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Try These Examples */}
+              <Card className="glass-card animate-fade-in hover-scale" style={{ animationDelay: '0.5s' }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Rocket className="w-5 h-5 text-primary" />
+                    Try These Examples
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {examplePrompts.map((prompt, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-left h-auto p-3 transition-all duration-200 hover:scale-105"
+                        onClick={() => setMessage(prompt)}
+                      >
+                        "{prompt}"
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
             
             {/* Download Component - Show only when report is completed */}
