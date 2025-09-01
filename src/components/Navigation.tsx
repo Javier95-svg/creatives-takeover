@@ -35,7 +35,7 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="flex items-center">
-              <img src="/lovable-uploads/e7cdb86e-adb5-4d8e-8ae1-ce7b5e4ab843.png" alt="Logo" className="h-10 w-auto" />
+              <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-15 w-auto" />
             </a>
           </div>
 
