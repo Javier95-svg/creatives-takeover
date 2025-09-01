@@ -35,7 +35,7 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="flex items-center">
-              <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-9 w-auto" />
+              <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-9 w-auto animate-fade-in hover-scale transition-transform duration-200" />
             </a>
           </div>
 
