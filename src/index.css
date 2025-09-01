@@ -374,6 +374,10 @@ All colors MUST be HSL.
     animation: pulse-slow 3s ease-in-out infinite;
   }
 
+  .animate-pulse-scale {
+    animation: pulse-scale 3s ease-in-out infinite;
+  }
+
   /* Line clamp utilities */
   .line-clamp-2 {
     display: -webkit-box;
@@ -443,6 +447,11 @@ All colors MUST be HSL.
 @keyframes pulse-slow {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }
+}
+
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 /* Creatives Takeover Gradient Animations */
