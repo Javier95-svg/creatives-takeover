@@ -346,6 +346,77 @@ export type Database = {
         }
         Relationships: []
       }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_tiers: {
+        Row: {
+          created_at: string
+          features: Json | null
+          monthly_credits: number
+          price_cents: number
+          stripe_price_id: string | null
+          tier_name: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json | null
+          monthly_credits?: number
+          price_cents?: number
+          stripe_price_id?: string | null
+          tier_name: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json | null
+          monthly_credits?: number
+          price_cents?: number
+          stripe_price_id?: string | null
+          tier_name?: string
+        }
+        Relationships: []
+      }
       user_bookmarks: {
         Row: {
           created_at: string
@@ -379,24 +450,30 @@ export type Database = {
         Row: {
           balance: number
           created_at: string
+          last_credit_grant: string | null
           last_reset_at: string
           monthly_quota: number
+          subscription_tier: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           balance?: number
           created_at?: string
+          last_credit_grant?: string | null
           last_reset_at?: string
           monthly_quota?: number
+          subscription_tier?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           balance?: number
           created_at?: string
+          last_credit_grant?: string | null
           last_reset_at?: string
           monthly_quota?: number
+          subscription_tier?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -490,6 +567,14 @@ export type Database = {
           author_avatar: string
           author_name: string
         }[]
+      }
+      grant_monthly_credits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_user_subscription_tier: {
+        Args: { is_subscribed?: boolean; new_tier: string; user_email: string }
+        Returns: undefined
       }
     }
     Enums: {
