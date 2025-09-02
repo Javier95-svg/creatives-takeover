@@ -172,9 +172,16 @@ const CommunityFeed: React.FC = () => {
   }, [posts, search, sort, selectedTag]);
 
   const publish = async (payload: ComposerPayload) => {
-    if (!isAuthenticated || !user) {
-      toast.error('Please sign in to create posts');
-      navigate('/auth');
+    // Create a random user from our existing profiles for anonymous posts
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(10);
+    
+    const randomProfile = profiles?.[Math.floor(Math.random() * profiles.length)];
+    
+    if (!randomProfile) {
+      toast.error('Unable to create post at this time');
       return;
     }
 
@@ -185,7 +192,7 @@ const CommunityFeed: React.FC = () => {
           title: payload.title,
           content: payload.content,
           tags: payload.tags,
-          user_id: user.id
+          user_id: randomProfile.id
         })
         .select('*')
         .single();
@@ -297,21 +304,8 @@ const CommunityFeed: React.FC = () => {
           </Button>
         </div>
 
-        {isAuthenticated && <PostComposer onPublish={publish} />}
-        
-        {!isAuthenticated && (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <h2 className="text-xl font-semibold mb-2">Join the Community</h2>
-              <p className="text-muted-foreground mb-4">
-                Sign in to share your entrepreneurial journey, vote on posts, and engage with fellow builders.
-              </p>
-              <Button onClick={() => navigate('/auth')} size="lg">
-                Sign In / Sign Up
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Anyone can post without authentication */}
+        <PostComposer onPublish={publish} />
 
         <div className="space-y-6">
           {filtered.map((post) => (
