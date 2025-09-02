@@ -2,3 +2,6 @@ project_id = "rcjlaybjnozqbsoxzboa"
 
 [functions.community-ai-moderator]
 verify_jwt = false
+
+[functions.notify-admin]
+verify_jwt = true

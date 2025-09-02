@@ -37,14 +37,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Create or update profile when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            createUserProfile(session.user);
+          setTimeout(async () => {
+            const isNewProfile = await createUserProfile(session.user);
+            
             // Initialize credits for new users (5 free credits)
             supabase.functions.invoke('credit-service', {
               body: { action: 'initialize', userId: session.user!.id }
             });
             // Grant monthly credits if due (free and paid tiers)
             supabase.rpc('grant_monthly_credits');
+            
+            // Send email notification for new signups only
+            if (isNewProfile) {
+              try {
+                await supabase.functions.invoke('notify-admin', {
+                  body: {
+                    email: session.user.email || '',
+                    fullName: session.user.user_metadata?.full_name || '',
+                    timestamp: new Date().toISOString()
+                  }
+                });
+                console.log('Admin notification sent for new user:', session.user.email);
+              } catch (notificationError) {
+                console.log('Failed to send admin notification:', notificationError);
+              }
+            }
           }, 0);
         }
       }
@@ -60,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const createUserProfile = async (user: User) => {
+  const createUserProfile = async (user: User): Promise<boolean> => {
     try {
       // Check if profile already exists to prevent overwriting
       const { data: existingProfile } = await supabase
@@ -81,10 +98,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Error creating profile:', error);
+          return false;
         }
+        return true; // New profile was created
       }
+      return false; // Profile already existed
     } catch (error) {
       console.error('Error creating profile:', error);
+      return false;
     }
   };
 
