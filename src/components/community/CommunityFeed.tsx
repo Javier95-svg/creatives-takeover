@@ -34,17 +34,24 @@ const CommunityFeed: React.FC = () => {
         return;
       }
 
+      console.log('Raw posts data:', data);
+
       // Fetch profiles for all user_ids
       const userIds = [...new Set(data?.map(post => post.user_id).filter(Boolean))];
+      console.log('User IDs to fetch:', userIds);
+      
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
         .in('id', userIds);
 
+      console.log('Profiles data:', profiles);
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      console.log('Profiles map:', profilesMap);
 
       const formattedPosts: Post[] = data?.map(post => {
         const profile = profilesMap.get(post.user_id);
+        console.log(`Post ${post.id}: user_id=${post.user_id}, profile=`, profile);
         return {
           id: post.id,
           title: post.title,
@@ -66,6 +73,8 @@ const CommunityFeed: React.FC = () => {
         };
       }) || [];
 
+      console.log('Formatted posts:', formattedPosts);
+
       setPosts(formattedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -86,6 +95,7 @@ const CommunityFeed: React.FC = () => {
         schema: 'public',
         table: 'community_posts'
       }, () => {
+        console.log('Posts changed, refetching...');
         fetchPosts(); // Refetch posts when changes occur
       })
       .on('postgres_changes', {
@@ -93,7 +103,16 @@ const CommunityFeed: React.FC = () => {
         schema: 'public',
         table: 'post_comments'
       }, () => {
+        console.log('Comments changed, refetching...');
         fetchPosts(); // Refetch when comments change
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'profiles'
+      }, () => {
+        console.log('Profiles changed, refetching...');
+        fetchPosts(); // Refetch when profiles change
       })
       .subscribe();
 
