@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, MapPin, Activity, ImageIcon } from "lucide-react";
-import { useArticleImage } from "@/hooks/useArticleImage";
+import { TrendingUp, MapPin, Activity } from "lucide-react";
 
 interface TrendCardProps {
   trend: {
@@ -26,13 +25,6 @@ interface TrendCardProps {
 }
 
 const TrendCard = ({ trend, onClick }: TrendCardProps) => {
-  const { imageUrl, isLoading: imageLoading, error: imageError } = useArticleImage({
-    title: trend.title,
-    description: trend.description,
-    category: trend.category,
-    articleId: trend.id
-  });
-
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
       case 'positive': return 'text-green-600 bg-green-50';
@@ -59,41 +51,14 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
 
   return (
     <Card 
-      className="hover:shadow-md transition-all duration-200 cursor-pointer group overflow-hidden"
+      className="hover:shadow-md transition-all duration-200 cursor-pointer group"
       onClick={handleClick}
     >
-      {/* AI Generated Image */}
-      <div className="relative w-full h-48 bg-gradient-to-br from-primary/5 to-secondary/5 overflow-hidden">
-        {imageLoading && (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2 text-sm text-muted-foreground">Generating image...</span>
-          </div>
-        )}
-        
-        {imageUrl && !imageLoading && (
-          <img 
-            src={imageUrl} 
-            alt={`AI generated image for: ${trend.title}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              console.error('Image failed to load:', imageUrl);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        )}
-        
-        {imageError && !imageLoading && (
-          <div className="flex items-center justify-center h-full bg-muted/20">
-            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-          </div>
-        )}
-
-        {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-        
-        {/* Trend score badge overlay */}
-        <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-2 py-1">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
+            {trend.title}
+          </CardTitle>
           <div className="flex items-center gap-1 text-sm font-medium">
             <TrendingUp className="h-4 w-4" />
             <span className={getScoreColor(trend.trend_score)}>
@@ -101,12 +66,6 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
             </span>
           </div>
         </div>
-      </div>
-
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
-          {trend.title}
-        </CardTitle>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Badge variant="outline" className="text-xs">
             {trend.category}
