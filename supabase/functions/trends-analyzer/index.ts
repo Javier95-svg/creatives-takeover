@@ -136,10 +136,9 @@ Focus on finding actual published articles with real URLs, not generating hypoth
 
       // Try models in order of preference
       const models = [
-        'sonar-small-online',
-        'sonar-large-online', 
-        'sonar-huge-online',
-        'llama-3.1-sonar-small-128k-online'
+        'llama-3.1-sonar-small-128k-online',
+        'llama-3.1-sonar-large-128k-online', 
+        'llama-3.1-sonar-huge-128k-online'
       ];
 
       try {
@@ -167,7 +166,7 @@ Focus on finding actual published articles with real URLs, not generating hypoth
                 ],
                 max_tokens: 1500,
                 top_p: 0.9,
-                search_recency_filter: 'month',
+                search_recency_filter: 'week',
                 return_images: false,
                 return_related_questions: false
               }),
@@ -255,7 +254,7 @@ Focus on finding actual published articles with real URLs, not generating hypoth
             summary: summary.substring(0, 300),
             source_urls: [url],
             is_active: true,
-            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
           });
         }
       }
@@ -298,15 +297,27 @@ Focus on finding actual published articles with real URLs, not generating hypoth
       });
     }
 
-    // Store articles in database with error handling
-    const { data: storedArticles, error: insertError } = await supabase
-      .from('trends')
-      .insert(uniqueArticles)
-      .select();
+    // Store articles in database with error handling, skipping duplicates
+    const insertedArticles: any[] = [];
+    for (const article of uniqueArticles) {
+      const { data, error } = await supabase
+        .from('trends')
+        .insert(article)
+        .select()
+        .single();
 
-    if (insertError) {
-      console.error('❌ Database insert error:', insertError);
-      throw insertError;
+      if (error) {
+        const msg = (error as any)?.message || '';
+        const code = (error as any)?.code || '';
+        if (code === '23505' || msg.includes('duplicate key') || msg.includes('uq_trends_article_url')) {
+          console.log(`↩️ Skipping duplicate article URL: ${article.article_url}`);
+          continue;
+        }
+        console.error('❌ Database insert error for article:', article.article_url, error);
+        throw error;
+      }
+
+      if (data) insertedArticles.push(data);
     }
 
     // Clean up expired articles
@@ -315,12 +326,12 @@ Focus on finding actual published articles with real URLs, not generating hypoth
       .update({ is_active: false })
       .lt('expires_at', new Date().toISOString());
 
-    console.log(`✅ Successfully stored ${storedArticles?.length || 0} articles`);
+    console.log(`✅ Successfully stored ${insertedArticles.length} articles`);
 
     return new Response(JSON.stringify({
       success: true,
-      articles: storedArticles,
-      message: `Found and stored ${storedArticles?.length || 0} trending articles`
+      articles: insertedArticles,
+      message: `Found and stored ${insertedArticles.length} trending articles`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
