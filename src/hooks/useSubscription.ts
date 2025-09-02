@@ -71,7 +71,8 @@ export function useSubscription() {
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
-      toast.error('Failed to check subscription status');
+      // Silencing user-facing toast to avoid noisy error in UI
+      console.debug('Failed to check subscription status:', error);
     } finally {
       setLoading(false);
     }
