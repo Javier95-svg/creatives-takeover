@@ -73,19 +73,12 @@ const CommunityFeed: React.FC = () => {
         };
       }) || [];
 
-      // Apply filtering rules: exclude "javier alonso", ensure unique authors, require avatars
+      // Basic filtering: just exclude "javier alonso" posts, allow all others
       const filtered = formattedPosts.filter(
-        (post) => post.author.name.toLowerCase() !== 'javier alonso' && post.author.avatar
+        (post) => post.author.name.toLowerCase() !== 'javier alonso'
       );
 
-      const seenAuthors = new Set<string>();
-      const uniqueByAuthor = filtered.filter((post) => {
-        if (seenAuthors.has(post.author.name)) return false;
-        seenAuthors.add(post.author.name);
-        return true;
-      });
-
-      setPosts(uniqueByAuthor);
+      setPosts(filtered);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
