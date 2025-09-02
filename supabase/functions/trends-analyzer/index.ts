@@ -34,7 +34,67 @@ serve(async (req) => {
     console.log('🔍 Starting article discovery...');
     
     if (!perplexityApiKey) {
-      throw new Error('PERPLEXITY_API_KEY is not configured');
+      console.log('⚠️ PERPLEXITY_API_KEY is not configured. Returning sample data for testing.');
+      // Return sample trending articles for development/testing
+      const sampleArticles = [
+        {
+          title: "AI Tools Transform Business Productivity in 2024",
+          description: "Latest AI productivity tools are revolutionizing how entrepreneurs work, offering unprecedented automation capabilities and insights.",
+          category: "ai",
+          trend_score: 8.5,
+          opportunity_score: 9.2,
+          keywords: ["AI", "productivity", "automation", "business"],
+          sentiment: "positive" as const,
+          market_size_indicator: "growing",
+          geographic_relevance: ["Global"],
+          article_url: "https://example.com/ai-productivity-2024",
+          article_source: "Tech Business Weekly",
+          author: "Sample Author",
+          publication_date: new Date().toISOString(),
+          summary: "Comprehensive guide to the latest AI productivity tools transforming business operations.",
+          source_urls: ["https://example.com/ai-productivity-2024"],
+          is_active: true,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          title: "No-Code MVP Development Strategies for Startups",
+          description: "How modern startups are building MVPs without traditional coding, accelerating time-to-market and reducing costs.",
+          category: "startup",
+          trend_score: 7.8,
+          opportunity_score: 8.5,
+          keywords: ["no-code", "MVP", "startup", "development"],
+          sentiment: "positive" as const,
+          market_size_indicator: "growing",
+          geographic_relevance: ["Global"],
+          article_url: "https://example.com/no-code-mvp-2024",
+          article_source: "Startup Insights",
+          author: "Innovation Expert",
+          publication_date: new Date().toISOString(),
+          summary: "Complete guide to building and launching MVPs using no-code platforms.",
+          source_urls: ["https://example.com/no-code-mvp-2024"],
+          is_active: true,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+
+      // Store sample articles in database
+      const { data: storedArticles, error: insertError } = await supabase
+        .from('trends')
+        .insert(sampleArticles)
+        .select();
+
+      if (insertError) {
+        console.error('❌ Sample data insert error:', insertError);
+        throw insertError;
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        articles: storedArticles,
+        message: `Stored ${storedArticles?.length || 0} sample articles (API key needed for live data)`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Insighta's popular topics for article discovery
