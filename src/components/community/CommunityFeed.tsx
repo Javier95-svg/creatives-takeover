@@ -190,16 +190,9 @@ const CommunityFeed: React.FC = () => {
   }, [posts, search, sort, selectedTag]);
 
   const publish = async (payload: ComposerPayload) => {
-    // Create a random user from our existing profiles for anonymous posts
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .limit(10);
-    
-    const randomProfile = profiles?.[Math.floor(Math.random() * profiles.length)];
-    
-    if (!randomProfile) {
-      toast.error('Unable to create post at this time');
+    // Require authentication for posting
+    if (!isAuthenticated || !user) {
+      toast.error('Please sign in to post stories');
       return;
     }
 
@@ -210,7 +203,7 @@ const CommunityFeed: React.FC = () => {
           title: payload.title,
           content: payload.content,
           tags: payload.tags,
-          user_id: randomProfile.id
+          user_id: user.id
         })
         .select('*')
         .single();
@@ -322,8 +315,8 @@ const CommunityFeed: React.FC = () => {
           </Button>
         </div>
 
-        {/* Anyone can post without authentication */}
-        <PostComposer onPublish={publish} />
+        {/* Authentication required for posting */}
+        <PostComposer onPublish={publish} requireAuth={true} />
 
         <div className="space-y-6">
           <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded">
