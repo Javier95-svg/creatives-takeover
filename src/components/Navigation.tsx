@@ -92,13 +92,13 @@ const Navigation = () => {
             ) : (
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/login" className="flex items-center gap-2">
+                  <a href="https://creatives-takeover.com/auth" className="flex items-center gap-2">
                     <LogIn className="w-4 h-4" />
                     Sign In
-                  </Link>
+                  </a>
                 </Button>
                 <Button size="sm" className="glass bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-                  <Link to="/signup">Sign Up</Link>
+                  <a href="https://creatives-takeover.com/auth">Sign Up</a>
                 </Button>
               </div>
             )}
@@ -167,13 +167,13 @@ const Navigation = () => {
                 ) : (
                   <div className="space-y-2">
                     <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)} asChild>
-                      <Link to="/login" className="flex items-center">
+                      <a href="https://creatives-takeover.com/auth" className="flex items-center">
                         <LogIn className="w-4 h-4 mr-2" />
                         Sign In
-                      </Link>
+                      </a>
                     </Button>
                     <Button size="sm" className="w-full glass bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setIsOpen(false)} asChild>
-                      <Link to="/signup">Sign Up</Link>
+                      <a href="https://creatives-takeover.com/auth">Sign Up</a>
                     </Button>
                   </div>
                 )}
