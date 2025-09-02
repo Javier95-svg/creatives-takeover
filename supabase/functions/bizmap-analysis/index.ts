@@ -38,7 +38,7 @@ function getInputQuality(answers: Record<string, string>) {
 }
 
 // Credit cost for launch report generation
-const LAUNCH_REPORT_CREDIT_COST = 10;
+const LAUNCH_REPORT_CREDIT_COST = 5;
 
 // Credit service helper
 async function deductCredits(userId: string, amount: number, feature: string, sessionId?: string) {

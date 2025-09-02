@@ -35,10 +35,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Create or update profile when user signs up
+        // Create or update profile when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
             createUserProfile(session.user);
+            // Initialize credits for new users (5 free credits)
+            supabase.functions.invoke('credit-service', {
+              body: { action: 'initialize', userId: session.user!.id }
+            });
+            // Grant monthly credits if due (free and paid tiers)
+            supabase.rpc('grant_monthly_credits');
           }, 0);
         }
       }
@@ -108,14 +114,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Auto-check subscription status after successful login
     if (!error) {
       try {
-        await supabase.functions.invoke('check-subscription', {
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-          }
-        });
+        await Promise.all([
+          supabase.functions.invoke('check-subscription', {
+            headers: {
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+            }
+          }),
+          // Ensure monthly credits are granted if due
+          supabase.rpc('grant_monthly_credits')
+        ]);
       } catch (subscriptionError) {
         // Silently handle subscription check errors
-        console.log('Subscription check on login:', subscriptionError);
+        console.log('Subscription/credits check on login:', subscriptionError);
       }
     }
     
