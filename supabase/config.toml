@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.trends-analyzer]
 verify_jwt = false
+
+[functions.news-aggregator]
+verify_jwt = false

@@ -67,31 +67,53 @@ export const useTrends = () => {
   const generateNewTrends = async () => {
     try {
       setError(null);
-      console.log('🔍 Searching for trending articles...');
+      console.log('🔍 Fetching fresh articles from NewsAPI...');
       
-      const { data, error: functionError } = await supabase.functions.invoke('trends-analyzer', {
-        body: { action: 'find_articles' }
+      // Try the new news-aggregator function first
+      const { data, error: functionError } = await supabase.functions.invoke('news-aggregator', {
+        body: { 
+          topics: 'business OR technology OR AI OR startup OR innovation OR creator economy',
+          pageSize: 20,
+          recencyDays: 7
+        }
       });
 
-      console.log('📊 Article search response:', { data, error: functionError });
+      console.log('📊 News aggregator response:', { data, error: functionError });
 
       if (functionError) {
-        console.error('❌ Function error:', functionError);
-        throw functionError;
+        console.error('❌ News aggregator error:', functionError);
+        
+        // Fallback to trends-analyzer if news-aggregator fails
+        console.log('🔄 Falling back to trends-analyzer...');
+        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('trends-analyzer', {
+          body: { action: 'find_articles' }
+        });
+        
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        
+        if (fallbackData?.success) {
+          console.log('✅ Fallback successful:', fallbackData.articles?.length, 'articles');
+          await fetchTrends();
+          return fallbackData.articles;
+        } else {
+          throw new Error(fallbackData?.error || 'Both news sources failed');
+        }
       }
 
       if (data?.success) {
-        console.log('✅ Articles found successfully:', data.articles?.length, 'articles');
+        console.log('✅ News aggregation successful:', data.saved, 'new articles saved');
         // Refresh trends after generation
         await fetchTrends();
-        return data.articles;
+        return data.processed || [];
       } else {
-        console.error('❌ Article search failed:', data?.error);
-        throw new Error(data?.error || 'Failed to find articles');
+        console.error('❌ News aggregation failed:', data?.error);
+        throw new Error(data?.error || 'Failed to fetch news articles');
       }
     } catch (err) {
-      console.error('❌ Error finding articles:', err);
-      setError(err instanceof Error ? err.message : 'Failed to find articles');
+      console.error('❌ Error generating trends:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch trending articles');
       throw err;
     }
   };
