@@ -15,6 +15,7 @@ export type ComposerPayload = {
   content: string;
   tags: string[];
   image?: string; // data URL preview for now
+  location?: string;
 };
 
 interface PostComposerProps {
@@ -29,6 +30,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const [content, setContent] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | undefined>();
+  const [location, setLocation] = useState("");
   const [showSignInModal, setShowSignInModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -47,6 +49,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     setContent("");
     setTagsInput("");
     setImagePreview(undefined);
+    setLocation("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -83,7 +86,13 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
       toast.error("Tell a bit more about your story.");
       return;
     }
-    onPublish({ title: title.trim(), content: content.trim(), tags, image: imagePreview });
+    onPublish({ 
+      title: title.trim(), 
+      content: content.trim(), 
+      tags, 
+      image: imagePreview,
+      location: location.trim() || undefined 
+    });
     toast.success("Your story has been posted!");
     reset();
   };
@@ -149,6 +158,20 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
                 ))}
               </div>
             )}
+
+            <div>
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="📍 Location (optional) - e.g., New York, NY • London, UK • Remote"
+                aria-label="Location"
+                maxLength={100}
+                disabled={requireAuth && !isAuthenticated}
+              />
+              <div className="mt-1 text-xs text-muted-foreground">
+                Share where you're posting from • {location.length}/100
+              </div>
+            </div>
 
             {imagePreview && (
               <div className="relative">

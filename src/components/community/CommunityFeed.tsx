@@ -69,6 +69,7 @@ const CommunityFeed: React.FC = () => {
           title: post.title,
           content: post.content,
           tags: post.tags || [],
+          location: post.location,
           createdAt: post.created_at,
           author: {
             name: authorInfo?.authorName || 'Anonymous',
@@ -203,6 +204,7 @@ const CommunityFeed: React.FC = () => {
           title: payload.title,
           content: payload.content,
           tags: payload.tags,
+          location: payload.location,
           user_id: user.id
         })
         .select('*')

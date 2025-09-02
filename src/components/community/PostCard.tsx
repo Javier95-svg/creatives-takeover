@@ -19,6 +19,7 @@ export type Post = {
   content: string;
   image?: string;
   tags: string[];
+  location?: string;
   createdAt: string; // ISO
   author: { name: string; avatar?: string };
   votes: number;
@@ -362,7 +363,9 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{post.author.name}</span> · {timeAgo(post.createdAt)}
+                  <span className="font-medium text-foreground">{post.author.name}</span>
+                  {post.location && <span> · 📍 {post.location}</span>}
+                  <span> · {timeAgo(post.createdAt)}</span>
                 </div>
                 <Button variant="ghost" size="icon" aria-label="More actions">
                   <MoreVertical className="h-4 w-4" />
