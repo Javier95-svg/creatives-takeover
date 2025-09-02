@@ -50,7 +50,7 @@ const CommunityFeed: React.FC = () => {
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      const formattedPosts: Post[] = data?.map(post => {
+      let formattedPosts: Post[] = data?.map(post => {
         const profile = profilesMap.get(post.user_id);
         return {
           id: post.id,
@@ -60,7 +60,7 @@ const CommunityFeed: React.FC = () => {
           createdAt: post.created_at,
           author: {
             name: profile?.full_name || 'Unknown User',
-            avatar: profile?.avatar_url
+            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile?.full_name || 'Unknown User')}`
           },
           votes: (post.upvotes || 0) - (post.downvotes || 0),
           commentsCount: post.comment_count || 0,
@@ -73,7 +73,19 @@ const CommunityFeed: React.FC = () => {
         };
       }) || [];
 
-      setPosts(formattedPosts);
+      // Apply filtering rules: exclude "javier alonso", ensure unique authors, require avatars
+      const filtered = formattedPosts.filter(
+        (post) => post.author.name.toLowerCase() !== 'javier alonso' && post.author.avatar
+      );
+
+      const seenAuthors = new Set<string>();
+      const uniqueByAuthor = filtered.filter((post) => {
+        if (seenAuthors.has(post.author.name)) return false;
+        seenAuthors.add(post.author.name);
+        return true;
+      });
+
+      setPosts(uniqueByAuthor);
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
