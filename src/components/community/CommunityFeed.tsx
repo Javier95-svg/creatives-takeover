@@ -45,24 +45,24 @@ const CommunityFeed: React.FC = () => {
         return;
       }
 
-      // Fetch profiles for all user_ids
-      const userIds = [...new Set(data.map(post => post.user_id).filter(Boolean))];
-      console.log('👥 USER IDs TO FETCH:', userIds);
+      // Fetch author information using secure function
+      const authorPromises = data.map(async (post) => {
+        const { data: authorData } = await supabase.rpc('get_post_author_info', {
+          author_user_id: post.user_id
+        });
+        return {
+          postId: post.id,
+          authorName: authorData?.[0]?.author_name || 'Anonymous',
+          authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`
+        };
+      });
 
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .in('id', userIds);
-
-      console.log('👤 PROFILES DATA:', profiles);
-      console.log('❌ PROFILES ERROR:', profilesError);
-
-      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-      console.log('🗺️ PROFILES MAP:', profilesMap);
+      const authorResults = await Promise.all(authorPromises);
+      const authorMap = new Map(authorResults.map(result => [result.postId, result]));
 
       let formattedPosts: Post[] = data.map(post => {
-        const profile = profilesMap.get(post.user_id);
-        console.log(`🔧 FORMATTING POST ${post.id} for user ${post.user_id}:`, { post, profile });
+        const authorInfo = authorMap.get(post.id);
+        console.log(`🔧 FORMATTING POST ${post.id} for user ${post.user_id}:`, { post, authorInfo });
         
         return {
           id: post.id,
@@ -71,8 +71,8 @@ const CommunityFeed: React.FC = () => {
           tags: post.tags || [],
           createdAt: post.created_at,
           author: {
-            name: profile?.full_name || 'Unknown User',
-            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile?.full_name || 'Unknown User')}`
+            name: authorInfo?.authorName || 'Anonymous',
+            avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`
           },
           votes: (post.upvotes || 0) - (post.downvotes || 0),
           commentsCount: post.comment_count || 0,

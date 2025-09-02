@@ -117,24 +117,29 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           return;
         }
 
-        // Fetch profiles for comment authors
-        const userIds = [...new Set(data?.map(comment => comment.user_id).filter(Boolean))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', userIds);
+        // Fetch author information using secure function for each comment
+        const authorPromises = (data || []).map(async (comment) => {
+          const { data: authorData } = await supabase.rpc('get_post_author_info', {
+            author_user_id: comment.user_id
+          });
+          return {
+            commentId: comment.id,
+            authorName: authorData?.[0]?.author_name || 'Anonymous',
+            authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`
+          };
+        });
 
-        // Build profiles map
-        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const authorResults = await Promise.all(authorPromises);
+        const authorMap = new Map(authorResults.map(result => [result.commentId, result]));
 
         let mappedComments = (data || []).map((comment) => {
-          const profile = profilesMap.get(comment.user_id);
-          const author = profile?.full_name || 'Anonymous';
+          const authorInfo = authorMap.get(comment.id);
+          const author = authorInfo?.authorName || 'Anonymous';
           return {
             id: comment.id,
             author,
             text: comment.content,
-            avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author)}`,
+            avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author)}`,
           };
         });
 

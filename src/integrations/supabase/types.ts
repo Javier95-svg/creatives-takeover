@@ -389,7 +389,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_post_author_info: {
+        Args: { author_user_id: string }
+        Returns: {
+          author_avatar: string
+          author_name: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
