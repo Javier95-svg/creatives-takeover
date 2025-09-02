@@ -39,7 +39,7 @@ serve(async (req) => {
 
     console.log('📰 Searching for articles on topics:', insightaTopics.slice(0, 4));
 
-    // Generate article searches for each topic
+    // Generate article searches for each topic with model fallback
     const articlePromises = insightaTopics.slice(0, 4).map(async (topic: string) => {
       const prompt = `Find 2-3 recent high-quality articles about "${topic}" published in the last 2 weeks. Focus on:
 
@@ -62,44 +62,62 @@ ARTICLE 2: [same format]
 
 Focus on finding actual published articles with real URLs, not generating hypothetical content.`;
 
+      // Try models in order of preference
+      const models = [
+        'sonar-small-online',
+        'sonar-large-online', 
+        'sonar-huge-online',
+        'llama-3.1-sonar-small-128k-online'
+      ];
+
       try {
         console.log(`🔎 Searching for articles on: ${topic}`);
         
-        const response = await fetch('https://api.perplexity.ai/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${perplexityApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'llama-3.1-sonar-small-128k-online',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a research assistant specializing in finding recent business and entrepreneurship articles. Always provide real, published articles with actual URLs from reputable sources.'
+        for (const model of models) {
+          try {
+            const response = await fetch('https://api.perplexity.ai/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${perplexityApiKey}`,
+                'Content-Type': 'application/json',
               },
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
-            max_tokens: 1500,
-            top_p: 0.9,
-            search_recency_filter: 'month',
-            return_images: false,
-            return_related_questions: false
-          }),
-        });
+              body: JSON.stringify({
+                model,
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'You are a research assistant specializing in finding recent business and entrepreneurship articles. Always provide real, published articles with actual URLs from reputable sources.'
+                  },
+                  {
+                    role: 'user',
+                    content: prompt
+                  }
+                ],
+                max_tokens: 1500,
+                top_p: 0.9,
+                search_recency_filter: 'month',
+                return_images: false,
+                return_related_questions: false
+              }),
+            });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`❌ Perplexity API error for topic "${topic}":`, response.status, errorText);
-          throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`✅ Found articles for topic: ${topic} using model: ${model}`);
+              return { topic, content: data.choices[0].message.content };
+            } else {
+              const errorText = await response.text();
+              console.log(`⚠️ Model ${model} failed for topic "${topic}": ${response.status} - ${errorText}`);
+              continue; // Try next model
+            }
+          } catch (modelError) {
+            console.log(`⚠️ Model ${model} error for topic "${topic}":`, modelError.message);
+            continue; // Try next model
+          }
         }
-
-        const data = await response.json();
-        console.log(`✅ Found articles for topic: ${topic}`);
-        return { topic, content: data.choices[0].message.content };
+        
+        // If all models failed
+        throw new Error(`All Perplexity models failed for topic: ${topic}`);
         
       } catch (error) {
         console.error(`❌ Error fetching articles for topic "${topic}":`, error);
@@ -184,10 +202,34 @@ Focus on finding actual published articles with real URLs, not generating hypoth
       });
     }
 
-    // Store articles in database
+    // Deduplicate articles by URL to avoid duplicates
+    const seenUrls = new Set();
+    const uniqueArticles = articles.filter(article => {
+      if (seenUrls.has(article.article_url)) {
+        console.log(`⚠️ Skipping duplicate URL: ${article.article_url}`);
+        return false;
+      }
+      seenUrls.add(article.article_url);
+      return true;
+    });
+
+    console.log(`📝 After deduplication: ${uniqueArticles.length} unique articles`);
+
+    if (uniqueArticles.length === 0) {
+      console.log('⚠️ No unique articles to insert after deduplication');
+      return new Response(JSON.stringify({
+        success: true,
+        articles: [],
+        message: 'No unique articles found after deduplication'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Store articles in database with error handling
     const { data: storedArticles, error: insertError } = await supabase
       .from('trends')
-      .insert(articles)
+      .insert(uniqueArticles)
       .select();
 
     if (insertError) {
