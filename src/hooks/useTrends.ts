@@ -26,6 +26,7 @@ export const useTrends = () => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log('📋 Fetching trends from database...');
 
       const { data, error: fetchError } = await supabase
         .from('trends')
@@ -36,16 +37,22 @@ export const useTrends = () => {
         .order('created_at', { ascending: false })
         .limit(20);
 
+      console.log('📊 Fetch trends result:', { data, error: fetchError, count: data?.length });
+
       if (fetchError) {
+        console.error('❌ Database fetch error:', fetchError);
         throw fetchError;
       }
 
-      setTrends((data || []).map(item => ({
+      const processedTrends = (data || []).map(item => ({
         ...item,
         sentiment: (item.sentiment as 'positive' | 'negative' | 'neutral') || 'neutral'
-      })));
+      }));
+
+      console.log('✅ Successfully fetched trends:', processedTrends.length);
+      setTrends(processedTrends);
     } catch (err) {
-      console.error('Error fetching trends:', err);
+      console.error('❌ Error fetching trends:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch trends');
     } finally {
       setIsLoading(false);
@@ -55,24 +62,30 @@ export const useTrends = () => {
   const generateNewTrends = async (categories: string[] = ['business', 'startup', 'ai', 'technology']) => {
     try {
       setError(null);
+      console.log('🔄 Generating trends for categories:', categories);
       
       const { data, error: functionError } = await supabase.functions.invoke('trends-analyzer', {
         body: { categories, limit: 10 }
       });
 
+      console.log('📊 Trends generation response:', { data, error: functionError });
+
       if (functionError) {
+        console.error('❌ Function error:', functionError);
         throw functionError;
       }
 
       if (data?.success) {
+        console.log('✅ Trends generated successfully:', data.trends?.length, 'trends');
         // Refresh trends after generation
         await fetchTrends();
         return data.trends;
       } else {
+        console.error('❌ Trends generation failed:', data?.error);
         throw new Error(data?.error || 'Failed to generate trends');
       }
     } catch (err) {
-      console.error('Error generating trends:', err);
+      console.error('❌ Error generating trends:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate trends');
       throw err;
     }
@@ -93,13 +106,17 @@ export const useTrends = () => {
   };
 
   useEffect(() => {
+    console.log('🚀 useTrends: Initial mount, fetching trends...');
     fetchTrends();
   }, []);
 
   // Auto-generate trends if none exist
   useEffect(() => {
     if (!isLoading && trends.length === 0 && !error) {
-      generateNewTrends().catch(console.error);
+      console.log('🚀 Auto-generating trends - no existing trends found');
+      generateNewTrends().catch((err) => {
+        console.error('❌ Auto-generation failed:', err);
+      });
     }
   }, [isLoading, trends.length, error]);
 

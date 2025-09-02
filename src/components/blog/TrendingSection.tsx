@@ -8,8 +8,9 @@ import TrendCard from "./TrendCard";
 import { useTrends } from "@/hooks/useTrends";
 
 const TrendingSection = () => {
-  const { trends, isLoading, error, refetch } = useTrends();
+  const { trends, isLoading, error, refetch, generateNewTrends } = useTrends();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Group trends by category
   const trendsByCategory = trends?.reduce((acc, trend) => {
@@ -27,10 +28,35 @@ const TrendingSection = () => {
     : trendsByCategory[selectedCategory]?.slice(0, 6) || [];
 
   const handleRefresh = async () => {
-    await refetch();
+    try {
+      setIsGenerating(true);
+      if (trends.length === 0) {
+        console.log('🚀 No trends found, generating new trends...');
+        await generateNewTrends();
+      } else {
+        console.log('🔄 Refreshing existing trends...');
+        await refetch();
+      }
+    } catch (error) {
+      console.error('❌ Error during refresh:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  if (isLoading) {
+  const handleGenerateNew = async () => {
+    try {
+      setIsGenerating(true);
+      console.log('🚀 Manually generating new trends...');
+      await generateNewTrends();
+    } catch (error) {
+      console.error('❌ Error generating trends:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (isLoading || isGenerating) {
     return (
       <section className="py-16 bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto px-4">
@@ -40,7 +66,7 @@ const TrendingSection = () => {
               <h2 className="text-3xl font-bold">Trending Now</h2>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              AI-powered insights analyzing the latest business trends and opportunities
+              {isGenerating ? 'AI is analyzing the latest trends...' : 'AI-powered insights analyzing the latest business trends and opportunities'}
             </p>
           </div>
           
@@ -140,12 +166,18 @@ const TrendingSection = () => {
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No trends available</h3>
             <p className="text-muted-foreground mb-4">
-              We're currently analyzing the latest trends. Check back soon!
+              Let's analyze the latest business trends for you!
             </p>
-            <Button onClick={handleRefresh} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Trends
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={handleGenerateNew} disabled={isGenerating}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Generating...' : 'Generate Trends'}
+              </Button>
+              <Button onClick={handleRefresh} variant="outline" disabled={isGenerating}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </div>
         )}
       </div>
