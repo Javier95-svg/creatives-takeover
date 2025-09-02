@@ -82,24 +82,7 @@ export const useTrends = () => {
 
       if (functionError) {
         console.error('❌ News aggregator error:', functionError);
-        
-        // Fallback to trends-analyzer if news-aggregator fails
-        console.log('🔄 Falling back to trends-analyzer...');
-        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('trends-analyzer', {
-          body: { action: 'find_articles' }
-        });
-        
-        if (fallbackError) {
-          throw fallbackError;
-        }
-        
-        if (fallbackData?.success) {
-          console.log('✅ Fallback successful:', fallbackData.articles?.length, 'articles');
-          await fetchTrends();
-          return fallbackData.articles;
-        } else {
-          throw new Error(fallbackData?.error || 'Both news sources failed');
-        }
+        throw functionError;
       }
 
       if (data?.success) {
