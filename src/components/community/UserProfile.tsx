@@ -57,9 +57,16 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, onClose }) => {
         .from('profiles')
         .select('full_name, avatar_url, created_at')
         .eq('id', targetUserId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+      
+      if (!profileData) {
+        // No profile found for this user
+        toast.error('User profile not found');
+        return;
+      }
+      
       setProfile(profileData);
 
       // Load user posts
@@ -104,7 +111,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, onClose }) => {
         totalPosts: userPosts.length,
         totalVotes,
         totalComments,
-        joinDate: profileData.created_at,
+        joinDate: profileData?.created_at || new Date().toISOString(),
         topTags
       });
 
