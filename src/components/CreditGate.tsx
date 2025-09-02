@@ -1,5 +1,6 @@
-import { AlertCircle, Coins, CreditCard, Zap } from "lucide-react";
+import { AlertCircle, Coins, CreditCard, Zap, Crown } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CreditGateProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export function CreditGate({
   onPurchase 
 }: CreditGateProps) {
   const { balance, CREDIT_COSTS } = useCredits();
+  const { createCheckout, tiers, subscriptionData } = useSubscription();
 
   const creditPackages = [
     { credits: 20, price: 9.99, popular: false },
@@ -35,10 +38,18 @@ export function CreditGate({
     { credits: 100, price: 34.99, popular: false },
   ];
 
-  const handlePurchaseClick = (packageCredits: number, price: number) => {
+  const handleSubscriptionPurchase = async (tier: string) => {
+    const url = await createCheckout(tier);
+    if (url) {
+      onPurchase?.();
+      onClose();
+    }
+  };
+
+  const handleCreditPackagePurchase = (packageCredits: number, price: number) => {
     console.log(`Purchase ${packageCredits} credits for $${price}`);
     onPurchase?.();
-    // TODO: Implement Stripe integration
+    // TODO: Implement one-time credit purchase
   };
 
   return (
@@ -54,7 +65,7 @@ export function CreditGate({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Current vs Required */}
           <Card>
             <CardContent className="pt-6 pb-4">
@@ -78,47 +89,105 @@ export function CreditGate({
             </CardContent>
           </Card>
 
-          {/* Credit Packages */}
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">Purchase Credit Packages:</h4>
-            <div className="space-y-2">
-              {creditPackages.map((pkg, index) => (
-                <Card key={index} className={pkg.popular ? "ring-2 ring-primary" : ""}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{pkg.credits} Credits</span>
-                            {pkg.popular && (
-                              <Badge variant="default" className="text-xs">
-                                Popular
-                              </Badge>
-                            )}
+          {/* Subscription vs One-time Purchase Tabs */}
+          <Tabs defaultValue={subscriptionData.subscribed ? "credits" : "subscription"} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="subscription">Monthly Plans</TabsTrigger>
+              <TabsTrigger value="credits">Credit Packages</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="subscription" className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Upgrade to a Monthly Plan:</h4>
+                <div className="space-y-2">
+                  {tiers.filter(tier => tier.tier_name !== 'free').map((tier, index) => (
+                    <Card key={tier.tier_name} className={tier.tier_name === 'premium' ? "ring-2 ring-primary" : ""}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Crown className="h-4 w-4 text-primary" />
+                                <span className="font-medium capitalize">{tier.tier_name} Plan</span>
+                                {tier.tier_name === 'premium' && (
+                                  <Badge variant="default" className="text-xs">
+                                    Popular
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {tier.monthly_credits} credits per month
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            ${(pkg.price / pkg.credits).toFixed(2)} per credit
+                          <div className="text-right">
+                            <div className="font-bold">${(tier.price_cents / 100).toFixed(2)}/month</div>
+                            <Button
+                              size="sm"
+                              variant={tier.tier_name === 'premium' ? "default" : "outline"}
+                              onClick={() => handleSubscriptionPurchase(tier.tier_name)}
+                              className="mt-1"
+                            >
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              Subscribe
+                            </Button>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold">${pkg.price}</div>
-                        <Button
-                          size="sm"
-                          variant={pkg.popular ? "default" : "outline"}
-                          onClick={() => handlePurchaseClick(pkg.credits, pkg.price)}
-                          className="mt-1"
-                        >
-                          <CreditCard className="h-3 w-3 mr-1" />
-                          Buy Now
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="credits" className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">One-time Credit Packages:</h4>
+                <div className="space-y-2">
+                  {creditPackages.map((pkg, index) => (
+                    <Card key={index} className={pkg.popular ? "ring-2 ring-primary" : ""}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{pkg.credits} Credits</span>
+                                {pkg.popular && (
+                                  <Badge variant="default" className="text-xs">
+                                    Popular
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                ${(pkg.price / pkg.credits).toFixed(2)} per credit
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold">${pkg.price}</div>
+                            <Button
+                              size="sm"
+                              variant={pkg.popular ? "default" : "outline"}
+                              onClick={() => handleCreditPackagePurchase(pkg.credits, pkg.price)}
+                              className="mt-1"
+                            >
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              Buy Now
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3 text-xs">
+                  <p className="text-blue-800 dark:text-blue-200">
+                    💡 <strong>Tip:</strong> Monthly plans offer better value and include additional features like priority support and advanced analytics.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Feature Costs Reference */}
           <div className="bg-muted/50 rounded-lg p-3 text-xs">

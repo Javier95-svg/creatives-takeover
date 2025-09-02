@@ -28,6 +28,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
 import CreditAnalyticsPage from "./pages/CreditAnalyticsPage";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/account" element={<Account />} />
             <Route path="/credits" element={<CreditAnalyticsPage />} />
+            <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/news" element={<Blog />} />
             <Route path="/news/:slug" element={<BlogPost />} />
             <Route path="/blog" element={<Blog />} />

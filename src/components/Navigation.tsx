@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CreditDisplay } from "@/components/CreditDisplay";
+import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,6 +61,7 @@ const Navigation = () => {
             ) : user ? (
               <div className="flex items-center space-x-2">
                 <CreditDisplay variant="navigation" showPurchaseButton={true} />
+                <SubscriptionStatus variant="inline" />
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="w-4 h-4" />
                   <span className="text-muted-foreground">

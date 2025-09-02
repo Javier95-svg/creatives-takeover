@@ -105,6 +105,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       password,
     });
     
+    // Auto-check subscription status after successful login
+    if (!error) {
+      try {
+        await supabase.functions.invoke('check-subscription', {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
+        });
+      } catch (subscriptionError) {
+        // Silently handle subscription check errors
+        console.log('Subscription check on login:', subscriptionError);
+      }
+    }
+    
     return { error };
   };
 
