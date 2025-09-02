@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Linkedin, Twitter, Youtube, Github } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -40,12 +40,13 @@ const Footer = () => {
             <ul className="mt-3 flex flex-wrap gap-4">
               <li>
                 <a
-                  href="https://twitter.com/creativestakeover"
+                  href="https://www.instagram.com/creativestakeover"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="X (Twitter)"
+                  aria-label="Instagram"
+                  className="text-xl hover:opacity-80 transition-opacity"
                 >
-                  <Twitter className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                  📷
                 </a>
               </li>
               <li>
@@ -54,28 +55,9 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
+                  className="text-xl hover:opacity-80 transition-opacity"
                 >
-                  <Linkedin className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://youtube.com/@creativestakeover"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="YouTube"
-                >
-                  <Youtube className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/creativestakeover"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub"
-                >
-                  <Github className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                  💼
                 </a>
               </li>
             </ul>
