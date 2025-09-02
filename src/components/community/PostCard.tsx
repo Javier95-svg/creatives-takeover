@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import SignInModal from "./SignInModal";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export type Post = {
   id: string;
@@ -387,9 +389,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             />
           )}
           <div className="p-4">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+            <ReactMarkdown
+              className="text-sm leading-relaxed text-foreground/90 [&>*]:mb-3"
+              remarkPlugins={[remarkGfm]}
+            >
               {post.content}
-            </p>
+            </ReactMarkdown>
             <div className="mt-4 flex items-center gap-2">
               <div className="flex items-center rounded-full border">
                 <Button
