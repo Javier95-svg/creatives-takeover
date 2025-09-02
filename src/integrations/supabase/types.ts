@@ -167,6 +167,57 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          feature: string | null
+          id: string
+          metadata: Json | null
+          reason: string | null
+          session_id: string | null
+          tx_type: Database["public"]["Enums"]["credit_tx_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          feature?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          session_id?: string | null
+          tx_type: Database["public"]["Enums"]["credit_tx_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          feature?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          session_id?: string | null
+          tx_type?: Database["public"]["Enums"]["credit_tx_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           comment_id: string | null
@@ -266,22 +317,31 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          credit_balance: number
           full_name: string | null
           id: string
+          last_credit_reset_at: string
+          subscription_tier: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          credit_balance?: number
           full_name?: string | null
           id: string
+          last_credit_reset_at?: string
+          subscription_tier?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          credit_balance?: number
           full_name?: string | null
           id?: string
+          last_credit_reset_at?: string
+          subscription_tier?: string
           updated_at?: string
         }
         Relationships: []
@@ -311,6 +371,41 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_credits: {
+        Row: {
+          balance: number
+          created_at: string
+          last_reset_at: string
+          monthly_quota: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          last_reset_at?: string
+          monthly_quota?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          last_reset_at?: string
+          monthly_quota?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -398,7 +493,13 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      credit_tx_type:
+        | "grant"
+        | "deduct"
+        | "purchase"
+        | "refund"
+        | "adjustment"
+        | "reset"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -525,6 +626,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      credit_tx_type: [
+        "grant",
+        "deduct",
+        "purchase",
+        "refund",
+        "adjustment",
+        "reset",
+      ],
+    },
   },
 } as const
