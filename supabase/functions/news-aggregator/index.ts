@@ -29,20 +29,26 @@ const CURATED_DOMAINS = [
 const ALLOWED_DOMAINS = CURATED_DOMAINS;
 
 const CURATED_KEYWORDS = [
-  'ai',
-  'artificial intelligence',
-  'startup',
-  'startups',
-  'no-code',
-  'nocode',
-  'solopreneur',
-  'creator',
-  'creator economy',
-  'growth',
-  'marketing',
-  'product',
-  'go-to-market',
-  'gtm'
+  // AI & Technology
+  'ai', 'artificial intelligence', 'machine learning', 'automation', 'tech', 'technology', 'digital',
+  // Startup & Business
+  'startup', 'startups', 'founder', 'entrepreneur', 'business', 'venture', 'funding', 'investment', 'vc',
+  // No-code & Tools
+  'no-code', 'nocode', 'low-code', 'saas', 'tool', 'platform', 'software',
+  // Growth & Marketing
+  'growth', 'marketing', 'product', 'strategy', 'scale', 'launch', 'go-to-market', 'gtm',
+  // Creator Economy
+  'creator', 'content', 'influencer', 'monetization', 'online', 'digital marketing'
+];
+
+// Query variations for live search behavior
+const QUERY_VARIATIONS = [
+  'AI OR artificial intelligence OR machine learning OR automation',
+  'startup OR startups OR founder OR entrepreneur OR venture capital',
+  'no-code OR nocode OR low-code OR SaaS OR productivity tools',
+  'growth marketing OR product marketing OR go-to-market OR GTM',
+  'creator economy OR content creation OR digital marketing OR monetization',
+  'innovation OR technology OR digital transformation OR business strategy'
 ];
 
 interface NewsAPIArticle {
@@ -220,17 +226,22 @@ serve(async (req) => {
 
     // Parse request body for customization options
     const body = await req.json().catch(() => ({}));
+    
+    // Randomize query for live search behavior
+    const randomQuery = QUERY_VARIATIONS[Math.floor(Math.random() * QUERY_VARIATIONS.length)];
+    
     const {
-      topics = 'AI OR artificial intelligence OR startup OR startups OR no-code OR nocode OR solopreneur OR creator economy OR growth marketing OR product growth OR product marketing OR go-to-market OR GTM',
+      topics = randomQuery,
       sources,
       countries = 'us',
-      pageSize = 20,
-      recencyDays = 7
+      pageSize = 25, // Increased for more variety
+      recencyDays = 14 // Extended for more articles
     } = body;
 
-    // Calculate date range
+    // Calculate date range with some randomization for freshness
     const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - recencyDays);
+    const randomDaysBack = Math.floor(Math.random() * recencyDays) + 1;
+    fromDate.setDate(fromDate.getDate() - randomDaysBack);
     const fromDateStr = fromDate.toISOString().split('T')[0];
 
     console.log(`📊 Fetching articles: topics="${topics}", from=${fromDateStr}, pageSize=${pageSize}`);
@@ -328,11 +339,21 @@ serve(async (req) => {
         const { trendScore, opportunityScore } = calculateScores(article);
         const keywords = extractKeywords(article);
 
-        // Enforce curated topic filtering
+        // Enforce curated topic filtering (more flexible)
         const textForMatch = `${article.title} ${article.description || ''}`.toLowerCase();
-        const matchesCurated = CURATED_KEYWORDS.some(kw => textForMatch.includes(kw));
+        const matchesCurated = CURATED_KEYWORDS.some(kw => {
+          // Support partial matches for better coverage
+          if (kw.length <= 3) {
+            // Short keywords need exact word match
+            return new RegExp(`\\b${kw}\\b`, 'i').test(textForMatch);
+          } else {
+            // Longer keywords can be partial matches
+            return textForMatch.includes(kw.toLowerCase());
+          }
+        });
+        
         if (!matchesCurated) {
-          console.log('❌ Skipped: Not in curated topics');
+          console.log(`❌ Skipped: Not in curated topics (${article.title.substring(0, 50)}...)`);
           skipped++;
           continue;
         }
