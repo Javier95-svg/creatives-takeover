@@ -257,58 +257,6 @@ const CommunityFeed: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
-        <section className="lg:col-span-8 space-y-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <h2 className="text-2xl font-semibold mb-4">Join the Community</h2>
-              <p className="text-muted-foreground mb-6">
-                Sign in to participate in discussions, share your entrepreneurial journey, and connect with fellow builders.
-              </p>
-              <Button onClick={() => navigate('/auth')} size="lg">
-                Sign In / Sign Up
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Show public posts */}
-          <div className="space-y-6">
-            {filtered.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        </section>
-
-        <aside className="lg:col-span-4 space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="mb-3 text-sm font-semibold tracking-wide">Popular tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {allTags.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setSelectedTag((cur) => (cur === t ? null : t))}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
-                      selectedTag === t ? "bg-primary/10 border-primary" : "hover:bg-accent"
-                    }`}
-                    aria-pressed={selectedTag === t}
-                  >
-                    <span>#{t}</span>
-                    {selectedTag === t && (
-                      <Badge variant="secondary">active</Badge>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
-      </main>
-    );
-  }
-
   return (
     <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
       <section className="lg:col-span-8 space-y-6">
@@ -344,7 +292,21 @@ const CommunityFeed: React.FC = () => {
           </Button>
         </div>
 
-        <PostComposer onPublish={publish} />
+        {isAuthenticated && <PostComposer onPublish={publish} />}
+        
+        {!isAuthenticated && (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <h2 className="text-xl font-semibold mb-2">Join the Community</h2>
+              <p className="text-muted-foreground mb-4">
+                Sign in to share your entrepreneurial journey, vote on posts, and engage with fellow builders.
+              </p>
+              <Button onClick={() => navigate('/auth')} size="lg">
+                Sign In / Sign Up
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-6">
           {filtered.map((post) => (
