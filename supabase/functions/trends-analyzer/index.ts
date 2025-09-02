@@ -7,9 +7,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+console.log('🔧 Initializing environment variables...');
 const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+console.log('🔍 Environment check:', {
+  hasPerplexityKey: !!perplexityApiKey,
+  hasSupabaseUrl: !!supabaseUrl,
+  hasServiceKey: !!supabaseServiceKey,
+  perplexityKeyLength: perplexityApiKey?.length || 0
+});
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing required Supabase environment variables');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
