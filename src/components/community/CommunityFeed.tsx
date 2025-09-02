@@ -122,9 +122,31 @@ const CommunityFeed: React.FC = () => {
   }, []);
 
   const allTags = useMemo(() => {
+    // Curated entrepreneurship and startup tags
+    const entrepreneurshipTags = [
+      'startup', 'saas', 'bootstrapped', 'mvp', 'validation', 'fundraising',
+      'revenue', 'mrr', 'product-market-fit', 'pivot', 'scaling', 'growth-hacking',
+      'lean-startup', 'customer-development', 'pricing', 'business-model',
+      'networking', 'mentorship', 'failure', 'lessons', 'milestone',
+      'side-hustle', 'full-time', 'remote', 'productivity', 'innovation',
+      'disruption', 'market-research', 'competition', 'strategy', 'leadership'
+    ];
+
+    // Count which curated tags actually appear in posts
     const counts = new Map<string, number>();
-    posts.forEach((p) => p.tags.forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([t]) => t);
+    posts.forEach((p) => 
+      p.tags.forEach((t) => {
+        if (entrepreneurshipTags.includes(t)) {
+          counts.set(t, (counts.get(t) || 0) + 1);
+        }
+      })
+    );
+
+    // Return curated tags sorted by frequency, with unused ones at the end
+    const usedTags = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([t]) => t);
+    const unusedTags = entrepreneurshipTags.filter(t => !counts.has(t));
+    
+    return [...usedTags, ...unusedTags].slice(0, 20); // Limit to top 20 tags
   }, [posts]);
 
   const filtered = useMemo(() => {
