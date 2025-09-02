@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon, Send, X, Hash } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export type ComposerPayload = {
@@ -19,10 +20,12 @@ interface PostComposerProps {
 }
 
 const PostComposer: React.FC<PostComposerProps> = ({ onPublish }) => {
+  const { isAuthenticated } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const tags = useMemo(
@@ -55,8 +58,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish }) => {
     reader.readAsDataURL(file);
   };
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      toast.error("Please sign in to post");
+      return;
+    }
     if (title.trim().length < 3) {
       toast.error("Title is too short.");
       return;
@@ -65,15 +72,27 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish }) => {
       toast.error("Tell a bit more about your story.");
       return;
     }
-    onPublish({ title: title.trim(), content: content.trim(), tags, image: imagePreview });
-    toast.success("Your story has been posted!");
-    reset();
+    
+    setIsSubmitting(true);
+    try {
+      await onPublish({ title: title.trim(), content: content.trim(), tags, image: imagePreview });
+      reset();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (!isAuthenticated) {
+    return null; // Don't show composer if user is not authenticated
+  }
 
   return (
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-xl">Share your entrepreneurial story</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Share your wins, failures, and lessons learned to help other entrepreneurs.
+        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handlePublish} className="space-y-4">
@@ -154,11 +173,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish }) => {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="ghost" onClick={reset}>
+              <Button type="button" variant="ghost" onClick={reset} disabled={isSubmitting}>
                 Reset
               </Button>
-              <Button type="submit">
-                <Send className="mr-2 h-4 w-4" /> Post story
+              <Button type="submit" disabled={isSubmitting}>
+                <Send className="mr-2 h-4 w-4" /> 
+                {isSubmitting ? 'Publishing...' : 'Post story'}
               </Button>
             </div>
           </div>
