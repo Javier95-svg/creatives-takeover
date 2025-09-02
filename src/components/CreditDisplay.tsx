@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface CreditDisplayProps {
   variant?: "navigation" | "inline" | "detailed";
@@ -25,6 +26,7 @@ interface CreditDisplayProps {
 
 export function CreditDisplay({ variant = "navigation", showPurchaseButton = false }: CreditDisplayProps) {
   const { balance, loading, refreshBalance, CREDIT_COSTS } = useCredits();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   if (!user) return null;
@@ -84,7 +86,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               </div>
               
               {showPurchaseButton && (
-                <Button size="sm" className="w-full gap-2" variant="outline">
+                <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
                   <Plus className="h-3 w-3" />
                   Buy More Credits
                 </Button>
@@ -146,7 +148,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
           )}
           
           {showPurchaseButton && (
-            <Button className="w-full gap-2" variant="default">
+            <Button className="w-full gap-2" variant="default" onClick={() => navigate('/pricing')}>
               <Plus className="h-4 w-4" />
               Purchase More Credits
             </Button>
