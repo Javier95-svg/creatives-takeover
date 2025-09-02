@@ -9,6 +9,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -94,10 +95,20 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background/80 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+      {/* Animated Background */}
+      <AnimatedBackground />
+      
+      <Card className="w-full max-w-md relative z-10 glass-card">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img 
+              src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" 
+              alt="Creatives Takeover Logo" 
+              className="h-8 w-auto animate-fade-in" 
+            />
+            <CardTitle className="text-2xl font-bold takeover-gradient creatives-font">Welcome</CardTitle>
+          </div>
           <CardDescription>
             Join our community to share your entrepreneurial journey
           </CardDescription>
