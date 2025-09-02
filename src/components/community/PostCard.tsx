@@ -136,7 +136,28 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           };
         }) || [];
 
-        setComments(formattedComments);
+        // Filter and ensure diverse comments with avatars
+        const filteredComments = formattedComments
+          .filter(comment => 
+            comment.author.toLowerCase() !== 'javier alonso' && 
+            comment.author !== 'Unknown User'
+          );
+
+        // Remove duplicate authors and ensure all have avatars
+        const seenAuthors = new Set();
+        const diverseComments = filteredComments.filter(comment => {
+          if (seenAuthors.has(comment.author)) {
+            return false;
+          }
+          seenAuthors.add(comment.author);
+          return true;
+        }).map(comment => ({
+          ...comment,
+          // Ensure every comment has an avatar
+          avatar: comment.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.author)}`
+        }));
+
+        setComments(diverseComments);
       } catch (error) {
         console.error('Error loading comments:', error);
       } finally {
