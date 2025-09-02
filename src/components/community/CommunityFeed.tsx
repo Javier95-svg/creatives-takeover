@@ -23,10 +23,13 @@ const CommunityFeed: React.FC = () => {
   // Fetch posts from database
   const fetchPosts = async () => {
     try {
+      // Force fresh data by adding timestamp to prevent caching
+      const timestamp = Date.now();
       const { data, error } = await supabase
         .from('community_posts')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50); // Add limit to prevent huge queries
 
       if (error) {
         console.error('Error fetching posts:', error);
@@ -34,24 +37,21 @@ const CommunityFeed: React.FC = () => {
         return;
       }
 
-      console.log('Raw posts data:', data);
-
       // Fetch profiles for all user_ids
       const userIds = [...new Set(data?.map(post => post.user_id).filter(Boolean))];
-      console.log('User IDs to fetch:', userIds);
-      
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
         .in('id', userIds);
 
-      console.log('Profiles data:', profiles);
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-      console.log('Profiles map:', profilesMap);
 
       const formattedPosts: Post[] = data?.map(post => {
         const profile = profilesMap.get(post.user_id);
-        console.log(`Post ${post.id}: user_id=${post.user_id}, profile=`, profile);
         return {
           id: post.id,
           title: post.title,
@@ -72,8 +72,6 @@ const CommunityFeed: React.FC = () => {
           aiNextStep: post.ai_next_step
         };
       }) || [];
-
-      console.log('Formatted posts:', formattedPosts);
 
       setPosts(formattedPosts);
     } catch (error) {
@@ -334,6 +332,16 @@ const CommunityFeed: React.FC = () => {
               <SelectItem value="top">Top</SelectItem>
             </SelectContent>
           </Select>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              setLoading(true);
+              fetchPosts();
+            }}
+          >
+            Refresh
+          </Button>
         </div>
 
         <PostComposer onPublish={publish} />
