@@ -22,14 +22,16 @@ const CommunityFeed: React.FC = () => {
 
   // Fetch posts from database
   const fetchPosts = async () => {
+    console.log('🔍 STARTING TO FETCH POSTS...');
+    setLoading(true);
     try {
-      // Force fresh data by adding timestamp to prevent caching
-      const timestamp = Date.now();
       const { data, error } = await supabase
         .from('community_posts')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50); // Add limit to prevent huge queries
+        .order('created_at', { ascending: false });
+
+      console.log('📊 RAW POSTS DATA:', data);
+      console.log('❌ POSTS ERROR:', error);
 
       if (error) {
         console.error('Error fetching posts:', error);
@@ -37,21 +39,31 @@ const CommunityFeed: React.FC = () => {
         return;
       }
 
+      if (!data || data.length === 0) {
+        console.log('⚠️ NO POSTS FOUND IN DATABASE');
+        setPosts([]);
+        return;
+      }
+
       // Fetch profiles for all user_ids
-      const userIds = [...new Set(data?.map(post => post.user_id).filter(Boolean))];
+      const userIds = [...new Set(data.map(post => post.user_id).filter(Boolean))];
+      console.log('👥 USER IDs TO FETCH:', userIds);
+
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
         .in('id', userIds);
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-      }
+      console.log('👤 PROFILES DATA:', profiles);
+      console.log('❌ PROFILES ERROR:', profilesError);
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      console.log('🗺️ PROFILES MAP:', profilesMap);
 
-      let formattedPosts: Post[] = data?.map(post => {
+      let formattedPosts: Post[] = data.map(post => {
         const profile = profilesMap.get(post.user_id);
+        console.log(`🔧 FORMATTING POST ${post.id} for user ${post.user_id}:`, { post, profile });
+        
         return {
           id: post.id,
           title: post.title,
@@ -71,18 +83,24 @@ const CommunityFeed: React.FC = () => {
           aiTrendingAngle: post.ai_trending_angle,
           aiNextStep: post.ai_next_step
         };
-      }) || [];
+      });
+
+      console.log('✨ FORMATTED POSTS:', formattedPosts);
 
       // Basic filtering: just exclude "javier alonso" posts, allow all others
       const filtered = formattedPosts.filter(
         (post) => post.author.name.toLowerCase() !== 'javier alonso'
       );
 
+      console.log('🎯 FILTERED POSTS:', filtered);
+      console.log(`📈 SETTING ${filtered.length} POSTS TO STATE`);
+
       setPosts(filtered);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('💥 ERROR IN FETCHPOSTS:', error);
       toast.error('Failed to load posts');
     } finally {
+      console.log('🏁 SETTING LOADING TO FALSE');
       setLoading(false);
     }
   };
@@ -308,13 +326,22 @@ const CommunityFeed: React.FC = () => {
         <PostComposer onPublish={publish} />
 
         <div className="space-y-6">
+          <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded">
+            DEBUG: Showing {filtered.length} posts (total loaded: {posts.length})
+          </div>
           {filtered.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
           {filtered.length === 0 && (
             <Card>
-              <CardContent className="p-6 text-sm text-muted-foreground">
-                No stories match your search.
+              <CardContent className="p-6">
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>No stories match your search.</p>
+                  <p>DEBUG: Total posts in state: {posts.length}</p>
+                  <p>DEBUG: Loading state: {loading.toString()}</p>
+                  <p>DEBUG: Search term: "{search}"</p>
+                  <p>DEBUG: Selected tag: {selectedTag || 'none'}</p>
+                </div>
               </CardContent>
             </Card>
           )}
