@@ -1,31 +1,16 @@
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, RefreshCw, Sparkles } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { RefreshCw, Sparkles, TrendingUp } from "lucide-react";
 import TrendCard from "./TrendCard";
 import { useTrends } from "@/hooks/useTrends";
 
 const TrendingSection = () => {
   const { trends, isLoading, error, refetch, generateNewTrends } = useTrends();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Group trends by category
-  const trendsByCategory = trends?.reduce((acc, trend) => {
-    if (!acc[trend.category]) {
-      acc[trend.category] = [];
-    }
-    acc[trend.category].push(trend);
-    return acc;
-  }, {} as Record<string, typeof trends>) || {};
-
-  const categories = ['all', ...Object.keys(trendsByCategory)];
-  
-  const filteredTrends = selectedCategory === 'all' 
-    ? trends?.slice(0, 8) || []
-    : trendsByCategory[selectedCategory]?.slice(0, 6) || [];
+  // Show maximum of 8 articles
+  const displayedTrends = trends?.slice(0, 8) || [];
 
   const handleRefresh = async () => {
     try {
@@ -129,27 +114,8 @@ const TrendingSection = () => {
           </p>
         </div>
 
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-8">
-          <TabsList className="grid w-full grid-cols-auto mx-auto max-w-2xl">
-            {categories.map((category) => (
-              <TabsTrigger 
-                key={category} 
-                value={category}
-                className="capitalize"
-              >
-                {category}
-                {category !== 'all' && trendsByCategory[category] && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {trendsByCategory[category].length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredTrends.map((trend) => (
+          {displayedTrends.map((trend) => (
             <TrendCard 
               key={trend.id} 
               trend={trend}
@@ -157,7 +123,7 @@ const TrendingSection = () => {
           ))}
         </div>
 
-        {filteredTrends.length === 0 && (
+        {displayedTrends.length === 0 && (
           <div className="text-center py-12">
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No articles available</h3>
