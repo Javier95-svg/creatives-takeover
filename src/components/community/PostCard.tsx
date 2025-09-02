@@ -56,7 +56,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [score, setScore] = useState(post.votes);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(true); // Open comments by default
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Array<{id: string, author: string, text: string, avatar?: string}>>([]);
   const [commentInput, setCommentInput] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
