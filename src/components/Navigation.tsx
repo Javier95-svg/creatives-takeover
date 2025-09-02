@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { CreditDisplay } from "@/components/CreditDisplay";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +59,7 @@ const Navigation = () => {
               <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
             ) : user ? (
               <div className="flex items-center space-x-2">
+                <CreditDisplay variant="navigation" showPurchaseButton={true} />
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="w-4 h-4" />
                   <span className="text-muted-foreground">
@@ -128,9 +130,12 @@ const Navigation = () => {
                   <div className="w-full h-10 animate-pulse bg-muted rounded" />
                 ) : user ? (
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground">
-                      <User className="w-4 h-4" />
-                      <span>{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                    <div className="flex items-center justify-between px-3 py-2">
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <User className="w-4 h-4" />
+                        <span>{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                      </div>
+                      <CreditDisplay variant="inline" />
                     </div>
                     <Button 
                       variant="ghost" 

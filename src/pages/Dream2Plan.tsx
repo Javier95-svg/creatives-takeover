@@ -16,6 +16,8 @@ import ReportDownload from "@/components/ReportDownload";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { useChatSessions, ChatSession } from "@/hooks/useChatSessions";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditGate } from "@/components/CreditGate";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -40,6 +42,9 @@ const BizMapAI = () => {
   ]);
 
   const { user } = useAuth();
+  const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
+  const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ type: 'report' | 'asset'; assetType?: string } | null>(null);
   const {
     currentSessionId,
     setCurrentSessionId,
@@ -251,6 +256,13 @@ const BizMapAI = () => {
   }, []);
 
   const generateLaunchReport = async (answers: any, stage: string, region: string) => {
+    // Check if user has sufficient credits
+    if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
+      setPendingAction({ type: 'report' });
+      setCreditGateOpen(true);
+      return null;
+    }
+
     try {
       setIsLoading(true);
       
@@ -258,18 +270,44 @@ const BizMapAI = () => {
         body: { 
           answers,
           stage,
-          region
+          region,
+          sessionId: currentSessionId
+        },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
       });
 
       if (error) {
         console.error('Supabase function error:', error);
+        
+        // Handle credit-related errors
+        if (error.message?.includes('Insufficient credits') || error.message?.includes('credit')) {
+          setPendingAction({ type: 'report' });
+          setCreditGateOpen(true);
+          toast.error(`You need ${CREDIT_COSTS.LAUNCH_REPORT} credits to generate a launch report.`);
+          return null;
+        }
+        
         throw error;
       }
+
+      // If successful, deduct credits from local state for immediate UI update
+      handleCreditDeduction(CREDIT_COSTS.LAUNCH_REPORT);
+      toast.success(`Launch report generated! (Used ${CREDIT_COSTS.LAUNCH_REPORT} credits)`);
 
       return data.launchReport;
     } catch (error) {
       console.error('Error generating launch report:', error);
+      
+      // Check if it's a credit error
+      if (error?.message?.includes('402') || error?.message?.includes('credit')) {
+        setPendingAction({ type: 'report' });
+        setCreditGateOpen(true);
+        toast.error(`You need ${CREDIT_COSTS.LAUNCH_REPORT} credits to generate a launch report.`);
+        return null;
+      }
+      
       toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
       
       // Fallback to basic structure if API fails
@@ -281,6 +319,13 @@ const BizMapAI = () => {
 
   // Generate post-report assets (outreach email, social posts, landing page)
   const generateAsset = async (type: 'outreach' | 'social' | 'landing') => {
+    // Check if user has sufficient credits
+    if (!hasCredits(CREDIT_COSTS.ASSET_GENERATION)) {
+      setPendingAction({ type: 'asset', assetType: type });
+      setCreditGateOpen(true);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const label = type === 'outreach' ? 'your first outreach email' : type === 'social' ? '3 social posts' : 'a simple landing page outline';
@@ -292,17 +337,42 @@ const BizMapAI = () => {
           answers: userAnswers,
           stage: userStage,
           region: userRegion,
+        },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle credit-related errors
+        if (error.message?.includes('Insufficient credits') || error.message?.includes('credit')) {
+          setPendingAction({ type: 'asset', assetType: type });
+          setCreditGateOpen(true);
+          toast.error(`You need ${CREDIT_COSTS.ASSET_GENERATION} credits to generate assets.`);
+          return;
+        }
+        throw error;
+      }
+      
       if (data?.asset) {
+        // If successful, deduct credits from local state for immediate UI update
+        handleCreditDeduction(CREDIT_COSTS.ASSET_GENERATION);
+        toast.success(`Asset generated! (Used ${CREDIT_COSTS.ASSET_GENERATION} credits)`);
         setMessages(prev => [...prev, { type: 'assistant', content: data.asset }]);
       } else {
         toast.error('Sorry, I could not generate that asset right now.');
       }
     } catch (err) {
       console.error('Error generating asset:', err);
+      
+      // Check if it's a credit error
+      if (err?.message?.includes('402') || err?.message?.includes('credit')) {
+        setPendingAction({ type: 'asset', assetType: type });
+        setCreditGateOpen(true);
+        toast.error(`You need ${CREDIT_COSTS.ASSET_GENERATION} credits to generate assets.`);
+        return;
+      }
+      
       toast.error('There was a problem generating that. Please try again.');
     } finally {
       setIsLoading(false);
@@ -1169,6 +1239,30 @@ ${translations.dataDisclaimer}`;
           </div>
         </div>
       </div>
+
+      {/* Credit Gate Modal */}
+      <CreditGate
+        isOpen={creditGateOpen}
+        onClose={() => {
+          setCreditGateOpen(false);
+          setPendingAction(null);
+        }}
+        requiredCredits={
+          pendingAction?.type === 'report' 
+            ? CREDIT_COSTS.LAUNCH_REPORT 
+            : CREDIT_COSTS.ASSET_GENERATION
+        }
+        feature={
+          pendingAction?.type === 'report' 
+            ? 'Launch Report Generation' 
+            : `Asset Generation (${pendingAction?.assetType || 'unknown'})`
+        }
+        onPurchase={() => {
+          // TODO: Implement Stripe purchase flow
+          console.log('Purchase flow would open here');
+          toast.info('Credit purchase coming soon!');
+        }}
+      />
 
       <Footer />
     </div>
