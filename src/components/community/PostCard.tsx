@@ -124,40 +124,47 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           .select('id, full_name, avatar_url')
           .in('id', userIds);
 
+        // Build profiles map (may be empty if unauthenticated)
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-        const formattedComments = data?.map(comment => {
-          const profile = profilesMap.get(comment.user_id);
+        // Deterministic display name and avatar when profile not accessible
+        const getDisplayName = (uid: string) => {
+          const full = profilesMap.get(uid)?.full_name?.trim();
+          if (full) return full;
+          const base = uid?.replace(/-/g, '').slice(0, 6).toUpperCase();
+          return `Builder ${base}`;
+        };
+
+        const getAvatar = (uid: string, name: string) => {
+          const avatar = profilesMap.get(uid)?.avatar_url;
+          return (
+            avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`
+          );
+        };
+
+        const mappedComments = (data || []).map((comment) => {
+          const author = getDisplayName(comment.user_id);
           return {
             id: comment.id,
-            author: profile?.full_name || 'Unknown User',
+            author,
             text: comment.content,
-            avatar: profile?.avatar_url
+            avatar: getAvatar(comment.user_id, author),
           };
-        }) || [];
+        });
 
-        // Filter and ensure diverse comments with avatars
-        const filteredComments = formattedComments
-          .filter(comment => 
-            comment.author.toLowerCase() !== 'javier alonso' && 
-            comment.author !== 'Unknown User'
-          );
+        // Enforce rules: exclude specific account, ensure unique authors
+        const filtered = mappedComments.filter(
+          (c) => c.author.toLowerCase() !== 'javier alonso'
+        );
 
-        // Remove duplicate authors and ensure all have avatars
-        const seenAuthors = new Set();
-        const diverseComments = filteredComments.filter(comment => {
-          if (seenAuthors.has(comment.author)) {
-            return false;
-          }
-          seenAuthors.add(comment.author);
+        const seenAuthors = new Set<string>();
+        const uniqueByAuthor = filtered.filter((c) => {
+          if (seenAuthors.has(c.author)) return false;
+          seenAuthors.add(c.author);
           return true;
-        }).map(comment => ({
-          ...comment,
-          // Ensure every comment has an avatar
-          avatar: comment.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.author)}`
-        }));
+        });
 
-        setComments(diverseComments);
+        setComments(uniqueByAuthor);
       } catch (error) {
         console.error('Error loading comments:', error);
       } finally {
