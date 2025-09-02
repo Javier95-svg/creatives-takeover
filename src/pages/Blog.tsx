@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogGrid from "@/components/blog/BlogGrid";
+import TrendingSection from "@/components/blog/TrendingSection";
 import TopicsPreferences from "@/components/blog/TopicsPreferences";
 import SignupInviteModal from "@/components/blog/SignupInviteModal";
 import { useSignupInvite } from "@/hooks/useSignupInvite";
@@ -28,6 +29,7 @@ const Blog = () => {
       <Navigation />
       <main>
         <BlogHero />
+        <TrendingSection />
         <BlogGrid />
         <TopicsPreferences />
       </main>

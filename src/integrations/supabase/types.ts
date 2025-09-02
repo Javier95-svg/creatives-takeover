@@ -420,6 +420,60 @@ export type Database = {
         }
         Relationships: []
       }
+      trends: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          expires_at: string
+          geographic_relevance: string[] | null
+          id: string
+          is_active: boolean
+          keywords: string[]
+          market_size_indicator: string | null
+          opportunity_score: number | null
+          sentiment: string | null
+          source_urls: string[] | null
+          title: string
+          trend_score: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          expires_at?: string
+          geographic_relevance?: string[] | null
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          market_size_indicator?: string | null
+          opportunity_score?: number | null
+          sentiment?: string | null
+          source_urls?: string[] | null
+          title: string
+          trend_score?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          expires_at?: string
+          geographic_relevance?: string[] | null
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          market_size_indicator?: string | null
+          opportunity_score?: number | null
+          sentiment?: string | null
+          source_urls?: string[] | null
+          title?: string
+          trend_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_bookmarks: {
         Row: {
           created_at: string
@@ -509,6 +563,36 @@ export type Database = {
           created_at?: string
           id?: string
           topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_trend_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          notification_enabled: boolean
+          preferred_categories: string[]
+          preferred_keywords: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_enabled?: boolean
+          preferred_categories?: string[]
+          preferred_keywords?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_enabled?: boolean
+          preferred_categories?: string[]
+          preferred_keywords?: string[]
           updated_at?: string
           user_id?: string
         }

@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
 import { blogPosts } from "@/data/blogPosts";
+import { useTrends } from "@/hooks/useTrends";
 
 const BlogHero = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { trends, isLoading: trendsLoading } = useTrends();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +34,19 @@ const BlogHero = () => {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) // Show top 10 topics
       .map(([tag]) => tag);
+  };
+
+  // Get top trending topics from AI trends
+  const getTrendingTopics = () => {
+    if (!trends || trends.length === 0) return [];
+    
+    return trends
+      .slice(0, 5)
+      .map(trend => ({
+        title: trend.title.substring(0, 30) + (trend.title.length > 30 ? '...' : ''),
+        score: trend.trend_score,
+        category: trend.category
+      }));
   };
 
   const popularTopics = getPopularTopics();
@@ -108,22 +124,56 @@ const BlogHero = () => {
             </Button>
           </form>
 
-          {/* Popular Topics */}
-          <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <p className="text-sm text-muted-foreground mb-4">Popular topics:</p>
-            <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-              {popularTopics.map((topic, index) => (
-                <Button
-                  key={topic}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleTopicClick(topic)}
-                  className="glass border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-foreground transition-all duration-300 hover-scale animate-fade-in"
-                  style={{ animationDelay: `${0.8 + index * 0.1}s` }}
-                >
-                  {topic}
-                </Button>
-              ))}
+          {/* AI Trends + Popular Topics Section */}
+          <div className="space-y-8 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            {/* AI Trends Section */}
+            {!trendsLoading && trends && trends.length > 0 && (
+              <div>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <p className="text-sm text-muted-foreground">AI-Powered Trending Insights</p>
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto mb-6">
+                  {getTrendingTopics().map((trend, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleTopicClick(trend.title)}
+                      className="glass border-primary/30 hover:border-primary/50 hover:bg-primary/10 text-foreground transition-all duration-300 hover-scale animate-fade-in relative group"
+                      style={{ animationDelay: `${0.8 + index * 0.1}s` }}
+                    >
+                      <Badge variant="secondary" className="mr-2 text-xs px-1.5 py-0.5 bg-primary/20 text-primary">
+                        {trend.score.toFixed(1)}
+                      </Badge>
+                      <span className="font-medium">{trend.title}</span>
+                      <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0.5 border-primary/20 text-primary/80">
+                        {trend.category}
+                      </Badge>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Popular Topics Section */}
+            <div>
+              <p className="text-sm text-muted-foreground mb-4">Popular topics:</p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+                {popularTopics.map((topic, index) => (
+                  <Button
+                    key={topic}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTopicClick(topic)}
+                    className="glass border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-foreground transition-all duration-300 hover-scale animate-fade-in"
+                    style={{ animationDelay: `${1.2 + index * 0.1}s` }}
+                  >
+                    {topic}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
