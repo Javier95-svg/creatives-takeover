@@ -116,19 +116,12 @@ export const useTrends = () => {
   };
 
   useEffect(() => {
-    console.log('🚀 useTrends: Initial mount, fetching trends...');
-    fetchTrends();
+    console.log('🚀 useTrends: Force generating fresh NewsAPI articles...');
+    generateNewTrends().catch((err) => {
+      console.error('❌ Failed to generate fresh articles:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch fresh articles');
+    });
   }, []);
-
-  // Auto-generate articles if none exist
-  useEffect(() => {
-    if (!isLoading && trends.length === 0 && !error) {
-      console.log('🚀 Auto-finding articles - no existing articles found');
-      generateNewTrends().catch((err) => {
-        console.error('❌ Auto-article search failed:', err);
-      });
-    }
-  }, [isLoading, trends.length, error]);
 
   return {
     trends,
