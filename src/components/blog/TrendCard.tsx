@@ -14,6 +14,11 @@ interface TrendCardProps {
     sentiment: 'positive' | 'negative' | 'neutral';
     market_size_indicator: string;
     geographic_relevance: string[];
+    article_url?: string;
+    article_source?: string;
+    author?: string;
+    publication_date?: string;
+    summary?: string;
     created_at: string;
   };
   onClick?: () => void;
@@ -34,10 +39,20 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
     return 'text-red-600';
   };
 
+  const handleClick = () => {
+    if (trend.article_url) {
+      window.open(trend.article_url, '_blank', 'noopener,noreferrer');
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
+  const isArticle = Boolean(trend.article_url);
+
   return (
     <Card 
       className="hover:shadow-md transition-all duration-200 cursor-pointer group"
-      onClick={onClick}
+      onClick={handleClick}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
@@ -58,20 +73,39 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
           <Badge className={`text-xs ${getSentimentColor(trend.sentiment)}`}>
             {trend.sentiment}
           </Badge>
+          {isArticle && trend.article_source && (
+            <Badge variant="secondary" className="text-xs">
+              {trend.article_source}
+            </Badge>
+          )}
         </div>
       </CardHeader>
       
       <CardContent className="pt-0">
         <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-          {trend.description}
+          {trend.summary || trend.description}
         </p>
         
         <div className="space-y-3">
+          {/* Article Source & Author */}
+          {isArticle && (
+            <div className="text-sm text-muted-foreground">
+              {trend.author && (
+                <span>By {trend.author} • </span>
+              )}
+              {trend.publication_date && (
+                <span>{new Date(trend.publication_date).toLocaleDateString()}</span>
+              )}
+            </div>
+          )}
+
           {/* Opportunity Score */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Opportunity</span>
+              <span className="text-muted-foreground">
+                {isArticle ? 'Relevance' : 'Opportunity'}
+              </span>
             </div>
             <span className={`font-medium ${getScoreColor(trend.opportunity_score)}`}>
               {trend.opportunity_score.toFixed(1)}/10
@@ -105,6 +139,13 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
                   +{trend.keywords.length - 4}
                 </Badge>
               )}
+            </div>
+          )}
+
+          {/* Article Link Indicator */}
+          {isArticle && (
+            <div className="text-xs text-primary font-medium">
+              Click to read full article →
             </div>
           )}
         </div>

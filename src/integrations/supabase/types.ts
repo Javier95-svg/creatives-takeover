@@ -422,6 +422,9 @@ export type Database = {
       }
       trends: {
         Row: {
+          article_source: string | null
+          article_url: string | null
+          author: string | null
           category: string
           created_at: string
           description: string
@@ -432,13 +435,18 @@ export type Database = {
           keywords: string[]
           market_size_indicator: string | null
           opportunity_score: number | null
+          publication_date: string | null
           sentiment: string | null
           source_urls: string[] | null
+          summary: string | null
           title: string
           trend_score: number
           updated_at: string
         }
         Insert: {
+          article_source?: string | null
+          article_url?: string | null
+          author?: string | null
           category?: string
           created_at?: string
           description: string
@@ -449,13 +457,18 @@ export type Database = {
           keywords?: string[]
           market_size_indicator?: string | null
           opportunity_score?: number | null
+          publication_date?: string | null
           sentiment?: string | null
           source_urls?: string[] | null
+          summary?: string | null
           title: string
           trend_score?: number
           updated_at?: string
         }
         Update: {
+          article_source?: string | null
+          article_url?: string | null
+          author?: string | null
           category?: string
           created_at?: string
           description?: string
@@ -466,8 +479,10 @@ export type Database = {
           keywords?: string[]
           market_size_indicator?: string | null
           opportunity_score?: number | null
+          publication_date?: string | null
           sentiment?: string | null
           source_urls?: string[] | null
+          summary?: string | null
           title?: string
           trend_score?: number
           updated_at?: string

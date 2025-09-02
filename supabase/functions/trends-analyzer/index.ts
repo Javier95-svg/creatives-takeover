@@ -19,135 +19,236 @@ serve(async (req) => {
   }
 
   try {
-    const { categories = ['business', 'startup', 'ai', 'technology'], limit = 10 } = await req.json();
+    console.log('🔍 Starting article discovery...');
+    
+    if (!perplexityApiKey) {
+      throw new Error('PERPLEXITY_API_KEY is not configured');
+    }
 
-    console.log('Analyzing trends for categories:', categories);
+    // Insighta's popular topics for article discovery
+    const insightaTopics = [
+      'AI productivity tools for entrepreneurs',
+      'no-code MVP development strategies', 
+      'growth hacking techniques for startups',
+      'creative marketing strategies 2024',
+      'startup validation methods',
+      'business automation tools',
+      'solopreneur business models',
+      'innovation leadership strategies'
+    ];
 
-    // Generate trends for each category
-    const trendPromises = categories.map(async (category: string) => {
-      const prompt = `Analyze the latest trends in ${category} for entrepreneurs and business builders. Focus on:
-1. Emerging opportunities with high growth potential
-2. Market shifts and disruptions
-3. Consumer behavior changes
-4. Technology adoption patterns
-5. Investment and funding trends
+    console.log('📰 Searching for articles on topics:', insightaTopics.slice(0, 4));
 
-Provide 3-5 specific, actionable trends with:
-- Clear trend title (max 60 chars)
-- Brief description (max 200 chars)
-- Opportunity score (0-10)
-- Key keywords
-- Market size indicator (emerging/growing/mature)
-- Geographic relevance
+    // Generate article searches for each topic
+    const articlePromises = insightaTopics.slice(0, 4).map(async (topic: string) => {
+      const prompt = `Find 2-3 recent high-quality articles about "${topic}" published in the last 2 weeks. Focus on:
 
-Format as structured data.`;
+- Articles from reputable business, tech, or entrepreneurship publications
+- Actionable insights for entrepreneurs and business builders  
+- Recent developments and practical strategies
+- Include the article URL, title, publication source, author if available
+- Brief summary highlighting key insights
 
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${perplexityApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a business trend analyst. Provide structured, actionable insights for entrepreneurs. Be specific and data-driven.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 2000,
-          search_recency_filter: 'week'
-        }),
-      });
+Please provide structured data with:
+ARTICLE 1:
+- Title: [exact article title]
+- URL: [direct link to article]  
+- Source: [publication name]
+- Author: [author name if available]
+- Published: [publication date if available]
+- Summary: [2-3 sentence summary of key insights]
 
-      if (!response.ok) {
-        throw new Error(`Perplexity API error: ${response.status}`);
+ARTICLE 2: [same format]
+
+Focus on finding actual published articles with real URLs, not generating hypothetical content.`;
+
+      try {
+        console.log(`🔎 Searching for articles on: ${topic}`);
+        
+        const response = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-sonar-small-128k-online',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a research assistant specializing in finding recent business and entrepreneurship articles. Always provide real, published articles with actual URLs from reputable sources.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            max_tokens: 1500,
+            top_p: 0.9,
+            search_recency_filter: 'month',
+            return_images: false,
+            return_related_questions: false
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ Perplexity API error for topic "${topic}":`, response.status, errorText);
+          throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log(`✅ Found articles for topic: ${topic}`);
+        return { topic, content: data.choices[0].message.content };
+        
+      } catch (error) {
+        console.error(`❌ Error fetching articles for topic "${topic}":`, error);
+        return { topic, content: null, error: error.message };
       }
-
-      const data = await response.json();
-      return { category, analysis: data.choices[0].message.content };
     });
 
-    const categoryAnalyses = await Promise.all(trendPromises);
+    const topicResults = await Promise.all(articlePromises);
+    console.log('📊 Article search completed. Processing results...');
 
-    // Parse and structure the trends
-    const trends = [];
-    for (const { category, analysis } of categoryAnalyses) {
-      // Extract structured data from AI response
-      const trendMatches = analysis.match(/\d+\.\s*([^\n]+)/g) || [];
+    // Parse and structure the articles
+    const articles = [];
+    for (const result of topicResults) {
+      if (!result.content || result.error) {
+        console.log(`⚠️ Skipping topic "${result.topic}" due to error:`, result.error);
+        continue;
+      }
+
+      // Extract article data from AI response  
+      const articleBlocks = result.content.split(/ARTICLE \d+:/);
       
-      for (let i = 0; i < Math.min(trendMatches.length, 2); i++) {
-        const trendText = trendMatches[i];
-        const title = trendText.replace(/^\d+\.\s*/, '').substring(0, 60);
+      for (let i = 1; i < articleBlocks.length; i++) {
+        const block = articleBlocks[i].trim();
         
-        // Extract keywords from the trend text
-        const keywords = extractKeywords(trendText);
-        
-        // Calculate trend scores based on content
-        const trendScore = calculateTrendScore(trendText);
-        const opportunityScore = calculateOpportunityScore(trendText);
-        
-        trends.push({
-          title: title,
-          description: generateDescription(trendText, analysis),
-          category: category,
-          trend_score: trendScore,
-          keywords: keywords,
-          sentiment: determineSentiment(trendText),
-          opportunity_score: opportunityScore,
-          market_size_indicator: determineMarketSize(trendText),
-          geographic_relevance: extractGeography(analysis),
-          source_urls: [],
-          is_active: true,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        });
+        // Extract structured data using regex patterns
+        const titleMatch = block.match(/Title:\s*(.+?)(?:\n|$)/i);
+        const urlMatch = block.match(/URL:\s*(.+?)(?:\n|$)/i);
+        const sourceMatch = block.match(/Source:\s*(.+?)(?:\n|$)/i);
+        const authorMatch = block.match(/Author:\s*(.+?)(?:\n|$)/i);
+        const publishedMatch = block.match(/Published:\s*(.+?)(?:\n|$)/i);
+        const summaryMatch = block.match(/Summary:\s*(.+?)(?:\n\n|$)/is);
+
+        if (titleMatch && urlMatch) {
+          const title = titleMatch[1].trim().replace(/[\[\]]/g, '');
+          const url = urlMatch[1].trim();
+          const source = sourceMatch ? sourceMatch[1].trim() : 'Unknown Source';
+          const author = authorMatch ? authorMatch[1].trim() : null;
+          const summary = summaryMatch ? summaryMatch[1].trim() : title;
+          
+          // Skip if URL looks invalid
+          if (!url.startsWith('http')) {
+            continue;
+          }
+
+          const keywords = extractKeywords(title + ' ' + summary);
+          const trendScore = calculateTrendScore(summary);
+          const opportunityScore = calculateOpportunityScore(summary);
+          
+          articles.push({
+            title: title.substring(0, 100),
+            description: summary.substring(0, 250),
+            category: getCategoryFromTopic(result.topic),
+            trend_score: trendScore,
+            opportunity_score: opportunityScore,
+            keywords: keywords,
+            sentiment: determineSentiment(summary),
+            market_size_indicator: determineMarketSize(summary),
+            geographic_relevance: extractGeography(summary),
+            article_url: url,
+            article_source: source,
+            author: author,
+            publication_date: parsePublishedDate(publishedMatch ? publishedMatch[1] : null),
+            summary: summary.substring(0, 300),
+            source_urls: [url],
+            is_active: true,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+          });
+        }
       }
     }
 
-    // Store trends in database
-    const { data: storedTrends, error: insertError } = await supabase
+    console.log(`📝 Processed ${articles.length} articles for database insertion`);
+
+    if (articles.length === 0) {
+      console.log('⚠️ No articles found to insert');
+      return new Response(JSON.stringify({
+        success: true,
+        articles: [],
+        message: 'No articles found in this search'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Store articles in database
+    const { data: storedArticles, error: insertError } = await supabase
       .from('trends')
-      .insert(trends)
+      .insert(articles)
       .select();
 
     if (insertError) {
-      console.error('Database insert error:', insertError);
+      console.error('❌ Database insert error:', insertError);
       throw insertError;
     }
 
-    // Clean up expired trends
+    // Clean up expired articles
     await supabase
       .from('trends')
       .update({ is_active: false })
       .lt('expires_at', new Date().toISOString());
 
-    console.log(`Successfully stored ${storedTrends?.length || 0} trends`);
+    console.log(`✅ Successfully stored ${storedArticles?.length || 0} articles`);
 
     return new Response(JSON.stringify({
       success: true,
-      trends: storedTrends,
-      message: `Analyzed and stored ${storedTrends?.length || 0} trends`
+      articles: storedArticles,
+      message: `Found and stored ${storedArticles?.length || 0} trending articles`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in trends-analyzer function:', error);
+    console.error('❌ Error in trends-analyzer function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      success: false 
+      success: false,
+      details: 'Failed to fetch trending articles'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
+
+// Helper function to map topics to categories
+function getCategoryFromTopic(topic: string): string {
+  if (topic.toLowerCase().includes('ai')) return 'ai';
+  if (topic.toLowerCase().includes('startup') || topic.toLowerCase().includes('mvp')) return 'startup';
+  if (topic.toLowerCase().includes('growth') || topic.toLowerCase().includes('marketing')) return 'business';
+  if (topic.toLowerCase().includes('no-code') || topic.toLowerCase().includes('automation')) return 'technology';
+  return 'business';
+}
+
+// Helper function to parse publication dates
+function parsePublishedDate(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  
+  try {
+    // Try to parse various date formats
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      // If parsing fails, return a recent date as fallback
+      return new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString();
+    }
+    return date.toISOString();
+  } catch {
+    return null;
+  }
+}
 
 function extractKeywords(text: string): string[] {
   const keywords = [];

@@ -31,10 +31,10 @@ const TrendingSection = () => {
     try {
       setIsGenerating(true);
       if (trends.length === 0) {
-        console.log('🚀 No trends found, generating new trends...');
+        console.log('🚀 No articles found, finding new articles...');
         await generateNewTrends();
       } else {
-        console.log('🔄 Refreshing existing trends...');
+        console.log('🔄 Refreshing existing articles...');
         await refetch();
       }
     } catch (error) {
@@ -47,10 +47,10 @@ const TrendingSection = () => {
   const handleGenerateNew = async () => {
     try {
       setIsGenerating(true);
-      console.log('🚀 Manually generating new trends...');
+      console.log('🚀 Manually finding new articles...');
       await generateNewTrends();
     } catch (error) {
-      console.error('❌ Error generating trends:', error);
+      console.error('❌ Error finding articles:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -63,10 +63,10 @@ const TrendingSection = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-              <h2 className="text-3xl font-bold">Trending Now</h2>
+              <h2 className="text-3xl font-bold">Trending Articles</h2>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {isGenerating ? 'AI is analyzing the latest trends...' : 'AI-powered insights analyzing the latest business trends and opportunities'}
+              {isGenerating ? 'AI is discovering the latest articles...' : 'Latest articles on entrepreneurship, AI tools, and business strategies'}
             </p>
           </div>
           
@@ -95,9 +95,9 @@ const TrendingSection = () => {
     return (
       <section className="py-16 bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Trending Now</h2>
+          <h2 className="text-3xl font-bold mb-4">Trending Articles</h2>
           <p className="text-muted-foreground mb-6">
-            Unable to load trends at the moment. Please try again.
+            Unable to load articles at the moment. Please try again.
           </p>
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -114,7 +114,7 @@ const TrendingSection = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">Trending Now</h2>
+            <h2 className="text-3xl font-bold">Trending Articles</h2>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -125,7 +125,7 @@ const TrendingSection = () => {
             </Button>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            AI-powered insights analyzing the latest business trends and opportunities
+            Latest articles on entrepreneurship, AI tools, and business strategies
           </p>
         </div>
 
@@ -153,10 +153,6 @@ const TrendingSection = () => {
             <TrendCard 
               key={trend.id} 
               trend={trend}
-              onClick={() => {
-                // TODO: Open trend detail modal or navigate to trend page
-                console.log('Trend clicked:', trend);
-              }}
             />
           ))}
         </div>
@@ -164,14 +160,14 @@ const TrendingSection = () => {
         {filteredTrends.length === 0 && (
           <div className="text-center py-12">
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No trends available</h3>
+            <h3 className="text-lg font-semibold mb-2">No articles available</h3>
             <p className="text-muted-foreground mb-4">
-              Let's analyze the latest business trends for you!
+              Let's discover the latest trending articles for you!
             </p>
             <div className="flex gap-2 justify-center">
               <Button onClick={handleGenerateNew} disabled={isGenerating}>
                 <Sparkles className="h-4 w-4 mr-2" />
-                {isGenerating ? 'Generating...' : 'Generate Trends'}
+                {isGenerating ? 'Finding Articles...' : 'Find Articles'}
               </Button>
               <Button onClick={handleRefresh} variant="outline" disabled={isGenerating}>
                 <RefreshCw className="h-4 w-4 mr-2" />

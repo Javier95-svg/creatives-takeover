@@ -12,6 +12,11 @@ export interface Trend {
   sentiment: 'positive' | 'negative' | 'neutral';
   market_size_indicator: string;
   geographic_relevance: string[];
+  article_url?: string;
+  article_source?: string;
+  author?: string;
+  publication_date?: string;
+  summary?: string;
   created_at: string;
   updated_at: string;
   is_active: boolean;
@@ -59,16 +64,16 @@ export const useTrends = () => {
     }
   };
 
-  const generateNewTrends = async (categories: string[] = ['business', 'startup', 'ai', 'technology']) => {
+  const generateNewTrends = async () => {
     try {
       setError(null);
-      console.log('🔄 Generating trends for categories:', categories);
+      console.log('🔍 Searching for trending articles...');
       
       const { data, error: functionError } = await supabase.functions.invoke('trends-analyzer', {
-        body: { categories, limit: 10 }
+        body: { action: 'find_articles' }
       });
 
-      console.log('📊 Trends generation response:', { data, error: functionError });
+      console.log('📊 Article search response:', { data, error: functionError });
 
       if (functionError) {
         console.error('❌ Function error:', functionError);
@@ -76,17 +81,17 @@ export const useTrends = () => {
       }
 
       if (data?.success) {
-        console.log('✅ Trends generated successfully:', data.trends?.length, 'trends');
+        console.log('✅ Articles found successfully:', data.articles?.length, 'articles');
         // Refresh trends after generation
         await fetchTrends();
-        return data.trends;
+        return data.articles;
       } else {
-        console.error('❌ Trends generation failed:', data?.error);
-        throw new Error(data?.error || 'Failed to generate trends');
+        console.error('❌ Article search failed:', data?.error);
+        throw new Error(data?.error || 'Failed to find articles');
       }
     } catch (err) {
-      console.error('❌ Error generating trends:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate trends');
+      console.error('❌ Error finding articles:', err);
+      setError(err instanceof Error ? err.message : 'Failed to find articles');
       throw err;
     }
   };
@@ -110,12 +115,12 @@ export const useTrends = () => {
     fetchTrends();
   }, []);
 
-  // Auto-generate trends if none exist
+  // Auto-generate articles if none exist
   useEffect(() => {
     if (!isLoading && trends.length === 0 && !error) {
-      console.log('🚀 Auto-generating trends - no existing trends found');
+      console.log('🚀 Auto-finding articles - no existing articles found');
       generateNewTrends().catch((err) => {
-        console.error('❌ Auto-generation failed:', err);
+        console.error('❌ Auto-article search failed:', err);
       });
     }
   }, [isLoading, trends.length, error]);
