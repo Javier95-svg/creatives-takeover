@@ -14,13 +14,35 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 // Initialize Supabase client with service role for inserting data
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-// Allowlisted domains for news sources
-const ALLOWED_DOMAINS = [
-  'techcrunch.com', 'bloomberg.com', 'reuters.com', 'ap.org', 'bbc.com',
-  'cnn.com', 'forbes.com', 'wsj.com', 'nytimes.com', 'theguardian.com',
-  'axios.com', 'venturebeat.com', 'theverge.com', 'wired.com', 'arstechnica.com',
-  'fastcompany.com', 'inc.com', 'entrepreneur.com', 'harvard.edu', 'mit.edu',
-  'stanford.edu', 'github.com', 'medium.com', 'substack.com'
+// Curated domains and keywords for Insighta
+const CURATED_DOMAINS = [
+  'techcrunch.com',
+  'wired.com',
+  'hbr.org',
+  'technologyreview.com',
+  'theverge.com',
+  'entrepreneur.com',
+  'fastcompany.com',
+  'sifted.eu'
+];
+
+const ALLOWED_DOMAINS = CURATED_DOMAINS;
+
+const CURATED_KEYWORDS = [
+  'ai',
+  'artificial intelligence',
+  'startup',
+  'startups',
+  'no-code',
+  'nocode',
+  'solopreneur',
+  'creator',
+  'creator economy',
+  'growth',
+  'marketing',
+  'product',
+  'go-to-market',
+  'gtm'
 ];
 
 interface NewsAPIArticle {
@@ -199,7 +221,7 @@ serve(async (req) => {
     // Parse request body for customization options
     const body = await req.json().catch(() => ({}));
     const {
-      topics = 'business OR technology OR AI OR startup OR innovation',
+      topics = 'AI OR artificial intelligence OR startup OR startups OR no-code OR nocode OR solopreneur OR creator economy OR growth marketing OR product growth OR product marketing OR go-to-market OR GTM',
       sources,
       countries = 'us',
       pageSize = 20,
@@ -226,6 +248,8 @@ serve(async (req) => {
     if (sources) {
       params.set('sources', sources);
     }
+    // Also constrain by curated domains for higher precision
+    params.set('domains', CURATED_DOMAINS.join(','));
     // Note: 'country' is not supported on the /everything endpoint. Do not include it.
 
     const newsApiUrl = `https://newsapi.org/v2/everything?${params.toString()}`;
@@ -303,6 +327,15 @@ serve(async (req) => {
         // Calculate scores and extract metadata
         const { trendScore, opportunityScore } = calculateScores(article);
         const keywords = extractKeywords(article);
+
+        // Enforce curated topic filtering
+        const textForMatch = `${article.title} ${article.description || ''}`.toLowerCase();
+        const matchesCurated = CURATED_KEYWORDS.some(kw => textForMatch.includes(kw));
+        if (!matchesCurated) {
+          console.log('❌ Skipped: Not in curated topics');
+          skipped++;
+          continue;
+        }
 
         // Determine category based on content
         const title = article.title.toLowerCase();
