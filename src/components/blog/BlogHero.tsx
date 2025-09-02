@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Sparkles, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
-import { blogPosts } from "@/data/blogPosts";
 import { useTrends } from "@/hooks/useTrends";
 
 const BlogHero = () => {
@@ -22,19 +21,6 @@ const BlogHero = () => {
     console.log("Selected topic:", topic);
   };
 
-  // Get most popular topics from blog posts
-  const getPopularTopics = () => {
-    const allTags = blogPosts.flatMap(post => post.tags || []);
-    const tagCounts = allTags.reduce((acc: { [key: string]: number }, tag) => {
-      acc[tag] = (acc[tag] || 0) + 1;
-      return acc;
-    }, {});
-    
-    return Object.entries(tagCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10) // Show top 10 topics
-      .map(([tag]) => tag);
-  };
 
   // Get top trending topics from AI trends
   const getTrendingTopics = () => {
@@ -49,7 +35,7 @@ const BlogHero = () => {
       }));
   };
 
-  const popularTopics = getPopularTopics();
+  
 
   return (
     <section className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -157,24 +143,6 @@ const BlogHero = () => {
               </div>
             )}
 
-            {/* Popular Topics Section */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-4">Popular topics:</p>
-              <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-                {popularTopics.map((topic, index) => (
-                  <Button
-                    key={topic}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleTopicClick(topic)}
-                    className="glass border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-foreground transition-all duration-300 hover-scale animate-fade-in"
-                    style={{ animationDelay: `${1.2 + index * 0.1}s` }}
-                  >
-                    {topic}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
