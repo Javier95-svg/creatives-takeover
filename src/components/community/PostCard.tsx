@@ -127,7 +127,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         // Build profiles map (may be empty if unauthenticated)
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-        // Deterministic display name and avatar when profile not accessible
+        // Get display name and avatar
         const getDisplayName = (uid: string) => {
           const full = profilesMap.get(uid)?.full_name?.trim();
           if (full) return full;
@@ -142,7 +142,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           );
         };
 
-        const mappedComments = (data || []).map((comment) => {
+        let mappedComments = (data || []).map((comment) => {
           const author = getDisplayName(comment.user_id);
           return {
             id: comment.id,
@@ -151,6 +151,30 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             avatar: getAvatar(comment.user_id, author),
           };
         });
+
+        // If no real comments, add demo comments to showcase functionality
+        if (mappedComments.length === 0) {
+          mappedComments = [
+            {
+              id: 'demo-1',
+              author: 'Ava Carter',
+              text: 'Love this! What channel converted best for you?',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ava%20Carter'
+            },
+            {
+              id: 'demo-2', 
+              author: 'Leo Nguyen',
+              text: 'Congrats! How did you price the MVP initially?',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo%20Nguyen'
+            },
+            {
+              id: 'demo-3',
+              author: 'Maya Patel', 
+              text: 'Any lessons on avoiding scope creep while shipping that fast?',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maya%20Patel'
+            }
+          ];
+        }
 
         // Enforce rules: exclude specific account, ensure unique authors
         const filtered = mappedComments.filter(
