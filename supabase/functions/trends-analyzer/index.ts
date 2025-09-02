@@ -99,7 +99,7 @@ serve(async (req) => {
       // Store sample articles in database
       const { data: storedArticles, error: insertError } = await supabase
         .from('trends')
-        .insert(sampleArticles)
+        .upsert(sampleArticles, { onConflict: 'article_url', ignoreDuplicates: true })
         .select();
 
       if (insertError) {
@@ -285,12 +285,31 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     console.log(`📝 Processed ${articles.length} articles for database insertion`);
 
-    if (articles.length === 0) {
-      console.log('⚠️ No articles found to insert');
+    // Filter out outdated articles (older than 60 days) when a publication_date is present
+    const nowTs = Date.now();
+    const maxAgeDays = 60;
+    const recentArticles = articles.filter(a => {
+      if (!a.publication_date) return true;
+      const ts = new Date(a.publication_date).getTime();
+      return !Number.isNaN(ts) && (nowTs - ts) <= maxAgeDays * 24 * 60 * 60 * 1000;
+    });
+
+    console.log(`🗂️ After recency filter: ${recentArticles.length} articles`);
+
+    // Validate URLs are reachable before recommending
+    const validated = await Promise.all(
+      recentArticles.map(async (a) => (await isUrlReachable(a.article_url)) ? a : null)
+    );
+    const validArticles = validated.filter((x): x is typeof recentArticles[number] => x !== null);
+
+    console.log(`🔗 After URL validation: ${validArticles.length} articles`);
+
+    if (validArticles.length === 0) {
+      console.log('⚠️ No valid articles found after validation');
       return new Response(JSON.stringify({
         success: true,
         articles: [],
-        message: 'No articles found in this search'
+        message: 'No valid articles found after validation'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -298,7 +317,7 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     // Deduplicate articles by URL to avoid duplicates
     const seenUrls = new Set();
-    const uniqueArticles = articles.filter(article => {
+    const uniqueArticles = validArticles.filter(article => {
       if (seenUrls.has(article.article_url)) {
         console.log(`⚠️ Skipping duplicate URL: ${article.article_url}`);
         return false;
@@ -494,4 +513,40 @@ function generateDescription(trendText: string, fullAnalysis: string): string {
   }
   
   return description;
+}
+
+// Validate that an external URL is reachable before recommending it
+async function isUrlReachable(url: string, timeoutMs = 6000): Promise<boolean> {
+  const target = url.trim();
+
+  // Try a quick HEAD request first
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const head = await fetch(target, { method: 'HEAD', redirect: 'follow', signal: controller.signal });
+    if (head.ok && head.status < 400) {
+      return true;
+    }
+  } catch (_) {
+    // Ignore and fallback to GET
+  } finally {
+    clearTimeout(timer);
+  }
+
+  // Fallback to a lightweight GET (some sites block HEAD)
+  const controller2 = new AbortController();
+  const timer2 = setTimeout(() => controller2.abort(), timeoutMs);
+  try {
+    const res = await fetch(target, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: controller2.signal,
+      headers: { 'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.1' }
+    });
+    return res.ok && res.status < 400;
+  } catch (_) {
+    return false;
+  } finally {
+    clearTimeout(timer2);
+  }
 }
