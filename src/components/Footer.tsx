@@ -40,7 +40,7 @@ const Footer = () => {
             <ul className="mt-3 flex flex-wrap gap-4">
               <li>
                 <a
-                  href="https://www.linkedin.com/company/creativestakeover"
+                  href="https://www.linkedin.com/company/creatives-takeover"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
