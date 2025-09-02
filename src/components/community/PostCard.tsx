@@ -56,7 +56,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [score, setScore] = useState(post.votes);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(true); // Open comments by default
   const [comments, setComments] = useState<Array<{id: string, author: string, text: string, avatar?: string}>>([]);
   const [commentInput, setCommentInput] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
@@ -145,32 +145,35 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
         // If no real comments exist, show demo comments from different fictional users
         if (mappedComments.length === 0) {
+          console.log('🔍 No real comments found, using demo comments');
           mappedComments = [
             {
               id: 'demo-1',
               author: 'Maya Chen',
               text: 'This is incredible! What was your biggest challenge during implementation?',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maya%20Chen'
+              avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=400&h=400&fit=crop&crop=face'
             },
             {
               id: 'demo-2', 
               author: 'Carlos Rodriguez',
               text: 'Thanks for sharing! How long did this take you to build?',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos%20Rodriguez'
+              avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face'
             },
             {
               id: 'demo-3',
               author: 'Priya Sharma', 
               text: 'Amazing results! Any advice for someone just starting out?',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya%20Sharma'
+              avatar: 'https://images.unsplash.com/photo-1544005314-0ceecf7a77ce?w=400&h=400&fit=crop&crop=face'
             },
             {
               id: 'demo-4',
               author: 'Jordan Park',
               text: 'Love the transparency in sharing numbers. What metrics do you track?',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jordan%20Park'
+              avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face'
             }
           ];
+        } else {
+          console.log(`🎉 Found ${mappedComments.length} real comments from database`);
         }
 
         // Enforce unique authors - if real comments exist, use them; otherwise use demo
@@ -417,7 +420,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 onClick={() => setCommentsOpen((o) => !o)}
                 aria-expanded={commentsOpen}
               >
-                <MessageSquare className="mr-2 h-4 w-4" /> {comments.length} comments
+                <MessageSquare className="mr-2 h-4 w-4" /> {post.commentsCount || comments.length} comments
               </Button>
               <Button type="button" variant="ghost" size="sm" onClick={handleShare}> 
                 <Share2 className="mr-2 h-4 w-4" /> Share
