@@ -225,9 +225,8 @@ serve(async (req) => {
 
     if (sources) {
       params.set('sources', sources);
-    } else {
-      params.set('country', countries);
     }
+    // Note: 'country' is not supported on the /everything endpoint. Do not include it.
 
     const newsApiUrl = `https://newsapi.org/v2/everything?${params.toString()}`;
     console.log(`🌐 Calling NewsAPI: ${newsApiUrl.replace(NEWSAPI_KEY, '[REDACTED]')}`);
