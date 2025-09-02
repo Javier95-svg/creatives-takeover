@@ -100,7 +100,7 @@ const BlogHero = () => {
           
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            A blog for builders and doers: dive into AI, smart business tips, and creative growth hacks to help you launch and scale your projects.
+            Discover the latest business trends and opportunities from across the web. Insighta uses AI to surface trending articles, industry insights, and emerging opportunities that matter to entrepreneurs and innovators.
           </p>
 
           {/* Search Bar */}
