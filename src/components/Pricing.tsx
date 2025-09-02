@@ -1,111 +1,98 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { Star, Crown, Check } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Pricing = () => {
+  const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
+  const { user } = useAuth();
 
-  const plans = [
-    {
-      name: "Starter",
-      title: "Explore & Discover",
-      description: "Perfect for getting started with AI-powered business planning",
-      monthlyPrice: 0,
-      annualPrice: 0,
-      credits: 50,
-      integrationCredits: 5,
-      features: [
+  // Define feature sets for each tier
+  const getFeatures = (tierName: string) => {
+    const featureMap: Record<string, string[]> = {
+      free: [
         "Access to BizMap AI chatbot",
-        "Basic prompt library access",
+        "Basic prompt library access", 
         "Community forum participation",
         "Email support",
         "Getting started guides"
       ],
-      cta: "Start Creating",
-      popular: false
-    },
-    {
-      name: "Insighta Pro",
-      title: "Premium Insights",
-      description: "Unlock exclusive content and AI-powered personalization",
-      monthlyPrice: 9.99,
-      annualPrice: 99.99,
-      credits: 200,
-      integrationCredits: 20,
-      features: [
+      basic: [
+        "Everything in Free",
         "Exclusive premium articles",
         "AI-powered content personalization",
         "Early access to new features",
-        "Expert Q&A sessions",
         "Advanced search filters",
-        "Bookmark unlimited content",
         "Priority email support"
       ],
-      cta: "Start Pro",
-      popular: false,
-      badge: "New"
-    },
-    {
-      name: "Community Insider",
-      title: "Enhanced Community",
-      description: "Unlock advanced community features and AI insights",
-      monthlyPrice: 14.99,
-      annualPrice: 149.99,
-      credits: 300,
-      integrationCredits: 30,
-      features: [
+      premium: [
+        "Everything in Basic",
         "Priority post visibility",
         "Advanced AI post insights",
-        "Direct messaging with members",
         "Exclusive discussion groups",
         "Community analytics dashboard",
-        "Mentor matching system",
         "Weekly community highlights"
       ],
-      cta: "Join Insider",
-      popular: true,
-      badge: "Popular"
-    },
-    {
-      name: "Elite",
-      title: "Unlock Full Potential",
-      description: "Best value for serious entrepreneurs who want comprehensive AI assistance",
-      monthlyPrice: 19.99,
-      annualPrice: 199.99,
-      credits: 500,
-      integrationCredits: 50,
-      features: [
+      enterprise: [
+        "Everything in Premium",
         "Unlimited BizMap AI conversations",
-        "Full prompt library access",
-        "Premium community features",
-        "Priority support",
         "Advanced business templates",
         "Export capabilities",
-        "Custom business analysis"
-      ],
-      cta: "Get Started",
-      popular: false
-    },
-    {
-      name: "Teams",
-      title: "Scale Together",
-      description: "Perfect for teams collaborating on business development",
-      monthlyPrice: 39.99,
-      annualPrice: 299.99,
-      credits: 1500,
-      integrationCredits: 150,
-      features: [
-        "Everything in Elite",
-        "Up to 5 team members",
-        "Shared workspace access",
-        "Team collaboration tools",
-        "Bulk prompt operations",
-        "Team admin controls",
+        "Custom business analysis",
         "Dedicated account manager"
-      ],
-      cta: "Get Started",
-      popular: false
+      ]
+    };
+    return featureMap[tierName] || [];
+  };
+
+  const getDescription = (tierName: string) => {
+    const descriptions: Record<string, string> = {
+      free: "Perfect for getting started with AI-powered business planning",
+      basic: "Unlock exclusive content and AI-powered personalization",
+      premium: "Best value for serious entrepreneurs with comprehensive features",
+      enterprise: "Perfect for teams and advanced users who need everything"
+    };
+    return descriptions[tierName] || "";
+  };
+
+  const getTitleAndCTA = (tierName: string) => {
+    const details: Record<string, { title: string; cta: string }> = {
+      free: { title: "Explore & Discover", cta: "Start Free" },
+      basic: { title: "Premium Insights", cta: "Start Basic" },
+      premium: { title: "Unlock Full Potential", cta: "Go Premium" },
+      enterprise: { title: "Scale Together", cta: "Get Enterprise" }
+    };
+    return details[tierName] || { title: "Get Started", cta: "Subscribe" };
+  };
+
+  const handleSubscribe = async (tierName: string) => {
+    if (!user) {
+      // Redirect to auth
+      window.location.href = "/auth";
+      return;
     }
-  ];
+    
+    if (tierName === 'free') {
+      // Free tier - no checkout needed
+      return;
+    }
+
+    await createCheckout(tierName);
+  };
+
+  if (loading) {
+    return (
+      <section className="relative py-24 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-4">Loading pricing plans...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -155,80 +142,95 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto stagger-child">
-          {plans.map((plan, index) => (
-            <div
-              key={plan.name}
-              className={`relative glass-card p-8 hover-lift transition-all duration-500 ${
-                plan.popular 
-                  ? 'border-2 border-primary/30 scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
-                  : 'border border-border/50'
-              }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {(plan.popular || plan.badge) && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className={`px-4 py-1 text-sm font-medium flex items-center gap-1 ${
-                    plan.popular 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-secondary text-secondary-foreground'
-                  }`}>
-                    <Star className="w-3 h-3 fill-current" />
-                    {plan.badge || 'Most Popular'}
-                  </Badge>
-                </div>
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl mx-auto stagger-child">
+          {tiers.map((tier, index) => {
+            const { title, cta } = getTitleAndCTA(tier.tier_name);
+            const features = getFeatures(tier.tier_name);
+            const description = getDescription(tier.tier_name);
+            const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
+            const isPopular = tier.tier_name === 'premium';
 
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-lg font-semibold text-primary mb-2">{plan.title}</p>
-                <p className="text-sm text-muted-foreground">{plan.description}</p>
-              </div>
-
-              <div className="text-center mb-8">
-                <div className="flex items-baseline justify-center gap-2">
-                  <span className="text-4xl font-bold">
-                    ${plan.monthlyPrice}
-                  </span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-              </div>
-
-
-              {/* Features List */}
-              <div className="mb-8 space-y-3">
-                {plan.features.map((feature, featureIndex) => (
-                  <div key={featureIndex} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground leading-relaxed">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                onClick={() => {
-                  if (plan.name === "Starter") {
-                    window.open("https://creatives-takeover.com/dream2plan", "_blank");
-                  } else if (plan.name === "Insighta Pro") {
-                    window.open("https://pay.creatives-takeover.com/b/insighta-pro", "_blank");
-                  } else if (plan.name === "Community Insider") {
-                    window.open("https://pay.creatives-takeover.com/b/community-insider", "_blank");
-                  } else if (plan.name === "Elite") {
-                    window.open("https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00", "_blank");
-                  } else if (plan.name === "Teams") {
-                    window.open("https://pay.creatives-takeover.com/b/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
-                  }
-                }}
-                className={`w-full py-3 font-medium btn-magnetic hover-scale transition-all duration-300 ${
-                  plan.popular 
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                    : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+            return (
+              <div
+                key={tier.tier_name}
+                className={`relative glass-card p-8 hover-lift transition-all duration-500 ${
+                  isCurrentPlan
+                    ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
+                    : isPopular 
+                    ? 'border-2 border-primary/30 scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
+                    : 'border border-border/50'
                 }`}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {plan.cta}
-              </Button>
-            </div>
-          ))}
+                {/* Current Plan or Popular Badge */}
+                {(isCurrentPlan || isPopular) && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className={`px-4 py-1 text-sm font-medium flex items-center gap-1 ${
+                      isCurrentPlan
+                        ? 'bg-green-600 text-white'
+                        : 'bg-primary text-primary-foreground'
+                    }`}>
+                      {isCurrentPlan ? (
+                        <>
+                          <Crown className="w-3 h-3 fill-current" />
+                          Your Plan
+                        </>
+                      ) : (
+                        <>
+                          <Star className="w-3 h-3 fill-current" />
+                          Most Popular
+                        </>
+                      )}
+                    </Badge>
+                  </div>
+                )}
+
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-2 capitalize">{tier.tier_name}</h3>
+                  <p className="text-lg font-semibold text-primary mb-2">{title}</p>
+                  <p className="text-sm text-muted-foreground">{description}</p>
+                </div>
+
+                <div className="text-center mb-6">
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-4xl font-bold">
+                      ${(tier.price_cents / 100).toFixed(0)}
+                    </span>
+                    <span className="text-muted-foreground">/month</span>
+                  </div>
+                  {tier.monthly_credits > 0 && (
+                    <div className="text-sm text-primary mt-2">
+                      {tier.monthly_credits} credits/month
+                    </div>
+                  )}
+                </div>
+
+                {/* Features List */}
+                <div className="mb-8 space-y-3">
+                  {features.map((feature, featureIndex) => (
+                    <div key={featureIndex} className="flex items-start gap-3">
+                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground leading-relaxed">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => handleSubscribe(tier.tier_name)}
+                  disabled={isCurrentPlan}
+                  className={`w-full py-3 font-medium btn-magnetic hover-scale transition-all duration-300 ${
+                    isCurrentPlan
+                      ? 'bg-green-600 text-white cursor-default'
+                      : isPopular 
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                      : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                  }`}
+                >
+                  {isCurrentPlan ? 'Current Plan' : cta}
+                </Button>
+              </div>
+            );
+          })}
         </div>
 
       </div>
