@@ -56,18 +56,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (user: User) => {
     try {
-      const { error } = await supabase
+      // Check if profile already exists to prevent overwriting
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          full_name: user.user_metadata?.full_name || '',
-          avatar_url: user.user_metadata?.avatar_url || '',
-        }, {
-          onConflict: 'id'
-        });
-      
-      if (error) {
-        console.error('Error creating profile:', error);
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      // Only create profile if it doesn't exist
+      if (!existingProfile) {
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || '',
+            avatar_url: user.user_metadata?.avatar_url || '',
+          });
+        
+        if (error) {
+          console.error('Error creating profile:', error);
+        }
       }
     } catch (error) {
       console.error('Error creating profile:', error);
