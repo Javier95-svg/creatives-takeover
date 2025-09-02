@@ -78,6 +78,12 @@ const Pricing = () => {
       return;
     }
 
+    if (tierName === 'basic') {
+      // Redirect to external payment page for basic plan
+      window.location.href = "https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00";
+      return;
+    }
+
     await createCheckout(tierName);
   };
 
@@ -194,7 +200,7 @@ const Pricing = () => {
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-4xl font-bold">
-                      ${(tier.price_cents / 100).toFixed(0)}
+                      ${tier.tier_name === 'basic' ? '19.99' : (tier.price_cents / 100).toFixed(0)}
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
