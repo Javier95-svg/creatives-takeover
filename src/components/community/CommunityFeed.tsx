@@ -1,59 +1,106 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-// Example assets for demo posts
-import heroImg from "@/assets/solopreneur-hero.jpg";
-import team1 from "@/assets/team-member-1.jpg";
-import team2 from "@/assets/team-member-2.jpg";
-import team3 from "@/assets/team-member-3.jpg";
+import { useNavigate } from "react-router-dom";
 
 const CommunityFeed: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "p1",
-      title: "From zero to first 100 customers in 90 days",
-      content:
-        "I launched a tiny SaaS for invoicing freelancers. Here's the 3-channel approach that got me to 100 paid users...",
-      tags: ["saas", "marketing", "bootstrap"],
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      author: { name: "Alex Rivera", avatar: team1 },
-      votes: 128,
-      commentsCount: 22,
-    },
-    {
-      id: "p2",
-      title: "We failed our Kickstarter, but found PMF anyway",
-      content:
-        "Kickstarter flop taught us more than success would have. We interviewed 25 backers and pivoted to a B2B offer...",
-      tags: ["fundraising", "pmf", "hardware"],
-      createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-      author: { name: "Morgan Lee", avatar: team2 },
-      votes: 74,
-      commentsCount: 11,
-    },
-    {
-      id: "p3",
-      title: "Quit my job, shipped an AI tool in 4 weeks",
-      content:
-        "Used weekend sprints + public building to stay accountable. Launched on Product Hunt and learned these 5 lessons...",
-      tags: ["ai", "launch", "product-hunt"],
-      createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-      author: { name: "Sam Patel", avatar: team3 },
-      votes: 210,
-      commentsCount: 35,
-    },
-  ]);
-
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"hot" | "new" | "top">("hot");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // Fetch posts from database
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching posts:', error);
+        toast.error('Failed to load posts');
+        return;
+      }
+
+      // Fetch profiles for all user_ids
+      const userIds = [...new Set(data?.map(post => post.user_id).filter(Boolean))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      const formattedPosts: Post[] = data?.map(post => {
+        const profile = profilesMap.get(post.user_id);
+        return {
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          tags: post.tags || [],
+          createdAt: post.created_at,
+          author: {
+            name: profile?.full_name || 'Unknown User',
+            avatar: profile?.avatar_url
+          },
+          votes: (post.upvotes || 0) - (post.downvotes || 0),
+          commentsCount: post.comment_count || 0,
+          aiSummary: post.ai_summary,
+          aiInsights: post.ai_insights,
+          aiRelatedTopics: post.ai_related_topics,
+          aiStructuredIdea: post.ai_structured_idea as Post['aiStructuredIdea'],
+          aiTrendingAngle: post.ai_trending_angle,
+          aiNextStep: post.ai_next_step
+        };
+      }) || [];
+
+      setPosts(formattedPosts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Set up real-time subscription
+  useEffect(() => {
+    fetchPosts();
+
+    const channel = supabase
+      .channel('community-posts-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'community_posts'
+      }, () => {
+        fetchPosts(); // Refetch posts when changes occur
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'post_comments'
+      }, () => {
+        fetchPosts(); // Refetch when comments change
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const allTags = useMemo(() => {
     const counts = new Map<string, number>();
@@ -80,53 +127,148 @@ const CommunityFeed: React.FC = () => {
     }
   }, [posts, search, sort, selectedTag]);
 
-  const publish = (payload: ComposerPayload) => {
-    const newPost: Post = {
-      id: `p-${Date.now()}`,
-      title: payload.title,
-      content: payload.content,
-      image: payload.image,
-      tags: payload.tags,
-      createdAt: new Date().toISOString(),
-      author: { name: "You" },
-      votes: 0,
-      commentsCount: 0,
-    };
-    setPosts((prev) => [newPost, ...prev]);
+  const publish = async (payload: ComposerPayload) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Please sign in to create posts');
+      navigate('/auth');
+      return;
+    }
 
-    // Behind-the-scenes AI moderation & insight generation
-    void (async () => {
-      toast.message("Analyzing your post with AI…");
-      const { data, error } = await supabase.functions.invoke('community-ai-moderator', {
-        body: {
+    try {
+      const { data, error } = await supabase
+        .from('community_posts')
+        .insert({
           title: payload.title,
           content: payload.content,
           tags: payload.tags,
-        },
-      });
+          user_id: user.id
+        })
+        .select('*')
+        .single();
 
       if (error) {
-        console.error('AI moderation error', error);
-        toast.error("AI analysis failed. Your post is still published.");
+        console.error('Error creating post:', error);
+        toast.error('Failed to create post');
         return;
       }
 
-      setPosts((prev) => prev.map((p) =>
-        p.id === newPost.id
-          ? {
-              ...p,
-              aiSummary: data?.tldr,
-              aiInsights: data?.insights,
-              aiRelatedTopics: data?.related_topics,
-              aiStructuredIdea: data?.structured_idea,
-              aiTrendingAngle: data?.trending_angle,
-              aiNextStep: data?.next_step,
-            }
-          : p
-      ));
-      toast.success("AI insights added to your post.");
-    })();
+      toast.success('Post created successfully!');
+
+      // Behind-the-scenes AI moderation & insight generation
+      setTimeout(async () => {
+        try {
+          toast.message("Analyzing your post with AI…");
+          const { data: aiData, error: aiError } = await supabase.functions.invoke('community-ai-moderator', {
+            body: {
+              title: payload.title,
+              content: payload.content,
+              tags: payload.tags,
+            },
+          });
+
+          if (aiError) {
+            console.error('AI moderation error', aiError);
+            toast.error("AI analysis failed. Your post is still published.");
+            return;
+          }
+
+          // Update the post with AI insights
+          await supabase
+            .from('community_posts')
+            .update({
+              ai_summary: aiData?.tldr,
+              ai_insights: aiData?.insights,
+              ai_related_topics: aiData?.related_topics,
+              ai_structured_idea: aiData?.structured_idea,
+              ai_trending_angle: aiData?.trending_angle,
+              ai_next_step: aiData?.next_step,
+            })
+            .eq('id', data.id);
+
+          toast.success("AI insights added to your post.");
+        } catch (error) {
+          console.error('AI moderation error:', error);
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error('Failed to create post');
+    }
   };
+
+  if (loading) {
+    return (
+      <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
+        <section className="lg:col-span-8 space-y-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
+                <div className="h-20 bg-muted rounded mb-4"></div>
+                <div className="flex gap-2">
+                  <div className="h-6 bg-muted rounded w-16"></div>
+                  <div className="h-6 bg-muted rounded w-20"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      </main>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
+        <section className="lg:col-span-8 space-y-6">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <h2 className="text-2xl font-semibold mb-4">Join the Community</h2>
+              <p className="text-muted-foreground mb-6">
+                Sign in to participate in discussions, share your entrepreneurial journey, and connect with fellow builders.
+              </p>
+              <Button onClick={() => navigate('/auth')} size="lg">
+                Sign In / Sign Up
+              </Button>
+            </CardContent>
+          </Card>
+          
+          {/* Show public posts */}
+          <div className="space-y-6">
+            {filtered.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        </section>
+
+        <aside className="lg:col-span-4 space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="mb-3 text-sm font-semibold tracking-wide">Popular tags</h2>
+              <div className="flex flex-wrap gap-2">
+                {allTags.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTag((cur) => (cur === t ? null : t))}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
+                      selectedTag === t ? "bg-primary/10 border-primary" : "hover:bg-accent"
+                    }`}
+                    aria-pressed={selectedTag === t}
+                  >
+                    <span>#{t}</span>
+                    {selectedTag === t && (
+                      <Badge variant="secondary">active</Badge>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </aside>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
