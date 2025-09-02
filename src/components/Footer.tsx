@@ -46,7 +46,7 @@ const Footer = () => {
                   aria-label="Instagram"
                   className="text-xl hover:opacity-80 transition-opacity"
                 >
-                  📸
+                  📷
                 </a>
               </li>
               <li>
@@ -57,7 +57,7 @@ const Footer = () => {
                   aria-label="LinkedIn"
                   className="text-xl hover:opacity-80 transition-opacity"
                 >
-                  🔗
+                  💼
                 </a>
               </li>
             </ul>
