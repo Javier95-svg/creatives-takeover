@@ -198,13 +198,22 @@ const CommunityFeed: React.FC = () => {
     }
 
     try {
+      // Prepare location data - store as JSON if coordinates are available, otherwise just the address
+      let locationToStore = payload.location;
+      if (payload.locationData && payload.locationData.coordinates) {
+        locationToStore = JSON.stringify({
+          address: payload.locationData.address,
+          coordinates: payload.locationData.coordinates
+        });
+      }
+
       const { data, error } = await supabase
         .from('community_posts')
         .insert({
           title: payload.title,
           content: payload.content,
           tags: payload.tags,
-          location: payload.location,
+          location: locationToStore,
           user_id: user.id
         })
         .select('*')

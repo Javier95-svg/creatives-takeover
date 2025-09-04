@@ -328,6 +328,19 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     toast.success('Link copied to clipboard');
   };
 
+  const displayLocation = (location: string) => {
+    try {
+      // Try to parse as JSON first
+      const locationData = JSON.parse(location);
+      if (locationData.address) {
+        return locationData.address;
+      }
+    } catch {
+      // If parsing fails, it's just a plain text location
+    }
+    return location;
+  };
+
   const handlePostClick = (e: React.MouseEvent) => {
     // Don't show modal if clicking on buttons or interactive elements
     const target = e.target as HTMLElement;
@@ -365,7 +378,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">{post.author.name}</span>
-                  {post.location && <span> · 📍 {post.location}</span>}
+                  {post.location && <span> · 📍 {displayLocation(post.location)}</span>}
                   <span> · {timeAgo(post.createdAt)}</span>
                 </div>
                 <Button variant="ghost" size="icon" aria-label="More actions">

@@ -8,6 +8,7 @@ import { Image as ImageIcon, Send, X, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
+import LocationSearchInput from "./LocationSearchInput";
 import { useNavigate } from "react-router-dom";
 
 export type ComposerPayload = {
@@ -16,6 +17,13 @@ export type ComposerPayload = {
   tags: string[];
   image?: string; // data URL preview for now
   location?: string;
+  locationData?: {
+    address: string;
+    coordinates?: {
+      lng: number;
+      lat: number;
+    };
+  };
 };
 
 interface PostComposerProps {
@@ -31,6 +39,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const [tagsInput, setTagsInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | undefined>();
   const [location, setLocation] = useState("");
+  const [locationData, setLocationData] = useState<{ address: string; coordinates?: { lng: number; lat: number; } } | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -50,7 +59,13 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     setTagsInput("");
     setImagePreview(undefined);
     setLocation("");
+    setLocationData(undefined);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleLocationChange = (locationText: string, data?: { address: string; coordinates?: { lng: number; lat: number; } }) => {
+    setLocation(locationText);
+    setLocationData(data);
   };
 
   const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,7 +106,8 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
       content: content.trim(), 
       tags, 
       image: imagePreview,
-      location: location.trim() || undefined 
+      location: location.trim() || undefined,
+      locationData: locationData
     });
     toast.success("Your story has been posted!");
     reset();
@@ -160,17 +176,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
             )}
 
             <div>
-              <Input
+              <LocationSearchInput
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="📍 Location (optional) - e.g., New York, NY • London, UK • Remote"
-                aria-label="Location"
-                maxLength={100}
+                onChange={handleLocationChange}
                 disabled={requireAuth && !isAuthenticated}
+                placeholder="📍 Search for a location or use GPS to share where you're posting from"
               />
-              <div className="mt-1 text-xs text-muted-foreground">
-                Share where you're posting from • {location.length}/100
-              </div>
             </div>
 
             {imagePreview && (
