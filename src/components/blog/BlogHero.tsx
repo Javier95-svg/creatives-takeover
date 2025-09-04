@@ -1,16 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, Sparkles } from "lucide-react";
 import { useState } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
 
-const BlogHero = () => {
+interface BlogHeroProps {
+  onSearch?: (searchTerm: string) => void;
+}
+
+const BlogHero = ({ onSearch }: BlogHeroProps) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // This will be implemented when you add search functionality
-    console.log("Searching for:", searchTerm);
+    if (onSearch && searchTerm.trim()) {
+      onSearch(searchTerm.trim());
+    }
   };
 
   const scrollToOpportunities = () => {
@@ -76,12 +81,12 @@ const BlogHero = () => {
           {/* Value Proposition */}
           <div className="flex flex-wrap justify-center gap-6 mb-12 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span className="text-sm font-medium">Market Intelligence</span>
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">AI-Powered Analysis</span>
             </div>
             <div className="flex items-center gap-2 bg-secondary/10 px-4 py-2 rounded-full">
               <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              <span className="text-sm font-medium">Business Ideas</span>
+              <span className="text-sm font-medium">Market Intelligence</span>
             </div>
             <div className="flex items-center gap-2 bg-accent/10 px-4 py-2 rounded-full">
               <div className="w-2 h-2 bg-accent rounded-full"></div>
@@ -106,6 +111,7 @@ const BlogHero = () => {
               />
             </div>
             <Button type="submit" className="glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic">
+              <Search className="h-4 w-4 mr-2" />
               Discover
             </Button>
           </form>

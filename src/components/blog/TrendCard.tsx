@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, MapPin, Activity, Lightbulb, Users, DollarSign, CheckCircle, ArrowRight } from "lucide-react";
+import { TrendingUp, MapPin, Activity, Lightbulb, Users, DollarSign, CheckCircle, ArrowRight, Bookmark, BookmarkCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Trend } from "@/hooks/useTrends";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { cn } from "@/lib/utils";
 
 interface TrendCardProps {
   trend: Trend;
@@ -12,6 +14,7 @@ interface TrendCardProps {
 
 const TrendCard = ({ trend, onClick }: TrendCardProps) => {
   const navigate = useNavigate();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -62,12 +65,20 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
     });
   };
 
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await toggleBookmark(trend.id);
+  };
+
   const isArticle = Boolean(trend.article_url);
   const hasBusinessOpportunity = Boolean(trend.business_opportunity);
 
   return (
     <Card 
-      className="hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20"
+      className={cn(
+        "hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20",
+        isBookmarked(trend.id) && "ring-2 ring-primary/20 bg-gradient-to-br from-primary/5 to-muted/20"
+      )}
       onClick={handleClick}
     >
       <CardHeader className="pb-4">
@@ -75,11 +86,25 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
           <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
             {trend.title}
           </CardTitle>
-          <div className="flex items-center gap-1 text-sm font-medium shrink-0">
-            <TrendingUp className="h-4 w-4" />
-            <span className={getScoreColor(trend.opportunity_score)}>
-              {trend.opportunity_score.toFixed(0)}
-            </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBookmark}
+              className="h-8 w-8 p-0 hover:bg-primary/10"
+            >
+              {isBookmarked(trend.id) ? (
+                <BookmarkCheck className="h-4 w-4 text-primary" />
+              ) : (
+                <Bookmark className="h-4 w-4 text-muted-foreground hover:text-primary" />
+              )}
+            </Button>
+            <div className="flex items-center gap-1 text-sm font-medium">
+              <TrendingUp className="h-4 w-4" />
+              <span className={getScoreColor(trend.opportunity_score)}>
+                {trend.opportunity_score.toFixed(0)}
+              </span>
+            </div>
           </div>
         </div>
         

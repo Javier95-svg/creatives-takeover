@@ -6,11 +6,16 @@ import TrendingSection from "@/components/blog/TrendingSection";
 import SignupInviteModal from "@/components/blog/SignupInviteModal";
 import { useSignupInvite } from "@/hooks/useSignupInvite";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Blog = () => {
   const { showInvite, closeInvite } = useSignupInvite();
   const { trackPageVisit } = useReadingAnalytics();
+  const [searchTerm, setSearchTerm] = useState<string>();
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
 
   // Track page visit when component mounts
   useEffect(() => {
@@ -26,8 +31,8 @@ const Blog = () => {
       </Helmet>
       <Navigation />
       <main>
-        <BlogHero />
-        <TrendingSection />
+        <BlogHero onSearch={handleSearch} />
+        <TrendingSection searchTerm={searchTerm} />
       </main>
       <Footer />
       
