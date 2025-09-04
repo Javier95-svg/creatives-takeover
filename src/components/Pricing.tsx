@@ -90,6 +90,12 @@ const Pricing = () => {
       return;
     }
 
+    if (tierName === 'enterprise') {
+      // Redirect to external payment URL for enterprise tier
+      window.open("https://pay.creatives-takeover.com/b/4gMdR91PH3jy0vE21R0ZW02", "_blank");
+      return;
+    }
+
     // Use internal checkout for other paid tiers
     await createCheckout(tierName);
   };
