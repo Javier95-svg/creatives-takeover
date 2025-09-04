@@ -78,7 +78,13 @@ const Pricing = () => {
       return;
     }
 
-    // Use internal checkout for all paid tiers
+    if (tierName === 'basic') {
+      // Redirect to external payment URL for basic tier
+      window.open("https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00", "_blank");
+      return;
+    }
+
+    // Use internal checkout for other paid tiers
     await createCheckout(tierName);
   };
 
