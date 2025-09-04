@@ -1,42 +1,42 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, MapPin, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, MapPin, Activity, Lightbulb, Users, DollarSign, CheckCircle, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Trend } from "@/hooks/useTrends";
 
 interface TrendCardProps {
-  trend: {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    trend_score: number;
-    opportunity_score: number;
-    keywords: string[];
-    sentiment: 'positive' | 'negative' | 'neutral';
-    market_size_indicator: string;
-    geographic_relevance: string[];
-    article_url?: string;
-    article_source?: string;
-    author?: string;
-    publication_date?: string;
-    summary?: string;
-    created_at: string;
-  };
+  trend: Trend;
   onClick?: () => void;
 }
 
 const TrendCard = ({ trend, onClick }: TrendCardProps) => {
+  const navigate = useNavigate();
+
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'text-green-600 bg-green-50';
-      case 'negative': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'positive': return 'text-green-600 bg-green-50 border-green-200';
+      case 'negative': return 'text-red-600 bg-red-50 border-red-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600';
-    if (score >= 6) return 'text-yellow-600';
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const getDifficultyColor = (difficulty: number) => {
+    if (difficulty <= 3) return 'text-green-600 bg-green-50';
+    if (difficulty <= 6) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
+  };
+
+  const getDifficultyLabel = (difficulty: number) => {
+    if (difficulty <= 3) return 'Easy';
+    if (difficulty <= 6) return 'Medium';
+    return 'Hard';
   };
 
   const handleClick = () => {
@@ -47,73 +47,135 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
     }
   };
 
+  const handleGenerateBusinessPlan = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Navigate to Dream2Plan with pre-filled context from this trend
+    navigate('/dream2plan', { 
+      state: { 
+        trendContext: {
+          title: trend.title,
+          category: trend.category,
+          opportunity: trend.business_opportunity,
+          keywords: trend.keywords
+        }
+      }
+    });
+  };
+
   const isArticle = Boolean(trend.article_url);
+  const hasBusinessOpportunity = Boolean(trend.business_opportunity);
 
   return (
     <Card 
-      className="hover:shadow-md transition-all duration-200 cursor-pointer group"
+      className="hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20"
       onClick={handleClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
             {trend.title}
           </CardTitle>
-          <div className="flex items-center gap-1 text-sm font-medium">
+          <div className="flex items-center gap-1 text-sm font-medium shrink-0">
             <TrendingUp className="h-4 w-4" />
-            <span className={getScoreColor(trend.trend_score)}>
-              {trend.trend_score.toFixed(1)}
+            <span className={getScoreColor(trend.opportunity_score)}>
+              {trend.opportunity_score.toFixed(0)}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Badge variant="outline" className="text-xs">
-            {trend.category}
+        
+        <div className="flex items-center gap-2 text-sm">
+          <Badge variant="outline" className="text-xs font-medium">
+            {trend.category.replace('-', ' ')}
           </Badge>
-          <Badge className={`text-xs ${getSentimentColor(trend.sentiment)}`}>
+          <Badge className={`text-xs border ${getSentimentColor(trend.sentiment)}`}>
             {trend.sentiment}
           </Badge>
-          {isArticle && trend.article_source && (
-            <Badge variant="secondary" className="text-xs">
-              {trend.article_source}
+          {trend.entry_difficulty && (  
+            <Badge className={`text-xs border ${getDifficultyColor(trend.entry_difficulty)}`}>
+              {getDifficultyLabel(trend.entry_difficulty)}
             </Badge>
           )}
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+      <CardContent className="pt-0 space-y-4">
+        {/* Business Opportunity Section */}
+        {hasBusinessOpportunity && trend.business_opportunity && (
+          <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Business Opportunity</span>
+            </div>
+            
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="font-medium text-muted-foreground mb-1">Market Gap:</p>
+                <p className="text-foreground">{trend.business_opportunity.market_gap}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-start gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-muted-foreground">Target:</p>
+                    <p className="text-foreground">{trend.business_opportunity.target_audience}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-muted-foreground">Revenue:</p>
+                    <p className="text-foreground">{trend.business_opportunity.revenue_model}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Article Summary or Description */}
+        <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
           {trend.summary || trend.description}
         </p>
         
         <div className="space-y-3">
-          {/* Article Source & Author */}
-          {isArticle && (
-            <div className="text-sm text-muted-foreground">
-              {trend.author && (
-                <span>By {trend.author} • </span>
-              )}
-              {trend.publication_date && (
-                <span>{new Date(trend.publication_date).toLocaleDateString()}</span>
-              )}
+          {/* Action Steps */}
+          {trend.action_steps && trend.action_steps.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium">Next Steps</span>
+              </div>
+              <div className="space-y-1">
+                {trend.action_steps.slice(0, 2).map((step, index) => (
+                  <div key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <span className="text-primary font-medium">{index + 1}.</span>
+                    <span>{step}</span>
+                  </div>
+                ))}
+                {trend.action_steps.length > 2 && (
+                  <p className="text-xs text-muted-foreground ml-4">
+                    +{trend.action_steps.length - 2} more steps
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Opportunity Score */}
+          {/* Market Info */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">
-                {isArticle ? 'Relevance' : 'Opportunity'}
-              </span>
+              <span className="text-muted-foreground">Market Size</span>
             </div>
-            <span className={`font-medium ${getScoreColor(trend.opportunity_score)}`}>
-              {trend.opportunity_score.toFixed(1)}/10
+            <span className="font-medium">
+              {trend.market_size_estimate || trend.market_size_indicator || 'Medium'}
             </span>
           </div>
 
           {/* Geographic Relevance */}
-          {trend.geographic_relevance.length > 0 && (
+          {trend.geographic_relevance && trend.geographic_relevance.length > 0 && (
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">
@@ -123,9 +185,9 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
           )}
 
           {/* Keywords */}
-          {trend.keywords.length > 0 && (
+          {trend.keywords && trend.keywords.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {trend.keywords.slice(0, 4).map((keyword, index) => (
+              {trend.keywords.slice(0, 3).map((keyword, index) => (
                 <Badge 
                   key={index}
                   variant="secondary" 
@@ -134,20 +196,49 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
                   {keyword}
                 </Badge>
               ))}
-              {trend.keywords.length > 4 && (
+              {trend.keywords.length > 3 && (
                 <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                  +{trend.keywords.length - 4}
+                  +{trend.keywords.length - 3}
                 </Badge>
               )}
             </div>
           )}
 
-          {/* Article Link Indicator */}
+          {/* Article Source & Date */}
           {isArticle && (
-            <div className="text-xs text-primary font-medium">
-              Click to read full article →
+            <div className="text-xs text-muted-foreground border-t pt-3">
+              {trend.author && <span>By {trend.author} • </span>}
+              {trend.article_source && <span>{trend.article_source}</span>}
+              {trend.publication_date && (
+                <span> • {new Date(trend.publication_date).toLocaleDateString()}</span>
+              )}
             </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2">
+            {hasBusinessOpportunity ? (
+              <Button 
+                onClick={handleGenerateBusinessPlan}
+                size="sm" 
+                className="flex-1 text-xs h-8"
+              >
+                <Lightbulb className="h-3 w-3 mr-1" />
+                Create Business Plan
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleClick}
+                variant="outline" 
+                size="sm" 
+                className="flex-1 text-xs h-8"
+              >
+                {isArticle ? 'Read Full Article' : 'Learn More'}
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

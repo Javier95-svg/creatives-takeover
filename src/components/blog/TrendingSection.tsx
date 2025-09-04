@@ -48,10 +48,10 @@ const TrendingSection = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-              <h2 className="text-3xl font-bold">Trending Articles</h2>
+              <h2 className="text-3xl font-bold">Business Opportunities</h2>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {isGenerating ? 'AI is discovering the latest articles...' : 'Latest articles on entrepreneurship, AI tools, and business strategies'}
+              {isGenerating ? 'AI is discovering new business opportunities...' : 'AI-curated business opportunities and market trends'}
             </p>
           </div>
           
@@ -99,7 +99,7 @@ const TrendingSection = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">Trending Articles</h2>
+            <h2 className="text-3xl font-bold">Business Opportunities</h2>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -110,7 +110,7 @@ const TrendingSection = () => {
             </Button>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Latest articles on entrepreneurship, AI tools, and business strategies
+            AI-curated business opportunities and market trends to inspire your next venture
           </p>
         </div>
 
@@ -126,14 +126,14 @@ const TrendingSection = () => {
         {displayedTrends.length === 0 && (
           <div className="text-center py-12">
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No articles available</h3>
+            <h3 className="text-lg font-semibold mb-2">No opportunities found</h3>
             <p className="text-muted-foreground mb-4">
-              Let's discover the latest trending articles for you!
+              Let's discover fresh business opportunities and market trends for you!
             </p>
             <div className="flex gap-2 justify-center">
               <Button onClick={handleGenerateNew} disabled={isGenerating}>
                 <Sparkles className="h-4 w-4 mr-2" />
-                {isGenerating ? 'Finding Articles...' : 'Find Articles'}
+                {isGenerating ? 'Finding Opportunities...' : 'Discover Opportunities'}
               </Button>
               <Button onClick={handleRefresh} variant="outline" disabled={isGenerating}>
                 <RefreshCw className="h-4 w-4 mr-2" />

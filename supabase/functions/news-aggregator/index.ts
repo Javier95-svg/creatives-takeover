@@ -14,41 +14,53 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 // Initialize Supabase client with service role for inserting data
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-// Curated domains and keywords for Insighta
+// Business-focused domains for better opportunity discovery
 const CURATED_DOMAINS = [
   'techcrunch.com',
   'wired.com',
-  'hbr.org',
+  'hbr.org', // Harvard Business Review
   'technologyreview.com',
   'theverge.com',
   'entrepreneur.com',
   'fastcompany.com',
-  'sifted.eu'
+  'sifted.eu',
+  'forbes.com',
+  'inc.com',
+  'businessinsider.com',
+  'bloomberg.com',
+  'reuters.com',
+  'wsj.com' // Wall Street Journal
 ];
 
 const ALLOWED_DOMAINS = CURATED_DOMAINS;
 
+// Expanded keywords focused on business opportunities
 const CURATED_KEYWORDS = [
-  // AI & Technology
-  'ai', 'artificial intelligence', 'machine learning', 'automation', 'tech', 'technology', 'digital',
-  // Startup & Business
-  'startup', 'startups', 'founder', 'entrepreneur', 'business', 'venture', 'funding', 'investment', 'vc',
-  // No-code & Tools
-  'no-code', 'nocode', 'low-code', 'saas', 'tool', 'platform', 'software',
-  // Growth & Marketing
+  // AI & Technology Opportunities
+  'ai', 'artificial intelligence', 'machine learning', 'automation', 'tech', 'technology', 'digital transformation',
+  // Business & Startup Opportunities  
+  'startup', 'startups', 'founder', 'entrepreneur', 'business', 'venture', 'funding', 'investment', 'vc', 'market gap',
+  // No-code & SaaS Opportunities
+  'no-code', 'nocode', 'low-code', 'saas', 'tool', 'platform', 'software', 'app', 'productivity',
+  // Business Model Innovation
+  'subscription', 'marketplace', 'platform business', 'business model', 'revenue model', 'monetization',
+  // Market Trends & Opportunities
+  'trend', 'opportunity', 'market', 'consumer behavior', 'demand', 'industry shift', 'disruption',
+  // Growth & Scaling
   'growth', 'marketing', 'product', 'strategy', 'scale', 'launch', 'go-to-market', 'gtm',
-  // Creator Economy
-  'creator', 'content', 'influencer', 'monetization', 'online', 'digital marketing'
+  // Creator & Service Economy
+  'creator', 'content', 'influencer', 'freelance', 'gig economy', 'service business', 'consulting'
 ];
 
-// Query variations for live search behavior
+// Business opportunity-focused query variations
 const QUERY_VARIATIONS = [
-  'AI OR artificial intelligence OR machine learning OR automation',
-  'startup OR startups OR founder OR entrepreneur OR venture capital',
-  'no-code OR nocode OR low-code OR SaaS OR productivity tools',
-  'growth marketing OR product marketing OR go-to-market OR GTM',
-  'creator economy OR content creation OR digital marketing OR monetization',
-  'innovation OR technology OR digital transformation OR business strategy'
+  'business opportunity OR market gap OR startup idea OR entrepreneurship',
+  'AI business OR artificial intelligence startup OR automation opportunity',
+  'no-code business OR SaaS opportunity OR software startup',
+  'creator economy OR content monetization OR influencer business',
+  'service business OR consulting opportunity OR freelance market',
+  'marketplace startup OR platform business OR subscription model',
+  'consumer trend OR market shift OR industry disruption'
 ];
 
 interface NewsAPIArticle {
@@ -157,26 +169,60 @@ async function articleExists(url: string, title: string): Promise<boolean> {
   return (data?.length || 0) > 0;
 }
 
-// Calculate trend and opportunity scores based on article metadata
+// Calculate trend and opportunity scores with business focus
 function calculateScores(article: NewsAPIArticle): { trendScore: number; opportunityScore: number } {
-  let trendScore = 50; // Base score
-  let opportunityScore = 40;
+  let trendScore = 40; // Base score
+  let opportunityScore = 30;
   
-  // Boost score for certain keywords
-  const highValueKeywords = ['AI', 'startup', 'funding', 'IPO', 'acquisition', 'breakthrough', 'innovation'];
   const title = article.title.toLowerCase();
   const description = (article.description || '').toLowerCase();
+  const fullText = `${title} ${description}`;
   
-  highValueKeywords.forEach(keyword => {
-    if (title.includes(keyword.toLowerCase()) || description.includes(keyword.toLowerCase())) {
-      trendScore += 10;
-      opportunityScore += 8;
+  // Business opportunity keywords (higher weight)
+  const opportunityKeywords = [
+    'opportunity', 'market gap', 'new market', 'untapped', 'underserved', 'emerging', 'trend',
+    'business model', 'revenue stream', 'monetization', 'startup idea', 'entrepreneur'
+  ];
+  
+  opportunityKeywords.forEach(keyword => {
+    if (fullText.includes(keyword)) {
+      trendScore += 15;
+      opportunityScore += 20;
     }
   });
   
-  // Boost for reputable sources
-  const reputableSources = ['Reuters', 'Bloomberg', 'TechCrunch', 'Forbes'];
-  if (reputableSources.some(source => article.source.name.includes(source))) {
+  // High-value business keywords
+  const businessKeywords = [
+    'funding', 'investment', 'series a', 'series b', 'ipo', 'acquisition', 'merger',
+    'growth', 'scale', 'expansion', 'market leader', 'disruption', 'innovation'
+  ];
+  
+  businessKeywords.forEach(keyword => {
+    if (fullText.includes(keyword)) {
+      trendScore += 12;
+      opportunityScore += 10;
+    }
+  });
+  
+  // Technology and AI keywords
+  const techKeywords = ['ai', 'artificial intelligence', 'machine learning', 'automation', 'saas', 'platform'];
+  techKeywords.forEach(keyword => {
+    if (fullText.includes(keyword)) {
+      trendScore += 10;
+      opportunityScore += 12;
+    }
+  });
+  
+  // Boost for business-focused sources
+  const businessSources = ['Harvard Business Review', 'Forbes', 'Entrepreneur', 'Inc.', 'Fast Company', 'Bloomberg'];
+  if (businessSources.some(source => article.source.name.includes(source))) {
+    trendScore += 20;
+    opportunityScore += 15;
+  }
+  
+  // Tech sources get moderate boost
+  const techSources = ['TechCrunch', 'Wired', 'MIT Technology Review'];
+  if (techSources.some(source => article.source.name.includes(source))) {
     trendScore += 15;
     opportunityScore += 10;
   }
@@ -186,15 +232,15 @@ function calculateScores(article: NewsAPIArticle): { trendScore: number; opportu
   const hoursOld = (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60);
   if (hoursOld < 24) {
     trendScore += 20;
-    opportunityScore += 15;
+    opportunityScore += 18;
   } else if (hoursOld < 72) {
-    trendScore += 10;
-    opportunityScore += 8;
+    trendScore += 12;
+    opportunityScore += 10;
   }
   
   return {
-    trendScore: Math.min(100, Math.max(0, trendScore)),
-    opportunityScore: Math.min(100, Math.max(0, opportunityScore))
+    trendScore: Math.min(100, Math.max(20, trendScore)),
+    opportunityScore: Math.min(100, Math.max(15, opportunityScore))
   };
 }
 
@@ -209,6 +255,184 @@ function extractKeywords(article: NewsAPIArticle): string[] {
     .slice(0, 10);
     
   return [...new Set(words)]; // Remove duplicates
+}
+
+// Business opportunity generation functions
+function generateBusinessOpportunity(article: NewsAPIArticle, category: string, opportunityScore: number) {
+  const title = article.title.toLowerCase();
+  const description = (article.description || '').toLowerCase();
+  const fullText = `${title} ${description}`;
+  
+  let marketGap = "New market opportunity identified";
+  let targetAudience = "Businesses and entrepreneurs";
+  let revenueModel = "Service-based or SaaS model";
+  let entryBarrier = "Medium";
+  
+  // AI/Tech opportunities
+  if (category === 'ai-tech') {
+    marketGap = "AI automation and productivity tools are in high demand";
+    targetAudience = "Small to medium businesses looking to automate processes";
+    revenueModel = "SaaS subscription or per-use pricing";
+    entryBarrier = fullText.includes('complex') || fullText.includes('technical') ? "High" : "Medium";
+  }
+  // Startup opportunities
+  else if (category === 'startup') {
+    marketGap = "Market validation and funding trends indicate new opportunities";
+    targetAudience = "Aspiring entrepreneurs and early-stage founders";
+    revenueModel = "Consulting, courses, or marketplace commissions";
+    entryBarrier = "Medium";
+  }
+  // Marketing opportunities
+  else if (category === 'marketing') {
+    marketGap = "Content creation and digital marketing services are growing";
+    targetAudience = "Content creators, small businesses, and marketing agencies";
+    revenueModel = "Service packages, subscriptions, or commission-based";
+    entryBarrier = "Low to Medium";
+  }
+  
+  return {
+    market_gap: marketGap,
+    target_audience: targetAudience,
+    revenue_model: revenueModel,
+    entry_barrier: entryBarrier,
+    time_sensitivity: opportunityScore > 70 ? "High - Act quickly" : "Medium - Good timing",
+    success_factors: ["Market research", "MVP development", "Customer validation"]
+  };
+}
+
+function determineSentiment(text: string): string {
+  const positiveWords = ['growth', 'success', 'opportunity', 'breakthrough', 'innovation', 'expansion', 'boom'];
+  const negativeWords = ['decline', 'loss', 'failure', 'crisis', 'shutdown', 'bankruptcy', 'struggle'];
+  
+  const positiveCount = positiveWords.filter(word => text.includes(word)).length;
+  const negativeCount = negativeWords.filter(word => text.includes(word)).length;
+  
+  if (positiveCount > negativeCount) return 'positive';
+  if (negativeCount > positiveCount) return 'negative';
+  return 'neutral';
+}
+
+function determineMarketSize(text: string): string {
+  if (text.includes('billion') || text.includes('trillion') || text.includes('massive')) return 'Large';
+  if (text.includes('million') || text.includes('growing') || text.includes('expanding')) return 'Medium';
+  return 'Small';
+}
+
+function determineCompetitionLevel(text: string): string {
+  if (text.includes('saturated') || text.includes('competitive') || text.includes('crowded')) return 'High';
+  if (text.includes('emerging') || text.includes('new') || text.includes('untapped')) return 'Low';
+  return 'Medium';
+}
+
+function determineTimeSensitivity(text: string): string {
+  if (text.includes('urgent') || text.includes('trending') || text.includes('hot')) return 'High';
+  if (text.includes('stable') || text.includes('long-term') || text.includes('steady')) return 'Low';
+  return 'Medium';
+}
+
+function extractGeographicRelevance(text: string): string[] {
+  const regions = ['US', 'Europe', 'Asia', 'Global'];
+  const found = [];
+  
+  if (text.includes('global') || text.includes('worldwide') || text.includes('international')) {
+    found.push('Global');
+  } else {
+    if (text.includes('us') || text.includes('america') || text.includes('united states')) found.push('US');
+    if (text.includes('europe') || text.includes('eu')) found.push('Europe');  
+    if (text.includes('asia') || text.includes('china') || text.includes('japan')) found.push('Asia');
+  }
+  
+  return found.length > 0 ? found : ['Global'];
+}
+
+function extractRevenueModels(text: string): string[] {
+  const models = [];
+  if (text.includes('subscription') || text.includes('saas')) models.push('Subscription');
+  if (text.includes('marketplace') || text.includes('commission')) models.push('Commission');
+  if (text.includes('service') || text.includes('consulting')) models.push('Service');
+  if (text.includes('product') || text.includes('retail')) models.push('Product Sales');
+  if (text.includes('advertising') || text.includes('ads')) models.push('Advertising');
+  
+  return models.length > 0 ? models : ['Service', 'Product Sales'];
+}
+
+function extractTargetAudience(text: string, category: string): string[] {
+  const audiences = [];
+  
+  if (text.includes('small business') || text.includes('smb')) audiences.push('Small Businesses');
+  if (text.includes('enterprise') || text.includes('large company')) audiences.push('Enterprise');
+  if (text.includes('startup') || text.includes('founder')) audiences.push('Startups');
+  if (text.includes('consumer') || text.includes('individual')) audiences.push('Consumers');
+  if (text.includes('creator') || text.includes('influencer')) audiences.push('Content Creators');
+  
+  // Category-based defaults
+  if (audiences.length === 0) {
+    switch (category) {
+      case 'ai-tech': audiences.push('Businesses', 'Tech Companies'); break;
+      case 'startup': audiences.push('Entrepreneurs', 'Investors'); break;
+      case 'marketing': audiences.push('Small Businesses', 'Content Creators'); break;
+      default: audiences.push('Businesses', 'Entrepreneurs');
+    }
+  }
+  
+  return audiences;
+}
+
+function generateActionSteps(article: NewsAPIArticle, category: string): string[] {
+  const baseSteps = [
+    "Research the market opportunity thoroughly",
+    "Validate the idea with potential customers",
+    "Create a minimum viable product (MVP)"
+  ];
+  
+  switch (category) {
+    case 'ai-tech':
+      return [
+        "Learn about AI tools and automation trends",
+        "Identify specific business pain points to solve",
+        "Prototype a simple AI-powered solution",
+        "Test with early adopters and iterate"
+      ];
+    case 'startup':
+      return [
+        "Analyze successful businesses in this space",
+        "Network with industry experts and mentors",
+        "Develop a lean business plan",
+        "Seek feedback from potential investors"
+      ];
+    case 'marketing':
+      return [
+        "Study the latest marketing trends and tools",
+        "Build a portfolio or case studies",
+        "Start with a specific niche or service",
+        "Scale through referrals and partnerships"
+      ];
+    default:
+      return baseSteps;
+  }
+}
+
+function calculateEntryDifficulty(text: string, category: string): number {
+  let difficulty = 5; // Base difficulty (1-10 scale)
+  
+  // Increase difficulty for technical content
+  if (text.includes('technical') || text.includes('complex') || text.includes('advanced')) {
+    difficulty += 2;
+  }
+  
+  // Decrease for service-based opportunities
+  if (text.includes('service') || text.includes('consulting') || text.includes('simple')) {
+    difficulty -= 1;
+  }
+  
+  // Category-specific adjustments
+  switch (category) {
+    case 'ai-tech': difficulty += 1; break;
+    case 'marketing': difficulty -= 1; break;
+    case 'saas': difficulty += 2; break;
+  }
+  
+  return Math.min(10, Math.max(1, difficulty));
 }
 
 serve(async (req) => {
@@ -358,36 +582,49 @@ serve(async (req) => {
           continue;
         }
 
-        // Determine category based on content
+        // Determine category and generate business opportunity data
         const title = article.title.toLowerCase();
         const description = (article.description || '').toLowerCase();
-        let category = 'business';
+        const fullText = `${title} ${description}`;
         
-        if (title.includes('ai') || title.includes('artificial intelligence') || description.includes('ai')) {
-          category = 'technology';
-        } else if (title.includes('startup') || title.includes('funding') || title.includes('venture')) {
+        let category = 'business';
+        if (fullText.includes('ai') || fullText.includes('artificial intelligence') || fullText.includes('machine learning')) {
+          category = 'ai-tech';
+        } else if (fullText.includes('startup') || fullText.includes('funding') || fullText.includes('venture')) {
           category = 'startup';
-        } else if (title.includes('marketing') || title.includes('creator') || title.includes('content')) {
+        } else if (fullText.includes('marketing') || fullText.includes('creator') || fullText.includes('content')) {
           category = 'marketing';
+        } else if (fullText.includes('saas') || fullText.includes('software') || fullText.includes('platform')) {
+          category = 'saas';
         }
 
-        // Prepare trend data for insertion
+        // Generate business opportunity data
+        const businessOpportunity = generateBusinessOpportunity(article, category, opportunityScore);
+
+        // Prepare trend data with business opportunity fields
         const trendData = {
-          title: article.title.substring(0, 200), // Limit title length
-          description: article.description.substring(0, 500), // Limit description
+          title: article.title.substring(0, 200),
+          description: article.description.substring(0, 500),
           category,
           trend_score: trendScore,
           opportunity_score: opportunityScore,
           keywords,
-          sentiment: 'neutral', // Could be enhanced with sentiment analysis
-          market_size_indicator: 'Medium',
-          geographic_relevance: ['US', 'Global'],
+          sentiment: determineSentiment(fullText),
+          market_size_indicator: determineMarketSize(fullText),
+          competition_level: determineCompetitionLevel(fullText),
+          time_sensitivity: determineTimeSensitivity(fullText),
+          geographic_relevance: extractGeographicRelevance(fullText),
           article_url: verifiedUrl,
           article_source: article.source.name,
           author: article.author,
           publication_date: article.publishedAt,
           summary: article.description.substring(0, 300),
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          business_opportunity: businessOpportunity,
+          revenue_models: extractRevenueModels(fullText),
+          target_audience: extractTargetAudience(fullText, category),
+          action_steps: generateActionSteps(article, category),
+          entry_difficulty: calculateEntryDifficulty(fullText, category),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
           is_active: true
         };
 

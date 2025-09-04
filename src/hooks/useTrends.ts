@@ -20,6 +20,22 @@ export interface Trend {
   created_at: string;
   updated_at: string;
   is_active: boolean;
+  // New business opportunity fields
+  business_opportunity?: {
+    market_gap: string;
+    target_audience: string;
+    revenue_model: string;
+    entry_barrier: string;
+    time_sensitivity: string;
+    success_factors: string[];
+  };
+  market_size_estimate?: string;
+  competition_level?: string;
+  time_sensitivity?: string;
+  revenue_models?: string[];
+  target_audience?: string[];
+  action_steps?: string[];
+  entry_difficulty?: number;
 }
 
 export const useTrends = () => {
@@ -38,8 +54,8 @@ export const useTrends = () => {
         .select('*')
         .eq('is_active', true)
         .gt('expires_at', new Date().toISOString())
+        .order('opportunity_score', { ascending: false })
         .order('trend_score', { ascending: false })
-        .order('created_at', { ascending: false })
         .limit(20);
 
       console.log('📊 Fetch trends result:', { data, error: fetchError, count: data?.length });
@@ -51,8 +67,21 @@ export const useTrends = () => {
 
       const processedTrends = (data || []).map(item => ({
         ...item,
-        sentiment: (item.sentiment as 'positive' | 'negative' | 'neutral') || 'neutral'
-      }));
+        sentiment: (item.sentiment as 'positive' | 'negative' | 'neutral') || 'neutral',
+        business_opportunity: item.business_opportunity ? 
+          (item.business_opportunity as any) :
+          undefined,
+        revenue_models: item.revenue_models || [],
+        target_audience: item.target_audience || [],
+        action_steps: item.action_steps || [],
+        geographic_relevance: item.geographic_relevance || [],
+        keywords: item.keywords || [],
+        article_url: item.article_url || undefined,
+        article_source: item.article_source || undefined,
+        author: item.author || undefined,
+        publication_date: item.publication_date || undefined,
+        summary: item.summary || undefined
+      })) as Trend[];
 
       console.log('✅ Successfully fetched trends:', processedTrends.length);
       setTrends(processedTrends);
@@ -69,12 +98,12 @@ export const useTrends = () => {
       setError(null);
       console.log('🔍 Fetching fresh articles from NewsAPI...');
       
-      // Try the new news-aggregator function first
+      // Try the news-aggregator function with business-focused queries
       const { data, error: functionError } = await supabase.functions.invoke('news-aggregator', {
         body: { 
-          topics: 'business OR technology OR AI OR startup OR innovation OR creator economy',
-          pageSize: 20,
-          recencyDays: 7
+          topics: 'business opportunity OR startup OR entrepreneurship OR market trends OR AI business',
+          pageSize: 25,
+          recencyDays: 14
         }
       });
 
