@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const Account = () => {
   const { user } = useAuth();
@@ -140,26 +141,31 @@ const Account = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-6 pt-24">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle>Access Denied</CardTitle>
-              <CardDescription>
-                Please log in to access your account settings.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+      <div className="relative min-h-screen overflow-hidden">
+        <AnimatedBackground />
+        <div className="relative z-10">
+          <Navigation />
+          <div className="container mx-auto px-6 pt-24">
+            <Card className="max-w-md mx-auto">
+              <CardHeader>
+                <CardTitle>Access Denied</CardTitle>
+                <CardDescription>
+                  Please log in to access your account settings.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="container mx-auto px-6 pt-24">
+    <div className="relative min-h-screen overflow-hidden">
+      <AnimatedBackground />
+      <div className="relative z-10">
+        <Navigation />
+        <div className="container mx-auto px-6 pt-24">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
             <h1 className="text-3xl font-bold gradient-text">My Account</h1>
@@ -422,6 +428,7 @@ const Account = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
         </div>
       </div>
     </div>
