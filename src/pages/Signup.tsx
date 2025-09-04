@@ -181,8 +181,12 @@ const Signup = () => {
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
-            <Sparkles className="w-6 h-6" />
+          <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
+            <img 
+              src="/lovable-uploads/04a4b9d0-4213-4186-ba00-c7acd22bad98.png" 
+              alt="Creatives Takeover Logo" 
+              className="w-8 h-8" 
+            />
             Creatives Takeover
           </Link>
           <h1 className="text-3xl font-bold mt-4 mb-2">Join Creatives Takeover</h1>
