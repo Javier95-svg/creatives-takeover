@@ -3,23 +3,23 @@ import { Zap, Shield, Bot, Layers, ArrowRight } from "lucide-react";
 const benefits = [
   {
     icon: Zap,
-    title: "Launch in weeks, not months",
-    desc: "Accelerated setup with AI-driven automation and ready-to-use playbooks.",
+    title: "Get your business plan in 30 minutes, not 30 days",
+    desc: "Complete comprehensive business planning with AI assistance in under half an hour.",
   },
   {
     icon: Shield,
-    title: "Keep 100% of your IP",
-    desc: "Your ideas and outputs are yours—full ownership and control maintained.",
+    title: "Validate demand before you build anything",
+    desc: "Smart market research and validation tools to test your ideas before investing time and money.",
   },
   {
     icon: Bot,
-    title: "AI agents + human expertise",
-    desc: "Blend of smart agents and expert guidance to ensure quality outcomes.",
+    title: "Professional marketing assets without hiring designers",
+    desc: "Generate logos, marketing copy, and brand materials as part of your business plan creation.",
   },
   {
     icon: Layers,
-    title: "Templates for every stage",
-    desc: "From idea validation to growth—templates that speed up each step.",
+    title: "Connect with fellow entrepreneurs building real businesses",
+    desc: "Join our community of creators and get feedback, support, and networking opportunities.",
   },
 ];
 

@@ -4,6 +4,7 @@ import ProblemSolution from "@/components/ProblemSolution";
 import HowWeWork from "@/components/HowWeWork";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
+import CTASection from "@/components/CTASection";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 
@@ -22,6 +23,7 @@ const Index = () => {
         <HowWeWork />
         <SimpleBizMapGuide />
         <Benefits />
+        <CTASection />
       </main>
       <Footer />
     </div>

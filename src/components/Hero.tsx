@@ -53,39 +53,42 @@ const Hero = () => {
 
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-            <span className="takeover-gradient">Transform ideas into startups</span>
+            <span className="takeover-gradient">From idea to professional</span>
             <br />
-            <span className="animated-gradient">with smart AI support.</span>
+            <span className="animated-gradient">business plan in 30 minutes</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            For creators, entrepreneurs, and polymaths who need guidance to build, launch, and scale their projects.
+            Join 1,200+ entrepreneurs who've created their comprehensive business plans with AI-powered insights and validation tools.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating" aria-label="Start creating" asChild>
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating" aria-label="Create business plan" asChild>
               <a href="/dream2plan">
-                Start Creating
+                Create My Business Plan
                 <ArrowRight className="ml-2 w-5 h-5" />
               </a>
+            </Button>
+            <Button size="lg" variant="outline" className="glass hover:bg-primary/10 px-8 py-4 text-lg btn-magnetic" aria-label="See sample business plan">
+              See Sample Business Plan
             </Button>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold takeover-gradient mb-2 creatives-font">1,200+</div>
-              <div className="text-muted-foreground">Business Plans Created</div>
+              <div className="text-3xl font-bold takeover-gradient mb-2 creatives-font">2,847</div>
+              <div className="text-muted-foreground">Business Plans Generated</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold animated-gradient mb-2 creatives-font">3 Min</div>
-              <div className="text-muted-foreground">Average Plan Time</div>
+              <div className="text-3xl font-bold animated-gradient mb-2 creatives-font">28 Min</div>
+              <div className="text-muted-foreground">Average Completion Time</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold reverse-gradient mb-2 creatives-font">85%</div>
-              <div className="text-muted-foreground">Validation Success Rate</div>
+              <div className="text-3xl font-bold reverse-gradient mb-2 creatives-font">5,600+</div>
+              <div className="text-muted-foreground">Marketing Assets Created</div>
             </div>
           </div>
 
