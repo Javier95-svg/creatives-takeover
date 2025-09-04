@@ -38,10 +38,15 @@ serve(async (req: Request): Promise<Response> => {
 
     const name = fullName && fullName.trim().length > 0 ? fullName.trim() : "there";
 
+    // Sender configuration via Supabase Edge Function secrets
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+    const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
+    const replyTo = Deno.env.get("REPLY_TO_EMAIL");
+
     const html = `
       <div style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; line-height: 1.6; color: #0f172a;">
-        <h1 style="margin: 0 0 16px; font-size: 24px;">Welcome to BizMap AI, ${name} 🎉</h1>
-        <p style="margin: 0 0 12px;">Thanks for creating an account! You're all set to explore AI-powered tools for planning, validating, and growing your ideas.</p>
+        <h1 style="margin: 0 0 16px; font-size: 24px;">Welcome to Creatives Takeover, ${name} 🎉</h1>
+        <p style="margin: 0 0 12px;">Thanks for creating an account! You're all set to explore tools, resources, and a community built for creators and builders.</p>
         <p style="margin: 0 0 12px;">Here are a few things you can try next:</p>
         <ul style="margin: 0 0 16px; padding-left: 20px;">
           <li>Start with Dream2Plan to turn ideas into a strategy.</li>
@@ -49,18 +54,24 @@ serve(async (req: Request): Promise<Response> => {
           <li>Explore Resources for templates and guides.</li>
         </ul>
         <p style="margin: 0 0 16px;">If you didn't create this account, you can safely ignore this email.</p>
-        <p style="margin: 0 0 4px;">— The BizMap AI Team</p>
+        <p style="margin: 0 0 4px;">— The Creatives Takeover Team</p>
       </div>
     `;
 
-    const subject = "Welcome to BizMap AI";
+    const subject = "Welcome to Creatives Takeover";
 
-    const sendResult = await resend.emails.send({
-      from: "BizMap AI <onboarding@resend.dev>",
+    const sendPayload: Record<string, unknown> = {
+      from: `${fromName} <${fromEmail}>`,
       to: [email],
       subject,
       html,
-    });
+    };
+
+    if (replyTo && replyTo.trim().length > 0) {
+      (sendPayload as any).reply_to = replyTo;
+    }
+
+    const sendResult = await resend.emails.send(sendPayload as any);
 
     console.log("send-welcome-email: sent", { to: email, id: sendResult?.data?.id });
 
