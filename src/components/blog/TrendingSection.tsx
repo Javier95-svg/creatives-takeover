@@ -66,7 +66,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
 
   if (isLoading || isGenerating) {
     return (
-      <section className="relative py-12 overflow-hidden" data-section="opportunities">
+      <section className="relative py-6 overflow-hidden" data-section="opportunities">
       {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30"
@@ -131,7 +131,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
 
   if (error) {
     return (
-      <section className="relative py-12 overflow-hidden" data-section="opportunities">
+      <section className="relative py-6 overflow-hidden" data-section="opportunities">
         {/* Animated Background with Multiple Layers */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-30"
@@ -177,7 +177,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
   }
 
   return (
-    <section className="relative py-12 overflow-hidden" data-section="opportunities">
+    <section className="relative py-6 overflow-hidden" data-section="opportunities">
       {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30"
