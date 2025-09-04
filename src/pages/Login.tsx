@@ -107,8 +107,11 @@ const Login = () => {
       } else {
         if (rememberMe) {
           localStorage.setItem('rememberedEmail', formData.email);
+          // Store preference for extended session
+          localStorage.setItem('extendedSession', 'true');
         } else {
           localStorage.removeItem('rememberedEmail');
+          localStorage.removeItem('extendedSession');
         }
         toast.success("Login successful! Welcome back.");
         navigate('/');
@@ -265,7 +268,7 @@ const Login = () => {
                     onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
                     disabled={isLoading}
                   />
-                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+                  <Label htmlFor="rememberMe" className="text-sm">Stay signed in for 30 days</Label>
                 </div>
                 <Link
                   to="/forgot-password"

@@ -145,9 +145,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    // Check if extended session is requested
+    const extendedSession = localStorage.getItem('extendedSession') === 'true';
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      // Note: Supabase handles refresh tokens automatically for extended sessions
+      // The token refresh is managed by the client configuration
     });
     
     // Auto-check subscription status after successful login

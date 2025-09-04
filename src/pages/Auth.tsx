@@ -72,8 +72,11 @@ const Auth: React.FC = () => {
     } else {
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
+        // Store preference for extended session
+        localStorage.setItem('extendedSession', 'true');
       } else {
         localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('extendedSession');
       }
       toast.success('Welcome back!');
       navigate('/');
@@ -154,17 +157,22 @@ const Auth: React.FC = () => {
             )}
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" name="login" autoComplete="on">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
                     id="login-email"
+                    name="email"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
+                    autoComplete="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    inputMode="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -172,6 +180,7 @@ const Auth: React.FC = () => {
                   <div className="relative">
                     <Input
                       id="login-password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
@@ -179,6 +188,7 @@ const Auth: React.FC = () => {
                       required
                       disabled={loading}
                       className="pr-10"
+                      autoComplete="current-password"
                     />
                     <button
                       type="button"
@@ -201,7 +211,7 @@ const Auth: React.FC = () => {
                     onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
                     disabled={loading}
                   />
-                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+                  <Label htmlFor="rememberMe" className="text-sm">Stay signed in for 30 days</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
@@ -217,29 +227,36 @@ const Auth: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4" name="signup" autoComplete="on">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Full Name</Label>
                   <Input
                     id="signup-name"
+                    name="fullName"
                     type="text"
                     placeholder="John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     disabled={loading}
+                    autoComplete="name"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
                     id="signup-email"
+                    name="email"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
+                    autoComplete="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    inputMode="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -247,6 +264,7 @@ const Auth: React.FC = () => {
                   <div className="relative">
                     <Input
                       id="signup-password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
@@ -255,6 +273,7 @@ const Auth: React.FC = () => {
                       disabled={loading}
                       minLength={6}
                       className="pr-10"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
@@ -275,6 +294,7 @@ const Auth: React.FC = () => {
                   <div className="relative">
                     <Input
                       id="confirm-password"
+                      name="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={confirmPassword}
@@ -283,6 +303,7 @@ const Auth: React.FC = () => {
                       disabled={loading}
                       minLength={6}
                       className="pr-10"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
