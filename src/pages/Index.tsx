@@ -4,7 +4,6 @@ import ProblemSolution from "@/components/ProblemSolution";
 import HowWeWork from "@/components/HowWeWork";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
-import CTASection from "@/components/CTASection";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { Helmet } from "react-helmet-async";
@@ -28,7 +27,6 @@ const Index = () => {
         <HowWeWork />
         <SimpleBizMapGuide />
         <Benefits />
-        <CTASection />
       </main>
       <Footer />
       
