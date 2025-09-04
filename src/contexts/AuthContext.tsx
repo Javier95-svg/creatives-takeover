@@ -122,6 +122,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     });
+
+    if (!error) {
+      try {
+        await supabase.functions.invoke('send-welcome-email', {
+          body: { email, fullName }
+        });
+      } catch (welcomeError) {
+        console.log('Welcome email failed:', welcomeError);
+      }
+    }
     
     return { error };
   };
