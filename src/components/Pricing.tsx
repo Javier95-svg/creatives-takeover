@@ -201,7 +201,7 @@ const Pricing = () => {
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-4xl font-bold">
-                      ${tier.price_cents === 0 ? 'Free' : (tier.price_cents / 100).toFixed(0)}
+                      ${tier.price_cents === 0 ? 'Free' : (tier.price_cents / 100).toFixed(2)}
                     </span>
                     {tier.price_cents > 0 && (
                       <span className="text-muted-foreground">/month</span>
