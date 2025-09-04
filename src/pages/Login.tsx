@@ -188,7 +188,14 @@ const Login = () => {
             <h2 className="text-xl font-semibold text-center">Sign in to your account</h2>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} autoComplete="on" className="space-y-6">
+            <form 
+              onSubmit={handleSubmit} 
+              autoComplete="on" 
+              className="space-y-6"
+              name="loginForm"
+              id="loginForm"
+              data-password-manager-enabled="true"
+            >
               {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
@@ -211,6 +218,9 @@ const Login = () => {
                     autoCapitalize="off"
                     autoCorrect="off"
                     inputMode="email"
+                    form="loginForm"
+                    data-lpignore="false"
+                    data-1p-ignore="false"
                   />
                 </div>
                 {errors.email && (
@@ -237,6 +247,10 @@ const Login = () => {
                     }`}
                     disabled={isLoading}
                     autoComplete="current-password"
+                    form="loginForm"
+                    data-lpignore="false"
+                    data-1p-ignore="false"
+                    data-password-field="true"
                   />
                   <button
                     type="button"
@@ -265,7 +279,10 @@ const Login = () => {
                     onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
                     disabled={isLoading}
                   />
-                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+                  <Label htmlFor="rememberMe" className="text-sm">
+                    Remember email
+                    {rememberMe && <span className="text-xs text-muted-foreground ml-1">(✓ saved)</span>}
+                  </Label>
                 </div>
                 <Link
                   to="/forgot-password"
@@ -273,6 +290,16 @@ const Login = () => {
                 >
                   Forgot your password?
                 </Link>
+              </div>
+
+              {/* Password Manager Hint */}
+              <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
+                    💡
+                  </div>
+                  <span>Tip: Save your password in your browser for instant sign-in next time</span>
+                </div>
               </div>
 
               {/* Sign In Button */}

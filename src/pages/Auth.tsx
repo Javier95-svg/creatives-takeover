@@ -154,7 +154,14 @@ const Auth: React.FC = () => {
             )}
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4" name="login" autoComplete="on">
+              <form 
+                onSubmit={handleLogin} 
+                className="space-y-4" 
+                name="loginForm"
+                id="loginForm" 
+                autoComplete="on"
+                data-password-manager-enabled="true"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
@@ -170,6 +177,9 @@ const Auth: React.FC = () => {
                     autoCapitalize="off"
                     autoCorrect="off"
                     inputMode="email"
+                    form="loginForm"
+                    data-lpignore="false"
+                    data-1p-ignore="false"
                   />
                 </div>
                 <div className="space-y-2">
@@ -186,6 +196,10 @@ const Auth: React.FC = () => {
                       disabled={loading}
                       className="pr-10"
                       autoComplete="current-password"
+                      form="loginForm"
+                      data-lpignore="false"
+                      data-1p-ignore="false"
+                      data-password-field="true"
                     />
                     <button
                       type="button"
@@ -201,14 +215,22 @@ const Auth: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
-                    disabled={loading}
-                  />
-                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+                      disabled={loading}
+                    />
+                    <Label htmlFor="rememberMe" className="text-sm">
+                      Remember email 
+                      {rememberMe && <span className="text-xs text-muted-foreground ml-1">(✓ saved)</span>}
+                    </Label>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    💡 Save password in browser for auto-fill
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
@@ -224,7 +246,14 @@ const Auth: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4" name="signup" autoComplete="on">
+              <form 
+                onSubmit={handleSignUp} 
+                className="space-y-4" 
+                name="signupForm"
+                id="signupForm" 
+                autoComplete="on"
+                data-password-manager-enabled="true"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Full Name</Label>
                   <Input
