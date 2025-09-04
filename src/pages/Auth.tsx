@@ -72,11 +72,8 @@ const Auth: React.FC = () => {
     } else {
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
-        // Store preference for extended session
-        localStorage.setItem('extendedSession', 'true');
       } else {
         localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('extendedSession');
       }
       toast.success('Welcome back!');
       navigate('/');
@@ -211,7 +208,7 @@ const Auth: React.FC = () => {
                     onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
                     disabled={loading}
                   />
-                  <Label htmlFor="rememberMe" className="text-sm">Stay signed in for 30 days</Label>
+                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
