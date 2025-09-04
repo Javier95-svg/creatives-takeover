@@ -48,21 +48,14 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   const marker = useRef<mapboxgl.Marker | null>(null);
   const debounceTimer = useRef<number | undefined>(undefined);
 
-  // For now, we'll need the user to provide their Mapbox token
-  // In production, this would come from Supabase secrets via an edge function
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [showTokenInput, setShowTokenInput] = useState(false);
+  // Use a default Mapbox token for location features
+  const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
 
   useEffect(() => {
-    // Check if we have a stored token
-    const storedToken = localStorage.getItem('mapbox_token');
-    if (storedToken) {
-      setMapboxToken(storedToken);
-      mapboxgl.accessToken = storedToken;
-    } else {
-      setShowTokenInput(true);
+    if (mapboxToken) {
+      mapboxgl.accessToken = mapboxToken;
     }
-  }, []);
+  }, [mapboxToken]);
 
   const searchLocations = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 3) {
@@ -100,16 +93,6 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
       searchLocations(query);
     }, 300);
   }, [searchLocations]);
-
-  const handleTokenSubmit = (token: string) => {
-    if (token.trim()) {
-      setMapboxToken(token.trim());
-      localStorage.setItem('mapbox_token', token.trim());
-      mapboxgl.accessToken = token.trim();
-      setShowTokenInput(false);
-      toast.success('Mapbox token saved! You can now use location features.');
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -290,55 +273,6 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
 
   return (
     <div className="space-y-2">
-      {/* Mapbox Token Input */}
-      {showTokenInput && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <div className="flex items-start gap-2">
-            <MapPin className="h-5 w-5 text-amber-600 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="font-medium text-amber-800">Mapbox Token Required</h4>
-              <p className="text-sm text-amber-700 mt-1">
-                To use location search and GPS features, please provide your Mapbox public token.
-              </p>
-              <div className="mt-3 flex gap-2">
-                <Input
-                  placeholder="pk.eyJ1IjoieW91cnVzZXJuYW1lIiwi..."
-                  className="text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleTokenSubmit(e.currentTarget.value);
-                    }
-                  }}
-                />
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                    if (input) {
-                      handleTokenSubmit(input.value);
-                    }
-                  }}
-                >
-                  Save
-                </Button>
-              </div>
-              <p className="text-xs text-amber-600 mt-2">
-                Get your free token at{' '}
-                <a 
-                  href="https://mapbox.com/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="underline hover:text-amber-800"
-                >
-                  mapbox.com
-                </a>
-                . This will be stored locally in your browser.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="relative">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -346,7 +280,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             <Input
               value={searchValue}
               onChange={handleInputChange}
-              placeholder={mapboxToken ? placeholder : "📍 Enter location manually or add Mapbox token for GPS/search"}
+              placeholder={placeholder}
               disabled={disabled}
               className="pl-10 pr-10"
             />
@@ -369,9 +303,9 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             variant="outline"
             size="default"
             onClick={getCurrentLocation}
-            disabled={disabled || isGettingLocation || !mapboxToken}
+            disabled={disabled || isGettingLocation}
             className="px-3"
-            title={!mapboxToken ? "Add Mapbox token to use GPS" : "Use current location"}
+            title="Use current location"
           >
             {isGettingLocation ? (
               <Loader2 className="h-4 w-4 animate-spin" />

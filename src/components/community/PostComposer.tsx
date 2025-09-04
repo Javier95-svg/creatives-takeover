@@ -180,7 +180,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
                 value={location}
                 onChange={handleLocationChange}
                 disabled={requireAuth && !isAuthenticated}
-                placeholder="📍 Search for a location or use GPS to share where you're posting from"
+                placeholder="📍 Search for a location or use GPS"
               />
             </div>
 
