@@ -319,33 +319,51 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           credit_balance: number
           full_name: string | null
+          github_url: string | null
           id: string
+          instagram_url: string | null
           last_credit_reset_at: string
+          linkedin_url: string | null
           subscription_tier: string
+          twitter_url: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           credit_balance?: number
           full_name?: string | null
+          github_url?: string | null
           id: string
+          instagram_url?: string | null
           last_credit_reset_at?: string
+          linkedin_url?: string | null
           subscription_tier?: string
+          twitter_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           credit_balance?: number
           full_name?: string | null
+          github_url?: string | null
           id?: string
+          instagram_url?: string | null
           last_credit_reset_at?: string
+          linkedin_url?: string | null
           subscription_tier?: string
+          twitter_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
