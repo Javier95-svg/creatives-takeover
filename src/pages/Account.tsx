@@ -162,7 +162,7 @@ const Account = () => {
       <div className="container mx-auto px-6 pt-24">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold gradient-text">Account Settings</h1>
+            <h1 className="text-3xl font-bold gradient-text">My Account</h1>
             <p className="text-muted-foreground mt-2">
               Manage your account information and preferences.
             </p>
