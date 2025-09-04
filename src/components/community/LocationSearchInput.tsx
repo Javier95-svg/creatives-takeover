@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -48,8 +49,36 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   const marker = useRef<mapboxgl.Marker | null>(null);
   const debounceTimer = useRef<number | undefined>(undefined);
 
-  // Use a default Mapbox token for location features
-  const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+
+  // Get Mapbox token on component mount
+  useEffect(() => {
+    const getMapboxToken = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('location-search', {
+          body: { action: 'get-token' }
+        });
+        
+        if (error) {
+          console.error('Failed to get Mapbox token:', error);
+          // Fallback to demo token with warning
+          const demoToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+          setMapboxToken(demoToken);
+          console.warn('Using demo Mapbox token - functionality may be limited');
+        } else if (data?.token) {
+          setMapboxToken(data.token);
+        }
+      } catch (error) {
+        console.error('Error getting Mapbox token:', error);
+        // Use demo token as fallback
+        const demoToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+        setMapboxToken(demoToken);
+        console.warn('Using demo Mapbox token - functionality may be limited');
+      }
+    };
+
+    getMapboxToken();
+  }, []);
 
   useEffect(() => {
     if (mapboxToken) {
@@ -65,24 +94,33 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
 
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          query
-        )}.json?access_token=${mapboxToken}&types=place,locality,neighborhood,address&limit=5`
-      );
+      console.log('Searching for location:', query);
       
-      if (response.ok) {
-        const data = await response.json();
+      const { data, error } = await supabase.functions.invoke('location-search', {
+        body: JSON.stringify({ q: query })
+      });
+      
+      if (error) {
+        console.error('Location search error:', error);
+        toast.error('Failed to search locations. Please try again.');
+        setSuggestions([]);
+      } else {
+        console.log('Search results:', data);
         setSuggestions(data.features || []);
         setShowSuggestions(true);
+        
+        if (data.features && data.features.length === 0) {
+          toast.info('No locations found. Try a different search term.');
+        }
       }
     } catch (error) {
       console.error('Location search error:', error);
       toast.error('Failed to search locations. Please try again.');
+      setSuggestions([]);
     }
     
     setIsSearching(false);
-  }, [mapboxToken]);
+  }, []);
 
   const debouncedSearch = useCallback((query: string) => {
     if (debounceTimer.current) {
@@ -141,33 +179,37 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
         const { latitude, longitude } = position.coords;
         
         try {
-          // Reverse geocoding to get address
-          const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&types=place,locality,neighborhood,address`
-          );
+          console.log('Getting location details for:', latitude, longitude);
           
-          if (response.ok) {
-            const data = await response.json();
+          const { data, error } = await supabase.functions.invoke('location-search', {
+            body: JSON.stringify({ lng: longitude, lat: latitude })
+          });
+          
+          if (error) {
+            console.error('Reverse geocoding error:', error);
+            toast.error('Failed to get location details.');
+          } else if (data.features && data.features[0]) {
             const feature = data.features[0];
+            const locationData: LocationData = {
+              address: feature.place_name,
+              coordinates: { lng: longitude, lat: latitude },
+            };
             
-            if (feature) {
-              const locationData: LocationData = {
-                address: feature.place_name,
-                coordinates: { lng: longitude, lat: latitude },
-              };
-              
-              setSearchValue(feature.place_name);
-              setSelectedLocation(locationData);
-              onChange(feature.place_name, locationData);
-              
-              // Show map with current location
-              if (mapboxToken) {
-                setShowMap(true);
-                setTimeout(() => initializeMap(latitude, longitude), 100);
-              }
-              
-              toast.success('Current location detected!');
+            setSearchValue(feature.place_name);
+            setSelectedLocation(locationData);
+            onChange(feature.place_name, locationData);
+            
+            // Show map with current location
+            if (mapboxToken) {
+              setShowMap(true);
+              setTimeout(() => initializeMap(latitude, longitude), 100);
             }
+            
+            toast.success('Current location detected!');
+            console.log('Location detected:', feature.place_name);
+          } else {
+            console.warn('No location data found');
+            toast.error('Could not determine your location address.');
           }
         } catch (error) {
           console.error('Reverse geocoding error:', error);

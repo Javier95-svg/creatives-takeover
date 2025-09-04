@@ -1,5 +1,8 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
+[functions.location-search]
+verify_jwt = false
+
 [functions.community-ai-moderator]
 verify_jwt = false
 
