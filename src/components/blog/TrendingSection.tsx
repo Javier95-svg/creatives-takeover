@@ -43,17 +43,17 @@ const TrendingSection = () => {
 
   if (isLoading || isGenerating) {
     return (
-      <section className="py-16 bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-              <h2 className="text-3xl font-bold">Business Opportunities</h2>
-            </div>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {isGenerating ? 'AI is discovering new business opportunities...' : 'AI-curated business opportunities and market trends'}
-            </p>
+    <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+            <h2 className="text-3xl font-bold">Latest Opportunities</h2>
           </div>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {isGenerating ? 'AI is discovering new business opportunities...' : 'Freshly discovered business opportunities with AI-generated insights'}
+          </p>
+        </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
@@ -78,28 +78,28 @@ const TrendingSection = () => {
 
   if (error) {
     return (
-      <section className="py-16 bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Trending Articles</h2>
-          <p className="text-muted-foreground mb-6">
-            Unable to load articles at the moment. Please try again.
-          </p>
-          <Button onClick={handleRefresh} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-        </div>
-      </section>
+    <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-3xl font-bold mb-4">Latest Opportunities</h2>
+        <p className="text-muted-foreground mb-6">
+          Unable to load opportunities at the moment. Please try again.
+        </p>
+        <Button onClick={handleRefresh} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Try Again
+        </Button>
+      </div>
+    </section>
     );
   }
 
   return (
-    <section className="py-16 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">Business Opportunities</h2>
+            <h2 className="text-3xl font-bold">Latest Opportunities</h2>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -110,7 +110,7 @@ const TrendingSection = () => {
             </Button>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            AI-curated business opportunities and market trends to inspire your next venture
+            Freshly discovered business opportunities with AI-generated market analysis and action plans
           </p>
         </div>
 

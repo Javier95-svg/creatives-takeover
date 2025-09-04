@@ -57,13 +57,30 @@ const BlogHero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-            <span className="takeover-gradient">Insighta</span>
+            <span className="takeover-gradient">Business Opportunity</span> Explorer
           </h1>
           
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            Discover the latest business trends and opportunities from across the web. Insighta uses AI to surface trending articles, industry insights, and emerging opportunities that matter to entrepreneurs and innovators.
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            AI-powered discovery of emerging business opportunities, market gaps, and trending ventures. 
+            Turn market insights into your next successful business idea.
           </p>
+
+          {/* Value Proposition */}
+          <div className="flex flex-wrap justify-center gap-6 mb-12 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              <span className="text-sm font-medium">Market Intelligence</span>
+            </div>
+            <div className="flex items-center gap-2 bg-secondary/10 px-4 py-2 rounded-full">
+              <div className="w-2 h-2 bg-secondary rounded-full"></div>
+              <span className="text-sm font-medium">Business Ideas</span>
+            </div>
+            <div className="flex items-center gap-2 bg-accent/10 px-4 py-2 rounded-full">
+              <div className="w-2 h-2 bg-accent rounded-full"></div>
+              <span className="text-sm font-medium">Action Plans</span>
+            </div>
+          </div>
 
           {/* Search Bar */}
           <form 
@@ -75,16 +92,22 @@ const BlogHero = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search articles..."
+                placeholder="Search opportunities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 glass"
               />
             </div>
             <Button type="submit" className="glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic">
-              Search
+              Discover
             </Button>
           </form>
+
+          {/* Connection Bridge to Next Section */}
+          <div className="mt-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            <div className="w-px h-12 bg-gradient-to-b from-primary/50 to-transparent mx-auto"></div>
+            <div className="w-2 h-2 bg-primary rounded-full mx-auto -mt-1"></div>
+          </div>
         </div>
       </div>
     </section>
