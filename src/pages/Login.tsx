@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,6 +23,7 @@ const Login = () => {
     email: "",
     password: ""
   });
+  const [rememberMe, setRememberMe] = useState(false);
   
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
@@ -32,6 +34,15 @@ const Login = () => {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Prefill saved email if user opted to be remembered
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -94,6 +105,11 @@ const Login = () => {
       if (error) {
         toast.error(error.message || "Login failed. Please check your credentials.");
       } else {
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
         toast.success("Login successful! Welcome back.");
         navigate('/');
       }
@@ -172,7 +188,7 @@ const Login = () => {
             <h2 className="text-xl font-semibold text-center">Sign in to your account</h2>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} autoComplete="on" className="space-y-6">
               {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
@@ -191,6 +207,10 @@ const Login = () => {
                       errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
+                    autoComplete="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    inputMode="email"
                   />
                 </div>
                 {errors.email && (
@@ -216,6 +236,7 @@ const Login = () => {
                       errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
@@ -235,8 +256,17 @@ const Login = () => {
                 )}
               </div>
 
-              {/* Forgot Password Link */}
-              <div className="text-right">
+              {/* Remember Me + Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+                </div>
                 <Link
                   to="/forgot-password"
                   className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"

@@ -198,7 +198,7 @@ const Signup = () => {
             <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
@@ -217,6 +217,7 @@ const Signup = () => {
                       errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
+                    autoComplete="name"
                   />
                 </div>
                 {errors.fullName && (
@@ -242,6 +243,10 @@ const Signup = () => {
                       errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
+                    autoComplete="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    inputMode="email"
                   />
                 </div>
                 {errors.email && (
@@ -267,6 +272,7 @@ const Signup = () => {
                       errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -307,6 +313,7 @@ const Signup = () => {
                       errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
