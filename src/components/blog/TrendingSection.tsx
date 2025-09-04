@@ -67,13 +67,35 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
   if (isLoading || isGenerating) {
     return (
       <section className="relative py-12 overflow-hidden" data-section="opportunities">
-        {/* Shared Background with Hero */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+      {/* Animated Background with Multiple Layers */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-30"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+      
+      {/* Enhanced Animated Floating Elements */}
+      <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-60" />
+      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '3s' }} />
+      <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/30 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '4s' }} />
+      <div className="absolute top-1/3 right-10 w-6 h-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
+      <div className="absolute bottom-1/3 left-10 w-4 h-4 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-30" style={{ animationDelay: '6s' }} />
+      
+      {/* Additional Dynamic Elements */}
+      <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/40 rounded-full animate-drift opacity-60" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute top-80 right-1/4 w-5 h-5 bg-secondary/20 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1.5s' }} />
+      <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-accent/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.5s' }} />
+      <div className="absolute top-24 right-1/3 w-8 h-8 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-orbit opacity-20 blur-sm" style={{ animationDelay: '7s' }} />
+      <div className="absolute bottom-24 left-1/3 w-10 h-10 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-15 blur-md" style={{ animationDelay: '8s' }} />
+      
+      {/* Tiny Floating Particles */}
+      <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '11s' }} />
+      <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/60 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '12s' }} />
+      <div className="absolute top-72 left-12 w-2 h-2 bg-accent/40 rounded-full animate-orbit opacity-55" style={{ animationDelay: '13s' }} />
+      <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '14s' }} />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-8">
@@ -110,13 +132,35 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
   if (error) {
     return (
       <section className="relative py-12 overflow-hidden" data-section="opportunities">
-        {/* Shared Background with Hero */}
+        {/* Animated Background with Multiple Layers */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+        
+        {/* Enhanced Animated Floating Elements */}
+        <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-60" />
+        <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '3s' }} />
+        <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/30 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/3 right-10 w-6 h-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
+        <div className="absolute bottom-1/3 left-10 w-4 h-4 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-30" style={{ animationDelay: '6s' }} />
+        
+        {/* Additional Dynamic Elements */}
+        <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/40 rounded-full animate-drift opacity-60" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-80 right-1/4 w-5 h-5 bg-secondary/20 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-accent/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.5s' }} />
+        <div className="absolute top-24 right-1/3 w-8 h-8 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-orbit opacity-20 blur-sm" style={{ animationDelay: '7s' }} />
+        <div className="absolute bottom-24 left-1/3 w-10 h-10 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-15 blur-md" style={{ animationDelay: '8s' }} />
+        
+        {/* Tiny Floating Particles */}
+        <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '11s' }} />
+        <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/60 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '12s' }} />
+        <div className="absolute top-72 left-12 w-2 h-2 bg-accent/40 rounded-full animate-orbit opacity-55" style={{ animationDelay: '13s' }} />
+        <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '14s' }} />
         
         <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-3xl font-bold mb-4">Latest Opportunities</h2>
@@ -134,13 +178,35 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
 
   return (
     <section className="relative py-12 overflow-hidden" data-section="opportunities">
-      {/* Shared Background with Hero */}
+      {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+      
+      {/* Enhanced Animated Floating Elements */}
+      <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-60" />
+      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '3s' }} />
+      <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/30 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '4s' }} />
+      <div className="absolute top-1/3 right-10 w-6 h-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
+      <div className="absolute bottom-1/3 left-10 w-4 h-4 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-30" style={{ animationDelay: '6s' }} />
+      
+      {/* Additional Dynamic Elements */}
+      <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/40 rounded-full animate-drift opacity-60" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute top-80 right-1/4 w-5 h-5 bg-secondary/20 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1.5s' }} />
+      <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-accent/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.5s' }} />
+      <div className="absolute top-24 right-1/3 w-8 h-8 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-orbit opacity-20 blur-sm" style={{ animationDelay: '7s' }} />
+      <div className="absolute bottom-24 left-1/3 w-10 h-10 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-15 blur-md" style={{ animationDelay: '8s' }} />
+      
+      {/* Tiny Floating Particles */}
+      <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '11s' }} />
+      <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/60 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '12s' }} />
+      <div className="absolute top-72 left-12 w-2 h-2 bg-accent/40 rounded-full animate-orbit opacity-55" style={{ animationDelay: '13s' }} />
+      <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '14s' }} />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-8">
