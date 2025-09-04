@@ -5,10 +5,15 @@ import HowWeWork from "@/components/HowWeWork";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
 import CTASection from "@/components/CTASection";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
+import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
+import { useExitIntent } from "@/hooks/useExitIntent";
 
 const Index = () => {
+  const { showExitIntent, closeExitIntent } = useExitIntent();
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -26,6 +31,10 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
+      
+      {/* Conversion Optimization Components */}
+      <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
+      <ScrollTriggeredCTA />
     </div>
   );
 };

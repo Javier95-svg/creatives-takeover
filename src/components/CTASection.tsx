@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Users, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
@@ -44,15 +45,15 @@ const CTASection = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic" asChild>
-              <a href="/dream2plan">
+              <Link to="/dream2plan">
                 Generate My Launch Strategy
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </a>
+              </Link>
             </Button>
             <Button size="lg" variant="outline" className="glass hover:bg-primary/10 px-8 py-4 text-lg btn-magnetic" asChild>
-              <a href="/community">
+              <Link to="/community">
                 Join Entrepreneur Network
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
