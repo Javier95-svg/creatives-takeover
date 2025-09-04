@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,6 +24,7 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -34,6 +36,15 @@ const Auth: React.FC = () => {
     };
     checkUser();
   }, [navigate]);
+
+  // Prefill saved email if user opted to be remembered
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +60,11 @@ const Auth: React.FC = () => {
       setError(error.message);
       setLoading(false);
     } else {
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
       toast.success('Welcome back!');
       navigate('/');
     }
@@ -152,6 +168,15 @@ const Auth: React.FC = () => {
                     required
                     disabled={loading}
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+                    disabled={loading}
+                  />
+                  <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
