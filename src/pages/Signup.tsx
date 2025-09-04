@@ -171,8 +171,8 @@ const Signup = () => {
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4">
       <Helmet>
-        <title>Sign Up - BizMap AI</title>
-        <meta name="description" content="Create your BizMap AI account to start transforming business ideas into actionable plans with AI-powered insights." />
+        <title>Sign Up - Creatives Takeover</title>
+        <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
       {/* Animated Background */}
@@ -183,11 +183,11 @@ const Signup = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
             <Sparkles className="w-6 h-6" />
-            BizMap AI
+            Creatives Takeover
           </Link>
-          <h1 className="text-3xl font-bold mt-4 mb-2">Join BizMap AI</h1>
+          <h1 className="text-3xl font-bold mt-4 mb-2">Join Creatives Takeover</h1>
           <p className="text-muted-foreground">
-            Start turning your business ideas into reality
+            Start turning your creative ideas into reality
           </p>
         </div>
 
