@@ -91,48 +91,19 @@ serve(async (req) => {
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
-      // Determine subscription tier from Stripe price with robust mapping
+      // Determine subscription tier from price
       const priceId = subscription.items.data[0].price.id;
       const price = await stripe.prices.retrieve(priceId);
       const amount = price.unit_amount || 0;
-
-      // Try to resolve tier using subscription_tiers table first
-      let usedMapping: 'stripe_price_id' | 'price_cents' | 'fallback' = 'fallback';
-      let resolvedTier: string | null = null;
-      try {
-        const { data: tiers, error: tiersError } = await supabaseService
-          .from('subscription_tiers')
-          .select('tier_name,stripe_price_id,price_cents');
-        if (!tiersError && tiers && tiers.length > 0) {
-          const byPriceId = tiers.find(t => t.stripe_price_id && t.stripe_price_id === priceId);
-          if (byPriceId) {
-            resolvedTier = byPriceId.tier_name;
-            usedMapping = 'stripe_price_id';
-          } else {
-            const byAmount = tiers.find(t => typeof t.price_cents === 'number' && t.price_cents === amount);
-            if (byAmount) {
-              resolvedTier = byAmount.tier_name;
-              usedMapping = 'price_cents';
-            }
-          }
-        }
-      } catch (mapErr) {
-        logStep('Error reading subscription_tiers for mapping', { error: String(mapErr) });
+      
+      if (amount <= 999) {
+        subscriptionTier = "basic";
+      } else if (amount <= 1999) {
+        subscriptionTier = "premium";
+      } else {
+        subscriptionTier = "enterprise";
       }
-
-      // Fallback to amount thresholds if mapping not resolved
-      if (!resolvedTier) {
-        if (amount <= 999) {
-          resolvedTier = 'basic';
-        } else if (amount <= 1999) {
-          resolvedTier = 'premium';
-        } else {
-          resolvedTier = 'enterprise';
-        }
-      }
-
-      subscriptionTier = resolvedTier;
-      logStep("Tier mapping resolved", { priceId, amount, subscriptionTier, usedMapping });
+      logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
     } else {
       logStep("No active subscription found");
     }
