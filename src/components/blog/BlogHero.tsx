@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
 
@@ -11,6 +11,13 @@ const BlogHero = () => {
     e.preventDefault();
     // This will be implemented when you add search functionality
     console.log("Searching for:", searchTerm);
+  };
+
+  const scrollToOpportunities = () => {
+    const opportunitiesSection = document.querySelector('[data-section="opportunities"]');
+    if (opportunitiesSection) {
+      opportunitiesSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -57,13 +64,13 @@ const BlogHero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-            <span className="takeover-gradient">Business Opportunity</span> Explorer
+            <span className="takeover-gradient">Insighta</span>
           </h1>
           
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            AI-powered discovery of emerging business opportunities, market gaps, and trending ventures. 
-            Turn market insights into your next successful business idea.
+            Our AI scans thousands of news sources, market reports, and trend data to identify emerging business opportunities. 
+            Each opportunity is analyzed for market gap, target audience, and competitive landscape to help you make informed decisions.
           </p>
 
           {/* Value Proposition */}
@@ -103,10 +110,16 @@ const BlogHero = () => {
             </Button>
           </form>
 
-          {/* Connection Bridge to Next Section */}
+          {/* Scroll Down Indicator */}
           <div className="mt-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <div className="w-px h-12 bg-gradient-to-b from-primary/50 to-transparent mx-auto"></div>
-            <div className="w-2 h-2 bg-primary rounded-full mx-auto -mt-1"></div>
+            <Button
+              variant="ghost"
+              onClick={scrollToOpportunities}
+              className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
+            >
+              <span className="text-sm font-medium">Latest Opportunities</span>
+              <ChevronDown className="w-5 h-5 animate-bounce group-hover:animate-pulse" />
+            </Button>
           </div>
         </div>
       </div>

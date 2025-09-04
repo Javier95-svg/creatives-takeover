@@ -43,7 +43,7 @@ const TrendingSection = () => {
 
   if (isLoading || isGenerating) {
     return (
-    <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
+    <section className="py-12 bg-gradient-to-b from-muted/30 to-background" data-section="opportunities">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
@@ -78,7 +78,7 @@ const TrendingSection = () => {
 
   if (error) {
     return (
-    <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
+    <section className="py-12 bg-gradient-to-b from-muted/30 to-background" data-section="opportunities">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-3xl font-bold mb-4">Latest Opportunities</h2>
         <p className="text-muted-foreground mb-6">
@@ -94,7 +94,7 @@ const TrendingSection = () => {
   }
 
   return (
-    <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
+    <section className="py-12 bg-gradient-to-b from-muted/30 to-background" data-section="opportunities">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
