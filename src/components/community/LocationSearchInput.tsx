@@ -49,41 +49,10 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   const marker = useRef<mapboxgl.Marker | null>(null);
   const debounceTimer = useRef<number | undefined>(undefined);
 
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-
-  // Get Mapbox token on component mount
-  useEffect(() => {
-    const getMapboxToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('location-search', {
-          body: { action: 'get-token' }
-        });
-        
-        if (error) {
-          console.error('Failed to get Mapbox token:', error);
-          // Fallback to demo token with warning
-          const demoToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-          setMapboxToken(demoToken);
-          console.warn('Using demo Mapbox token - functionality may be limited');
-        } else if (data?.token) {
-          setMapboxToken(data.token);
-        }
-      } catch (error) {
-        console.error('Error getting Mapbox token:', error);
-        // Use demo token as fallback
-        const demoToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-        setMapboxToken(demoToken);
-        console.warn('Using demo Mapbox token - functionality may be limited');
-      }
-    };
-
-    getMapboxToken();
-  }, []);
+  const [mapboxToken] = useState<string>('pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw');
 
   useEffect(() => {
-    if (mapboxToken) {
-      mapboxgl.accessToken = mapboxToken;
-    }
+    mapboxgl.accessToken = mapboxToken;
   }, [mapboxToken]);
 
   const searchLocations = useCallback(async (query: string) => {
@@ -96,22 +65,27 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     try {
       console.log('Searching for location:', query);
       
-      const { data, error } = await supabase.functions.invoke('location-search', {
-        body: JSON.stringify({ q: query })
-      });
-      
-      if (error) {
-        console.error('Location search error:', error);
-        toast.error('Failed to search locations. Please try again.');
-        setSuggestions([]);
-      } else {
-        console.log('Search results:', data);
-        setSuggestions(data.features || []);
-        setShowSuggestions(true);
-        
-        if (data.features && data.features.length === 0) {
-          toast.info('No locations found. Try a different search term.');
+      const response = await fetch(
+        `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/location-search?q=${encodeURIComponent(query)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng`,
+          },
         }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Search results:', data);
+      setSuggestions(data.features || []);
+      setShowSuggestions(true);
+      
+      if (data.features && data.features.length === 0) {
+        toast.info('No locations found. Try a different search term.');
       }
     } catch (error) {
       console.error('Location search error:', error);
@@ -181,14 +155,23 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
         try {
           console.log('Getting location details for:', latitude, longitude);
           
-          const { data, error } = await supabase.functions.invoke('location-search', {
-            body: JSON.stringify({ lng: longitude, lat: latitude })
-          });
+          const response = await fetch(
+            `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/location-search?lng=${longitude}&lat=${latitude}`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng`,
+              },
+            }
+          );
           
-          if (error) {
-            console.error('Reverse geocoding error:', error);
-            toast.error('Failed to get location details.');
-          } else if (data.features && data.features[0]) {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.features && data.features[0]) {
             const feature = data.features[0];
             const locationData: LocationData = {
               address: feature.place_name,
