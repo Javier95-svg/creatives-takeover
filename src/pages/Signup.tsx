@@ -189,7 +189,7 @@ const Signup = () => {
             />
             Creatives Takeover
           </Link>
-          <h1 className="text-3xl font-bold mt-4 mb-2">Join Creatives Takeover</h1>
+          <h1 className="text-3xl font-bold mt-4 mb-2">Join us</h1>
           <p className="text-muted-foreground">
             Start turning your creative ideas into reality
           </p>
