@@ -71,9 +71,6 @@ const Hero = () => {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </a>
             </Button>
-            <Button size="lg" variant="outline" className="glass hover:bg-primary/10 px-8 py-4 text-lg btn-magnetic" aria-label="See sample business plan">
-              See Sample Business Plan
-            </Button>
           </div>
 
           {/* Stats */}
