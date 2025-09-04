@@ -84,6 +84,12 @@ const Pricing = () => {
       return;
     }
 
+    if (tierName === 'premium') {
+      // Redirect to external payment URL for premium tier
+      window.open("https://pay.creatives-takeover.com/b/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
+      return;
+    }
+
     // Use internal checkout for other paid tiers
     await createCheckout(tierName);
   };
