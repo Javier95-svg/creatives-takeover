@@ -6,6 +6,7 @@ import TrendCard from "./TrendCard";
 import SearchFilters from "./SearchFilters";
 import { useTrends } from "@/hooks/useTrends";
 import { useSearch } from "@/hooks/useSearch";
+import heroImage from "@/assets/hero-bg-animated.jpg";
 
 interface TrendingSectionProps {
   searchTerm?: string;
@@ -65,8 +66,16 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
 
   if (isLoading || isGenerating) {
     return (
-      <section className="py-12 bg-gradient-to-b from-muted/30 to-background" data-section="opportunities">
-        <div className="container mx-auto px-4">
+      <section className="relative py-12 overflow-hidden" data-section="opportunities">
+        {/* Shared Background with Hero */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
@@ -100,8 +109,16 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
 
   if (error) {
     return (
-      <section className="py-12 bg-gradient-to-b from-muted/30 to-background" data-section="opportunities">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative py-12 overflow-hidden" data-section="opportunities">
+        {/* Shared Background with Hero */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-3xl font-bold mb-4">Latest Opportunities</h2>
           <p className="text-muted-foreground mb-6">
             Unable to load opportunities at the moment. Please try again.
@@ -116,8 +133,16 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
   }
 
   return (
-    <section className="py-12 bg-gradient-to-b from-muted/30 to-background" data-section="opportunities">
-      <div className="container mx-auto px-4">
+    <section className="relative py-12 overflow-hidden" data-section="opportunities">
+      {/* Shared Background with Hero */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-30"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Sparkles className="h-6 w-6 text-primary" />
