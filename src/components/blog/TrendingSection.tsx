@@ -6,7 +6,7 @@ import TrendCard from "./TrendCard";
 import SearchFilters from "./SearchFilters";
 import { useTrends } from "@/hooks/useTrends";
 import { useSearch } from "@/hooks/useSearch";
-import heroImage from "@/assets/hero-bg-animated.jpg";
+import opportunitiesImage from "@/assets/opportunities-bg.jpg";
 
 interface TrendingSectionProps {
   searchTerm?: string;
@@ -70,7 +70,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
       {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${opportunitiesImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
@@ -135,7 +135,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
         {/* Animated Background with Multiple Layers */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{ backgroundImage: `url(${heroImage})` }}
+          style={{ backgroundImage: `url(${opportunitiesImage})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
@@ -181,7 +181,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
       {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${opportunitiesImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
