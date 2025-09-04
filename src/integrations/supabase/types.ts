@@ -548,67 +548,91 @@ export type Database = {
       }
       trends: {
         Row: {
+          action_steps: string[] | null
           article_source: string | null
           article_url: string | null
           author: string | null
+          business_opportunity: Json | null
           category: string
+          competition_level: string | null
           created_at: string
           description: string
+          entry_difficulty: number | null
           expires_at: string
           geographic_relevance: string[] | null
           id: string
           is_active: boolean
           keywords: string[]
+          market_size_estimate: string | null
           market_size_indicator: string | null
           opportunity_score: number | null
           publication_date: string | null
+          revenue_models: string[] | null
           sentiment: string | null
           source_urls: string[] | null
           summary: string | null
+          target_audience: string[] | null
+          time_sensitivity: string | null
           title: string
           trend_score: number
           updated_at: string
         }
         Insert: {
+          action_steps?: string[] | null
           article_source?: string | null
           article_url?: string | null
           author?: string | null
+          business_opportunity?: Json | null
           category?: string
+          competition_level?: string | null
           created_at?: string
           description: string
+          entry_difficulty?: number | null
           expires_at?: string
           geographic_relevance?: string[] | null
           id?: string
           is_active?: boolean
           keywords?: string[]
+          market_size_estimate?: string | null
           market_size_indicator?: string | null
           opportunity_score?: number | null
           publication_date?: string | null
+          revenue_models?: string[] | null
           sentiment?: string | null
           source_urls?: string[] | null
           summary?: string | null
+          target_audience?: string[] | null
+          time_sensitivity?: string | null
           title: string
           trend_score?: number
           updated_at?: string
         }
         Update: {
+          action_steps?: string[] | null
           article_source?: string | null
           article_url?: string | null
           author?: string | null
+          business_opportunity?: Json | null
           category?: string
+          competition_level?: string | null
           created_at?: string
           description?: string
+          entry_difficulty?: number | null
           expires_at?: string
           geographic_relevance?: string[] | null
           id?: string
           is_active?: boolean
           keywords?: string[]
+          market_size_estimate?: string | null
           market_size_indicator?: string | null
           opportunity_score?: number | null
           publication_date?: string | null
+          revenue_models?: string[] | null
           sentiment?: string | null
           source_urls?: string[] | null
           summary?: string | null
+          target_audience?: string[] | null
+          time_sensitivity?: string | null
           title?: string
           trend_score?: number
           updated_at?: string
@@ -824,6 +848,10 @@ export type Database = {
         }[]
       }
       grant_monthly_credits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      refresh_expired_trends: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
