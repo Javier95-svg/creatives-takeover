@@ -47,19 +47,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Grant monthly credits if due (free and paid tiers)
             supabase.rpc('grant_monthly_credits');
             
-            // Send email notification for new signups only
+            // Send emails for new signups only
             if (isNewProfile) {
               try {
-                await supabase.functions.invoke('notify-admin', {
-                  body: {
-                    email: session.user.email || '',
-                    fullName: session.user.user_metadata?.full_name || '',
-                    timestamp: new Date().toISOString()
-                  }
-                });
-                console.log('Admin notification sent for new user:', session.user.email);
+                await Promise.all([
+                  supabase.functions.invoke('notify-admin', {
+                    body: {
+                      email: session.user.email || '',
+                      fullName: session.user.user_metadata?.full_name || '',
+                      timestamp: new Date().toISOString()
+                    }
+                  }),
+                  supabase.functions.invoke('send-welcome-email', {
+                    body: {
+                      email: session.user.email || '',
+                      fullName: session.user.user_metadata?.full_name || ''
+                    }
+                  })
+                ]);
+                console.log('Admin notification and welcome email sent for new user:', session.user.email);
               } catch (notificationError) {
-                console.log('Failed to send admin notification:', notificationError);
+                console.log('Failed to send admin notification or welcome email:', notificationError);
               }
             }
           }, 0);
