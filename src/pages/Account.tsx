@@ -7,16 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera, Users, UserCheck, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
+import { useSocial } from "@/hooks/useSocial";
 
 const Account = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [friendRequestsOpen, setFriendRequestsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const { pendingFriendRequests } = useSocial();
   
   // Profile state
   const [fullName, setFullName] = useState("");
@@ -384,6 +390,52 @@ const Account = () => {
             </Card>
           </form>
 
+          {/* Social Stats & Friend Requests */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Social & Connections
+              </CardTitle>
+              <CardDescription>
+                Your social statistics and manage friend requests.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-wrap items-center gap-6">
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
+                  <Users className="h-4 w-4" />
+                  {/* Add followers count from profile data when available */}
+                  0 Followers
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
+                  <UserCheck className="h-4 w-4" />
+                  0 Following
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
+                  <MessageSquare className="h-4 w-4" />
+                  0 Friends
+                </Badge>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => setFriendRequestsOpen(true)}
+                className="relative"
+              >
+                Friend Requests
+                {pendingFriendRequests.length > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                  >
+                    {pendingFriendRequests.length > 9 ? '9+' : pendingFriendRequests.length}
+                  </Badge>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Account Information */}
           <Card>
             <CardHeader>
@@ -430,6 +482,10 @@ const Account = () => {
           </Card>
         </div>
         </div>
+        <FriendRequestsModal 
+          open={friendRequestsOpen} 
+          onOpenChange={setFriendRequestsOpen} 
+        />
       </div>
     </div>
   );

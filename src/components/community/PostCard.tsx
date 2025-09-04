@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import SignInModal from "./SignInModal";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { SocialButtons } from "@/components/social/SocialButtons";
 
 export type Post = {
   id: string;

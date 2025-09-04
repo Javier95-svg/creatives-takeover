@@ -1,3 +1,4 @@
+import Messages from "./pages/Messages";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/community" element={<CommunityPage />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/prompt-library" element={<PromptLibrary />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/contact" element={<Contact />} />
