@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">🎉 New User Signup - BizMap AI</h1>
+          <h1 style="color: white; margin: 0; font-size: 24px;">🎉 New User Signup - Creatives Takeover</h1>
         </div>
         
         <div style="background: white; padding: 30px; border: 1px solid #e1e5e9; border-radius: 0 0 10px 10px;">
@@ -53,14 +53,22 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
         
         <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
-          <p>This is an automated notification from BizMap AI</p>
+          <p>This is an automated notification from Creatives Takeover</p>
         </div>
       </div>
     `;
 
+    // Get sender information from environment
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+    const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
+    
+    // Get recipient emails from environment (comma-separated)
+    const adminEmails = Deno.env.get("ADMIN_NOTIFICATION_EMAILS") || "javier_apv13@hotmail.com";
+    const recipients = adminEmails.split(",").map(email => email.trim());
+
     const emailResponse = await resend.emails.send({
-      from: "BizMap AI <onboarding@resend.dev>",
-      to: ["javier_apv13@hotmail.com"],
+      from: `${fromName} <${fromEmail}>`,
+      to: recipients,
       subject: `🚀 New User Signup: ${email}`,
       html: emailHtml,
     });
