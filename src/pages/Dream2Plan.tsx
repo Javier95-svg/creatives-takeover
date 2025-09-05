@@ -18,6 +18,7 @@ import { useChatSessions, ChatSession } from "@/hooks/useChatSessions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditGate } from "@/components/CreditGate";
+import { AudioRecorder } from "@/components/AudioRecorder";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -617,8 +618,8 @@ ${translations.dataDisclaimer}`;
     }
   };
   
-  const handleNextStep = async () => {
-    const currentAnswer = message.trim();
+  const handleNextStep = async (messageOverride?: string) => {
+    const currentAnswer = (messageOverride || message).trim();
     if (!currentAnswer) {
       toast.error("Please provide an answer before continuing.");
       return;
@@ -827,12 +828,19 @@ ${translations.dataDisclaimer}`;
   };
 
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (messageOverride?: string) => {
+    const messageToSend = messageOverride || message.trim();
     if (currentStep < wizardSteps.length) {
-      handleNextStep();
+      await handleNextStep(messageToSend);
     } else {
       await handlePostReportMessage();
     }
+    if (!messageOverride) setMessage('');
+  };
+
+  const handleAudioTranscription = (text: string) => {
+    setMessage(text);
+    handleSendMessage(text);
   };
 
   const getCurrentPlaceholder = () => {
@@ -1051,7 +1059,7 @@ ${translations.dataDisclaimer}`;
                           disabled={isLoading}
                         />
                         <Button 
-                          onClick={handleSendMessage} 
+                          onClick={() => handleSendMessage()} 
                           size="icon" 
                           disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
                         >
@@ -1067,7 +1075,7 @@ ${translations.dataDisclaimer}`;
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={handleSendMessage}
+                            onClick={() => handleSendMessage()}
                             disabled={isLoading || !message.trim()}
                           >
                             {getButtonText()}
