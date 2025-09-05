@@ -1058,6 +1058,10 @@ ${translations.dataDisclaimer}`;
                           className="flex-1"
                           disabled={isLoading}
                         />
+                        <AudioRecorder 
+                          onTranscription={handleAudioTranscription}
+                          disabled={isLoading}
+                        />
                         <Button 
                           onClick={() => handleSendMessage()} 
                           size="icon" 
