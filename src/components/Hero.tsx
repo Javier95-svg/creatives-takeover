@@ -74,18 +74,12 @@ const Hero = () => {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div className="flex justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating relative overflow-hidden group" aria-label="Create business plan and earn credits" asChild>
               <Link to="/dream2plan">
                 <span className="relative z-10">Get FREE Report + Credits</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="glass hover:bg-primary/10 px-8 py-4 text-lg btn-magnetic" asChild>
-              <Link to="/dream2plan">
-                Start Business Plan
-                <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
           </div>
