@@ -122,7 +122,7 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
             <div className="space-y-2 mb-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>15-page business analysis report</span>
+                <span>Strategic business analysis report</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
@@ -134,7 +134,7 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
             <div className="flex gap-4 justify-center mb-4 text-xs text-muted-foreground animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center gap-1">
                 <Users className="w-3 h-3 text-primary" />
-                <span>500+ earned credits</span>
+                <span>Growing community</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-3 h-3 text-primary" />

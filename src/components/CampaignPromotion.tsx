@@ -60,7 +60,7 @@ const CampaignPromotion = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center gap-3 text-left">
               <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
-              <span>Comprehensive 15-page business analysis report</span>
+              <span>Strategic business analysis report</span>
             </div>
             <div className="flex items-center gap-3 text-left">
               <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
@@ -80,7 +80,7 @@ const CampaignPromotion = () => {
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Users className="w-5 h-5 text-primary" />
-              <span>500+ entrepreneurs earned credits</span>
+              <span>Growing entrepreneur community</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="w-5 h-5 text-primary" />
@@ -88,7 +88,7 @@ const CampaignPromotion = () => {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Gift className="w-5 h-5 text-primary" />
-              <span>Worth $97+ in value</span>
+              <span>Professional business insights</span>
             </div>
           </div>
 

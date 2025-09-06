@@ -17,10 +17,10 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
   if (isAuthenticated) return null;
 
   const benefits = [
-    "FREE comprehensive business plan (worth $97)",
+    "FREE strategic business analysis report",
     "Complete 5-minute survey = up to 7 bonus credits",
     "AI-powered market analysis & validation included",
-    "Join 1,200+ entrepreneurs who earned free credits"
+    "Join our growing community of entrepreneurs"
   ];
 
   return (
@@ -74,11 +74,11 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="w-4 h-4 text-primary" />
-                <span className="text-sm">1,200+ entrepreneurs joined</span>
+                <span className="text-sm">Growing entrepreneur community</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="w-4 h-4 text-primary" />
-                <span className="text-sm">28 min average completion</span>
+                <span className="text-sm">5 minute survey</span>
               </div>
             </div>
 
