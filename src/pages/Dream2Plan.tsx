@@ -649,7 +649,7 @@ ${translations.dataDisclaimer}`;
           
         case 'problem':
           // Need quantified pain points and current solutions
-          return wordCount < 20 || (!hasSpecifics && !hasTimeframe) || !t.includes('current');
+          return wordCount < 15 || (!hasSpecifics && !hasTimeframe && !t.includes('difficult') && !t.includes('hard') && !t.includes('expensive') && !t.includes('slow') && !t.includes('frustrating'));
           
         case 'solution':
           // Need differentiation and competitive analysis
