@@ -709,6 +709,54 @@ export type Database = {
           },
         ]
       }
+      user_feedback: {
+        Row: {
+          acquisition_source: string | null
+          additional_comments: string | null
+          business_challenge: string | null
+          completed_at: string
+          conversion_status: string | null
+          created_at: string
+          email: string | null
+          feature_request: string | null
+          id: string
+          nps_score: number | null
+          session_id: string | null
+          user_id: string | null
+          ux_rating: number | null
+        }
+        Insert: {
+          acquisition_source?: string | null
+          additional_comments?: string | null
+          business_challenge?: string | null
+          completed_at?: string
+          conversion_status?: string | null
+          created_at?: string
+          email?: string | null
+          feature_request?: string | null
+          id?: string
+          nps_score?: number | null
+          session_id?: string | null
+          user_id?: string | null
+          ux_rating?: number | null
+        }
+        Update: {
+          acquisition_source?: string | null
+          additional_comments?: string | null
+          business_challenge?: string | null
+          completed_at?: string
+          conversion_status?: string | null
+          created_at?: string
+          email?: string | null
+          feature_request?: string | null
+          id?: string
+          nps_score?: number | null
+          session_id?: string | null
+          user_id?: string | null
+          ux_rating?: number | null
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string

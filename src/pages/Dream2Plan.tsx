@@ -18,6 +18,8 @@ import { useChatSessions, ChatSession } from "@/hooks/useChatSessions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditGate } from "@/components/CreditGate";
+import { useFeedbackModal } from "@/hooks/useFeedbackModal";
+import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
 
 const BizMapAI = () => {
@@ -45,19 +47,10 @@ const BizMapAI = () => {
     }
   ]);
 
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ type: 'report' | 'asset'; assetType?: string } | null>(null);
-  const {
-    currentSessionId,
-    setCurrentSessionId,
-    createNewSession,
-    updateSession,
-    getSession,
-    sessions
-  } = useChatSessions();
-
+  
+  // Define wizardSteps before using it in hooks
   const wizardSteps = [
     {
       key: "overview",
@@ -109,6 +102,18 @@ const BizMapAI = () => {
       transition: "Excellent! I have everything I need to create your personalized Launch Report."
     }
   ];
+
+  const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
+  const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{ type: 'report' | 'asset'; assetType?: string } | null>(null);
+  const {
+    currentSessionId,
+    setCurrentSessionId,
+    createNewSession,
+    updateSession,
+    getSession,
+    sessions
+  } = useChatSessions();
 
   const [message, setMessage] = useState("");
   const [followUpState, setFollowUpState] = useState<{ active: boolean; stepKey: string | null; initialAnswer: string }>(
@@ -263,15 +268,17 @@ const BizMapAI = () => {
   // Generate asset function remains unchanged
 
   // Simplified launch report generation - single step, fixed cost
-  const generateLaunchReport = async (answers: any) => {
-    if (!user) {
-      toast.error("Please sign in to generate a launch report");
+  const generateLaunchReport = async (answers: any, isFreeForFeedback = false) => {
+    // Check authentication and credits (unless it's free for feedback)
+    if (!isAuthenticated && !isFreeForFeedback && !hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
+      setPendingAction({ type: 'report' });
+      setCreditGateOpen(true);
       return;
     }
 
     const reportCost = CREDIT_COSTS.LAUNCH_REPORT;
 
-    if (!hasCredits(reportCost)) {
+    if (!isFreeForFeedback && !hasCredits(reportCost)) {
       setPendingAction({ type: 'report' });
       setCreditGateOpen(true);
       return;
@@ -302,8 +309,14 @@ const BizMapAI = () => {
       }
 
       if (data?.success) {
-        // Credits are deducted by the edge function
-        toast.success(`Launch Report generated successfully! (Used ${reportCost} credits)`);
+        // Deduct credits for authenticated users (unless it's free for feedback)
+        if (isAuthenticated && !isFreeForFeedback) {
+          handleCreditDeduction(reportCost);
+        }
+        const successMessage = isFreeForFeedback ? 
+          "FREE Launch Report generated successfully! 🎉" : 
+          `Launch Report generated successfully! (Used ${reportCost} credits)`;
+        toast.success(successMessage);
         return data.report;
       } else {
         console.error('API returned error:', data?.error);
@@ -740,7 +753,7 @@ ${translations.dataDisclaimer}`;
       } else {
         setMessages(prev => [...prev, { type: "assistant", content: "Amazing! I have everything I need now. Let me create your personalized Launch Report - this is going to be good! 🚀" }]);
         const completeAnswers = { ...userAnswers, [currentKey]: combined };
-        const report = await generateLaunchReport(completeAnswers);
+        const report = await generateLaunchReport(completeAnswers, feedbackCompleted);
         setLaunchReport(report);
         setMessages(prev => [...prev, { type: "assistant", content: report }]);
       }
@@ -804,7 +817,7 @@ ${translations.dataDisclaimer}`;
 
       // Generate launch report
       const completeAnswers = { ...userAnswers };
-      const report = await generateLaunchReport(completeAnswers);
+      const report = await generateLaunchReport(completeAnswers, feedbackCompleted);
       setLaunchReport(report);
 
       // Add final message with report
@@ -1222,6 +1235,30 @@ ${translations.dataDisclaimer}`;
           console.log('Purchase flow would open here');
           toast.info('Credit purchase coming soon!');
         }}
+      />
+
+      <FeedbackQuestionnaire 
+        open={showFeedback}
+        onClose={closeFeedback}
+        onComplete={(feedbackData) => {
+          completeFeedback();
+          // Auto-generate the free report after feedback completion
+          setTimeout(() => {
+            if (currentStep === wizardSteps.length) {
+              const completeAnswers = { ...userAnswers };
+              generateLaunchReport(completeAnswers, true).then(report => {
+                if (report) {
+                  setLaunchReport(report);
+                  setMessages(prev => [...prev, {
+                    type: "assistant", 
+                    content: "🎉 Thank you for your feedback! Here's your FREE Launch Report as promised:\n\n" + report
+                  }]);
+                }
+              });
+            }
+          }, 1000);
+        }}
+        sessionId={currentSessionId}
       />
 
       <Footer />
