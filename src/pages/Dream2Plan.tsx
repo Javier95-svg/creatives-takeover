@@ -34,8 +34,6 @@ const BizMapAI = () => {
     pricing: "",
     goals: ""
   });
-  const [userStage, setUserStage] = useState("Explore");
-  const [userRegion, setUserRegion] = useState("US");
   const [refinedContext, setRefinedContext] = useState(null);
   const [isRefiningContext, setIsRefiningContext] = useState(false);
   const [launchReport, setLaunchReport] = useState("");
@@ -271,7 +269,7 @@ const BizMapAI = () => {
     try {
       setIsRefiningContext(true);
       const { data, error } = await supabase.functions.invoke('bizmap-refine', {
-        body: { answers, stage: userStage, region: userRegion }
+        body: { answers }
       });
 
       if (error) throw error;
@@ -310,7 +308,6 @@ const BizMapAI = () => {
           businessConcept: answers.overview || answers.solution || "Business concept",
           industry: answers.market || "General",
           targetMarket: answers.market || "General market", 
-          region: userRegion,
           depth: researchDepth
         }
       });
@@ -333,7 +330,7 @@ const BizMapAI = () => {
   };
 
   // Generate launch report using the best available context
-  const generateLaunchReport = async (answers: any, stage: string, region: string) => {
+  const generateLaunchReport = async (answers: any) => {
     if (!user) {
       toast.error("Please sign in to generate a launch report");
       return;
@@ -362,8 +359,6 @@ const BizMapAI = () => {
       const { data, error } = await supabase.functions.invoke('bizmap-analysis', {
         body: { 
           answers, 
-          stage, 
-          region,
           refinedContext: context,
           researchData: research // Pass research data to the AI function
         }
@@ -371,7 +366,7 @@ const BizMapAI = () => {
 
       if (error) {
         console.error('Error generating launch report:', error);
-        const fallbackReport = generateFallbackReport(answers, stage, region);
+        const fallbackReport = generateFallbackReport(answers);
         toast.success("Generated launch report using fallback analysis");
         return fallbackReport;
       }
@@ -381,14 +376,14 @@ const BizMapAI = () => {
         return data.report;
       } else {
         console.error('API returned error:', data?.error);
-        const fallbackReport = generateFallbackReport(answers, stage, region);
+        const fallbackReport = generateFallbackReport(answers);
         toast.success("Generated launch report using fallback analysis");
         return fallbackReport;
       }
     } catch (error) {
       console.error('Unexpected error:', error);
       toast.error("Connection error. Generated launch report using local analysis.");
-      return generateFallbackReport(userAnswers, userStage, userRegion);
+      return generateFallbackReport(userAnswers);
     } finally {
       setIsLoading(false);
     }
@@ -412,8 +407,6 @@ const BizMapAI = () => {
         body: {
           type,
           answers: userAnswers,
-          stage: userStage,
-          region: userRegion,
         },
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
@@ -481,11 +474,12 @@ const BizMapAI = () => {
     await generateAsset(type);
   };
 
-  const generateFallbackReport = (answers: any, stage: string, regionInput?: string) => {
-    const region = (regionInput || 'Global').trim();
+  const generateFallbackReport = (answers: any) => {
+    // Use sensible defaults since stage and region are no longer required
+    const region = 'Global';
     const r = region.toLowerCase();
 
-    // Region-aware channels and currency
+    // Default channels for global market
     let channels = ['LinkedIn', 'Email outreach', 'Google Search'];
     let currency = '$';
     let currencyLabel = 'USD';
@@ -750,8 +744,6 @@ ${translations.dataDisclaimer}`;
     };
 
     const generateContextualFollowUp = (stepKey: string, answer: string) => {
-      const stage = userStage;
-      const region = userRegion;
       const prev = userAnswers as any;
       
       // Analyze user's business context for smarter follow-ups
@@ -762,16 +754,12 @@ ${translations.dataDisclaimer}`;
         prev.overview.toLowerCase().includes('restaurant') ? 'food' : 'general'
       ) : 'general';
       
-      const urgencyLevel = stage === 'Explore' ? 'planning' : 
-                          stage === 'Validate' ? 'testing' :
-                          stage === 'Build' ? 'launching' : 'scaling';
-      
       switch (stepKey) {
         case 'overview':
-          return `Thank you for that overview! As someone in the ${stage.toLowerCase()} stage, I'd like to understand your biggest concern right now. What's the one assumption about "${answer.slice(0, 100)}..." that keeps you up at night? This will help me tailor your launch plan perfectly.`;
+          return `Thank you for that overview! I'd like to understand your biggest concern right now. What's the one assumption about "${answer.slice(0, 100)}..." that keeps you up at night? This will help me tailor your launch plan perfectly.`;
           
         case 'market':
-          return `Great start! Since you're targeting customers in ${region}, I need to understand their behavior better. Could you tell me: where do these specific people spend most of their time online, and what's their typical decision-making process when they need solutions like yours?`;
+          return `Great start! I need to understand their behavior better. Could you tell me: where do these specific people spend most of their time online, and what's their typical decision-making process when they need solutions like yours?`;
           
         case 'problem':
           const problemContext = businessType === 'tech' ? 'inefficiency' : 
@@ -780,29 +768,19 @@ ${translations.dataDisclaimer}`;
           
         case 'solution':
           const competitorContext = prev.problem ? `given the problem of "${String(prev.problem).slice(0, 80)}..."` : 'in this space';
-          return `That sounds promising! Since you're ${urgencyLevel}, I need to understand your competitive advantage clearly. What makes your approach fundamentally different from existing solutions ${competitorContext}? What's your "unfair advantage"?`;
+          return `That sounds promising! I need to understand your competitive advantage clearly. What makes your approach fundamentally different from existing solutions ${competitorContext}? What's your "unfair advantage"?`;
           
         case 'channels':
-          const regionalChannels = region.includes('US') ? 'LinkedIn and Google' :
-                                 region.includes('India') ? 'WhatsApp and Instagram' :
-                                 region.includes('Brazil') ? 'WhatsApp and Facebook' :
-                                 region.includes('Europe') ? 'LinkedIn and email' : 'the most popular platforms';
-          return `Good thinking on channels! For ${region}, I'd recommend focusing on ${regionalChannels} initially. But I need specifics: How exactly will you get your first 10 customers through your top 2 channels? What's your step-by-step approach?`;
+          return `Good thinking on channels! But I need specifics: How exactly will you get your first 10 customers through your top 2 channels? What's your step-by-step approach?`;
           
         case 'pricing':
-          const stageAdvice = stage === 'Explore' ? 'validate willingness to pay' :
-                            stage === 'Validate' ? 'test different price points' :
-                            stage === 'Build' ? 'finalize your pricing strategy' : 'optimize pricing';
-          return `Perfect, I can see you've thought about the economics. Since you're in the ${stage.toLowerCase()} stage, you need to ${stageAdvice}. What's your specific plan to test pricing with real customers in the next 2 weeks? This is crucial for ${businessType} businesses.`;
+          return `Perfect, I can see you've thought about the economics. What's your specific plan to test pricing with real customers in the next 2 weeks? This is crucial for ${businessType} businesses.`;
           
         case 'goals':
-          const timelineContext = urgencyLevel === 'planning' ? 'establish foundations' :
-                                 urgencyLevel === 'testing' ? 'validate core assumptions' :
-                                 urgencyLevel === 'launching' ? 'acquire first customers' : 'scale operations';
-          return `Excellent goals! Given that you're ${urgencyLevel}, your focus should be to ${timelineContext}. What's the biggest obstacle you anticipate in the next 30 days, and what's your backup plan if things don't go as expected? This foresight will be key to your success.`;
+          return `Excellent goals! What's the biggest obstacle you anticipate in the next 30 days, and what's your backup plan if things don't go as expected? This foresight will be key to your success.`;
           
         default:
-          return `Thank you for sharing that. To give you the most relevant advice for your ${businessType} business in ${region}, could you provide one more specific detail that would help me understand your situation better?`;
+          return `Thank you for sharing that. To give you the most relevant advice for your ${businessType} business, could you provide one more specific detail that would help me understand your situation better?`;
       }
     };
 
@@ -828,7 +806,7 @@ ${translations.dataDisclaimer}`;
       } else {
         setMessages(prev => [...prev, { type: "assistant", content: "Excellent! Now I'm generating your personalized Launch Report based on all your responses. This may take a moment..." }]);
         const completeAnswers = { ...userAnswers, [currentKey]: combined };
-        const report = await generateLaunchReport(completeAnswers, userStage, userRegion);
+        const report = await generateLaunchReport(completeAnswers);
         setLaunchReport(report);
         setMessages(prev => [...prev, { type: "assistant", content: report }]);
       }
@@ -892,7 +870,7 @@ ${translations.dataDisclaimer}`;
 
       // Generate launch report
       const completeAnswers = { ...userAnswers };
-      const report = await generateLaunchReport(completeAnswers, userStage, userRegion);
+      const report = await generateLaunchReport(completeAnswers);
       setLaunchReport(report);
 
       // Add final message with report
@@ -1075,49 +1053,7 @@ ${translations.dataDisclaimer}`;
                       )}
                     </div>
 
-                    {/* Preferences */}
-                    <div className="p-4 border-t border-border/50 bg-muted/20">
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Stage</label>
-                          <Select value={userStage} onValueChange={setUserStage}>
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Explore">Explore (idea stage)</SelectItem>
-                              <SelectItem value="Validate">Validate (no customers yet)</SelectItem>
-                              <SelectItem value="Build">Build (MVP)</SelectItem>
-                              <SelectItem value="Grow">Grow (some revenue)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Region</label>
-                          <Select value={userRegion} onValueChange={setUserRegion}>
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="US">United States</SelectItem>
-                              <SelectItem value="Europe">Europe</SelectItem>
-                              <SelectItem value="Latin America">Latin America</SelectItem>
-                              <SelectItem value="Brazil">Brazil</SelectItem>
-                              <SelectItem value="Mexico">Mexico</SelectItem>
-                              <SelectItem value="UK">United Kingdom</SelectItem>
-                              <SelectItem value="India">India</SelectItem>
-                              <SelectItem value="China">China</SelectItem>
-                              <SelectItem value="Nigeria">Nigeria</SelectItem>
-                              <SelectItem value="Kenya">Kenya</SelectItem>
-                              <SelectItem value="UAE">UAE</SelectItem>
-                              <SelectItem value="Global">Global</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Research Controls */}
+                     {/* Research Controls */}
                     <div className="p-4 border-t border-border/50">
                       <ResearchControls
                         researchEnabled={researchEnabled}

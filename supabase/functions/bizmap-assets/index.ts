@@ -128,7 +128,7 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
-    const { type, answers, stage, region }: BizMapAssetsRequest = await req.json();
+    const { type, answers, stage = "Explore", region = "Global" }: BizMapAssetsRequest = await req.json();
 
     // Check and deduct credits BEFORE making the OpenAI call
     try {

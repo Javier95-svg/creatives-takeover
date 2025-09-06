@@ -49,7 +49,7 @@ serve(async (req) => {
   }
 
   try {
-    const { answers, stage, region }: RefineRequest = await req.json();
+    const { answers, stage = "Explore", region = "Global" }: RefineRequest = await req.json();
 
     console.log('Refining context for answers:', Object.keys(answers));
 

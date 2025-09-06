@@ -126,7 +126,7 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
-    const { answers, stage, region, sessionId, refinedContext, researchData }: LaunchReportRequest & { sessionId?: string } = await req.json();
+    const { answers, stage = "Explore", region = "Global", sessionId, refinedContext, researchData }: LaunchReportRequest & { sessionId?: string } = await req.json();
 
     // Check and deduct credits BEFORE making the OpenAI call
     try {

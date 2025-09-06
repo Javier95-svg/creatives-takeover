@@ -58,7 +58,7 @@ serve(async (req) => {
   }
 
   try {
-    const { businessConcept, industry, targetMarket, region, depth = 'comprehensive' }: ResearchRequest = await req.json();
+    const { businessConcept, industry, targetMarket, region = "Global", depth = 'comprehensive' }: ResearchRequest = await req.json();
 
     console.log('Starting market research for:', businessConcept, 'with depth:', depth);
 
