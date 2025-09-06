@@ -24,7 +24,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onTranscription, d
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          sampleRate: 44100,
+          channelCount: 1
         }
       });
       

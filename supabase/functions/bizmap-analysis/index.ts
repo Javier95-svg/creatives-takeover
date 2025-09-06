@@ -19,6 +19,7 @@ interface LaunchReportRequest {
   };
   stage?: string;
   region?: string;
+  refinedContext?: any; // Add refined context support
 }
 
 // Input quality heuristic to decide when to ask clarifying questions first
@@ -124,7 +125,7 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
-    const { answers, stage, region, sessionId }: LaunchReportRequest & { sessionId?: string } = await req.json();
+    const { answers, stage, region, sessionId, refinedContext }: LaunchReportRequest & { sessionId?: string } = await req.json();
 
     // Check and deduct credits BEFORE making the OpenAI call
     try {
@@ -168,6 +169,8 @@ USER'S 7-STEP RESPONSES:
 
 STAGE: ${stage || "Explore"}
 TARGET REGION: ${region || "Global"}
+
+REFINED CONTEXT: ${refinedContext ? JSON.stringify(refinedContext, null, 2) : 'Not available'}
 
 INPUT_QUALITY: ${quality}
 INPUT_QUALITY_REASONS: ${reasons.join('; ') || 'N/A'}

@@ -34,6 +34,8 @@ const BizMapAI = () => {
   });
   const [userStage, setUserStage] = useState("Explore");
   const [userRegion, setUserRegion] = useState("US");
+  const [refinedContext, setRefinedContext] = useState(null);
+  const [isRefiningContext, setIsRefiningContext] = useState(false);
   const [launchReport, setLaunchReport] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -256,63 +258,78 @@ const BizMapAI = () => {
     }
   }, []);
 
+  // Context refining function
+  const refineContext = async (answers: any) => {
+    try {
+      setIsRefiningContext(true);
+      const { data, error } = await supabase.functions.invoke('bizmap-refine', {
+        body: { answers, stage: userStage, region: userRegion }
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        setRefinedContext(data.refinedContext);
+        console.log('Context refined successfully:', data.refinedContext.contextQuality);
+        return data.refinedContext;
+      }
+    } catch (error) {
+      console.error('Context refinement error:', error);
+      toast.error("Failed to refine context, proceeding with basic analysis");
+    } finally {
+      setIsRefiningContext(false);
+    }
+    return null;
+  };
+
+  // Generate launch report using the best available context
   const generateLaunchReport = async (answers: any, stage: string, region: string) => {
-    // Check if user has sufficient credits
+    if (!user) {
+      toast.error("Please sign in to generate a launch report");
+      return;
+    }
+
     if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
       setPendingAction({ type: 'report' });
       setCreditGateOpen(true);
-      return null;
+      return;
     }
 
     try {
       setIsLoading(true);
       
+      // First, refine the context for better understanding
+      const context = await refineContext(answers);
+      
       const { data, error } = await supabase.functions.invoke('bizmap-analysis', {
         body: { 
-          answers,
-          stage,
+          answers, 
+          stage, 
           region,
-          sessionId: currentSessionId
-        },
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          refinedContext: context // Pass refined context to the AI function
         }
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
-        
-        // Handle credit-related errors
-        if (error.message?.includes('Insufficient credits') || error.message?.includes('credit')) {
-          setPendingAction({ type: 'report' });
-          setCreditGateOpen(true);
-          toast.error(`You need ${CREDIT_COSTS.LAUNCH_REPORT} credits to generate a launch report.`);
-          return null;
-        }
-        
-        throw error;
+        console.error('Error generating launch report:', error);
+        const fallbackReport = generateFallbackReport(answers, stage, region);
+        toast.success("Generated launch report using fallback analysis");
+        return fallbackReport;
       }
 
-      // If successful, deduct credits from local state for immediate UI update
-      handleCreditDeduction(CREDIT_COSTS.LAUNCH_REPORT);
-      toast.success(`Launch report generated! (Used ${CREDIT_COSTS.LAUNCH_REPORT} credits)`);
-
-      return data.launchReport;
+      if (data?.success) {
+        await handleCreditDeduction(CREDIT_COSTS.LAUNCH_REPORT);
+        return data.report;
+      } else {
+        console.error('API returned error:', data?.error);
+        const fallbackReport = generateFallbackReport(answers, stage, region);
+        toast.success("Generated launch report using fallback analysis");
+        return fallbackReport;
+      }
     } catch (error) {
-      console.error('Error generating launch report:', error);
-      
-      // Check if it's a credit error
-      if (error?.message?.includes('402') || error?.message?.includes('credit')) {
-        setPendingAction({ type: 'report' });
-        setCreditGateOpen(true);
-        toast.error(`You need ${CREDIT_COSTS.LAUNCH_REPORT} credits to generate a launch report.`);
-        return null;
-      }
-      
-      toast.error("Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.");
-      
-      // Fallback to basic structure if API fails
-      return generateFallbackReport(answers, stage, region);
+      console.error('Unexpected error:', error);
+      toast.error("Connection error. Generated launch report using local analysis.");
+      return generateFallbackReport(userAnswers, userStage, userRegion);
     } finally {
       setIsLoading(false);
     }

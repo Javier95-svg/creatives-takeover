@@ -1,5 +1,11 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
+[functions.bizmap-refine]
+verify_jwt = true
+
+[functions.bizmap-research]
+verify_jwt = true
+
 [functions.location-search]
 verify_jwt = false
 
