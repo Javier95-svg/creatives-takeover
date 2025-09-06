@@ -7,6 +7,7 @@ import Benefits from "@/components/Benefits";
 import CampaignPromotion from "@/components/CampaignPromotion";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
+import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 import { useExitIntent } from "@/hooks/useExitIntent";
@@ -35,6 +36,10 @@ const Index = () => {
       {/* Conversion Optimization Components */}
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
       <ScrollTriggeredCTA />
+      
+      {/* Interactive Campaign Popups */}
+      <CreditCampaignPopup trigger="time" delay={15000} />
+      <CreditCampaignPopup trigger="scroll" />
     </div>
   );
 };

@@ -1,15 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
+import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
+import { useHoverPopup } from "@/hooks/useHoverPopup";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, isAuthenticated } = useAuth();
+  
+  // Hover popup for BizMap AI menu item
+  const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
 
   const handleSignOut = async () => {
     try {
@@ -23,7 +28,6 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/dream2plan" },
-    { name: "Free Report + Credits", href: "/dream2plan", isPromo: true },
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Insighta", href: "/news" },
     { name: "Community", href: "/community" },
@@ -48,15 +52,17 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`transition-colors animated-underline ${
-                  item.isPromo 
-                    ? "text-primary font-semibold hover:text-primary/80 relative" 
-                    : "text-muted-foreground hover:text-foreground"
+                className={`text-muted-foreground hover:text-foreground transition-colors animated-underline ${
+                  item.name === 'BizMap AI' ? 'relative' : ''
                 }`}
+                onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
+                onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
               >
                 {item.name}
-                {item.isPromo && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                {item.name === 'BizMap AI' && !isAuthenticated && !bizMapHover.hasShown && (
+                  <div className="absolute -top-1 -right-2 flex items-center">
+                    <Gift className="w-3 h-3 text-primary animate-bounce" />
+                  </div>
                 )}
               </Link>
             ))}
@@ -190,6 +196,14 @@ const Navigation = () => {
           </div>
         )}
       </div>
+      
+      {/* Hover-triggered Campaign Popup */}
+      {bizMapHover.showPopup && (
+        <CreditCampaignPopup 
+          trigger="hover"
+          onClose={bizMapHover.closePopup}
+        />
+      )}
     </nav>
   );
 };
