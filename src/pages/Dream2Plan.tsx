@@ -21,6 +21,7 @@ import { CreditGate } from "@/components/CreditGate";
 import { useFeedbackModal } from "@/hooks/useFeedbackModal";
 import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
+import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -104,6 +105,7 @@ const BizMapAI = () => {
   ];
 
   const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
+  const { hasPendingCredits } = useFeedbackCredits();
   const [creditGateOpen, setCreditGateOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ type: 'report' | 'asset'; assetType?: string } | null>(null);
   const {
@@ -1241,7 +1243,7 @@ ${translations.dataDisclaimer}`;
         open={showFeedback}
         onClose={closeFeedback}
         onComplete={(feedbackData) => {
-          completeFeedback();
+          completeFeedback(feedbackData);
           // Auto-generate the free report after feedback completion
           setTimeout(() => {
             if (currentStep === wizardSteps.length) {

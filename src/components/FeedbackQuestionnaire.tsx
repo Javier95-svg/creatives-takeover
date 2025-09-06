@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Gift, Star, MessageCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Gift, Star, MessageCircle, Coins } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCredits } from '@/hooks/useCredits';
+import { toast } from 'sonner';
 
 interface FeedbackQuestionnaireProps {
   open: boolean;
@@ -23,6 +26,7 @@ interface FeedbackData {
   npsScore: number;
   businessChallenge: string;
   additionalComments?: string;
+  creditBonus?: number;
 }
 
 export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: FeedbackQuestionnaireProps) => {
@@ -30,6 +34,34 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 5;
+  const { addCredits } = useCredits();
+
+  // Calculate credit bonus based on responses
+  const calculateCreditBonus = (): number => {
+    let bonus = 2; // Base bonus for completion
+    
+    // Email bonus
+    if (formData.email && formData.email.trim() !== '') {
+      bonus += 3;
+    }
+    
+    // High NPS bonus
+    if (formData.npsScore && formData.npsScore >= 9) {
+      bonus += 1;
+    }
+    
+    // Detailed feature request bonus
+    if (formData.featureRequest && formData.featureRequest.length > 20) {
+      bonus += 1;
+    }
+    
+    // Referral source bonus
+    if (formData.acquisitionSource === 'referral') {
+      bonus += 2;
+    }
+    
+    return bonus;
+  };
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -48,6 +80,8 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
 
     setIsSubmitting(true);
     try {
+      const creditBonus = calculateCreditBonus();
+      
       // Save feedback to Supabase
       const { error } = await supabase
         .from('user_feedback')
@@ -64,9 +98,18 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
 
       if (error) throw error;
 
-      onComplete(formData as FeedbackData);
+      // Store credit bonus in session for non-authenticated users
+      sessionStorage.setItem('feedback-credit-bonus', creditBonus.toString());
+      
+      const feedbackData = { ...formData, creditBonus } as FeedbackData;
+      
+      // Show success message with credit info
+      toast.success(`Feedback submitted! You've earned ${creditBonus} free credits that will be added when you sign up!`);
+      
+      onComplete(feedbackData);
     } catch (error) {
       console.error('Failed to submit feedback:', error);
+      toast.error('Failed to submit feedback. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -237,6 +280,19 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
           <p className="text-sm text-muted-foreground">
             Complete this quick {totalSteps}-question survey and receive your comprehensive business report at no cost.
           </p>
+          
+          {/* Credit Bonus Display */}
+          <div className="mt-3 p-3 bg-gradient-to-r from-primary/10 to-primary-glow/10 rounded-lg border border-primary/20">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Coins className="w-4 h-4 text-primary" />
+              <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                Bonus: {calculateCreditBonus()} Free Credits
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Credits will be added to your account when you sign up!
+            </p>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

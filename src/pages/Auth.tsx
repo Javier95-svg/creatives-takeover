@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('login');
+  const { hasPendingCredits } = useFeedbackCredits();
 
   // Form states
   const [email, setEmail] = useState('');

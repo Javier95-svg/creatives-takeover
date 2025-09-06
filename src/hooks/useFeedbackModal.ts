@@ -28,11 +28,16 @@ export const useFeedbackModal = (questionsCompleted: boolean) => {
     setShowFeedback(false);
   };
 
-  const completeFeedback = () => {
+  const completeFeedback = (feedbackData?: any) => {
     setShowFeedback(false);
     setFeedbackCompleted(true);
     // Remember that user has completed feedback for this session
     sessionStorage.setItem('bizmap-feedback-completed', 'true');
+    
+    // Store credit bonus if provided
+    if (feedbackData?.creditBonus) {
+      sessionStorage.setItem('feedback-credit-bonus', feedbackData.creditBonus.toString());
+    }
   };
 
   return {

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -10,6 +11,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { hasPendingCredits } = useFeedbackCredits();
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
 
   useEffect(() => {
