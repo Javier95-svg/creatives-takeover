@@ -46,7 +46,7 @@ const BizMapAI = () => {
   const [messages, setMessages] = useState([
     {
       type: "assistant",
-      content: "Welcome to BizMap AI! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
+      content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
     }
   ]);
 
@@ -67,44 +67,51 @@ const BizMapAI = () => {
     {
       key: "overview",
       title: "Business Overview",
-      question: "In 2-3 sentences, describe your business idea. What are you building or planning to offer?",
-      placeholder: "e.g., A mobile app that helps busy parents find and book last-minute childcare services in their neighborhood..."
+      question: "In a few sentences, what are you planning to create or offer?",
+      placeholder: "e.g., A mobile app that helps busy parents find and book last-minute childcare services in their neighborhood...",
+      transition: "That sounds really interesting! I can already see the potential. Now, let's talk about who would benefit most from this."
     },
     {
       key: "market", 
       title: "Target Market",
-      question: "Who is your ideal customer? Be specific about demographics, location, and current behavior.",
-      placeholder: "e.g., Working parents aged 28-45 in urban areas who currently struggle with childcare arrangements and use Facebook groups to find sitters..."
+      question: "Who's your ideal customer? Tell me about the specific people who would love what you're building.",
+      placeholder: "e.g., Working parents aged 28-45 in urban areas who currently struggle with childcare arrangements and use Facebook groups to find sitters...",
+      transition: "Perfect! I'm getting a clear picture of your audience. Now I want to understand the problem you're solving for them."
     },
     {
       key: "problem",
       title: "Problem Definition", 
-      question: "What specific problem does your business solve? How do people currently handle this problem?",
-      placeholder: "e.g., Parents waste hours searching unreliable Facebook groups and calling multiple sitters, often finding no one available for urgent needs..."
+      question: "What specific pain point or challenge does your business address? How do people deal with this frustration today?",
+      placeholder: "e.g., Parents waste hours searching unreliable Facebook groups and calling multiple sitters, often finding no one available for urgent needs...",
+      transition: "Wow, that's definitely a real problem! I can see why people would be frustrated. Now, tell me about your solution."
     },
     {
       key: "solution",
       title: "Your Solution",
-      question: "How does your product/service solve this problem better than existing alternatives?", 
-      placeholder: "e.g., Our app provides verified sitters with real-time availability, instant booking, and background checks - solving the problem in under 5 minutes..."
+      question: "How does your approach solve this problem better than what's currently available? What makes you different?", 
+      placeholder: "e.g., Our app provides verified sitters with real-time availability, instant booking, and background checks - solving the problem in under 5 minutes...",
+      transition: "That's a solid approach! I love how you're thinking about the competitive advantage. Now, let's figure out how to reach your customers."
     },
     {
       key: "channels",
       title: "Marketing Channels",
-      question: "How will you reach and acquire your first customers? What platforms do they use most?",
-      placeholder: "e.g., Instagram ads targeting parent hashtags, partnerships with pediatricians, referral program, local parenting Facebook groups..."
+      question: "How will you get your first customers? Where do your ideal customers spend their time and discover new solutions?",
+      placeholder: "e.g., Instagram ads targeting parent hashtags, partnerships with pediatricians, referral program, local parenting Facebook groups...",
+      transition: "Great marketing thinking! Now let's talk about the business side - how will this actually make money?"
     },
     {
       key: "pricing",
       title: "Pricing & Costs", 
-      question: "How will you make money? What are your main costs? What's your available budget to start?",
-      placeholder: "e.g., 15% commission per booking, avg $60/booking. Main costs: app development ($5K), marketing ($2K/month). Available budget: $10K..."
+      question: "What's your revenue model? What will it cost to run this business, and what's your budget to get started?",
+      placeholder: "e.g., 15% commission per booking, avg $60/booking. Main costs: app development ($5K), marketing ($2K/month). Available budget: $10K...",
+      transition: "Perfect! The economics are starting to come together. Finally, let's talk about your timeline and goals."
     },
     {
       key: "goals",
       title: "Goals & Timeline",
-      question: "What are your goals for the next 90 days? How much time can you dedicate weekly?",
-      placeholder: "e.g., Launch MVP, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week, want to launch in 8 weeks..."
+      question: "What do you want to achieve in the next 90 days? How much time can you realistically commit to this each week?",
+      placeholder: "e.g., Launch MVP, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week, want to launch in 8 weeks...",
+      transition: "Excellent! I have everything I need to create your personalized Launch Report."
     }
   ];
 
@@ -135,17 +142,20 @@ const BizMapAI = () => {
       const reconstructedMessages = [
         {
           type: "assistant",
-          content: "Welcome to BizMap AI! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
         }
       ];
 
       // Add messages for completed steps
       wizardSteps.forEach((step, index) => {
         if (index <= session.current_step && session.answers[step.key]) {
-          reconstructedMessages.push({
-            type: "assistant",
-            content: `**${step.title}** (Step ${index + 1} of 7)\n\n${step.question}`
-          });
+          if (index > 0) {
+            // Add transition from previous step
+            reconstructedMessages.push({
+              type: "assistant",
+              content: wizardSteps[index - 1].transition + "\n\n" + step.question
+            });
+          }
           reconstructedMessages.push({
             type: "user",
             content: session.answers[step.key]
@@ -163,9 +173,10 @@ const BizMapAI = () => {
         // Add next question if not completed
         const nextStep = session.current_step;
         if (nextStep < wizardSteps.length) {
+          const transitionText = nextStep > 0 ? wizardSteps[nextStep - 1].transition + "\n\n" : "";
           reconstructedMessages.push({
             type: "assistant",
-            content: `**${wizardSteps[nextStep].title}** (Step ${nextStep + 1} of 7)\n\n${wizardSteps[nextStep].question}`
+            content: transitionText + wizardSteps[nextStep].question
           });
         }
       }
@@ -192,11 +203,7 @@ const BizMapAI = () => {
     setMessages([
       {
         type: "assistant",
-        content: "Welcome to BizMap AI! 👋 I'm your global startup co-founder in chatbot form. I'll guide you through 7 quick questions to create a personalized Launch Report for your business idea.\n\nLet's start with the first question:"
-      },
-      {
-        type: "assistant",
-        content: `**${wizardSteps[0].title}** (Step 1 of 7)\n\n${wizardSteps[0].question}`
+        content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
       }
     ]);
   };
@@ -254,15 +261,7 @@ const BizMapAI = () => {
     }
   }, []);
 
-  // Add first question to messages on component mount
-  useEffect(() => {
-    if (messages.length === 1) { // Only initial message
-      setMessages(prev => [...prev, {
-        type: "assistant",
-        content: `**${wizardSteps[0].title}** (Step 1 of 7)\n\n${wizardSteps[0].question}`
-      }]);
-    }
-  }, []);
+  // Component is now fully conversational - no need to add separate first question
 
   // Context refining function
   const refineContext = async (answers: any) => {
@@ -801,10 +800,10 @@ ${translations.dataDisclaimer}`;
         setCurrentStep(nextStep);
         setMessages(prev => [...prev, {
           type: "assistant",
-          content: `Great! Now for step ${nextStep + 1} of 7:\n\n**${wizardSteps[nextStep].title}**\n\n${wizardSteps[nextStep].question}`
+          content: wizardSteps[currentStep].transition + "\n\n" + wizardSteps[nextStep].question
         }]);
       } else {
-        setMessages(prev => [...prev, { type: "assistant", content: "Excellent! Now I'm generating your personalized Launch Report based on all your responses. This may take a moment..." }]);
+        setMessages(prev => [...prev, { type: "assistant", content: "Amazing! I have everything I need now. Let me create your personalized Launch Report - this is going to be good! 🚀" }]);
         const completeAnswers = { ...userAnswers, [currentKey]: combined };
         const report = await generateLaunchReport(completeAnswers);
         setLaunchReport(report);
@@ -856,16 +855,16 @@ ${translations.dataDisclaimer}`;
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
 
-      // Add next question to chat
+      // Add next question to chat with conversational transition
       setMessages(prev => [...prev, {
         type: "assistant",
-        content: `Great! Now for step ${nextStep + 1} of 7:\n\n**${wizardSteps[nextStep].title}**\n\n${wizardSteps[nextStep].question}`
+        content: wizardSteps[currentStep].transition + "\n\n" + wizardSteps[nextStep].question
       }]);
     } else {
       // All steps completed, generate launch report
       setMessages(prev => [...prev, {
         type: "assistant",
-        content: "Excellent! Now I'm generating your personalized Launch Report based on all your responses. This may take a moment..."
+        content: "Amazing! I have everything I need now. Let me create your personalized Launch Report - this is going to be good! 🚀"
       }]);
 
       // Generate launch report
