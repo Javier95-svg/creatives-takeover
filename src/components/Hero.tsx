@@ -46,14 +46,8 @@ const Hero = () => {
 
       <div className="container mx-auto px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 glass-card mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">AI-Powered Business Transformation</span>
-          </div>
-
           {/* Credit Bonus Promotion Badge */}
-          <div className="inline-flex items-center gap-2 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-6 animate-pulse-glow">
+          <div className="inline-flex items-center gap-2 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-8 animate-pulse-glow">
             <div className="flex items-center gap-1">
               <span className="text-primary font-bold">🎁</span>
               <span className="text-sm font-semibold text-primary">LIMITED TIME:</span>
