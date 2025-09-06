@@ -19,6 +19,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
 import { CreditGate } from "@/components/CreditGate";
 import { AudioRecorder } from "@/components/AudioRecorder";
+import ResearchControls from "@/components/ResearchControls";
+import SourcesDisplay from "@/components/SourcesDisplay";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -37,6 +39,12 @@ const BizMapAI = () => {
   const [refinedContext, setRefinedContext] = useState(null);
   const [isRefiningContext, setIsRefiningContext] = useState(false);
   const [launchReport, setLaunchReport] = useState("");
+  
+  // Research enhancement states
+  const [researchEnabled, setResearchEnabled] = useState(true);
+  const [researchDepth, setResearchDepth] = useState<'basic' | 'comprehensive' | 'expert'>('comprehensive');
+  const [researchData, setResearchData] = useState<any>(null);
+  const [isResearching, setIsResearching] = useState(false);
   const [messages, setMessages] = useState([
     {
       type: "assistant",
@@ -282,6 +290,48 @@ const BizMapAI = () => {
     return null;
   };
 
+  // Enhanced research function  
+  const conductResearch = async (answers: any) => {
+    if (!researchEnabled) return null;
+
+    try {
+      setIsResearching(true);
+      
+      const researchCosts = { basic: 1, comprehensive: 3, expert: 5 };
+      const researchCost = researchCosts[researchDepth];
+      
+      if (!hasCredits(researchCost)) {
+        toast.error(`Insufficient credits for ${researchDepth} research (${researchCost} credits needed)`);
+        return null;
+      }
+
+      const { data, error } = await supabase.functions.invoke('bizmap-research', {
+        body: {
+          businessConcept: answers.overview || answers.solution || "Business concept",
+          industry: answers.market || "General",
+          targetMarket: answers.market || "General market", 
+          region: userRegion,
+          depth: researchDepth
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        await handleCreditDeduction(researchCost);
+        setResearchData(data);
+        console.log('Research completed:', data.research_quality, 'quality with', data.all_sources?.length, 'sources');
+        return data;
+      }
+    } catch (error) {
+      console.error('Research error:', error);
+      toast.error("Research failed, proceeding without market data");
+    } finally {
+      setIsResearching(false);
+    }
+    return null;
+  };
+
   // Generate launch report using the best available context
   const generateLaunchReport = async (answers: any, stage: string, region: string) => {
     if (!user) {
@@ -289,7 +339,11 @@ const BizMapAI = () => {
       return;
     }
 
-    if (!hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
+    const baseCost = CREDIT_COSTS.LAUNCH_REPORT;
+    const researchCosts = { basic: 1, comprehensive: 3, expert: 5 };
+    const totalCost = baseCost + (researchEnabled ? researchCosts[researchDepth] : 0);
+
+    if (!hasCredits(totalCost)) {
       setPendingAction({ type: 'report' });
       setCreditGateOpen(true);
       return;
@@ -298,15 +352,20 @@ const BizMapAI = () => {
     try {
       setIsLoading(true);
       
-      // First, refine the context for better understanding
+      // Step 1: Conduct research if enabled
+      const research = await conductResearch(answers);
+      
+      // Step 2: Refine the context for better understanding
       const context = await refineContext(answers);
       
+      // Step 3: Generate the launch report with all available intelligence
       const { data, error } = await supabase.functions.invoke('bizmap-analysis', {
         body: { 
           answers, 
           stage, 
           region,
-          refinedContext: context // Pass refined context to the AI function
+          refinedContext: context,
+          researchData: research // Pass research data to the AI function
         }
       });
 
@@ -318,7 +377,7 @@ const BizMapAI = () => {
       }
 
       if (data?.success) {
-        await handleCreditDeduction(CREDIT_COSTS.LAUNCH_REPORT);
+        await handleCreditDeduction(baseCost); // Research cost already deducted
         return data.report;
       } else {
         console.error('API returned error:', data?.error);
@@ -1057,6 +1116,27 @@ ${translations.dataDisclaimer}`;
                         </div>
                       </div>
                     </div>
+
+                    {/* Research Controls */}
+                    <div className="p-4 border-t border-border/50">
+                      <ResearchControls
+                        researchEnabled={researchEnabled}
+                        onResearchToggle={setResearchEnabled}
+                        researchDepth={researchDepth}
+                        onDepthChange={setResearchDepth}
+                        creditCost={CREDIT_COSTS.LAUNCH_REPORT + (researchEnabled ? { basic: 1, comprehensive: 3, expert: 5 }[researchDepth] : 0)}
+                      />
+                    </div>
+
+                    {/* Sources Display */}
+                    {researchData && (
+                      <div className="p-4 border-t border-border/50">
+                        <SourcesDisplay
+                          sources={researchData.all_sources || []}
+                          researchQuality={researchData.research_quality || 'low'}
+                        />
+                      </div>
+                    )}
 
                     <div className="p-4 border-t border-border/50">
                       {isCompleted && (

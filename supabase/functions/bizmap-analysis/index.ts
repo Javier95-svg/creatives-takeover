@@ -11,7 +11,7 @@ interface LaunchReportRequest {
   answers: {
     overview: string;
     market: string;
-    problem: string;
+    problem: string;  
     solution: string;
     channels: string;
     pricing: string;
@@ -19,7 +19,8 @@ interface LaunchReportRequest {
   };
   stage?: string;
   region?: string;
-  refinedContext?: any; // Add refined context support
+  refinedContext?: any;
+  researchData?: any; // Add research data support
 }
 
 // Input quality heuristic to decide when to ask clarifying questions first
@@ -125,7 +126,7 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
-    const { answers, stage, region, sessionId, refinedContext }: LaunchReportRequest & { sessionId?: string } = await req.json();
+    const { answers, stage, region, sessionId, refinedContext, researchData }: LaunchReportRequest & { sessionId?: string } = await req.json();
 
     // Check and deduct credits BEFORE making the OpenAI call
     try {
@@ -172,6 +173,31 @@ TARGET REGION: ${region || "Global"}
 
 REFINED CONTEXT: ${refinedContext ? JSON.stringify(refinedContext, null, 2) : 'Not available'}
 
+MARKET RESEARCH DATA: ${researchData?.success ? `
+Market Intelligence Quality: ${researchData.research_quality}
+Sources Count: ${researchData.all_sources?.length || 0}
+
+Research Insights:
+${researchData.structured_data?.market_size?.data || 'Not available'}
+
+Competitor Analysis:
+${researchData.structured_data?.competitors?.data || 'Not available'}
+
+Industry Trends:
+${researchData.structured_data?.industry_trends?.data || 'Not available'}
+
+Customer Behavior:
+${researchData.structured_data?.customer_behavior?.data || 'Not available'}
+
+Pricing Data:
+${researchData.structured_data?.pricing?.data || 'Not available'}
+
+Marketing Channels:
+${researchData.structured_data?.marketing_channels?.data || 'Not available'}
+
+All Sources: ${researchData.all_sources?.join(', ') || 'None'}
+` : 'No research data available'}
+
 INPUT_QUALITY: ${quality}
 INPUT_QUALITY_REASONS: ${reasons.join('; ') || 'N/A'}
 
@@ -188,6 +214,8 @@ ADVISOR RULES:
 - Assume early-stage founders with limited budget and resources; favor fast validation and scrappy execution
 - Order recommendations by priority (Do First → Next → Later) with clear, smallest-first steps
 - When relevant, suggest specific tools/platforms and 1–2 real-world examples to inspire execution
+- **CRITICAL**: If market research data is provided, integrate specific insights, competitor names, pricing data, and industry trends throughout your recommendations
+- **CITATIONS**: When using research data, reference sources with [Source: ...] format
 
 STAGE-SPECIFIC ADAPTATION: Replace generic steps with stage-specific tasks across all sections.
 - **Explore** (idea only): focus on problem validation, customer interviews, cheap experiments
