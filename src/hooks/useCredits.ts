@@ -19,8 +19,8 @@ interface CreditTransaction {
 }
 
 export const CREDIT_COSTS = {
-  LAUNCH_REPORT: 5,
-  ASSET_GENERATION: 5,
+  LAUNCH_REPORT: 3,
+  ASSET_GENERATION: 3,
   PREMIUM_FEATURE: 3
 } as const;
 
