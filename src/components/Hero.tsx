@@ -46,15 +46,6 @@ const Hero = () => {
 
       <div className="container mx-auto px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Credit Bonus Promotion Badge */}
-          <div className="inline-flex items-center gap-1.5 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-8 px-3 py-1.5 animate-bounce-subtle">
-            <div className="flex items-center gap-1">
-              <span className="text-primary font-bold text-xs">🎁</span>
-              <span className="text-xs font-semibold text-primary">LIMITED TIME:</span>
-            </div>
-            <span className="text-xs font-medium">Complete 5-min survey = FREE Report + Up to 7 Credits!</span>
-          </div>
-
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
             <span className="takeover-gradient">From idea to professional</span>
