@@ -23,6 +23,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/dream2plan" },
+    { name: "Free Report + Credits", href: "/dream2plan", isPromo: true },
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Insighta", href: "/news" },
     { name: "Community", href: "/community" },
@@ -47,9 +48,16 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-muted-foreground hover:text-foreground transition-colors animated-underline"
+                className={`transition-colors animated-underline ${
+                  item.isPromo 
+                    ? "text-primary font-semibold hover:text-primary/80 relative" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 {item.name}
+                {item.isPromo && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                )}
               </Link>
             ))}
           </div>

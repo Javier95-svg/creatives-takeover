@@ -52,6 +52,15 @@ const Hero = () => {
             <span className="text-sm font-medium">AI-Powered Business Transformation</span>
           </div>
 
+          {/* Credit Bonus Promotion Badge */}
+          <div className="inline-flex items-center gap-2 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-6 animate-pulse-glow">
+            <div className="flex items-center gap-1">
+              <span className="text-primary font-bold">🎁</span>
+              <span className="text-sm font-semibold text-primary">LIMITED TIME:</span>
+            </div>
+            <span className="text-sm font-medium">Complete 5-min survey = FREE Report + Up to 7 Credits!</span>
+          </div>
+
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
             <span className="takeover-gradient">From idea to professional</span>
@@ -66,9 +75,16 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating" aria-label="Create business plan" asChild>
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating relative overflow-hidden group" aria-label="Create business plan and earn credits" asChild>
               <Link to="/dream2plan">
-                Create My Business Plan
+                <span className="relative z-10">Get FREE Report + Credits</span>
+                <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="glass hover:bg-primary/10 px-8 py-4 text-lg btn-magnetic" asChild>
+              <Link to="/dream2plan">
+                Start Business Plan
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>

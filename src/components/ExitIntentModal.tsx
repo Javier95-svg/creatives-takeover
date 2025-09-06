@@ -17,10 +17,10 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
   if (isAuthenticated) return null;
 
   const benefits = [
-    "Professional business plan in 30 minutes",
-    "AI-powered market analysis & validation",
-    "Custom marketing assets included",
-    "Join 1,200+ successful entrepreneurs"
+    "FREE comprehensive business plan (worth $97)",
+    "Complete 5-minute survey = up to 7 bonus credits",
+    "AI-powered market analysis & validation included",
+    "Join 1,200+ entrepreneurs who earned free credits"
   ];
 
   return (
@@ -43,21 +43,21 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             </button>
 
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 glass-card mb-6 animate-fade-in">
+            <div className="inline-flex items-center gap-2 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-6 animate-fade-in">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Wait! Don't miss out</span>
+              <span className="text-sm font-medium text-primary">🎁 FREE Credits Available!</span>
             </div>
 
             {/* Headline */}
             <h2 className="text-2xl md:text-3xl font-bold mb-4 animate-slide-up">
-              <span className="gradient-text">Create Your Business Plan</span>
+              <span className="gradient-text">Get FREE Business Report</span>
               <br />
-              <span className="text-foreground">Before You Go!</span>
+              <span className="text-foreground">+ Up to 7 Credits Before You Go!</span>
             </h2>
 
             {/* Subheadline */}
             <p className="text-lg text-muted-foreground mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Join thousands who've transformed their ideas into successful businesses in just 30 minutes.
+              Complete our 5-minute feedback survey and get your comprehensive business plan plus bonus credits to unlock premium features.
             </p>
 
             {/* Benefits List */}
@@ -84,15 +84,16 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <Button size="lg" className="flex-1 glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic" asChild>
-                <Link to="/signup" onClick={onClose}>
-                  Start Creating My Plan
-                  <ArrowRight className="ml-2 w-4 h-4" />
+              <Button size="lg" className="flex-1 glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic relative overflow-hidden group" asChild>
+                <Link to="/dream2plan" onClick={onClose}>
+                  <span className="relative z-10">Get FREE Report + Credits</span>
+                  <ArrowRight className="ml-2 w-4 h-4 relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="flex-1 glass hover:bg-primary/10 btn-magnetic" asChild>
-                <Link to="/dream2plan" onClick={onClose}>
-                  Preview Tool
+                <Link to="/signup" onClick={onClose}>
+                  Sign Up for More
                 </Link>
               </Button>
             </div>

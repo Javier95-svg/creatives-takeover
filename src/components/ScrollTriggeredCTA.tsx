@@ -59,17 +59,18 @@ export const ScrollTriggeredCTA = () => {
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Ready to start planning?</h3>
-              <p className="text-sm text-muted-foreground">Create your business plan in 30 min</p>
+              <h3 className="font-semibold text-foreground">Get FREE Report + Credits!</h3>
+              <p className="text-sm text-muted-foreground">5-min survey = Free plan + up to 7 credits</p>
             </div>
           </div>
 
           {/* CTA Buttons */}
           <div className="flex gap-2">
-            <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-              <Link to="/signup">
-                Get Started
-                <ArrowRight className="ml-1 w-3 h-3" />
+            <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground relative overflow-hidden group" asChild>
+              <Link to="/dream2plan">
+                <span className="relative z-10">Claim Credits</span>
+                <ArrowRight className="ml-1 w-3 h-3 relative z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
             </Button>
             <Button size="sm" variant="outline" className="flex-1 hover:bg-primary/10" asChild>
