@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_cache: {
+        Row: {
+          cache_key: string
+          cost_estimate: number | null
+          created_at: string
+          expires_at: string
+          id: string
+          input_hash: string
+          model: string
+          provider: string
+          response_data: Json
+        }
+        Insert: {
+          cache_key: string
+          cost_estimate?: number | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          input_hash: string
+          model: string
+          provider: string
+          response_data: Json
+        }
+        Update: {
+          cache_key?: string
+          cost_estimate?: number | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          input_hash?: string
+          model?: string
+          provider?: string
+          response_data?: Json
+        }
+        Relationships: []
+      }
+      ai_request_logs: {
+        Row: {
+          cost_estimate: number | null
+          created_at: string
+          error_message: string | null
+          function_name: string
+          id: string
+          latency_ms: number | null
+          metadata: Json | null
+          model: string
+          provider: string
+          success: boolean
+          tokens_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          cost_estimate?: number | null
+          created_at?: string
+          error_message?: string | null
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          model: string
+          provider: string
+          success?: boolean
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          cost_estimate?: number | null
+          created_at?: string
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          model?: string
+          provider?: string
+          success?: boolean
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author_avatar: string | null
@@ -888,6 +969,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_ai_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_post_author_info: {
         Args: { author_user_id: string }
         Returns: {

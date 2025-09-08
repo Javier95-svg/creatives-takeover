@@ -275,49 +275,45 @@ Format:
       ...(wantsStream ? { stream: true } as const : {})
     };
 
-    const oaRes = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Create cache key
+    const cacheKey = `assets_${type}_${await hashInput(JSON.stringify({ answers, type }))}`;
+
+    // Use model router
+    const oaRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/ai-model-router`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        provider: 'openai',
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a pragmatic startup copilot. Always return clean Markdown ready to paste. Use short sentences and direct CTAs.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 900,
+        user_id: userId,
+        function_name: 'bizmap-assets',
+        cache_key: cacheKey
+      }),
     });
 
     if (!oaRes.ok) {
-      const errorData = await oaRes.json().catch(() => ({}));
-      console.error('OpenAI error (assets):', errorData);
-      throw new Error(errorData.error?.message || 'Failed to generate asset');
+      const errorText = await oaRes.text();
+      console.error('Model router error (assets):', errorText);
+      throw new Error('Failed to generate asset');
     }
 
-    if (wantsStream) {
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            const reader = oaRes.body!.getReader();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              controller.enqueue(value);
-            }
-            controller.close();
-          } catch (err) {
-            controller.error(err);
-          }
-        },
-      });
-      return new Response(stream, {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
-    }
-
+    // Note: Streaming is not supported through the model router yet
     const data = await oaRes.json();
-    const asset = data.choices?.[0]?.message?.content || '';
+    const asset = data.content || '';
 
     return new Response(
       JSON.stringify({ asset }),
@@ -331,3 +327,11 @@ Format:
     );
   }
 });
+
+async function hashInput(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}

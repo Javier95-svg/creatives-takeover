@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,10 +54,22 @@ serve(async (req) => {
 
     console.log('Refining context for answers:', Object.keys(answers));
 
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      throw new Error('OpenAI API key not configured');
+    // Get user ID for logging
+    const authHeader = req.headers.get('Authorization');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+    
+    let userId = null;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id;
     }
+
+    // Create cache key
+    const cacheKey = `refine_${await hashInput(JSON.stringify({ answers, stage, region }))}`;
 
     // Construct the refining prompt
     const prompt = `
@@ -109,37 +122,42 @@ Analyze this information and return a JSON object with the following structure:
 Focus on extracting concrete, actionable insights. If information is missing or vague, note it in missingElements and suggest specific follow-up questions.
 Return only valid JSON, no additional text.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Use model router
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/ai-model-router`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIKey}`,
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        provider: 'anthropic',
+        model: 'claude-3-5-sonnet-20241022',
         messages: [
-          {
-            role: 'system',
-            content: 'You are an expert business analyst who extracts structured insights from startup descriptions. Always return valid JSON.'
+          { 
+            role: 'system', 
+            content: 'You are an expert business analyst who extracts structured insights from startup descriptions. Always respond with valid JSON only.' 
           },
-          {
-            role: 'user',
+          { 
+            role: 'user', 
             content: prompt
           }
         ],
-        max_completion_tokens: 1500,
-        response_format: { type: "json_object" }
+        temperature: 0.3,
+        max_tokens: 1500,
+        user_id: userId,
+        function_name: 'bizmap-refine',
+        cache_key: cacheKey
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('Model router error:', errorText);
+      throw new Error(`Model router error: ${response.status}`);
     }
 
     const data = await response.json();
-    const refinedContext = JSON.parse(data.choices[0].message.content);
+    const refinedContext = JSON.parse(data.content);
 
     console.log('Context refinement completed, quality:', refinedContext.contextQuality);
 
@@ -167,3 +185,11 @@ Return only valid JSON, no additional text.`;
     );
   }
 });
+
+async function hashInput(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}

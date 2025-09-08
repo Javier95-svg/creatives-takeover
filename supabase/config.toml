@@ -1,9 +1,15 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
+[functions.ai-model-router]
+verify_jwt = false
+
 [functions.bizmap-refine]
 verify_jwt = true
 
 [functions.bizmap-research]
+verify_jwt = true
+
+[functions.bizmap-assets]
 verify_jwt = true
 
 [functions.location-search]
