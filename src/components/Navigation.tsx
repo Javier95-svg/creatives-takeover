@@ -1,20 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CreditDisplay } from "@/components/CreditDisplay";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
-import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
-import { useHoverPopup } from "@/hooks/useHoverPopup";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut, loading, isAuthenticated } = useAuth();
-  
-  // Hover popup for BizMap AI menu item
-  const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
 
   const handleSignOut = async () => {
     try {
@@ -52,18 +47,9 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-muted-foreground hover:text-foreground transition-colors animated-underline ${
-                  item.name === 'BizMap AI' ? 'relative' : ''
-                }`}
-                onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
-                onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
+                className="text-muted-foreground hover:text-foreground transition-colors animated-underline"
               >
                 {item.name}
-                {item.name === 'BizMap AI' && !isAuthenticated && !bizMapHover.hasShown && (
-                  <div className="absolute -top-1 -right-2 flex items-center">
-                    <Gift className="w-3 h-3 text-primary animate-bounce" />
-                  </div>
-                )}
               </Link>
             ))}
           </div>
@@ -196,14 +182,6 @@ const Navigation = () => {
           </div>
         )}
       </div>
-      
-      {/* Hover-triggered Campaign Popup */}
-      {bizMapHover.showPopup && (
-        <CreditCampaignPopup 
-          trigger="hover"
-          onClose={bizMapHover.closePopup}
-        />
-      )}
     </nav>
   );
 };
