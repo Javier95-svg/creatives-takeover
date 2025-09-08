@@ -95,6 +95,47 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_data_cache: {
+        Row: {
+          cached_at: string
+          created_at: string
+          data_payload: Json
+          data_type: string
+          expires_at: string
+          id: string
+          integration_id: string
+          time_period: string
+        }
+        Insert: {
+          cached_at?: string
+          created_at?: string
+          data_payload: Json
+          data_type: string
+          expires_at?: string
+          id?: string
+          integration_id: string
+          time_period: string
+        }
+        Update: {
+          cached_at?: string
+          created_at?: string
+          data_payload?: Json
+          data_type?: string
+          expires_at?: string
+          id?: string
+          integration_id?: string
+          time_period?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_data_cache_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "user_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_avatar: string | null
@@ -332,6 +373,62 @@ export type Database = {
           },
         ]
       }
+      data_refresh_jobs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          integration_id: string
+          is_active: boolean
+          job_type: string
+          last_run_at: string | null
+          max_retries: number
+          metadata: Json | null
+          next_run_at: string | null
+          retry_count: number
+          schedule_expression: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          integration_id: string
+          is_active?: boolean
+          job_type: string
+          last_run_at?: string | null
+          max_retries?: number
+          metadata?: Json | null
+          next_run_at?: string | null
+          retry_count?: number
+          schedule_expression: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          integration_id?: string
+          is_active?: boolean
+          job_type?: string
+          last_run_at?: string | null
+          max_retries?: number
+          metadata?: Json | null
+          next_run_at?: string | null
+          retry_count?: number
+          schedule_expression?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_refresh_jobs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "user_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -361,6 +458,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      integration_webhooks: {
+        Row: {
+          created_at: string
+          event_types: string[]
+          id: string
+          integration_id: string
+          is_active: boolean
+          last_received_at: string | null
+          updated_at: string
+          webhook_secret: string | null
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          event_types: string[]
+          id?: string
+          integration_id: string
+          is_active?: boolean
+          last_received_at?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          event_types?: string[]
+          id?: string
+          integration_id?: string
+          is_active?: boolean
+          last_received_at?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_webhooks_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "user_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -553,6 +694,42 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      report_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean
+          is_public: boolean
+          name: string
+          template_config: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          is_public?: boolean
+          name: string
+          template_config: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          is_public?: boolean
+          name?: string
+          template_config?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -865,6 +1042,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_integrations: {
+        Row: {
+          access_token: string | null
+          account_id: string | null
+          connection_status: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          metadata: Json | null
+          provider: string
+          provider_name: string
+          refresh_token: string | null
+          sync_frequency: string
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_id?: string | null
+          connection_status?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          provider: string
+          provider_name: string
+          refresh_token?: string | null
+          sync_frequency?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          account_id?: string | null
+          connection_status?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          provider?: string
+          provider_name?: string
+          refresh_token?: string | null
+          sync_frequency?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_topic_preferences: {
         Row: {
           created_at: string
@@ -970,6 +1198,10 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_ai_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_analytics_cache: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
