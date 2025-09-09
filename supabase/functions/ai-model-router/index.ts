@@ -8,18 +8,19 @@ const corsHeaders = {
 };
 
 interface ModelRequest {
-  provider: 'openai' | 'anthropic';
-  model: string;
+  provider: 'openai' | 'anthropic' | 'auto';
+  model?: string; // optional when provider is 'auto'
   messages: Array<{
     role: string;
     content: string;
   }>;
-  temperature?: number;
-  max_tokens?: number;
+  temperature?: number; // ignored for newer OpenAI models (gpt-5, 4.1, o3, o4)
+  max_tokens?: number; // mapped to max_completion_tokens for newer models
   stream?: boolean;
   user_id?: string;
   function_name?: string;
   cache_key?: string;
+  strategy?: 'quality' | 'speed' | 'economy' | 'balanced';
 }
 
 interface ModelResponse {
@@ -61,7 +62,7 @@ class ModelRouter {
           await this.logRequest(request, {
             ...cached,
             cached: true
-          }, Date.now() - startTime, true, null);
+          }, Date.now() - startTime, true, null, { cache_hit: true });
           return {
             ...cached,
             cached: true
@@ -70,21 +71,44 @@ class ModelRouter {
       }
 
       let response: ModelResponse;
+
+      // Select provider/model when in auto mode or when model not provided
+      let selectedProvider = request.provider;
+      let selectedModel = request.model;
+      let selectionReason: string | undefined;
+
+      if (request.provider === 'auto' || !request.model) {
+        const selection = this.selectProviderAndModel(request);
+        selectedProvider = selection.provider;
+        selectedModel = selection.model;
+        selectionReason = selection.reason;
+      }
+
+      const effectiveRequest: ModelRequest = {
+        ...request,
+        provider: selectedProvider as 'openai' | 'anthropic' | 'auto',
+        model: selectedModel,
+      };
       
-      if (request.provider === 'anthropic') {
-        response = await this.callAnthropic(request);
+      if (effectiveRequest.provider === 'anthropic') {
+        response = await this.callAnthropic(effectiveRequest);
       } else {
-        response = await this.callOpenAI(request);
+        response = await this.callOpenAI(effectiveRequest);
       }
 
       response.cached = false;
 
       // Cache the response
       if (request.cache_key) {
-        await this.saveToCache(request.cache_key, request, response);
+        await this.saveToCache(request.cache_key, effectiveRequest, response);
       }
 
-      await this.logRequest(request, response, Date.now() - startTime, success, errorMessage);
+      await this.logRequest(effectiveRequest, response, Date.now() - startTime, success, errorMessage, {
+        strategy: request.strategy || 'balanced',
+        selection_reason: selectionReason,
+        original_provider: request.provider,
+        original_model: request.model,
+      });
       return response;
 
     } catch (error) {
@@ -92,23 +116,36 @@ class ModelRouter {
       errorMessage = error.message;
       console.error('Model router error:', error);
       
-      await this.logRequest(request, null, Date.now() - startTime, success, errorMessage);
+      await this.logRequest(request, null, Date.now() - startTime, success, errorMessage, { stage: 'pre-fallback' });
       
       // Try fallback provider
-      if (request.provider === 'anthropic' && this.openaiKey) {
+      if (this.openaiKey && (request.provider === 'anthropic' || request.provider === 'auto')) {
         console.log('Falling back to OpenAI...');
         try {
           const fallbackResponse = await this.callOpenAI({
             ...request,
             provider: 'openai',
-            model: 'gpt-4o-mini' // Safe fallback model
+            model: 'gpt-5-mini-2025-08-07' // Fast, reliable fallback
           });
-          return {
-            ...fallbackResponse,
-            cached: false
-          };
+          await this.logRequest({ ...request, provider: 'openai', model: 'gpt-5-mini-2025-08-07' }, fallbackResponse, Date.now() - startTime, true, null, { fallback: 'from anthropic/error' });
+          return { ...fallbackResponse, cached: false };
         } catch (fallbackError) {
-          console.error('Fallback also failed:', fallbackError);
+          console.error('OpenAI fallback failed:', fallbackError);
+        }
+      }
+
+      if (this.anthropicKey && (request.provider === 'openai' || request.provider === 'auto')) {
+        console.log('Falling back to Anthropic...');
+        try {
+          const fallbackResponse = await this.callAnthropic({
+            ...request,
+            provider: 'anthropic',
+            model: 'claude-3-5-haiku-20241022' // Fast, reliable fallback
+          });
+          await this.logRequest({ ...request, provider: 'anthropic', model: 'claude-3-5-haiku-20241022' }, fallbackResponse, Date.now() - startTime, true, null, { fallback: 'from openai/error' });
+          return { ...fallbackResponse, cached: false };
+        } catch (fallbackError) {
+          console.error('Anthropic fallback failed:', fallbackError);
         }
       }
       
@@ -116,14 +153,96 @@ class ModelRouter {
     }
   }
 
+  private selectProviderAndModel(request: ModelRequest): { provider: 'openai' | 'anthropic'; model: string; reason: string } {
+    const strategy = request.strategy || 'balanced';
+    const openaiAvailable = Boolean(this.openaiKey);
+    const anthropicAvailable = Boolean(this.anthropicKey);
+
+    // Combine message text for lightweight heuristics
+    const text = (request.messages || []).map(m => m.content || '').join(' ').toLowerCase();
+    const complexity = text.length; // rough proxy for task size
+    const needsReasoning = /(reason|step[- ]?by[- ]?step|chain of thought|analy[zs]e|proof|derive|strategy|architecture|debug|optimi[sz]e|design)/.test(text);
+
+    // Helper to choose first available provider from a preference list
+    const pickProvider = (preferred: Array<'openai'|'anthropic'>): 'openai'|'anthropic' => {
+      for (const p of preferred) {
+        if (p === 'openai' && openaiAvailable) return 'openai';
+        if (p === 'anthropic' && anthropicAvailable) return 'anthropic';
+      }
+      // Fallback to any available
+      if (openaiAvailable) return 'openai';
+      if (anthropicAvailable) return 'anthropic';
+      // Default to openai (will error clearly later if key missing)
+      return 'openai';
+    };
+
+    let provider: 'openai' | 'anthropic' = openaiAvailable ? 'openai' : 'anthropic';
+    let model = '';
+    let reason = '';
+
+    if (strategy === 'quality') {
+      if (needsReasoning && openaiAvailable) {
+        provider = 'openai';
+        model = 'o3-2025-04-16';
+        reason = 'quality strategy + deep reasoning detected → OpenAI o3';
+      } else if (openaiAvailable) {
+        provider = 'openai';
+        model = 'gpt-5-2025-08-07';
+        reason = 'quality strategy → OpenAI GPT-5';
+      } else {
+        provider = 'anthropic';
+        model = 'claude-sonnet-4-20250514';
+        reason = 'quality strategy with OpenAI unavailable → Claude Sonnet 4';
+      }
+    } else if (strategy === 'speed') {
+      const preferred = pickProvider(['openai', 'anthropic']);
+      provider = preferred;
+      if (preferred === 'openai') {
+        model = 'gpt-5-mini-2025-08-07';
+      } else {
+        model = 'claude-3-5-haiku-20241022';
+      }
+      reason = 'speed strategy → compact fast model';
+    } else if (strategy === 'economy') {
+      const preferred = pickProvider(['openai', 'anthropic']);
+      provider = preferred;
+      if (preferred === 'openai') {
+        model = 'gpt-5-nano-2025-08-07';
+      } else {
+        model = 'claude-3-5-haiku-20241022';
+      }
+      reason = 'economy strategy → cheapest capable model';
+    } else { // balanced (default)
+      if (needsReasoning && openaiAvailable) {
+        provider = 'openai';
+        model = 'o3-2025-04-16';
+        reason = 'balanced + reasoning detected → OpenAI o3';
+      } else if (complexity > 4000) {
+        // Heavier tasks → robust models
+        const preferred = pickProvider(['openai', 'anthropic']);
+        provider = preferred;
+        model = preferred === 'openai' ? 'gpt-4.1-2025-04-14' : 'claude-sonnet-4-20250514';
+        reason = 'balanced + high complexity → robust model';
+      } else {
+        const preferred = pickProvider(['openai', 'anthropic']);
+        provider = preferred;
+        model = preferred === 'openai' ? 'gpt-5-mini-2025-08-07' : 'claude-3-5-haiku-20241022';
+        reason = 'balanced + moderate complexity → mid-tier fast model';
+      }
+    }
+
+    return { provider, model, reason };
+  }
+
   private async callOpenAI(request: ModelRequest): Promise<ModelResponse> {
-    const isNewerModel = request.model.includes('gpt-5') || 
-                        request.model.includes('gpt-4.1') || 
-                        request.model.includes('o3') || 
-                        request.model.includes('o4');
+    const modelName = request.model || 'gpt-4o-mini';
+    const isNewerModel = modelName.includes('gpt-5') || 
+                        modelName.includes('gpt-4.1') || 
+                        modelName.includes('o3') || 
+                        modelName.includes('o4');
 
     const body: any = {
-      model: request.model,
+      model: modelName,
       messages: request.messages,
     };
 
@@ -176,7 +295,7 @@ class ModelRouter {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: request.model,
+        model: request.model || 'claude-3-5-haiku-20241022',
         max_tokens: request.max_tokens || 4096,
         temperature: request.temperature,
         messages: request.messages,
@@ -252,7 +371,8 @@ class ModelRouter {
     response: ModelResponse | null, 
     latencyMs: number, 
     success: boolean, 
-    errorMessage: string | null
+    errorMessage: string | null,
+    extraMetadata?: Record<string, any>
   ): Promise<void> {
     try {
       await this.supabase
@@ -269,7 +389,8 @@ class ModelRouter {
           error_message: errorMessage,
           metadata: {
             cached: response?.cached || false,
-            message_count: request.messages.length
+            message_count: request.messages.length,
+            ...(extraMetadata || {})
           }
         });
     } catch (error) {
@@ -284,8 +405,14 @@ class ModelRouter {
     const costs: Record<string, { input: number; output: number }> = {
       'gpt-5-2025-08-07': { input: 0.01, output: 0.03 },
       'gpt-5-mini-2025-08-07': { input: 0.002, output: 0.008 },
+      'gpt-5-nano-2025-08-07': { input: 0.0005, output: 0.002 },
+      'gpt-4.1-2025-04-14': { input: 0.005, output: 0.015 },
+      'o3-2025-04-16': { input: 0.01, output: 0.03 },
+      'o4-mini-2025-04-16': { input: 0.003, output: 0.01 },
       'gpt-4o': { input: 0.005, output: 0.015 },
       'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+      'claude-sonnet-4-20250514': { input: 0.006, output: 0.015 },
+      'claude-opus-4-20250514': { input: 0.015, output: 0.075 },
       'claude-3-5-sonnet-20241022': { input: 0.003, output: 0.015 },
       'claude-3-5-haiku-20241022': { input: 0.0008, output: 0.004 }
     };
