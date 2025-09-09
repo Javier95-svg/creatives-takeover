@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import CommunityFeed from "@/components/community/CommunityFeed";
+import CommunityHero from "@/components/CommunityHero";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
@@ -22,6 +23,7 @@ const CommunityPage = () => {
         <AnimatedBackground />
         <div className="relative z-10">
           <Navigation />
+          <CommunityHero />
           <CommunityFeed />
           <Footer />
         </div>

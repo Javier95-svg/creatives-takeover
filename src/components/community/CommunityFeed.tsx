@@ -1,11 +1,14 @@
 import React, { useMemo, useState, useEffect } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
+import PostMasonry from "./PostMasonry";
+import CommunityPulse from "./CommunityPulse";
+import TrendingCarousel from "./TrendingCarousel";
+import AdvancedFilters from "./AdvancedFilters";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +22,8 @@ const CommunityFeed: React.FC = () => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"hot" | "new" | "top">("hot");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [postType, setPostType] = useState("all");
+  const [engagement, setEngagement] = useState("all");
 
   // Fetch posts from database
   const fetchPosts = async () => {
@@ -175,20 +180,61 @@ const CommunityFeed: React.FC = () => {
     let list = posts.filter((p) =>
       (p.title + " " + p.content).toLowerCase().includes(search.toLowerCase())
     );
+    
+    // Tag filtering
     if (selectedTag) list = list.filter((p) => p.tags.includes(selectedTag));
+    
+    // Post type filtering
+    if (postType !== "all") {
+      switch (postType) {
+        case "success":
+          list = list.filter(p => p.tags.some(tag => ['success', 'milestone', 'revenue', 'growth'].includes(tag)));
+          break;
+        case "question":
+          list = list.filter(p => p.title.includes('?') || p.content.includes('?'));
+          break;
+        case "update":
+          list = list.filter(p => p.tags.some(tag => ['update', 'progress', 'pivot'].includes(tag)));
+          break;
+        case "ai-enhanced":
+          list = list.filter(p => p.aiSummary || (p.aiInsights && p.aiInsights.length > 0));
+          break;
+      }
+    }
+    
+    // Engagement filtering
+    if (engagement !== "all") {
+      switch (engagement) {
+        case "high":
+          list = list.filter(p => p.votes > 10 || p.commentsCount > 5);
+          break;
+        case "medium":
+          list = list.filter(p => (p.votes > 3 && p.votes <= 10) || (p.commentsCount > 1 && p.commentsCount <= 5));
+          break;
+        case "new":
+          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+          list = list.filter(p => new Date(p.createdAt).getTime() > oneDayAgo);
+          break;
+      }
+    }
 
+    // Sorting
     switch (sort) {
       case "new":
         return list.slice().sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
       case "top":
         return list.slice().sort((a, b) => b.votes - a.votes);
       default:
-        // hot (simple heuristic: votes + recency)
+        // hot (enhanced heuristic: votes + recency + AI insights bonus)
         return list
           .slice()
-          .sort((a, b) => b.votes + (+new Date(b.createdAt) - Date.now()) / 1e7 - (a.votes + (+new Date(a.createdAt) - Date.now()) / 1e7));
+          .sort((a, b) => {
+            const aScore = a.votes + (+new Date(a.createdAt) - Date.now()) / 1e7 + (a.aiSummary ? 2 : 0);
+            const bScore = b.votes + (+new Date(b.createdAt) - Date.now()) / 1e7 + (b.aiSummary ? 2 : 0);
+            return bScore - aScore;
+          });
     }
-  }, [posts, search, sort, selectedTag]);
+  }, [posts, search, sort, selectedTag, postType, engagement]);
 
   const publish = async (payload: ComposerPayload) => {
     // Require authentication for posting
@@ -272,121 +318,141 @@ const CommunityFeed: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
-        <section className="lg:col-span-8 space-y-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
-                <div className="h-20 bg-muted rounded mb-4"></div>
-                <div className="flex gap-2">
-                  <div className="h-6 bg-muted rounded w-16"></div>
-                  <div className="h-6 bg-muted rounded w-20"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        {/* Loading Community Pulse */}
+        <div className="animate-pulse">
+          <div className="h-32 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg"></div>
+        </div>
+        
+        {/* Loading Trending Carousel */}
+        <div className="animate-pulse">
+          <div className="h-48 bg-gradient-to-r from-orange-500/5 to-red-500/5 rounded-lg"></div>
+        </div>
+        
+        <div className="grid lg:grid-cols-12 gap-6">
+          <section className="lg:col-span-8 space-y-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
+                  <div className="h-20 bg-muted rounded mb-4"></div>
+                  <div className="flex gap-2">
+                    <div className="h-6 bg-muted rounded w-16"></div>
+                    <div className="h-6 bg-muted rounded w-20"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+          <aside className="lg:col-span-4">
+            <div className="h-96 bg-muted/20 rounded-lg animate-pulse"></div>
+          </aside>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="container mx-auto grid min-h-screen gap-6 px-4 py-8 lg:grid-cols-12">
-      <section className="lg:col-span-8 space-y-6">
+    <main className="container mx-auto px-4 py-8 space-y-6">
+      {/* Community Pulse Widget */}
+      <CommunityPulse />
+      
+      {/* Trending Posts Carousel */}
+      <TrendingCarousel />
+      
+      <div className="grid lg:grid-cols-12 gap-6">
+        <section className="lg:col-span-8 space-y-6">
+          {/* Enhanced Search Bar */}
+          <Card className="bg-gradient-to-r from-background to-muted/20 border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search stories, experiences, and insights..."
+                    className="pl-10 bg-background/50 backdrop-blur-sm"
+                    aria-label="Search community posts"
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setLoading(true);
+                    fetchPosts();
+                  }}
+                  className="bg-background/50 backdrop-blur-sm"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search stories"
-              aria-label="Search stories"
-            />
-          </div>
-          <Select value={sort} onValueChange={(v) => setSort(v as any)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hot">Hot</SelectItem>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="top">Top</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              setLoading(true);
-              fetchPosts();
-            }}
-          >
-            Refresh
-          </Button>
-        </div>
+          {/* Post Composer */}
+          <PostComposer onPublish={publish} requireAuth={true} />
 
-        {/* Authentication required for posting */}
-        <PostComposer onPublish={publish} requireAuth={true} />
+          {/* Results Summary */}
+          {search && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing <span className="font-semibold text-primary">{filtered.length}</span> results 
+                  {search && ` for "${search}"`}
+                  {selectedTag && ` in #${selectedTag}`}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-        <div className="space-y-6">
-          <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded">
-            DEBUG: Showing {filtered.length} posts (total loaded: {posts.length})
-          </div>
-          {filtered.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-          {filtered.length === 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-sm text-muted-foreground space-y-2">
-                  <p>No stories match your search.</p>
-                  <p>DEBUG: Total posts in state: {posts.length}</p>
-                  <p>DEBUG: Loading state: {loading.toString()}</p>
-                  <p>DEBUG: Search term: "{search}"</p>
-                  <p>DEBUG: Selected tag: {selectedTag || 'none'}</p>
+          {/* Posts Masonry Layout */}
+          {filtered.length > 0 ? (
+            <PostMasonry posts={filtered} />
+          ) : (
+            <Card className="text-center p-12">
+              <CardContent>
+                <div className="text-muted-foreground space-y-2">
+                  <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-semibold">No stories found</h3>
+                  <p>Try adjusting your search or filters to discover more content.</p>
+                  {(search || selectedTag || postType !== "all" || engagement !== "all") && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSearch("");
+                        setSelectedTag(null);
+                        setPostType("all");
+                        setEngagement("all");
+                      }}
+                      className="mt-4"
+                    >
+                      Clear all filters
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
-        </div>
-      </section>
+        </section>
 
-      <aside className="lg:col-span-4 space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="mb-3 text-sm font-semibold tracking-wide">Popular tags</h2>
-            <div className="flex flex-wrap gap-2">
-              {allTags.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTag((cur) => (cur === t ? null : t))}
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
-                    selectedTag === t ? "bg-primary/10 border-primary" : "hover:bg-accent"
-                  }`}
-                  aria-pressed={selectedTag === t}
-                >
-                  <span>#{t}</span>
-                  {selectedTag === t && (
-                    <Badge variant="secondary">active</Badge>
-                  )}
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="mb-3 text-sm font-semibold tracking-wide">Community rules</h2>
-            <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-              <li>Be kind and constructive.</li>
-              <li>No spam or self-promo without value.</li>
-              <li>Share real experiences and learnings.</li>
-            </ul>
-          </CardContent>
-        </Card>
-      </aside>
+        {/* Advanced Filters Sidebar */}
+        <aside className="lg:col-span-4">
+          <AdvancedFilters
+            selectedTag={selectedTag}
+            onTagSelect={setSelectedTag}
+            sort={sort}
+            onSortChange={(value) => setSort(value as "hot" | "new" | "top")}
+            postType={postType}
+            onPostTypeChange={setPostType}
+            engagement={engagement}
+            onEngagementChange={setEngagement}
+            allTags={allTags}
+          />
+        </aside>
+      </div>
     </main>
   );
 };
