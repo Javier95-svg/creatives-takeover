@@ -522,6 +522,38 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_webhook_secrets: {
+        Row: {
+          created_at: string
+          id: string
+          integration_webhook_id: string
+          secret: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          integration_webhook_id: string
+          secret: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          integration_webhook_id?: string
+          secret?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_webhook_secrets_integration_webhook_id_fkey"
+            columns: ["integration_webhook_id"]
+            isOneToOne: true
+            referencedRelation: "integration_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_webhooks: {
         Row: {
           created_at: string
@@ -531,7 +563,6 @@ export type Database = {
           is_active: boolean
           last_received_at: string | null
           updated_at: string
-          webhook_secret: string | null
           webhook_url: string
         }
         Insert: {
@@ -542,7 +573,6 @@ export type Database = {
           is_active?: boolean
           last_received_at?: string | null
           updated_at?: string
-          webhook_secret?: string | null
           webhook_url: string
         }
         Update: {
@@ -553,7 +583,6 @@ export type Database = {
           is_active?: boolean
           last_received_at?: string | null
           updated_at?: string
-          webhook_secret?: string | null
           webhook_url?: string
         }
         Relationships: [
