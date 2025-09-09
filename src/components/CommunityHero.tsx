@@ -22,20 +22,9 @@ const CommunityHero = () => {
                 Entrepreneur Stories Community
               </h1>
               
-              <p className="text-muted-foreground mb-4 max-w-lg">
+              <p className="text-muted-foreground max-w-lg">
                 Share your entrepreneurial journey, learn from others, and connect with like-minded founders building the future.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                <Button className="bg-primary hover:bg-primary/90 shadow-lg">
-                  <Users className="mr-2 h-4 w-4" />
-                  Share Your Journey
-                </Button>
-                <Button variant="outline">
-                  <Heart className="mr-2 h-4 w-4" />
-                  Explore Stories
-                </Button>
-              </div>
             </div>
 
             {/* Right side - Quick Stats & Activity */}
