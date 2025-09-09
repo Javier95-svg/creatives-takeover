@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.send-welcome-email]
 verify_jwt = false
+
+[functions.market-data-aggregator]
+verify_jwt = false
+
+[functions.market-intelligence-refresh]
+verify_jwt = false

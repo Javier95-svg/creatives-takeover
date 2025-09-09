@@ -503,6 +503,128 @@ export type Database = {
           },
         ]
       }
+      market_data_sources: {
+        Row: {
+          api_endpoint: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_updated_at: string | null
+          metadata: Json | null
+          rate_limit_per_hour: number | null
+          source_name: string
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_updated_at?: string | null
+          metadata?: Json | null
+          rate_limit_per_hour?: number | null
+          source_name: string
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_updated_at?: string | null
+          metadata?: Json | null
+          rate_limit_per_hour?: number | null
+          source_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      market_insights_cache: {
+        Row: {
+          cache_key: string
+          confidence_score: number | null
+          created_at: string
+          data_sources: string[] | null
+          expires_at: string
+          id: string
+          insights_data: Json
+          query_params: Json
+        }
+        Insert: {
+          cache_key: string
+          confidence_score?: number | null
+          created_at?: string
+          data_sources?: string[] | null
+          expires_at?: string
+          id?: string
+          insights_data: Json
+          query_params: Json
+        }
+        Update: {
+          cache_key?: string
+          confidence_score?: number | null
+          created_at?: string
+          data_sources?: string[] | null
+          expires_at?: string
+          id?: string
+          insights_data?: Json
+          query_params?: Json
+        }
+        Relationships: []
+      }
+      market_intelligence: {
+        Row: {
+          created_at: string
+          data_payload: Json
+          data_type: string
+          expires_at: string
+          freshness_score: number | null
+          geographic_region: string | null
+          id: string
+          industry: string | null
+          keywords: string[] | null
+          relevance_score: number | null
+          source_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_payload: Json
+          data_type: string
+          expires_at?: string
+          freshness_score?: number | null
+          geographic_region?: string | null
+          id?: string
+          industry?: string | null
+          keywords?: string[] | null
+          relevance_score?: number | null
+          source_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_payload?: Json
+          data_type?: string
+          expires_at?: string
+          freshness_score?: number | null
+          geographic_region?: string | null
+          id?: string
+          industry?: string | null
+          keywords?: string[] | null
+          relevance_score?: number | null
+          source_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_intelligence_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "market_data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachments: Json | null
@@ -1217,6 +1339,10 @@ export type Database = {
         Returns: undefined
       }
       refresh_expired_trends: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_market_data_freshness: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

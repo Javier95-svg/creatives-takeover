@@ -169,6 +169,87 @@ IMPORTANT: Include specific citations and sources for all claims. Use recent dat
       research_quality: allSources.length > 5 ? 'high' : allSources.length > 2 ? 'medium' : 'low'
     };
 
+    // Enhance with real-time market intelligence
+    try {
+      console.log('Enriching with real-time market data...');
+      
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
+      
+      if (supabaseUrl && supabaseKey) {
+        const marketDataResponse = await fetch(`${supabaseUrl}/functions/v1/market-data-aggregator`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            industries: [industry],
+            keywords: [
+              businessConcept,
+              targetMarket,
+              ...(region && region !== 'Global' ? [region] : [])
+            ].filter(Boolean),
+            data_types: ['news', 'trend', 'market_size'],
+            refresh_cache: false
+          })
+        });
+
+        if (marketDataResponse.ok) {
+          const marketData = await marketDataResponse.json();
+          
+          // Integrate market intelligence into research response
+          if (marketData.data && marketData.data.length > 0) {
+            // Add real-time insights to the response
+            (researchResponse as any).market_intelligence = {
+              real_time_insights: marketData.data.slice(0, 5),
+              market_confidence: marketData.confidence_score || 0,
+              data_freshness: marketData.freshness_avg || 0,
+              sources_consulted: marketData.sources_used || [],
+              last_updated: new Date().toISOString()
+            };
+
+            // Extract key market insights for integration
+            const highImpactInsights = marketData.data.filter((item: any) => 
+              item.market_impact === 'High' && item.relevance_score > 0.6
+            );
+
+            if (highImpactInsights.length > 0) {
+              (researchResponse as any).market_opportunities = highImpactInsights.map((insight: any) => ({
+                title: insight.title,
+                opportunity_score: insight.opportunity_score,
+                key_insights: insight.insights,
+                source: insight.source
+              }));
+            }
+
+            // Enhance existing sections with real-time data
+            const newsInsights = marketData.data.filter((item: any) => item.data_type === 'news');
+            if (newsInsights.length > 0 && researchResponse.structured_data) {
+              const newsContent = newsInsights.slice(0, 3).map((item: any) => 
+                `• ${item.title} (${item.source}, ${new Date(item.created_at).toLocaleDateString()})`
+              ).join('\n');
+              
+              researchResponse.structured_data.industry_trends.data += '\n\n**Latest Real-Time Updates:**\n' + newsContent;
+              researchResponse.structured_data.industry_trends.sources.push(...marketData.sources_used);
+            }
+
+            // Add market intelligence sources to all sources
+            researchResponse.all_sources = [...new Set([...allSources, ...marketData.sources_used])];
+            
+            console.log('Successfully integrated market intelligence with', marketData.data.length, 'insights');
+          }
+        } else {
+          console.log('Market data integration failed - API response not ok');
+        }
+      } else {
+        console.log('Market data integration skipped - Supabase configuration missing');
+      }
+    } catch (marketError) {
+      console.error('Market data integration failed:', marketError);
+      // Continue without market data - don't fail the entire request
+    }
+
     return new Response(
       JSON.stringify(researchResponse),
       {
