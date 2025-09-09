@@ -1316,7 +1316,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      trending_market_topics: {
+        Row: {
+          avg_relevance: number | null
+          data_type: string | null
+          industry: string | null
+          keyword: string | null
+          last_seen: string | null
+          mention_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_ai_cache: {
@@ -1326,6 +1336,39 @@ export type Database = {
       cleanup_expired_analytics_cache: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_fresh_market_insights: {
+        Args: {
+          p_data_types?: string[]
+          p_industries: string[]
+          p_keywords?: string[]
+          p_limit?: number
+        }
+        Returns: {
+          created_at: string
+          data_type: string
+          freshness_score: number
+          id: string
+          industry: string
+          insights: string[]
+          market_impact: string
+          opportunity_score: number
+          relevance_score: number
+          source_name: string
+          summary: string
+          title: string
+        }[]
+      }
+      get_market_intelligence_summary: {
+        Args: { p_industry?: string; p_limit?: number }
+        Returns: {
+          avg_freshness: number
+          avg_relevance: number
+          data_type: string
+          industry: string
+          recent_insights: number
+          top_sources: string[]
+        }[]
       }
       get_post_author_info: {
         Args: { author_user_id: string }
