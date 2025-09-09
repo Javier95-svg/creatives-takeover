@@ -30,14 +30,18 @@ const CommunityHero = () => {
             {/* Right side - Interaction Prompts */}
             <div className="flex flex-col lg:items-end gap-4">
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button className="group bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                  <Heart className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-                  Share Your Story
-                </Button>
-                <Button variant="outline" className="border-primary/20 hover:bg-primary/5">
-                  <Users className="h-4 w-4 mr-2" />
-                  Connect & Learn
-                </Button>
+                <Link to="/login">
+                  <Button className="group bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                    <Heart className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                    Share Your Story
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button variant="outline" className="border-primary/20 hover:bg-primary/5">
+                    <Users className="h-4 w-4 mr-2" />
+                    Connect & Learn
+                  </Button>
+                </Link>
               </div>
               <div className="text-center lg:text-right">
                 <p className="text-sm text-muted-foreground">
