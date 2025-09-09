@@ -55,7 +55,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            Join 1,200+ entrepreneurs who've created their comprehensive business plans with AI-powered insights and validation tools.
+            Transform your business ideas into comprehensive, actionable plans with AI-powered insights and market validation tools.
           </p>
 
           {/* CTA Buttons */}
@@ -69,19 +69,28 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Stats */}
+          {/* Key Features */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold takeover-gradient mb-2 creatives-font">2,847</div>
-              <div className="text-muted-foreground">Business Plans Generated</div>
+              <div className="flex justify-center mb-3">
+                <Sparkles className="w-8 h-8 text-primary" />
+              </div>
+              <div className="text-lg font-semibold takeover-gradient mb-2">AI-Powered Analysis</div>
+              <div className="text-muted-foreground text-sm">Smart insights and market validation for your business ideas</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold animated-gradient mb-2 creatives-font">28 Min</div>
-              <div className="text-muted-foreground">Average Completion Time</div>
+              <div className="flex justify-center mb-3">
+                <ArrowRight className="w-8 h-8 text-secondary" />
+              </div>
+              <div className="text-lg font-semibold animated-gradient mb-2">Quick Results</div>
+              <div className="text-muted-foreground text-sm">Get comprehensive business plans in minutes, not months</div>
             </div>
             <div className="glass-card btn-magnetic">
-              <div className="text-3xl font-bold reverse-gradient mb-2 creatives-font">5,600+</div>
-              <div className="text-muted-foreground">Marketing Assets Created</div>
+              <div className="flex justify-center mb-3">
+                <Sparkles className="w-8 h-8 text-accent" />
+              </div>
+              <div className="text-lg font-semibold reverse-gradient mb-2">Complete Package</div>
+              <div className="text-muted-foreground text-sm">Business plan, market research, and execution strategy included</div>
             </div>
           </div>
 
