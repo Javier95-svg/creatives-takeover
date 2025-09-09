@@ -27,20 +27,25 @@ const CommunityHero = () => {
               </p>
             </div>
 
-            {/* Right side - Quick Stats & Activity */}
-            <div className="flex lg:flex-col gap-6 lg:gap-4">
-              <div className="grid grid-cols-3 lg:grid-cols-1 gap-4 lg:gap-3">
-                <div className="text-center lg:text-right p-3 lg:p-2 rounded-lg bg-primary/5">
-                  <div className="text-lg lg:text-xl font-bold text-primary">342+</div>
-                  <div className="text-xs text-muted-foreground">Stories Shared</div>
-                </div>
-                <div className="text-center lg:text-right p-3 lg:p-2 rounded-lg bg-secondary/5">
-                  <div className="text-lg lg:text-xl font-bold text-secondary">127</div>
-                  <div className="text-xs text-muted-foreground">Active Today</div>
-                </div>
-                <div className="text-center lg:text-right p-3 lg:p-2 rounded-lg bg-accent/5">
-                  <div className="text-lg lg:text-xl font-bold text-accent">89%</div>
-                  <div className="text-xs text-muted-foreground">Helpful Rate</div>
+            {/* Right side - Interaction Prompts */}
+            <div className="flex flex-col lg:items-end gap-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button className="group bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                  <Heart className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                  Share Your Story
+                </Button>
+                <Button variant="outline" className="border-primary/20 hover:bg-primary/5">
+                  <Users className="h-4 w-4 mr-2" />
+                  Connect & Learn
+                </Button>
+              </div>
+              <div className="text-center lg:text-right">
+                <p className="text-sm text-muted-foreground">
+                  Join entrepreneurs sharing their journey
+                </p>
+                <div className="flex items-center justify-center lg:justify-end gap-1 mt-1">
+                  <Globe className="h-3 w-3 text-primary" />
+                  <span className="text-xs text-primary">Global Community</span>
                 </div>
               </div>
             </div>
