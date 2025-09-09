@@ -23,6 +23,7 @@ import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import MarketIntelWidget from "@/components/MarketIntelWidget";
+import SuccessScore from "@/components/SuccessScore";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,6 +40,7 @@ const BizMapAI = () => {
   const [refinedContext, setRefinedContext] = useState(null);
   const [isRefiningContext, setIsRefiningContext] = useState(false);
   const [launchReport, setLaunchReport] = useState("");
+  const [successScore, setSuccessScore] = useState<any>(null);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -270,6 +272,44 @@ const BizMapAI = () => {
   
   // Generate asset function remains unchanged
 
+  // Helper: compute and store success score
+  const computeAndStoreSuccessScore = async (answers: any) => {
+    try {
+      const { data: scoreData, error: scoreError } = await supabase.rpc('calculate_business_success_score', { answers });
+      if (scoreError) throw scoreError;
+      setSuccessScore(scoreData);
+
+      // Persist for history/analytics
+      const { data } = await supabase.auth.getSession();
+      const userId = data.session?.user?.id ?? null;
+      const score: any = scoreData as any;
+      setSuccessScore(score);
+
+      // Persist for history/analytics
+      await supabase.from('business_success_scores').insert({
+        user_id: userId,
+        session_id: currentSessionId,
+        overall_score: score.overall_score,
+        market_clarity_score: score.market_clarity_score,
+        problem_validation_score: score.problem_validation_score,
+        solution_strength_score: score.solution_strength_score,
+        market_strategy_score: score.market_strategy_score,
+        financial_planning_score: score.financial_planning_score,
+        execution_feasibility_score: score.execution_feasibility_score,
+        risk_assessment: score.risk_assessment,
+        success_likelihood: score.success_likelihood,
+        key_strengths: score.key_strengths,
+        improvement_areas: score.improvement_areas,
+        action_recommendations: score.action_recommendations,
+        scoring_criteria: score.scoring_breakdown
+      });
+      toast.success('Success score calculated.');
+    } catch (e) {
+      console.error('Scoring error:', e);
+      toast.error('Could not calculate success score, please try again later.');
+    }
+  };
+
   // Simplified launch report generation - single step, fixed cost
   const generateLaunchReport = async (answers: any, isFreeForFeedback = false) => {
     // Check authentication and credits (unless it's free for feedback)
@@ -308,6 +348,7 @@ const BizMapAI = () => {
         // Try fallback but make it comprehensive
         const fallbackReport = generateFallbackReport(answers);
         toast.success("Generated your Launch Report successfully!");
+        await computeAndStoreSuccessScore(answers);
         return fallbackReport;
       }
 
@@ -320,11 +361,13 @@ const BizMapAI = () => {
           "FREE Launch Report generated successfully! 🎉" : 
           `Launch Report generated successfully! (Used ${reportCost} credits)`;
         toast.success(successMessage);
+        await computeAndStoreSuccessScore(answers);
         return data.report;
       } else {
         console.error('API returned error:', data?.error);
         const fallbackReport = generateFallbackReport(answers);
         toast.success("Generated your Launch Report successfully!");
+        await computeAndStoreSuccessScore(answers);
         return fallbackReport;
       }
     } catch (error) {

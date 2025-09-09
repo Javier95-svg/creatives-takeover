@@ -193,6 +193,69 @@ export type Database = {
         }
         Relationships: []
       }
+      business_success_scores: {
+        Row: {
+          action_recommendations: string[] | null
+          created_at: string
+          execution_feasibility_score: number
+          financial_planning_score: number
+          id: string
+          improvement_areas: string[] | null
+          key_strengths: string[] | null
+          market_clarity_score: number
+          market_strategy_score: number
+          overall_score: number
+          problem_validation_score: number
+          risk_assessment: string
+          scoring_criteria: Json | null
+          session_id: string | null
+          solution_strength_score: number
+          success_likelihood: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          action_recommendations?: string[] | null
+          created_at?: string
+          execution_feasibility_score: number
+          financial_planning_score: number
+          id?: string
+          improvement_areas?: string[] | null
+          key_strengths?: string[] | null
+          market_clarity_score: number
+          market_strategy_score: number
+          overall_score: number
+          problem_validation_score: number
+          risk_assessment?: string
+          scoring_criteria?: Json | null
+          session_id?: string | null
+          solution_strength_score: number
+          success_likelihood?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_recommendations?: string[] | null
+          created_at?: string
+          execution_feasibility_score?: number
+          financial_planning_score?: number
+          id?: string
+          improvement_areas?: string[] | null
+          key_strengths?: string[] | null
+          market_clarity_score?: number
+          market_strategy_score?: number
+          overall_score?: number
+          problem_validation_score?: number
+          risk_assessment?: string
+          scoring_criteria?: Json | null
+          session_id?: string | null
+          solution_strength_score?: number
+          success_likelihood?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_sessions: {
         Row: {
           answers: Json
@@ -1329,6 +1392,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_business_success_score: {
+        Args: { answers: Json }
+        Returns: Json
+      }
       cleanup_expired_ai_cache: {
         Args: Record<PropertyKey, never>
         Returns: undefined
