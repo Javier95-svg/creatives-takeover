@@ -22,6 +22,7 @@ import { useFeedbackModal } from "@/hooks/useFeedbackModal";
 import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
+import MarketIntelWidget from "@/components/MarketIntelWidget";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -1262,6 +1263,9 @@ ${translations.dataDisclaimer}`;
         }}
         sessionId={currentSessionId}
       />
+
+      {/* Live Market Intelligence Widget */}
+      <MarketIntelWidget />
 
       <Footer />
     </div>
