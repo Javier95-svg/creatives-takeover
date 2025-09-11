@@ -48,21 +48,21 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-            <span className="takeover-gradient">The AI Business</span>
+            <span className="takeover-gradient">From idea to professional</span>
             <br />
-            <span className="animated-gradient">Validation Engine</span>
+            <span className="animated-gradient">business plan in 30 minutes</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <span className="text-primary font-semibold">Validate before you build.</span> Get AI-powered risk assessment, market validation, and viability scoring in 30 minutes, not 30 days.
+            Transform your business ideas into comprehensive, actionable plans with AI-powered insights and market validation tools.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating relative overflow-hidden group" aria-label="Validate your business idea with AI" asChild>
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating relative overflow-hidden group" aria-label="Create business plan and earn credits" asChild>
               <Link to="/dream2plan">
-                <span className="relative z-10">Validate Your Idea FREE</span>
+                <span className="relative z-10">Get FREE Report + Credits</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
@@ -75,22 +75,22 @@ const Hero = () => {
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
-              <div className="text-lg font-semibold takeover-gradient mb-2">Risk Assessment</div>
-              <div className="text-muted-foreground text-sm">AI identifies potential risks and validates market demand before you invest</div>
+              <div className="text-lg font-semibold takeover-gradient mb-2">AI-Powered Analysis</div>
+              <div className="text-muted-foreground text-sm">Smart insights and market validation for your business ideas</div>
             </div>
             <div className="glass-card btn-magnetic">
               <div className="flex justify-center mb-3">
                 <ArrowRight className="w-8 h-8 text-secondary" />
               </div>
-              <div className="text-lg font-semibold animated-gradient mb-2">30 Min Validation</div>
-              <div className="text-muted-foreground text-sm">Get comprehensive viability scoring in minutes, not months of guesswork</div>
+              <div className="text-lg font-semibold animated-gradient mb-2">Quick Results</div>
+              <div className="text-muted-foreground text-sm">Get comprehensive business plans in minutes, not months</div>
             </div>
             <div className="glass-card btn-magnetic">
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-8 h-8 text-accent" />
               </div>
-              <div className="text-lg font-semibold reverse-gradient mb-2">Execution Ready</div>
-              <div className="text-muted-foreground text-sm">Validated business plan with clear next steps and success metrics</div>
+              <div className="text-lg font-semibold reverse-gradient mb-2">Complete Package</div>
+              <div className="text-muted-foreground text-sm">Business plan, market research, and execution strategy included</div>
             </div>
           </div>
 

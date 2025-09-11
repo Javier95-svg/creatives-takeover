@@ -13,8 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface CreditGateProps {
   isOpen: boolean;
@@ -48,25 +46,10 @@ export function CreditGate({
     }
   };
 
-  const handleCreditPackagePurchase = async (packageCredits: number, price: number) => {
-    try {
-      const price_cents = Math.round(price * 100);
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { credits: packageCredits, price_cents }
-      });
-      if (error) throw error;
-      if (data?.url) {
-        // Open Stripe checkout in a new tab (recommended default)
-        window.open(data.url, "_blank");
-        onPurchase?.();
-        onClose();
-      } else {
-        throw new Error("No checkout URL returned");
-      }
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to start checkout");
-      console.error("Credit package purchase error:", e);
-    }
+  const handleCreditPackagePurchase = (packageCredits: number, price: number) => {
+    console.log(`Purchase ${packageCredits} credits for $${price}`);
+    onPurchase?.();
+    // TODO: Implement one-time credit purchase
   };
 
   return (
