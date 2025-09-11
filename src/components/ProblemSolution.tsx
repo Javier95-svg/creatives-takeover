@@ -118,16 +118,15 @@ const ProblemSolution = () => {
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-primary/20 mb-8 animate-fade-in">
             <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-primary font-semibold">The Transformation Journey</span>
+            <span className="text-primary font-semibold">The Validation Revolution</span>
           </div>
           
           <h2 className="text-5xl md:text-6xl font-bold mb-8 takeover-gradient creatives-font">
-            From Chaos to Launch Ready
+            From Risk to Confidence
           </h2>
           
           <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-            Watch how BizMap AI transforms your biggest entrepreneurial frustrations into your competitive advantages. 
-            <span className="text-primary font-semibold"> Real problems. Real solutions. Real results.</span>
+            Stop gambling with your business ideas. See how our <span className="text-primary font-semibold">AI Validation Engine</span> transforms entrepreneurial uncertainty into data-driven confidence.
           </p>
         </div>
 

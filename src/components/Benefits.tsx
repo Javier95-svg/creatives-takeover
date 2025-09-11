@@ -3,23 +3,23 @@ import { Zap, Shield, Bot, Layers, ArrowRight } from "lucide-react";
 const benefits = [
   {
     icon: Zap,
-    title: "Get your business plan in 30 minutes, not 30 days",
-    desc: "Complete comprehensive business planning with AI assistance in under half an hour.",
+    title: "Validate demand before building anything",
+    desc: "Get AI-powered market validation and risk assessment in 30 minutes, preventing costly mistakes.",
   },
   {
     icon: Shield,
-    title: "Validate demand before you build anything",
-    desc: "Smart market research and validation tools to test your ideas before investing time and money.",
+    title: "Risk mitigation built into every analysis",
+    desc: "Comprehensive risk scoring identifies potential pitfalls and provides mitigation strategies before you invest.",
   },
   {
     icon: Bot,
-    title: "Professional marketing assets without hiring designers",
-    desc: "Generate logos, marketing copy, and brand materials as part of your business plan creation.",
+    title: "Real-time market intelligence integration",
+    desc: "Live competitor analysis and market trend data powers accurate viability scoring and opportunity identification.",
   },
   {
     icon: Layers,
-    title: "Connect with fellow entrepreneurs building real businesses",
-    desc: "Join our community of creators and get feedback, support, and networking opportunities.",
+    title: "Execution-ready validation experiments",
+    desc: "Get specific, actionable experiments to test your assumptions with real customers before full commitment.",
   },
 ];
 
@@ -33,10 +33,10 @@ const Benefits = () => {
       <div className="container mx-auto px-6 relative z-10">
         <header className="text-center max-w-2xl mx-auto mb-12 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 animate-slide-up">
-            Why Choose <span className="gradient-text">BizMap AI</span>
+            Why the <span className="gradient-text">Validation Engine</span> Works
           </h2>
           <p className="text-muted-foreground animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            Clear advantages that help you move faster while staying in control.
+            Built for entrepreneurs who refuse to waste time on unvalidated ideas.
           </p>
         </header>
 
