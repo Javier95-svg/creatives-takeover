@@ -1,5 +1,8 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import InteractiveDemo from "@/components/InteractiveDemo";
+import ProcessSteps from "@/components/ProcessSteps";
+import BusinessReadinessQuiz from "@/components/BusinessReadinessQuiz";
 import ProblemSolution from "@/components/ProblemSolution";
 import HowWeWork from "@/components/HowWeWork";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
@@ -25,6 +28,9 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
+        <InteractiveDemo />
+        <ProcessSteps />
+        <BusinessReadinessQuiz />
         <CampaignPromotion />
         <ProblemSolution />
         <HowWeWork />
