@@ -1,7 +1,8 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import InteractiveDemo from "@/components/InteractiveDemo";
-import BusinessReadinessQuiz from "@/components/BusinessReadinessQuiz";
+import ProblemSolution from "@/components/ProblemSolution";
+import HowWeWork from "@/components/HowWeWork";
+import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
 import CampaignPromotion from "@/components/CampaignPromotion";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
@@ -24,10 +25,11 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
-        <InteractiveDemo />
-        <BusinessReadinessQuiz />
-        <Benefits />
         <CampaignPromotion />
+        <ProblemSolution />
+        <HowWeWork />
+        <SimpleBizMapGuide />
+        <Benefits />
       </main>
       <Footer />
       
