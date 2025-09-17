@@ -1122,13 +1122,13 @@ ${translations.dataDisclaimer}`;
                 <div className="absolute top-4 right-4 w-3 h-3 bg-primary/30 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-500" />
                 <div className="absolute bottom-6 left-6 w-2 h-2 bg-secondary/40 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-500" style={{ animationDelay: '0.3s' }} />
                 
-                <CardHeader className="relative z-10 pb-4">
+                <CardHeader className="relative z-10 pb-4" style={{ backgroundColor: 'blue', color: 'white' }}>
                   <CardTitle className="flex items-center gap-3 text-xl group-hover:text-primary transition-colors duration-500">
                     <div className="relative p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 group-hover:scale-110 transition-all duration-500 shadow-lg">
                       <Lightbulb className="w-6 h-6 text-primary group-hover:animate-pulse" />
                       <div className="absolute inset-0 rounded-xl bg-primary/20 opacity-0 group-hover:opacity-100 animate-ping transition-opacity duration-500" />
                     </div>
-                    <span className="creatives-font">How BizMap AI Works</span>
+                    <span className="creatives-font">🚀 ENHANCED: How BizMap AI Works</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 relative z-10">

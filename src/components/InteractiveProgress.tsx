@@ -111,13 +111,14 @@ const InteractiveProgress = ({
       {/* Modern Progress Header */}
       <div className="text-center mb-12">
         <div className="relative">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 creatives-font">
-            {isComplete ? (
-              <span className="takeover-gradient">Your Business Plan is Ready!</span>
-            ) : (
-              <span className="silver-gradient-text">Step {currentStep + 1} of {totalSteps}</span>
-            )}
-          </h2>
+        <h2 className="text-3xl md:text-4xl font-bold mb-4 creatives-font" style={{ backgroundColor: 'red', color: 'white', padding: '20px' }}>
+          ⚡ ENHANCED TIMELINE - CHANGES APPLIED! ⚡
+          {isComplete ? (
+            <span className="takeover-gradient">Your Business Plan is Ready!</span>
+          ) : (
+            <span className="silver-gradient-text">Step {currentStep + 1} of {totalSteps}</span>
+          )}
+        </h2>
           <div className="absolute -top-2 -right-2 animate-pulse">
             <div className="w-3 h-3 bg-primary rounded-full"></div>
           </div>
