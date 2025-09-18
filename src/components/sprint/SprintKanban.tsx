@@ -1,0 +1,252 @@
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  Clock, 
+  MessageSquare, 
+  Play, 
+  Pause, 
+  CheckCircle, 
+  AlertCircle,
+  Calendar,
+  Users,
+  TrendingUp
+} from 'lucide-react';
+import { Sprint, SprintTask, useSprints } from '@/hooks/useSprints';
+import { format } from 'date-fns';
+import TaskCard from './TaskCard';
+import SprintComments from './SprintComments';
+
+interface SprintKanbanProps {
+  sprint: Sprint;
+  onStatusChange?: (status: Sprint['status']) => void;
+}
+
+const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) => {
+  const { 
+    sprintTasks, 
+    sprintComments,
+    fetchSprintTasks, 
+    fetchSprintComments,
+    updateTaskStatus,
+    updateSprintStatus 
+  } = useSprints();
+  
+  const [showComments, setShowComments] = useState(false);
+  const [taskStats, setTaskStats] = useState({
+    todo: 0,
+    in_progress: 0,
+    review: 0,
+    done: 0,
+    totalHours: 0,
+    completedHours: 0
+  });
+
+  useEffect(() => {
+    if (sprint.id) {
+      fetchSprintTasks(sprint.id);
+      fetchSprintComments(sprint.id);
+    }
+  }, [sprint.id]);
+
+  useEffect(() => {
+    const stats = sprintTasks.reduce((acc, task) => {
+      acc[task.status] = (acc[task.status] || 0) + 1;
+      acc.totalHours += task.estimated_hours;
+      if (task.status === 'done' && task.actual_hours) {
+        acc.completedHours += task.actual_hours;
+      }
+      return acc;
+    }, {
+      todo: 0,
+      in_progress: 0,
+      review: 0,
+      done: 0,
+      totalHours: 0,
+      completedHours: 0
+    });
+    setTaskStats(stats);
+  }, [sprintTasks]);
+
+  const handleStatusChange = async (newStatus: Sprint['status']) => {
+    await updateSprintStatus(sprint.id, newStatus);
+    onStatusChange?.(newStatus);
+  };
+
+  const getStatusColor = (status: Sprint['status']) => {
+    switch (status) {
+      case 'planning': return 'bg-blue-500';
+      case 'active': return 'bg-green-500';
+      case 'completed': return 'bg-purple-500';
+      case 'paused': return 'bg-orange-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getTasksByStatus = (status: SprintTask['status']) => {
+    return sprintTasks.filter(task => task.status === status);
+  };
+
+  const progressPercentage = taskStats.totalHours > 0 
+    ? Math.round((taskStats.done / sprintTasks.length) * 100) 
+    : 0;
+
+  const columns = [
+    { id: 'todo', title: 'To Do', status: 'todo' as const, icon: Clock, color: 'border-gray-200' },
+    { id: 'in_progress', title: 'In Progress', status: 'in_progress' as const, icon: Play, color: 'border-blue-200' },
+    { id: 'review', title: 'Review', status: 'review' as const, icon: AlertCircle, color: 'border-orange-200' },
+    { id: 'done', title: 'Done', status: 'done' as const, icon: CheckCircle, color: 'border-green-200' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Sprint Header */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`w-3 h-3 rounded-full ${getStatusColor(sprint.status)}`} />
+                <CardTitle className="text-2xl creatives-font">{sprint.title}</CardTitle>
+                <Badge variant="outline" className="capitalize">
+                  {sprint.status}
+                </Badge>
+                {sprint.community_visible && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Users className="w-3 h-3 mr-1" />
+                    Community
+                  </Badge>
+                )}
+              </div>
+              
+              {sprint.description && (
+                <p className="text-muted-foreground mb-4">{sprint.description}</p>
+              )}
+
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {format(new Date(sprint.start_date), 'MMM dd')} - {format(new Date(sprint.end_date), 'MMM dd')}
+                </div>
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-4 h-4" />
+                  {progressPercentage}% Complete
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {taskStats.completedHours}h / {taskStats.totalHours}h
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {sprint.status === 'planning' && (
+                <Button onClick={() => handleStatusChange('active')} size="sm">
+                  <Play className="w-4 h-4 mr-1" />
+                  Start Sprint
+                </Button>
+              )}
+              {sprint.status === 'active' && (
+                <>
+                  <Button onClick={() => handleStatusChange('paused')} variant="outline" size="sm">
+                    <Pause className="w-4 h-4 mr-1" />
+                    Pause
+                  </Button>
+                  <Button onClick={() => handleStatusChange('completed')} variant="outline" size="sm">
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Complete
+                  </Button>
+                </>
+              )}
+              {sprint.status === 'paused' && (
+                <Button onClick={() => handleStatusChange('active')} variant="outline" size="sm">
+                  <Play className="w-4 h-4 mr-1" />
+                  Resume
+                </Button>
+              )}
+              
+              {sprint.community_visible && (
+                <Button 
+                  onClick={() => setShowComments(!showComments)}
+                  variant="outline" 
+                  size="sm"
+                >
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  Comments ({sprintComments.length})
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span>Sprint Progress</span>
+              <span>{taskStats.done} of {sprintTasks.length} tasks completed</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Comments Section */}
+      {showComments && sprint.community_visible && (
+        <SprintComments 
+          sprintId={sprint.id} 
+          comments={sprintComments}
+          onCommentAdded={() => fetchSprintComments(sprint.id)}
+        />
+      )}
+
+      {/* Kanban Board */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {columns.map((column) => {
+          const tasks = getTasksByStatus(column.status);
+          const Icon = column.icon;
+          
+          return (
+            <Card key={column.id} className={`${column.color} border-2`}>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between text-base">
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {column.title}
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {tasks.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {tasks.length === 0 ? (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    No tasks yet
+                  </div>
+                ) : (
+                  tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onStatusChange={(newStatus, actualHours) => 
+                        updateTaskStatus(task.id, newStatus, actualHours)
+                      }
+                    />
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default SprintKanban;

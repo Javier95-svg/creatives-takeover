@@ -947,6 +947,183 @@ export type Database = {
         }
         Relationships: []
       }
+      sprint_accountability: {
+        Row: {
+          accountability_partner_id: string | null
+          created_at: string
+          daily_checkins_enabled: boolean
+          id: string
+          last_checkin_at: string | null
+          nudge_count: number
+          sprint_id: string
+          user_id: string
+        }
+        Insert: {
+          accountability_partner_id?: string | null
+          created_at?: string
+          daily_checkins_enabled?: boolean
+          id?: string
+          last_checkin_at?: string | null
+          nudge_count?: number
+          sprint_id: string
+          user_id: string
+        }
+        Update: {
+          accountability_partner_id?: string | null
+          created_at?: string
+          daily_checkins_enabled?: boolean
+          id?: string
+          last_checkin_at?: string | null
+          nudge_count?: number
+          sprint_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_accountability_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sprint_comments: {
+        Row: {
+          comment_type: string
+          content: string
+          created_at: string
+          id: string
+          sprint_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_type?: string
+          content: string
+          created_at?: string
+          id?: string
+          sprint_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          sprint_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_comments_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sprint_tasks: {
+        Row: {
+          actual_hours: number | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          estimated_hours: number
+          id: string
+          priority: string
+          sprint_id: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_hours?: number | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          estimated_hours?: number
+          id?: string
+          priority?: string
+          sprint_id: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_hours?: number | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          estimated_hours?: number
+          id?: string
+          priority?: string
+          sprint_id?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_tasks_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sprints: {
+        Row: {
+          community_visible: boolean
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          is_public: boolean
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          community_visible?: boolean
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_public?: boolean
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          community_visible?: boolean
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_public?: boolean
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
