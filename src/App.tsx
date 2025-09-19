@@ -30,7 +30,6 @@ import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
 import CreditAnalyticsPage from "./pages/CreditAnalyticsPage";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
-import SprintPlannerPage from "./pages/SprintPlanner";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -60,7 +59,6 @@ const App = () => (
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/laboratory" element={<Laboratory />} />
             <Route path="/dream2plan" element={<BizMapAI />} />
-            <Route path="/sprints" element={<SprintPlannerPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth" element={<Auth />} />

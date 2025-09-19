@@ -24,6 +24,11 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import MarketIntelWidget from "@/components/MarketIntelWidget";
 import SuccessScore from "@/components/SuccessScore";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
+import SprintKanban from "@/components/sprint/SprintKanban";
+import { useSprints } from "@/hooks/useSprints";
+import { ArrowLeft, Zap } from "lucide-react";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -53,7 +58,24 @@ const BizMapAI = () => {
 
   const { user, isAuthenticated } = useAuth();
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
+  const { sprints, currentSprint, setCurrentSprint } = useSprints();
+  const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("bizmap");
   
+  // Sprint Planner handlers
+  const handleSprintCreated = (sprintId: string) => {
+    const sprint = sprints.find(s => s.id === sprintId);
+    if (sprint) {
+      setCurrentSprint(sprint);
+      setActiveSprintId(sprintId);
+      setActiveTab("sprint");
+    }
+  };
+
+  const activeSprint = activeSprintId 
+    ? sprints.find(s => s.id === activeSprintId) 
+    : currentSprint;
+
   // Define wizardSteps before using it in hooks
   const wizardSteps = [
     {
@@ -950,8 +972,16 @@ ${translations.dataDisclaimer}`;
               </p>
             </div>
 
-            {/* Chat Interface Container */}
-            <div className="flex gap-6 mb-8">
+            {/* Tab Navigation */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="bizmap">Business Planning</TabsTrigger>
+                <TabsTrigger value="sprint">Sprint Planner</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="bizmap">
+                {/* Chat Interface Container */}
+                <div className="flex gap-6 mb-8">
               {/* Chat Sidebar */}
               <ChatSidebar 
                 onSessionSelect={handleSessionSelect}
@@ -1055,49 +1085,61 @@ ${translations.dataDisclaimer}`;
                           <Button size="sm" variant="secondary" onClick={() => handleQuickAction('social')}>Write 3 social posts</Button>
                           <Button size="sm" variant="secondary" onClick={() => handleQuickAction('landing')}>Sketch landing page</Button>
                         </div>
-                      )}
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder={getCurrentPlaceholder()}
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          className="flex-1"
-                          disabled={isLoading}
-                        />
-                        <AudioRecorder 
-                          onTranscription={handleAudioTranscription}
-                          disabled={isLoading}
-                        />
-                        <Button 
-                          onClick={() => handleSendMessage()} 
-                          size="icon" 
-                          disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
-                        >
-                          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-muted-foreground">
-                          {isCompleted ? "Launch Report generated! Copy and save it." :
-                           `Answer to continue to step ${currentStep + 2}`}
-                        </p>
-                        {!isCompleted && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleSendMessage()}
-                            disabled={isLoading || !message.trim()}
-                          >
-                            {getButtonText()}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+                       )}
+                       <div className="flex gap-2">
+                         <Input
+                           placeholder={getCurrentPlaceholder()}
+                           value={message}
+                           onChange={(e) => setMessage(e.target.value)}
+                           onKeyPress={handleKeyPress}
+                           className="flex-1"
+                           disabled={isLoading}
+                         />
+                         <AudioRecorder 
+                           onTranscription={handleAudioTranscription}
+                           disabled={isLoading}
+                         />
+                         <Button 
+                           onClick={() => handleSendMessage()} 
+                           size="icon" 
+                           disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
+                         >
+                           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                         </Button>
+                       </div>
+                       <div className="flex items-center justify-between mt-2">
+                         <p className="text-xs text-muted-foreground">
+                           {isCompleted ? "Launch Report generated! Ready to create your sprint?" :
+                            `Answer to continue to step ${currentStep + 2}`}
+                         </p>
+                         <div className="flex gap-2">
+                           {isCompleted && (
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               onClick={() => setActiveTab("sprint")}
+                             >
+                               <Zap className="w-4 h-4 mr-2" />
+                               Create Sprint
+                             </Button>
+                           )}
+                           {!isCompleted && (
+                             <Button 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => handleSendMessage()}
+                               disabled={isLoading || !message.trim()}
+                             >
+                               {getButtonText()}
+                             </Button>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   </CardContent>
+                 </Card>
+               </div>
+             </div>
             
             {/* Full Width Sections */}
             {/* Interactive Progress Visualization - Synchronized with chatbot */}
@@ -1263,6 +1305,42 @@ ${translations.dataDisclaimer}`;
                 <ReportDownload report={launchReport} title="BizMap Launch Report" />
               </div>
             )}
+              </TabsContent>
+
+              <TabsContent value="sprint">
+                {!activeSprint ? (
+                  <SprintPlannerComponent onSprintCreated={handleSprintCreated} />
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold creatives-font">Sprint Dashboard</h2>
+                        <p className="text-muted-foreground">Track your progress and stay accountable</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setActiveSprintId(null);
+                          setCurrentSprint(null);
+                        }}
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Create New Sprint
+                      </Button>
+                    </div>
+                    
+                    <SprintKanban 
+                      sprint={activeSprint} 
+                      onStatusChange={(status) => {
+                        if (activeSprint) {
+                          setCurrentSprint({ ...activeSprint, status });
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>

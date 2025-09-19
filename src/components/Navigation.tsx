@@ -28,15 +28,12 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/dream2plan" },
-    { name: "Sprint Planner", href: "/sprints" },
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Insighta", href: "/news" },
     { name: "Community", href: "/community" },
     { name: "About Us", href: "/about" },
     { name: "Pricing", href: "/pricing" }
   ];
-  
-  console.log("Navigation items:", navItems);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border shadow-sm">
