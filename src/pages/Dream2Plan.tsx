@@ -1308,8 +1308,31 @@ ${translations.dataDisclaimer}`;
               </TabsContent>
 
               <TabsContent value="sprint">
+                <div className="flex items-center gap-4 mb-6">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setActiveTab("bizmap")}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to BizMap
+                  </Button>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold">Sprint Planning</h2>
+                    <p className="text-muted-foreground">Turn your business plan into actionable sprints</p>
+                  </div>
+                </div>
+                
                 {!activeSprint ? (
-                  <SprintPlannerComponent onSprintCreated={handleSprintCreated} />
+                  <SprintPlannerComponent 
+                    onSprintCreated={handleSprintCreated}
+                    businessPlanData={launchReport ? {
+                      answers: userAnswers,
+                      launchReport: launchReport,
+                      successScore: successScore
+                    } : undefined}
+                  />
                 ) : (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">

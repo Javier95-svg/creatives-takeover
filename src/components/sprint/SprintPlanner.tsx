@@ -16,18 +16,25 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface SprintPlannerProps {
   onSprintCreated?: (sprintId: string) => void;
+  businessPlanData?: {
+    answers: any;
+    launchReport?: string;
+    successScore?: any;
+  };
 }
 
-const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated }) => {
+const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, businessPlanData }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { createSprint, createSprintTasks } = useSprints();
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    fuzzyIdea: '',
+    title: businessPlanData?.answers?.overview ? 
+      `Launch: ${businessPlanData.answers.overview.split(' ').slice(0, 6).join(' ')}...` : '',
+    description: businessPlanData?.answers?.goals || '',
+    fuzzyIdea: businessPlanData ? 
+      `Business Overview: ${businessPlanData.answers?.overview || ''}\n\nTarget Market: ${businessPlanData.answers?.market || ''}\n\nSolution: ${businessPlanData.answers?.solution || ''}\n\nGoals: ${businessPlanData.answers?.goals || ''}` : '',
     isPublic: false,
     communityVisible: false,
     startDate: new Date(),
@@ -62,7 +69,10 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated }) => {
         body: {
           fuzzyIdea: formData.fuzzyIdea,
           sprintTitle: formData.title,
-          sprintDuration: Math.ceil((formData.endDate.getTime() - formData.startDate.getTime()) / (1000 * 3600 * 24))
+          sprintDuration: Math.ceil((formData.endDate.getTime() - formData.startDate.getTime()) / (1000 * 3600 * 24)),
+          businessPlan: businessPlanData?.answers,
+          launchReport: businessPlanData?.launchReport,
+          successScore: businessPlanData?.successScore
         }
       });
 
@@ -143,10 +153,13 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated }) => {
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold creatives-font bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          AI Sprint Planner
+          {businessPlanData ? 'Turn Your Plan Into Action' : 'AI Sprint Planner'}
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Transform your fuzzy ideas into actionable 2-week sprints with time-boxed tasks and community accountability
+          {businessPlanData ? 
+            'Your business plan is ready! Now let\'s create actionable 2-week sprints to bring it to life.' :
+            'Transform your fuzzy ideas into actionable 2-week sprints with time-boxed tasks and community accountability'
+          }
         </p>
       </div>
 
@@ -261,16 +274,29 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated }) => {
           </CardHeader>
           <CardContent className="relative space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fuzzyIdea">Describe Your Fuzzy Idea</Label>
+              <Label htmlFor="fuzzyIdea">
+                {businessPlanData ? 'Your Business Plan Summary' : 'Describe Your Fuzzy Idea'}
+              </Label>
               <Textarea
                 id="fuzzyIdea"
-                placeholder="I want to build a food delivery app for my local area. I have some basic coding skills but I'm not sure where to start or what steps to take..."
+                placeholder={businessPlanData ? 
+                  "Your business plan details are pre-loaded. You can edit or add more context..." :
+                  "I want to build a food delivery app for my local area. I have some basic coding skills but I'm not sure where to start or what steps to take..."
+                }
                 value={formData.fuzzyIdea}
                 onChange={(e) => setFormData(prev => ({ ...prev, fuzzyIdea: e.target.value }))}
                 rows={6}
                 className="resize-none"
+                readOnly={businessPlanData ? true : false}
               />
             </div>
+            
+            {businessPlanData && (
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border-l-4 border-primary">
+                <p className="font-medium text-primary mb-1">✓ Business Plan Integrated</p>
+                <p>Your comprehensive business plan has been automatically loaded to generate highly targeted sprint tasks.</p>
+              </div>
+            )}
 
             <Button
               onClick={handleGenerateTasks}
