@@ -35,6 +35,8 @@ const Navigation = () => {
     { name: "About Us", href: "/about" },
     { name: "Pricing", href: "/pricing" }
   ];
+  
+  console.log("Navigation items:", navItems);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border shadow-sm">
