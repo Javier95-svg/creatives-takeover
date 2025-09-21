@@ -12,7 +12,13 @@ import DemoCallButton from '@/components/sprint/DemoCallButton';
 import { supabase } from '@/integrations/supabase/client';
 import { PresenceIndicator } from './PresenceIndicator';
 import { LiveComments } from './LiveComments';
+import { EnhancedPresenceIndicator } from './EnhancedPresenceIndicator';
+import { LiveChat } from './LiveChat';
+import { VoiceVideoCall } from './VoiceVideoCall';
+import { NotificationCenter } from './NotificationCenter';
+import { ActivityFeed } from './ActivityFeed';
 import { useCollaboration } from '@/hooks/useCollaboration';
+import { useEnhancedCollaboration } from '@/hooks/useEnhancedCollaboration';
 import { useSprints } from '@/hooks/useSprints';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sprint, SprintTask } from '@/hooks/useSprints';
@@ -52,6 +58,20 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
     addComment,
     resolveComment,
   } = useCollaboration('sprint', sprint.id);
+
+  // Initialize enhanced collaboration features
+  const {
+    messages,
+    userStatuses,
+    notifications,
+    activities,
+    activeCall,
+    sendMessage,
+    updateUserStatus,
+    markNotificationAsRead,
+    startCall,
+    endCall,
+  } = useEnhancedCollaboration(session?.id || '');
 
   // Set up real-time task updates
   useEffect(() => {
@@ -162,10 +182,16 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Collaboration Presence */}
-              <PresenceIndicator 
-                activeUsers={activeUsers}
+              {/* Enhanced Collaboration Presence */}
+              <EnhancedPresenceIndicator 
+                userStatuses={userStatuses}
                 currentUserId={user?.id}
+              />
+              
+              {/* Notifications */}
+              <NotificationCenter
+                notifications={notifications}
+                onMarkAsRead={markNotificationAsRead}
               />
               
               {/* Live Comments Toggle */}
@@ -352,6 +378,28 @@ export const CollaborativeSprintKanban: React.FC<CollaborativeSprintKanbanProps>
               ))}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Enhanced Collaboration Features */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Live Chat */}
+        <LiveChat
+          messages={messages}
+          onSendMessage={sendMessage}
+          currentUserId={user?.id}
+        />
+        
+        {/* Voice/Video Call */}
+        <VoiceVideoCall
+          activeCall={activeCall}
+          userStatuses={userStatuses}
+          currentUserId={user?.id}
+          onStartCall={startCall}
+          onEndCall={endCall}
+        />
+        
+        {/* Activity Feed */}
+        <ActivityFeed activities={activities} />
       </div>
 
       {/* Additional Sprint Features */}

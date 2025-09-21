@@ -370,6 +370,186 @@ export type Database = {
         }
         Relationships: []
       }
+      collaboration_activity: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_activity_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_calls: {
+        Row: {
+          call_type: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          initiated_by: string
+          metadata: Json | null
+          participants: Json
+          session_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          call_type?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          initiated_by: string
+          metadata?: Json | null
+          participants?: Json
+          session_id: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          call_type?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          initiated_by?: string
+          metadata?: Json | null
+          participants?: Json
+          session_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_calls_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_messages: {
+        Row: {
+          content: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          reply_to_id: string | null
+          session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          reply_to_id?: string | null
+          session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          reply_to_id?: string | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaboration_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          notification_type: string
+          read_at: string | null
+          session_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          notification_type: string
+          read_at?: string | null
+          session_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          notification_type?: string
+          read_at?: string | null
+          session_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_notifications_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaboration_sessions: {
         Row: {
           created_at: string
@@ -1985,6 +2165,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_status: {
+        Row: {
+          activity_type: string | null
+          created_at: string
+          custom_status: string | null
+          id: string
+          last_activity_at: string
+          status: string
+          status_emoji: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_type?: string | null
+          created_at?: string
+          custom_status?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: string
+          status_emoji?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string | null
+          created_at?: string
+          custom_status?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: string
+          status_emoji?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_topic_preferences: {
         Row: {
