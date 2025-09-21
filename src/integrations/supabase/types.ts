@@ -654,6 +654,177 @@ export type Database = {
           },
         ]
       }
+      demo_call_feedback: {
+        Row: {
+          created_at: string
+          demo_call_id: string
+          feedback_text: string | null
+          id: string
+          rating: number
+          suggestions: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          demo_call_id: string
+          feedback_text?: string | null
+          id?: string
+          rating: number
+          suggestions?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          demo_call_id?: string
+          feedback_text?: string | null
+          id?: string
+          rating?: number
+          suggestions?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_demo_call_feedback_demo_call_id"
+            columns: ["demo_call_id"]
+            isOneToOne: false
+            referencedRelation: "demo_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_call_participants: {
+        Row: {
+          created_at: string
+          demo_call_id: string
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          demo_call_id: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          demo_call_id?: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_demo_call_participants_demo_call_id"
+            columns: ["demo_call_id"]
+            isOneToOne: false
+            referencedRelation: "demo_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_call_recordings: {
+        Row: {
+          created_at: string
+          demo_call_id: string
+          duration_seconds: number | null
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          is_public: boolean
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          demo_call_id: string
+          duration_seconds?: number | null
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          is_public?: boolean
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          demo_call_id?: string
+          duration_seconds?: number | null
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          is_public?: boolean
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_demo_call_recordings_demo_call_id"
+            columns: ["demo_call_id"]
+            isOneToOne: false
+            referencedRelation: "demo_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_calls: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_public: boolean
+          max_participants: number
+          meeting_url: string | null
+          recording_url: string | null
+          scheduled_at: string
+          sprint_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_public?: boolean
+          max_participants?: number
+          meeting_url?: string | null
+          recording_url?: string | null
+          scheduled_at: string
+          sprint_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_public?: boolean
+          max_participants?: number
+          meeting_url?: string | null
+          recording_url?: string | null
+          scheduled_at?: string
+          sprint_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string

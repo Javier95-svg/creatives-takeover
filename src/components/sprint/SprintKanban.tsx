@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Calendar,
   Users,
-  TrendingUp
+  TrendingUp,
+  Video
 } from 'lucide-react';
 import { Sprint, SprintTask, useSprints } from '@/hooks/useSprints';
 import { format } from 'date-fns';
@@ -21,6 +22,7 @@ import SprintComments from './SprintComments';
 import { DailyCheckIn } from './DailyCheckIn';
 import { AccountabilityPartnerIntegration } from './AccountabilityPartnerIntegration';
 import { useAuth } from '@/contexts/AuthContext';
+import DemoCallButton from './DemoCallButton';
 
 interface SprintKanbanProps {
   sprint: Sprint;
@@ -169,6 +171,11 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
                   <Play className="w-4 h-4 mr-1" />
                   Resume
                 </Button>
+              )}
+
+              {/* Demo Call Button - show for active or completed sprints */}
+              {(sprint.status === 'active' || sprint.status === 'completed') && (
+                <DemoCallButton sprint={sprint} />
               )}
               
               {sprint.community_visible && (
