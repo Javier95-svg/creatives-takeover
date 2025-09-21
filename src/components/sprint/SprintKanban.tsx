@@ -18,6 +18,8 @@ import { Sprint, SprintTask, useSprints } from '@/hooks/useSprints';
 import { format } from 'date-fns';
 import TaskCard from './TaskCard';
 import SprintComments from './SprintComments';
+import { DailyCheckIn } from './DailyCheckIn';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SprintKanbanProps {
   sprint: Sprint;
@@ -25,7 +27,8 @@ interface SprintKanbanProps {
 }
 
 const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) => {
-  const { 
+  const { user } = useAuth();
+  const {
     sprintTasks, 
     sprintComments,
     fetchSprintTasks, 
@@ -195,6 +198,19 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
           </div>
         </CardHeader>
       </Card>
+
+      {/* Daily Check-in Section */}
+      {user?.id === sprint.user_id && (
+        <div className="mb-6">
+          <DailyCheckIn 
+            sprintId={sprint.id}
+            sprintTitle={sprint.title}
+            onCheckInComplete={() => {
+              // Refresh sprint comments or any other data if needed
+            }}
+          />
+        </div>
+      )}
 
       {/* Comments Section */}
       {showComments && sprint.community_visible && (

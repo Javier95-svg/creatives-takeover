@@ -436,6 +436,90 @@ export type Database = {
           },
         ]
       }
+      daily_check_ins: {
+        Row: {
+          blockers: string | null
+          check_in_date: string
+          completed_tasks: string[] | null
+          created_at: string
+          energy_level: number | null
+          id: string
+          mood_rating: number | null
+          photo_url: string | null
+          progress_summary: string
+          sprint_id: string
+          streak_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blockers?: string | null
+          check_in_date?: string
+          completed_tasks?: string[] | null
+          created_at?: string
+          energy_level?: number | null
+          id?: string
+          mood_rating?: number | null
+          photo_url?: string | null
+          progress_summary: string
+          sprint_id: string
+          streak_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blockers?: string | null
+          check_in_date?: string
+          completed_tasks?: string[] | null
+          created_at?: string
+          energy_level?: number | null
+          id?: string
+          mood_rating?: number | null
+          photo_url?: string | null
+          progress_summary?: string
+          sprint_id?: string
+          streak_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_reminders: {
+        Row: {
+          created_at: string
+          id: string
+          is_sent: boolean | null
+          metadata: Json | null
+          reminder_type: string
+          scheduled_for: string
+          sent_at: string | null
+          sprint_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_sent?: boolean | null
+          metadata?: Json | null
+          reminder_type?: string
+          scheduled_for: string
+          sent_at?: string | null
+          sprint_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_sent?: boolean | null
+          metadata?: Json | null
+          reminder_type?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          sprint_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       data_refresh_jobs: {
         Row: {
           created_at: string
