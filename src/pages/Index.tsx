@@ -12,6 +12,7 @@ import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 import { useExitIntent } from "@/hooks/useExitIntent";
+import ChatWidget from "@/components/ChatWidget";
 
 const Index = () => {
   const { showExitIntent, closeExitIntent } = useExitIntent();
@@ -46,6 +47,9 @@ const Index = () => {
       {/* Interactive Campaign Popups */}
       <CreditCampaignPopup trigger="time" delay={15000} />
       <CreditCampaignPopup trigger="scroll" />
+      
+      {/* Interactive Chat Assistant */}
+      <ChatWidget />
     </div>
   );
 };
