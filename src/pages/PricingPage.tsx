@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Pricing from "@/components/Pricing";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 const PricingPage = () => {
   return (
@@ -21,6 +22,7 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
+          <ChatbotWidget />
         </div>
       </div>
     </>

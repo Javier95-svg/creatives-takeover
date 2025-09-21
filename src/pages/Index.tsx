@@ -8,6 +8,7 @@ import CampaignPromotion from "@/components/CampaignPromotion";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
+import ChatbotWidget from "@/components/ChatbotWidget";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 import { useExitIntent } from "@/hooks/useExitIntent";
@@ -40,6 +41,9 @@ const Index = () => {
       {/* Interactive Campaign Popups */}
       <CreditCampaignPopup trigger="time" delay={15000} />
       <CreditCampaignPopup trigger="scroll" />
+      
+      {/* AI Chatbot Assistant */}
+      <ChatbotWidget />
     </div>
   );
 };
