@@ -279,6 +279,16 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, communityVisible: checked }))}
                 />
               </div>
+
+              <Button
+                onClick={handleCreateSprint}
+                disabled={!formData.title.trim()}
+                size="lg"
+                className="w-full mt-6"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Create Sprint & Start Shipping
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -354,19 +364,6 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
             )}
           </CardContent>
         </Card>
-      </div>
-
-      {/* Create Sprint Button */}
-      <div className="flex justify-center">
-        <Button
-          onClick={handleCreateSprint}
-          disabled={!formData.title.trim()}
-          size="lg"
-          className="px-8"
-        >
-          <Users className="w-4 h-4 mr-2" />
-          Create Sprint & Start Shipping
-        </Button>
       </div>
     </div>
   );
