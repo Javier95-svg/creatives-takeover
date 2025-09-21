@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import TaskCard from './TaskCard';
 import SprintComments from './SprintComments';
 import { DailyCheckIn } from './DailyCheckIn';
+import { AccountabilityPartnerIntegration } from './AccountabilityPartnerIntegration';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SprintKanbanProps {

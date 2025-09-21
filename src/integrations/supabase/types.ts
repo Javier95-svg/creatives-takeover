@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      accountability_nudges: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          id: string
+          message: string | null
+          nudge_trigger: Json | null
+          nudge_type: string
+          nudged_id: string
+          nudger_id: string
+          partnership_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          nudge_trigger?: Json | null
+          nudge_type?: string
+          nudged_id: string
+          nudger_id: string
+          partnership_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          nudge_trigger?: Json | null
+          nudge_type?: string
+          nudged_id?: string
+          nudger_id?: string
+          partnership_id?: string
+        }
+        Relationships: []
+      }
+      accountability_partnerships: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          partner_id: string
+          partnership_settings: Json | null
+          partnership_type: string
+          requester_id: string
+          sprint_id: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          partner_id: string
+          partnership_settings?: Json | null
+          partnership_type?: string
+          requester_id: string
+          sprint_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          partner_id?: string
+          partnership_settings?: Json | null
+          partnership_type?: string
+          requester_id?: string
+          sprint_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_cache: {
         Row: {
           cache_key: string
@@ -1039,6 +1117,7 @@ export type Database = {
           id: string
           last_checkin_at: string | null
           nudge_count: number
+          partnership_id: string | null
           sprint_id: string
           user_id: string
         }
@@ -1049,6 +1128,7 @@ export type Database = {
           id?: string
           last_checkin_at?: string | null
           nudge_count?: number
+          partnership_id?: string | null
           sprint_id: string
           user_id: string
         }
@@ -1059,10 +1139,18 @@ export type Database = {
           id?: string
           last_checkin_at?: string | null
           nudge_count?: number
+          partnership_id?: string | null
           sprint_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sprint_accountability_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_partnerships"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sprint_accountability_sprint_id_fkey"
             columns: ["sprint_id"]
