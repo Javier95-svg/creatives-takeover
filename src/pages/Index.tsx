@@ -5,14 +5,12 @@ import HowWeWork from "@/components/HowWeWork";
 import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
 import Benefits from "@/components/Benefits";
 import CampaignPromotion from "@/components/CampaignPromotion";
-import UpcomingDemoCalls from "@/components/UpcomingDemoCalls";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 import { useExitIntent } from "@/hooks/useExitIntent";
-import ChatWidget from "@/components/ChatWidget";
 
 const Index = () => {
   const { showExitIntent, closeExitIntent } = useExitIntent();
@@ -28,11 +26,6 @@ const Index = () => {
       <main>
         <Hero />
         <CampaignPromotion />
-        <section className="py-20 px-6">
-          <div className="container mx-auto max-w-4xl">
-            <UpcomingDemoCalls />
-          </div>
-        </section>
         <ProblemSolution />
         <HowWeWork />
         <SimpleBizMapGuide />
@@ -47,9 +40,6 @@ const Index = () => {
       {/* Interactive Campaign Popups */}
       <CreditCampaignPopup trigger="time" delay={15000} />
       <CreditCampaignPopup trigger="scroll" />
-      
-      {/* Interactive Chat Assistant */}
-      <ChatWidget />
     </div>
   );
 };

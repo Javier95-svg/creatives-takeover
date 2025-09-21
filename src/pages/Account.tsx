@@ -9,14 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera, Users, UserCheck, MessageSquare, Video } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera, Users, UserCheck, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { useSocial } from "@/hooks/useSocial";
-import { useDemoCalls } from "@/hooks/useDemoCalls";
-import { format } from "date-fns";
-import { Link } from "react-router-dom";
 
 const Account = () => {
   const { user } = useAuth();
@@ -26,12 +23,6 @@ const Account = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { pendingFriendRequests } = useSocial();
-  const { calls: demoCalls, getUserCalls } = useDemoCalls();
-  
-  const userDemoCalls = getUserCalls().slice(0, 3);
-  const upcomingDemoCalls = demoCalls
-    .filter(call => new Date(call.scheduled_at) > new Date())
-    .slice(0, 2);
   
   // Profile state
   const [fullName, setFullName] = useState("");
@@ -398,78 +389,6 @@ const Account = () => {
               </CardContent>
             </Card>
           </form>
-
-          {/* Demo Calls Dashboard */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Video className="w-5 h-5" />
-                Demo Calls
-              </CardTitle>
-              <CardDescription>
-                Your scheduled demo calls and upcoming community events.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <h4 className="font-medium mb-3">Your Demo Calls</h4>
-                  {userDemoCalls.length === 0 ? (
-                    <div className="text-sm text-muted-foreground p-4 border rounded-lg">
-                      No demo calls scheduled yet
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {userDemoCalls.map((call) => (
-                        <div key={call.id} className="p-3 border rounded-lg">
-                          <div className="font-medium text-sm">{call.title}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(call.scheduled_at), 'MMM d, h:mm a')}
-                          </div>
-                          <Badge variant="outline" className="mt-1">
-                            {call.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-3">Upcoming Community Calls</h4>
-                  {upcomingDemoCalls.length === 0 ? (
-                    <div className="text-sm text-muted-foreground p-4 border rounded-lg">
-                      No upcoming calls
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {upcomingDemoCalls.map((call) => (
-                        <div key={call.id} className="p-3 border rounded-lg">
-                          <div className="font-medium text-sm">{call.title}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(call.scheduled_at), 'MMM d, h:mm a')}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Link to="/demo-calls">
-                  <Button variant="outline">
-                    View All Demo Calls
-                  </Button>
-                </Link>
-                <Link to="/demo-calls">
-                  <Button>
-                    Schedule New Call
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Social Stats & Friend Requests */}
           <Card>
