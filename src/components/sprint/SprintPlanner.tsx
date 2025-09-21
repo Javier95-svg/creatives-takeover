@@ -64,6 +64,11 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
 
     try {
       setIsGenerating(true);
+      console.log('Starting task generation...', { 
+        fuzzyIdea: formData.fuzzyIdea.substring(0, 100) + '...', 
+        sprintTitle: formData.title,
+        sprintDuration: Math.ceil((formData.endDate.getTime() - formData.startDate.getTime()) / (1000 * 3600 * 24))
+      });
       
       const { data, error } = await supabase.functions.invoke('sprint-task-generator', {
         body: {
@@ -76,19 +81,34 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
         }
       });
 
-      if (error) throw error;
+      console.log('Edge function response:', { data, error });
 
-      setGeneratedTasks(data.tasks || []);
-      
-      toast({
-        title: "Tasks Generated!",
-        description: `Generated ${data.tasks?.length || 0} actionable tasks from your idea`,
-      });
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      if (data?.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
+        console.log('Setting generated tasks:', data.tasks.length, 'tasks');
+        setGeneratedTasks(data.tasks);
+        
+        toast({
+          title: "Tasks Generated!",
+          description: `Generated ${data.tasks.length} actionable tasks from your idea`,
+        });
+      } else {
+        console.warn('No tasks returned from edge function:', data);
+        toast({
+          title: "No Tasks Generated",
+          description: "The AI didn't return any tasks. Please try with a more detailed description.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Error generating tasks:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate tasks. Please try again.",
+        description: error?.message || "Failed to generate tasks. Please try again.",
         variant: "destructive",
       });
     } finally {

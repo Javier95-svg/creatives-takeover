@@ -14,8 +14,29 @@ serve(async (req) => {
   }
 
   try {
-    const { fuzzyIdea, sprintTitle, sprintDuration } = await req.json();
+    console.log('Sprint task generator called');
+    const body = await req.json();
+    console.log('Request body:', body);
+    
+    const { fuzzyIdea, sprintTitle, sprintDuration } = body;
 
+    if (!fuzzyIdea || !sprintTitle) {
+      console.error('Missing required fields:', { fuzzyIdea: !!fuzzyIdea, sprintTitle: !!sprintTitle });
+      return new Response(JSON.stringify({ error: 'Missing required fields: fuzzyIdea and sprintTitle are required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Making OpenAI API call...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -39,14 +60,32 @@ serve(async (req) => {
       }),
     });
 
+    console.log('OpenAI response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    console.log('OpenAI response data:', data);
+    
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error('No content in OpenAI response');
+      throw new Error('No content received from OpenAI');
+    }
     
     let tasks;
     try {
+      console.log('Parsing OpenAI response:', content);
       const parsed = JSON.parse(content);
       tasks = parsed.tasks || [];
-    } catch {
+      console.log('Parsed tasks:', tasks);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', parseError);
+      console.log('Using fallback tasks');
       // Fallback parsing if JSON is malformed
       tasks = [
         { title: "Plan project structure", description: "Define project architecture and requirements", estimated_hours: 2.0, priority: "high", tags: ["planning"] },
@@ -57,12 +96,16 @@ serve(async (req) => {
       ];
     }
 
+    console.log('Returning tasks:', tasks);
     return new Response(JSON.stringify({ tasks }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Sprint task generator error:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: 'Check the edge function logs for more information'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

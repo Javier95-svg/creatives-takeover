@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.market-intelligence-refresh]
 verify_jwt = false
+
+[functions.sprint-task-generator]
+verify_jwt = true
