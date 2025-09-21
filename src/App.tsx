@@ -31,6 +31,7 @@ import Auth from "./pages/Auth";
 import CreditAnalyticsPage from "./pages/CreditAnalyticsPage";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import ScrollToTop from "./components/ScrollToTop";
+import DemoCalls from "./pages/DemoCalls";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/demo-calls" element={<DemoCalls />} />
             <Route path="/account" element={<Account />} />
             <Route path="/credits" element={<CreditAnalyticsPage />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
