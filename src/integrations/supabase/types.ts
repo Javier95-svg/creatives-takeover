@@ -452,6 +452,62 @@ export type Database = {
           },
         ]
       }
+      collaboration_files: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_size_bytes: number
+          file_type: string
+          filename: string
+          id: string
+          is_public: boolean
+          original_filename: string
+          session_id: string
+          storage_path: string
+          tags: string[] | null
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_size_bytes: number
+          file_type: string
+          filename: string
+          id?: string
+          is_public?: boolean
+          original_filename: string
+          session_id: string
+          storage_path: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_size_bytes?: number
+          file_type?: string
+          filename?: string
+          id?: string
+          is_public?: boolean
+          original_filename?: string
+          session_id?: string
+          storage_path?: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_files_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaboration_messages: {
         Row: {
           content: string
@@ -550,6 +606,62 @@ export type Database = {
           },
         ]
       }
+      collaboration_polls: {
+        Row: {
+          allow_comments: boolean
+          anonymous: boolean
+          closes_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          options: Json
+          poll_type: string
+          session_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_comments?: boolean
+          anonymous?: boolean
+          closes_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          options?: Json
+          poll_type?: string
+          session_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_comments?: boolean
+          anonymous?: boolean
+          closes_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          options?: Json
+          poll_type?: string
+          session_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_polls_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaboration_sessions: {
         Row: {
           created_at: string
@@ -582,6 +694,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      collaboration_whiteboards: {
+        Row: {
+          background_color: string
+          canvas_data: Json
+          created_at: string
+          created_by: string
+          height: number
+          id: string
+          name: string
+          session_id: string
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          background_color?: string
+          canvas_data?: Json
+          created_at?: string
+          created_by: string
+          height?: number
+          id?: string
+          name?: string
+          session_id: string
+          updated_at?: string
+          width?: number
+        }
+        Update: {
+          background_color?: string
+          canvas_data?: Json
+          created_at?: string
+          created_by?: string
+          height?: number
+          id?: string
+          name?: string
+          session_id?: string
+          updated_at?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_whiteboards_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       collaborative_edits: {
         Row: {
@@ -1079,6 +1238,38 @@ export type Database = {
         }
         Relationships: []
       }
+      file_access_logs: {
+        Row: {
+          access_type: string
+          created_at: string
+          file_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          access_type: string
+          created_at?: string
+          file_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          file_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_access_logs_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -1440,6 +1631,50 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          poll_id: string
+          rating_value: number | null
+          selected_options: Json
+          text_response: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          poll_id: string
+          rating_value?: number | null
+          selected_options?: Json
+          text_response?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          poll_id?: string
+          rating_value?: number | null
+          selected_options?: Json
+          text_response?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_polls"
             referencedColumns: ["id"]
           },
         ]
@@ -2297,6 +2532,47 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whiteboard_objects: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_deleted: boolean
+          object_data: Json
+          object_type: string
+          updated_at: string
+          whiteboard_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_deleted?: boolean
+          object_data: Json
+          object_type: string
+          updated_at?: string
+          whiteboard_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_deleted?: boolean
+          object_data?: Json
+          object_type?: string
+          updated_at?: string
+          whiteboard_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whiteboard_objects_whiteboard_id_fkey"
+            columns: ["whiteboard_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_whiteboards"
             referencedColumns: ["id"]
           },
         ]
