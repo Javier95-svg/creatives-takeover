@@ -22,7 +22,6 @@ import { useFeedbackModal } from "@/hooks/useFeedbackModal";
 import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
-import MarketIntelWidget from "@/components/MarketIntelWidget";
 import SuccessScore from "@/components/SuccessScore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
@@ -1430,9 +1429,6 @@ ${translations.dataDisclaimer}`;
         }}
         sessionId={currentSessionId}
       />
-
-      {/* Live Market Intelligence Widget */}
-      <MarketIntelWidget />
 
       <Footer />
     </div>
