@@ -93,7 +93,7 @@ export const useChatbot = () => {
           quickActions: [
             { text: 'Contact Support', action: 'navigate', href: '/contact' },
             { text: 'View FAQ', action: 'navigate', href: '/faq' },
-            { text: 'Schedule Demo', action: 'navigate', href: '/demo-calls' }
+            { text: 'Start Planning', action: 'navigate', href: '/dream2plan' }
           ]
         };
       }

@@ -20,7 +20,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: 'general',
     quickActions: [
       { text: 'Start Planning', action: 'navigate', href: '/dream2plan' },
-      { text: 'View Demo', action: 'navigate', href: '/demo-calls' }
+      { text: 'Learn More', action: 'navigate', href: '/services' }
     ]
   },
   {
@@ -53,7 +53,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: 'pricing',
     quickActions: [
       { text: 'Start Free', action: 'navigate', href: '/signup' },
-      { text: 'Schedule Demo', action: 'navigate', href: '/demo-calls' }
+      { text: 'View Pricing', action: 'navigate', href: '/pricing' }
     ]
   },
   {
