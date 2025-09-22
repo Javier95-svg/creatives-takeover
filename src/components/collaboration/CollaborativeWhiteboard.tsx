@@ -277,8 +277,8 @@ export const CollaborativeWhiteboard: React.FC<CollaborativeWhiteboardProps> = (
     if (!fabricCanvas) return;
     
     const activeObject = fabricCanvas.getActiveObject();
-    if (activeObject && activeObject.id) {
-      onDeleteObject(activeObject.id);
+    if (activeObject && (activeObject as any).customId) {
+      onDeleteObject((activeObject as any).customId);
       fabricCanvas.remove(activeObject);
     }
   };

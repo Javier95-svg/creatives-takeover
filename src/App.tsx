@@ -30,6 +30,9 @@ import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
 import CreditAnalyticsPage from "./pages/CreditAnalyticsPage";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import CollaborationDemo from "./pages/CollaborationDemo";
+// import InteractiveCollaborationDemo from "./pages/InteractiveCollaborationDemo";
+import Phase4CollaborationDemo from "./pages/Phase4CollaborationDemo";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -68,6 +71,9 @@ const App = () => (
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/news" element={<Blog />} />
             <Route path="/news/:slug" element={<BlogPost />} />
+            <Route path="/collaboration-demo" element={<CollaborationDemo />} />
+            {/* <Route path="/interactive-collaboration" element={<InteractiveCollaborationDemo />} /> */}
+            <Route path="/phase4-collaboration" element={<Phase4CollaborationDemo />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
