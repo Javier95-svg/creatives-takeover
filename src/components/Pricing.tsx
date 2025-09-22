@@ -8,39 +8,43 @@ const Pricing = () => {
   const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
   const { user } = useAuth();
 
-  // Define feature sets for each tier
+  // Define feature sets for each tier - based on actual implemented features
   const getFeatures = (tierName: string) => {
     const featureMap: Record<string, string[]> = {
       free: [
-        "Access to BizMap AI chatbot",
-        "Basic prompt library access", 
-        "Community forum participation",
-        "Email support",
-        "Getting started guides"
+        "5 BizMap AI conversations per month",
+        "Basic community forum access (read & post)",
+        "Access to prompt library (view only)",
+        "Basic sprint planning (1 active sprint)",
+        "Email support"
       ],
-      basic: [
-        "Everything in Free",
-        "Exclusive premium articles",
-        "AI-powered content personalization",
-        "Early access to new features",
-        "Advanced search filters",
+      creator: [
+        "50 BizMap AI conversations per month",
+        "Full community features (posting, commenting, voting)",
+        "Prompt library with copy/export functionality", 
+        "Unlimited sprint planning & Kanban boards",
+        "Market intelligence widget access",
+        "Basic collaboration tools (text chat, file sharing)",
         "Priority email support"
       ],
-      premium: [
-        "Everything in Basic",
-        "Priority post visibility",
-        "Advanced AI post insights",
-        "Exclusive discussion groups",
-        "Community analytics dashboard",
-        "Weekly community highlights"
+      professional: [
+        "150 BizMap AI conversations per month",
+        "AI-enhanced community features (post insights, trending)",
+        "Custom business report generation",
+        "Advanced collaboration tools (whiteboarding, polls, video calls)",
+        "Success score analytics & tracking",
+        "Priority support + community access",
+        "Export capabilities for all reports"
       ],
       enterprise: [
-        "Everything in Premium",
-        "Unlimited BizMap AI conversations",
-        "Advanced business templates",
-        "Export capabilities",
-        "Custom business analysis",
-        "Dedicated account manager"
+        "500 BizMap AI conversations per month",
+        "All collaboration features with unlimited participants",
+        "Advanced market intelligence & trend analysis",
+        "Custom AI business analysis reports",
+        "API access for integrations",
+        "Dedicated account manager",
+        "Custom business templates",
+        "Priority feature requests"
       ]
     };
     return featureMap[tierName] || [];
@@ -49,19 +53,19 @@ const Pricing = () => {
   const getDescription = (tierName: string) => {
     const descriptions: Record<string, string> = {
       free: "Perfect for getting started with AI-powered business planning",
-      basic: "Unlock exclusive content and AI-powered personalization",
-      premium: "Best value for serious entrepreneurs with comprehensive features",
-      enterprise: "Perfect for teams and advanced users who need everything"
+      creator: "Ideal for solopreneurs who need regular AI insights and community access",
+      professional: "Best value for serious entrepreneurs with comprehensive collaboration features",
+      enterprise: "Perfect for teams and advanced users who need unlimited access and premium support"
     };
     return descriptions[tierName] || "";
   };
 
   const getTitleAndCTA = (tierName: string) => {
     const details: Record<string, { title: string; cta: string }> = {
-      free: { title: "Explore & Discover", cta: "Start Free" },
-      basic: { title: "Premium Insights", cta: "Start Basic" },
-      premium: { title: "Unlock Full Potential", cta: "Go Premium" },
-      enterprise: { title: "Scale Together", cta: "Get Enterprise" }
+      free: { title: "Get Started", cta: "Start Free" },
+      creator: { title: "Build & Create", cta: "Go Creator" },
+      professional: { title: "Scale & Collaborate", cta: "Go Professional" },
+      enterprise: { title: "Lead & Innovate", cta: "Go Enterprise" }
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
@@ -78,14 +82,14 @@ const Pricing = () => {
       return;
     }
 
-    if (tierName === 'basic') {
-      // Redirect to external payment URL for basic tier
+    if (tierName === 'creator') {
+      // Redirect to external payment URL for creator tier
       window.open("https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00", "_blank");
       return;
     }
 
-    if (tierName === 'premium') {
-      // Redirect to external payment URL for premium tier
+    if (tierName === 'professional') {
+      // Redirect to external payment URL for professional tier
       window.open("https://pay.creatives-takeover.com/b/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
       return;
     }
@@ -167,7 +171,7 @@ const Pricing = () => {
             const features = getFeatures(tier.tier_name);
             const description = getDescription(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
-            const isPopular = tier.tier_name === 'premium';
+            const isPopular = tier.tier_name === 'professional';
 
             return (
               <div
