@@ -18,9 +18,9 @@ export const ScrollTriggeredCTA = () => {
     if (hasSeenCTA) return;
 
     const handleScroll = () => {
-      // Show CTA after scrolling past 50% of viewport height
+      // Make less aggressive - trigger at 70% scroll instead of 50%
       const scrollPosition = window.scrollY;
-      const triggerPoint = window.innerHeight * 0.5;
+      const triggerPoint = window.innerHeight * 0.7;
       
       if (scrollPosition > triggerPoint && !isDismissed) {
         setIsVisible(true);

@@ -20,10 +20,10 @@ export const useExitIntent = () => {
       }
     };
 
-    // Add small delay before enabling exit intent detection
+    // Add longer delay before enabling exit intent detection
     const timer = setTimeout(() => {
       document.addEventListener('mouseleave', handleMouseLeave);
-    }, 3000); // Wait 3 seconds before enabling exit intent
+    }, 8000); // Wait 8 seconds instead of 3 seconds
 
     return () => {
       clearTimeout(timer);

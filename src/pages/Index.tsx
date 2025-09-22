@@ -34,13 +34,12 @@ const Index = () => {
       </main>
       <Footer />
       
-      {/* Conversion Optimization Components */}
+      {/* Conversion Optimization Components - Less Invasive */}
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
       <ScrollTriggeredCTA />
       
-      {/* Interactive Campaign Popups */}
-      <CreditCampaignPopup trigger="time" delay={15000} />
-      <CreditCampaignPopup trigger="scroll" />
+      {/* Single Strategic Campaign Popup */}
+      <CreditCampaignPopup trigger="time" delay={45000} />
       
       {/* AI Chatbot Assistant */}
       <ChatbotWidget />
