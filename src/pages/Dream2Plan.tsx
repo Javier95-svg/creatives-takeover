@@ -1166,76 +1166,91 @@ ${translations.dataDisclaimer}`;
               />
             </div>
             
-            {/* Three Information Cards - Minimalistic */}
+            {/* Three Information Cards - Minimalistic with Silver Glass Effect */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
               {/* How BizMap AI Works */}
-              <div className="p-6 bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Lightbulb className="w-4 h-4 text-primary" />
+              <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 border border-primary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative z-10 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Lightbulb className="w-4 h-4 text-primary group-hover:animate-pulse" />
+                    </div>
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300">How It Works</h3>
                   </div>
-                  <h3 className="font-medium text-foreground">How It Works</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-3">
-                    <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                    <p className="text-muted-foreground">Answer 7 guided questions about your business</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                    <p className="text-muted-foreground">AI analyzes your responses and market data</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                    <p className="text-muted-foreground">Get a comprehensive launch report</p>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">1</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Answer 7 guided questions about your business</p>
+                    </div>
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">2</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">AI analyzes your responses and market data</p>
+                    </div>
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">3</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Get a comprehensive launch report</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Market Intelligence */}
-              <div className="p-6 bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <Target className="w-4 h-4 text-secondary" />
+              <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-secondary/10 border border-secondary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-secondary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative z-10 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Target className="w-4 h-4 text-secondary group-hover:animate-pulse" />
+                    </div>
+                    <h3 className="font-medium text-foreground group-hover:text-secondary transition-colors duration-300">Market Intelligence</h3>
                   </div>
-                  <h3 className="font-medium text-foreground">Market Intelligence</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-3">
-                    <span className="text-secondary">📊</span>
-                    <p className="text-muted-foreground">Real-time market trends and competitor insights</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-secondary">🎯</span>
-                    <p className="text-muted-foreground">Customer validation strategies</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-secondary">📈</span>
-                    <p className="text-muted-foreground">Growth opportunities identification</p>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                      <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📊</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Real-time market trends and competitor insights</p>
+                    </div>
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                      <span className="text-secondary group-hover:scale-110 transition-transform duration-300">🎯</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Customer validation strategies</p>
+                    </div>
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                      <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📈</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Growth opportunities identification</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Success Scoring */}
-              <div className="p-6 bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <Rocket className="w-4 h-4 text-accent" />
+              <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-accent/10 border border-accent/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className="relative z-10 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Rocket className="w-4 h-4 text-accent group-hover:animate-pulse" />
+                    </div>
+                    <h3 className="font-medium text-foreground group-hover:text-accent transition-colors duration-300">Success Scoring</h3>
                   </div>
-                  <h3 className="font-medium text-foreground">Success Scoring</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-3">
-                    <span className="text-accent font-mono text-xs">95%</span>
-                    <p className="text-muted-foreground">Business model validation score</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-accent font-mono text-xs">8.7</span>
-                    <p className="text-muted-foreground">Product-market fit assessment</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-accent font-mono text-xs">90d</span>
-                    <p className="text-muted-foreground">Optimized launch timeline</p>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                      <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">95%</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Business model validation score</p>
+                    </div>
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                      <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">8.7</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Product-market fit assessment</p>
+                    </div>
+                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                      <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">90d</span>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Optimized launch timeline</p>
+                    </div>
                   </div>
                 </div>
               </div>
