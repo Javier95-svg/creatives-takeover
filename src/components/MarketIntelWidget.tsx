@@ -69,99 +69,83 @@ export default function MarketIntelWidget() {
   };
 
   return (
-    <Card className="mt-8">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-xl flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" /> Live Market Intelligence
-        </CardTitle>
+    <div className="max-w-5xl mx-auto p-8 bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl mt-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-medium text-foreground">Market Intelligence</h3>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => runQuery(false)} disabled={loading}>
-            <LineChart className="h-4 w-4 mr-2" /> Fetch
+          <Button variant="ghost" size="sm" onClick={() => runQuery(false)} disabled={loading}>
+            <LineChart className="h-4 w-4" />
           </Button>
-          <Button variant="secondary" size="sm" onClick={refreshBackend} disabled={refreshing}>
-            <RefreshCw className="h-4 w-4 mr-2 animate-spin" style={{ animationDuration: refreshing ? '1s' : '0s' }} /> Refresh
+          <Button variant="ghost" size="sm" onClick={refreshBackend} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-3 mb-4">
-          <Input
-            placeholder="Industry (e.g., technology, healthcare)"
-            value={industry}
-            onChange={(e) => setIndustry(e.target.value)}
-          />
-          <Input
-            placeholder="Keywords, comma-separated (optional)"
-            value={keywords}
-            onChange={(e) => setKeywords(e.target.value)}
-          />
+      </div>
+
+      {/* Controls */}
+      <div className="flex gap-3 mb-6">
+        <Input
+          placeholder="Industry"
+          value={industry}
+          onChange={(e) => setIndustry(e.target.value)}
+          className="max-w-xs"
+        />
+        <Input
+          placeholder="Keywords (optional)"
+          value={keywords}
+          onChange={(e) => setKeywords(e.target.value)}
+          className="max-w-xs"
+        />
+      </div>
+
+      {/* Content */}
+      {!data && !loading && (
+        <p className="text-sm text-muted-foreground py-8 text-center">
+          Enter an industry and click fetch to load insights
+        </p>
+      )}
+
+      {loading && (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-2 p-4 border border-border/30 rounded-lg">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+          ))}
         </div>
-        <Separator className="my-4" />
+      )}
 
-        {!data && !loading && (
-          <div className="text-sm text-muted-foreground">Enter an industry and click Fetch to load real-time insights.</div>
-        )}
+      {data && !loading && (
+        <div className="space-y-4">
+          {/* Simple stats */}
+          <div className="text-xs text-muted-foreground mb-4">
+            {data.sources_used.length} sources • {(data.confidence_score * 100).toFixed(0)}% confidence
+          </div>
 
-        {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-5 w-1/2" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <div className="flex gap-2 mt-2">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-20" />
+          {/* Insights grid */}
+          <div className="space-y-3">
+            {data.data.map((item) => (
+              <div key={item.id} className="p-4 border border-border/30 rounded-lg hover:border-border/50 transition-colors">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-medium text-sm">{item.title}</h4>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                    {item.data_type}
+                  </span>
                 </div>
+                <p className="text-sm text-muted-foreground mb-3">{item.summary}</p>
+                {item.insights?.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    {item.insights.slice(0, 2).join(' • ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
-        )}
-
-        {data && !loading && (
-          <div>
-            <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
-              <Badge variant="secondary">Sources: {data.sources_used.length}</Badge>
-              <Badge variant="outline">Confidence: {(data.confidence_score * 100).toFixed(0)}%</Badge>
-              <Badge variant="outline">Freshness: {(data.freshness_avg * 100).toFixed(0)}%</Badge>
-              {data.cache_hit && <Badge className="">Cache hit</Badge>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {data.data.map((item) => (
-                <div key={item.id} className="rounded-lg border p-4 hover:shadow-sm transition-shadow">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={item.data_type === 'news' ? 'default' : 'secondary'}>
-                        {item.data_type === 'news' ? <Newspaper className="h-3 w-3 mr-1" /> : <LineChart className="h-3 w-3 mr-1" />}
-                        {item.data_type}
-                      </Badge>
-                      <Badge variant="outline">{item.industry}</Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</div>
-                  </div>
-                  <div className="font-medium mb-1">{item.title}</div>
-                  <div className="text-sm text-muted-foreground mb-2">{item.summary}</div>
-                  {item.insights?.length > 0 && (
-                    <ul className="text-sm list-disc pl-5 space-y-1">
-                      {item.insights.slice(0, 3).map((ins, idx) => (
-                        <li key={idx}>{ins}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <div className="flex flex-wrap gap-2 mt-3 text-xs">
-                    <Badge variant="outline">Impact: {item.market_impact}</Badge>
-                    <Badge variant="outline">Opp: {(item.opportunity_score * 100).toFixed(0)}%</Badge>
-                    <Badge variant="outline">Rel: {(item.relevance_score * 100).toFixed(0)}%</Badge>
-                    <Badge variant="outline">Fresh: {(item.freshness_score * 100).toFixed(0)}%</Badge>
-                    <Badge variant="secondary">{item.source}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 }
