@@ -1078,14 +1078,29 @@ ${translations.dataDisclaimer}`;
 
                      {/* Simplified UI - removed research controls for streamlined process */}
                      
-                     <div className="p-4 border-t border-border/50">
-                      {isCompleted && (
-                        <div className="mb-3 flex flex-wrap gap-2">
-                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('outreach')}>Draft outreach email</Button>
-                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('social')}>Write 3 social posts</Button>
-                          <Button size="sm" variant="secondary" onClick={() => handleQuickAction('landing')}>Sketch landing page</Button>
-                        </div>
-                       )}
+                      <div className="p-4 border-t border-border/50">
+                       {isCompleted && (
+                         <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+                           <button 
+                             className="py-2 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/30 rounded-md hover:border-border/50" 
+                             onClick={() => handleQuickAction('outreach')}
+                           >
+                             Email
+                           </button>
+                           <button 
+                             className="py-2 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/30 rounded-md hover:border-border/50" 
+                             onClick={() => handleQuickAction('social')}
+                           >
+                             Social
+                           </button>
+                           <button 
+                             className="py-2 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/30 rounded-md hover:border-border/50" 
+                             onClick={() => handleQuickAction('landing')}
+                           >
+                             Landing
+                           </button>
+                         </div>
+                        )}
                        <div className="flex gap-2">
                          <Input
                            placeholder={getCurrentPlaceholder()}
