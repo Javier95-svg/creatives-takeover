@@ -3,58 +3,60 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { 
-  Infinity, 
+  MessageSquare, 
   Zap, 
   Users, 
-  Cloud, 
-  Palette, 
+  TrendingUp, 
+  FileText, 
   BarChart3,
   ArrowRight,
-  Check
+  Check,
+  Sparkles,
+  Target
 } from "lucide-react";
 
 const SubscriptionFeatures = () => {
   const features = [
     {
-      icon: <Infinity className="w-10 h-10 text-primary" />,
-      title: "Unlimited Design Access",
-      description: "Access our entire library of premium templates, assets, and design resources.",
-      benefits: ["10,000+ premium templates", "Unlimited downloads", "Commercial license included"],
-      highlight: "Most Popular"
-    },
-    {
-      icon: <Zap className="w-10 h-10 text-primary" />,
-      title: "AI-Powered Tools",
-      description: "Smart automation and AI assistance to accelerate your creative workflow.",
-      benefits: ["Smart design suggestions", "Auto background removal", "AI content generation"],
-      highlight: "New"
-    },
-    {
-      icon: <Cloud className="w-10 h-10 text-primary" />,
-      title: "Cloud Collaboration",
-      description: "Work seamlessly with your team from anywhere with real-time sync.",
-      benefits: ["Real-time collaboration", "Cloud storage", "Version control"],
-      highlight: ""
+      icon: <MessageSquare className="w-10 h-10 text-primary" />,
+      title: "AI Business Planning",
+      description: "Get personalized business insights with our BizMap AI chatbot and strategic planning tools.",
+      benefits: ["AI-powered business analysis", "Custom launch reports", "Strategic recommendations"],
+      highlight: "Core Feature"
     },
     {
       icon: <Users className="w-10 h-10 text-primary" />,
-      title: "Team Workspaces",
-      description: "Dedicated spaces for team projects with advanced permission controls.",
-      benefits: ["Shared workspaces", "Role-based access", "Project management"],
+      title: "Community & Collaboration",
+      description: "Connect with fellow entrepreneurs and collaborate on projects in real-time.",
+      benefits: ["Entrepreneur community", "Real-time collaboration", "Team workspaces"],
+      highlight: "Most Popular"
+    },
+    {
+      icon: <TrendingUp className="w-10 h-10 text-primary" />,
+      title: "Market Intelligence",
+      description: "Stay ahead with real-time market insights and trend analysis for your industry.",
+      benefits: ["Market trend analysis", "Industry insights", "Opportunity detection"],
+      highlight: "New"
+    },
+    {
+      icon: <Target className="w-10 h-10 text-primary" />,
+      title: "Sprint Planning & Kanban",
+      description: "Organize your projects with advanced sprint planning and Kanban board management.",
+      benefits: ["Sprint planning tools", "Kanban boards", "Progress tracking"],
       highlight: ""
     },
     {
-      icon: <Palette className="w-10 h-10 text-primary" />,
-      title: "Creative Asset Library",
-      description: "Massive collection of photos, graphics, fonts, and multimedia assets.",
-      benefits: ["1M+ stock photos", "Premium fonts", "Vector graphics"],
+      icon: <Sparkles className="w-10 h-10 text-primary" />,
+      title: "Prompt Library",
+      description: "Access our curated collection of business prompts and templates for various scenarios.",
+      benefits: ["Curated business prompts", "Template library", "Export functionality"],
       highlight: ""
     },
     {
       icon: <BarChart3 className="w-10 h-10 text-primary" />,
-      title: "Performance Analytics",
-      description: "Track your creative performance and optimize for better results.",
-      benefits: ["Usage analytics", "Performance insights", "ROI tracking"],
+      title: "Success Analytics",
+      description: "Track your business performance with detailed analytics and success scoring.",
+      benefits: ["Business success scores", "Performance tracking", "Analytics dashboard"],
       highlight: ""
     }
   ];
@@ -65,14 +67,14 @@ const SubscriptionFeatures = () => {
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6">
-            Creative Subscription Features
+            AI Solopreneur Platform Features
           </Badge>
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
-            Everything You Need in One Subscription
+            Everything You Need to Build Your Business
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our creative subscription service combines powerful tools, unlimited resources, 
-            and intelligent features to supercharge your creative workflow.
+            Our comprehensive platform combines AI-powered business planning, community collaboration, 
+            and market intelligence to accelerate your entrepreneurial journey.
           </p>
         </div>
 
@@ -123,32 +125,32 @@ const SubscriptionFeatures = () => {
         {/* Value Proposition */}
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 text-center">
           <h3 className="text-3xl font-bold mb-4 gradient-text">
-            Why Choose Our Creative Subscription?
+            Why Choose Our AI Solopreneur Platform?
           </h3>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Save $2000+ annually compared to individual tool subscriptions while getting 
-            more features, better performance, and seamless integration.
+            Save hundreds of hours and get the clarity you need to build a successful business 
+            with our comprehensive AI-powered platform.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">10x</div>
-              <div className="text-muted-foreground">Faster workflow</div>
+              <div className="text-muted-foreground">Faster business planning</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">$2000+</div>
-              <div className="text-muted-foreground">Annual savings</div>
+              <div className="text-3xl font-bold text-primary mb-2">500+</div>
+              <div className="text-muted-foreground">AI conversations monthly</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">99.9%</div>
-              <div className="text-muted-foreground">Uptime guarantee</div>
+              <div className="text-3xl font-bold text-primary mb-2">24/7</div>
+              <div className="text-muted-foreground">AI business advisor</div>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
               <Link to="/pricing">
-                Start Your Free Trial
+                Start Your Journey
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
