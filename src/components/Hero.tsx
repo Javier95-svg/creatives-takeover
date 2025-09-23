@@ -38,7 +38,7 @@ const Hero = () => {
       <div className="container mx-auto px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
             <span className="takeover-gradient">Turn Your Creativity Into</span>
             <br />
             <span className="animated-gradient">Profitable Businesses</span>
