@@ -5,7 +5,7 @@ import heroImage from "@/assets/hero-bg-animated.jpg";
 
 const Hero = () => {
   return (
-    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Creative Wallpaper Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-blue-900/10 to-purple-900/20" />
       
