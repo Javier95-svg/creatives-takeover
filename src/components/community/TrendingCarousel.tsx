@@ -3,14 +3,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, ChevronRight, Flame, Star, Crown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame, Star, Crown, MessageCircle, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "./PostCard";
 
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+}
+
 const TrendingCarousel = () => {
   const [trendingPosts, setTrendingPosts] = useState<Post[]>([]);
+  const [postComments, setPostComments] = useState<Record<string, Comment[]>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const fetchTrendingPosts = async () => {
@@ -66,6 +78,46 @@ const TrendingCarousel = () => {
         });
 
         setTrendingPosts(formattedPosts);
+
+        // Fetch comments for each trending post
+        const fetchComments = async () => {
+          const commentsMap: Record<string, Comment[]> = {};
+          
+          for (const post of formattedPosts) {
+            const { data: commentsData } = await supabase
+              .from('post_comments')
+              .select('*')
+              .eq('post_id', post.id)
+              .order('created_at', { ascending: false })
+              .limit(3);
+
+            if (commentsData) {
+              const formattedComments: Comment[] = [];
+              
+              for (const comment of commentsData) {
+                const { data: commentAuthor } = await supabase.rpc('get_post_author_info', {
+                  author_user_id: comment.user_id
+                });
+                
+                formattedComments.push({
+                  id: comment.id,
+                  content: comment.content,
+                  created_at: comment.created_at,
+                  author: {
+                    name: commentAuthor?.[0]?.author_name || 'Anonymous',
+                    avatar: commentAuthor?.[0]?.author_avatar
+                  }
+                });
+              }
+              
+              commentsMap[post.id] = formattedComments;
+            }
+          }
+          
+          setPostComments(commentsMap);
+        };
+
+        fetchComments();
       } catch (error) {
         console.error('Error fetching trending posts:', error);
       } finally {
@@ -75,6 +127,17 @@ const TrendingCarousel = () => {
 
     fetchTrendingPosts();
   }, []);
+
+  // Auto-scroll effect
+  useEffect(() => {
+    if (trendingPosts.length <= 3 || isPaused) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % Math.max(1, trendingPosts.length - 2));
+    }, 4000); // Auto-scroll every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [trendingPosts.length, isPaused]);
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % Math.max(1, trendingPosts.length - 2));
@@ -146,60 +209,103 @@ const TrendingCarousel = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 transition-all duration-500 ease-in-out"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           {visiblePosts.map((post, index) => {
             const globalIndex = currentIndex + index;
+            const comments = postComments[post.id] || [];
+            
             return (
               <Card key={post.id} className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-background/80 backdrop-blur-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-2">
                     {getTrendingIcon(globalIndex)}
                     <Badge 
                       variant="secondary" 
                       className={`
-                        ${globalIndex === 0 ? 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30' : ''}
-                        ${globalIndex === 1 ? 'bg-gray-500/20 text-gray-700 border-gray-500/30' : ''}
-                        ${globalIndex === 2 ? 'bg-orange-500/20 text-orange-700 border-orange-500/30' : ''}
-                        ${globalIndex > 2 ? 'bg-red-500/20 text-red-700 border-red-500/30' : ''}
+                        ${globalIndex === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-yellow-700 border-yellow-500/30' : ''}
+                        ${globalIndex === 1 ? 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-700 border-gray-500/30' : ''}
+                        ${globalIndex === 2 ? 'bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-700 border-orange-500/30' : ''}
+                        ${globalIndex > 2 ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700 border-red-500/30' : ''}
                       `}
                     >
                       #{globalIndex + 1} Trending
                     </Badge>
                   </div>
                   
-                  <div className="flex items-center gap-2 mb-2">
-                    <Avatar className="h-6 w-6">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-7 w-7">
                       {post.author.avatar && (
                         <AvatarImage src={post.author.avatar} alt={post.author.name} />
                       )}
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-secondary/20">
                         {post.author.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-muted-foreground font-medium">
-                      {post.author.name}
-                    </span>
+                    <div>
+                      <span className="text-sm font-medium">{post.author.name}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Heart className="h-3 w-3" />
+                        <span>{post.votes}</span>
+                        <MessageCircle className="h-3 w-3" />
+                        <span>{post.commentsCount}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <h4 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-                    {post.title}
-                  </h4>
-                  
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                    {post.content}
-                  </p>
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h4>
+                    
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {post.content}
+                    </p>
 
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <span>↑ {post.votes}</span>
-                      <span>💬 {post.commentsCount}</span>
-                    </div>
                     {post.tags.length > 0 && (
                       <Badge variant="outline" className="text-xs">
                         #{post.tags[0]}
                       </Badge>
                     )}
                   </div>
+
+                  {/* Comments Section */}
+                  {comments.length > 0 && (
+                    <div className="border-t pt-3 space-y-2">
+                      <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                        <MessageCircle className="h-3 w-3" />
+                        <span>Recent Comments</span>
+                      </div>
+                      <div className="space-y-2 max-h-24 overflow-y-auto">
+                        {comments.slice(0, 2).map((comment) => (
+                          <div key={comment.id} className="bg-muted/30 rounded-lg p-2">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Avatar className="h-4 w-4">
+                                {comment.author.avatar && (
+                                  <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
+                                )}
+                                <AvatarFallback className="text-[8px]">
+                                  {comment.author.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs font-medium">{comment.author.name}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {comment.content}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      {comments.length > 2 && (
+                        <p className="text-xs text-muted-foreground text-center">
+                          +{comments.length - 2} more comments
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
