@@ -39,9 +39,9 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
-            <span className="takeover-gradient">Rise Up</span>
+            <span className="takeover-gradient">Turn Your Creativity Into</span>
             <br />
-            <span className="animated-gradient">Create. Conquer. Rule.</span>
+            <span className="animated-gradient">Profitable Businesses</span>
           </h1>
 
           {/* Subheadline */}
