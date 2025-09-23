@@ -5,7 +5,7 @@ import { ArrowRight, Users, MessageCircle, Heart, Globe } from "lucide-react";
 
 const CommunityHero = () => {
   return (
-    <section className="relative py-8 lg:py-12 border-b border-border/50">
+    <section className="relative pt-20 pb-8 lg:pt-24 lg:pb-12 border-b border-border/50">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
