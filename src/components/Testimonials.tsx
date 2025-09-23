@@ -27,9 +27,9 @@ const Testimonials = () => {
     },
     {
       quote: "From prototype to production in 48 hours. This is the future of software development.",
-      author: "David Kim",
+      author: "Alex Johnson",
       role: "Lead Developer, StartupHub",
-      avatar: "DK",
+      avatar: "AJ",
       rating: 5
     }
   ];
