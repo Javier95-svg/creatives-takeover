@@ -17,44 +17,44 @@ const FeatureHighlights = () => {
   const features = [
     {
       icon: <MessageSquare className="w-10 h-10 text-primary" />,
-      title: "AI Idea Validator",
-      description: "Know if your startup idea will make money before you waste months building it.",
-      benefits: ["Market size analysis", "Competition assessment", "Revenue potential scoring"],
+      title: "AI Business Planning",
+      description: "Get personalized business planning support tailored for creative entrepreneurs and innovators.",
+      benefits: ["Creative idea structuring", "Market opportunity analysis", "Business model optimization"],
       highlight: "Most Used"
     },
     {
       icon: <Users className="w-10 h-10 text-primary" />,
-      title: "Founder Community",
-      description: "Network with 15,000+ indie hackers, side hustlers, and successful founders.",
-      benefits: ["Daily founder discussions", "Real-time collaboration", "Success story sharing"],
+      title: "Creative Community",
+      description: "Network with 15,000+ creative entrepreneurs, startup founders, and innovative solopreneurs.",
+      benefits: ["Creative entrepreneur network", "Startup founder discussions", "Innovation collaboration"],
       highlight: "Top Rated"
     },
     {
       icon: <TrendingUp className="w-10 h-10 text-primary" />,
-      title: "Market Opportunity Finder",
-      description: "Discover profitable niches and trending markets before your competitors do.",
-      benefits: ["Trend analysis", "Opportunity alerts", "Revenue forecasting"],
+      title: "Market Intelligence",
+      description: "Discover profitable opportunities in creative industries and emerging innovation markets.",
+      benefits: ["Creative market trends", "Innovation opportunities", "Competitive intelligence"],
       highlight: "New"
     },
     {
       icon: <Target className="w-10 h-10 text-primary" />,
-      title: "Launch Sprint Planner",
-      description: "Ship your MVP fast with proven sprint templates used by successful indie hackers.",
-      benefits: ["MVP sprint templates", "Launch checklists", "Progress tracking"],
+      title: "No-Code Automation",
+      description: "Leverage automated tools and templates designed for rapid creative business execution.",
+      benefits: ["Automated workflows", "No-code templates", "Business process automation"],
       highlight: ""
     },
     {
       icon: <Sparkles className="w-10 h-10 text-primary" />,
-      title: "Founder Playbooks",
-      description: "Access battle-tested strategies and prompts from founders who've built $1M+ businesses.",
-      benefits: ["Success frameworks", "Growth strategies", "Proven templates"],
+      title: "Creative Playbooks",
+      description: "Access proven strategies and frameworks from successful creative entrepreneurs and innovators.",
+      benefits: ["Creative business frameworks", "Innovation strategies", "Startup playbooks"],
       highlight: ""
     },
     {
       icon: <BarChart3 className="w-10 h-10 text-primary" />,
-      title: "Revenue Tracker",
-      description: "Track your path to profitability with metrics that matter to bootstrapped founders.",
-      benefits: ["Revenue tracking", "Growth analytics", "Success milestones"],
+      title: "Success Analytics",
+      description: "Track your creative business performance with metrics that matter to innovative entrepreneurs.",
+      benefits: ["Creative business metrics", "Innovation tracking", "Growth analytics"],
       highlight: ""
     }
   ];
@@ -70,14 +70,14 @@ const FeatureHighlights = () => {
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6">
-            Built for Indie Hackers
+            Built for Creative Entrepreneurs
           </Badge>
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
-            Everything You Need to Win
+            Everything You Need to Innovate
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            The complete toolkit for founders who want to validate fast, build smart, and launch profitable businesses. 
-            <strong className="text-foreground">No fluff, just results.</strong>
+            The complete AI-powered toolkit for creative entrepreneurs who want to leverage automation 
+            and no-code tools for <strong className="text-foreground">faster business execution</strong>.
           </p>
         </div>
 
@@ -131,22 +131,22 @@ const FeatureHighlights = () => {
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 text-center animate-fade-in">
           <div className="flex items-center justify-center mb-4">
             <Sparkles className="w-6 h-6 text-primary mr-2" />
-            <h3 className="text-2xl font-bold gradient-text">Ready to Build Something Great?</h3>
+            <h3 className="text-2xl font-bold gradient-text">Ready to Innovate?</h3>
           </div>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of indie hackers and side hustlers who are building profitable businesses with our platform.
+            Join thousands of creative entrepreneurs and innovators who are building successful businesses with AI automation.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
               <Link to="/dream2plan">
-                Start Building Now
+                Start Creating Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/pricing">
-                See Pricing
+              <Link to="/services">
+                Explore AI Tools
               </Link>
             </Button>
           </div>
