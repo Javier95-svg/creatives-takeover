@@ -1,0 +1,1 @@
+DELETE FROM community_posts WHERE user_id = '3f8e63f8-fa94-408d-ae10-7f595e826d4d' AND title = 'Month 14 Solo Founder Update: $25.8K MRR';
