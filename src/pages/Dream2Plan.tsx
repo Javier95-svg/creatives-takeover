@@ -287,12 +287,6 @@ const BizMapAI = () => {
     }
   }, []);
 
-  // Component is now fully conversational - no need to add separate first question
-
-  // Remove unused research/refine functions - simplified process
-  
-  // Generate asset function remains unchanged
-
   // Helper: compute and store success score
   const computeAndStoreSuccessScore = async (answers: any) => {
     try {
@@ -415,388 +409,235 @@ const BizMapAI = () => {
     try {
       setIsLoading(true);
       const label = type === 'outreach' ? 'your first outreach email' : type === 'social' ? '3 social posts' : 'a simple landing page outline';
-      setMessages(prev => [...prev, { type: 'assistant', content: `Got it. Generating ${label} based on your inputs...` }]);
-
+      
+      setMessages(prev => [...prev, { 
+        type: 'assistant', 
+        content: `Perfect! I'm generating ${label} based on your Launch Report. This will take about 15 seconds...` 
+      }]);
+      
       const { data, error } = await supabase.functions.invoke('bizmap-assets', {
-        body: {
-          type,
-          answers: userAnswers,
-        },
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        body: { 
+          assetType: type,
+          answers: userAnswers 
         }
       });
 
       if (error) {
-        // Handle credit-related errors
-        if (error.message?.includes('Insufficient credits') || error.message?.includes('credit')) {
-          setPendingAction({ type: 'asset', assetType: type });
-          setCreditGateOpen(true);
-          toast.error(`You need ${CREDIT_COSTS.ASSET_GENERATION} credits to generate assets.`);
-          return;
-        }
-        throw error;
-      }
-      
-      if (data?.asset) {
-        // If successful, deduct credits from local state for immediate UI update
-        handleCreditDeduction(CREDIT_COSTS.ASSET_GENERATION);
-        toast.success(`Asset generated! (Used ${CREDIT_COSTS.ASSET_GENERATION} credits)`);
-        setMessages(prev => [...prev, { type: 'assistant', content: data.asset }]);
-      } else {
-        toast.error('Sorry, I could not generate that asset right now.');
-      }
-    } catch (err) {
-      console.error('Error generating asset:', err);
-      
-      // Check if it's a credit error
-      if (err?.message?.includes('402') || err?.message?.includes('credit')) {
-        setPendingAction({ type: 'asset', assetType: type });
-        setCreditGateOpen(true);
-        toast.error(`You need ${CREDIT_COSTS.ASSET_GENERATION} credits to generate assets.`);
+        console.error('Error generating asset:', error);
+        toast.error("Failed to generate asset. Please try again.");
         return;
       }
-      
-      toast.error('There was a problem generating that. Please try again.');
+
+      if (data?.success) {
+        handleCreditDeduction(CREDIT_COSTS.ASSET_GENERATION);
+        toast.success(`Generated ${label} successfully! (Used ${CREDIT_COSTS.ASSET_GENERATION} credits)`);
+        
+        setMessages(prev => [...prev, { 
+          type: 'assistant', 
+          content: data.content 
+        }]);
+      } else {
+        toast.error("Failed to generate asset. Please try again.");
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
-      setMessage('');
     }
   };
 
-  const handlePostReportMessage = async () => {
-    const content = message.toLowerCase();
-    if (message.trim()) {
-      setMessages(prev => [...prev, { type: 'user', content: message.trim() }]);
-    }
-    if (content.includes('outreach') || content.includes('email')) {
-      await generateAsset('outreach');
-      return;
-    }
-    if (content.includes('social')) {
-      await generateAsset('social');
-      return;
-    }
-    if (content.includes('landing')) {
-      await generateAsset('landing');
-      return;
-    }
-    setMessages(prev => [...prev, { type: 'assistant', content: "You can ask for: 'Draft my first outreach email', 'Write 3 social media posts to test my idea', or 'Help me sketch a simple landing page'." }]);
-    setMessage('');
-  };
-  const handleQuickAction = async (type: 'outreach' | 'social' | 'landing') => {
-    await generateAsset(type);
-  };
-
+  // Fallback report generator for when API fails
   const generateFallbackReport = (answers: any) => {
-    // Use sensible defaults since stage and region are no longer required
-    const region = 'Global';
-    const r = region.toLowerCase();
+    return `# Launch Report for ${answers.overview || 'Your Business'}
 
-    // Default channels for global market
-    let channels = ['LinkedIn', 'Email outreach', 'Google Search'];
-    let currency = '$';
-    let currencyLabel = 'USD';
+## Executive Summary
+Based on your business concept, this launch report provides a strategic framework for bringing your idea to market.
 
-    if (r.includes('latin') || r.includes('latam')) {
-      channels = ['WhatsApp', 'Instagram', 'Facebook Groups'];
-      currency = '$';
-      currencyLabel = 'USD';
-    }
-    if (r.includes('brazil')) { channels = ['WhatsApp', 'Instagram', 'Facebook']; currency = 'R$'; currencyLabel = 'BRL'; }
-    else if (r.includes('mexico')) { channels = ['WhatsApp', 'Facebook', 'Instagram']; currency = '$'; currencyLabel = 'MXN'; }
-    else if (r.includes('europe') || r.includes('germany') || r.includes('france') || r.includes('spain') || r.includes('italy') || r.includes('eu')) { channels = ['LinkedIn', 'Google Search', 'Email']; currency = '€'; currencyLabel = 'EUR'; }
-    else if (r.includes('uk') || r.includes('united kingdom') || r.includes('britain')) { channels = ['LinkedIn', 'Email', 'Events/Meetups']; currency = '£'; currencyLabel = 'GBP'; }
-    else if (r.includes('india')) { channels = ['WhatsApp', 'Instagram', 'YouTube']; currency = '₹'; currencyLabel = 'INR'; }
-    else if (r.includes('nigeria') || r.includes('kenya') || r.includes('africa')) { channels = ['WhatsApp', 'Facebook', 'Community Groups']; currency = '₦'; currencyLabel = 'Local'; }
-    else if (r.includes('china')) { channels = ['WeChat', 'Weibo', 'Douyin']; currency = '¥'; currencyLabel = 'CNY'; }
-    else if (r.includes('us') || r.includes('united states') || r.includes('america')) { channels = ['LinkedIn', 'Email', 'Google Search']; currency = '$'; currencyLabel = 'USD'; }
-    else if (r.includes('mena') || r.includes('middle east') || r.includes('uae') || r.includes('saudi')) { channels = ['WhatsApp', 'Instagram', 'LinkedIn']; currency = '﷼'; currencyLabel = 'Local'; }
+## Business Overview
+${answers.overview || 'Your business concept shows promise in the market.'}
 
-    // Fixed English translations
-    const translations = {
-      title: "# Launch Report",
-      executiveSummary: "## Executive Summary",
-      executiveText: "Based on your responses, you have a promising business concept that addresses a real market need. Success will depend on effective customer validation and focused execution.",
-      doNext: "**Do Next:**",
-      scheduleReview: "Schedule 2 hours this week to review this entire report and identify your top 3 priorities.",
-      leanCanvas: "## Lean Canvas Snapshot",
-      problem: "**Problem:**",
-      solution: "**Solution:**",
-      keyCustomers: "**Key Customers:**",
-      channels: "**Channels:**",
-      revenueStreams: "**Revenue Streams:**",
-      keyCosts: "**Key Costs:**",
-      customerPersona: "## Customer Persona",
-      validationPlan: "## Validation Plan - 5 Next Steps",
-      goToMarket: "## Go-To-Market One-Pager",
-      pricingAnalysis: "## Simple Pricing & Breakeven Analysis",
-      roadmap: "## 90-Day Roadmap & KPIs",
-      scripts: "## Copy-Paste Scripts",
-      disclaimer: "This plan is a starting point. Execute, test, and adjust fast.",
-      dataDisclaimer: "**Data Disclaimer:** All numbers above are estimates/assumptions, not official statistics. Always validate with real market research, competitor analysis, and customer surveys before making major decisions."
-    };
+## Target Market Analysis
+${answers.market || 'Your target customers represent a significant opportunity.'}
 
-    return `${translations.title}
+## Problem & Solution Fit
+**Problem:** ${answers.problem || 'Clear market problem identified.'}
+**Solution:** ${answers.solution || 'Your solution addresses the core issue effectively.'}
 
-${translations.executiveSummary}
-${translations.executiveText}
+## Go-to-Market Strategy
+${answers.channels || 'Multiple marketing channels identified for customer acquisition.'}
 
-${translations.doNext} ${translations.scheduleReview}
+## Financial Model
+${answers.pricing || 'Revenue model and cost structure outlined.'}
 
-${translations.leanCanvas}
-${translations.problem} ${answers.problem}
-${translations.solution} ${answers.solution}
-${translations.keyCustomers} From your market research
-${translations.channels} ${answers.channels || channels.join(', ')}
-${translations.revenueStreams} Based on your pricing model
-${translations.keyCosts} As outlined in your cost structure
+## 90-Day Action Plan
+${answers.goals || 'Clear milestones and timeline established.'}
 
-${translations.doNext} Print or save this canvas and put it somewhere visible. Review weekly to stay focused.
+## Key Recommendations
+1. Validate your assumptions through customer interviews
+2. Build a minimal viable product (MVP)
+3. Test your marketing channels with a small budget
+4. Monitor key metrics and iterate based on feedback
 
-${translations.customerPersona}
-**Name:** Your Ideal Customer
-**Demographics:** Based on your target market description
-**Pain Points:** Issues you identified in problem section
-**Where They Spend Time:** ${channels.join(', ')}
-**Buying Triggers:** Value propositions from your solution
-
-${translations.doNext} Interview 3 people who match this persona this week using these questions: "What's your biggest challenge with [problem area]?" and "How do you currently solve this?"
-
-${translations.validationPlan}
-1. **Customer Interviews:** Conduct 20 interviews with target customers
-2. **Market Research:** Analyze 3 direct competitors
-3. **Prototype Testing:** Create simple version to test core concept
-4. **Channel Test (${region}):** Run a small test on ${channels[0]} with ${currency}50–${currency}150 budget (track real costs)
-5. **Pricing Validation:** Survey 20+ potential customers on pricing (${currencyLabel}) - don't guess, ask directly
-
-${translations.doNext} Complete step 1 within the next 3 days. Set a calendar reminder right now.
-
-${translations.goToMarket}
-**Primary Channel Focus (${region}):** ${channels[0]}
-**First 10 Customers Plan:**
-• Direct outreach via ${channels[0]}
-• Content marketing to establish expertise
-• Partnerships with complementary businesses
-
-${translations.doNext} Create your first piece of content for ${channels[0]} this week. Post it and track engagement.
-
-${translations.pricingAnalysis} (${currencyLabel})
-**Recommended Pricing:** Example ${currency}49–${currency}199 (verify with competitor research)
-**Key Assumptions (validate these with real data):**
-• Customer acquisition cost: ~${currency}5–${currency}25 via ${channels[0]} (test with small budget)
-• Monthly customers needed: Based on your revenue goals
-• Break-even timeline: 6–18 months (varies by market)
-
-**Find Real Data:** Search "pricing benchmarks [your industry] ${region}" on Google, check Statista, or survey potential customers directly.
-
-${translations.doNext} Survey 10 potential customers about pricing this week using: "Would you pay ${currency}[X] for [solution] that [key benefit]?"
-
-${translations.roadmap}
-
-### Month 1: Foundation
-**Goal:** Validate core assumptions with real data
-**Key Actions:** Customer interviews, competitor analysis, basic prototype
-**KPI:** 20 customer interviews completed + pricing range validated
-**Do Next:** Complete the first customer interview within 48 hours.
-
-### Month 2: Validation
-**Goal:** Test solution-market fit with real customers
-**Key Actions:** Refine offering, test ${channels[0]} with ${currency}100–${currency}300 budget, validate pricing in ${currencyLabel}
-**KPI:** 10+ potential customers express buying intent at your price point
-**Do Next:** Set up tracking system for your KPI (spreadsheet, app, etc.)
-
-### Month 3: Launch
-**Goal:** Get first paying customers
-**Key Actions:** Official launch, focus marketing on ${channels[0]} and ${channels[1] || channels[0]}, gather feedback
-**KPI:** First 5–15 paying customers (track real acquisition costs)
-**Do Next:** Create a launch checklist with specific dates for each task.
-
-${translations.scripts}
-
-### ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} Message:
-\`\`\`
-Hi [Name], I'm launching a new [solution] that helps [target customer] with [problem]. Would you be interested in learning more?
-\`\`\`
-
-### Cold Email Subject + Body:
-\`\`\`
-Subject: Quick question about [specific problem]
-Body: Hi [Name], I noticed [specific observation]. I'm working on [solution] to help with [problem]. Would you have 5 minutes to share your thoughts?
-\`\`\`
-
-### Landing Page Headline:
-\`\`\`
-Finally, a better way to [solve their problem]
-\`\`\`
-
-**Do Next:** Send the ${channels[0] === 'WhatsApp' ? 'WhatsApp' : 'SMS/DM'} message to 5 potential customers today. Track responses in a simple spreadsheet.
-
----
-
-${translations.disclaimer}
-
-**⚠️ Important Disclaimer:** BizMap AI is not a legal or financial advisor. This report gives practical guidance to kickstart your journey, but always validate with real customers and professional advice where needed.
-
-${translations.dataDisclaimer}`;
+*This report was generated using AI analysis of your business inputs. Use it as a starting point for your entrepreneurial journey.*`;
   };
 
+  // Validation helper functions
   const isAnswerTooVague = (answer: string, stepKey: string) => {
-    const trimmed = answer.trim().toLowerCase();
+    if (!answer || answer.trim().length < 10) return true;
     
-    // Check for obviously vague responses
-    const vagueResponses = ['idk', "i don't know", 'not sure', 'maybe', 'um', 'uh', 'dunno', '?'];
-    if (vagueResponses.includes(trimmed) || trimmed.length < 10) {
-      return true;
-    }
-
-    // Step-specific vague answer detection
+    const wordCount = answer.trim().split(/\s+/).length;
+    const t = answer.toLowerCase();
+    
+    // Vague indicators
+    const vague = /(i think|maybe|probably|sort of|kind of|not sure|i guess|possibly)/i;
+    const generic = /(make money|be successful|help people|solve problems|good idea)/i;
+    
+    // Check for step-specific requirements
     switch (stepKey) {
       case 'overview':
-        return trimmed.includes('a store') || trimmed.includes('an app') || trimmed.includes('a business') || trimmed.includes('a website');
+        // Need what they're building and general approach
+        return wordCount < 15 || !/(app|website|service|product|platform|business|company)/i.test(t);
+        
       case 'market':
-        return trimmed.includes('everyone') || trimmed.includes('anyone') || trimmed.includes('people');
+        // Need specific demographics or customer characteristics
+        const hasMarketSpecifics = /(age|years old|parents|professionals|students|small business|women|men)/i.test(t);
+        return !hasMarketSpecifics || wordCount < 20 || vague.test(t);
+        
       case 'problem':
-        return !trimmed.includes('problem') && !trimmed.includes('issue') && !trimmed.includes('struggle') && !trimmed.includes('difficult');
-      case 'solution':
-        return trimmed.length < 20;
+        // Need concrete pain points
+        const hasPainPoints = /(waste time|expensive|difficult|frustrating|slow|manual|hard to)/i.test(t);
+        return !hasPainPoints || wordCount < 25 || generic.test(t);
+        
+      case 'solution': 
+        // Need differentiation
+        const hasDifferentiation = /(faster|cheaper|easier|better|automated|simple|instant)/i.test(t);
+        return !hasDifferentiation || wordCount < 20;
+        
       case 'channels':
-        return trimmed.includes('social media') && trimmed.length < 30;
+        // Need specific marketing tactics
+        const hasTactics = /(ads|social|email|seo|content|referral|partnership|direct)/i.test(t);
+        return !hasTactics || wordCount < 15;
+        
       case 'pricing':
-        return !trimmed.includes('$') && !trimmed.includes('free') && !trimmed.includes('subscription') && !trimmed.includes('commission');
+        // Need numbers and revenue model
+        const hasNumbers = /[\d$%]/;
+        return !hasNumbers.test(t) || wordCount < 20;
+        
       case 'goals':
-        return !trimmed.includes('day') && !trimmed.includes('week') && !trimmed.includes('month') && !trimmed.includes('hour');
+        // Need measurable objectives and timeline
+        const hasGoalSpecifics = /\d/.test(t) && /(days|weeks|months|users|revenue|customers)/i.test(t);
+        const hasTimeframe = /(week|month|day|launch|by)/i.test(t);
+        return !hasGoalSpecifics || !hasTimeframe || wordCount < 20 || !/(users|customers|revenue|launch|build|grow)/i.test(t);
+        
       default:
-        return false;
+        return wordCount < 15;
     }
   };
 
-  const generateClarifyingQuestion = (stepKey: string, vagueAnswer: string) => {
+  const generateClarifyingQuestion = (stepKey: string, answer: string) => {
+    const questions = {
+      overview: [
+        "I'd love to understand better - what exactly are you building? Is it an app, website, physical product, or service?",
+        "Can you help me visualize this? What would someone actually do or get when they use your product/service?",
+        "That sounds interesting! What's the core thing you're creating and who would use it?"
+      ],
+      market: [
+        "I need more specifics about your customers. Can you tell me their age range, occupation, or key characteristics?",
+        "Where do these people currently go when they have the problem you're solving? What do they do today?",
+        "Help me picture your ideal customer - what's their typical day like and when do they encounter this problem?"
+      ],
+      problem: [
+        "I want to understand the pain better. How much time or money does this problem typically cost people?",
+        "What happens when people can't solve this problem? What's the real impact on their day/business/life?",
+        "Can you give me a specific example of when someone last experienced this frustration?"
+      ],
+      solution: [
+        "What makes your approach different from what's already out there? What's your unique angle?",
+        "If someone asked you 'why not just use [existing solution]?' - what would you say?",
+        "What's the core innovation or improvement you're bringing to this problem?"
+      ],
+      channels: [
+        "I need specifics on how you'll reach people. What's your plan to get your first 10 customers?",
+        "Which marketing channel do you think will work best for your specific audience and why?",
+        "Where do your ideal customers spend time online, and how will you reach them there?"
+      ],
+      pricing: [
+        "I need to understand the money side better. What will you charge and what are your main costs?",
+        "How much money do you need to get started, and what's your revenue target for month 1?",
+        "What's your revenue model - subscription, one-time payment, commission, etc.?"
+      ],
+      goals: [
+        "I need specific, measurable goals. What exact numbers do you want to hit and by when?",
+        "What does success look like in the next 30, 60, and 90 days with specific metrics?",
+        "How many hours per week can you dedicate to this, and what's your target launch date?"
+      ]
+    };
+    
+    const questionSet = questions[stepKey as keyof typeof questions] || questions.overview;
+    return questionSet[Math.floor(Math.random() * questionSet.length)];
+  };
+
+  const shouldAskFollowUp = (stepKey: string, answer: string) => {
+    const wordCount = answer.trim().split(/\s+/).length;
+    
+    // Don't ask follow-ups for very detailed answers
+    if (wordCount > 60) return false;
+    
+    // Ask follow-ups for medium answers to get more strategic insight
+    if (wordCount >= 25 && wordCount <= 60) {
+      return Math.random() > 0.3; // 70% chance to ask follow-up for medium answers
+    }
+    
+    return false; // Short answers get clarifying questions, not follow-ups
+  };
+
+  const generateContextualFollowUp = (stepKey: string, answer: string) => {
+    const prev = userAnswers as any;
+    
+    // Analyze user's business context for smarter follow-ups
+    const businessType = prev.overview ? (
+      prev.overview.toLowerCase().includes('app') ? 'tech' :
+      prev.overview.toLowerCase().includes('service') ? 'service' :
+      prev.overview.toLowerCase().includes('store') ? 'ecommerce' :
+      prev.overview.toLowerCase().includes('restaurant') ? 'food' : 'general'
+    ) : 'general';
+    
     switch (stepKey) {
       case 'overview':
-        return `I need more details to help you properly. Let me give you some options to get specific:\n\n• **E-commerce:** Selling physical products online (like clothing, gadgets, food)\n• **Service Business:** Offering services (consulting, cleaning, tutoring, design)\n• **Tech/App:** Building software or mobile applications\n• **Local Business:** Restaurant, salon, retail store, etc.\n\nWhich category fits best, and what specific product/service would you offer?`;
+        return `Thank you for that overview! I'd like to understand your biggest concern right now. What's the one assumption about "${answer.slice(0, 100)}..." that keeps you up at night? This will help me tailor your launch plan perfectly.`;
         
       case 'market':
-        if (vagueAnswer.toLowerCase().includes('everyone')) {
-          return `"Everyone" isn't a target market - let's get specific! Try one of these approaches:\n\n• **Demographics:** Age range, income level, location (e.g., "Working professionals 25-40 in urban areas")\n• **Behavior:** What they currently do (e.g., "Parents who shop online for kids' clothes")\n• **Industry:** Business type (e.g., "Small restaurant owners with 10-50 employees")\n\nWho specifically would benefit most from your solution?`;
-        }
-        return `I need more specifics about your ideal customer. Help me understand:\n\n• **Who:** Age, location, income level?\n• **What:** What do they currently do related to your business?\n• **Where:** Where do they spend time online/offline?\n\nFor example: "Busy working parents in suburbs who currently use Facebook groups to find childcare."`;
+        return `Great start! I need to understand their behavior better. Could you tell me: where do these specific people spend most of their time online, and what's their typical decision-making process when they need solutions like yours?`;
         
       case 'problem':
-        return `I need to understand the specific problem you're solving. Try this format:\n\n• **Current Situation:** How do people handle this now?\n• **Pain Points:** What's frustrating/time-consuming/expensive?\n• **Impact:** How does this problem affect their day/business/life?\n\nFor example: "Parents waste 2+ hours searching unreliable Facebook groups for sitters, often finding no one available for urgent needs."`;
+        const problemContext = businessType === 'tech' ? 'inefficiency' : 
+                              businessType === 'service' ? 'frustration' : 'cost or time waste';
+        return `I can see this is a real issue. To help you build a compelling solution, could you quantify the impact? For example: How much time, money, or ${problemContext} does this problem typically cause your target customers each week or month?`;
         
       case 'solution':
-        return `Help me understand how your solution is different and better:\n\n• **Key Feature:** What's the main thing your solution does?\n• **Advantage:** How is it better than current alternatives?\n• **Outcome:** What result does the customer get?\n\nFor example: "Our app provides verified sitters with real-time availability and instant booking - solving the problem in under 5 minutes vs hours of searching."`;
+        const competitorContext = prev.problem ? `given the problem of "${String(prev.problem).slice(0, 80)}..."` : 'in this space';
+        return `That sounds promising! I need to understand your competitive advantage clearly. What makes your approach fundamentally different from existing solutions ${competitorContext}? What's your "unfair advantage"?`;
         
       case 'channels':
-        return `Let's get specific about how you'll reach customers. Choose your top 2-3:\n\n• **Social Media:** Which platforms? (Instagram, TikTok, LinkedIn, Facebook)\n• **Content:** Blog, YouTube, podcast, email newsletter\n• **Partnerships:** Other businesses, influencers, referrals\n• **Paid Ads:** Google, Facebook, industry publications\n• **Direct:** Cold outreach, networking, events\n\nWhere does your target customer spend the most time?`;
+        return `Good thinking on channels! But I need specifics: How exactly will you get your first 10 customers through your top 2 channels? What's your step-by-step approach?`;
         
       case 'pricing':
-        return `I need specifics about your business model and costs:\n\n• **Revenue:** How will you charge? (one-time fee, subscription, commission, ads)\n• **Price Point:** What will you charge? (even a rough estimate)\n• **Main Costs:** Development, marketing, materials, labor?\n• **Starting Budget:** How much can you invest initially?\n\nFor example: "15% commission per booking, average $60. Main costs: app development ($5K), marketing ($2K/month). Have $10K to start."`;
+        return `Perfect, I can see you've thought about the economics. What's your specific plan to test pricing with real customers in the next 2 weeks? This is crucial for ${businessType} businesses.`;
         
       case 'goals':
-        return `Let's set specific, measurable goals:\n\n• **Revenue Target:** How much money in 90 days?\n• **Customer Target:** How many customers/users?\n• **Time Commitment:** How many hours per week can you dedicate?\n• **Launch Timeline:** When do you want to be live?\n\nFor example: "Launch MVP in 8 weeks, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week."`;
+        return `Excellent goals! What's the biggest obstacle you anticipate in the next 30 days, and what's your backup plan if things don't go as expected? This foresight will be key to your success.`;
         
       default:
-        return `Could you provide more specific details? I need enough information to create a useful business plan for you.`;
+        return `Thank you for sharing that. To give you the most relevant advice for your ${businessType} business, could you provide one more specific detail that would help me understand your situation better?`;
     }
   };
-  
-  const handleNextStep = async (messageOverride?: string) => {
-    const currentAnswer = (messageOverride || message).trim();
-    if (!currentAnswer) {
-      toast.error("Please provide an answer before continuing.");
-      return;
-    }
+
+  // Main handler for wizard steps
+  const handleNextStep = async (currentAnswer: string) => {
+    if (!currentAnswer.trim()) return;
 
     const currentKey = wizardSteps[currentStep].key;
-
-    // Internal helpers for context-aware follow-ups
-    const shouldAskFollowUp = (stepKey: string, answer: string) => {
-      const t = answer.toLowerCase();
-      const wordCount = answer.split(' ').length;
-      
-      // More sophisticated context analysis
-      const hasSpecifics = /(\d+|%|\$|€|£|₹|R\$)/.test(answer);
-      const hasTimeframe = /(day|week|month|year|hour|minute)/.test(t);
-      const hasLocation = /(city|town|state|country|us|uk|europe|india|brazil|mexico|nigeria|kenya|china|uae|local|global)/.test(t);
-      const hasComparison = /(better|faster|cheaper|unique|different|advantage|versus|compared|unlike)/.test(t);
-      
-      switch (stepKey) {
-        case 'overview':
-          // Need business model clarity and specific value prop
-          return wordCount < 25 || (!hasSpecifics && !t.includes('help') && !t.includes('solve'));
-          
-        case 'market':
-          // Need demographic specifics and geographic context
-          return wordCount < 20 || (!hasLocation && !hasSpecifics) || t.includes('everyone') || t.includes('anyone');
-          
-        case 'problem':
-          // Need quantified pain points and current solutions
-          return wordCount < 15 || (!hasSpecifics && !hasTimeframe && !t.includes('difficult') && !t.includes('hard') && !t.includes('expensive') && !t.includes('slow') && !t.includes('frustrating'));
-          
-        case 'solution':
-          // Need differentiation and competitive analysis
-          return wordCount < 25 || !hasComparison || (!t.includes('than') && !t.includes('instead'));
-          
-        case 'channels':
-          // Need specific platforms and acquisition strategy
-          const channelCount = (answer.match(/,|and|\+/g) || []).length + 1;
-          return channelCount < 2 || wordCount < 15 || !/(instagram|tiktok|linkedin|facebook|google|whatsapp|youtube|email|newsletter|events|partnership|ads|seo|content)/i.test(t);
-          
-        case 'pricing':
-          // Need business model and validation plan
-          return !hasSpecifics || wordCount < 20 || !/(subscription|commission|one-time|freemium|ads|revenue|cost|budget)/i.test(t);
-          
-        case 'goals':
-          // Need measurable objectives and timeline
-          return !hasSpecifics || !hasTimeframe || wordCount < 20 || !/(users|customers|revenue|launch|build|grow)/i.test(t);
-          
-        default:
-          return wordCount < 15;
-      }
-    };
-
-    const generateContextualFollowUp = (stepKey: string, answer: string) => {
-      const prev = userAnswers as any;
-      
-      // Analyze user's business context for smarter follow-ups
-      const businessType = prev.overview ? (
-        prev.overview.toLowerCase().includes('app') ? 'tech' :
-        prev.overview.toLowerCase().includes('service') ? 'service' :
-        prev.overview.toLowerCase().includes('store') ? 'ecommerce' :
-        prev.overview.toLowerCase().includes('restaurant') ? 'food' : 'general'
-      ) : 'general';
-      
-      switch (stepKey) {
-        case 'overview':
-          return `Thank you for that overview! I'd like to understand your biggest concern right now. What's the one assumption about "${answer.slice(0, 100)}..." that keeps you up at night? This will help me tailor your launch plan perfectly.`;
-          
-        case 'market':
-          return `Great start! I need to understand their behavior better. Could you tell me: where do these specific people spend most of their time online, and what's their typical decision-making process when they need solutions like yours?`;
-          
-        case 'problem':
-          const problemContext = businessType === 'tech' ? 'inefficiency' : 
-                                businessType === 'service' ? 'frustration' : 'cost or time waste';
-          return `I can see this is a real issue. To help you build a compelling solution, could you quantify the impact? For example: How much time, money, or ${problemContext} does this problem typically cause your target customers each week or month?`;
-          
-        case 'solution':
-          const competitorContext = prev.problem ? `given the problem of "${String(prev.problem).slice(0, 80)}..."` : 'in this space';
-          return `That sounds promising! I need to understand your competitive advantage clearly. What makes your approach fundamentally different from existing solutions ${competitorContext}? What's your "unfair advantage"?`;
-          
-        case 'channels':
-          return `Good thinking on channels! But I need specifics: How exactly will you get your first 10 customers through your top 2 channels? What's your step-by-step approach?`;
-          
-        case 'pricing':
-          return `Perfect, I can see you've thought about the economics. What's your specific plan to test pricing with real customers in the next 2 weeks? This is crucial for ${businessType} businesses.`;
-          
-        case 'goals':
-          return `Excellent goals! What's the biggest obstacle you anticipate in the next 30 days, and what's your backup plan if things don't go as expected? This foresight will be key to your success.`;
-          
-        default:
-          return `Thank you for sharing that. To give you the most relevant advice for your ${businessType} business, could you provide one more specific detail that would help me understand your situation better?`;
-      }
-    };
 
     // If we're answering a pending follow-up for this step
     if (followUpState.active && followUpState.stepKey === currentKey) {
@@ -895,6 +736,37 @@ ${translations.dataDisclaimer}`;
     }
   };
 
+  // Handle post-report conversation
+  const handlePostReportMessage = async () => {
+    if (!message.trim()) return;
+    
+    const userMessage = message.trim().toLowerCase();
+    
+    // Add user message
+    setMessages(prev => [...prev, { type: "user", content: message }]);
+    setMessage("");
+
+    // Simple keyword-based responses
+    let response = "";
+    
+    if (userMessage.includes('outreach') || userMessage.includes('email')) {
+      response = "I'd be happy to help you create an outreach email template! Let me generate one based on your business plan...";
+      setTimeout(() => generateAsset('outreach'), 1000);
+    } else if (userMessage.includes('social') || userMessage.includes('post')) {
+      response = "Great idea! Let me create some social media posts to help promote your launch...";
+      setTimeout(() => generateAsset('social'), 1000);
+    } else if (userMessage.includes('landing') || userMessage.includes('page')) {
+      response = "A landing page is crucial for converting visitors! Let me create an outline for you...";
+      setTimeout(() => generateAsset('landing'), 1000);
+    } else if (userMessage.includes('sprint') || userMessage.includes('plan') || userMessage.includes('task')) {
+      response = "Ready to turn your plan into action? Click the 'Sprint Planner' tab above to create your 90-day sprint!";
+    } else {
+      response = "I'm here to help you take action on your launch plan! You can:\n\n📧 Generate an outreach email template\n📱 Create social media posts\n🏗️ Get a landing page outline\n🎯 Create a 90-day sprint plan\n\nWhat would you like to work on?";
+    }
+
+    // Add AI response
+    setMessages(prev => [...prev, { type: "assistant", content: response }]);
+  };
 
   const handleSendMessage = async (messageOverride?: string) => {
     const messageToSend = messageOverride || message.trim();
@@ -909,6 +781,22 @@ ${translations.dataDisclaimer}`;
   const handleAudioTranscription = (text: string) => {
     setMessage(text);
     handleSendMessage(text);
+  };
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'outreach':
+        generateAsset('outreach');
+        break;
+      case 'social':
+        generateAsset('social');
+        break;
+      case 'landing':
+        generateAsset('landing');
+        break;
+      default:
+        break;
+    }
   };
 
   const getCurrentPlaceholder = () => {
@@ -939,13 +827,6 @@ ${translations.dataDisclaimer}`;
     }
   };
 
-  const examplePrompts = [
-    "I want to start an e-commerce business",
-    "I have an idea for a mobile app", 
-    "I want to open a local restaurant",
-    "I'm planning a consulting business"
-  ];
-
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Helmet>
@@ -954,8 +835,14 @@ ${translations.dataDisclaimer}`;
         <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, launch report" />
       </Helmet>
       
-      {/* Animated Background */}
+      {/* Enhanced Animated Background */}
       <AnimatedBackground />
+      
+      {/* Enhanced Background decorations */}
+      <div className="fixed top-20 left-10 w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/10 rounded-full blur-3xl animate-float" />
+      <div className="fixed bottom-20 right-10 w-24 h-24 bg-gradient-to-tl from-secondary/20 to-accent/10 rounded-full blur-2xl animate-spiral" style={{ animationDelay: '1s' }} />
+      <div className="fixed top-1/2 right-20 w-16 h-16 bg-gradient-to-r from-accent/15 to-primary/10 rounded-full blur-xl animate-diagonal-float" />
+      <div className="fixed top-1/3 left-1/4 w-20 h-20 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-2xl animate-orbit opacity-60" />
       
       <div className="relative z-10">
         <Navigation />
@@ -963,305 +850,368 @@ ${translations.dataDisclaimer}`;
         <div className="pt-20 pb-16 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6 takeover-gradient creatives-font animate-fade-in">
                 BizMap AI
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Your global startup co-founder in chatbot form. Transform business ideas into actionable Launch Reports.
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                Your global startup co-founder in chatbot form. Transform business ideas into <span className="gradient-text font-semibold">actionable Launch Reports</span>.
               </p>
             </div>
 
-            {/* Tab Navigation */}
+            {/* Enhanced Tab Navigation */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="bizmap">Business Planning</TabsTrigger>
-                <TabsTrigger value="sprint">Sprint Planner</TabsTrigger>
-              </TabsList>
+              <div className="flex justify-center mb-8">
+                <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                  <TabsTrigger 
+                    value="bizmap" 
+                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium"
+                  >
+                    <Lightbulb className="w-5 h-5" />
+                    Business Planning
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="sprint" 
+                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/20 data-[state=active]:to-secondary/10 data-[state=active]:text-secondary transition-all duration-300 hover:bg-secondary/5 rounded-lg font-medium"
+                  >
+                    <Target className="w-5 h-5" />
+                    Sprint Planner
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="bizmap">
                 {/* Chat Interface Container */}
                 <div className="flex gap-6 mb-8">
-              {/* Chat Sidebar */}
-              <ChatSidebar 
-                onSessionSelect={handleSessionSelect}
-                onNewChat={handleNewChat}
-                className="hidden md:flex"
-              />
+                  {/* Chat Sidebar */}
+                  <ChatSidebar 
+                    onSessionSelect={handleSessionSelect}
+                    onNewChat={handleNewChat}
+                    className="hidden md:flex"
+                  />
 
-              {/* Main Chat Interface */}
-              <div className="flex-1 min-w-0">
-                <Card className="glass-card-silver h-[700px] flex flex-col hover-lift">
-                  <CardContent className="flex flex-col h-full p-0">
-                    {/* Chat Header */}
-                    <div className="p-4 border-b border-border/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-silver-glow flex items-center justify-center shadow-lg">
-                            <Bot className="w-5 h-5 text-foreground" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold silver-gradient-text">BizMap AI Assistant</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {isCompleted ? "Launch Report Complete!" : 
-                               `Step ${currentStep + 1} of ${wizardSteps.length}`}
-                            </p>
+                  {/* Enhanced Main Chat Interface */}
+                  <div className="flex-1 min-w-0">
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[700px] flex flex-col hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-2xl overflow-hidden">
+                      <div className="flex flex-col h-full">
+                        {/* Enhanced Chat Header */}
+                        <div className="p-6 border-b border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg animate-pulse-glow">
+                                  <Bot className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse border-2 border-card"></div>
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-semibold gradient-text">BizMap AI Assistant</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {isCompleted ? "🎉 Launch Report Complete!" : 
+                                   `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder`}
+                                </p>
+                              </div>
+                            </div>
+                            {!isCompleted && (
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-primary">
+                                  {Math.round(getProgressPercentage())}%
+                                </span>
+                                <div className="w-20 h-3 bg-muted/50 rounded-full overflow-hidden border border-primary/20">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 animate-glow"
+                                    style={{ width: `${getProgressPercentage()}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        {!isCompleted && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {Math.round(getProgressPercentage())}%
-                            </span>
-                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary transition-all duration-300"
-                                style={{ width: `${getProgressPercentage()}%` }}
-                              />
+
+                        {/* Enhanced Messages */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-transparent to-primary/2">
+                          {messages.map((msg, index) => {
+                            const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
+                            
+                            if (msg.type === "user") {
+                              return (
+                                <div key={index} className="flex gap-4 flex-row-reverse animate-slide-in-right" style={{ animationDelay: `${index * 0.1}s` }}>
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-secondary to-accent shadow-lg hover:scale-110 transition-transform duration-300">
+                                    <User className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div className="max-w-[80%] group">
+                                    <div className="p-4 rounded-2xl text-sm whitespace-pre-wrap bg-gradient-to-br from-secondary/20 to-accent/10 border border-secondary/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm rounded-br-sm">
+                                      {msg.content}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1 text-right px-2">
+                                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            if (isLastAIMessage) {
+                              return (
+                                <div key={index} className="flex gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse-glow hover:scale-110 transition-transform duration-300">
+                                    <Bot className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div className="max-w-[80%]">
+                                    <TypingMessage 
+                                      content={msg.content}
+                                      speed={25}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            return (
+                              <div key={index} className="flex gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg hover:scale-110 transition-transform duration-300">
+                                  <Bot className="w-5 h-5 text-white" />
+                                </div>
+                                <div className="max-w-[80%] group">
+                                  <div className="glass-card border-primary/20 p-4 rounded-2xl text-sm whitespace-pre-wrap hover:shadow-xl hover:scale-[1.02] transition-all duration-300 rounded-bl-sm backdrop-blur-sm">
+                                    {msg.content}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1 px-2">
+                                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {isLoading && (
+                            <div className="flex gap-4 animate-fade-in">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center animate-pulse-glow shadow-lg">
+                                <Bot className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="glass-card border-primary/20 p-4 rounded-2xl rounded-bl-sm">
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                  <div className="flex space-x-1">
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Enhanced Input Area */}
+                        <div className="p-6 border-t border-primary/20 bg-gradient-to-t from-card/50 via-primary/2 to-transparent">
+                          {isCompleted && (
+                            <div className="mb-6 grid grid-cols-3 gap-3">
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                className="glass border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/5 transition-all duration-300 hover:scale-105"
+                                onClick={() => handleQuickAction('outreach')}
+                              >
+                                <span className="mr-2">📧</span>
+                                Email
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                className="glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5 transition-all duration-300 hover:scale-105"
+                                onClick={() => handleQuickAction('social')}
+                              >
+                                <span className="mr-2">📱</span>
+                                Social
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                className="glass border-accent/30 hover:bg-gradient-to-r hover:from-accent/10 hover:to-primary/5 transition-all duration-300 hover:scale-105"
+                                onClick={() => handleQuickAction('landing')}
+                              >
+                                <span className="mr-2">🏗️</span>
+                                Landing
+                              </Button>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-3 items-end">
+                            <div className="flex-1">
+                              <div className="relative">
+                                <Input
+                                  placeholder={getCurrentPlaceholder()}
+                                  value={message}
+                                  onChange={(e) => setMessage(e.target.value)}
+                                  onKeyPress={handleKeyPress}
+                                  className="glass bg-input/50 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/70 transition-all duration-300 hover:border-primary/50 pr-12 py-3 text-base"
+                                  disabled={isLoading}
+                                />
+                                {message && (
+                                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <AudioRecorder 
+                              onTranscription={handleAudioTranscription}
+                              disabled={isLoading}
+                            />
+                            
+                            <Button 
+                              onClick={() => handleSendMessage()} 
+                              size="icon" 
+                              disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
+                              className="btn-magnetic bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border border-primary/30 shadow-lg w-12 h-12"
+                            >
+                              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                            </Button>
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-4">
+                            <p className="text-sm text-muted-foreground">
+                              {isCompleted ? "✨ Launch Report generated! Ready to create your sprint?" :
+                               `💬 Answer to continue to step ${currentStep + 2}`}
+                            </p>
+                            <div className="flex gap-3">
+                              {isCompleted && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setActiveTab("sprint")}
+                                  className="btn-magnetic glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5"
+                                >
+                                  <Zap className="w-4 h-4 mr-2" />
+                                  Create Sprint
+                                </Button>
+                              )}
+                              {!isCompleted && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleSendMessage()}
+                                  disabled={isLoading || !message.trim()}
+                                  className="hover:bg-primary/10 transition-all duration-300"
+                                >
+                                  {getButtonText()}
+                                </Button>
+                              )}
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
-
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {messages.map((msg, index) => {
-                        // For AI messages, use typing animation for the last message
-                        const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
-                        
-                        if (msg.type === "user") {
-                          return (
-                            <div key={index} className="flex gap-3 flex-row-reverse">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
-                                <User className="w-4 h-4" />
-                              </div>
-                              <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-primary text-primary-foreground rounded-br-none">
-                                {msg.content}
-                              </div>
-                            </div>
-                          );
-                        }
-                        
-                        if (isLastAIMessage) {
-                          return (
-                            <TypingMessage 
-                              key={index}
-                              content={msg.content}
-                              speed={25}
-                            />
-                          );
-                        }
-                        
-                        return (
-                          <div key={index} className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                              <Bot className="w-4 h-4" />
-                            </div>
-                            <div className="max-w-[85%] p-3 rounded-lg text-sm whitespace-pre-wrap bg-muted rounded-bl-none">
-                              {msg.content}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {isLoading && (
-                        <div className="flex gap-3">
-                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                            <Bot className="w-4 h-4" />
-                          </div>
-                          <div className="bg-muted p-3 rounded-lg rounded-bl-none">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          </div>
+                  </div>
+                </div>
+             
+                {/* Full Width Sections */}
+                {/* Interactive Progress Visualization - Synchronized with chatbot */}
+                <div className="animate-fade-in mb-8">
+                  <InteractiveProgress
+                    currentStep={currentStep}
+                    totalSteps={wizardSteps.length}
+                    stepTitles={wizardSteps.map(step => step.title)}
+                    isComplete={!!launchReport}
+                  />
+                </div>
+                
+                {/* Three Information Cards - Minimalistic with Silver Glass Effect */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+                  {/* How BizMap AI Works */}
+                  <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 border border-primary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                    {/* Background Effects */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    <div className="relative z-10 p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Lightbulb className="w-4 h-4 text-primary group-hover:animate-pulse" />
                         </div>
-                      )}
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300">How It Works</h3>
+                      </div>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">1</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Answer 7 guided questions about your business</p>
+                        </div>
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">2</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">AI analyzes your responses and market data</p>
+                        </div>
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">3</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Get a comprehensive launch report</p>
+                        </div>
+                      </div>
                     </div>
-
-                     {/* Simplified UI - removed research controls for streamlined process */}
-                     
-                      <div className="p-4 border-t border-border/50">
-                       {isCompleted && (
-                         <div className="mb-4 grid grid-cols-3 gap-2 text-center">
-                           <button 
-                             className="py-2 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/30 rounded-md hover:border-border/50" 
-                             onClick={() => handleQuickAction('outreach')}
-                           >
-                             Email
-                           </button>
-                           <button 
-                             className="py-2 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/30 rounded-md hover:border-border/50" 
-                             onClick={() => handleQuickAction('social')}
-                           >
-                             Social
-                           </button>
-                           <button 
-                             className="py-2 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/30 rounded-md hover:border-border/50" 
-                             onClick={() => handleQuickAction('landing')}
-                           >
-                             Landing
-                           </button>
-                         </div>
-                        )}
-                       <div className="flex gap-2">
-                         <Input
-                           placeholder={getCurrentPlaceholder()}
-                           value={message}
-                           onChange={(e) => setMessage(e.target.value)}
-                           onKeyPress={handleKeyPress}
-                           className="flex-1"
-                           disabled={isLoading}
-                         />
-                         <AudioRecorder 
-                           onTranscription={handleAudioTranscription}
-                           disabled={isLoading}
-                         />
-                         <Button 
-                           onClick={() => handleSendMessage()} 
-                           size="icon" 
-                           disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
-                         >
-                           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                         </Button>
-                       </div>
-                       <div className="flex items-center justify-between mt-2">
-                         <p className="text-xs text-muted-foreground">
-                           {isCompleted ? "Launch Report generated! Ready to create your sprint?" :
-                            `Answer to continue to step ${currentStep + 2}`}
-                         </p>
-                         <div className="flex gap-2">
-                           {isCompleted && (
-                             <Button 
-                               variant="outline" 
-                               size="sm"
-                               onClick={() => setActiveTab("sprint")}
-                             >
-                               <Zap className="w-4 h-4 mr-2" />
-                               Create Sprint
-                             </Button>
-                           )}
-                           {!isCompleted && (
-                             <Button 
-                               variant="ghost" 
-                               size="sm"
-                               onClick={() => handleSendMessage()}
-                               disabled={isLoading || !message.trim()}
-                             >
-                               {getButtonText()}
-                             </Button>
-                           )}
-                         </div>
-                       </div>
-                     </div>
-                   </CardContent>
-                 </Card>
-               </div>
-             </div>
-            
-            {/* Full Width Sections */}
-            {/* Interactive Progress Visualization - Synchronized with chatbot */}
-            <div className="animate-fade-in mb-8">
-              <InteractiveProgress
-                currentStep={currentStep}
-                totalSteps={wizardSteps.length}
-                stepTitles={wizardSteps.map(step => step.title)}
-                isComplete={!!launchReport}
-              />
-            </div>
-            
-            {/* Three Information Cards - Minimalistic with Silver Glass Effect */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-              {/* How BizMap AI Works */}
-              <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 border border-primary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                {/* Background Effects */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative z-10 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Lightbulb className="w-4 h-4 text-primary group-hover:animate-pulse" />
-                    </div>
-                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300">How It Works</h3>
                   </div>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
-                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">1</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Answer 7 guided questions about your business</p>
+
+                  {/* Market Intelligence */}
+                  <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-secondary/10 border border-secondary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                    {/* Background Effects */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-secondary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    <div className="relative z-10 p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Target className="w-4 h-4 text-secondary group-hover:animate-pulse" />
+                        </div>
+                        <h3 className="font-medium text-foreground group-hover:text-secondary transition-colors duration-300">Market Intelligence</h3>
+                      </div>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📊</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Real-time market trends and competitor insights</p>
+                        </div>
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300">🎯</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Customer validation strategies</p>
+                        </div>
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📈</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Growth opportunities identification</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
-                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">2</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">AI analyzes your responses and market data</p>
-                    </div>
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">3</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Get a comprehensive launch report</p>
+                  </div>
+
+                  {/* Success Scoring */}
+                  <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-accent/10 border border-accent/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                    {/* Background Effects */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    <div className="relative z-10 p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Rocket className="w-4 h-4 text-accent group-hover:animate-pulse" />
+                        </div>
+                        <h3 className="font-medium text-foreground group-hover:text-accent transition-colors duration-300">Success Scoring</h3>
+                      </div>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                          <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">95%</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Business model validation score</p>
+                        </div>
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                          <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">8.7</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Product-market fit assessment</p>
+                        </div>
+                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                          <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">90d</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Optimized launch timeline</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Market Intelligence */}
-              <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-secondary/10 border border-secondary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                {/* Background Effects */}
-                <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-secondary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <div className="relative z-10 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Target className="w-4 h-4 text-secondary group-hover:animate-pulse" />
-                    </div>
-                    <h3 className="font-medium text-foreground group-hover:text-secondary transition-colors duration-300">Market Intelligence</h3>
+                {/* Download Component - Show only when report is completed */}
+                {launchReport && (
+                  <div className="mt-8">
+                    <ReportDownload report={launchReport} title="BizMap Launch Report" />
                   </div>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
-                      <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📊</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Real-time market trends and competitor insights</p>
-                    </div>
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
-                      <span className="text-secondary group-hover:scale-110 transition-transform duration-300">🎯</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Customer validation strategies</p>
-                    </div>
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                      <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📈</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Growth opportunities identification</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Success Scoring */}
-              <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-accent/10 border border-accent/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                {/* Background Effects */}
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative z-10 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Rocket className="w-4 h-4 text-accent group-hover:animate-pulse" />
-                    </div>
-                    <h3 className="font-medium text-foreground group-hover:text-accent transition-colors duration-300">Success Scoring</h3>
-                  </div>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
-                      <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">95%</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Business model validation score</p>
-                    </div>
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
-                      <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">8.7</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Product-market fit assessment</p>
-                    </div>
-                    <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                      <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">90d</span>
-                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Optimized launch timeline</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Download Component - Show only when report is completed */}
-            {launchReport && (
-              <div className="mt-8">
-                <ReportDownload report={launchReport} title="BizMap Launch Report" />
-              </div>
-            )}
+                )}
               </TabsContent>
 
               <TabsContent value="sprint">
