@@ -2,7 +2,6 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import FeatureHighlights from "@/components/FeatureHighlights";
-import Testimonials from "@/components/Testimonials";
 import CTASection from "@/components/CTASection";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
@@ -27,7 +26,6 @@ const Index = () => {
         <Hero />
         <EntrepreneurProblems />
         <FeatureHighlights />
-        <Testimonials />
         <CTASection />
       </main>
       <Footer />
