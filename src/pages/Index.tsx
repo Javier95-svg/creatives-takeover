@@ -2,7 +2,8 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import FeatureHighlights from "@/components/FeatureHighlights";
-import CTASection from "@/components/CTASection";
+import SuccessStats from "@/components/SuccessStats";
+import FinalCTA from "@/components/FinalCTA";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
@@ -26,7 +27,8 @@ const Index = () => {
         <Hero />
         <EntrepreneurProblems />
         <FeatureHighlights />
-        <CTASection />
+        <SuccessStats />
+        <FinalCTA />
       </main>
       <Footer />
       
