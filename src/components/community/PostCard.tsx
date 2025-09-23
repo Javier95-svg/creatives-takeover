@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowDown, ArrowUp, Bookmark, MessageSquare, MoreVertical, Share2 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -460,35 +461,80 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             </div>
 
             {commentsOpen && (
-              <div className="mt-4 space-y-3 border-t pt-4">
-                {loadingComments ? (
-                  <div className="text-sm text-muted-foreground">Loading comments...</div>
-                ) : (
-                  comments.map((c) => (
-                    <div key={c.id} className="flex gap-3">
-                      <Avatar className="h-7 w-7">
-                        {c.avatar && <AvatarImage src={c.avatar} alt={`${c.author} avatar`} />}
-                        <AvatarFallback className="text-[10px]">{c.author.slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">{c.author}</span>
-                        </div>
-                        <p className="text-sm">{c.text}</p>
+              <div className="mt-4 border-t pt-4">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="add-comment" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-3 px-0">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="font-medium">Add Comment</span>
                       </div>
-                    </div>
-                  ))
-                )}
-                <div className="flex items-center gap-2 pt-2">
-                  <Input
-                    value={commentInput}
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    placeholder="Add a comment"
-                    aria-label="Add a comment"
-                    onKeyDown={(e) => e.key === 'Enter' && submitComment()}
-                  />
-                  <Button onClick={submitComment} disabled={!commentInput.trim()}>Comment</Button>
-                </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={commentInput}
+                          onChange={(e) => setCommentInput(e.target.value)}
+                          placeholder="Share your thoughts..."
+                          aria-label="Add a comment"
+                          onKeyDown={(e) => e.key === 'Enter' && submitComment()}
+                          className="flex-1"
+                        />
+                        <Button onClick={submitComment} disabled={!commentInput.trim()}>
+                          Post
+                        </Button>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="view-comments" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline py-3 px-0">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="font-medium">
+                          {loadingComments ? 'Loading...' : `Comments (${comments.length})`}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4">
+                      <div className="space-y-4">
+                        {loadingComments ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="text-sm text-muted-foreground">Loading comments...</div>
+                          </div>
+                        ) : comments.length === 0 ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="text-center text-muted-foreground">
+                              <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">No comments yet</p>
+                              <p className="text-xs">Be the first to share your thoughts!</p>
+                            </div>
+                          </div>
+                        ) : (
+                          comments.map((c, index) => (
+                            <div key={c.id} className="flex gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                              <Avatar className="h-8 w-8 ring-2 ring-background">
+                                {c.avatar && <AvatarImage src={c.avatar} alt={`${c.author} avatar`} />}
+                                <AvatarFallback className="text-xs font-medium">
+                                  {c.author.slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm text-foreground">{c.author}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    #{index + 1}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm leading-relaxed text-foreground/80">{c.text}</p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             )}
           </div>
