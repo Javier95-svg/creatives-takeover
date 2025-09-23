@@ -41,8 +41,8 @@ export const ScrollTriggeredCTA = () => {
   if (isAuthenticated || !isVisible || isDismissed) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up">
-      <div className="glass-card max-w-md mx-4 p-4 border border-border shadow-2xl">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60] animate-slide-up">
+      <div className="glass-card max-w-md mx-4 p-5 border border-primary/20 shadow-2xl bg-background/95 backdrop-blur-xl rounded-xl">
         <div className="relative">
           {/* Close Button */}
           <button 
@@ -53,29 +53,29 @@ export const ScrollTriggeredCTA = () => {
             <X className="w-4 h-4" />
           </button>
 
-          {/* Content */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Sparkles className="w-5 h-5 text-primary" />
+          {/* Enhanced Content */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 bg-gradient-to-br from-primary/15 to-secondary/15 rounded-xl border border-primary/20">
+              <Sparkles className="w-6 h-6 text-primary animate-pulse" />
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground">Get FREE Report + Credits!</h3>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-foreground mb-1">Get FREE Report + Credits!</h3>
               <p className="text-sm text-muted-foreground">5-min survey = Free plan + up to 7 credits</p>
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex gap-2">
-            <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground relative overflow-hidden group" asChild>
+          {/* Enhanced CTA Buttons */}
+          <div className="flex gap-3">
+            <Button size="sm" className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group" asChild>
               <Link to="/dream2plan">
-                <span className="relative z-10">Claim Credits</span>
-                <ArrowRight className="ml-1 w-3 h-3 relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                <span className="relative z-10 font-semibold">Claim Credits</span>
+                <ArrowRight className="ml-1 w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </Link>
             </Button>
-            <Button size="sm" variant="outline" className="flex-1 hover:bg-primary/10" asChild>
+            <Button size="sm" variant="outline" className="flex-1 border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/10 shadow-md transition-all duration-300" asChild>
               <Link to="/dream2plan">
-                Preview
+                <span className="font-semibold">Preview</span>
               </Link>
             </Button>
           </div>

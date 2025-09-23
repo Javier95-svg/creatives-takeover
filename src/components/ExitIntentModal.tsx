@@ -25,12 +25,13 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden border-0 bg-background/95 backdrop-blur-xl">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden border border-border/20 bg-background/98 backdrop-blur-2xl shadow-2xl z-[100]">
         <div className="relative">
-          {/* Animated Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/5 to-primary/10 animate-pulse" />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-2xl animate-float" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-secondary/20 to-transparent rounded-full blur-2xl animate-float" style={{ animationDelay: '1s' }} />
+          {/* Enhanced Animated Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-secondary/8 to-accent/10" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary/25 to-transparent rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-secondary/25 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-gradient-to-r from-accent/20 to-transparent rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
           
           <div className="relative z-10 p-8">
             {/* Close Button */}
@@ -42,10 +43,10 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-6 animate-fade-in">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">🎁 FREE Credits Available!</span>
+            {/* Enhanced Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/15 to-secondary/15 border border-primary/30 rounded-full shadow-lg mb-6 animate-fade-in">
+              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+              <span className="text-sm font-semibold text-primary">🎁 FREE Credits Available!</span>
             </div>
 
             {/* Headline */}
@@ -82,18 +83,18 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
               </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <Button size="lg" className="flex-1 glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic relative overflow-hidden group" asChild>
+            {/* Enhanced CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+              <Button size="lg" className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group" asChild>
                 <Link to="/dream2plan" onClick={onClose}>
-                  <span className="relative z-10">Get FREE Report + Credits</span>
-                  <ArrowRight className="ml-2 w-4 h-4 relative z-10" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                  <span className="relative z-10 font-semibold">Get FREE Report + Credits</span>
+                  <ArrowRight className="ml-2 w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="flex-1 glass hover:bg-primary/10 btn-magnetic" asChild>
+              <Button size="lg" variant="outline" className="flex-1 border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/10 shadow-md hover:shadow-lg transition-all duration-300" asChild>
                 <Link to="/signup" onClick={onClose}>
-                  Sign Up for More
+                  <span className="font-semibold">Sign Up for More</span>
                 </Link>
               </Button>
             </div>
