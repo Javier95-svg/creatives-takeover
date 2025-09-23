@@ -18,11 +18,13 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
 
   useEffect(() => {
     // Don't show for authenticated users
+    console.log('CreditCampaignPopup check:', { isAuthenticated, trigger, delay });
     if (isAuthenticated) return;
 
     // Check if user has already seen this popup in this session
     const sessionKey = `credit-popup-${trigger}-seen`;
     const hasSeenPopup = sessionStorage.getItem(sessionKey);
+    console.log('CreditCampaignPopup session check:', { sessionKey, hasSeenPopup, hasShown });
     if (hasSeenPopup || hasShown) return;
 
     let timeoutId: NodeJS.Timeout;

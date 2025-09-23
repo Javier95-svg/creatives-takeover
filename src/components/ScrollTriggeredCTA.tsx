@@ -11,10 +11,12 @@ export const ScrollTriggeredCTA = () => {
 
   useEffect(() => {
     // Don't show for authenticated users
+    console.log('ScrollTriggeredCTA check:', { isAuthenticated });
     if (isAuthenticated) return;
 
     // Check if user has already dismissed the CTA in this session
     const hasSeenCTA = sessionStorage.getItem('scroll-cta-dismissed');
+    console.log('ScrollTriggeredCTA session check:', { hasSeenCTA });
     if (hasSeenCTA) return;
 
     const handleScroll = () => {

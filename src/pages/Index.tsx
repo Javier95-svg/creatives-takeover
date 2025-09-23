@@ -14,6 +14,20 @@ import { useExitIntent } from "@/hooks/useExitIntent";
 
 const Index = () => {
   const { showExitIntent, closeExitIntent } = useExitIntent();
+  
+  // Clear popup session storage for debugging (remove this in production)
+  // sessionStorage.removeItem('exit-intent-seen');
+  // sessionStorage.removeItem('scroll-cta-dismissed');  
+  // sessionStorage.removeItem('credit-popup-time-seen');
+
+  // Debug function to clear all popup session storage
+  const clearPopupStorage = () => {
+    sessionStorage.removeItem('exit-intent-seen');
+    sessionStorage.removeItem('scroll-cta-dismissed');  
+    sessionStorage.removeItem('credit-popup-time-seen');
+    console.log('Cleared all popup session storage');
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,12 +46,21 @@ const Index = () => {
       </main>
       <Footer />
       
+      {/* DEBUG: Temporary popup testing button (remove in production) */}
+      <button 
+        onClick={clearPopupStorage}
+        className="fixed top-4 right-4 z-[200] bg-red-500 text-white p-2 rounded text-xs"
+        style={{ fontSize: '10px' }}
+      >
+        Clear Popups
+      </button>
+      
       {/* Conversion Optimization Components - Less Invasive */}
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
       <ScrollTriggeredCTA />
       
-      {/* Minimal Campaign Popup - Very Delayed */}
-      <CreditCampaignPopup trigger="time" delay={90000} />
+      {/* Minimal Campaign Popup - Faster for testing */}
+      <CreditCampaignPopup trigger="time" delay={5000} />
       
       {/* AI Chatbot Assistant */}
       <ChatbotWidget />
