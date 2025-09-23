@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
 import AdvancedFilters from "./AdvancedFilters";
-import WelcomeNewUser from "./WelcomeNewUser";
 import CommunityInsights from "./CommunityInsights";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,8 +22,6 @@ const CommunityFeed: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [postType, setPostType] = useState("all");
   const [engagement, setEngagement] = useState("all");
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [isNewUser, setIsNewUser] = useState(false);
 
   // Fetch posts from database
   const fetchPosts = async () => {
@@ -112,30 +109,6 @@ const CommunityFeed: React.FC = () => {
     }
   };
 
-  // Check if user is new (first visit or recently joined)
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      const checkNewUser = async () => {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('created_at')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile) {
-            const joinDate = new Date(profile.created_at);
-            const daysSinceJoin = (Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24);
-            setIsNewUser(daysSinceJoin <= 7); // Consider new if joined within 7 days
-          }
-        } catch (error) {
-          console.error('Error checking user status:', error);
-        }
-      };
-      
-      checkNewUser();
-    }
-  }, [isAuthenticated, user]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -382,10 +355,6 @@ const CommunityFeed: React.FC = () => {
     <main className="container mx-auto px-4 py-8 space-y-6">
       <div className="grid lg:grid-cols-12 gap-6">
         <section className="lg:col-span-8 space-y-6">
-          {/* Welcome Message for New Users */}
-          {isAuthenticated && isNewUser && showWelcome && (
-            <WelcomeNewUser onDismiss={() => setShowWelcome(false)} />
-          )}
 
           {/* Post Composer */}
           <PostComposer onPublish={publish} requireAuth={true} />
