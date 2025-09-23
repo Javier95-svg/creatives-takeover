@@ -48,21 +48,21 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-            <span className="takeover-gradient">From idea to professional</span>
+            <span className="takeover-gradient">From Side Hustle to</span>
             <br />
-            <span className="animated-gradient">business plan in 30 minutes</span>
+            <span className="animated-gradient">Profitable Business</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            Transform your business ideas into comprehensive, actionable plans with AI-powered insights and market validation tools.
+            The AI-powered platform built for <strong className="text-foreground">founders, indie hackers, and side hustlers</strong> who want to validate ideas fast and launch profitable businesses without the guesswork.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex justify-center mb-16 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating relative overflow-hidden group" aria-label="Create business plan and earn credits" asChild>
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic btn-start-creating relative overflow-hidden group" aria-label="Validate business idea and get insights" asChild>
               <Link to="/dream2plan">
-                <span className="relative z-10">Get FREE Report + Credits</span>
+                <span className="relative z-10">Validate My Idea Now</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
@@ -75,22 +75,22 @@ const Hero = () => {
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
-              <div className="text-lg font-semibold takeover-gradient mb-2">AI-Powered Analysis</div>
-              <div className="text-muted-foreground text-sm">Smart insights and market validation for your business ideas</div>
+              <div className="text-lg font-semibold takeover-gradient mb-2">5-Min Validation</div>
+              <div className="text-muted-foreground text-sm">Know if your idea will make money before you build anything</div>
             </div>
             <div className="glass-card btn-magnetic">
               <div className="flex justify-center mb-3">
                 <ArrowRight className="w-8 h-8 text-secondary" />
               </div>
-              <div className="text-lg font-semibold animated-gradient mb-2">Quick Results</div>
-              <div className="text-muted-foreground text-sm">Get comprehensive business plans in minutes, not months</div>
+              <div className="text-lg font-semibold animated-gradient mb-2">Ship Fast</div>
+              <div className="text-muted-foreground text-sm">Launch your MVP in weeks, not months with proven frameworks</div>
             </div>
             <div className="glass-card btn-magnetic">
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-8 h-8 text-accent" />
               </div>
-              <div className="text-lg font-semibold reverse-gradient mb-2">Complete Package</div>
-              <div className="text-muted-foreground text-sm">Business plan, market research, and execution strategy included</div>
+              <div className="text-lg font-semibold reverse-gradient mb-2">Indie Community</div>
+              <div className="text-muted-foreground text-sm">Connect with 15,000+ founders building profitable businesses</div>
             </div>
           </div>
 

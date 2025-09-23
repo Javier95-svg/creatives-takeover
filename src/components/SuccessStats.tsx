@@ -14,38 +14,38 @@ const SuccessStats = () => {
     {
       icon: <Users className="w-8 h-8 text-primary" />,
       number: "15,000+",
-      label: "Active Entrepreneurs",
-      description: "Building successful businesses"
+      label: "Indie Hackers",
+      description: "Building profitable businesses"
     },
     {
       icon: <TrendingUp className="w-8 h-8 text-primary" />,
       number: "$2.4M+",
       label: "Revenue Generated",
-      description: "By our community members"
+      description: "By our founder community"
     },
     {
       icon: <Clock className="w-8 h-8 text-primary" />,
       number: "87%",
-      label: "Faster Planning",
+      label: "Faster Validation",
       description: "Compared to traditional methods"
     },
     {
       icon: <Star className="w-8 h-8 text-primary" />,
       number: "4.9/5",
-      label: "User Rating",
+      label: "Founder Rating",
       description: "From verified entrepreneurs"
     },
     {
       icon: <Zap className="w-8 h-8 text-primary" />,
       number: "50K+",
-      label: "AI Conversations",
+      label: "Ideas Validated",
       description: "Business insights generated"
     },
     {
       icon: <Target className="w-8 h-8 text-primary" />,
       number: "92%",
-      label: "Success Rate",
-      description: "Users launch within 90 days"
+      label: "Launch Success",
+      description: "Ship MVP within 90 days"
     }
   ];
 
@@ -63,11 +63,11 @@ const SuccessStats = () => {
             Platform Success Metrics
           </Badge>
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
-            Trusted by Entrepreneurs Worldwide
+            Trusted by Indie Hackers Worldwide
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Join thousands of successful entrepreneurs who have transformed their ideas 
-            into profitable businesses using our AI-powered platform.
+            Join thousands of successful founders who have transformed their side hustles 
+            into profitable businesses using our platform.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ const SuccessStats = () => {
 
         {/* Bottom Trust Indicators */}
         <div className="mt-16 text-center animate-fade-in">
-          <p className="text-muted-foreground mb-6">Trusted by entrepreneurs from</p>
+          <p className="text-muted-foreground mb-6">Trusted by indie hackers from</p>
           <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-6 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded-sm"></div>

@@ -40,7 +40,7 @@ const FinalCTA = () => {
             
             <p className="text-xl lg:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
               Stop spending months on research and planning. Get your AI-powered business 
-              strategy in minutes and start building something amazing today.
+              validation in minutes and start building something profitable today.
             </p>
           </div>
 
@@ -48,13 +48,13 @@ const FinalCTA = () => {
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <Button size="lg" className="text-lg px-12 py-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90" asChild>
               <Link to="/dream2plan">
-                Start Your Business Plan
+                Validate My Idea Now
                 <ArrowRight className="ml-3 h-6 w-6" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg px-12 py-8 border-2 hover:bg-primary/10" asChild>
               <Link to="/community">
-                Join the Community
+                Join Indie Community
               </Link>
             </Button>
           </div>
@@ -62,7 +62,7 @@ const FinalCTA = () => {
           {/* Trust Indicators */}
           <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <p className="text-sm text-muted-foreground mb-4">
-              Join 15,000+ entrepreneurs who chose our platform
+              Join 15,000+ indie hackers who chose our platform
             </p>
             <div className="flex items-center justify-center gap-8 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
