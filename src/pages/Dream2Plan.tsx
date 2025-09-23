@@ -71,6 +71,11 @@ const BizMapAI = () => {
     const tab = urlParams.get('tab');
     if (tab && ['bizmap', 'templates', 'financial'].includes(tab)) {
       setActiveTab(tab);
+    } else {
+      // Default to bizmap if invalid tab or no tab specified
+      setActiveTab('bizmap');
+      // Update URL to reflect the actual tab
+      window.history.replaceState({}, '', '/dream2plan?tab=bizmap');
     }
   }, []);
   
