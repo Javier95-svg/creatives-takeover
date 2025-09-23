@@ -44,24 +44,8 @@ const FinalCTA = () => {
             </p>
           </div>
 
-          {/* Value Props */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50">
-              <Clock className="w-5 h-5 text-primary" />
-              <span className="font-medium">5-minute setup</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50">
-              <Zap className="w-5 h-5 text-primary" />
-              <span className="font-medium">Instant AI analysis</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="font-medium">30-day guarantee</span>
-            </div>
-          </div>
-
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <Button size="lg" className="text-lg px-12 py-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90" asChild>
               <Link to="/dream2plan">
                 Start Your Business Plan
@@ -76,7 +60,7 @@ const FinalCTA = () => {
           </div>
 
           {/* Trust Indicators */}
-          <div className="text-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
+          <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <p className="text-sm text-muted-foreground mb-4">
               Join 15,000+ entrepreneurs who chose our platform
             </p>
