@@ -43,10 +43,53 @@ const SocialProof = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 bg-background relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute top-1/3 left-1/5 w-20 h-20 bg-primary/3 rounded-full blur-2xl animate-float" />
-      <div className="absolute bottom-1/3 right-1/5 w-32 h-32 bg-secondary/3 rounded-full blur-3xl animate-spiral" style={{ animationDelay: '2s' }} />
+    <section className="py-20 lg:py-32 relative overflow-hidden">
+      {/* Success-Focused Golden Wallpaper */}
+      <div className="absolute inset-0 bg-gradient-to-br from-yellow-950/20 via-green-950/15 to-emerald-900/10" />
+      
+      {/* Success Pattern - Rising Charts */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            conic-gradient(from 0deg at 20% 30%, rgba(34, 197, 94, 0.2) 0deg, transparent 90deg),
+            conic-gradient(from 90deg at 80% 20%, rgba(251, 191, 36, 0.2) 0deg, transparent 90deg),
+            conic-gradient(from 180deg at 60% 80%, rgba(34, 197, 94, 0.2) 0deg, transparent 90deg)
+          `
+        }} />
+      </div>
+      
+      {/* Trophy and Success Icons Background */}
+      <div className="absolute inset-0 opacity-3">
+        <div className="absolute top-20 left-16 text-yellow-500 text-5xl">🏆</div>
+        <div className="absolute top-40 right-24 text-green-500 text-4xl">💰</div>
+        <div className="absolute bottom-32 left-32 text-yellow-400 text-6xl">⭐</div>
+        <div className="absolute bottom-48 right-16 text-green-400 text-3xl">📈</div>
+        <div className="absolute top-1/2 left-1/5 text-yellow-500 text-4xl">💎</div>
+        <div className="absolute top-1/3 right-1/4 text-green-500 text-5xl">🚀</div>
+      </div>
+      
+      {/* Success Rays */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div className="w-1 h-32 bg-gradient-to-t from-yellow-400/10 to-transparent rotate-12 animate-pulse" />
+        <div className="w-1 h-32 bg-gradient-to-t from-green-400/10 to-transparent rotate-45 animate-pulse absolute top-0" style={{ animationDelay: '0.5s' }} />
+        <div className="w-1 h-32 bg-gradient-to-t from-yellow-400/10 to-transparent rotate-90 animate-pulse absolute top-0" style={{ animationDelay: '1s' }} />
+        <div className="w-1 h-32 bg-gradient-to-t from-green-400/10 to-transparent -rotate-12 animate-pulse absolute top-0" style={{ animationDelay: '1.5s' }} />
+      </div>
+      
+      {/* Growth Chart Elements */}
+      <div className="absolute bottom-20 left-20 flex items-end space-x-2">
+        <div className="w-2 h-8 bg-green-400/20 animate-pulse" />
+        <div className="w-2 h-12 bg-green-400/30 animate-pulse" style={{ animationDelay: '0.2s' }} />
+        <div className="w-2 h-16 bg-green-400/40 animate-pulse" style={{ animationDelay: '0.4s' }} />
+        <div className="w-2 h-20 bg-green-400/50 animate-pulse" style={{ animationDelay: '0.6s' }} />
+      </div>
+      
+      <div className="absolute top-20 right-20 flex items-end space-x-2">
+        <div className="w-2 h-6 bg-yellow-400/20 animate-pulse" />
+        <div className="w-2 h-10 bg-yellow-400/30 animate-pulse" style={{ animationDelay: '0.3s' }} />
+        <div className="w-2 h-14 bg-yellow-400/40 animate-pulse" style={{ animationDelay: '0.6s' }} />
+        <div className="w-2 h-18 bg-yellow-400/50 animate-pulse" style={{ animationDelay: '0.9s' }} />
+      </div>
       
       <div className="container mx-auto px-6 relative z-10">
         {/* Section Header */}

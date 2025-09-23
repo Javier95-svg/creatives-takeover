@@ -54,11 +54,39 @@ const EntrepreneurProblems = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 bg-muted/20 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-red-500/5 rounded-full blur-3xl animate-spiral" />
-      <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-primary/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute top-1/2 left-1/6 w-20 h-20 bg-accent/5 rounded-full blur-xl animate-zigzag" style={{ animationDelay: '2s' }} />
+    <section className="py-20 lg:py-32 relative overflow-hidden">
+      {/* Problem-Focused Dark Wallpaper */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-gray-900/20 to-orange-950/20" />
+      
+      {/* Circuit Board Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(239, 68, 68, 0.1) 1px, transparent 1px),
+            linear-gradient(rgba(239, 68, 68, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
+      
+      {/* Scattered Problem Icons Background */}
+      <div className="absolute inset-0 opacity-5">
+        {/* Scattered X marks representing problems */}
+        <div className="absolute top-20 left-20 text-red-500 text-4xl font-bold">✕</div>
+        <div className="absolute top-40 right-32 text-red-500 text-3xl font-bold">✕</div>
+        <div className="absolute bottom-32 left-40 text-red-500 text-5xl font-bold">✕</div>
+        <div className="absolute bottom-48 right-20 text-red-500 text-2xl font-bold">✕</div>
+        <div className="absolute top-1/2 left-1/3 text-red-500 text-6xl font-bold">✕</div>
+        <div className="absolute top-1/3 right-1/4 text-red-500 text-3xl font-bold">✕</div>
+      </div>
+      
+      {/* Warning Stripes */}
+      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent" />
+      
+      {/* Glitch Effect Elements */}
+      <div className="absolute top-1/4 left-1/5 w-32 h-1 bg-red-500/30 animate-pulse" />
+      <div className="absolute bottom-1/3 right-1/5 w-24 h-1 bg-orange-500/30 animate-pulse" style={{ animationDelay: '1s' }} />
       
       <div className="container mx-auto px-6 relative z-10">
         {/* Section Header */}

@@ -49,10 +49,48 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 bg-gradient-to-br from-muted/20 via-background to-muted/10 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-primary/5 rounded-full blur-3xl animate-spiral" />
-      <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-secondary/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '1.5s' }} />
+    <section className="py-20 lg:py-32 relative overflow-hidden">
+      {/* Process-Focused Blueprint Wallpaper */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-indigo-900/10 to-cyan-950/15" />
+      
+      {/* Blueprint Grid Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+            linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '100px 100px, 100px 100px, 20px 20px, 20px 20px'
+        }} />
+      </div>
+      
+      {/* Process Flow Lines */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Horizontal flow lines */}
+        <div className="absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-pulse" />
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-3/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        {/* Vertical connection lines */}
+        <div className="absolute top-0 left-1/4 w-0.5 h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
+        <div className="absolute top-0 left-2/4 w-0.5 h-full bg-gradient-to-b from-transparent via-blue-400/20 to-transparent" />
+        <div className="absolute top-0 left-3/4 w-0.5 h-full bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent" />
+      </div>
+      
+      {/* Gear/Cog Elements */}
+      <div className="absolute top-20 right-20 w-16 h-16 border-2 border-primary/20 rounded-full animate-spin" style={{ animationDuration: '10s' }}>
+        <div className="absolute inset-2 border-2 border-primary/30 rounded-full" />
+      </div>
+      <div className="absolute bottom-20 left-20 w-12 h-12 border-2 border-blue-400/20 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
+        <div className="absolute inset-2 border-2 border-blue-400/30 rounded-full" />
+      </div>
+      
+      {/* Step Indicators */}
+      <div className="absolute top-32 left-1/4 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-bold animate-pulse">1</div>
+      <div className="absolute top-48 left-2/4 w-8 h-8 bg-blue-400/10 rounded-full flex items-center justify-center text-blue-400 text-sm font-bold animate-pulse" style={{ animationDelay: '0.5s' }}>2</div>
+      <div className="absolute top-32 left-3/4 w-8 h-8 bg-cyan-400/10 rounded-full flex items-center justify-center text-cyan-400 text-sm font-bold animate-pulse" style={{ animationDelay: '1s' }}>3</div>
       
       <div className="container mx-auto px-6 relative z-10">
         {/* Section Header */}
