@@ -276,14 +276,50 @@ const BizMapAI = () => {
     }
   }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
-  // Check for pre-populated prompt from Prompt Library
+  // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
     const savedPrompt = localStorage.getItem('bizmap_prompt');
+    const savedTemplate = localStorage.getItem('bizmap_template');
+    
     if (savedPrompt) {
       setUserAnswers(prev => ({ ...prev, overview: savedPrompt }));
       setMessage(savedPrompt);
       localStorage.removeItem('bizmap_prompt');
       toast.success("Prompt loaded from Prompt Library!");
+    } else if (savedTemplate) {
+      const template = JSON.parse(savedTemplate);
+      setUserAnswers(template.answers);
+      setCurrentStep(7); // Move to end since template is complete
+      localStorage.removeItem('bizmap_template');
+      toast.success(`${template.title} template loaded!`);
+      
+      // Reconstruct messages for template
+      const templateMessages = [
+        {
+          type: "assistant",
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
+        }
+      ];
+      
+      wizardSteps.forEach((step, index) => {
+        if (index > 0) {
+          templateMessages.push({
+            type: "assistant", 
+            content: wizardSteps[index - 1].transition + "\n\n" + step.question
+          });
+        }
+        templateMessages.push({
+          type: "user",
+          content: template.answers[step.key]
+        });
+      });
+      
+      templateMessages.push({
+        type: "assistant",
+        content: "Excellent! I have everything I need to create your personalized Launch Report. This template provides a solid foundation - let's generate your comprehensive business plan!"
+      });
+      
+      setMessages(templateMessages);
     }
   }, []);
 
