@@ -7,19 +7,8 @@ import { ChevronLeft, ChevronRight, Flame, Star, Crown, MessageCircle, Heart } f
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "./PostCard";
 
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  author: {
-    name: string;
-    avatar?: string;
-  };
-}
-
 const TrendingCarousel = () => {
   const [trendingPosts, setTrendingPosts] = useState<Post[]>([]);
-  const [postComments, setPostComments] = useState<Record<string, Comment[]>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -78,46 +67,6 @@ const TrendingCarousel = () => {
         });
 
         setTrendingPosts(formattedPosts);
-
-        // Fetch comments for each trending post
-        const fetchComments = async () => {
-          const commentsMap: Record<string, Comment[]> = {};
-          
-          for (const post of formattedPosts) {
-            const { data: commentsData } = await supabase
-              .from('post_comments')
-              .select('*')
-              .eq('post_id', post.id)
-              .order('created_at', { ascending: false })
-              .limit(3);
-
-            if (commentsData) {
-              const formattedComments: Comment[] = [];
-              
-              for (const comment of commentsData) {
-                const { data: commentAuthor } = await supabase.rpc('get_post_author_info', {
-                  author_user_id: comment.user_id
-                });
-                
-                formattedComments.push({
-                  id: comment.id,
-                  content: comment.content,
-                  created_at: comment.created_at,
-                  author: {
-                    name: commentAuthor?.[0]?.author_name || 'Anonymous',
-                    avatar: commentAuthor?.[0]?.author_avatar
-                  }
-                });
-              }
-              
-              commentsMap[post.id] = formattedComments;
-            }
-          }
-          
-          setPostComments(commentsMap);
-        };
-
-        fetchComments();
       } catch (error) {
         console.error('Error fetching trending posts:', error);
       } finally {
@@ -216,7 +165,6 @@ const TrendingCarousel = () => {
         >
           {visiblePosts.map((post, index) => {
             const globalIndex = currentIndex + index;
-            const comments = postComments[post.id] || [];
             
             return (
               <Card key={post.id} className="hover:shadow-lg transition-all duration-300 cursor-pointer group bg-background/80 backdrop-blur-sm">
@@ -271,41 +219,6 @@ const TrendingCarousel = () => {
                       </Badge>
                     )}
                   </div>
-
-                  {/* Comments Section */}
-                  {comments.length > 0 && (
-                    <div className="border-t pt-3 space-y-2">
-                      <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                        <MessageCircle className="h-3 w-3" />
-                        <span>Recent Comments</span>
-                      </div>
-                      <div className="space-y-2 max-h-24 overflow-y-auto">
-                        {comments.slice(0, 2).map((comment) => (
-                          <div key={comment.id} className="bg-muted/30 rounded-lg p-2">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Avatar className="h-4 w-4">
-                                {comment.author.avatar && (
-                                  <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-                                )}
-                                <AvatarFallback className="text-[8px]">
-                                  {comment.author.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs font-medium">{comment.author.name}</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {comment.content}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      {comments.length > 2 && (
-                        <p className="text-xs text-muted-foreground text-center">
-                          +{comments.length - 2} more comments
-                        </p>
-                      )}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
