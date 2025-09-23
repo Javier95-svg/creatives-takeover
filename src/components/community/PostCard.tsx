@@ -1,53 +1,54 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import React, { useState, useEffect, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, Bookmark, MoreVertical, Share2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import SignInModal from "./SignInModal";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { 
+  Heart, 
+  MessageCircle, 
+  Share2, 
+  Repeat2, 
+  MapPin, 
+  MoreHorizontal,
+  Send
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { SocialButtons } from "@/components/social/SocialButtons";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import SignInModal from "./SignInModal";
 
-export type Post = {
+export interface Post {
   id: string;
   title: string;
   content: string;
-  image?: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
   tags: string[];
   location?: string;
-  createdAt: string; // ISO
-  author: { name: string; avatar?: string };
+  createdAt: string;
   votes: number;
   commentsCount: number;
-  // AI moderator fields (optional, populated behind the scenes)
+  repostCount?: number;
+  shareCount?: number;
   aiSummary?: string;
   aiInsights?: string[];
   aiRelatedTopics?: string[];
   aiStructuredIdea?: {
     problem: string;
     solution: string;
-    audience: string;
-    next_steps: string[];
+    market: string;
+    validation: string;
+    revenue: string;
   };
   aiTrendingAngle?: string;
   aiNextStep?: string;
-};
-
-const timeAgo = (iso: string) => {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-};
+}
 
 interface PostCardProps {
   post: Post;
@@ -56,281 +57,422 @@ interface PostCardProps {
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [score, setScore] = useState(post.votes);
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isReposted, setIsReposted] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [comments, setComments] = useState<any[]>([]);
+  const [localLikes, setLocalLikes] = useState(post.votes);
+  const [localReposts, setLocalReposts] = useState(post.repostCount || 0);
+  const [localComments, setLocalComments] = useState(post.commentsCount);
 
-  const avatarFallback = useMemo(() => post.author.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase(), [post.author.name]);
+  const timeAgo = (dateString: string) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds}s`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    return `${Math.floor(diffInSeconds / 86400)}d`;
+  };
 
-  // Load user's vote status and bookmark status
+  const avatarFallback = useMemo(() => {
+    return post.author.name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }, [post.author.name]);
+
+  // Load user's like and repost status
   useEffect(() => {
     if (!isAuthenticated || !user) return;
-
-    const loadUserInteractions = async () => {
+    
+    const loadUserStatus = async () => {
       try {
-        // Check vote status
-        const { data: voteData } = await supabase
+        // Check if user liked this post
+        const { data: likeData } = await supabase
           .from('user_votes')
           .select('vote_type')
-          .eq('user_id', user.id)
           .eq('post_id', post.id)
+          .eq('user_id', user.id)
           .maybeSingle();
+        
+        setIsLiked(likeData?.vote_type === 'up');
 
-        if (voteData) {
-          setVote(voteData.vote_type as "up" | "down");
-        }
-
-        // Check bookmark status
-        const { data: bookmarkData } = await supabase
-          .from('user_bookmarks')
+        // Check if user reposted this post
+        const { data: repostData } = await supabase
+          .from('post_reposts')
           .select('id')
-          .eq('user_id', user.id)
           .eq('post_id', post.id)
+          .eq('user_id', user.id)
           .maybeSingle();
-
-        setIsBookmarked(!!bookmarkData);
+        
+        setIsReposted(!!repostData);
       } catch (error) {
-        console.error('Error loading user interactions:', error);
+        console.error('Error loading user status:', error);
       }
     };
 
-    loadUserInteractions();
-  }, [post.id, user, isAuthenticated]);
+    loadUserStatus();
+  }, [isAuthenticated, user, post.id]);
 
-  const handleVote = async (dir: "up" | "down") => {
+  // Load comments
+  const loadComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  };
+
+  const handleLike = async () => {
     if (!isAuthenticated || !user) {
-      toast.error('Please sign in to vote');
-      navigate('/auth');
+      setShowSignInModal(true);
       return;
     }
 
     try {
-      if (vote === dir) {
-        // Remove vote
+      if (isLiked) {
+        // Remove like
         await supabase
           .from('user_votes')
           .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', post.id);
+          .eq('post_id', post.id)
+          .eq('user_id', user.id);
         
-        setVote(null);
-        setScore(s => s + (dir === "up" ? -1 : 1));
-        toast.success('Vote removed');
+        setIsLiked(false);
+        setLocalLikes(prev => prev - 1);
       } else {
-        // Add or update vote
+        // Add like
         await supabase
           .from('user_votes')
           .upsert({
-            user_id: user.id,
             post_id: post.id,
-            vote_type: dir
-          });
-
-        const delta = dir === "up" ? 1 : -1;
-        setScore(s => s + delta - (vote === "up" ? 1 : vote === "down" ? -1 : 0));
-        setVote(dir);
-        toast.success(`Post ${dir}voted`);
-      }
-    } catch (error) {
-      console.error('Error voting:', error);
-      toast.error('Failed to vote');
-    }
-  };
-
-  const handleBookmark = async () => {
-    if (!isAuthenticated || !user) {
-      toast.error('Please sign in to bookmark posts');
-      navigate('/auth');
-      return;
-    }
-
-    try {
-      if (isBookmarked) {
-        await supabase
-          .from('user_bookmarks')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', post.id);
-        
-        setIsBookmarked(false);
-        toast.success('Bookmark removed');
-      } else {
-        await supabase
-          .from('user_bookmarks')
-          .insert({
             user_id: user.id,
-            post_id: post.id
+            vote_type: 'up'
           });
         
-        setIsBookmarked(true);
-        toast.success('Post bookmarked');
+        setIsLiked(true);
+        setLocalLikes(prev => prev + 1);
       }
     } catch (error) {
-      console.error('Error bookmarking:', error);
-      toast.error('Failed to bookmark');
+      console.error('Error handling like:', error);
+      toast.error('Failed to update like');
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Link copied to clipboard');
-  };
-
-  const displayLocation = (location: string) => {
-    try {
-      // Try to parse as JSON first
-      const locationData = JSON.parse(location);
-      if (locationData.address) {
-        return locationData.address;
-      }
-    } catch {
-      // If parsing fails, it's just a plain text location
-    }
-    return location;
-  };
-
-  const handlePostClick = (e: React.MouseEvent) => {
-    // Don't show modal if clicking on buttons or interactive elements
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input')) {
+  const handleRepost = async () => {
+    if (!isAuthenticated || !user) {
+      setShowSignInModal(true);
       return;
     }
-    
-    if (!isAuthenticated) {
+
+    try {
+      if (isReposted) {
+        // Remove repost
+        await supabase
+          .from('post_reposts')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', user.id);
+        
+        setIsReposted(false);
+        setLocalReposts(prev => prev - 1);
+        toast.success('Repost removed');
+      } else {
+        // Add repost
+        await supabase
+          .from('post_reposts')
+          .insert({
+            post_id: post.id,
+            user_id: user.id
+          });
+        
+        setIsReposted(true);
+        setLocalReposts(prev => prev + 1);
+        toast.success('Reposted successfully!');
+      }
+    } catch (error) {
+      console.error('Error handling repost:', error);
+      toast.error('Failed to repost');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const url = `${window.location.origin}/community?post=${post.id}`;
+      await navigator.clipboard.writeText(url);
+      
+      // Update share count
+      await supabase
+        .from('community_posts')
+        .update({ share_count: (post.shareCount || 0) + 1 })
+        .eq('id', post.id);
+      
+      toast.success('Link copied to clipboard!');
+    } catch (error) {
+      console.error('Error sharing:', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!isAuthenticated || !user) {
       setShowSignInModal(true);
+      return;
+    }
+
+    if (!newComment.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .insert({
+          post_id: post.id,
+          user_id: user.id,
+          content: newComment
+        });
+
+      if (error) throw error;
+      
+      setNewComment("");
+      setLocalComments(prev => prev + 1);
+      loadComments();
+      toast.success('Comment added!');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Failed to add comment');
     }
   };
 
   const handleSignIn = () => {
-    setShowSignInModal(false);
-    navigate('/auth');
+    navigate('/login');
   };
 
   const handleSignUp = () => {
-    setShowSignInModal(false);
-    navigate('/auth');
+    navigate('/signup');
+  };
+
+  const displayLocation = (location: string | null | undefined) => {
+    if (!location) return null;
+    
+    try {
+      const parsed = JSON.parse(location);
+      return parsed.address || location;
+    } catch {
+      return location;
+    }
   };
 
   return (
     <>
-      <Card className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 bg-gradient-to-br from-background to-muted/20" onClick={handlePostClick}>
-        <CardHeader className="p-6 bg-gradient-to-r from-background/80 to-muted/10 backdrop-blur-sm">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-12 w-12 ring-2 ring-background shadow-lg">
+      <Card className="w-full hover:shadow-md transition-all duration-200 border-border/50">
+        <CardContent className="p-6">
+          {/* Post Header */}
+          <div className="flex items-start gap-3 mb-4">
+            <Avatar className="h-12 w-12">
               {post.author.avatar && (
-                <AvatarImage src={post.author.avatar} alt={`${post.author.name} avatar`} />
+                <AvatarImage src={post.author.avatar} alt={post.author.name} />
               )}
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-primary font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
                 {avatarFallback}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {post.author.name}
-                  </span>
-                  {post.location && (
-                    <Badge variant="outline" className="text-xs">
-                      📍 {displayLocation(post.location)}
-                    </Badge>
-                  )}
-                  <span className="text-xs">•</span>
-                  <time className="text-xs">{timeAgo(post.createdAt)}</time>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-foreground">{post.author.name}</span>
+                <span className="text-muted-foreground text-sm">•</span>
+                <span className="text-muted-foreground text-sm">{timeAgo(post.createdAt)}</span>
               </div>
-              <h2 className="text-xl font-bold leading-tight text-foreground group-hover:text-primary transition-colors">
-                {post.title}
-              </h2>
-              {post.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {post.tags.map((t) => (
-                    <Badge key={t} variant="secondary" className="text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                      #{t}
-                    </Badge>
-                  ))}
+              
+              {post.location && (
+                <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
+                  <MapPin className="h-3 w-3" />
+                  <span>{displayLocation(post.location)}</span>
                 </div>
               )}
             </div>
+            
+            <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {post.image && (
-            <div className="relative overflow-hidden">
-              <img
-                src={post.image}
-                alt={`Image for post ${post.title}`}
-                className="max-h-[480px] w-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          {/* Post Content */}
+          <div className="mb-4">
+            <h2 className="text-xl font-bold mb-3 text-foreground">{post.title}</h2>
+            
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} className="text-foreground">
+                {post.content}
+              </ReactMarkdown>
+            </div>
+          </div>
+          
+          {/* Tags */}
+          {post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {post.tags.map((tag, index) => (
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                >
+                  #{tag}
+                </Badge>
+              ))}
             </div>
           )}
-          <div className="p-6">
-            <ReactMarkdown
-              className="text-base leading-relaxed text-foreground/90 [&>*]:mb-4 [&>h1]:text-2xl [&>h2]:text-xl [&>h3]:text-lg [&>h1,&>h2,&>h3]:font-bold [&>h1,&>h2,&>h3]:text-foreground [&>p]:text-foreground/80 [&>ul]:list-disc [&>ul]:ml-6 [&>ol]:list-decimal [&>ol]:ml-6"
-              remarkPlugins={[remarkGfm]}
-            >
-              {post.content}
-            </ReactMarkdown>
-            
-            {/* Action Bar */}
-            <div className="mt-6 pt-4 border-t border-border/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Vote Buttons */}
-                  <div className="flex items-center rounded-full border border-border/50 bg-muted/30 backdrop-blur-sm">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      aria-label="Upvote"
-                      onClick={() => handleVote("up")}
-                      className={`rounded-l-full px-3 ${vote === "up" ? "bg-green-500/20 text-green-600 hover:bg-green-500/30" : "hover:bg-muted"}`}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <span className="px-3 text-sm font-medium min-w-[2rem] text-center">{score}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      aria-label="Downvote"
-                      onClick={() => handleVote("down")}
-                      className={`rounded-r-full px-3 ${vote === "down" ? "bg-red-500/20 text-red-600 hover:bg-red-500/30" : "hover:bg-muted"}`}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleBookmark}
-                    className={`rounded-full ${isBookmarked ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
+          
+          {/* Social Media Actions */}
+          <div className="flex items-center justify-between pt-4 border-t border-border/50">
+            <div className="flex items-center gap-6">
+              {/* Like Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                className={`flex items-center gap-2 rounded-full px-3 py-2 ${
+                  isLiked 
+                    ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                    : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                }`}
+              >
+                <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
+                <span className="text-sm font-medium">{localLikes}</span>
+              </Button>
+              
+              {/* Comment Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowComments(!showComments);
+                  if (!showComments) loadComments();
+                }}
+                className="flex items-center gap-2 rounded-full px-3 py-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              >
+                <MessageCircle className="h-5 w-5" />
+                <span className="text-sm font-medium">{localComments}</span>
+              </Button>
+              
+              {/* Repost Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRepost}
+                className={`flex items-center gap-2 rounded-full px-3 py-2 ${
+                  isReposted 
+                    ? "text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20" 
+                    : "text-muted-foreground hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
+                }`}
+              >
+                <Repeat2 className="h-5 w-5" />
+                <span className="text-sm font-medium">{localReposts}</span>
+              </Button>
+              
+              {/* Share Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="flex items-center gap-2 rounded-full px-3 py-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              >
+                <Share2 className="h-5 w-5" />
+                <span className="text-sm font-medium">{post.shareCount || 0}</span>
+              </Button>
+            </div>
+          </div>
+          
+          {/* Comments Section */}
+          {showComments && (
+            <div className="mt-4 pt-4 border-t border-border/50">
+              {/* Add Comment */}
+              <div className="flex gap-3 mb-4">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-xs">
+                    {user ? user.email?.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    placeholder="Write a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                    className="flex-1 rounded-full"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    className="rounded-full"
                   >
-                    <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleShare}
-                    className="rounded-full hover:bg-muted"
-                  > 
-                    <Share2 className="h-4 w-4" />
+                    <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+              
+              {/* Comments List */}
+              <div className="space-y-3">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    <Avatar className="h-8 w-8">
+                      {comment.profiles?.avatar_url && (
+                        <AvatarImage src={comment.profiles.avatar_url} alt={comment.profiles.full_name} />
+                      )}
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-xs">
+                        {comment.profiles?.full_name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="bg-muted rounded-2xl px-4 py-2">
+                        <div className="font-medium text-sm mb-1">
+                          {comment.profiles?.full_name || 'Anonymous'}
+                        </div>
+                        <div className="text-sm">{comment.content}</div>
+                      </div>
+                      <div className="flex items-center gap-4 mt-1 px-2">
+                        <span className="text-xs text-muted-foreground">
+                          {timeAgo(comment.created_at)}
+                        </span>
+                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
+                          Like
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
+                          Reply
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {comments.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  No comments yet. Be the first to comment!
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
       

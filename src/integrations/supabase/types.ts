@@ -797,7 +797,11 @@ export type Database = {
           created_at: string
           downvotes: number | null
           id: string
+          is_repost: boolean | null
           location: string | null
+          original_post_id: string | null
+          repost_count: number | null
+          share_count: number | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -817,7 +821,11 @@ export type Database = {
           created_at?: string
           downvotes?: number | null
           id?: string
+          is_repost?: boolean | null
           location?: string | null
+          original_post_id?: string | null
+          repost_count?: number | null
+          share_count?: number | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -837,14 +845,26 @@ export type Database = {
           created_at?: string
           downvotes?: number | null
           id?: string
+          is_repost?: boolean | null
           location?: string | null
+          original_post_id?: string | null
+          repost_count?: number | null
+          share_count?: number | null
           tags?: string[] | null
           title?: string
           updated_at?: string
           upvotes?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_original_post_id_fkey"
+            columns: ["original_post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -1713,6 +1733,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_reposts: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reposts_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"

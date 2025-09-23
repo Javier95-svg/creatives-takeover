@@ -79,6 +79,8 @@ const CommunityFeed: React.FC = () => {
           },
           votes: (post.upvotes || 0) - (post.downvotes || 0),
           commentsCount: post.comment_count || 0,
+          repostCount: post.repost_count || 0,
+          shareCount: post.share_count || 0,
           aiSummary: post.ai_summary,
           aiInsights: post.ai_insights,
           aiRelatedTopics: post.ai_related_topics,
