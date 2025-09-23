@@ -3,7 +3,7 @@ import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
 import PostMasonry from "./PostMasonry";
 import CommunityPulse from "./CommunityPulse";
-import TrendingCarousel from "./TrendingCarousel";
+
 import AdvancedFilters from "./AdvancedFilters";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -356,9 +356,6 @@ const CommunityFeed: React.FC = () => {
     <main className="container mx-auto px-4 py-8 space-y-6">
       {/* Community Pulse Widget */}
       <CommunityPulse />
-      
-      {/* Trending Posts Carousel */}
-      <TrendingCarousel />
       
       <div className="grid lg:grid-cols-12 gap-6">
         <section className="lg:col-span-8 space-y-6">
