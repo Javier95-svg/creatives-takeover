@@ -27,7 +27,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
 import SprintKanban from "@/components/sprint/SprintKanban";
 import { useSprints } from "@/hooks/useSprints";
-import { ArrowLeft, Zap } from "lucide-react";
+import { ArrowLeft, Zap, BarChart3, Calculator, FolderOpen, FileText } from "lucide-react";
+import ProjectsDashboard from "@/components/dashboard/ProjectsDashboard";
+import FinancialDashboard from "@/components/financial/FinancialDashboard";
+import BusinessValuation from "@/components/valuation/BusinessValuation";
+import TemplateLibrary from "@/components/templates/TemplateLibrary";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -59,7 +63,7 @@ const BizMapAI = () => {
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
   const { sprints, currentSprint, setCurrentSprint } = useSprints();
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("bizmap");
+  const [activeTab, setActiveTab] = useState("dashboard");
   
   // Sprint Planner handlers
   const handleSprintCreated = (sprintId: string) => {
@@ -899,11 +903,39 @@ ${answers.goals || 'Clear milestones and timeline established.'}
               <div className="flex justify-center mb-8">
                 <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
                   <TabsTrigger 
+                    value="dashboard" 
+                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-blue-500/10 data-[state=active]:text-blue-600 transition-all duration-300 hover:bg-blue-500/5 rounded-lg font-medium"
+                  >
+                    <FolderOpen className="w-5 h-5" />
+                    Dashboard
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="templates" 
+                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10 data-[state=active]:text-purple-600 transition-all duration-300 hover:bg-purple-500/5 rounded-lg font-medium"
+                  >
+                    <FileText className="w-5 h-5" />
+                    Templates
+                  </TabsTrigger>
+                  <TabsTrigger 
                     value="bizmap" 
                     className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium"
                   >
                     <Lightbulb className="w-5 h-5" />
                     Business Planning
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="financial" 
+                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/20 data-[state=active]:to-green-500/10 data-[state=active]:text-green-600 transition-all duration-300 hover:bg-green-500/5 rounded-lg font-medium"
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    Financial
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="valuation" 
+                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/20 data-[state=active]:to-orange-500/10 data-[state=active]:text-orange-600 transition-all duration-300 hover:bg-orange-500/5 rounded-lg font-medium"
+                  >
+                    <Calculator className="w-5 h-5" />
+                    Valuation
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sprint" 
@@ -1305,6 +1337,26 @@ ${answers.goals || 'Clear milestones and timeline established.'}
                     />
                   </div>
                 )}
+              </TabsContent>
+
+              {/* Professional Dashboard Tab */}
+              <TabsContent value="dashboard">
+                <ProjectsDashboard />
+              </TabsContent>
+
+              {/* Business Templates Tab */}
+              <TabsContent value="templates">
+                <TemplateLibrary />
+              </TabsContent>
+
+              {/* Financial Dashboard Tab */}
+              <TabsContent value="financial">
+                <FinancialDashboard businessPlan={userAnswers} />
+              </TabsContent>
+
+              {/* Business Valuation Tab */}
+              <TabsContent value="valuation">
+                <BusinessValuation businessPlan={userAnswers} />
               </TabsContent>
             </Tabs>
           </div>
