@@ -3,9 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowDown, ArrowUp, Bookmark, MessageSquare, MoreVertical, Share2 } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ArrowDown, ArrowUp, Bookmark, MoreVertical, Share2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -61,10 +59,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [score, setScore] = useState(post.votes);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [comments, setComments] = useState<Array<{id: string, author: string, text: string, avatar?: string}>>([]);
-  const [commentInput, setCommentInput] = useState("");
-  const [loadingComments, setLoadingComments] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
 
   const avatarFallback = useMemo(() => post.author.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase(), [post.author.name]);
@@ -103,103 +97,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
     loadUserInteractions();
   }, [post.id, user, isAuthenticated]);
-
-  // Load comments when opened
-  useEffect(() => {
-    if (!commentsOpen) return;
-
-    const loadComments = async () => {
-      setLoadingComments(true);
-      try {
-        const { data, error } = await supabase
-          .from('post_comments')
-          .select('*')
-          .eq('post_id', post.id)
-          .order('created_at', { ascending: false }); // Most recent first
-
-        if (error) {
-          console.error('Error loading comments:', error);
-          return;
-        }
-
-        // Fetch author information using secure function for each comment
-        const authorPromises = (data || []).map(async (comment) => {
-          const { data: authorData } = await supabase.rpc('get_post_author_info', {
-            author_user_id: comment.user_id
-          });
-          return {
-            commentId: comment.id,
-            authorName: authorData?.[0]?.author_name || 'Anonymous',
-            authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`
-          };
-        });
-
-        const authorResults = await Promise.all(authorPromises);
-        const authorMap = new Map(authorResults.map(result => [result.commentId, result]));
-
-        let mappedComments = (data || []).map((comment) => {
-          const authorInfo = authorMap.get(comment.id);
-          const author = authorInfo?.authorName || 'Anonymous';
-          return {
-            id: comment.id,
-            author,
-            text: comment.content,
-            avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author)}`,
-          };
-        });
-
-        // If no real comments exist, show demo comments from different fictional users
-        if (mappedComments.length === 0) {
-          console.log('🔍 No real comments found, using demo comments');
-          mappedComments = [
-            {
-              id: 'demo-1',
-              author: 'Maya Chen',
-              text: 'This is incredible! What was your biggest challenge during implementation?',
-              avatar: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=400&h=400&fit=crop&crop=face'
-            },
-            {
-              id: 'demo-2', 
-              author: 'Carlos Rodriguez',
-              text: 'Thanks for sharing! How long did this take you to build?',
-              avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face'
-            },
-            {
-              id: 'demo-3',
-              author: 'Priya Sharma', 
-              text: 'Amazing results! Any advice for someone just starting out?',
-              avatar: 'https://images.unsplash.com/photo-1544005314-0ceecf7a77ce?w=400&h=400&fit=crop&crop=face'
-            },
-            {
-              id: 'demo-4',
-              author: 'Jordan Park',
-              text: 'Love the transparency in sharing numbers. What metrics do you track?',
-              avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face'
-            }
-          ];
-        } else {
-          console.log(`🎉 Found ${mappedComments.length} real comments from database`);
-        }
-
-        // Enforce unique authors - if real comments exist, use them; otherwise use demo
-        const seenAuthors = new Set<string>();
-        const uniqueByAuthor = mappedComments.filter((c) => {
-          if (seenAuthors.has(c.author)) return false;
-          seenAuthors.add(c.author);
-          return true;
-        });
-
-        console.log('💬 Final comments with unique authors:', uniqueByAuthor);
-        setComments(uniqueByAuthor);
-      } catch (error) {
-        console.error('Error loading comments:', error);
-      } finally {
-        setLoadingComments(false);
-      }
-    };
-
-    loadComments();
-  }, [commentsOpen, post.id]);
 
   const handleVote = async (dir: "up" | "down") => {
     if (!isAuthenticated || !user) {
@@ -272,55 +169,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     } catch (error) {
       console.error('Error bookmarking:', error);
       toast.error('Failed to bookmark');
-    }
-  };
-
-  const submitComment = async () => {
-    if (!isAuthenticated || !user) {
-      toast.error('Please sign in to comment');
-      navigate('/auth');
-      return;
-    }
-
-    if (!commentInput.trim()) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('post_comments')
-        .insert({
-          post_id: post.id,
-          user_id: user.id,
-          content: commentInput.trim()
-        })
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error('Error adding comment:', error);
-        toast.error('Failed to add comment');
-        return;
-      }
-
-      // Get user profile for the comment
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', user.id)
-        .single();
-
-      const newComment = {
-        id: data.id,
-        author: profile?.full_name || 'You',
-        text: data.content,
-        avatar: profile?.avatar_url
-      };
-
-      setComments(prev => [...prev, newComment]);
-      setCommentInput("");
-      toast.success('Comment added');
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
     }
   };
 
@@ -458,19 +306,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                       <ArrowDown className="h-4 w-4" />
                     </Button>
                   </div>
-
-                  {/* Comments Button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCommentsOpen((o) => !o)}
-                    aria-expanded={commentsOpen}
-                    className={`rounded-full ${commentsOpen ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" /> 
-                    <span className="font-medium">{post.commentsCount || comments.length}</span>
-                  </Button>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -495,124 +330,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 </div>
               </div>
             </div>
-
-            {/* Comments Section */}
-            {commentsOpen && (
-              <div className="mt-6 pt-6 border-t border-border/50">
-                <Accordion type="single" collapsible defaultValue="view-comments" className="w-full">
-                  {/* Add Comment Section */}
-                  <AccordionItem value="add-comment" className="border-0 mb-4">
-                    <AccordionTrigger className="hover:no-underline py-4 px-4 rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-primary/10">
-                          <MessageSquare className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="text-left">
-                          <h4 className="font-semibold text-foreground">Share Your Thoughts</h4>
-                          <p className="text-sm text-muted-foreground">Join the conversation</p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-2">
-                      <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/20 border border-border/50">
-                        <Avatar className="h-8 w-8 ring-2 ring-background">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {user?.user_metadata?.name?.[0] || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 space-y-3">
-                          <Input
-                            value={commentInput}
-                            onChange={(e) => setCommentInput(e.target.value)}
-                            placeholder="What are your thoughts on this?"
-                            aria-label="Add a comment"
-                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && submitComment()}
-                            className="bg-background/50 border-border/50 focus:border-primary/50"
-                          />
-                          <div className="flex justify-end">
-                            <Button 
-                              onClick={submitComment} 
-                              disabled={!commentInput.trim()}
-                              size="sm"
-                              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-                            >
-                              Post Comment
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  {/* View Comments Section */}
-                  <AccordionItem value="view-comments" className="border-0">
-                    <AccordionTrigger className="hover:no-underline py-4 px-4 rounded-lg bg-gradient-to-r from-muted/20 to-muted/10 hover:from-muted/30 hover:to-muted/20 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-foreground/10">
-                          <MessageSquare className="h-4 w-4" />
-                        </div>
-                        <div className="text-left">
-                          <h4 className="font-semibold text-foreground">
-                            {loadingComments ? 'Loading Comments...' : `Discussion (${comments.length})`}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {comments.length === 0 ? 'No comments yet' : 'Latest comments first'}
-                          </p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-2">
-                      <div className="space-y-4">
-                        {loadingComments ? (
-                          <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          </div>
-                        ) : comments.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <div className="p-3 rounded-full bg-muted/50 mb-4">
-                              <MessageSquare className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h4 className="font-medium text-foreground mb-2">Start the Discussion</h4>
-                            <p className="text-sm text-muted-foreground max-w-sm">
-                              Be the first to share your thoughts and insights on this post.
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {comments.map((c, index) => (
-                              <div key={c.id} className="group p-4 rounded-xl bg-gradient-to-r from-background to-muted/10 border border-border/30 hover:border-primary/20 transition-all duration-200 hover:shadow-sm">
-                                <div className="flex gap-4">
-                                  <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
-                                    {c.avatar && <AvatarImage src={c.avatar} alt={`${c.author} avatar`} />}
-                                    <AvatarFallback className="bg-gradient-to-br from-primary/10 to-secondary/10 text-primary font-semibold text-sm">
-                                      {c.author.slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 space-y-2">
-                                    <div className="flex items-center gap-3">
-                                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                        {c.author}
-                                      </span>
-                                      <Badge variant="secondary" className="text-xs bg-primary/5 text-primary border-primary/20">
-                                        #{comments.length - index}
-                                      </Badge>
-                                      <span className="text-xs text-muted-foreground">Latest</span>
-                                    </div>
-                                    <p className="text-sm leading-relaxed text-foreground/90 bg-muted/20 rounded-lg p-3 border border-border/20">
-                                      {c.text}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
