@@ -115,7 +115,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           .from('post_comments')
           .select('*')
           .eq('post_id', post.id)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false }); // Most recent first
 
         if (error) {
           console.error('Error loading comments:', error);
@@ -366,31 +366,44 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   return (
     <>
-      <Card className="overflow-hidden cursor-pointer" onClick={handlePostClick}>
-        <CardHeader className="p-4">
-          <div className="flex items-start gap-3">
-            <Avatar className="h-9 w-9">
+      <Card className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/30 bg-gradient-to-br from-background to-muted/20" onClick={handlePostClick}>
+        <CardHeader className="p-6 bg-gradient-to-r from-background/80 to-muted/10 backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-12 w-12 ring-2 ring-background shadow-lg">
               {post.author.avatar && (
                 <AvatarImage src={post.author.avatar} alt={`${post.author.name} avatar`} />
               )}
-              <AvatarFallback>{avatarFallback}</AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-primary font-bold">
+                {avatarFallback}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
+            <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{post.author.name}</span>
-                  {post.location && <span> · 📍 {displayLocation(post.location)}</span>}
-                  <span> · {timeAgo(post.createdAt)}</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {post.author.name}
+                  </span>
+                  {post.location && (
+                    <Badge variant="outline" className="text-xs">
+                      📍 {displayLocation(post.location)}
+                    </Badge>
+                  )}
+                  <span className="text-xs">•</span>
+                  <time className="text-xs">{timeAgo(post.createdAt)}</time>
                 </div>
-                <Button variant="ghost" size="icon" aria-label="More actions">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </div>
-              <h2 className="mt-1 text-lg font-semibold leading-tight">{post.title}</h2>
+              <h2 className="text-xl font-bold leading-tight text-foreground group-hover:text-primary transition-colors">
+                {post.title}
+              </h2>
               {post.tags?.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {post.tags.map((t) => (
-                    <Badge key={t} variant="secondary">#{t}</Badge>
+                    <Badge key={t} variant="secondary" className="text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                      #{t}
+                    </Badge>
                   ))}
                 </div>
               )}
@@ -399,137 +412,200 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         </CardHeader>
         <CardContent className="p-0">
           {post.image && (
-            <img
-              src={post.image}
-              alt={`Image for post ${post.title}`}
-              className="max-h-[480px] w-full object-cover"
-              loading="lazy"
-            />
+            <div className="relative overflow-hidden">
+              <img
+                src={post.image}
+                alt={`Image for post ${post.title}`}
+                className="max-h-[480px] w-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
           )}
-          <div className="p-4">
+          <div className="p-6">
             <ReactMarkdown
-              className="text-sm leading-relaxed text-foreground/90 [&>*]:mb-3"
+              className="text-base leading-relaxed text-foreground/90 [&>*]:mb-4 [&>h1]:text-2xl [&>h2]:text-xl [&>h3]:text-lg [&>h1,&>h2,&>h3]:font-bold [&>h1,&>h2,&>h3]:text-foreground [&>p]:text-foreground/80 [&>ul]:list-disc [&>ul]:ml-6 [&>ol]:list-decimal [&>ol]:ml-6"
               remarkPlugins={[remarkGfm]}
             >
               {post.content}
             </ReactMarkdown>
-            <div className="mt-4 flex items-center gap-2">
-              <div className="flex items-center rounded-full border">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Upvote"
-                  onClick={() => handleVote("up")}
-                >
-                  <ArrowUp className={`h-4 w-4 ${vote === "up" ? "text-primary" : ""}`} />
-                </Button>
-                <span className="min-w-[2rem] text-center text-sm">{score}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Downvote"
-                  onClick={() => handleVote("down")}
-                >
-                  <ArrowDown className={`h-4 w-4 ${vote === "down" ? "text-primary" : ""}`} />
-                </Button>
-              </div>
+            
+            {/* Action Bar */}
+            <div className="mt-6 pt-4 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Vote Buttons */}
+                  <div className="flex items-center rounded-full border border-border/50 bg-muted/30 backdrop-blur-sm">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Upvote"
+                      onClick={() => handleVote("up")}
+                      className={`rounded-l-full px-3 ${vote === "up" ? "bg-green-500/20 text-green-600 hover:bg-green-500/30" : "hover:bg-muted"}`}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <span className="px-3 text-sm font-medium min-w-[2rem] text-center">{score}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Downvote"
+                      onClick={() => handleVote("down")}
+                      className={`rounded-r-full px-3 ${vote === "down" ? "bg-red-500/20 text-red-600 hover:bg-red-500/30" : "hover:bg-muted"}`}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setCommentsOpen((o) => !o)}
-                aria-expanded={commentsOpen}
-              >
-                <MessageSquare className="mr-2 h-4 w-4" /> {post.commentsCount || comments.length} comments
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={handleShare}> 
-                <Share2 className="mr-2 h-4 w-4" /> Share
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleBookmark}
-                className={isBookmarked ? "text-primary" : ""}
-              >
-                <Bookmark className={`mr-2 h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} /> 
-                {isBookmarked ? "Saved" : "Save"}
-              </Button>
+                  {/* Comments Button */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCommentsOpen((o) => !o)}
+                    aria-expanded={commentsOpen}
+                    className={`rounded-full ${commentsOpen ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" /> 
+                    <span className="font-medium">{post.commentsCount || comments.length}</span>
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleBookmark}
+                    className={`rounded-full ${isBookmarked ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
+                  >
+                    <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleShare}
+                    className="rounded-full hover:bg-muted"
+                  > 
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
 
+            {/* Comments Section */}
             {commentsOpen && (
-              <div className="mt-4 border-t pt-4">
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="add-comment" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-3 px-0">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="font-medium">Add Comment</span>
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <Accordion type="single" collapsible defaultValue="view-comments" className="w-full">
+                  {/* Add Comment Section */}
+                  <AccordionItem value="add-comment" className="border-0 mb-4">
+                    <AccordionTrigger className="hover:no-underline py-4 px-4 rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-primary/10">
+                          <MessageSquare className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="text-left">
+                          <h4 className="font-semibold text-foreground">Share Your Thoughts</h4>
+                          <p className="text-sm text-muted-foreground">Join the conversation</p>
+                        </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={commentInput}
-                          onChange={(e) => setCommentInput(e.target.value)}
-                          placeholder="Share your thoughts..."
-                          aria-label="Add a comment"
-                          onKeyDown={(e) => e.key === 'Enter' && submitComment()}
-                          className="flex-1"
-                        />
-                        <Button onClick={submitComment} disabled={!commentInput.trim()}>
-                          Post
-                        </Button>
+                    <AccordionContent className="pt-4 pb-2">
+                      <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/20 border border-border/50">
+                        <Avatar className="h-8 w-8 ring-2 ring-background">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {user?.user_metadata?.name?.[0] || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 space-y-3">
+                          <Input
+                            value={commentInput}
+                            onChange={(e) => setCommentInput(e.target.value)}
+                            placeholder="What are your thoughts on this?"
+                            aria-label="Add a comment"
+                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && submitComment()}
+                            className="bg-background/50 border-border/50 focus:border-primary/50"
+                          />
+                          <div className="flex justify-end">
+                            <Button 
+                              onClick={submitComment} 
+                              disabled={!commentInput.trim()}
+                              size="sm"
+                              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                            >
+                              Post Comment
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="view-comments" className="border-b-0">
-                    <AccordionTrigger className="hover:no-underline py-3 px-0">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="font-medium">
-                          {loadingComments ? 'Loading...' : `Comments (${comments.length})`}
-                        </span>
+                  {/* View Comments Section */}
+                  <AccordionItem value="view-comments" className="border-0">
+                    <AccordionTrigger className="hover:no-underline py-4 px-4 rounded-lg bg-gradient-to-r from-muted/20 to-muted/10 hover:from-muted/30 hover:to-muted/20 transition-all duration-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-foreground/10">
+                          <MessageSquare className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <h4 className="font-semibold text-foreground">
+                            {loadingComments ? 'Loading Comments...' : `Discussion (${comments.length})`}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {comments.length === 0 ? 'No comments yet' : 'Latest comments first'}
+                          </p>
+                        </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-4">
+                    <AccordionContent className="pt-4 pb-2">
                       <div className="space-y-4">
                         {loadingComments ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="text-sm text-muted-foreground">Loading comments...</div>
+                          <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           </div>
                         ) : comments.length === 0 ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="text-center text-muted-foreground">
-                              <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm">No comments yet</p>
-                              <p className="text-xs">Be the first to share your thoughts!</p>
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="p-3 rounded-full bg-muted/50 mb-4">
+                              <MessageSquare className="h-8 w-8 text-muted-foreground" />
                             </div>
+                            <h4 className="font-medium text-foreground mb-2">Start the Discussion</h4>
+                            <p className="text-sm text-muted-foreground max-w-sm">
+                              Be the first to share your thoughts and insights on this post.
+                            </p>
                           </div>
                         ) : (
-                          comments.map((c, index) => (
-                            <div key={c.id} className="flex gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                              <Avatar className="h-8 w-8 ring-2 ring-background">
-                                {c.avatar && <AvatarImage src={c.avatar} alt={`${c.author} avatar`} />}
-                                <AvatarFallback className="text-xs font-medium">
-                                  {c.author.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm text-foreground">{c.author}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    #{index + 1}
-                                  </Badge>
+                          <div className="space-y-3">
+                            {comments.map((c, index) => (
+                              <div key={c.id} className="group p-4 rounded-xl bg-gradient-to-r from-background to-muted/10 border border-border/30 hover:border-primary/20 transition-all duration-200 hover:shadow-sm">
+                                <div className="flex gap-4">
+                                  <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
+                                    {c.avatar && <AvatarImage src={c.avatar} alt={`${c.author} avatar`} />}
+                                    <AvatarFallback className="bg-gradient-to-br from-primary/10 to-secondary/10 text-primary font-semibold text-sm">
+                                      {c.author.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                                        {c.author}
+                                      </span>
+                                      <Badge variant="secondary" className="text-xs bg-primary/5 text-primary border-primary/20">
+                                        #{comments.length - index}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">Latest</span>
+                                    </div>
+                                    <p className="text-sm leading-relaxed text-foreground/90 bg-muted/20 rounded-lg p-3 border border-border/20">
+                                      {c.text}
+                                    </p>
+                                  </div>
                                 </div>
-                                <p className="text-sm leading-relaxed text-foreground/80">{c.text}</p>
                               </div>
-                            </div>
-                          ))
+                            ))}
+                          </div>
                         )}
                       </div>
                     </AccordionContent>
