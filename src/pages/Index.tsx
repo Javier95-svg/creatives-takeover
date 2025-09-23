@@ -1,10 +1,11 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import ProblemSolution from "@/components/ProblemSolution";
-import HowWeWork from "@/components/HowWeWork";
-import SimpleBizMapGuide from "@/components/SimpleBizMapGuide";
-import Benefits from "@/components/Benefits";
-import CampaignPromotion from "@/components/CampaignPromotion";
+import EntrepreneurProblems from "@/components/EntrepreneurProblems";
+import PlatformProcess from "@/components/PlatformProcess";
+import FeatureHighlights from "@/components/FeatureHighlights";
+import Testimonials from "@/components/Testimonials";
+import ClientLogos from "@/components/ClientLogos";
+import CTASection from "@/components/CTASection";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
@@ -26,11 +27,12 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
-        <CampaignPromotion />
-        <ProblemSolution />
-        <HowWeWork />
-        <SimpleBizMapGuide />
-        <Benefits />
+        <EntrepreneurProblems />
+        <PlatformProcess />
+        <FeatureHighlights />
+        <ClientLogos />
+        <Testimonials />
+        <CTASection />
       </main>
       <Footer />
       
