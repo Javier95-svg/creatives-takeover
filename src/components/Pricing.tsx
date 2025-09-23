@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="flex justify-center gap-4 overflow-x-auto px-4">
+        <div className="grid grid-cols-4 gap-4 max-w-7xl mx-auto">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
@@ -176,7 +176,7 @@ const Pricing = () => {
             return (
               <div
                 key={tier.tier_name}
-                className={`relative glass-card p-8 transition-all duration-500 animate-fade-in hover:scale-105 hover:shadow-xl w-full max-w-sm flex flex-col justify-between ${
+                className={`relative glass-card p-6 transition-all duration-500 animate-fade-in hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
                   isCurrentPlan
                     ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
                     : isPopular 
