@@ -1,8 +1,8 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import FeatureHighlights from "@/components/FeatureHighlights";
-import SuccessStats from "@/components/SuccessStats";
+import HowItWorks from "@/components/HowItWorks";
+import SocialProof from "@/components/SocialProof";
 import FinalCTA from "@/components/FinalCTA";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
@@ -26,8 +26,8 @@ const Index = () => {
       <main>
         <Hero />
         <EntrepreneurProblems />
-        <FeatureHighlights />
-        <SuccessStats />
+        <HowItWorks />
+        <SocialProof />
         <FinalCTA />
       </main>
       <Footer />
