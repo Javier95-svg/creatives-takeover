@@ -995,7 +995,7 @@ ${answers.goals || 'Clear milestones and timeline established.'}
                                 <h4 className="text-lg font-semibold gradient-text">BizMap AI Assistant</h4>
                                 <p className="text-sm text-muted-foreground">
                                   {isCompleted ? "🎉 Launch Report Complete!" : 
-                                   `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder`}
+                                   `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder is ready`}
                                 </p>
                               </div>
                             </div>
