@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
+        <div className="flex justify-center gap-4 overflow-x-auto px-4">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
