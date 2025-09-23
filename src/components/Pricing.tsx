@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl mx-auto stagger-child">
+        <div className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
@@ -176,14 +176,14 @@ const Pricing = () => {
             return (
               <div
                 key={tier.tier_name}
-                className={`relative glass-card p-8 hover-lift transition-all duration-500 ${
+                className={`relative glass-card p-8 transition-all duration-500 animate-fade-in hover:scale-105 hover:shadow-xl w-full max-w-sm flex flex-col justify-between ${
                   isCurrentPlan
                     ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
                     : isPopular 
                     ? 'border-2 border-primary/30 scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
                     : 'border border-border/50'
                 }`}
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={{ animationDelay: `${index * 0.2}s` }}
               >
                 {/* Current Plan or Popular Badge */}
                 {(isCurrentPlan || isPopular) && (
@@ -231,7 +231,7 @@ const Pricing = () => {
                 </div>
 
                 {/* Features List */}
-                <div className="mb-8 space-y-3">
+                <div className="mb-8 space-y-3 flex-grow">
                   {features.map((feature, featureIndex) => (
                     <div key={featureIndex} className="flex items-start gap-3">
                       <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
