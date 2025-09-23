@@ -27,11 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
 import SprintKanban from "@/components/sprint/SprintKanban";
 import { useSprints } from "@/hooks/useSprints";
-import { ArrowLeft, Zap, BarChart3, Calculator, FolderOpen, FileText } from "lucide-react";
-import ProjectsDashboard from "@/components/dashboard/ProjectsDashboard";
-import FinancialDashboard from "@/components/financial/FinancialDashboard";
-import BusinessValuation from "@/components/valuation/BusinessValuation";
-import TemplateLibrary from "@/components/templates/TemplateLibrary";
+import { ArrowLeft, Zap } from "lucide-react";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -64,20 +60,6 @@ const BizMapAI = () => {
   const { sprints, currentSprint, setCurrentSprint } = useSprints();
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
-  
-  // Handle URL parameters for tab selection
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab');
-    if (tab && ['bizmap', 'templates', 'financial'].includes(tab)) {
-      setActiveTab(tab);
-    } else {
-      // Default to bizmap if invalid tab or no tab specified
-      setActiveTab('bizmap');
-      // Update URL to reflect the actual tab
-      window.history.replaceState({}, '', '/dream2plan?tab=bizmap');
-    }
-  }, []);
   
   // Sprint Planner handlers
   const handleSprintCreated = (sprintId: string) => {
@@ -913,49 +895,15 @@ ${answers.goals || 'Clear milestones and timeline established.'}
             </div>
 
             {/* Enhanced Tab Navigation */}
-            <Tabs value={activeTab} onValueChange={(value) => {
-              setActiveTab(value);
-              // Update URL without page reload
-              const url = new URL(window.location.href);
-              url.searchParams.set('tab', value);
-              window.history.pushState({}, '', url.toString());
-            }} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex justify-center mb-8">
                 <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                  <TabsTrigger 
-                    value="dashboard" 
-                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-blue-500/10 data-[state=active]:text-blue-600 transition-all duration-300 hover:bg-blue-500/5 rounded-lg font-medium"
-                  >
-                    <FolderOpen className="w-5 h-5" />
-                    Dashboard
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="templates" 
-                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10 data-[state=active]:text-purple-600 transition-all duration-300 hover:bg-purple-500/5 rounded-lg font-medium"
-                  >
-                    <FileText className="w-5 h-5" />
-                    Templates
-                  </TabsTrigger>
                   <TabsTrigger 
                     value="bizmap" 
                     className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium"
                   >
                     <Lightbulb className="w-5 h-5" />
                     Business Planning
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="financial" 
-                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/20 data-[state=active]:to-green-500/10 data-[state=active]:text-green-600 transition-all duration-300 hover:bg-green-500/5 rounded-lg font-medium"
-                  >
-                    <BarChart3 className="w-5 h-5" />
-                    Financial
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="valuation" 
-                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/20 data-[state=active]:to-orange-500/10 data-[state=active]:text-orange-600 transition-all duration-300 hover:bg-orange-500/5 rounded-lg font-medium"
-                  >
-                    <Calculator className="w-5 h-5" />
-                    Valuation
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sprint" 
@@ -995,7 +943,7 @@ ${answers.goals || 'Clear milestones and timeline established.'}
                                 <h4 className="text-lg font-semibold gradient-text">BizMap AI Assistant</h4>
                                 <p className="text-sm text-muted-foreground">
                                   {isCompleted ? "🎉 Launch Report Complete!" : 
-                                   `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder is ready`}
+                                   `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder`}
                                 </p>
                               </div>
                             </div>
@@ -1301,8 +1249,65 @@ ${answers.goals || 'Clear milestones and timeline established.'}
                   </div>
                 )}
               </TabsContent>
-          </Tabs>
-        </div>
+
+              <TabsContent value="sprint">
+                <div className="flex items-center gap-4 mb-6">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setActiveTab("bizmap")}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to BizMap
+                  </Button>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold">Sprint Planning</h2>
+                    <p className="text-muted-foreground">Turn your business plan into actionable sprints</p>
+                  </div>
+                </div>
+                
+                {!activeSprint ? (
+                  <SprintPlannerComponent 
+                    onSprintCreated={handleSprintCreated}
+                    businessPlanData={launchReport ? {
+                      answers: userAnswers,
+                      launchReport: launchReport,
+                      successScore: successScore
+                    } : undefined}
+                  />
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold creatives-font">Sprint Dashboard</h2>
+                        <p className="text-muted-foreground">Track your progress and stay accountable</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setActiveSprintId(null);
+                          setCurrentSprint(null);
+                        }}
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Create New Sprint
+                      </Button>
+                    </div>
+                    
+                    <SprintKanban 
+                      sprint={activeSprint} 
+                      onStatusChange={(status) => {
+                        if (activeSprint) {
+                          setCurrentSprint({ ...activeSprint, status });
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
 
