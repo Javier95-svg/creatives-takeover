@@ -90,10 +90,8 @@ const CommunityFeed: React.FC = () => {
 
       console.log('✨ FORMATTED POSTS:', formattedPosts);
 
-      // Basic filtering: just exclude "javier alonso" posts, allow all others
-      const filtered = formattedPosts.filter(
-        (post) => post.author.name.toLowerCase() !== 'javier alonso'
-      );
+      // No filtering - show all posts
+      const filtered = formattedPosts;
 
       console.log('🎯 FILTERED POSTS:', filtered);
       console.log(`📈 SETTING ${filtered.length} POSTS TO STATE`);
