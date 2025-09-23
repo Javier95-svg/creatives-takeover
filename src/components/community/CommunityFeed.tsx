@@ -387,36 +387,6 @@ const CommunityFeed: React.FC = () => {
             <WelcomeNewUser onDismiss={() => setShowWelcome(false)} />
           )}
 
-          {/* Enhanced Search Bar */}
-          <Card className="bg-gradient-to-r from-background to-muted/20 border-primary/20 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search stories, experiences, and insights..."
-                    className="pl-10 bg-background/50 backdrop-blur-sm border-primary/10 focus:border-primary/30"
-                    aria-label="Search community posts"
-                  />
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    setLoading(true);
-                    fetchPosts();
-                  }}
-                  className="bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-primary/5"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Post Composer */}
           <PostComposer onPublish={publish} requireAuth={true} />
 
