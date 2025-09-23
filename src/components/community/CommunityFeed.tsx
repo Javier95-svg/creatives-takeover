@@ -1,9 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
-import PostMasonry from "./PostMasonry";
-import CommunityPulse from "./CommunityPulse";
-
 import AdvancedFilters from "./AdvancedFilters";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -354,9 +351,6 @@ const CommunityFeed: React.FC = () => {
 
   return (
     <main className="container mx-auto px-4 py-8 space-y-6">
-      {/* Community Pulse Widget */}
-      <CommunityPulse />
-      
       <div className="grid lg:grid-cols-12 gap-6">
         <section className="lg:col-span-8 space-y-6">
           {/* Enhanced Search Bar */}
@@ -405,9 +399,13 @@ const CommunityFeed: React.FC = () => {
             </Card>
           )}
 
-          {/* Posts Masonry Layout */}
+          {/* Single Posts Feed */}
           {filtered.length > 0 ? (
-            <PostMasonry posts={filtered} />
+            <div className="space-y-4">
+              {filtered.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
           ) : (
             <Card className="text-center p-12">
               <CardContent>
