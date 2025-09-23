@@ -39,14 +39,14 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
-            <span className="takeover-gradient">Turn Creative Ideas Into</span>
+            <span className="takeover-gradient">The Creatives</span>
             <br />
-            <span className="animated-gradient">Profitable Businesses</span>
+            <span className="animated-gradient">Takeover Begins</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            The AI-powered platform for <strong className="text-foreground">creative entrepreneurs, innovators, and solopreneurs</strong> who want to leverage automation and no-code tools for faster business execution.
+            <strong className="text-foreground">Join the movement of creators who refuse to settle.</strong> We're the dreamers, makers, and rebels transforming industries. Your creative vision deserves a profitable business. <em className="text-primary font-medium">It's time to take over.</em>
           </p>
 
           {/* CTA Buttons */}
