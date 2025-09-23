@@ -65,6 +65,15 @@ const BizMapAI = () => {
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   
+  // Handle URL parameters for tab selection
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab && ['dashboard', 'templates', 'bizmap', 'financial', 'valuation', 'sprint'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
+  
   // Sprint Planner handlers
   const handleSprintCreated = (sprintId: string) => {
     const sprint = sprints.find(s => s.id === sprintId);
@@ -899,7 +908,13 @@ ${answers.goals || 'Clear milestones and timeline established.'}
             </div>
 
             {/* Enhanced Tab Navigation */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => {
+              setActiveTab(value);
+              // Update URL without page reload
+              const url = new URL(window.location.href);
+              url.searchParams.set('tab', value);
+              window.history.pushState({}, '', url.toString());
+            }} className="w-full">
               <div className="flex justify-center mb-8">
                 <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
                   <TabsTrigger 

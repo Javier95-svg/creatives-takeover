@@ -7,6 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
   LineChart,
   Line,
   AreaChart,
@@ -16,11 +21,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
 } from "recharts";
 import { 
   DollarSign, 
@@ -344,14 +345,19 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <CardTitle>Revenue & Profit Projection</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer
+                config={{
+                  revenue: { label: "Revenue", color: "#22c55e" },
+                  profit: { label: "Profit", color: "#3b82f6" }
+                }}
+                className="h-[300px]"
+              >
                 <AreaChart data={financialData}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip 
-                    formatter={(value) => [`$${Number(value).toLocaleString()}`, '']}
-                    labelFormatter={(label) => `${label}`}
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
                   />
                   <Area
                     type="monotone"
@@ -360,7 +366,6 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
                     stroke="#22c55e"
                     fill="#22c55e"
                     fillOpacity={0.6}
-                    name="Revenue"
                   />
                   <Area
                     type="monotone"
@@ -369,10 +374,9 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
                     stroke="#3b82f6"
                     fill="#3b82f6"
                     fillOpacity={0.6}
-                    name="Profit"
                   />
                 </AreaChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
 
@@ -382,22 +386,28 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <CardTitle>Customer Growth</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+              <ChartContainer
+                config={{
+                  customers: { label: "Customers", color: "#8b5cf6" }
+                }}
+                className="h-[250px]"
+              >
                 <LineChart data={financialData}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                  />
                   <Line
                     type="monotone"
                     dataKey="customers"
                     stroke="#8b5cf6"
                     strokeWidth={3}
                     dot={{ fill: '#8b5cf6' }}
-                    name="Customers"
                   />
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
@@ -459,7 +469,7 @@ const FinancialDashboard = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="space-y-2">
                 <p className="font-medium">Estimated Funding Needed</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  ${Math.abs(Math.min(...financialData.map(d => d.profit), 0)).toLocaleString()}
+                  ${(financialData.length > 0 ? Math.abs(Math.min(...financialData.map(d => d.profit), 0)) : 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Based on maximum negative cash flow in projections

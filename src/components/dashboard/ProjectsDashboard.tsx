@@ -47,17 +47,71 @@ const ProjectsDashboard = () => {
 
   // Calculate analytics
   useEffect(() => {
-    const completed = sessions.filter(s => s.is_completed).length;
-    const inProgress = sessions.filter(s => !s.is_completed && s.current_step > 0).length;
-    
-    setAnalytics({
-      totalProjects: sessions.length,
-      completedProjects: completed,
-      inProgressProjects: inProgress,
-      averageScore: 0, // TODO: Calculate from success scores
-      totalTimeSpent: `${sessions.length * 2}h` // Estimated
-    });
+    if (sessions && sessions.length > 0) {
+      const completed = sessions.filter(s => s.is_completed).length;
+      const inProgress = sessions.filter(s => !s.is_completed && s.current_step > 0).length;
+      
+      setAnalytics({
+        totalProjects: sessions.length,
+        completedProjects: completed,
+        inProgressProjects: inProgress,
+        averageScore: 0, // TODO: Calculate from success scores
+        totalTimeSpent: `${sessions.length * 2}h` // Estimated
+      });
+    }
   }, [sessions]);
+
+  // Show empty dashboard for non-authenticated users
+  if (!loading && sessions.length === 0) {
+    return (
+      <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold creatives-font gradient-text">
+              Projects Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Manage your business plans, track progress, and analyze performance
+            </p>
+          </div>
+          <Button asChild size="lg" className="gap-2">
+            <Link to="/dream2plan?tab=bizmap">
+              <Plus className="w-4 h-4" />
+              Create First Project
+            </Link>
+          </Button>
+        </div>
+
+        {/* Empty State for New Users */}
+        <Card className="glass-card text-center p-12">
+          <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+            <FileText className="w-12 h-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">
+            Start Your First Business Plan
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Create comprehensive business plans with AI assistance. Track progress, analyze financials, and turn ideas into reality.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button asChild size="lg">
+              <Link to="/dream2plan?tab=templates">
+                <FileText className="w-4 h-4 mr-2" />
+                Browse Templates
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/dream2plan?tab=bizmap">
+                <Plus className="w-4 h-4 mr-2" />
+                Start from Scratch
+              </Link>
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   // Filter sessions based on search and tab
   const filteredSessions = sessions.filter(session => {
@@ -115,12 +169,12 @@ const ProjectsDashboard = () => {
             Manage your business plans, track progress, and analyze performance
           </p>
         </div>
-        <Button asChild size="lg" className="gap-2">
-          <Link to="/dream2plan">
-            <Plus className="w-4 h-4" />
-            New Business Plan
-          </Link>
-        </Button>
+          <Button asChild size="lg" className="gap-2">
+            <Link to="/dream2plan?tab=bizmap">
+              <Plus className="w-4 h-4" />
+              New Business Plan
+            </Link>
+          </Button>
       </div>
 
       {/* Analytics Cards */}
@@ -237,7 +291,7 @@ const ProjectsDashboard = () => {
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Button asChild variant="outline" size="sm" className="flex-1">
-                  <Link to={`/dream2plan?session=${session.id}`}>
+                  <Link to={`/dream2plan?tab=bizmap&session=${session.id}`}>
                     <Edit className="w-3 h-3 mr-1" />
                     Continue
                   </Link>
@@ -278,7 +332,7 @@ const ProjectsDashboard = () => {
             }
           </p>
           <Button asChild size="lg">
-            <Link to="/dream2plan">
+            <Link to="/dream2plan?tab=bizmap">
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Project
             </Link>
