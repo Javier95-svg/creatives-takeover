@@ -2,6 +2,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
 import AdvancedFilters from "./AdvancedFilters";
+import WelcomeNewUser from "./WelcomeNewUser";
+import CommunityInsights from "./CommunityInsights";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,8 @@ const CommunityFeed: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [postType, setPostType] = useState("all");
   const [engagement, setEngagement] = useState("all");
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Fetch posts from database
   const fetchPosts = async () => {
@@ -107,6 +111,31 @@ const CommunityFeed: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Check if user is new (first visit or recently joined)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const checkNewUser = async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('created_at')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            const joinDate = new Date(profile.created_at);
+            const daysSinceJoin = (Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24);
+            setIsNewUser(daysSinceJoin <= 7); // Consider new if joined within 7 days
+          }
+        } catch (error) {
+          console.error('Error checking user status:', error);
+        }
+      };
+      
+      checkNewUser();
+    }
+  }, [isAuthenticated, user]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -353,8 +382,13 @@ const CommunityFeed: React.FC = () => {
     <main className="container mx-auto px-4 py-8 space-y-6">
       <div className="grid lg:grid-cols-12 gap-6">
         <section className="lg:col-span-8 space-y-6">
+          {/* Welcome Message for New Users */}
+          {isAuthenticated && isNewUser && showWelcome && (
+            <WelcomeNewUser onDismiss={() => setShowWelcome(false)} />
+          )}
+
           {/* Enhanced Search Bar */}
-          <Card className="bg-gradient-to-r from-background to-muted/20 border-primary/20">
+          <Card className="bg-gradient-to-r from-background to-muted/20 border-primary/20 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
@@ -363,7 +397,7 @@ const CommunityFeed: React.FC = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search stories, experiences, and insights..."
-                    className="pl-10 bg-background/50 backdrop-blur-sm"
+                    className="pl-10 bg-background/50 backdrop-blur-sm border-primary/10 focus:border-primary/30"
                     aria-label="Search community posts"
                   />
                 </div>
@@ -374,7 +408,7 @@ const CommunityFeed: React.FC = () => {
                     setLoading(true);
                     fetchPosts();
                   }}
-                  className="bg-background/50 backdrop-blur-sm"
+                  className="bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-primary/5"
                 >
                   <Sparkles className="h-4 w-4 mr-2" />
                   Refresh
@@ -388,7 +422,7 @@ const CommunityFeed: React.FC = () => {
 
           {/* Results Summary */}
           {search && (
-            <Card className="border-primary/20 bg-primary/5">
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5 shadow-md">
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">
                   Showing <span className="font-semibold text-primary">{filtered.length}</span> results 
@@ -401,18 +435,20 @@ const CommunityFeed: React.FC = () => {
 
           {/* Single Posts Feed */}
           {filtered.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {filtered.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
           ) : (
-            <Card className="text-center p-12">
+            <Card className="text-center p-12 bg-gradient-to-br from-background to-muted/10 border-primary/10">
               <CardContent>
-                <div className="text-muted-foreground space-y-2">
-                  <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold">No stories found</h3>
-                  <p>Try adjusting your search or filters to discover more content.</p>
+                <div className="text-muted-foreground space-y-4">
+                  <div className="h-16 w-16 mx-auto rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
+                    <Sparkles className="h-8 w-8 text-primary opacity-70" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">No stories found</h3>
+                  <p className="max-w-md mx-auto">Try adjusting your search or filters to discover more entrepreneurial content, or be the first to share your story!</p>
                   {(search || selectedTag || postType !== "all" || engagement !== "all") && (
                     <Button 
                       variant="outline" 
@@ -422,7 +458,7 @@ const CommunityFeed: React.FC = () => {
                         setPostType("all");
                         setEngagement("all");
                       }}
-                      className="mt-4"
+                      className="mt-4 border-primary/20 hover:bg-primary/5"
                     >
                       Clear all filters
                     </Button>
@@ -433,8 +469,12 @@ const CommunityFeed: React.FC = () => {
           )}
         </section>
 
-        {/* Advanced Filters Sidebar */}
-        <aside className="lg:col-span-4">
+        {/* Enhanced Sidebar */}
+        <aside className="lg:col-span-4 space-y-6">
+          {/* Community Insights */}
+          <CommunityInsights />
+          
+          {/* Advanced Filters */}
           <AdvancedFilters
             selectedTag={selectedTag}
             onTagSelect={setSelectedTag}
