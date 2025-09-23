@@ -18,9 +18,9 @@ export const ScrollTriggeredCTA = () => {
     if (hasSeenCTA) return;
 
     const handleScroll = () => {
-      // Make less aggressive - trigger at 70% scroll instead of 50%
+      // Much less aggressive - trigger at 90% scroll
       const scrollPosition = window.scrollY;
-      const triggerPoint = window.innerHeight * 0.7;
+      const triggerPoint = window.innerHeight * 0.9;
       
       if (scrollPosition > triggerPoint && !isDismissed) {
         setIsVisible(true);

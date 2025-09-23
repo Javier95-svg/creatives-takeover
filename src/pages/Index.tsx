@@ -38,8 +38,8 @@ const Index = () => {
       <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
       <ScrollTriggeredCTA />
       
-      {/* Single Strategic Campaign Popup */}
-      <CreditCampaignPopup trigger="time" delay={45000} />
+      {/* Minimal Campaign Popup - Very Delayed */}
+      <CreditCampaignPopup trigger="time" delay={90000} />
       
       {/* AI Chatbot Assistant */}
       <ChatbotWidget />
