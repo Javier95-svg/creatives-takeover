@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-4 gap-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-4 gap-8 max-w-7xl mx-auto">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
