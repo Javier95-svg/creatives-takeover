@@ -63,13 +63,13 @@ const BizMapAI = () => {
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
   const { sprints, currentSprint, setCurrentSprint } = useSprints();
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("bizmap");
   
   // Handle URL parameters for tab selection
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab');
-    if (tab && ['dashboard', 'templates', 'bizmap', 'financial', 'valuation', 'sprint'].includes(tab)) {
+    if (tab && ['bizmap', 'templates', 'financial'].includes(tab)) {
       setActiveTab(tab);
     }
   }, []);
@@ -1296,85 +1296,8 @@ ${answers.goals || 'Clear milestones and timeline established.'}
                   </div>
                 )}
               </TabsContent>
-
-              <TabsContent value="sprint">
-                <div className="flex items-center gap-4 mb-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab("bizmap")}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to BizMap
-                  </Button>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold">Sprint Planning</h2>
-                    <p className="text-muted-foreground">Turn your business plan into actionable sprints</p>
-                  </div>
-                </div>
-                
-                {!activeSprint ? (
-                  <SprintPlannerComponent 
-                    onSprintCreated={handleSprintCreated}
-                    businessPlanData={launchReport ? {
-                      answers: userAnswers,
-                      launchReport: launchReport,
-                      successScore: successScore
-                    } : undefined}
-                  />
-                ) : (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-bold creatives-font">Sprint Dashboard</h2>
-                        <p className="text-muted-foreground">Track your progress and stay accountable</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setActiveSprintId(null);
-                          setCurrentSprint(null);
-                        }}
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Create New Sprint
-                      </Button>
-                    </div>
-                    
-                    <SprintKanban 
-                      sprint={activeSprint} 
-                      onStatusChange={(status) => {
-                        if (activeSprint) {
-                          setCurrentSprint({ ...activeSprint, status });
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Professional Dashboard Tab */}
-              <TabsContent value="dashboard">
-                <ProjectsDashboard />
-              </TabsContent>
-
-              {/* Business Templates Tab */}
-              <TabsContent value="templates">
-                <TemplateLibrary />
-              </TabsContent>
-
-              {/* Financial Dashboard Tab */}
-              <TabsContent value="financial">
-                <FinancialDashboard businessPlan={userAnswers} />
-              </TabsContent>
-
-              {/* Business Valuation Tab */}
-              <TabsContent value="valuation">
-                <BusinessValuation businessPlan={userAnswers} />
-              </TabsContent>
-            </Tabs>
-          </div>
+          </Tabs>
+        </div>
         </div>
       </div>
 
