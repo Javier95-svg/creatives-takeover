@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import MobileFormOptimizer from '@/components/MobileFormOptimizer';
 import { useFeedbackCredits } from '@/hooks/useFeedbackCredits';
 
 const Auth: React.FC = () => {
@@ -123,11 +124,13 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative min-h-dvh flex items-center justify-center p-4 overflow-hidden safe-area-inset"
+         style={{ minHeight: 'max(100vh, 100dvh)' }}>
       {/* Animated Background */}
       <AnimatedBackground />
       
-      <Card className="w-full max-w-md relative z-10 glass-card">
+      <MobileFormOptimizer>
+        <Card className="w-full max-w-md relative z-10 glass-card">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <img 
@@ -362,6 +365,7 @@ const Auth: React.FC = () => {
           </Tabs>
         </CardContent>
       </Card>
+      </MobileFormOptimizer>
     </div>
   );
 };

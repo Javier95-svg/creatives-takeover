@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import MobileFormOptimizer from "@/components/MobileFormOptimizer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -160,7 +161,8 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4">
+    <div className="relative min-h-dvh overflow-hidden flex items-center justify-center p-4 safe-area-inset"
+         style={{ minHeight: 'max(100vh, 100dvh)' }}>
       <Helmet>
         <title>Sign In - Creatives Takeover</title>
         <meta name="description" content="Sign in to your Creatives Takeover account to access AI-powered creative planning tools." />
@@ -187,7 +189,8 @@ const Login = () => {
         </div>
 
         {/* Login Form */}
-        <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
+        <MobileFormOptimizer>
+          <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
           <CardHeader className="space-y-1 pb-4">
             <h2 className="text-xl font-semibold text-center">Sign in to your account</h2>
           </CardHeader>
@@ -355,6 +358,7 @@ const Login = () => {
             </form>
           </CardContent>
         </Card>
+        </MobileFormOptimizer>
 
         {/* Sign Up Link */}
         <div className="text-center mt-6">

@@ -120,8 +120,9 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden"
+            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -135,7 +136,7 @@ const Navigation = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="block px-4 py-4 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] touch-manipulation flex items-center"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
