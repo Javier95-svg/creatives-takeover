@@ -392,6 +392,55 @@ All colors MUST be HSL.
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* Mobile Optimizations */
+  @media (max-width: 768px) {
+    /* Reduce animations on mobile for better performance */
+    .animate-float,
+    .animate-spiral,
+    .animate-zigzag,
+    .animate-drift,
+    .animate-figure-eight,
+    .animate-orbit,
+    .animate-diagonal-float,
+    .animate-float-reverse {
+      animation: none !important;
+    }
+    
+    /* Faster, simpler animations for mobile */
+    .animate-fade-in {
+      animation: mobile-fade-in 0.3s ease-out;
+    }
+    
+    /* Ensure minimum touch target sizes */
+    button, .btn, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Optimize text for mobile reading */
+    .gradient-text {
+      background-size: 100% 100%;
+    }
+    
+    /* Improve glass card spacing on mobile */
+    .glass-card {
+      margin: 0.5rem 0;
+    }
+  }
+
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    .hover\\:scale-105:hover {
+      transform: none !important;
+    }
+    .hover\\:shadow-xl:hover {
+      box-shadow: none !important;
+    }
+    .btn-magnetic:hover {
+      transform: none !important;
+    }
+  }
 }
 
 /* Custom Keyframes */
@@ -442,6 +491,18 @@ All colors MUST be HSL.
 @keyframes glow {
   0% { box-shadow: 0 0 5px hsl(var(--primary) / 0.2), 0 0 10px hsl(var(--primary) / 0.2); }
   100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 30px hsl(var(--primary) / 0.3); }
+}
+
+/* Mobile-specific fade animation */
+@keyframes mobile-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-slow {

@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
@@ -176,7 +176,7 @@ const Pricing = () => {
             return (
               <div
                 key={tier.tier_name}
-                className={`relative glass-card p-6 transition-all duration-500 animate-fade-in hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
+                className={`relative glass-card p-4 sm:p-6 transition-all duration-500 animate-fade-in hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
                   isCurrentPlan
                     ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
                     : isPopular 
@@ -243,7 +243,7 @@ const Pricing = () => {
                 <Button
                   onClick={() => handleSubscribe(tier.tier_name)}
                   disabled={isCurrentPlan}
-                  className={`w-full py-3 font-medium btn-magnetic hover-scale transition-all duration-300 ${
+                  className={`w-full py-3 px-4 font-medium btn-magnetic hover-scale transition-all duration-300 min-h-[44px] text-sm sm:text-base ${
                     isCurrentPlan
                       ? 'bg-green-600 text-white cursor-default'
                       : isPopular 

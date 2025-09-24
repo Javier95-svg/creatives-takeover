@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			screens: {
+				'xs': '475px',
+				'3xl': '1600px',
+			},
 			fontFamily: {
 				'poppins': ['Poppins', 'sans-serif'],
 				'space-grotesk': ['Space Grotesk', 'Poppins', 'sans-serif'],
