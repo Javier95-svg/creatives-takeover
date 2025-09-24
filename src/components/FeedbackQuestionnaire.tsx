@@ -207,8 +207,8 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
               <Label htmlFor="nps">How likely are you to recommend BizMap AI? (0-10)</Label>
               <RadioGroup 
                 value={formData.npsScore?.toString()} 
-                onValueChange={(value) => setFormData({...formData, npsScore: parseInt(value)})}
-                className="mt-2 grid grid-cols-6 gap-2"
+                 onValueChange={(value) => setFormData({...formData, npsScore: parseInt(value)})}
+                className="mt-2 grid grid-cols-6 sm:grid-cols-11 gap-1 sm:gap-2"
               >
                 {Array.from({length: 11}, (_, i) => (
                   <div key={i} className="flex flex-col items-center space-y-1">
@@ -271,7 +271,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="w-[95vw] max-w-sm sm:max-w-md mx-auto">
         <DialogHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-gradient-to-r from-primary to-primary-glow rounded-full flex items-center justify-center mb-2">
             <Gift className="w-6 h-6 text-white" />
@@ -311,7 +311,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
           </div>
 
           {/* Question content */}
-          <div className="min-h-[200px]">
+          <div className="min-h-[150px] sm:min-h-[200px]">
             {renderStep()}
           </div>
 

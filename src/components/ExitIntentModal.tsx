@@ -25,7 +25,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden border border-border/20 bg-background/98 backdrop-blur-2xl shadow-2xl z-[100]">
+      <DialogContent className="w-[95vw] max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl p-0 overflow-hidden border border-border/20 bg-background/98 backdrop-blur-2xl shadow-2xl z-[100]">
         <div className="relative">
           {/* Enhanced Animated Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-secondary/8 to-accent/10" />
@@ -33,7 +33,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-secondary/25 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
           <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-gradient-to-r from-accent/20 to-transparent rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
           
-          <div className="relative z-10 p-8">
+          <div className="relative z-10 p-4 sm:p-6 md:p-8">
             {/* Close Button */}
             <button 
               onClick={onClose}
@@ -50,14 +50,14 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             </div>
 
             {/* Headline */}
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 animate-slide-up">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-4 animate-slide-up">
               <span className="gradient-text">Get FREE Business Report</span>
               <br />
               <span className="text-foreground">+ Up to 7 Credits Before You Go!</span>
             </h2>
 
             {/* Subheadline */}
-            <p className="text-lg text-muted-foreground mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
               Complete our 5-minute feedback survey and get your comprehensive business plan plus bonus credits to unlock premium features.
             </p>
 

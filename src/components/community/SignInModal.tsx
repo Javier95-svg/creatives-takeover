@@ -12,7 +12,7 @@ interface SignInModalProps {
 const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSignUp }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[95vw] max-w-sm sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">Join the Community</DialogTitle>
@@ -26,7 +26,7 @@ const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSi
         </DialogHeader>
         
         <div className="space-y-4 pt-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
             <Button onClick={onSignIn} className="flex items-center gap-2">
               <LogIn className="h-4 w-4" />
               Sign In

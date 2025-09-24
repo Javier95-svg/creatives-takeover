@@ -44,7 +44,7 @@ const SignupInviteModal = ({ isOpen, onClose }: SignupInviteModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto bg-background/95 backdrop-blur-sm border shadow-xl">
+      <DialogContent className="w-[95vw] max-w-sm sm:max-w-md mx-auto bg-background/95 backdrop-blur-sm border shadow-xl">
         <DialogHeader className="relative">
           <Button
             variant="ghost"
@@ -80,7 +80,7 @@ const SignupInviteModal = ({ isOpen, onClose }: SignupInviteModalProps) => {
           </div>
 
           {/* Benefits Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {benefits.map((benefit, index) => (
               <div key={index} className="text-center p-3 rounded-lg bg-muted/30">
                 <div className="flex justify-center mb-2 text-primary">

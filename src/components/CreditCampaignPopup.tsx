@@ -69,7 +69,7 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden border border-border/20 bg-background/98 backdrop-blur-2xl shadow-2xl z-[80]">
+      <DialogContent className="w-[95vw] max-w-sm sm:max-w-md md:max-w-lg p-0 overflow-hidden border border-border/20 bg-background/98 backdrop-blur-2xl shadow-2xl z-[80]">
         <div className="relative">
           {/* Enhanced Animated Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-secondary/6 to-accent/8" />
@@ -77,7 +77,7 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-secondary/25 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
           <div className="absolute center w-16 h-16 bg-gradient-to-r from-accent/20 to-transparent rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
           
-          <div className="relative z-10 p-6">
+          <div className="relative z-10 p-4 sm:p-6">
             {/* Close Button */}
             <button 
               onClick={handleClose}
@@ -106,17 +106,17 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
             </p>
 
             {/* Credit Breakdown */}
-            <div className="grid grid-cols-3 gap-2 mb-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              <div className="text-center p-2 glass-card">
-                <div className="text-primary font-bold text-lg">2</div>
+            <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div className="text-center p-1.5 sm:p-2 glass-card">
+                <div className="text-primary font-bold text-base sm:text-lg">2</div>
                 <div className="text-xs text-muted-foreground">Base</div>
               </div>
-              <div className="text-center p-2 glass-card">
-                <div className="text-secondary font-bold text-lg">+3</div>
+              <div className="text-center p-1.5 sm:p-2 glass-card">
+                <div className="text-secondary font-bold text-base sm:text-lg">+3</div>
                 <div className="text-xs text-muted-foreground">Email</div>
               </div>
-              <div className="text-center p-2 glass-card">
-                <div className="text-accent font-bold text-lg">+2</div>
+              <div className="text-center p-1.5 sm:p-2 glass-card">
+                <div className="text-accent font-bold text-base sm:text-lg">+2</div>
                 <div className="text-xs text-muted-foreground">Bonus</div>
               </div>
             </div>
@@ -134,12 +134,12 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex gap-4 justify-center mb-4 text-xs text-muted-foreground animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <div className="flex items-center gap-1">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center mb-4 text-xs text-muted-foreground animate-slide-up" style={{ animationDelay: '0.4s' }}>
+              <div className="flex items-center justify-center gap-1">
                 <Users className="w-3 h-3 text-primary" />
                 <span>Growing community</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1">
                 <Clock className="w-3 h-3 text-primary" />
                 <span>5 min survey</span>
               </div>
