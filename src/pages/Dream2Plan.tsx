@@ -1304,6 +1304,24 @@ Subject: "Quick question about [their pain point]"
                               )}
                             </div>
                           </div>
+                          
+                          {!isCompleted && currentStep < wizardSteps.length && (
+                            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <span className="text-white text-xs font-bold">🧠</span>
+                                </div>
+                                <div className="text-sm">
+                                  <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                                    Enhanced AI Validation Active
+                                  </p>
+                                  <p className="text-blue-700 dark:text-blue-200">
+                                    Our improved AI will detect vague answers and ask clarifying questions to help you create a more detailed business plan.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1323,7 +1341,7 @@ Subject: "Quick question about [their pain point]"
                 
                 {/* Three Information Cards - Minimalistic with Silver Glass Effect */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-                  {/* How BizMap AI Works */}
+                  {/* How BizMap AI Works - Enhanced with new features */}
                   <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 border border-primary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     {/* Background Effects */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1333,20 +1351,20 @@ Subject: "Quick question about [their pain point]"
                         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                           <Lightbulb className="w-4 h-4 text-primary group-hover:animate-pulse" />
                         </div>
-                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300">How It Works</h3>
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300">Enhanced AI Features</h3>
                       </div>
                       <div className="space-y-3 text-sm">
                         <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
-                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">1</span>
-                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Answer 7 guided questions about your business</p>
+                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">🧠</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"><strong>Smarter Validation:</strong> AI detects vague answers and asks clarifying questions</p>
                         </div>
                         <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
-                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">2</span>
-                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">AI analyzes your responses and market data</p>
+                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">📄</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"><strong>Professional PDFs:</strong> Download formatted reports with charts and branding</p>
                         </div>
                         <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">3</span>
-                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Get a comprehensive launch report</p>
+                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">⭐</span>
+                          <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"><strong>Success Scoring:</strong> Get detailed business viability analysis</p>
                         </div>
                       </div>
                     </div>
