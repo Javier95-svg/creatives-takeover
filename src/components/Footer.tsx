@@ -10,6 +10,7 @@ const Footer = () => {
           <section aria-labelledby="footer-address">
             <h2 id="footer-address" className="text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
             <address className="mt-3 text-sm text-muted-foreground not-italic">
+              <strong>Creatives Takeover Ltd</strong><br />
               71-75, Shelton Street<br />
               Covent Garden<br />
               London, WC2H 9JQ<br />
@@ -73,7 +74,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 text-xs text-muted-foreground">
-          &copy; {year} Creatives Takeover. All rights reserved.
+          &copy; {year} Creatives Takeover Ltd. All rights reserved.
         </div>
       </div>
     </footer>
