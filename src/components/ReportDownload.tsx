@@ -8,9 +8,10 @@ import { Link } from "react-router-dom";
 interface ReportDownloadProps {
   report: string;
   title?: string;
+  className?: string;
 }
 
-const ReportDownload = ({ report, title = "Launch Report" }: ReportDownloadProps) => {
+const ReportDownload = ({ report, title = "Launch Report", className = "" }: ReportDownloadProps) => {
   const { user } = useAuth();
 
   const downloadAsText = () => {
@@ -138,7 +139,7 @@ const ReportDownload = ({ report, title = "Launch Report" }: ReportDownloadProps
   }
 
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Download className="h-5 w-5" />

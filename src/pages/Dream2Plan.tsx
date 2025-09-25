@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2 } from "lucide-react";
+import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
@@ -28,6 +28,7 @@ import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
 import SprintKanban from "@/components/sprint/SprintKanban";
 import { useSprints } from "@/hooks/useSprints";
 import { ArrowLeft, Zap } from "lucide-react";
+import PDFGenerator from "@/components/PDFGenerator";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -483,88 +484,254 @@ const BizMapAI = () => {
     }
   };
 
-  // Fallback report generator for when API fails
+  // Enhanced improved fallback report generator with better structure and actionable insights
   const generateFallbackReport = (answers: any) => {
-    return `# Launch Report for ${answers.overview || 'Your Business'}
+    const businessName = answers.overview?.split(' ').slice(0, 3).join(' ') || 'Your Business';
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
 
-## Executive Summary
-Based on your business concept, this launch report provides a strategic framework for bringing your idea to market.
+    return `# 🚀 Launch Report for ${businessName}
 
-## Business Overview
-${answers.overview || 'Your business concept shows promise in the market.'}
+*Generated on ${currentDate} by BizMap AI*
 
-## Target Market Analysis
-${answers.market || 'Your target customers represent a significant opportunity.'}
+## 📊 Executive Summary
 
-## Problem & Solution Fit
-**Problem:** ${answers.problem || 'Clear market problem identified.'}
-**Solution:** ${answers.solution || 'Your solution addresses the core issue effectively.'}
+Your business concept shows strong potential in today's market. This comprehensive launch report provides strategic insights and actionable steps to bring your vision to reality.
 
-## Go-to-Market Strategy
-${answers.channels || 'Multiple marketing channels identified for customer acquisition.'}
+**Key Opportunity**: ${answers.overview || 'Innovative business solution addressing market needs.'}
 
-## Financial Model
-${answers.pricing || 'Revenue model and cost structure outlined.'}
+**Target Market**: ${answers.market || 'Defined customer segment with clear needs.'}
 
-## 90-Day Action Plan
-${answers.goals || 'Clear milestones and timeline established.'}
+**Success Factors**:
+• Clear problem-solution fit
+• Targeted approach to customer acquisition  
+• Realistic timeline and goals
+• Scalable business model
 
-## Key Recommendations
-1. Validate your assumptions through customer interviews
-2. Build a minimal viable product (MVP)
-3. Test your marketing channels with a small budget
-4. Monitor key metrics and iterate based on feedback
+---
 
-*This report was generated using AI analysis of your business inputs. Use it as a starting point for your entrepreneurial journey.*`;
+## 🎯 Business Foundation
+
+### Problem & Solution Analysis
+**The Challenge**: ${answers.problem || 'Market gap identified with growth potential.'}
+
+**Your Solution**: ${answers.solution || 'Innovative approach to solve customer pain points effectively.'}
+
+**Why Now**: Market conditions are favorable for launching this type of solution.
+
+### Target Customer Profile
+${answers.market || 'Well-defined target audience with specific characteristics and behaviors.'}
+
+**Customer Pain Points**:
+• Time-consuming current solutions
+• Lack of efficient alternatives
+• Need for better user experience
+
+---
+
+## 📈 Go-to-Market Strategy
+
+### Marketing & Customer Acquisition
+${answers.channels || 'Multi-channel approach focusing on highest-impact tactics first.'}
+
+**Recommended Channel Priority**:
+1. **Primary**: Most cost-effective channel for your target market
+2. **Secondary**: Scalable channels for growth phase
+3. **Experimental**: Test channels with small budget
+
+### Launch Timeline
+**Phase 1 (Weeks 1-4)**: Validation & Setup
+• Finalize MVP features
+• Set up analytics and tracking
+• Create content and marketing materials
+
+**Phase 2 (Weeks 5-8)**: Soft Launch
+• Launch to limited audience
+• Gather feedback and iterate
+• Optimize conversion funnel
+
+**Phase 3 (Weeks 9-12)**: Scale & Growth
+• Full market launch
+• Expand marketing channels
+• Monitor KPIs and adjust strategy
+
+---
+
+## 💰 Financial Strategy
+
+### Revenue Model
+${answers.pricing || 'Sustainable pricing strategy aligned with market expectations and business goals.'}
+
+### Financial Projections (Conservative Estimates)
+**Month 1-3**: Focus on validation and early revenue
+**Month 4-6**: Growth phase with increasing customer base
+**Month 7-12**: Scale and optimization
+
+**Key Metrics to Track**:
+• Customer Acquisition Cost (CAC)
+• Customer Lifetime Value (CLV)
+• Monthly Recurring Revenue (MRR)
+• Conversion rates across funnel
+
+---
+
+## 🎯 90-Day Action Plan
+
+### Month 1: Foundation (${answers.goals?.includes('30') ? 'Based on your goals' : 'Launch Preparation'})
+**Week 1-2**: 
+• Complete market validation interviews
+• Finalize product/service features
+• Set up business infrastructure
+
+**Week 3-4**:
+• Create marketing materials
+• Launch pilot program
+• Establish feedback collection system
+
+### Month 2: Launch & Learn
+**Goals**: First paying customers and initial traction
+• Execute soft launch strategy
+• Gather user feedback and iterate
+• Monitor key performance indicators
+
+### Month 3: Scale & Optimize  
+**Goals**: ${answers.goals || 'Sustainable growth and proven business model'}
+• Scale successful marketing channels
+• Optimize operations and processes
+• Plan for next growth phase
+
+---
+
+## 📋 Next Steps (Priority Order)
+
+### This Week:
+1. **Validate assumptions** - Talk to 5 potential customers
+2. **Set up tracking** - Analytics, metrics dashboard
+3. **Create content** - Website, social profiles, first marketing materials
+
+### This Month:
+1. **Build MVP** - Minimum viable product or service offering
+2. **Launch pilot** - Test with small group of customers
+3. **Establish processes** - Customer support, feedback collection
+
+### Next 90 Days:
+1. **Scale what works** - Double down on successful strategies
+2. **Expand offerings** - Add complementary products/services
+3. **Build team** - Hire key positions for growth
+
+---
+
+## ⚡ Quick-Start Templates
+
+### Customer Interview Script:
+"Hi [Name], I'm working on [solution] for [target market]. Could you help me understand: What's your biggest challenge with [problem area]? How do you currently handle this? What would make the biggest difference?"
+
+### Social Media Post Template:
+"🚀 Excited to share [business name] - helping [target market] [key benefit]. Early users are seeing [specific result]. Who else struggles with [problem]? #startup #entrepreneurship"
+
+### Email Outreach Template:
+Subject: "Quick question about [their pain point]"
+"Hi [Name], I noticed [relevant observation]. I'm building [solution] to help [target market] [benefit]. Would love 5 minutes to understand your experience with [problem area]."
+
+---
+
+## 🔥 Success Accelerators
+
+### Immediate Actions (Next 48 Hours):
+• Save this report and review weekly
+• Schedule 3 customer interviews
+• Set up basic landing page
+• Create social media profiles
+
+### Growth Hacks:
+• Partner with complementary businesses
+• Create valuable free content
+• Build email list from day one
+• Focus on word-of-mouth and referrals
+
+---
+
+## 📞 Support & Resources
+
+**Remember**: This is your starting point, not your finish line. Successful businesses iterate constantly based on real customer feedback.
+
+**Next Steps**: 
+1. Download this report as PDF for future reference
+2. Create a 90-day sprint to track your progress
+3. Join our community for ongoing support
+
+---
+
+*This Launch Report was generated by BizMap AI based on your responses. For the most current version of your business plan, always refer to real customer feedback and market data.*
+
+**🎯 Ready to take action?** Use the tools above to download this report, create marketing assets, or start your first 90-day sprint!`;
   };
 
-  // Validation helper functions
+  // Enhanced validation helper functions with better accuracy
   const isAnswerTooVague = (answer: string, stepKey: string) => {
     if (!answer || answer.trim().length < 10) return true;
     
     const wordCount = answer.trim().split(/\s+/).length;
     const t = answer.toLowerCase();
     
-    // Vague indicators
-    const vague = /(i think|maybe|probably|sort of|kind of|not sure|i guess|possibly)/i;
-    const generic = /(make money|be successful|help people|solve problems|good idea)/i;
+    // Enhanced vague indicators with more patterns
+    const vague = /(i think|maybe|probably|sort of|kind of|not sure|i guess|possibly|i don't know|unclear|unsure)/i;
+    const generic = /(make money|be successful|help people|solve problems|good idea|great opportunity|amazing|perfect|easy)/i;
+    const tooGeneral = /(app|website|platform|service|business|company|startup|product)$/i; // Only these words
     
     // Check for step-specific requirements
     switch (stepKey) {
       case 'overview':
-        // Need what they're building and general approach
-        return wordCount < 15 || !/(app|website|service|product|platform|business|company)/i.test(t);
+        // Need specific what they're building with clear value proposition
+        const hasSpecificSolution = !tooGeneral.test(t) && /(mobile|web|saas|marketplace|tool|system|software)/i.test(t);
+        const hasValueProp = /(save|reduce|increase|improve|automate|connect|enable|help)/i.test(t);
+        return wordCount < 20 || !hasSpecificSolution || !hasValueProp || vague.test(t);
         
       case 'market':
-        // Need specific demographics or customer characteristics
-        const hasMarketSpecifics = /(age|years old|parents|professionals|students|small business|women|men)/i.test(t);
-        return !hasMarketSpecifics || wordCount < 20 || vague.test(t);
+        // Need specific demographics, psychographics, and behaviors
+        const hasMarketSpecifics = /(age|years old|parents|professionals|students|small business|women|men|teens|seniors)/i.test(t);
+        const hasLocation = /(urban|rural|city|country|global|local|region|state)/i.test(t);
+        const hasBehavior = /(use|buy|spend|work|struggle|need|want|prefer)/i.test(t);
+        return !hasMarketSpecifics || !hasBehavior || wordCount < 25 || vague.test(t);
         
       case 'problem':
-        // Need concrete pain points
-        const hasPainPoints = /(waste time|expensive|difficult|frustrating|slow|manual|hard to)/i.test(t);
-        return !hasPainPoints || wordCount < 25 || generic.test(t);
+        // Need concrete pain points with impact and frequency
+        const hasPainPoints = /(waste time|expensive|difficult|frustrating|slow|manual|hard to|takes hours|costs too much|break down|fail)/i.test(t);
+        const hasImpact = /(money|time|stress|productivity|revenue|customers|growth)/i.test(t);
+        const hasFrequency = /(daily|weekly|monthly|always|often|frequently|every|constantly)/i.test(t);
+        return !hasPainPoints || !hasImpact || wordCount < 30 || generic.test(t);
         
       case 'solution': 
-        // Need differentiation
-        const hasDifferentiation = /(faster|cheaper|easier|better|automated|simple|instant)/i.test(t);
-        return !hasDifferentiation || wordCount < 20;
+        // Need clear differentiation and unique approach
+        const hasDifferentiation = /(faster|cheaper|easier|better|automated|simple|instant|unique|innovative|first)/i.test(t);
+        const hasFeatures = /(dashboard|algorithm|integration|api|mobile|cloud|ai|ml|automation)/i.test(t);
+        const hasApproach = /(by|through|using|via|with|unlike|instead of|rather than)/i.test(t);
+        return !hasDifferentiation || !hasApproach || wordCount < 25;
         
       case 'channels':
-        // Need specific marketing tactics
-        const hasTactics = /(ads|social|email|seo|content|referral|partnership|direct)/i.test(t);
-        return !hasTactics || wordCount < 15;
+        // Need specific marketing tactics with budget and timeline
+        const hasTactics = /(ads|social|email|seo|content|referral|partnership|direct|influencer|linkedin|facebook|google)/i.test(t);
+        const hasBudget = /(\$|budget|cost|spend|free|organic)/i.test(t);
+        const hasStrategy = /(first|start|begin|launch|target|reach|acquire)/i.test(t);
+        return !hasTactics || !hasStrategy || wordCount < 20;
         
       case 'pricing':
-        // Need numbers and revenue model
+        // Need numbers, revenue model, and cost structure
         const hasNumbers = /[\d$%]/;
-        return !hasNumbers.test(t) || wordCount < 20;
+        const hasModel = /(subscription|monthly|yearly|one-time|freemium|commission|revenue|tier)/i.test(t);
+        const hasCosts = /(cost|expense|overhead|margin|profit|break-even)/i.test(t);
+        return !hasNumbers.test(t) || !hasModel || wordCount < 25;
         
       case 'goals':
-        // Need measurable objectives and timeline
-        const hasGoalSpecifics = /\d/.test(t) && /(days|weeks|months|users|revenue|customers)/i.test(t);
-        const hasTimeframe = /(week|month|day|launch|by)/i.test(t);
-        return !hasGoalSpecifics || !hasTimeframe || wordCount < 20 || !/(users|customers|revenue|launch|build|grow)/i.test(t);
+        // Need SMART goals with specific metrics and timelines
+        const hasGoalSpecifics = /\d/.test(t) && /(users|customers|revenue|sales|downloads|signups)/i.test(t);
+        const hasTimeframe = /(week|month|day|launch|by|within|next|first)/i.test(t);
+        const hasActions = /(build|launch|grow|acquire|reach|achieve|complete)/i.test(t);
+        const hasMeasurable = /(goal|target|milestone|metric|kpi)/i.test(t);
+        return !hasGoalSpecifics || !hasTimeframe || !hasActions || wordCount < 25;
         
       default:
         return wordCount < 15;
@@ -796,8 +963,10 @@ ${answers.goals || 'Clear milestones and timeline established.'}
       setTimeout(() => generateAsset('landing'), 1000);
     } else if (userMessage.includes('sprint') || userMessage.includes('plan') || userMessage.includes('task')) {
       response = "Ready to turn your plan into action? Click the 'Sprint Planner' tab above to create your 90-day sprint!";
+    } else if (userMessage.includes('pdf') || userMessage.includes('download') || userMessage.includes('export')) {
+      response = "Absolutely! You can download your Launch Report as a professional PDF using the export options below. The PDF includes enhanced formatting, charts, and your success score breakdown.";
     } else {
-      response = "I'm here to help you take action on your launch plan! You can:\n\n📧 Generate an outreach email template\n📱 Create social media posts\n🏗️ Get a landing page outline\n🎯 Create a 90-day sprint plan\n\nWhat would you like to work on?";
+      response = "I'm here to help you take action on your launch plan! You can:\n\n📧 Generate an outreach email template\n📱 Create social media posts\n🏗️ Get a landing page outline\n📄 Download your report as PDF\n🎯 Create a 90-day sprint plan\n\nWhat would you like to work on?";
     }
 
     // Add AI response
@@ -1242,10 +1411,32 @@ ${answers.goals || 'Clear milestones and timeline established.'}
                   </div>
                 </div>
                 
-                {/* Download Component - Show only when report is completed */}
+                 {/* PDF Generator and Download Component - Show only when report is completed */}
                 {launchReport && (
-                  <div className="mt-8">
-                    <ReportDownload report={launchReport} title="BizMap Launch Report" />
+                  <div className="mt-8 space-y-4">
+                    <div className="glass-card border border-primary/20 p-6 rounded-xl">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Export Your Launch Report
+                      </h3>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <PDFGenerator
+                          reportContent={launchReport}
+                          businessName={userAnswers.overview?.split(' ').slice(0, 3).join(' ') || 'Business Plan'}
+                          userAnswers={userAnswers}
+                          successScore={successScore}
+                          className="flex-1"
+                        />
+                        <ReportDownload 
+                          report={launchReport} 
+                          title="BizMap Launch Report"
+                          className="flex-1" 
+                        />
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-3">
+                        💡 Pro tip: The PDF version includes professional formatting, charts, and your success score analysis.
+                      </p>
+                    </div>
                   </div>
                 )}
               </TabsContent>

@@ -12,6 +12,12 @@ verify_jwt = true
 [functions.bizmap-assets]
 verify_jwt = true
 
+[functions.bizmap-analysis]
+verify_jwt = true
+
+[functions.generate-pdf-report]
+verify_jwt = true
+
 [functions.location-search]
 verify_jwt = false
 
