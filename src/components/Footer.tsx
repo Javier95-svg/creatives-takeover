@@ -6,7 +6,17 @@ const Footer = () => {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-6 py-12">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-4">
+          <section aria-labelledby="footer-address">
+            <h2 id="footer-address" className="text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
+            <address className="mt-3 text-sm text-muted-foreground not-italic">
+              71-75, Shelton Street<br />
+              Covent Garden<br />
+              London, WC2H 9JQ<br />
+              United Kingdom
+            </address>
+          </section>
+
           <section aria-labelledby="footer-contact">
             <h2 id="footer-contact" className="text-sm font-semibold tracking-wide text-foreground">Contact</h2>
             <p className="mt-3 text-sm text-muted-foreground">Questions or feedback? We’d love to hear from you.</p>
