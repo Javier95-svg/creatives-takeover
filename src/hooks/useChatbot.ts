@@ -352,7 +352,7 @@ What aspect of your business would you like to explore?`;
   };
 
   const generateBusinessConceptResponse = (message: string, info: Partial<BusinessContext>): AIResponse => {
-    let content = `Great! Let's develop your business concept. `;
+    let content = "Great! Let's develop your business concept. ";
 
     if (info.industry) {
       const industryData = businessInsights[info.industry as keyof typeof businessInsights];
