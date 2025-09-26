@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Linkedin, Instagram, MessageCircle } from "lucide-react";
+import { Mail, Linkedin, Instagram } from "lucide-react";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -75,8 +75,9 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Discord"
+                  className="text-lg hover:scale-110 transition-transform"
                 >
-                  <MessageCircle className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                  🎮
                 </a>
               </li>
             </ul>
