@@ -75,9 +75,12 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Discord"
-                  className="text-lg hover:scale-110 transition-transform"
                 >
-                  🎮
+                  <img 
+                    src="/lovable-uploads/discord-logo.png" 
+                    alt="Discord" 
+                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
+                  />
                 </a>
               </li>
             </ul>
