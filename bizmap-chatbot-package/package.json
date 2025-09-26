@@ -1,0 +1,54 @@
+{
+  "name": "bizmap-ai-chatbot",
+  "version": "1.0.0",
+  "description": "A sophisticated React chatbot component with FAQ matching, typing animations, and contextual responses",
+  "main": "src/components/ChatbotWidget.tsx",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "react",
+    "chatbot",
+    "ai",
+    "faq",
+    "customer-support",
+    "typescript",
+    "tailwindcss"
+  ],
+  "author": "BizMap AI",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "react-router-dom": ">=6.0.0"
+  },
+  "dependencies": {
+    "@radix-ui/react-scroll-area": "^1.1.0",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "lucide-react": "^0.462.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "src/**/*",
+    "README.md",
+    "FEATURES.md",
+    "CUSTOMIZATION.md",
+    "INTEGRATION.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/bizmap-ai-chatbot"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/bizmap-ai-chatbot/issues"
+  },
+  "homepage": "https://github.com/your-username/bizmap-ai-chatbot#readme"
+}
