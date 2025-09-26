@@ -3,17 +3,27 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
 
-// Enhanced message types for business planning
-export enum MessageType {
-  TEXT = 'text',
-  BUSINESS_PLAN_SECTION = 'business_plan_section',
-  FINANCIAL_PROJECTION = 'financial_projection',
-  MARKET_ANALYSIS = 'market_analysis',
-  SWOT_ANALYSIS = 'swot_analysis',
-  ACTION_ITEMS = 'action_items',
-  DOCUMENT = 'document',
-  FORM = 'form',
-  RECOMMENDATION = 'recommendation'
+// Enhanced message types for business planning - Compatible with ChatbotWidget
+export interface ChatMessage {
+  id: string;
+  content: string;
+  isBot: boolean;
+  timestamp: Date;
+  quickActions?: Array<{
+    text: string;
+    action: string;
+    href?: string;
+  }>;
+  // Extended properties for business planning
+  messageType?: 'text' | 'business_plan' | 'financial' | 'market_analysis' | 'recommendation';
+  businessContext?: string;
+  confidence?: number;
+  sources?: string[];
+  attachments?: Array<{
+    type: 'pdf' | 'xlsx' | 'docx' | 'image';
+    name: string;
+    url: string;
+  }>;
 }
 
 export enum ConversationContext {
@@ -42,59 +52,23 @@ export interface BusinessContext {
   completedSections?: string[];
 }
 
-export interface QuickAction {
-  id: string;
-  text: string;
-  action: string;
-  href?: string;
-  icon?: string;
-  type: 'primary' | 'secondary' | 'success' | 'warning' | 'info';
-  requiresAuth?: boolean;
-  payload?: Record<string, unknown>;
-}
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  isBot: boolean;
-  timestamp: Date;
-  type: MessageType;
-  context?: ConversationContext;
-  quickActions?: QuickAction[];
-  metadata?: {
-    confidence?: number;
-    sources?: string[];
-    businessPlanSection?: string;
-    suggestedFollowUps?: string[];
-    estimatedReadTime?: number;
-  };
-  attachments?: Array<{
-    type: 'pdf' | 'xlsx' | 'docx' | 'image';
-    name: string;
-    url: string;
-    size?: number;
-  }>;
-}
-
-export interface ConversationState {
+interface ConversationState {
   context: ConversationContext;
   businessContext: BusinessContext;
   currentTopic?: string;
-  awaitingInput?: string;
-  lastBotAction?: string;
   sessionDuration: number;
   messageCount: number;
   userSatisfaction?: number;
 }
 
-// AI Response Generation Interface
 interface AIResponse {
   content: string;
-  type: MessageType;
-  quickActions?: QuickAction[];
-  metadata?: ChatMessage['metadata'];
-  shouldTriggerAction?: string;
+  quickActions?: ChatMessage['quickActions'];
+  messageType?: ChatMessage['messageType'];
+  confidence?: number;
+  sources?: string[];
   contextUpdate?: Partial<BusinessContext>;
+  shouldNavigate?: string;
 }
 
 export const useChatbot = () => {
@@ -112,100 +86,50 @@ export const useChatbot = () => {
   const navigate = useNavigate();
   const sessionStartTime = useRef(Date.now());
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
-  const conversationHistory = useRef<ChatMessage[]>([]);
 
   // Business planning knowledge base
-  const businessPlanningPrompts = useMemo(() => ({
-    [ConversationContext.BUSINESS_CONCEPT]: {
-      questions: [
-        "What's your business idea?",
-        "Who is your target customer?",
-        "What problem does your business solve?",
-        "What makes your solution unique?"
-      ],
-      nextSteps: ["Let's analyze your market opportunity", "Let's create a basic business model"]
+  const businessInsights = useMemo(() => ({
+    technology: {
+      trends: 'AI, cloud computing, and cybersecurity are driving growth',
+      challenges: 'Rapid technological change, talent acquisition, funding competition',
+      opportunities: 'Automation, SaaS solutions, mobile-first applications'
     },
-    [ConversationContext.MARKET_RESEARCH]: {
-      questions: [
-        "Who are your main competitors?",
-        "What's your target market size?",
-        "How do customers currently solve this problem?",
-        "What's your pricing strategy?"
-      ],
-      nextSteps: ["Let's work on financial projections", "Let's develop your marketing strategy"]
+    healthcare: {
+      trends: 'Telemedicine, personalized medicine, and health tech solutions',
+      challenges: 'Regulatory compliance, data privacy, insurance coverage',
+      opportunities: 'Aging population, preventive care, digital health'
     },
-    [ConversationContext.FINANCIAL_PLANNING]: {
-      questions: [
-        "What are your startup costs?",
-        "What's your expected monthly revenue?",
-        "What are your ongoing expenses?",
-        "When do you expect to break even?"
-      ],
-      nextSteps: ["Let's plan your operations", "Let's discuss funding options"]
+    retail: {
+      trends: 'E-commerce growth, omnichannel experiences, sustainability',
+      challenges: 'Supply chain disruptions, changing consumer behavior',
+      opportunities: 'Direct-to-consumer, social commerce, personalization'
+    },
+    food: {
+      trends: 'Plant-based alternatives, food delivery, sustainability',
+      challenges: 'Food safety regulations, supply chain complexity',
+      opportunities: 'Health-conscious consumers, local sourcing, meal kits'
     }
   }), []);
 
-  const generateId = (): string => {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  };
+  const businessPlanSections = useMemo(() => [
+    'Executive Summary',
+    'Company Description',
+    'Market Analysis',
+    'Organization & Management',
+    'Products & Services',
+    'Marketing & Sales Strategy',
+    'Financial Projections',
+    'Implementation Timeline'
+  ], []);
 
-  const updateConversationState = (updates: Partial<ConversationState>) => {
-    setConversationState(prev => ({ ...prev, ...updates }));
-  };
-
-  const getContextualWelcomeMessage = useCallback((): ChatMessage => {
-    const path = location.pathname;
-    let content = "👋 Hi! I'm your AI business planning assistant.";
-    let quickActions: QuickAction[] = [];
-
-    if (path.includes('/dream2plan')) {
-      content += " I see you're ready to turn your dream into a plan! Let's start by understanding your business concept and goals.";
-      quickActions = [
-        { id: '1', text: 'Start business concept', action: 'start_business_concept', type: 'primary', icon: '💡' },
-        { id: '2', text: 'Market research', action: 'start_market_research', type: 'secondary', icon: '🔍' },
-        { id: '3', text: 'Financial planning', action: 'start_financial_planning', type: 'info', icon: '💰' }
-      ];
-    } else if (path.includes('/business-plan')) {
-      content += " I see you're working on a business plan. How can I help you today?";
-      quickActions = [
-        { id: '1', text: 'Start from scratch', action: 'start_new_plan', type: 'primary', icon: '🚀' },
-        { id: '2', text: 'Continue existing plan', action: 'continue_plan', type: 'secondary', icon: '📋' },
-        { id: '3', text: 'Get plan template', action: 'get_template', type: 'info', icon: '📄' }
-      ];
-    } else if (path.includes('/financial')) {
-      content += " Let's work on your financial projections and funding strategy.";
-      quickActions = [
-        { id: '1', text: 'Create financial model', action: 'create_financial_model', type: 'primary', icon: '📊' },
-        { id: '2', text: 'Review cash flow', action: 'review_cash_flow', type: 'secondary', icon: '💰' }
-      ];
-    } else {
-      content += " I can help you with business planning, market research, financial projections, and much more!";
-      quickActions = [
-        { id: '1', text: 'Start business plan', action: 'start_business_plan', type: 'primary', icon: '📈' },
-        { id: '2', text: 'Get business advice', action: 'get_advice', type: 'secondary', icon: '💡' },
-        { id: '3', text: 'Browse templates', action: 'browse_templates', type: 'info', icon: '📚' }
-      ];
-    }
-
-    return {
-      id: generateId(),
-      content,
-      isBot: true,
-      timestamp: new Date(),
-      type: MessageType.TEXT,
-      context: ConversationContext.WELCOME,
-      quickActions
-    };
-  }, [location.pathname]);
-
-  // Initialize with contextual welcome message
+  // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
     if (messages.length === 0) {
-      const contextualWelcome = getContextualWelcomeMessage();
-      setMessages([contextualWelcome]);
+      const welcomeMessage = createWelcomeMessage();
+      setMessages([welcomeMessage]);
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [getContextualWelcomeMessage]);
+  }, [location.pathname]);
 
   // Session tracking
   useEffect(() => {
@@ -214,283 +138,422 @@ export const useChatbot = () => {
         ...prev,
         sessionDuration: Date.now() - sessionStartTime.current
       }));
-    }, 1000);
+    }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
 
-  const simulateTyping = (duration: number = 1500) => {
-    setIsTyping(true);
-    if (typingTimeout.current) {
-      clearTimeout(typingTimeout.current);
+  const generateId = (): string => {
+    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const updateConversationState = (updates: Partial<ConversationState>) => {
+    setConversationState(prev => ({ ...prev, ...updates }));
+  };
+
+  const createWelcomeMessage = (): ChatMessage => {
+    const path = location.pathname;
+    let content = "👋 Welcome! I'm your AI Business Planning Assistant.";
+    let quickActions: ChatMessage['quickActions'] = [];
+
+    // Contextual welcome based on current page
+    if (path.includes('/dream2plan')) {
+      content = `🚀 Welcome to Dream2Plan! I'm your AI Business Planning Assistant, here to help you transform your business dreams into actionable plans.
+
+I can guide you through:
+• **Business Concept Development** - Validate and refine your ideas
+• **Market Research & Analysis** - Understand your opportunity
+• **Financial Planning & Modeling** - Create realistic projections
+• **Strategic Planning** - Develop your go-to-market strategy
+
+Ready to turn your vision into a comprehensive business plan? Let's start with understanding your business concept!
+
+What's your business idea or what industry are you exploring?`;
+
+      quickActions = [
+        { text: '💡 Validate My Business Idea', action: 'validate_idea' },
+        { text: '🎯 Conduct Market Research', action: 'market_research' },
+        { text: '📊 Create Financial Model', action: 'financial_model' },
+        { text: '📋 Get Business Plan Template', action: 'business_template' }
+      ];
+    } else if (path.includes('/business-plan')) {
+      content = `👋 Hi! I see you're working on a business plan. I'm here to guide you through every step of the process.
+
+I can help you with:
+• Business concept validation
+• Market research and analysis  
+• Financial projections and modeling
+• Operations planning
+• Marketing strategy development
+
+What would you like to work on first?`;
+
+      quickActions = [
+        { text: '🚀 Start New Business Plan', action: 'start_new_plan' },
+        { text: '📋 Continue Existing Plan', action: 'continue_plan' },
+        { text: '📊 Financial Projections', action: 'financial_planning' },
+        { text: '🎯 Market Research', action: 'market_research' }
+      ];
+    } else if (path.includes('/financial')) {
+      content = `💰 Let's work on your financial planning! I can help you create comprehensive financial projections including:
+
+• Revenue forecasting
+• Expense planning
+• Cash flow analysis
+• Break-even calculations
+• Investment requirements
+
+What financial aspect would you like to focus on?`;
+
+      quickActions = [
+        { text: '📈 Revenue Projections', action: 'revenue_projections' },
+        { text: '💸 Expense Planning', action: 'expense_planning' },
+        { text: '💰 Cash Flow Analysis', action: 'cash_flow_analysis' },
+        { text: '⚖️ Break-even Analysis', action: 'breakeven_analysis' }
+      ];
+    } else {
+      content = `I'm your comprehensive business planning assistant! I can help you with:
+
+🎯 **Business Strategy**
+• Concept development and validation
+• Market opportunity analysis
+• Competitive positioning
+
+📊 **Financial Planning**  
+• Revenue and expense modeling
+• Cash flow projections
+• Investment planning
+
+🚀 **Implementation**
+• Operations planning
+• Marketing strategy
+• Growth planning
+
+What aspect of your business would you like to explore?`;
+
+      quickActions = [
+        { text: '💡 Validate Business Idea', action: 'validate_idea' },
+        { text: '📊 Create Financial Model', action: 'financial_model' },
+        { text: '🎯 Analyze Market', action: 'market_analysis' },
+        { text: '📋 Get Business Plan Template', action: 'business_template' }
+      ];
     }
+
+    return {
+      id: generateId(),
+      content,
+      isBot: true,
+      timestamp: new Date(),
+      quickActions,
+      messageType: 'recommendation',
+      confidence: 1.0
+    };
+  };
+
+  const simulateTyping = (duration: number = 1200 + Math.random() * 800) => {
+    setIsTyping(true);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    
     typingTimeout.current = setTimeout(() => {
       setIsTyping(false);
     }, duration);
   };
 
-  // Advanced AI response generation
-  const generateAIResponse = async (userMessage: string, context: ConversationContext): Promise<AIResponse> => {
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+  // Advanced AI response generation with business expertise
+  const generateAIResponse = async (userMessage: string): Promise<AIResponse> => {
+    // Simulate AI processing
+    await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 900));
 
-    const businessContext = conversationState.businessContext;
-    let response: AIResponse;
+    const lowerMessage = userMessage.toLowerCase();
+    const { context, businessContext } = conversationState;
 
-    // Context-aware response generation
-    switch (context) {
-      case ConversationContext.BUSINESS_CONCEPT:
-        response = await generateBusinessConceptResponse(userMessage, businessContext);
-        break;
-      case ConversationContext.MARKET_RESEARCH:
-        response = await generateMarketResearchResponse(userMessage, businessContext);
-        break;
-      case ConversationContext.FINANCIAL_PLANNING:
-        response = await generateFinancialPlanningResponse(userMessage, businessContext);
-        break;
-      default:
-        response = await generateGeneralResponse(userMessage, context, businessContext);
-    }
-
-    // Add contextual quick actions
-    if (!response.quickActions) {
-      response.quickActions = generateContextualQuickActions(context, businessContext);
-    }
-
-    // Add metadata
-    response.metadata = {
-      confidence: 0.85 + Math.random() * 0.15,
-      sources: ['Business Planning Best Practices', 'Market Research Data', 'Financial Modeling Guidelines'],
-      suggestedFollowUps: generateFollowUpQuestions(context, userMessage),
-      estimatedReadTime: Math.ceil(response.content.length / 200) // 200 words per minute
-    };
-
-    return response;
-  };
-
-  const generateBusinessConceptResponse = async (message: string, context: BusinessContext): Promise<AIResponse> => {
-    // Extract business information from user message
-    const extractedInfo = extractBusinessInfo(message);
+    // Extract business information from message
+    const extractedInfo = extractBusinessInformation(userMessage);
     
-    if (extractedInfo.industry) {
-      const industryInsights = await getIndustryInsights(extractedInfo.industry);
-      return {
-        content: `Great! I understand you're interested in the ${extractedInfo.industry} industry. ${industryInsights} 
-
-Based on current market trends, here are some key considerations for your business concept:
-
-• **Market Opportunity**: The ${extractedInfo.industry} sector shows strong growth potential
-• **Key Success Factors**: Focus on customer experience, digital presence, and operational efficiency
-• **Common Challenges**: Competition, regulatory compliance, and scaling operations
-
-What specific problem are you looking to solve in this space?`,
-        type: MessageType.RECOMMENDATION,
-        contextUpdate: { industry: extractedInfo.industry, stage: 'planning' },
-        quickActions: [
-          { id: '1', text: 'Analyze competition', action: 'analyze_competition', type: 'primary', icon: '🔍' },
-          { id: '2', text: 'Define target market', action: 'define_target_market', type: 'secondary', icon: '🎯' },
-          { id: '3', text: 'Create value proposition', action: 'create_value_prop', type: 'info', icon: '💎' }
-        ]
-      };
-    }
-
-    return {
-      content: `I'd love to learn more about your business idea! To provide you with the most relevant guidance, could you tell me:
-
-• What industry or market are you considering?
-• What specific problem does your business solve?
-• Who would be your ideal customers?
-
-The more details you share, the better I can help you develop a comprehensive business plan.`,
-      type: MessageType.TEXT
-    };
-  };
-
-  const generateMarketResearchResponse = async (message: string, context: BusinessContext): Promise<AIResponse> => {
-    return {
-      content: `Excellent! Market research is crucial for business success. Let me help you analyze your market opportunity.
-
-**Market Analysis Framework:**
-
-1. **Total Addressable Market (TAM)**: The total demand for your product/service
-2. **Serviceable Addressable Market (SAM)**: The portion you could realistically serve
-3. **Serviceable Obtainable Market (SOM)**: Your realistic market share
-
-**Competitive Analysis:**
-I recommend identifying 3-5 direct competitors and analyzing their:
-• Pricing strategies
-• Marketing approaches
-• Strengths and weaknesses
-• Customer reviews and feedback
-
-Would you like me to help you research specific competitors or calculate your market size?`,
-      type: MessageType.MARKET_ANALYSIS,
-      quickActions: [
-        { id: '1', text: 'Find competitors', action: 'find_competitors', type: 'primary', icon: '🏢' },
-        { id: '2', text: 'Calculate market size', action: 'calculate_market_size', type: 'secondary', icon: '📊' },
-        { id: '3', text: 'Create customer personas', action: 'create_personas', type: 'info', icon: '👥' }
-      ]
-    };
-  };
-
-  const generateFinancialPlanningResponse = async (message: string, context: BusinessContext): Promise<AIResponse> => {
-    return {
-      content: `Let's build your financial projections! A solid financial plan includes:
-
-**Revenue Projections:**
-• Monthly/annual revenue forecasts
-• Revenue streams and pricing models
-• Growth assumptions and seasonality
-
-**Expense Categories:**
-• Fixed costs (rent, insurance, salaries)
-• Variable costs (materials, commissions)
-• One-time startup costs
-
-**Key Financial Metrics:**
-• Break-even analysis
-• Cash flow projections
-• Profit & loss statements
-• Return on investment (ROI)
-
-I can help you create a detailed financial model. What's your expected monthly revenue in the first year?`,
-      type: MessageType.FINANCIAL_PROJECTION,
-      quickActions: [
-        { id: '1', text: 'Build financial model', action: 'build_financial_model', type: 'primary', icon: '🧮' },
-        { id: '2', text: 'Calculate startup costs', action: 'calculate_startup_costs', type: 'secondary', icon: '💰' },
-        { id: '3', text: 'Explore funding options', action: 'explore_funding', type: 'info', icon: '🏦' }
-      ]
-    };
-  };
-
-  const generateGeneralResponse = async (message: string, context: ConversationContext, businessContext: BusinessContext): Promise<AIResponse> => {
-    // Search FAQ first
+    // Check FAQ first for quick answers
     const contextualFAQs = getContextualFAQ(location.pathname);
-    const faqResults = FAQUtils.sortByRelevance([...contextualFAQs, ...chatbotFAQ], message);
-    
-    if (faqResults.length > 0 && faqResults[0].relevanceScore > 5) {
-      const topResult = faqResults[0];
+    const faqResults = FAQUtils.sortByRelevance([...contextualFAQs, ...chatbotFAQ], userMessage);
+    if (faqResults.length > 0 && faqResults[0].relevanceScore > 8) {
       return {
-        content: topResult.answer,
-        type: MessageType.TEXT,
-        quickActions: topResult.quickActions?.map(action => ({
-          ...action,
-          id: generateId(),
-          type: 'info' as const
-        }))
+        content: faqResults[0].answer,
+        quickActions: faqResults[0].quickActions,
+        confidence: 0.9,
+        sources: ['FAQ Database']
       };
     }
 
-    // Generate contextual business advice
-    return {
-      content: `I understand you're looking for guidance on "${message}". Based on your business planning journey, here's what I recommend:
-
-Let me help you break this down into actionable steps. Could you provide more specific details about what you're trying to accomplish?
-
-In the meantime, here are some resources that might help:`,
-      type: MessageType.TEXT,
-      quickActions: [
-        { id: '1', text: 'Get specific advice', action: 'get_specific_advice', type: 'primary', icon: '🎯' },
-        { id: '2', text: 'Browse resources', action: 'browse_resources', type: 'secondary', icon: '📚' },
-        { id: '3', text: 'Schedule consultation', action: 'schedule_consultation', type: 'info', icon: '📅' }
-      ]
-    };
-  };
-
-  const generateContextualQuickActions = (context: ConversationContext, businessContext: BusinessContext): QuickAction[] => {
-    const baseActions: QuickAction[] = [
-      { id: 'help', text: 'Get help', action: 'show_help', type: 'info', icon: '❓' },
-      { id: 'restart', text: 'Start over', action: 'restart_conversation', type: 'secondary', icon: '🔄' }
-    ];
-
-    switch (context) {
-      case ConversationContext.BUSINESS_CONCEPT:
-        return [
-          { id: '1', text: 'Validate idea', action: 'validate_idea', type: 'primary', icon: '✅' },
-          { id: '2', text: 'Research market', action: 'research_market', type: 'secondary', icon: '🔍' },
-          ...baseActions
-        ];
-      case ConversationContext.FINANCIAL_PLANNING:
-        return [
-          { id: '1', text: 'Create projections', action: 'create_projections', type: 'primary', icon: '📈' },
-          { id: '2', text: 'Find funding', action: 'find_funding', type: 'secondary', icon: '💼' },
-          ...baseActions
-        ];
-      default:
-        return [
-          { id: '1', text: 'Continue planning', action: 'continue_planning', type: 'primary', icon: '▶️' },
-          ...baseActions
-        ];
+    // Context-aware business planning responses
+    if (context === ConversationContext.BUSINESS_CONCEPT || lowerMessage.includes('business idea') || lowerMessage.includes('concept')) {
+      return generateBusinessConceptResponse(userMessage, extractedInfo);
     }
+
+    if (context === ConversationContext.MARKET_RESEARCH || lowerMessage.includes('market') || lowerMessage.includes('competition')) {
+      return generateMarketResearchResponse(userMessage, extractedInfo);
+    }
+
+    if (context === ConversationContext.FINANCIAL_PLANNING || lowerMessage.includes('financial') || lowerMessage.includes('money') || lowerMessage.includes('revenue')) {
+      return generateFinancialPlanningResponse(userMessage, extractedInfo);
+    }
+
+    // Industry-specific guidance
+    if (extractedInfo.industry) {
+      return generateIndustrySpecificResponse(extractedInfo.industry, userMessage);
+    }
+
+    // General business advice
+    return generateGeneralBusinessAdvice(userMessage);
   };
 
-  const generateFollowUpQuestions = (context: ConversationContext, userMessage: string): string[] => {
-    const contextQuestions = businessPlanningPrompts[context]?.questions || [];
-    return contextQuestions.slice(0, 3);
-  };
-
-  const extractBusinessInfo = (message: string): Partial<BusinessContext> => {
+  const extractBusinessInformation = (message: string): Partial<BusinessContext> => {
     const info: Partial<BusinessContext> = {};
-    const lowerMessage = message.toLowerCase();
+    const lower = message.toLowerCase();
 
-    // Extract industry
-    const industries = ['technology', 'healthcare', 'retail', 'food', 'education', 'finance', 'manufacturing', 'consulting', 'ecommerce', 'saas', 'fintech'];
-    for (const industry of industries) {
-      if (lowerMessage.includes(industry)) {
+    // Industry detection
+    const industryKeywords = {
+      technology: ['tech', 'software', 'app', 'digital', 'ai', 'saas', 'platform'],
+      healthcare: ['health', 'medical', 'wellness', 'fitness', 'pharma', 'clinic'],
+      retail: ['retail', 'store', 'shop', 'ecommerce', 'product', 'fashion'],
+      food: ['food', 'restaurant', 'catering', 'delivery', 'cooking', 'beverage'],
+      education: ['education', 'training', 'course', 'school', 'learning'],
+      finance: ['finance', 'fintech', 'banking', 'investment', 'insurance']
+    };
+
+    for (const [industry, keywords] of Object.entries(industryKeywords)) {
+      if (keywords.some(keyword => lower.includes(keyword))) {
         info.industry = industry;
         break;
       }
     }
 
-    // Extract business type
-    if (lowerMessage.includes('startup') || lowerMessage.includes('new business')) {
+    // Business stage detection
+    if (lower.includes('startup') || lower.includes('new business')) {
       info.businessType = 'startup';
-    } else if (lowerMessage.includes('existing')) {
+      info.stage = 'idea';
+    }
+    if (lower.includes('existing business')) {
       info.businessType = 'existing';
     }
-
-    // Extract stage
-    if (lowerMessage.includes('idea') || lowerMessage.includes('concept')) {
-      info.stage = 'idea';
-    } else if (lowerMessage.includes('planning')) {
+    if (lower.includes('planning')) {
       info.stage = 'planning';
-    } else if (lowerMessage.includes('launch') || lowerMessage.includes('starting')) {
+    }
+    if (lower.includes('launch') || lower.includes('starting')) {
       info.stage = 'launch';
+    }
+
+    // Experience level
+    if (lower.includes('first time') || lower.includes('beginner')) {
+      info.experience = 'first-time';
+    }
+    if (lower.includes('experienced') || lower.includes('serial entrepreneur')) {
+      info.experience = 'experienced';
     }
 
     return info;
   };
 
-  const getIndustryInsights = async (industry: string): Promise<string> => {
-    const insights = {
-      'technology': 'The tech industry continues to grow rapidly with AI, cloud computing, and cybersecurity leading the way.',
-      'healthcare': 'Healthcare innovation focuses on telemedicine, personalized medicine, and health tech solutions.',
-      'retail': 'E-commerce and omnichannel experiences are reshaping retail with emphasis on customer experience.',
-      'food': 'The food industry is embracing sustainability, plant-based alternatives, and food delivery innovations.',
-      'education': 'EdTech is transforming learning with personalized platforms, online courses, and skill-based training.',
-      'finance': 'FinTech is revolutionizing banking with digital payments, robo-advisors, and blockchain technology.',
-      'manufacturing': 'Industry 4.0 is driving automation, IoT integration, and sustainable production methods.',
-      'consulting': 'Consulting services are evolving with specialized expertise, digital transformation, and remote delivery.',
-      'ecommerce': 'E-commerce growth continues with social commerce, mobile shopping, and direct-to-consumer brands.',
-      'saas': 'Software-as-a-Service markets show strong growth with focus on user experience and integration.',
-      'fintech': 'Financial technology is expanding rapidly with digital banking, payments, and investment platforms.',
-      'default': 'This industry offers significant opportunities for innovation and growth.'
-    };
+  const generateBusinessConceptResponse = (message: string, info: Partial<BusinessContext>): AIResponse => {
+    let content = `Great! Let's develop your business concept. `;
 
-    return insights[industry as keyof typeof insights] || insights.default;
+    if (info.industry) {
+      const industryData = businessInsights[info.industry as keyof typeof businessInsights];
+      if (industryData) {
+        content += `I see you're interested in the ${info.industry} industry. ${industryData.trends}.
+
+**Key Opportunities in ${info.industry}:**
+${industryData.opportunities}
+
+**Common Challenges to Consider:**
+${industryData.challenges}
+
+`;
+      }
+    }
+
+    content += `To help you refine your business concept, let's explore:
+
+🎯 **Value Proposition**: What unique problem does your business solve?
+👥 **Target Market**: Who are your ideal customers?
+💰 **Revenue Model**: How will you make money?
+🏆 **Competitive Advantage**: What sets you apart?
+
+What specific problem are you looking to solve with your business?`;
+
+    return {
+      content,
+      messageType: 'business_plan',
+      quickActions: [
+        { text: '🎯 Define Target Market', action: 'define_target_market' },
+        { text: '🔍 Research Competitors', action: 'research_competitors' },
+        { text: '💎 Create Value Proposition', action: 'value_proposition' },
+        { text: '📊 Validate Market Demand', action: 'validate_demand' }
+      ],
+      confidence: 0.92,
+      sources: ['Business Planning Best Practices', 'Industry Analysis'],
+      contextUpdate: { ...info, stage: 'planning' }
+    };
   };
 
-  const sendMessage = useCallback(async (content: string, isQuickAction = false) => {
+  const generateMarketResearchResponse = (message: string, info: Partial<BusinessContext>): AIResponse => {
+    const content = `Excellent! Market research is crucial for business success. Let me guide you through a comprehensive market analysis.
+
+📈 **Market Size Analysis (TAM-SAM-SOM Framework):**
+• **Total Addressable Market (TAM)**: The entire market opportunity
+• **Serviceable Addressable Market (SAM)**: Your realistic target market
+• **Serviceable Obtainable Market (SOM)**: Your achievable market share
+
+🏢 **Competitive Analysis Framework:**
+1. **Direct Competitors**: Companies offering similar solutions
+2. **Indirect Competitors**: Alternative solutions to the same problem
+3. **Competitive Advantages**: What makes you different and better
+
+👥 **Customer Research:**
+• Demographics and psychographics
+• Pain points and motivations
+• Buying behavior and decision factors
+• Price sensitivity and preferences
+
+Would you like me to help you identify your main competitors or calculate your market size potential?`;
+
+    return {
+      content,
+      messageType: 'market_analysis',
+      quickActions: [
+        { text: '🔍 Find Direct Competitors', action: 'find_competitors' },
+        { text: '📊 Calculate Market Size', action: 'market_size_calculator' },
+        { text: '👥 Create Customer Personas', action: 'customer_personas' },
+        { text: '💰 Analyze Pricing Strategies', action: 'pricing_analysis' }
+      ],
+      confidence: 0.89,
+      sources: ['Market Research Methodology', 'Competitive Analysis Framework']
+    };
+  };
+
+  const generateFinancialPlanningResponse = (message: string, info: Partial<BusinessContext>): AIResponse => {
+    const content = `Perfect! Let's build your financial foundation. A comprehensive financial plan includes several key components:
+
+💰 **Revenue Projections:**
+• Monthly/quarterly/annual revenue forecasts
+• Multiple revenue streams identification
+• Growth rate assumptions and seasonality factors
+• Customer acquisition and retention metrics
+
+💸 **Cost Structure:**
+• **Fixed Costs**: Rent, insurance, salaries, software subscriptions
+• **Variable Costs**: Materials, commissions, transaction fees
+• **One-time Costs**: Equipment, setup, legal, marketing launch
+
+📊 **Key Financial Statements:**
+• Profit & Loss (P&L) projections
+• Cash flow statements
+• Balance sheet forecasts
+• Break-even analysis
+
+🎯 **Critical Metrics:**
+• Customer Acquisition Cost (CAC)
+• Customer Lifetime Value (CLV)
+• Monthly Recurring Revenue (MRR)
+• Burn rate and runway
+
+What's your expected monthly revenue target for the first year of operations?`;
+
+    return {
+      content,
+      messageType: 'financial',
+      quickActions: [
+        { text: '🧮 Build Financial Model', action: 'build_financial_model' },
+        { text: '💰 Calculate Startup Costs', action: 'startup_costs_calculator' },
+        { text: '📈 Revenue Forecasting', action: 'revenue_forecasting' },
+        { text: '🏦 Explore Funding Options', action: 'funding_options' }
+      ],
+      confidence: 0.94,
+      sources: ['Financial Modeling Best Practices', 'Startup Finance Guide']
+    };
+  };
+
+  const generateIndustrySpecificResponse = (industry: string, message: string): AIResponse => {
+    const industryData = businessInsights[industry as keyof typeof businessInsights];
+    
+    const content = `Based on your interest in the ${industry} industry, here's what you should know:
+
+🌟 **Current Industry Trends:**
+${industryData?.trends || 'Industry is experiencing significant growth and innovation opportunities.'}
+
+⚡ **Key Opportunities:**
+${industryData?.opportunities || 'Multiple growth vectors available for new entrants.'}
+
+⚠️ **Challenges to Navigate:**
+${industryData?.challenges || 'Regulatory considerations and competitive landscape factors.'}
+
+**Recommended Next Steps:**
+1. Conduct thorough market research in your specific niche
+2. Identify key players and their market positioning
+3. Validate your unique value proposition
+4. Develop a minimum viable product (MVP) strategy
+
+What specific aspect of the ${industry} industry interests you most?`;
+
+    return {
+      content,
+      messageType: 'recommendation',
+      quickActions: [
+        { text: `📊 ${industry} Market Analysis`, action: `${industry}_market_analysis` },
+        { text: '🏢 Industry Competitors', action: 'industry_competitors' },
+        { text: '💡 Business Opportunities', action: 'business_opportunities' },
+        { text: '📋 Industry Requirements', action: 'industry_requirements' }
+      ],
+      confidence: 0.87,
+      sources: ['Industry Reports', 'Market Analysis'],
+      contextUpdate: { industry }
+    };
+  };
+
+  const generateGeneralBusinessAdvice = (message: string): AIResponse => {
+    const content = `I'm here to help you succeed in your business journey! Based on your question, here's my guidance:
+
+Let me provide you with actionable insights tailored to your specific situation. To give you the most relevant advice, I'd like to understand:
+
+🎯 **Your Business Focus:**
+• What industry or market are you considering?
+• What stage is your business in (idea, planning, launch, growth)?
+• What specific challenges are you facing?
+
+📈 **Common Success Factors:**
+• Clear value proposition and target market definition
+• Solid financial planning and cash flow management
+• Strong marketing and customer acquisition strategy
+• Operational efficiency and scalability planning
+
+💡 **Quick Wins:**
+• Validate your business idea with potential customers
+• Create detailed financial projections
+• Research your competition thoroughly
+• Build a strong online presence
+
+What specific aspect of your business would you like to focus on first?`;
+
+    return {
+      content,
+      quickActions: [
+        { text: '💡 Validate Business Idea', action: 'validate_business_idea' },
+        { text: '📊 Create Business Plan', action: 'create_business_plan' },
+        { text: '💰 Financial Planning', action: 'financial_planning' },
+        { text: '🎯 Marketing Strategy', action: 'marketing_strategy' }
+      ],
+      confidence: 0.75,
+      sources: ['Business Planning Guidelines', 'Entrepreneurship Best Practices']
+    };
+  };
+
+  // Main message sending function - Compatible with ChatbotWidget
+  const sendMessage = useCallback(async (content: string) => {
     if (!content.trim()) return;
 
-    // Add user message
+    // Create user message
     const userMessage: ChatMessage = {
       id: generateId(),
-      content,
+      content: content.trim(),
       isBot: false,
-      timestamp: new Date(),
-      type: MessageType.TEXT,
-      context: conversationState.context
+      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -505,23 +568,23 @@ In the meantime, here are some resources that might help:`,
 
     try {
       // Generate AI response
-      const aiResponse = await generateAIResponse(content, conversationState.context);
+      const aiResponse = await generateAIResponse(content);
       
-      // Create bot message
+      // Create bot response message
       const botMessage: ChatMessage = {
         id: generateId(),
         content: aiResponse.content,
         isBot: true,
         timestamp: new Date(),
-        type: aiResponse.type,
-        context: conversationState.context,
         quickActions: aiResponse.quickActions,
-        metadata: aiResponse.metadata
+        messageType: aiResponse.messageType,
+        confidence: aiResponse.confidence,
+        sources: aiResponse.sources
       };
 
       setMessages(prev => [...prev, botMessage]);
 
-      // Update business context if needed
+      // Update business context if provided
       if (aiResponse.contextUpdate) {
         setConversationState(prev => ({
           ...prev,
@@ -529,21 +592,24 @@ In the meantime, here are some resources that might help:`,
         }));
       }
 
-      // Store in conversation history
-      conversationHistory.current = [...conversationHistory.current, userMessage, botMessage];
+      // Handle navigation if needed
+      if (aiResponse.shouldNavigate) {
+        navigate(aiResponse.shouldNavigate);
+      }
 
     } catch (error) {
       console.error('Error generating AI response:', error);
       
+      // Error fallback message
       const errorMessage: ChatMessage = {
         id: generateId(),
-        content: "I apologize, but I'm having trouble processing your request right now. Please try again or contact support if the issue persists.",
+        content: "I apologize, but I'm experiencing some technical difficulties. Please try rephrasing your question or contact our support team if the issue persists.",
         isBot: true,
         timestamp: new Date(),
-        type: MessageType.TEXT,
         quickActions: [
-          { id: '1', text: 'Try again', action: 'retry', type: 'primary', icon: '🔄' },
-          { id: '2', text: 'Contact support', action: 'contact_support', type: 'secondary', icon: '📞' }
+          { text: '🔄 Try Again', action: 'retry_message' },
+          { text: '📞 Contact Support', action: 'contact_support' },
+          { text: '❓ Get Help', action: 'show_help' }
         ]
       };
 
@@ -551,69 +617,78 @@ In the meantime, here are some resources that might help:`,
     } finally {
       setIsTyping(false);
     }
-  }, [conversationState, location.pathname]);
+  }, [conversationState, navigate]);
 
-  const handleQuickAction = useCallback(async (action: string, payload?: Record<string, unknown> | string) => {
+  // Handle quick action clicks - Compatible with ChatbotWidget expectations
+  const handleQuickAction = useCallback(async (action: string, href?: string) => {
+    // Handle navigation actions
+    if (action === 'navigate' && href) {
+      navigate(href);
+      return;
+    }
+
+    if (action === 'contact_support') {
+      navigate('/contact');
+      return;
+    }
+
+    if (action === 'show_help') {
+      navigate('/faq');
+      return;
+    }
+
+    // Handle FAQ actions
+    if (action === 'faq' && href) {
+      const faqItem = chatbotFAQ.find(item => item.id === href);
+      if (faqItem) {
+        await sendMessage(faqItem.question);
+        return;
+      }
+    }
+
+    // Handle conversation actions
     switch (action) {
-      case 'start_business_concept':
-      case 'start_business_plan':
+      case 'start_new_plan':
         updateConversationState({ context: ConversationContext.BUSINESS_CONCEPT });
-        await sendMessage("I'd like to start developing my business concept", true);
+        await sendMessage("I'd like to start creating a comprehensive business plan from scratch.");
         break;
-      case 'start_market_research':
-        updateConversationState({ context: ConversationContext.MARKET_RESEARCH });
-        await sendMessage("I want to conduct market research for my business", true);
+      
+      case 'continue_plan':
+        await sendMessage("I want to continue working on my existing business plan. What section should we focus on?");
         break;
-      case 'start_financial_planning':
+      
+      case 'financial_planning':
+      case 'financial_model':
+      case 'build_financial_model':
         updateConversationState({ context: ConversationContext.FINANCIAL_PLANNING });
-        await sendMessage("Help me create financial projections", true);
+        await sendMessage("I need help with financial planning and projections for my business.");
         break;
-      case 'get_advice':
-        await sendMessage("I need some business advice", true);
+      
+      case 'market_research':
+      case 'market_analysis':
+        updateConversationState({ context: ConversationContext.MARKET_RESEARCH });
+        await sendMessage("I want to conduct thorough market research for my business idea.");
         break;
-      case 'continue_planning':
-        const nextContext = getNextPlanningContext(conversationState.context);
-        updateConversationState({ context: nextContext });
-        await sendMessage(`Let's continue with ${nextContext.replace('_', ' ')}`, true);
+      
+      case 'validate_idea':
+      case 'validate_business_idea':
+        updateConversationState({ context: ConversationContext.BUSINESS_CONCEPT });
+        await sendMessage("How can I validate my business idea to ensure there's market demand?");
         break;
+      
       case 'restart_conversation':
         clearConversation();
         break;
-      case 'contact_support':
-        navigate('/contact');
-        break;
-      case 'navigate':
-        if (typeof payload === 'string') {
-          navigate(payload);
-        }
-        break;
-      case 'faq':
-        if (typeof payload === 'string') {
-          const faqItem = chatbotFAQ.find(item => item.id === payload);
-          if (faqItem) {
-            await sendMessage(faqItem.question, true);
-          }
-        }
-        break;
+      
       default:
-        await sendMessage(action, true);
+        // For any other action, send it as a message
+        const actionText = action.replace(/_/g, ' ');
+        await sendMessage(`Help me with ${actionText}`);
     }
-  }, [conversationState, sendMessage, navigate]);
+  }, [sendMessage, navigate]);
 
-  const getNextPlanningContext = (current: ConversationContext): ConversationContext => {
-    const sequence = [
-      ConversationContext.BUSINESS_CONCEPT,
-      ConversationContext.MARKET_RESEARCH,
-      ConversationContext.FINANCIAL_PLANNING,
-      ConversationContext.OPERATIONS,
-      ConversationContext.MARKETING_STRATEGY
-    ];
-    
-    const currentIndex = sequence.indexOf(current);
-    return sequence[currentIndex + 1] || ConversationContext.GROWTH_PLANNING;
-  };
-
-  const clearConversation = useCallback(() => {
+  // Clear conversation function - Compatible with existing ChatbotWidget
+  const clearChat = useCallback(() => {
     setMessages([]);
     setConversationState({
       context: ConversationContext.WELCOME,
@@ -621,34 +696,50 @@ In the meantime, here are some resources that might help:`,
       sessionDuration: 0,
       messageCount: 0
     });
-    conversationHistory.current = [];
     sessionStartTime.current = Date.now();
     
     // Re-initialize with welcome message
     setTimeout(() => {
-      const welcomeMessage = getContextualWelcomeMessage();
+      const welcomeMessage = createWelcomeMessage();
       setMessages([welcomeMessage]);
     }, 100);
-  }, [getContextualWelcomeMessage]);
+  }, []);
 
+  const clearConversation = clearChat;
+
+  const toggleChat = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  // Export conversation data
   const exportConversation = useCallback(() => {
     const exportData = {
-      conversation: messages,
+      conversation: messages.map(msg => ({
+        content: msg.content,
+        isBot: msg.isBot,
+        timestamp: msg.timestamp,
+        messageType: msg.messageType
+      })),
       businessContext: conversationState.businessContext,
       sessionDuration: conversationState.sessionDuration,
-      timestamp: new Date().toISOString()
+      messageCount: conversationState.messageCount,
+      exportedAt: new Date().toISOString()
     };
     
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+      type: 'application/json' 
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `business-planning-session-${Date.now()}.json`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, [messages, conversationState]);
 
-  // Cleanup
+  // Cleanup function
   useEffect(() => {
     return () => {
       if (typingTimeout.current) {
@@ -657,29 +748,37 @@ In the meantime, here are some resources that might help:`,
     };
   }, []);
 
+  // Return interface compatible with ChatbotWidget
   return {
+    // Core ChatbotWidget compatibility
     isOpen,
     setIsOpen,
     messages,
     isTyping,
-    conversationState,
     sendMessage,
     handleQuickAction,
-    clearConversation,
-    exportConversation,
+    clearChat,
+    toggleChat,
     
-    // Advanced features
+    // Enhanced business planning features
+    conversationState,
     businessContext: conversationState.businessContext,
     currentContext: conversationState.context,
     sessionDuration: conversationState.sessionDuration,
     messageCount: conversationState.messageCount,
     
-    // Utility functions
-    generateId,
-    updateConversationState,
+    // Action handlers
+    clearConversation,
+    exportConversation,
     
-    // Legacy compatibility
-    toggleChat: () => setIsOpen(prev => !prev),
-    clearChat: clearConversation
+    // Utility functions
+    updateConversationState,
+    businessPlanSections,
+    
+    // Quick access to business insights
+    getBusinessInsight: (industry: string) => businessInsights[industry as keyof typeof businessInsights],
+    
+    // Session management
+    sessionStartTime: sessionStartTime.current
   };
 };
