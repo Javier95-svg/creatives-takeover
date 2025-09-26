@@ -71,7 +71,7 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://discord.com/invite/kcsxMzGw"
+                  href="https://discord.gg/kcsxMzGw"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Discord"

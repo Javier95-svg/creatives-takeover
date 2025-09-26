@@ -31,7 +31,7 @@ const CommunityHero = () => {
               </Button>
             </Link>
             <a 
-              href="https://discord.com/invite/kcsxMzGw" 
+              href="https://discord.gg/kcsxMzGw" 
               target="_blank" 
               rel="noopener noreferrer"
             >
