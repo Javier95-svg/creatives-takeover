@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { chatbotFAQ, getContextualFAQ, FAQItem } from '@/data/chatbotFAQ';
+import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
+import { FAQItem, FAQUtils } from '@/types/faq';
 
 export interface ChatMessage {
   id: string;
@@ -42,20 +43,23 @@ export const useChatbot = () => {
   const findBestMatch = useCallback((userInput: string): FAQItem | null => {
     const input = userInput.toLowerCase();
     
-    // First try contextual FAQs
+    // First try contextual FAQs with enhanced search
     const contextualFAQs = getContextualFAQ(location.pathname);
-    let bestMatch = contextualFAQs.find(item => 
-      item.keywords.some(keyword => input.includes(keyword.toLowerCase()))
-    );
-
-    // If no contextual match, search all FAQs
-    if (!bestMatch) {
-      bestMatch = chatbotFAQ.find(item => 
-        item.keywords.some(keyword => input.includes(keyword.toLowerCase()))
-      );
+    let searchResults = FAQUtils.sortByRelevance(contextualFAQs, input);
+    
+    if (searchResults.length > 0 && searchResults[0].relevanceScore > 3) {
+      return searchResults[0];
     }
 
-    return bestMatch || null;
+    // If no contextual match, search all FAQs with enhanced algorithm
+    searchResults = FAQUtils.sortByRelevance(chatbotFAQ, input);
+    
+    // Return best match if relevance score is above threshold
+    if (searchResults.length > 0 && searchResults[0].relevanceScore > 2) {
+      return searchResults[0];
+    }
+
+    return null;
   }, [location.pathname]);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -76,12 +80,17 @@ export const useChatbot = () => {
       let botResponse: ChatMessage;
       
       if (faqMatch) {
+        // Use short answer for quick responses if available, otherwise full answer
+        const responseContent = content.length < 20 && faqMatch.shortAnswer 
+          ? faqMatch.shortAnswer 
+          : faqMatch.answer;
+        
         botResponse = {
           id: (Date.now() + 1).toString(),
-          content: faqMatch.answer,
+          content: responseContent,
           isBot: true,
           timestamp: new Date(),
-          quickActions: faqMatch.quickActions
+          quickActions: faqMatch.quickActions?.sort((a, b) => (a.priority || 10) - (b.priority || 10))
         };
       } else {
         // Default response for unmatched queries
