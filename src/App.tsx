@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import MobileOptimization from "@/components/MobileOptimization";
 import Index from "./pages/Index";
+import CreativesTakeover from "./pages/CreativesTakeover";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import PricingPage from "./pages/PricingPage";
@@ -49,6 +50,7 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/creatives-takeover" element={<CreativesTakeover />} />
             <Route path="/software" element={<Software />} />
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />

@@ -654,3 +654,164 @@ All colors MUST be HSL.
     filter: brightness(1.2);
   }
 }
+
+/* Screen reader only text utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Creatives Takeover Responsive Styles */
+
+/* Header Styles */
+.site-header {
+  --brand: hsl(var(--electric-blue));
+}
+
+.header-inner {
+  max-width: 1200px;
+}
+
+/* Navigation Styles */
+.nav-toggle {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+/* Mobile Navigation */
+@media (max-width: 767px) {
+  .site-nav {
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .site-nav[aria-hidden="false"] {
+    transform: translateY(0);
+  }
+  
+  /* Ensure proper mobile touch targets */
+  .nav-toggle, 
+  .site-nav a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    touch-action: manipulation;
+  }
+}
+
+/* Cards Grid Layout */
+.cards {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Mobile: 1 column */
+@media (max-width: 600px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .card {
+    margin: 0.5rem 0;
+  }
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Desktop: 4 columns */
+@media (min-width: 1025px) {
+  .cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Hero Section */
+.hero {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    min-height: 80vh;
+  }
+}
+
+/* About Section */
+.about {
+  padding: 5rem 0;
+}
+
+.about-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .about-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+}
+
+/* Footer */
+.site-footer {
+  margin-top: auto;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1200px;
+  }
+}
