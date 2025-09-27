@@ -19,10 +19,26 @@ const ChatbotWidget = () => {
   } = useChatbot();
   
   const [inputValue, setInputValue] = useState('');
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const isMobile = useIsMobile();
+  
+  // Force mobile detection for screens under 768px
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      console.log('ChatbotWidget - Mobile check:', mobile, 'Width:', window.innerWidth);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  console.log('ChatbotWidget render - isMobile:', isMobile, 'isOpen:', isOpen);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

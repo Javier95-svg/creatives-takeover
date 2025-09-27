@@ -1,7 +1,6 @@
 import React from 'react';
 import { Bot } from 'lucide-react';
 import { useTypingAnimation } from '@/hooks/useTypingAnimation';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TypingMessageProps {
   content: string;
@@ -20,7 +19,8 @@ const TypingMessage: React.FC<TypingMessageProps> = ({
     onComplete
   });
   
-  const isMobile = useIsMobile();
+  // Use same mobile detection as ChatbotWidget
+  const isMobile = window.innerWidth < 768;
 
   return (
     <div className="flex gap-3">
