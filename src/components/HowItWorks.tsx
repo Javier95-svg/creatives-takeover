@@ -92,58 +92,60 @@ const HowItWorks = () => {
       <div className="absolute top-48 left-2/4 w-8 h-8 bg-blue-400/10 rounded-full flex items-center justify-center text-blue-400 text-sm font-bold animate-pulse" style={{ animationDelay: '0.5s' }}>2</div>
       <div className="absolute top-32 left-3/4 w-8 h-8 bg-cyan-400/10 rounded-full flex items-center justify-center text-cyan-400 text-sm font-bold animate-pulse" style={{ animationDelay: '1s' }}>3</div>
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-4 sm:mb-6 text-xs sm:text-sm">
             Simple 4-Step Process
           </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 gradient-text px-4">
             From Idea to Business in Minutes
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             Our proven process has helped thousands of creative entrepreneurs transform 
             their ideas into profitable businesses. Here's exactly how it works.
           </p>
         </div>
 
         {/* Process Steps */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
           {steps.map((step, index) => (
             <Card 
               key={index} 
-              className="relative glass border-border hover:shadow-xl transition-all duration-500 hover-lift group p-8" 
+              className="relative glass border-border hover:shadow-xl transition-all duration-500 hover-lift group p-4 sm:p-6 lg:p-8" 
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
               {/* Step Number */}
-              <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg">
+              <div className="absolute -top-3 sm:-top-4 -left-3 sm:-left-4 w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center text-primary-foreground font-bold text-base sm:text-lg shadow-lg">
                 {step.number}
               </div>
               
               {/* Time Badge */}
-              <div className="absolute -top-3 right-6">
-                <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+              <div className="absolute -top-2 sm:-top-3 right-4 sm:right-6">
+                <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
                   <Clock className="w-3 h-3 mr-1" />
                   {step.time}
                 </Badge>
               </div>
               
               <CardContent className="p-0">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    {step.icon}
+                <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="p-2 sm:p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 text-primary">
+                      {step.icon}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                    <p className="text-muted-foreground mb-4">{step.description}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">{step.title}</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-4">{step.description}</p>
                   </div>
                 </div>
                 
                 {/* Details List */}
                 <ul className="space-y-2">
                   {step.details.map((detail, detailIndex) => (
-                    <li key={detailIndex} className="flex items-center text-sm">
-                      <CheckCircle className="w-4 h-4 text-primary mr-3 flex-shrink-0" />
+                    <li key={detailIndex} className="flex items-center text-xs sm:text-sm">
+                      <CheckCircle className="w-3 sm:w-4 h-3 sm:h-4 text-primary mr-2 sm:mr-3 flex-shrink-0" />
                       <span>{detail}</span>
                     </li>
                   ))}
@@ -154,34 +156,34 @@ const HowItWorks = () => {
         </div>
 
         {/* Interactive CTA */}
-        <div className="text-center">
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 animate-fade-in">
-            <h3 className="text-3xl font-bold mb-4 gradient-text">
+        <div className="text-center px-4">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-6 sm:p-8 lg:p-12 animate-fade-in">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-4 gradient-text">
               Ready to See It in Action?
             </h3>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Don't just take our word for it. Try our process with your own creative idea right now.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">2 min</div>
-                <div className="text-sm text-muted-foreground">Average setup time</div>
+                <div className="text-xl sm:text-2xl font-bold text-primary mb-2">2 min</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Average setup time</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">30 sec</div>
-                <div className="text-sm text-muted-foreground">AI analysis speed</div>
+                <div className="text-xl sm:text-2xl font-bold text-primary mb-2">30 sec</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">AI analysis speed</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">100%</div>
-                <div className="text-sm text-muted-foreground">Free to try</div>
+                <div className="text-xl sm:text-2xl font-bold text-primary mb-2">100%</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Free to try</div>
               </div>
             </div>
 
-            <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300" asChild>
+            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto" asChild>
               <Link to="/dream2plan">
                 Try It With My Idea
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
               </Link>
             </Button>
           </div>

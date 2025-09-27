@@ -88,49 +88,51 @@ const EntrepreneurProblems = () => {
       <div className="absolute top-1/4 left-1/5 w-32 h-1 bg-red-500/30 animate-pulse" />
       <div className="absolute bottom-1/3 right-1/5 w-24 h-1 bg-orange-500/30 animate-pulse" style={{ animationDelay: '1s' }} />
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-6">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+          <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
             Creative Entrepreneur Challenges
           </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
             Stop Struggling with <span className="text-red-500">These Problems</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             Every creative entrepreneur faces these challenges. The difference? Having AI-powered tools 
             and automation to solve them <strong className="text-foreground">instantly</strong>.
           </p>
         </div>
 
         {/* Problems Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
           {problems.map((item, index) => (
             <Card 
               key={index} 
               className="glass border-border hover:shadow-xl transition-all duration-500 hover-lift group" 
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
-              <CardContent className="p-8">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="p-3 rounded-xl bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
-                    {item.icon}
+              <CardContent className="p-4 sm:p-6 lg:p-8">
+                <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="p-2 sm:p-3 rounded-xl bg-red-500/10 group-hover:bg-red-500/20 transition-colors flex-shrink-0">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 text-red-500">
+                      {item.icon}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2 text-red-600">{item.problem}</h3>
-                    <p className="text-muted-foreground mb-4">{item.description}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold mb-2 text-red-600">{item.problem}</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-4">{item.description}</p>
                   </div>
                 </div>
                 
                 {/* Solution */}
-                <div className="border-t border-border/50 pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <CheckCircle className="w-5 h-5 text-primary" />
+                <div className="border-t border-border/50 pt-4 sm:pt-6">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                      <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-primary mb-2">Our Solution:</h4>
-                      <p className="text-sm text-muted-foreground">{item.solution}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-primary mb-2 text-sm sm:text-base">Our Solution:</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{item.solution}</p>
                     </div>
                   </div>
                 </div>
@@ -140,38 +142,38 @@ const EntrepreneurProblems = () => {
         </div>
 
         {/* Solution CTA */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 text-center animate-fade-in">
-          <h3 className="text-3xl font-bold mb-4 gradient-text">
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-6 sm:p-8 lg:p-12 text-center animate-fade-in mx-4">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-4 gradient-text">
             Ready to Automate Your Success?
           </h3>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Stop struggling with manual processes and complex tools. Get AI-powered business planning 
             that <strong className="text-foreground">actually works for creatives</strong>.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Instant Business Analysis</span>
+              <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">Instant Business Analysis</span>
             </div>
             <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Community Support</span>
+              <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">Community Support</span>
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Market Intelligence</span>
+            <div className="flex items-center justify-center gap-2 sm:col-span-2 lg:col-span-1">
+              <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">Market Intelligence</span>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-6" asChild>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 w-full sm:w-auto" asChild>
               <Link to="/dream2plan">
                 Get AI Business Support
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
+            <Button variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 w-full sm:w-auto" asChild>
               <Link to="/community">
                 Join Creative Community
               </Link>

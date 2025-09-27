@@ -395,12 +395,57 @@ All colors MUST be HSL.
 
   /* Mobile Optimizations */
   
-  /* Mobile-specific styles */
-  .safe-area-inset {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+  /* Mobile-specific enhancements */
+  @media (max-width: 767px) {
+    /* Reduce hero animations on mobile for performance */
+    .animate-float,
+    .animate-spiral,
+    .animate-zigzag,
+    .animate-diagonal-float,
+    .animate-figure-eight,
+    .animate-orbit {
+      animation-duration: 8s;
+    }
+    
+    /* Optimize text gradients for mobile */
+    .takeover-gradient,
+    .animated-gradient,
+    .reverse-gradient,
+    .gradient-text {
+      background-size: 100% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    
+    /* Better mobile button spacing */
+    .btn-magnetic {
+      min-height: 48px;
+      touch-action: manipulation;
+    }
+    
+    /* Mobile-optimized glass cards */
+    .glass-card {
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+    }
+    
+    /* Reduce complex animations on mobile */
+    .hover-lift:hover {
+      transform: translateY(-2px);
+    }
+  }
+  
+  /* Tablet optimizations */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    
+    /* Tablet-specific hover effects */
+    .hover-lift:hover {
+      transform: translateY(-3px);
+    }
   }
 
   /* Viewport height support for mobile */
