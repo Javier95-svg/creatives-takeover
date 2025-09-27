@@ -1053,76 +1053,78 @@ Subject: "Quick question about [their pain point]"
       <div className="relative z-10">
         <Navigation />
         
-        <div className="pt-20 pb-16 px-4">
+        <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 takeover-gradient creatives-font animate-fade-in">
+            <div className="text-center mb-8 sm:mb-12">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 takeover-gradient creatives-font animate-fade-in">
                 BizMap AI
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
                 Your global startup co-founder in chatbot form. Transform business ideas into <span className="gradient-text font-semibold">actionable Launch Reports</span>.
               </p>
             </div>
 
             {/* Enhanced Tab Navigation */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="flex justify-center mb-8">
-                <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-2 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+              <div className="flex justify-center mb-6 sm:mb-8">
+                <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-1 sm:p-2 animate-fade-in w-full sm:w-auto max-w-md sm:max-w-none" style={{ animationDelay: '0.5s' }}>
                   <TabsTrigger 
                     value="bizmap" 
-                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium"
+                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm"
                   >
-                    <Lightbulb className="w-5 h-5" />
-                    Business Planning
+                    <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <span className="hidden sm:inline">Business Planning</span>
+                    <span className="sm:hidden">Planning</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sprint" 
-                    className="flex items-center gap-3 px-6 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/20 data-[state=active]:to-secondary/10 data-[state=active]:text-secondary transition-all duration-300 hover:bg-secondary/5 rounded-lg font-medium"
+                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/20 data-[state=active]:to-secondary/10 data-[state=active]:text-secondary transition-all duration-300 hover:bg-secondary/5 rounded-lg font-medium text-xs sm:text-sm"
                   >
-                    <Target className="w-5 h-5" />
-                    Sprint Planner
+                    <Target className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <span className="hidden sm:inline">Sprint Planner</span>
+                    <span className="sm:hidden">Sprint</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
 
               <TabsContent value="bizmap">
                 {/* Chat Interface Container */}
-                <div className="flex gap-6 mb-8">
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mb-6 sm:mb-8">
                   {/* Chat Sidebar */}
                   <ChatSidebar 
                     onSessionSelect={handleSessionSelect}
                     onNewChat={handleNewChat}
-                    className="hidden md:flex"
+                    className="hidden lg:flex"
                   />
 
                   {/* Enhanced Main Chat Interface */}
                   <div className="flex-1 min-w-0">
-                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[700px] flex flex-col hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-2xl overflow-hidden">
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[500px] sm:h-[600px] lg:h-[700px] flex flex-col hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <div className="flex flex-col h-full">
                         {/* Enhanced Chat Header */}
-                        <div className="p-6 border-b border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5">
+                        <div className="p-3 sm:p-4 lg:p-6 border-b border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
                               <div className="relative">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg animate-pulse-glow">
-                                  <Bot className="w-6 h-6 text-white" />
+                                <div className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg animate-pulse-glow">
+                                  <Bot className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 text-white" />
                                 </div>
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse border-2 border-card"></div>
+                                <div className="absolute -top-1 -right-1 w-3 sm:w-4 h-3 sm:h-4 bg-green-400 rounded-full animate-pulse border-2 border-card"></div>
                               </div>
-                              <div>
-                                <h4 className="text-lg font-semibold gradient-text">BizMap AI Assistant</h4>
-                                <p className="text-sm text-muted-foreground">
+                              <div className="min-w-0">
+                                <h4 className="text-sm sm:text-base lg:text-lg font-semibold gradient-text truncate">BizMap AI Assistant</h4>
+                                <p className="text-xs sm:text-sm text-muted-foreground">
                                   {isCompleted ? "🎉 Launch Report Complete!" : 
                                    `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder`}
                                 </p>
                               </div>
                             </div>
                             {!isCompleted && (
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-primary">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <span className="text-xs sm:text-sm font-medium text-primary">
                                   {Math.round(getProgressPercentage())}%
                                 </span>
-                                <div className="w-20 h-3 bg-muted/50 rounded-full overflow-hidden border border-primary/20">
+                                <div className="w-12 sm:w-16 lg:w-20 h-2 sm:h-3 bg-muted/50 rounded-full overflow-hidden border border-primary/20">
                                   <div 
                                     className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 animate-glow"
                                     style={{ width: `${getProgressPercentage()}%` }}
@@ -1134,18 +1136,18 @@ Subject: "Quick question about [their pain point]"
                         </div>
 
                         {/* Enhanced Messages */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-transparent to-primary/2">
+                        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 bg-gradient-to-b from-transparent to-primary/2">
                           {messages.map((msg, index) => {
                             const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
                             
                             if (msg.type === "user") {
                               return (
-                                <div key={index} className="flex gap-4 flex-row-reverse animate-slide-in-right" style={{ animationDelay: `${index * 0.1}s` }}>
-                                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-secondary to-accent shadow-lg hover:scale-110 transition-transform duration-300">
-                                    <User className="w-5 h-5 text-white" />
+                                <div key={index} className="flex gap-2 sm:gap-3 lg:gap-4 flex-row-reverse animate-slide-in-right" style={{ animationDelay: `${index * 0.1}s` }}>
+                                  <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-secondary to-accent shadow-lg hover:scale-110 transition-transform duration-300">
+                                    <User className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                                   </div>
-                                  <div className="max-w-[80%] group">
-                                    <div className="p-4 rounded-2xl text-sm whitespace-pre-wrap bg-gradient-to-br from-secondary/20 to-accent/10 border border-secondary/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm rounded-br-sm">
+                                  <div className="max-w-[85%] sm:max-w-[80%] group">
+                                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm whitespace-pre-wrap bg-gradient-to-br from-secondary/20 to-accent/10 border border-secondary/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm rounded-br-sm">
                                       {msg.content}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1 text-right px-2">
@@ -1158,11 +1160,11 @@ Subject: "Quick question about [their pain point]"
                             
                             if (isLastAIMessage) {
                               return (
-                                <div key={index} className="flex gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse-glow hover:scale-110 transition-transform duration-300">
-                                    <Bot className="w-5 h-5 text-white" />
+                                <div key={index} className="flex gap-2 sm:gap-3 lg:gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
+                                  <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse-glow hover:scale-110 transition-transform duration-300">
+                                    <Bot className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                                   </div>
-                                  <div className="max-w-[80%]">
+                                  <div className="max-w-[85%] sm:max-w-[80%]">
                                     <TypingMessage 
                                       content={msg.content}
                                       speed={25}
@@ -1173,12 +1175,12 @@ Subject: "Quick question about [their pain point]"
                             }
                             
                             return (
-                              <div key={index} className="flex gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg hover:scale-110 transition-transform duration-300">
-                                  <Bot className="w-5 h-5 text-white" />
+                              <div key={index} className="flex gap-2 sm:gap-3 lg:gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
+                                <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg hover:scale-110 transition-transform duration-300">
+                                  <Bot className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                                 </div>
-                                <div className="max-w-[80%] group">
-                                  <div className="glass-card border-primary/20 p-4 rounded-2xl text-sm whitespace-pre-wrap hover:shadow-xl hover:scale-[1.02] transition-all duration-300 rounded-bl-sm backdrop-blur-sm">
+                                <div className="max-w-[85%] sm:max-w-[80%] group">
+                                  <div className="glass-card border-primary/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm whitespace-pre-wrap hover:shadow-xl hover:scale-[1.02] transition-all duration-300 rounded-bl-sm backdrop-blur-sm">
                                     {msg.content}
                                   </div>
                                   <div className="text-xs text-muted-foreground mt-1 px-2">
@@ -1189,17 +1191,17 @@ Subject: "Quick question about [their pain point]"
                             );
                           })}
                           {isLoading && (
-                            <div className="flex gap-4 animate-fade-in">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center animate-pulse-glow shadow-lg">
-                                <Bot className="w-5 h-5 text-white" />
+                            <div className="flex gap-2 sm:gap-3 lg:gap-4 animate-fade-in">
+                              <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center animate-pulse-glow shadow-lg">
+                                <Bot className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
                               </div>
-                              <div className="glass-card border-primary/20 p-4 rounded-2xl rounded-bl-sm">
+                              <div className="glass-card border-primary/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl rounded-bl-sm">
                                 <div className="flex items-center gap-2">
-                                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                  <Loader2 className="w-3 sm:w-4 h-3 sm:h-4 animate-spin text-primary" />
                                   <div className="flex space-x-1">
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-primary rounded-full animate-pulse"></div>
+                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                                   </div>
                                 </div>
                               </div>
@@ -1208,40 +1210,40 @@ Subject: "Quick question about [their pain point]"
                         </div>
 
                         {/* Enhanced Input Area */}
-                        <div className="p-6 border-t border-primary/20 bg-gradient-to-t from-card/50 via-primary/2 to-transparent">
+                        <div className="p-3 sm:p-4 lg:p-6 border-t border-primary/20 bg-gradient-to-t from-card/50 via-primary/2 to-transparent">
                           {isCompleted && (
-                            <div className="mb-6 grid grid-cols-3 gap-3">
+                            <div className="mb-4 sm:mb-6 grid grid-cols-3 gap-2 sm:gap-3">
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="glass border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/5 transition-all duration-300 hover:scale-105"
+                                className="glass border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/5 transition-all duration-300 hover:scale-105 text-xs sm:text-sm p-2 sm:p-3"
                                 onClick={() => handleQuickAction('outreach')}
                               >
-                                <span className="mr-2">📧</span>
+                                <span className="mr-1 sm:mr-2">📧</span>
                                 Email
                               </Button>
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5 transition-all duration-300 hover:scale-105"
+                                className="glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 text-xs sm:text-sm p-2 sm:p-3"
                                 onClick={() => handleQuickAction('social')}
                               >
-                                <span className="mr-2">📱</span>
+                                <span className="mr-1 sm:mr-2">📱</span>
                                 Social
                               </Button>
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="glass border-accent/30 hover:bg-gradient-to-r hover:from-accent/10 hover:to-primary/5 transition-all duration-300 hover:scale-105"
+                                className="glass border-accent/30 hover:bg-gradient-to-r hover:from-accent/10 hover:to-primary/5 transition-all duration-300 hover:scale-105 text-xs sm:text-sm p-2 sm:p-3"
                                 onClick={() => handleQuickAction('landing')}
                               >
-                                <span className="mr-2">🏗️</span>
+                                <span className="mr-1 sm:mr-2">🏗️</span>
                                 Landing
                               </Button>
                             </div>
                           )}
                           
-                          <div className="flex gap-3 items-end">
+                          <div className="flex gap-2 sm:gap-3 items-end">
                             <div className="flex-1">
                               <div className="relative">
                                 <Input
@@ -1249,12 +1251,12 @@ Subject: "Quick question about [their pain point]"
                                   value={message}
                                   onChange={(e) => setMessage(e.target.value)}
                                   onKeyPress={handleKeyPress}
-                                  className="glass bg-input/50 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/70 transition-all duration-300 hover:border-primary/50 pr-12 py-3 text-base"
+                                  className="glass bg-input/50 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/70 transition-all duration-300 hover:border-primary/50 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-base"
                                   disabled={isLoading}
                                 />
                                 {message && (
-                                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                  <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2">
+                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-green-400 rounded-full animate-pulse"></div>
                                   </div>
                                 )}
                               </div>
@@ -1269,26 +1271,26 @@ Subject: "Quick question about [their pain point]"
                               onClick={() => handleSendMessage()} 
                               size="icon" 
                               disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
-                              className="btn-magnetic bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border border-primary/30 shadow-lg w-12 h-12"
+                              className="btn-magnetic bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border border-primary/30 shadow-lg w-10 sm:w-12 h-10 sm:h-12"
                             >
-                              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                              {isLoading ? <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" /> : <Send className="w-4 sm:w-5 h-4 sm:h-5" />}
                             </Button>
                           </div>
                           
-                          <div className="flex items-center justify-between mt-4">
-                            <p className="text-sm text-muted-foreground">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 sm:mt-4 gap-2 sm:gap-0">
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               {isCompleted ? "✨ Launch Report generated! Ready to create your sprint?" :
                                `💬 Answer to continue to step ${currentStep + 2}`}
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                               {isCompleted && (
                                 <Button 
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => setActiveTab("sprint")}
-                                  className="btn-magnetic glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5"
+                                  className="btn-magnetic glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5 flex-1 sm:flex-none"
                                 >
-                                  <Zap className="w-4 h-4 mr-2" />
+                                  <Zap className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                                   Create Sprint
                                 </Button>
                               )}
@@ -1298,7 +1300,7 @@ Subject: "Quick question about [their pain point]"
                                   size="sm"
                                   onClick={() => handleSendMessage()}
                                   disabled={isLoading || !message.trim()}
-                                  className="hover:bg-primary/10 transition-all duration-300"
+                                  className="hover:bg-primary/10 transition-all duration-300 flex-1 sm:flex-none"
                                 >
                                   {getButtonText()}
                                 </Button>
@@ -1307,12 +1309,12 @@ Subject: "Quick question about [their pain point]"
                           </div>
                           
                           {!isCompleted && currentStep < wizardSteps.length && (
-                            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                              <div className="flex items-start gap-3">
-                                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                              <div className="flex items-start gap-2 sm:gap-3">
+                                <div className="w-4 sm:w-5 h-4 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                                   <span className="text-white text-xs font-bold">🧠</span>
                                 </div>
-                                <div className="text-sm">
+                                <div className="text-xs sm:text-sm">
                                   <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
                                     Enhanced AI Validation Active
                                   </p>
@@ -1331,7 +1333,7 @@ Subject: "Quick question about [their pain point]"
              
                 {/* Full Width Sections */}
                 {/* Interactive Progress Visualization - Synchronized with chatbot */}
-                <div className="animate-fade-in mb-8">
+                <div className="animate-fade-in mb-6 sm:mb-8">
                   <InteractiveProgress
                     currentStep={currentStep}
                     totalSteps={wizardSteps.length}
@@ -1341,30 +1343,30 @@ Subject: "Quick question about [their pain point]"
                 </div>
                 
                 {/* Three Information Cards - Minimalistic with Silver Glass Effect */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-16 px-4 sm:px-0">
                   {/* How BizMap AI Works - Enhanced with new features */}
                   <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 border border-primary/10 rounded-xl animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     {/* Background Effects */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
-                    <div className="relative z-10 p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Lightbulb className="w-4 h-4 text-primary group-hover:animate-pulse" />
+                    <div className="relative z-10 p-4 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Lightbulb className="w-3 sm:w-4 h-3 sm:h-4 text-primary group-hover:animate-pulse" />
                         </div>
-                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300">Enhanced AI Features</h3>
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors duration-300 text-sm sm:text-base">Enhanced AI Features</h3>
                       </div>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
-                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">🧠</span>
+                      <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                          <span className="w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">🧠</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"><strong>Smarter Validation:</strong> AI detects vague answers and asks clarifying questions</p>
                         </div>
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
-                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">📄</span>
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                          <span className="w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">📄</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"><strong>Professional PDFs:</strong> Download formatted reports with charts and branding</p>
                         </div>
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">⭐</span>
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                          <span className="w-4 sm:w-5 h-4 sm:h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors duration-300">⭐</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"><strong>Success Scoring:</strong> Get detailed business viability analysis</p>
                         </div>
                       </div>
@@ -1376,24 +1378,24 @@ Subject: "Quick question about [their pain point]"
                     {/* Background Effects */}
                     <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-secondary/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
-                    <div className="relative z-10 p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Target className="w-4 h-4 text-secondary group-hover:animate-pulse" />
+                    <div className="relative z-10 p-4 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Target className="w-3 sm:w-4 h-3 sm:h-4 text-secondary group-hover:animate-pulse" />
                         </div>
-                        <h3 className="font-medium text-foreground group-hover:text-secondary transition-colors duration-300">Market Intelligence</h3>
+                        <h3 className="font-medium text-foreground group-hover:text-secondary transition-colors duration-300 text-sm sm:text-base">Market Intelligence</h3>
                       </div>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
-                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📊</span>
+                      <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300 text-sm">📊</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Real-time market trends and competitor insights</p>
                         </div>
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
-                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300">🎯</span>
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300 text-sm">🎯</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Customer validation strategies</p>
                         </div>
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300">📈</span>
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                          <span className="text-secondary group-hover:scale-110 transition-transform duration-300 text-sm">📈</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Growth opportunities identification</p>
                         </div>
                       </div>
@@ -1405,23 +1407,23 @@ Subject: "Quick question about [their pain point]"
                     {/* Background Effects */}
                     <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
-                    <div className="relative z-10 p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Rocket className="w-4 h-4 text-accent group-hover:animate-pulse" />
+                    <div className="relative z-10 p-4 sm:p-6">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-lg bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Rocket className="w-3 sm:w-4 h-3 sm:h-4 text-accent group-hover:animate-pulse" />
                         </div>
-                        <h3 className="font-medium text-foreground group-hover:text-accent transition-colors duration-300">Success Scoring</h3>
+                        <h3 className="font-medium text-foreground group-hover:text-accent transition-colors duration-300 text-sm sm:text-base">Success Scoring</h3>
                       </div>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300">
+                      <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300">
                           <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">95%</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Business model validation score</p>
                         </div>
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '50ms' }}>
                           <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">8.7</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Product-market fit assessment</p>
                         </div>
-                        <div className="flex gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
+                        <div className="flex gap-2 sm:gap-3 group-hover:translate-x-1 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
                           <span className="text-accent font-mono text-xs group-hover:scale-110 transition-transform duration-300">90d</span>
                           <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">Optimized launch timeline</p>
                         </div>
@@ -1432,13 +1434,13 @@ Subject: "Quick question about [their pain point]"
                 
                  {/* PDF Generator and Download Component - Show only when report is completed */}
                 {launchReport && (
-                  <div className="mt-8 space-y-4">
-                    <div className="glass-card border border-primary/20 p-6 rounded-xl">
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-primary" />
+                  <div className="mt-6 sm:mt-8 space-y-4 px-4 sm:px-0">
+                    <div className="glass-card border border-primary/20 p-4 sm:p-6 rounded-xl">
+                      <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                        <FileText className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
                         Export Your Launch Report
                       </h3>
-                      <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <PDFGenerator
                           reportContent={launchReport}
                           businessName={userAnswers.overview?.split(' ').slice(0, 3).join(' ') || 'Business Plan'}
@@ -1452,7 +1454,7 @@ Subject: "Quick question about [their pain point]"
                           className="flex-1" 
                         />
                       </div>
-                      <p className="text-sm text-muted-foreground mt-3">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3">
                         💡 Pro tip: The PDF version includes professional formatting, charts, and your success score analysis.
                       </p>
                     </div>
