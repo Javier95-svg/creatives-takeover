@@ -29,6 +29,7 @@ import SprintKanban from "@/components/sprint/SprintKanban";
 import { useSprints } from "@/hooks/useSprints";
 import { ArrowLeft, Zap } from "lucide-react";
 import PDFGenerator from "@/components/PDFGenerator";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -1569,6 +1570,7 @@ Subject: "Quick question about [their pain point]"
       />
 
       <Footer />
+      <ChatbotWidget />
     </div>
   );
 };
