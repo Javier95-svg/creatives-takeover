@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot } from 'lucide-react';
 import { useTypingAnimation } from '@/hooks/useTypingAnimation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TypingMessageProps {
   content: string;
@@ -18,23 +19,33 @@ const TypingMessage: React.FC<TypingMessageProps> = ({
     speed,
     onComplete
   });
+  
+  const isMobile = useIsMobile();
 
   return (
     <div className="flex gap-3">
-      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-        <Bot className="w-4 h-4" />
+      <div className={`rounded-full bg-muted flex items-center justify-center flex-shrink-0 ${
+        isMobile ? 'w-10 h-10' : 'w-8 h-8'
+      }`}>
+        <Bot className={isMobile ? 'w-5 h-5' : 'w-4 h-4'} />
       </div>
-      <div className="max-w-[85%] bg-muted p-3 rounded-lg rounded-bl-none text-sm">
-        <div className="whitespace-pre-wrap">
+      <div className={`max-w-[85%] bg-muted rounded-lg rounded-bl-none ${
+        isMobile ? 'p-4 text-base' : 'p-3 text-sm'
+      }`}>
+        <div className="whitespace-pre-wrap leading-relaxed">
           {displayedText}
           {isTyping && (
-            <span className="inline-block w-2 h-4 bg-foreground/60 animate-pulse ml-1" />
+            <span className={`inline-block bg-foreground/60 animate-pulse ml-1 ${
+              isMobile ? 'w-2.5 h-5' : 'w-2 h-4'
+            }`} />
           )}
         </div>
         {isTyping && content.length > 50 && (
           <button
             onClick={skipAnimation}
-            className="text-xs text-muted-foreground hover:text-foreground mt-2 underline"
+            className={`text-muted-foreground hover:text-foreground mt-3 underline touch-manipulation ${
+              isMobile ? 'text-sm min-h-[44px] py-2' : 'text-xs'
+            }`}
           >
             Skip animation
           </button>
