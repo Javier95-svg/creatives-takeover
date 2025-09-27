@@ -536,26 +536,26 @@ const PromptLibrary = () => {
       <div className="relative z-10">
         <Navigation />
         
-        <div className="pt-20 pb-16 px-4">
+        <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font">
               Prompt Library
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
               Get inspired with ready-to-use business idea prompts. Each prompt is crafted to help you get the most detailed and actionable business plans from BizMap AI.
             </p>
             
             {/* Search and Filter */}
-            <div className="max-w-2xl mx-auto space-y-4">
+            <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search prompts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-11 sm:h-12 text-base touch-manipulation"
                 />
               </div>
               
@@ -568,10 +568,11 @@ const PromptLibrary = () => {
                       variant={selectedCategory === category.id ? "default" : "outline"}
                       size="sm"
                       onClick={() => setSelectedCategory(category.id)}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm touch-manipulation"
                     >
-                      <Icon className="w-4 h-4" />
-                      {category.name}
+                      <Icon className="w-3 sm:w-4 h-3 sm:h-4" />
+                      <span className="hidden xs:inline">{category.name}</span>
+                      <span className="xs:hidden">{category.name.split(' ')[0]}</span>
                     </Button>
                   );
                 })}
@@ -580,54 +581,62 @@ const PromptLibrary = () => {
           </div>
 
           {/* Prompts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filteredPrompts.map((prompt) => (
               <Card key={prompt.id} className="glass-card hover:shadow-lg transition-shadow">
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg mb-2">{prompt.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mb-3">
+                    <div className="flex-1 pr-2">
+                      <CardTitle className="text-lg sm:text-xl mb-2 leading-tight">{prompt.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                         {prompt.description}
                       </p>
                     </div>
                     <Badge 
                       variant="outline" 
-                      className={`ml-2 ${getDifficultyColor(prompt.difficulty)}`}
+                      className={`ml-2 text-xs whitespace-nowrap ${getDifficultyColor(prompt.difficulty)}`}
                     >
                       {prompt.difficulty}
                     </Badge>
                   </div>
                   
-                  <div className="flex flex-wrap gap-1">
-                    {prompt.tags.map((tag, index) => (
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5">
+                    {prompt.tags.slice(0, 4).map((tag, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
                         {tag}
                       </Badge>
                     ))}
+                    {prompt.tags.length > 4 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{prompt.tags.length - 4}
+                      </Badge>
+                    )}
                   </div>
                 </CardHeader>
                 
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                   <div className="bg-muted/50 rounded-lg p-3 mb-4 text-sm">
-                    <p className="line-clamp-4">{prompt.prompt}</p>
+                    <p className="line-clamp-4 leading-relaxed">{prompt.prompt}</p>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
                     <Button
                       size="sm"
                       onClick={() => useInBizMap(prompt.prompt)}
-                      className="flex-1"
+                      className="flex-1 h-9 sm:h-10 text-sm touch-manipulation"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
-                      Use in BizMap AI
+                      <span className="hidden sm:inline">Use in BizMap AI</span>
+                      <span className="sm:hidden">Use in BizMap</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyPrompt(prompt.prompt)}
+                      className="w-full sm:w-auto h-9 sm:h-10 px-4 touch-manipulation"
                     >
                       <Copy className="w-4 h-4" />
+                      <span className="ml-2 sm:hidden">Copy</span>
                     </Button>
                   </div>
                 </CardContent>

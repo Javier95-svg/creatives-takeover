@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto px-2 sm:px-0">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
@@ -176,11 +176,11 @@ const Pricing = () => {
             return (
               <div
                 key={tier.tier_name}
-                className={`relative glass-card p-4 sm:p-6 transition-all duration-500 animate-fade-in hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
+                className={`relative glass-card p-4 sm:p-5 lg:p-6 transition-all duration-500 animate-fade-in hover:scale-[1.02] sm:hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
                   isCurrentPlan
                     ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
                     : isPopular 
-                    ? 'border-2 border-primary/30 scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
+                    ? 'border-2 border-primary/30 sm:scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
                     : 'border border-border/50'
                 }`}
                 style={{ animationDelay: `${index * 0.2}s` }}
@@ -208,34 +208,34 @@ const Pricing = () => {
                   </div>
                 )}
 
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2 capitalize">{tier.tier_name}</h3>
-                  <p className="text-lg font-semibold text-primary mb-2">{title}</p>
-                  <p className="text-sm text-muted-foreground">{description}</p>
+                <div className="text-center mb-6 sm:mb-8">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 capitalize">{tier.tier_name}</h3>
+                  <p className="text-base sm:text-lg font-semibold text-primary mb-1 sm:mb-2">{title}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{description}</p>
                 </div>
 
-                <div className="text-center mb-6">
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-4xl font-bold">
+                <div className="text-center mb-4 sm:mb-6">
+                  <div className="flex items-baseline justify-center gap-1 sm:gap-2">
+                    <span className="text-3xl sm:text-4xl font-bold">
                       ${(tier.price_cents / 100).toFixed(2)}
                     </span>
                     {tier.price_cents > 0 && (
-                      <span className="text-muted-foreground">/month</span>
+                      <span className="text-muted-foreground text-sm sm:text-base">/month</span>
                     )}
                   </div>
                   {tier.monthly_credits > 0 && (
-                    <div className="text-sm text-primary mt-2">
+                    <div className="text-xs sm:text-sm text-primary mt-2">
                       {tier.monthly_credits} credits/month
                     </div>
                   )}
                 </div>
 
                 {/* Features List */}
-                <div className="mb-8 space-y-3 flex-grow">
+                <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-3 flex-grow">
                   {features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-start gap-3">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground leading-relaxed">{feature}</span>
+                    <div key={featureIndex} className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-3 sm:w-4 h-3 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -243,7 +243,7 @@ const Pricing = () => {
                 <Button
                   onClick={() => handleSubscribe(tier.tier_name)}
                   disabled={isCurrentPlan}
-                  className={`w-full py-3 px-4 font-medium btn-magnetic hover-scale transition-all duration-300 min-h-[44px] text-sm sm:text-base ${
+                  className={`w-full py-3 px-4 font-medium btn-magnetic hover-scale transition-all duration-300 min-h-[44px] text-sm sm:text-base touch-manipulation ${
                     isCurrentPlan
                       ? 'bg-green-600 text-white cursor-default'
                       : isPopular 

@@ -65,39 +65,39 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
       <div className="absolute top-72 left-12 w-2 h-2 bg-accent/60 rounded-full animate-orbit opacity-75" style={{ animationDelay: '13s' }} />
       <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/50 rounded-full animate-spiral opacity-70" style={{ animationDelay: '14s' }} />
 
-      <div className="container mx-auto px-6 relative z-20">
+      <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 animate-slide-up takeover-title creatives-font">
             <span className="takeover-gradient">Insighta</span>
           </h1>
           
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up px-2" style={{ animationDelay: '0.2s' }}>
             Our AI scans thousands of news sources, market reports, and trend data to identify emerging business opportunities. 
             Each opportunity is analyzed for market gap, target audience, and competitive landscape to help you make informed decisions.
           </p>
 
           {/* Value Proposition */}
-          <div className="flex flex-wrap justify-center gap-6 mb-12 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">AI-Powered Analysis</span>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 animate-slide-up px-2" style={{ animationDelay: '0.3s' }}>
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
+              <Sparkles className="w-3 sm:w-4 h-3 sm:h-4 text-primary" />
+              <span className="text-xs sm:text-sm font-medium">AI-Powered Analysis</span>
             </div>
-            <div className="flex items-center gap-2 bg-secondary/10 px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              <span className="text-sm font-medium">Market Intelligence</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-secondary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
+              <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-secondary rounded-full"></div>
+              <span className="text-xs sm:text-sm font-medium">Market Intelligence</span>
             </div>
-            <div className="flex items-center gap-2 bg-accent/10 px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span className="text-sm font-medium">Action Plans</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-accent/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
+              <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-accent rounded-full"></div>
+              <span className="text-xs sm:text-sm font-medium">Action Plans</span>
             </div>
           </div>
 
           {/* Search Bar */}
           <form 
             onSubmit={handleSearch}
-            className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto animate-slide-up" 
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-lg mx-auto animate-slide-up px-2" 
             style={{ animationDelay: '0.4s' }}
           >
             <div className="relative flex-1">
@@ -107,12 +107,13 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
                 placeholder="Search opportunities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 glass"
+                className="pl-10 glass h-11 sm:h-12 touch-manipulation"
               />
             </div>
-            <Button type="submit" className="glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic">
+            <Button type="submit" className="glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic h-11 sm:h-12 px-6 touch-manipulation">
               <Search className="h-4 w-4 mr-2" />
-              Discover
+              <span className="hidden sm:inline">Discover</span>
+              <span className="sm:hidden">Search</span>
             </Button>
           </form>
 
