@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Gift, Clock, Users, ArrowRight, CheckCircle } from "lucide-react";
+import { X, Gift, Clock, Users, ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -88,21 +88,21 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
             </button>
 
             {/* Enhanced Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/15 to-orange-500/15 border border-red-500/30 rounded-full shadow-lg mb-4 animate-fade-in">
-              <Clock className="w-4 h-4 text-red-500 animate-pulse" />
-              <span className="text-sm font-bold text-red-600">⚡ ENDING TODAY - Act Fast!</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/15 to-secondary/15 border border-primary/30 rounded-full shadow-lg mb-4 animate-fade-in">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-primary">🎯 Welcome Bonus</span>
             </div>
 
             {/* Headline */}
             <h3 className="text-xl font-bold mb-3 animate-slide-up">
-              <span className="gradient-text">🔥 Only 50 Left!</span>
+              <span className="gradient-text">🚀 Get Started</span>
               <br />
               <span className="text-foreground">FREE Report + 7 Credits</span>
             </h3>
 
             {/* Subheadline */}
             <p className="text-muted-foreground mb-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              ⏰ <span className="font-bold text-red-600">Hurry!</span> We're limiting this to the first 500 users only. <span className="font-semibold">450 already claimed</span> - don't miss out!
+              💡 <span className="font-bold text-primary">New user bonus!</span> Complete our quick survey to get your personalized business report plus <span className="font-semibold">7 bonus credits</span> to explore our platform.
             </p>
 
             {/* Credit Breakdown */}

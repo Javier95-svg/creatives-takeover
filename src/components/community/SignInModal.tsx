@@ -16,14 +16,14 @@ const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSi
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-center">
-              🚀 Join Now - Limited Spots!
+              🚀 Join Our Community
             </DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
           <DialogDescription className="text-base text-center">
-            ⏰ <span className="font-semibold text-primary">Only 48 hours left</span> to join our exclusive entrepreneur community before we limit new registrations!
+            Connect with fellow entrepreneurs and grow your business together in our supportive community.
           </DialogDescription>
         </DialogHeader>
         
@@ -41,10 +41,10 @@ const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSi
           
           <div className="text-center bg-primary/10 rounded-lg p-3 border border-primary/20">
             <p className="text-sm font-medium text-primary">
-              🔥 <span className="font-bold">2,847 entrepreneurs</span> joined this week!
+              💼 <span className="font-bold">Growing community</span> of entrepreneurs
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Don't miss out on the momentum - spaces filling fast!
+              Join thousands building successful businesses together
             </p>
           </div>
           

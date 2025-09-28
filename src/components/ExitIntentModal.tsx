@@ -44,21 +44,21 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             </button>
 
             {/* Enhanced Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/15 to-orange-500/15 border border-red-500/30 rounded-full shadow-lg mb-6 animate-fade-in">
-              <Clock className="w-4 h-4 text-red-500 animate-pulse" />
-              <span className="text-sm font-bold text-red-600">⚠️ EXPIRING SOON - Only 2 Hours Left!</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/15 to-secondary/15 border border-primary/30 rounded-full shadow-lg mb-6 animate-fade-in">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-primary">🎁 Special Welcome Offer</span>
             </div>
 
             {/* Headline */}
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-4 animate-slide-up">
-              <span className="gradient-text">⏰ Last Chance:</span>
+              <span className="gradient-text">✨ Before You Go:</span>
               <br />
-              <span className="text-foreground">FREE Report + 7 Credits Expire Tonight!</span>
+              <span className="text-foreground">Get Your FREE Business Report</span>
             </h2>
 
             {/* Subheadline */}
             <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              🚨 <span className="font-bold text-red-600">This offer disappears at midnight!</span> Complete our 5-minute survey now and secure your free business plan + bonus credits before they're gone forever.
+              🚀 <span className="font-bold text-primary">Take our quick survey</span> and get a personalized business analysis report plus bonus credits to help validate your ideas.
             </p>
 
             {/* Benefits List */}

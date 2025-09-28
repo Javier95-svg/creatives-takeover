@@ -57,14 +57,14 @@ const SignupInviteModal = ({ isOpen, onClose }: SignupInviteModalProps) => {
           
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-              <DialogTitle className="text-xl font-bold">⚡ Join Before It's Too Late!</DialogTitle>
+              <Sparkles className="w-6 h-6 text-primary" />
+              <DialogTitle className="text-xl font-bold">✨ Unlock Your Potential</DialogTitle>
             </div>
             <p className="text-sm font-medium text-primary">
-              🔥 <span className="font-bold">Limited Time:</span> Free premium access for next 100 users
+              📚 <span className="font-bold">Free access</span> to premium business insights
             </p>
             <p className="text-xs text-muted-foreground">
-              85 spots remaining • Offer expires in 24 hours
+              Join our community of growth-focused entrepreneurs
             </p>
           </div>
         </DialogHeader>
