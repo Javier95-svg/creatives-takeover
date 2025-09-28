@@ -76,7 +76,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   aria-label="X"
                 >
-                  <span className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center text-sm font-bold">
+                  <span className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center text-lg font-bold">
                     𝕏
                   </span>
                 </a>
