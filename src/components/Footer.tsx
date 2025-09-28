@@ -66,7 +66,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   aria-label="Instagram"
                 >
-                  <Instagram className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                  <Instagram className="h-5 w-5 text-pink-500 hover:text-pink-400 transition-colors" />
                 </a>
               </li>
               <li>
