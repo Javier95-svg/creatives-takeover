@@ -95,6 +95,18 @@ const Footer = () => {
                   />
                 </a>
               </li>
+              <li>
+                <a
+                  href="https://www.reddit.com/r/Creatives_Takeover/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Reddit"
+                >
+                  <span className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center text-lg font-bold">
+                    r/
+                  </span>
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
