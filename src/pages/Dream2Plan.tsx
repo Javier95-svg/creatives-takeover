@@ -1034,7 +1034,7 @@ Subject: "Quick question about [their pain point]"
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen">
       <Helmet>
         <title>BizMap AI - Turn Business Ideas Into Launch Reports | AI Business Planning</title>
         <meta name="description" content="Transform your business ideas into comprehensive Launch Reports with our 7-step AI wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps." />

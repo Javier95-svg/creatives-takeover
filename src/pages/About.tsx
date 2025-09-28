@@ -34,8 +34,8 @@ const About = () => {
           
           <HowWeWork />
         </div>
-        <Footer />
       </div>
+      <Footer />
     </>
   );
 };
