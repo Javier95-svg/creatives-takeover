@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import FAQHero from "@/components/FAQHero";
 import SearchableFAQ from "@/components/SearchableFAQ";
 import FAQNavigation from "@/components/FAQNavigation";
@@ -27,6 +28,7 @@ const FAQPage = () => {
           <SearchableFAQ />
           <FAQNavigation />
         </div>
+        <Footer />
       </div>
     </>
   );

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera, Users, UserCheck, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { useSocial } from "@/hooks/useSocial";
@@ -486,6 +487,7 @@ const Account = () => {
           open={friendRequestsOpen} 
           onOpenChange={setFriendRequestsOpen} 
         />
+        <Footer />
       </div>
     </div>
   );

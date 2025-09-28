@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Laboratory = () => {
@@ -114,6 +115,7 @@ const Laboratory = () => {
             </Card>
           </section>
         </main>
+        <Footer />
       </div>
     </>
   );

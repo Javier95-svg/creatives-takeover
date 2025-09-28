@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import AboutHero from "@/components/AboutHero";
 
 import MissionVision from "@/components/MissionVision";
@@ -33,6 +34,7 @@ const About = () => {
           
           <HowWeWork />
         </div>
+        <Footer />
       </div>
     </>
   );

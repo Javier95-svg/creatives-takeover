@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const Software = () => {
   return (
@@ -18,6 +19,7 @@ const Software = () => {
           </header>
           {/* ... keep existing code (details and showcases will go here) */}
         </main>
+        <Footer />
       </div>
     </>
   )

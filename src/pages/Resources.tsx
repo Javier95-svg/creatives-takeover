@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import ResourcesHero from "@/components/ResourcesHero";
 import TutorialsSection from "@/components/TutorialsSection";
 import GuidesSection from "@/components/GuidesSection";
@@ -31,6 +32,7 @@ const Resources = () => {
           <DownloadsSection />
           <ResourcesNavigation />
         </div>
+        <Footer />
       </div>
     </>
   );

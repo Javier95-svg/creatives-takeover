@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import ChatbotWidget from "@/components/ChatbotWidget";
@@ -24,6 +25,7 @@ const PricingPage = () => {
           <Pricing />
           <ChatbotWidget />
         </div>
+        <Footer />
       </div>
     </>
   );

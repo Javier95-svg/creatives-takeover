@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import ServicesHero from "@/components/ServicesHero";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import ServicesNavigation from "@/components/ServicesNavigation";
@@ -27,6 +28,7 @@ const Services = () => {
           <SubscriptionFeatures />
           <ServicesNavigation />
         </div>
+        <Footer />
       </div>
     </>
   );
