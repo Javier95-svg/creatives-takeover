@@ -102,9 +102,11 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   aria-label="Reddit"
                 >
-                  <span className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center text-lg font-bold">
-                    🤖
-                  </span>
+                  <img 
+                    src="/lovable-uploads/reddit-logo.png" 
+                    alt="Reddit" 
+                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
+                  />
                 </a>
               </li>
             </ul>
