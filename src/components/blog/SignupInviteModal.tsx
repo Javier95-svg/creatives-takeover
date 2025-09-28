@@ -57,11 +57,14 @@ const SignupInviteModal = ({ isOpen, onClose }: SignupInviteModalProps) => {
           
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <DialogTitle className="text-xl font-bold">Join Insighta Community</DialogTitle>
+              <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+              <DialogTitle className="text-xl font-bold">⚡ Join Before It's Too Late!</DialogTitle>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Unlock personalized content and save your reading preferences
+            <p className="text-sm font-medium text-primary">
+              🔥 <span className="font-bold">Limited Time:</span> Free premium access for next 100 users
+            </p>
+            <p className="text-xs text-muted-foreground">
+              85 spots remaining • Offer expires in 24 hours
             </p>
           </div>
         </DialogHeader>
@@ -96,9 +99,9 @@ const SignupInviteModal = ({ isOpen, onClose }: SignupInviteModalProps) => {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            <Button asChild className="w-full" size="sm">
+            <Button asChild className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 animate-pulse" size="sm">
               <Link to="/signup" onClick={onClose}>
-                Create Free Account
+                🚀 Claim Your Spot Now (FREE)
               </Link>
             </Button>
             

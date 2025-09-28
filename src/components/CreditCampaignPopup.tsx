@@ -88,21 +88,21 @@ export const CreditCampaignPopup = ({ trigger, delay = 3000, onClose }: CreditCa
             </button>
 
             {/* Enhanced Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/15 to-secondary/15 border border-primary/30 rounded-full shadow-lg mb-4 animate-fade-in">
-              <Gift className="w-4 h-4 text-primary animate-pulse" />
-              <span className="text-sm font-bold text-primary">🎁 LIMITED TIME OFFER</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/15 to-orange-500/15 border border-red-500/30 rounded-full shadow-lg mb-4 animate-fade-in">
+              <Clock className="w-4 h-4 text-red-500 animate-pulse" />
+              <span className="text-sm font-bold text-red-600">⚡ ENDING TODAY - Act Fast!</span>
             </div>
 
             {/* Headline */}
             <h3 className="text-xl font-bold mb-3 animate-slide-up">
-              <span className="gradient-text">Get FREE Report</span>
+              <span className="gradient-text">🔥 Only 50 Left!</span>
               <br />
-              <span className="text-foreground">+ Up to 7 Credits!</span>
+              <span className="text-foreground">FREE Report + 7 Credits</span>
             </h3>
 
             {/* Subheadline */}
             <p className="text-muted-foreground mb-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Complete our 5-minute survey and receive a comprehensive business plan plus bonus credits.
+              ⏰ <span className="font-bold text-red-600">Hurry!</span> We're limiting this to the first 500 users only. <span className="font-semibold">450 already claimed</span> - don't miss out!
             </p>
 
             {/* Credit Breakdown */}

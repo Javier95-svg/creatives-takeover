@@ -15,13 +15,15 @@ const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSi
       <DialogContent className="w-[95vw] max-w-sm sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">Join the Community</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-center">
+              🚀 Join Now - Limited Spots!
+            </DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <DialogDescription className="text-base">
-            Sign in to interact with posts, vote, comment, and share your entrepreneurial journey with fellow builders.
+          <DialogDescription className="text-base text-center">
+            ⏰ <span className="font-semibold text-primary">Only 48 hours left</span> to join our exclusive entrepreneur community before we limit new registrations!
           </DialogDescription>
         </DialogHeader>
         
@@ -37,9 +39,12 @@ const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSi
             </Button>
           </div>
           
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Join thousands of entrepreneurs sharing their stories, wins, and lessons learned.
+          <div className="text-center bg-primary/10 rounded-lg p-3 border border-primary/20">
+            <p className="text-sm font-medium text-primary">
+              🔥 <span className="font-bold">2,847 entrepreneurs</span> joined this week!
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Don't miss out on the momentum - spaces filling fast!
             </p>
           </div>
           
