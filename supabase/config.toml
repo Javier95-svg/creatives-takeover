@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.sprint-task-generator]
 verify_jwt = true
+
+[functions.chatbot-ai-engine]
+verify_jwt = false
+
+[functions.business-insights-generator]
+verify_jwt = false

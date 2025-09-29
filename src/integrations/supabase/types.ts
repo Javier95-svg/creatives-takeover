@@ -271,6 +271,36 @@ export type Database = {
         }
         Relationships: []
       }
+      business_insights_cache: {
+        Row: {
+          business_stage: string
+          confidence_score: number | null
+          created_at: string
+          expires_at: string
+          id: string
+          industry: string
+          insights: Json
+        }
+        Insert: {
+          business_stage: string
+          confidence_score?: number | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          industry: string
+          insights: Json
+        }
+        Update: {
+          business_stage?: string
+          confidence_score?: number | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          industry?: string
+          insights?: Json
+        }
+        Relationships: []
+      }
       business_success_scores: {
         Row: {
           action_recommendations: string[] | null
@@ -369,6 +399,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      chatbot_conversations: {
+        Row: {
+          business_context: Json | null
+          conversation_stage: string | null
+          created_at: string
+          id: string
+          session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          business_context?: Json | null
+          conversation_stage?: string | null
+          created_at?: string
+          id?: string
+          session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_context?: Json | null
+          conversation_stage?: string | null
+          created_at?: string
+          id?: string
+          session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chatbot_messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       collaboration_activity: {
         Row: {
@@ -2650,6 +2745,10 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_analytics_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_insights: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

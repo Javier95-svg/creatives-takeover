@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
+import { supabase } from '@/integrations/supabase/client';
 
 // Enhanced message types for business planning - Compatible with ChatbotWidget
 export interface ChatMessage {
@@ -81,6 +82,7 @@ export const useChatbot = () => {
     sessionDuration: 0,
     messageCount: 0
   });
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -567,34 +569,49 @@ What specific aspect of your business would you like to focus on first?`;
     simulateTyping();
 
     try {
-      // Generate AI response
-      const aiResponse = await generateAIResponse(content);
+      // Call the enhanced AI chatbot engine
+      const { data, error } = await supabase.functions.invoke('chatbot-ai-engine', {
+        body: {
+          message: content,
+          sessionId,
+          conversationHistory: messages.slice(-10).map(msg => ({
+            role: msg.isBot ? 'assistant' : 'user',
+            content: msg.content
+          })),
+          businessContext: conversationState.businessContext,
+          userId: (await supabase.auth.getUser()).data.user?.id || null
+        }
+      });
+
+      if (error) {
+        console.error('Chatbot AI Engine Error:', error);
+        throw new Error(error.message);
+      }
+
+      const response = data;
       
       // Create bot response message
       const botMessage: ChatMessage = {
         id: generateId(),
-        content: aiResponse.content,
+        content: response.message || "I'm here to help with your business planning needs. How can I assist you today?",
         isBot: true,
         timestamp: new Date(),
-        quickActions: aiResponse.quickActions,
-        messageType: aiResponse.messageType,
-        confidence: aiResponse.confidence,
-        sources: aiResponse.sources
+        quickActions: response.quickActions?.map((action: string) => ({
+          text: action,
+          action: action.toLowerCase().replace(/\s+/g, '_')
+        })) || [],
+        messageType: 'text',
+        confidence: 0.85
       };
 
       setMessages(prev => [...prev, botMessage]);
 
       // Update business context if provided
-      if (aiResponse.contextUpdate) {
+      if (response.businessContext) {
         setConversationState(prev => ({
           ...prev,
-          businessContext: { ...prev.businessContext, ...aiResponse.contextUpdate }
+          businessContext: { ...prev.businessContext, ...response.businessContext }
         }));
-      }
-
-      // Handle navigation if needed
-      if (aiResponse.shouldNavigate) {
-        navigate(aiResponse.shouldNavigate);
       }
 
     } catch (error) {
