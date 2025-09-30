@@ -14,18 +14,18 @@ const AboutHero = () => {
           <div className="space-y-6 sm:space-y-8 animate-slide-up order-2 lg:order-1">
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer">
-                About Us
+                Built for the Entrepreneurial Future
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{
                 animationDelay: '0.2s'
-              }}>Creatives Takeover is a platform that helps creatives and founders launch their startups faster with AI-powered workflows, automation, and no-code tools.</p>
+              }}>We're entering a world where AI and automation eliminate traditional jobs but unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder—and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4 animate-slide-up" style={{
               animationDelay: '0.4s'
             }}>
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">Founded on the belief that everyone has the potential to create something extraordinary, our aim is to bridge the gap between imagination and implementation. We're not just a platform, we're your creative partners on the journey from concept to launch.</p>
-              
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">The biggest challenge isn't coming up with ideas—it's moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
             </div>
 
             </div>
