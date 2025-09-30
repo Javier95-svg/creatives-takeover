@@ -18,7 +18,7 @@ const AboutHero = () => {
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{
                 animationDelay: '0.2s'
-              }}>We're entering a world where AI and automation eliminate traditional jobs but unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
+              }}>We're entering a world where AI and automation will eliminate most traditional jobs but unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4 animate-slide-up" style={{
