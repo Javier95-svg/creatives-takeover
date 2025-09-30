@@ -14,7 +14,7 @@ const AboutHero = () => {
           <div className="space-y-6 sm:space-y-8 animate-slide-up order-2 lg:order-1">
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer">
-                Built for the Entrepreneurial Future
+                The Future Belongs to Founders
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{
                 animationDelay: '0.2s'
