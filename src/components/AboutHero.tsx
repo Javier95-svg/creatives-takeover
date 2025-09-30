@@ -18,13 +18,13 @@ const AboutHero = () => {
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed font-poppins animate-fade-in" style={{
                 animationDelay: '0.2s'
-              }}>We're entering a world where AI and automation eliminate traditional jobs but unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder—and we're here to make that transition possible.</p>
+              }}>We're entering a world where AI and automation eliminate traditional jobs but unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4 animate-slide-up" style={{
               animationDelay: '0.4s'
             }}>
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">The biggest challenge isn't coming up with ideas—it's moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">The biggest challenge isn't coming up with ideas but moving them from scattered brainstorming into real execution. Creatives Takeover transforms raw thoughts into clear, actionable roadmaps and creates an ecosystem where founders, entrepreneurs, creators, and freelancers collaborate to bring ideas to life.</p>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">This isn't just a tool. It's an ecosystem designed for the next wave of builders who will define their own future instead of waiting for one to be handed to them.</p>
             </div>
 
