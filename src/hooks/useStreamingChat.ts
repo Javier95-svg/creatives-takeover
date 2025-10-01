@@ -37,12 +37,15 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
 
     try {
       const CHAT_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
+      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng";
+
+      console.log('🚀 Starting streaming chat request:', { sessionId, messageLength: message.length });
 
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${ANON_KEY}`,
         },
         body: JSON.stringify({
           message,
@@ -54,14 +57,19 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
         signal: abortControllerRef.current.signal,
       });
 
+      console.log('📡 Streaming response status:', response.status, response.statusText);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Streaming request failed:', response.status, errorText);
+        
         if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please try again later.');
         }
         if (response.status === 402) {
           throw new Error('Payment required. Please add credits.');
         }
-        throw new Error('Failed to start stream');
+        throw new Error(`Failed to start stream: ${response.status} ${errorText}`);
       }
 
       if (!response.body) {
@@ -128,6 +136,7 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
       }
 
       setIsStreaming(false);
+      console.log('✅ Streaming complete:', { messageLength: fullMessage.length, metadata });
 
       if (onMessageComplete) {
         onMessageComplete({

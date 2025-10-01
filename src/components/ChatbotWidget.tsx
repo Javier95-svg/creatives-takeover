@@ -17,7 +17,7 @@ const ChatbotWidget = () => {
     setIsOpen,
     streamingMessage,
     isStreaming
-  } = useChatbot() as any; // Cast to any to access new streaming properties
+  } = useChatbot();
   
   const [inputValue, setInputValue] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);  
