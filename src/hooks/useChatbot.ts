@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, useReducer } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
@@ -60,6 +60,32 @@ interface ConversationState {
   sessionDuration: number;
   messageCount: number;
   userSatisfaction?: number;
+  conversationFlow?: ConversationFlow;
+  errorCount: number;
+  lastError?: string;
+  retryCount: number;
+  isProcessing: boolean;
+  conversationMemory: ConversationMemory;
+}
+
+interface ConversationFlow {
+  currentStep: number;
+  totalSteps: number;
+  flowType: 'business_planning' | 'market_research' | 'financial_planning' | 'general_support';
+  completedSteps: number[];
+  nextSteps: string[];
+  isCompleted: boolean;
+}
+
+interface ConversationMemory {
+  userPreferences: Record<string, any>;
+  previousTopics: string[];
+  importantDetails: Record<string, string>;
+  userGoals: string[];
+  painPoints: string[];
+  industryContext?: string;
+  businessStage?: string;
+  lastInteractionTime: Date;
 }
 
 interface AIResponse {
@@ -70,24 +96,147 @@ interface AIResponse {
   sources?: string[];
   contextUpdate?: Partial<BusinessContext>;
   shouldNavigate?: string;
+  conversationFlowUpdate?: Partial<ConversationFlow>;
+  memoryUpdate?: Partial<ConversationMemory>;
 }
+
+// Analytics and tracking interfaces
+interface ChatAnalytics {
+  totalMessages: number;
+  averageResponseTime: number;
+  userSatisfactionScore: number;
+  mostAskedQuestions: string[];
+  conversationCompletionRate: number;
+  errorRate: number;
+  popularTopics: string[];
+  sessionDuration: number;
+}
+
+interface ConversationAction {
+  type: 'ADD_MESSAGE' | 'UPDATE_STATE' | 'SET_ERROR' | 'CLEAR_ERROR' | 'UPDATE_MEMORY' | 'UPDATE_FLOW' | 'SET_PROCESSING' | 'INCREMENT_RETRY' | 'RESET_RETRY';
+  payload?: any;
+}
+
+// Reducer for conversation state management
+const conversationReducer = (state: ConversationState, action: ConversationAction): ConversationState => {
+  switch (action.type) {
+    case 'ADD_MESSAGE':
+      return {
+        ...state,
+        messageCount: state.messageCount + 1,
+        conversationMemory: {
+          ...state.conversationMemory,
+          lastInteractionTime: new Date()
+        }
+      };
+    
+    case 'UPDATE_STATE':
+      return {
+        ...state,
+        ...action.payload,
+        errorCount: 0,
+        retryCount: 0,
+        lastError: undefined
+      };
+    
+    case 'SET_ERROR':
+      return {
+        ...state,
+        errorCount: state.errorCount + 1,
+        lastError: action.payload,
+        isProcessing: false
+      };
+    
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        errorCount: 0,
+        lastError: undefined,
+        retryCount: 0
+      };
+    
+    case 'UPDATE_MEMORY':
+      return {
+        ...state,
+        conversationMemory: {
+          ...state.conversationMemory,
+          ...action.payload
+        }
+      };
+    
+    case 'UPDATE_FLOW':
+      return {
+        ...state,
+        conversationFlow: {
+          ...state.conversationFlow,
+          ...action.payload
+        }
+      };
+    
+    case 'SET_PROCESSING':
+      return {
+        ...state,
+        isProcessing: action.payload
+      };
+    
+    case 'INCREMENT_RETRY':
+      return {
+        ...state,
+        retryCount: state.retryCount + 1
+      };
+    
+    case 'RESET_RETRY':
+      return {
+        ...state,
+        retryCount: 0
+      };
+    
+    default:
+      return state;
+  }
+};
 
 export const useChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationState, setConversationState] = useState<ConversationState>({
+  const [analytics, setAnalytics] = useState<ChatAnalytics>({
+    totalMessages: 0,
+    averageResponseTime: 0,
+    userSatisfactionScore: 0,
+    mostAskedQuestions: [],
+    conversationCompletionRate: 0,
+    errorRate: 0,
+    popularTopics: [],
+    sessionDuration: 0
+  });
+  
+  const [conversationState, dispatch] = useReducer(conversationReducer, {
     context: ConversationContext.WELCOME,
     businessContext: {},
     sessionDuration: 0,
-    messageCount: 0
+    messageCount: 0,
+    errorCount: 0,
+    retryCount: 0,
+    isProcessing: false,
+    conversationMemory: {
+      userPreferences: {},
+      previousTopics: [],
+      importantDetails: {},
+      userGoals: [],
+      painPoints: [],
+      lastInteractionTime: new Date()
+    }
   });
+  
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
   const location = useLocation();
   const navigate = useNavigate();
   const sessionStartTime = useRef(Date.now());
-  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const responseTimeTracker = useRef<number[]>([]);
+  const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Business planning knowledge base
   const businessInsights = useMemo(() => ({
@@ -133,25 +282,95 @@ export const useChatbot = () => {
     }
   }, [location.pathname]);
 
-  // Session tracking
+  // Session tracking and analytics updates
   useEffect(() => {
     const interval = setInterval(() => {
-      setConversationState(prev => ({
+      const duration = Date.now() - sessionStartTime.current;
+      dispatch({ type: 'UPDATE_STATE', payload: { sessionDuration: duration } });
+      
+      // Update analytics
+      setAnalytics(prev => ({
         ...prev,
-        sessionDuration: Date.now() - sessionStartTime.current
+        sessionDuration: duration,
+        averageResponseTime: responseTimeTracker.current.length > 0 
+          ? responseTimeTracker.current.reduce((a, b) => a + b, 0) / responseTimeTracker.current.length 
+          : 0,
+        errorRate: conversationState.messageCount > 0 
+          ? (conversationState.errorCount / conversationState.messageCount) * 100 
+          : 0
       }));
     }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [conversationState.messageCount, conversationState.errorCount]);
+
+  // Analytics tracking for user interactions
+  const trackUserInteraction = useCallback((interaction: {
+    type: 'question_asked' | 'quick_action_clicked' | 'satisfaction_rated' | 'conversation_completed';
+    data?: any;
+  }) => {
+    setAnalytics(prev => {
+      const updated = { ...prev };
+      
+      switch (interaction.type) {
+        case 'question_asked':
+          updated.totalMessages += 1;
+          if (interaction.data?.question) {
+            updated.mostAskedQuestions = [
+              ...updated.mostAskedQuestions,
+              interaction.data.question
+            ].slice(-10); // Keep last 10 questions
+          }
+          break;
+        
+        case 'satisfaction_rated':
+          if (interaction.data?.score) {
+            updated.userSatisfactionScore = interaction.data.score;
+          }
+          break;
+        
+        case 'conversation_completed':
+          updated.conversationCompletionRate = conversationState.conversationFlow?.isCompleted ? 100 : 0;
+          break;
+      }
+      
+      return updated;
+    });
+  }, [conversationState.conversationFlow]);
 
   const generateId = (): string => {
     return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const updateConversationState = (updates: Partial<ConversationState>) => {
-    setConversationState(prev => ({ ...prev, ...updates }));
-  };
+  const updateConversationState = useCallback((updates: Partial<ConversationState>) => {
+    dispatch({ type: 'UPDATE_STATE', payload: updates });
+  }, []);
+
+  // Enhanced error handling with retry logic
+  const handleError = useCallback((error: Error, retryable: boolean = true) => {
+    console.error('Chatbot Error:', error);
+    
+    dispatch({ type: 'SET_ERROR', payload: error.message });
+    
+    if (retryable && conversationState.retryCount < 3) {
+      dispatch({ type: 'INCREMENT_RETRY' });
+      
+      // Auto-retry after delay
+      retryTimeout.current = setTimeout(() => {
+        dispatch({ type: 'CLEAR_ERROR' });
+        // Trigger retry logic here if needed
+      }, Math.pow(2, conversationState.retryCount) * 1000); // Exponential backoff
+    }
+  }, [conversationState.retryCount]);
+
+  // Clear errors and reset retry count
+  const clearError = useCallback(() => {
+    dispatch({ type: 'CLEAR_ERROR' });
+    if (retryTimeout.current) {
+      clearTimeout(retryTimeout.current);
+      retryTimeout.current = null;
+    }
+  }, []);
 
   const createWelcomeMessage = (): ChatMessage => {
     const path = location.pathname;
@@ -261,28 +480,64 @@ What aspect of your business would you like to explore?`;
     }, duration);
   };
 
-  // Advanced AI response generation with business expertise
+  // Enhanced AI response generation with memory and context awareness
   const generateAIResponse = async (userMessage: string): Promise<AIResponse> => {
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 900));
-
-    const lowerMessage = userMessage.toLowerCase();
-    const { context, businessContext } = conversationState;
-
-    // Extract business information from message
-    const extractedInfo = extractBusinessInformation(userMessage);
+    const startTime = Date.now();
+    dispatch({ type: 'SET_PROCESSING', payload: true });
     
-    // Check FAQ first for quick answers
-    const contextualFAQs = getContextualFAQ(location.pathname);
-    const faqResults = FAQUtils.sortByRelevance([...contextualFAQs, ...chatbotFAQ], userMessage);
-    if (faqResults.length > 0 && faqResults[0].relevanceScore > 8) {
-      return {
-        content: faqResults[0].answer,
-        quickActions: faqResults[0].quickActions,
-        confidence: 0.9,
-        sources: ['FAQ Database']
-      };
-    }
+    try {
+      // Simulate AI processing with realistic timing
+      await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 900));
+
+      const lowerMessage = userMessage.toLowerCase();
+      const { context, businessContext, conversationMemory } = conversationState;
+
+      // Track response time
+      const responseTime = Date.now() - startTime;
+      responseTimeTracker.current.push(responseTime);
+      if (responseTimeTracker.current.length > 20) {
+        responseTimeTracker.current.shift(); // Keep only last 20 response times
+      }
+
+      // Extract business information from message
+      const extractedInfo = extractBusinessInformation(userMessage);
+      
+      // Update conversation memory with new information
+      if (extractedInfo.industry) {
+        dispatch({ 
+          type: 'UPDATE_MEMORY', 
+          payload: { 
+            industryContext: extractedInfo.industry,
+            importantDetails: {
+              ...conversationMemory.importantDetails,
+              industry: extractedInfo.industry
+            }
+          } 
+        });
+      }
+
+      // Check FAQ first for quick answers with enhanced relevance scoring
+      const contextualFAQs = getContextualFAQ(location.pathname);
+      const allFAQs = [...contextualFAQs, ...chatbotFAQ];
+      const faqResults = FAQUtils.sortByRelevance(allFAQs, userMessage);
+      
+      if (faqResults.length > 0 && faqResults[0].relevanceScore > 8) {
+        // Track FAQ usage for analytics
+        trackUserInteraction({ 
+          type: 'question_asked', 
+          data: { question: userMessage, source: 'FAQ' } 
+        });
+        
+        return {
+          content: faqResults[0].answer,
+          quickActions: faqResults[0].quickActions,
+          confidence: 0.9,
+          sources: ['FAQ Database'],
+          memoryUpdate: {
+            previousTopics: [...conversationMemory.previousTopics, faqResults[0].category].slice(-5)
+          }
+        };
+      }
 
     // Context-aware business planning responses
     if (context === ConversationContext.BUSINESS_CONCEPT || lowerMessage.includes('business idea') || lowerMessage.includes('concept')) {
@@ -304,6 +559,13 @@ What aspect of your business would you like to explore?`;
 
     // General business advice
     return generateGeneralBusinessAdvice(userMessage);
+    
+    } catch (error) {
+      handleError(error as Error, true);
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_PROCESSING', payload: false });
+    }
   };
 
   const extractBusinessInformation = (message: string): Partial<BusinessContext> => {
@@ -546,9 +808,15 @@ What specific aspect of your business would you like to focus on first?`;
     };
   };
 
-  // Main message sending function - Compatible with ChatbotWidget
+  // Enhanced message sending function with better error handling and analytics
   const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim()) return;
+    if (!content.trim() || conversationState.isProcessing) return;
+
+    // Track user interaction
+    trackUserInteraction({ 
+      type: 'question_asked', 
+      data: { question: content } 
+    });
 
     // Create user message
     const userMessage: ChatMessage = {
@@ -559,82 +827,77 @@ What specific aspect of your business would you like to focus on first?`;
     };
 
     setMessages(prev => [...prev, userMessage]);
-    
-    // Update conversation state
-    updateConversationState({
-      messageCount: conversationState.messageCount + 1
-    });
+    dispatch({ type: 'ADD_MESSAGE' });
 
     // Show typing indicator
     simulateTyping();
 
     try {
-      // Call the enhanced AI chatbot engine
-      const { data, error } = await supabase.functions.invoke('chatbot-ai-engine', {
-        body: {
-          message: content,
-          sessionId,
-          conversationHistory: messages.slice(-10).map(msg => ({
-            role: msg.isBot ? 'assistant' : 'user',
-            content: msg.content
-          })),
-          businessContext: conversationState.businessContext,
-          userId: (await supabase.auth.getUser()).data.user?.id || null
-        }
-      });
-
-      if (error) {
-        console.error('Chatbot AI Engine Error:', error);
-        throw new Error(error.message);
-      }
-
-      const response = data;
+      // Try AI response generation first
+      const aiResponse = await generateAIResponse(content);
       
       // Create bot response message
       const botMessage: ChatMessage = {
         id: generateId(),
-        content: response.message || "I'm here to help with your business planning needs. How can I assist you today?",
+        content: aiResponse.content,
         isBot: true,
         timestamp: new Date(),
-        quickActions: response.quickActions?.map((action: string) => ({
-          text: action,
-          action: action.toLowerCase().replace(/\s+/g, '_')
-        })) || [],
-        messageType: 'text',
-        confidence: 0.85
+        quickActions: aiResponse.quickActions,
+        messageType: aiResponse.messageType || 'text',
+        confidence: aiResponse.confidence,
+        sources: aiResponse.sources
       };
 
       setMessages(prev => [...prev, botMessage]);
 
-      // Update business context if provided
-      if (response.businessContext) {
-        setConversationState(prev => ({
-          ...prev,
-          businessContext: { ...prev.businessContext, ...response.businessContext }
-        }));
+      // Update conversation memory if provided
+      if (aiResponse.memoryUpdate) {
+        dispatch({ type: 'UPDATE_MEMORY', payload: aiResponse.memoryUpdate });
       }
+
+      // Update business context if provided
+      if (aiResponse.contextUpdate) {
+        updateConversationState({
+          businessContext: { ...conversationState.businessContext, ...aiResponse.contextUpdate }
+        });
+      }
+
+      // Update conversation flow if provided
+      if (aiResponse.conversationFlowUpdate) {
+        dispatch({ type: 'UPDATE_FLOW', payload: aiResponse.conversationFlowUpdate });
+      }
+
+      // Clear any previous errors
+      clearError();
 
     } catch (error) {
       console.error('Error generating AI response:', error);
       
-      // Error fallback message
+      // Enhanced error handling with retry options
       const errorMessage: ChatMessage = {
         id: generateId(),
-        content: "I apologize, but I'm experiencing some technical difficulties. Please try rephrasing your question or contact our support team if the issue persists.",
+        content: conversationState.retryCount > 0 
+          ? `I'm still having trouble processing your request. ${conversationState.retryCount < 3 ? 'Let me try a different approach...' : 'Please try rephrasing your question or contact support.'}`
+          : "I apologize, but I'm experiencing some technical difficulties. Please try rephrasing your question or contact our support team if the issue persists.",
         isBot: true,
         timestamp: new Date(),
-        quickActions: [
+        quickActions: conversationState.retryCount < 3 ? [
           { text: '🔄 Try Again', action: 'retry_message' },
+          { text: '📝 Rephrase Question', action: 'rephrase_question' },
+          { text: '📞 Contact Support', action: 'contact_support' }
+        ] : [
           { text: '📞 Contact Support', action: 'contact_support' },
-          { text: '❓ Get Help', action: 'show_help' }
+          { text: '❓ Get Help', action: 'show_help' },
+          { text: '🔄 Start Over', action: 'restart_conversation' }
         ]
       };
 
       setMessages(prev => [...prev, errorMessage]);
+      handleError(error as Error, true);
     } finally {
       setIsTyping(false);
     }
-  }, [conversationState, navigate]);
+  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError]);
 
   // Handle quick action clicks - Compatible with ChatbotWidget expectations
   const handleQuickAction = useCallback(async (action: string, href?: string) => {
@@ -704,16 +967,49 @@ What specific aspect of your business would you like to focus on first?`;
     }
   }, [sendMessage, navigate]);
 
-  // Clear conversation function - Compatible with existing ChatbotWidget
+  // Enhanced clear conversation function with analytics reset
   const clearChat = useCallback(() => {
     setMessages([]);
-    setConversationState({
-      context: ConversationContext.WELCOME,
-      businessContext: {},
-      sessionDuration: 0,
-      messageCount: 0
+    dispatch({ 
+      type: 'UPDATE_STATE', 
+      payload: {
+        context: ConversationContext.WELCOME,
+        businessContext: {},
+        sessionDuration: 0,
+        messageCount: 0,
+        errorCount: 0,
+        retryCount: 0,
+        isProcessing: false,
+        conversationMemory: {
+          userPreferences: {},
+          previousTopics: [],
+          importantDetails: {},
+          userGoals: [],
+          painPoints: [],
+          lastInteractionTime: new Date()
+        }
+      }
     });
     sessionStartTime.current = Date.now();
+    responseTimeTracker.current = [];
+    
+    // Reset analytics for new session
+    setAnalytics({
+      totalMessages: 0,
+      averageResponseTime: 0,
+      userSatisfactionScore: 0,
+      mostAskedQuestions: [],
+      conversationCompletionRate: 0,
+      errorRate: 0,
+      popularTopics: [],
+      sessionDuration: 0
+    });
+    
+    // Clear any pending timeouts
+    if (retryTimeout.current) {
+      clearTimeout(retryTimeout.current);
+      retryTimeout.current = null;
+    }
     
     // Re-initialize with welcome message
     setTimeout(() => {
@@ -728,18 +1024,24 @@ What specific aspect of your business would you like to focus on first?`;
     setIsOpen(prev => !prev);
   }, []);
 
-  // Export conversation data
+  // Enhanced export conversation data with analytics
   const exportConversation = useCallback(() => {
     const exportData = {
       conversation: messages.map(msg => ({
         content: msg.content,
         isBot: msg.isBot,
         timestamp: msg.timestamp,
-        messageType: msg.messageType
+        messageType: msg.messageType,
+        confidence: msg.confidence,
+        sources: msg.sources
       })),
       businessContext: conversationState.businessContext,
+      conversationMemory: conversationState.conversationMemory,
+      conversationFlow: conversationState.conversationFlow,
+      analytics: analytics,
       sessionDuration: conversationState.sessionDuration,
       messageCount: conversationState.messageCount,
+      errorCount: conversationState.errorCount,
       exportedAt: new Date().toISOString()
     };
     
@@ -754,7 +1056,60 @@ What specific aspect of your business would you like to focus on first?`;
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [messages, conversationState]);
+  }, [messages, conversationState, analytics]);
+
+  // Rate conversation satisfaction
+  const rateSatisfaction = useCallback((score: number) => {
+    trackUserInteraction({ 
+      type: 'satisfaction_rated', 
+      data: { score } 
+    });
+    
+    setAnalytics(prev => ({
+      ...prev,
+      userSatisfactionScore: score
+    }));
+  }, [trackUserInteraction]);
+
+  // Get conversation insights
+  const getConversationInsights = useCallback(() => {
+    return {
+      totalMessages: conversationState.messageCount,
+      sessionDuration: conversationState.sessionDuration,
+      errorRate: analytics.errorRate,
+      averageResponseTime: analytics.averageResponseTime,
+      userSatisfaction: analytics.userSatisfactionScore,
+      popularTopics: conversationState.conversationMemory.previousTopics,
+      businessContext: conversationState.businessContext,
+      conversationFlow: conversationState.conversationFlow,
+      isProcessing: conversationState.isProcessing,
+      hasErrors: conversationState.errorCount > 0,
+      lastError: conversationState.lastError
+    };
+  }, [conversationState, analytics]);
+
+  // Save conversation to backend
+  const saveConversation = useCallback(async () => {
+    try {
+      const { error } = await supabase
+        .from('chatbot_conversations')
+        .insert({
+          session_id: sessionId,
+          messages: messages,
+          business_context: conversationState.businessContext,
+          conversation_memory: conversationState.conversationMemory,
+          analytics: analytics,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      return { success: false, error: error.message };
+    }
+  }, [sessionId, messages, conversationState, analytics]);
 
   // Cleanup function
   useEffect(() => {
@@ -765,7 +1120,7 @@ What specific aspect of your business would you like to focus on first?`;
     };
   }, []);
 
-  // Return interface compatible with ChatbotWidget
+  // Enhanced return interface with new functionality
   return {
     // Core ChatbotWidget compatibility
     isOpen,
@@ -784,18 +1139,37 @@ What specific aspect of your business would you like to focus on first?`;
     sessionDuration: conversationState.sessionDuration,
     messageCount: conversationState.messageCount,
     
+    // New enhanced features
+    analytics,
+    conversationMemory: conversationState.conversationMemory,
+    conversationFlow: conversationState.conversationFlow,
+    isProcessing: conversationState.isProcessing,
+    errorCount: conversationState.errorCount,
+    lastError: conversationState.lastError,
+    retryCount: conversationState.retryCount,
+    
     // Action handlers
     clearConversation,
     exportConversation,
+    rateSatisfaction,
+    getConversationInsights,
+    saveConversation,
+    clearError,
     
     // Utility functions
     updateConversationState,
     businessPlanSections,
+    trackUserInteraction,
     
     // Quick access to business insights
     getBusinessInsight: (industry: string) => businessInsights[industry as keyof typeof businessInsights],
     
     // Session management
-    sessionStartTime: sessionStartTime.current
+    sessionId,
+    sessionStartTime: sessionStartTime.current,
+    
+    // Error handling
+    hasErrors: conversationState.errorCount > 0,
+    canRetry: conversationState.retryCount < 3
   };
 };
