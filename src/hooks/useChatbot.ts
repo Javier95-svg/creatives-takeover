@@ -233,7 +233,20 @@ export interface EnhancedChatbotConfig {
   };
 }
 
-export const useChatbot = (config: EnhancedChatbotConfig = {
+export interface WizardMode {
+  enabled: boolean;
+  currentStep: number;
+  steps: Array<{
+    key: string;
+    question: string;
+    transition?: string;
+  }>;
+  answers: Record<string, string>;
+  onStepComplete?: (step: number, answer: string) => void;
+  onWizardComplete?: (answers: Record<string, string>) => void;
+}
+
+export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: WizardMode } = {
   enableNLU: true,
   enableDynamicFAQ: true,
   enableAnalytics: true,
@@ -298,6 +311,8 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
   
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [enableStreaming] = useState(true); // Enable streaming by default
+  const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
+  const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -402,11 +417,22 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
     if (messages.length === 0) {
-      const welcomeMessage = createWelcomeMessage();
-      setMessages([welcomeMessage]);
+      if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
+        // Initialize wizard mode with first question
+        const firstMessage: ChatMessage = {
+          id: generateId(),
+          content: config.wizardMode.steps[0].question,
+          isBot: true,
+          timestamp: new Date()
+        };
+        setMessages([firstMessage]);
+      } else {
+        const welcomeMessage = createWelcomeMessage();
+        setMessages([welcomeMessage]);
+      }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname]);
+  }, [location.pathname, config.wizardMode]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
@@ -986,6 +1012,45 @@ What specific aspect of your business would you like to focus on first?`;
     setMessages(prev => [...prev, userMessage]);
     dispatch({ type: 'ADD_MESSAGE' });
 
+    // Handle wizard mode
+    if (config.wizardMode?.enabled && config.wizardMode.steps) {
+      const currentStepData = config.wizardMode.steps[wizardStep];
+      if (currentStepData) {
+        // Save the answer
+        const newAnswers = { ...wizardAnswers, [currentStepData.key]: content.trim() };
+        setWizardAnswers(newAnswers);
+        
+        // Call step complete callback
+        config.wizardMode.onStepComplete?.(wizardStep, content.trim());
+        
+        // Move to next step
+        const nextStep = wizardStep + 1;
+        
+        if (nextStep < config.wizardMode.steps.length) {
+          // Show transition and next question
+          setWizardStep(nextStep);
+          const nextStepData = config.wizardMode.steps[nextStep];
+          const transitionText = currentStepData.transition || '';
+          
+          const botMessage: ChatMessage = {
+            id: generateId(),
+            content: transitionText ? `${transitionText}\n\n${nextStepData.question}` : nextStepData.question,
+            isBot: true,
+            timestamp: new Date()
+          };
+          
+          setTimeout(() => {
+            setMessages(prev => [...prev, botMessage]);
+          }, 500);
+        } else {
+          // Wizard complete
+          config.wizardMode.onWizardComplete?.(newAnswers);
+        }
+        
+        return;
+      }
+    }
+
     // Show typing indicator
     simulateTyping();
 
@@ -1344,6 +1409,15 @@ What specific aspect of your business would you like to focus on first?`;
     // Streaming properties
     streamingMessage,
     isStreaming,
+    
+    // Wizard mode properties
+    wizardMode: config.wizardMode?.enabled ? {
+      currentStep: wizardStep,
+      totalSteps: config.wizardMode.steps.length,
+      answers: wizardAnswers,
+      setWizardStep,
+      isComplete: wizardStep >= (config.wizardMode.steps.length || 0)
+    } : null,
     
     // Enhanced business planning features
     conversationState,
