@@ -315,27 +315,7 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
   });
 
   // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
-
-  const analyticsManager = useAnalytics({
-    enableTracking: config.enableAnalytics && (config.chatAnalyticsConfig?.enableTracking || false),
-    enableRealTimeAnalytics: config.enableAnalytics && (config.chatAnalyticsConfig?.enableRealTimeAnalytics || false),
-    enableUserSatisfaction: config.enableAnalytics && (config.chatAnalyticsConfig?.enableUserSatisfaction || false),
-    enableConversationMetrics: config.enableAnalytics,
-    enableErrorTracking: config.enableAnalytics,
-    batchSize: 10,
-    flushInterval: 30000,
-    analyticsProviders: config.chatAnalyticsConfig?.analyticsProviders || ['supabase']
-  });
-
-  const personalization = usePersonalization({
-    enableProfileTracking: config.enablePersonalization && (config.personalizationConfig?.enableProfileTracking || false),
-    enableBehaviorAnalysis: config.enablePersonalization && (config.personalizationConfig?.enableBehaviorAnalysis || false),
-    enableContextualResponses: config.enablePersonalization && (config.personalizationConfig?.enableContextualResponses || false),
-    enableRecommendations: config.enablePersonalization,
-    enableAIPersonalization: config.enablePersonalization,
-    dataRetentionDays: 365,
-    privacyMode: config.personalizationConfig?.privacyMode || 'full'
-  });
+  // These features will be added in Phase 1 and Phase 2 of the implementation
 
   // Business planning knowledge base
   const businessInsights = useMemo(() => ({
@@ -581,33 +561,8 @@ What aspect of your business would you like to explore?`;
 
   // Helper functions for enhanced response handling
   const handleFallbackResponse = async (content: string, nluResult: NLUResult): Promise<AIResponse> => {
-    // Try dynamic FAQ first
-    if (config.enableDynamicFAQ && dynamicFAQ.faqs.length > 0) {
-      const faqResults = FAQUtils.sortByRelevance(dynamicFAQ.faqs, content);
-      if (faqResults.length > 0 && faqResults[0].relevanceScore > 6) {
-        return {
-          content: faqResults[0].answer,
-          quickActions: faqResults[0].quickActions,
-          confidence: 0.7,
-          sources: ['Dynamic FAQ Database'],
-          memoryUpdate: {
-            previousTopics: [...conversationState.conversationMemory.previousTopics, faqResults[0].category].slice(-5)
-          }
-        };
-      }
-    }
-
-    // Try AI-generated answer
-    if (config.enableAIGeneratedAnswers) {
-      const aiAnswer = await dynamicFAQ.generateAIAnswer(content);
-      if (aiAnswer) {
-        return {
-          content: aiAnswer.answer,
-          confidence: aiAnswer.confidence,
-          sources: aiAnswer.sources,
-          messageType: 'recommendation'
-        };
-      }
+    // Dynamic FAQ and AI-generated answers will be implemented in Phase 1 per IMPLEMENTATION_PLAN.md
+    // For now, provide a generic fallback response
     }
 
     // Fallback to general response
@@ -1338,12 +1293,9 @@ What specific aspect of your business would you like to focus on first?`;
       const { error } = await supabase
         .from('chatbot_conversations')
         .insert({
-          session_id: sessionId,
-          messages: messages,
+          user_id: conversationState.businessContext.userId,
           business_context: conversationState.businessContext,
-          conversation_memory: conversationState.conversationMemory,
-          chatAnalytics: chatAnalytics,
-          created_at: new Date().toISOString()
+          conversation_stage: conversationState.context
         });
 
       if (error) throw error;
@@ -1420,38 +1372,6 @@ What specific aspect of your business would you like to focus on first?`;
     nlu: config.enableNLU ? {
       processMessage: nlu.processMessage,
       getIntentSuggestions: nlu.getIntentSuggestions
-    } : null,
-    
-    dynamicFAQ: config.enableDynamicFAQ ? {
-      faqs: dynamicFAQ.faqs,
-      loading: dynamicFAQ.loading,
-      error: dynamicFAQ.error,
-      loadFAQs: dynamicFAQ.loadFAQs,
-      updateFAQ: dynamicFAQ.updateFAQ,
-      createFAQ: dynamicFAQ.createFAQ,
-      generateAIAnswer: dynamicFAQ.generateAIAnswer,
-      getFAQVersions: dynamicFAQ.getFAQVersions,
-      clearCache: dynamicFAQ.clearCache,
-      getCacheStats: dynamicFAQ.getCacheStats
-    } : null,
-    
-    analyticsManager: config.enableAnalytics ? {
-      trackInteraction: analyticsManager.trackInteraction,
-      trackUserSatisfaction: analyticsManager.trackUserSatisfaction,
-      trackConversationMetrics: analyticsManager.trackConversationMetrics,
-      trackError: analyticsManager.trackError
-    } : null,
-    
-    personalization: config.enablePersonalization ? {
-      userProfile: personalization.userProfile,
-      loading: personalization.loading,
-      error: personalization.error,
-      loadUserProfile: personalization.loadUserProfile,
-      updateUserProfile: personalization.updateUserProfile,
-      trackUserBehavior: personalization.trackUserBehavior,
-      generatePersonalizedResponse: personalization.generatePersonalizedResponse,
-      getPersonalizedRecommendations: personalization.getPersonalizedRecommendations,
-      anonymizeUserData: personalization.anonymizeUserData
     } : null,
     
     // Configuration
