@@ -315,27 +315,7 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
   });
 
   // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
-
-  const analyticsManager = useAnalytics({
-    enableTracking: config.enableAnalytics && (config.chatAnalyticsConfig?.enableTracking || false),
-    enableRealTimeAnalytics: config.enableAnalytics && (config.chatAnalyticsConfig?.enableRealTimeAnalytics || false),
-    enableUserSatisfaction: config.enableAnalytics && (config.chatAnalyticsConfig?.enableUserSatisfaction || false),
-    enableConversationMetrics: config.enableAnalytics,
-    enableErrorTracking: config.enableAnalytics,
-    batchSize: 10,
-    flushInterval: 30000,
-    analyticsProviders: config.chatAnalyticsConfig?.analyticsProviders || ['supabase']
-  });
-
-  const personalization = usePersonalization({
-    enableProfileTracking: config.enablePersonalization && (config.personalizationConfig?.enableProfileTracking || false),
-    enableBehaviorAnalysis: config.enablePersonalization && (config.personalizationConfig?.enableBehaviorAnalysis || false),
-    enableContextualResponses: config.enablePersonalization && (config.personalizationConfig?.enableContextualResponses || false),
-    enableRecommendations: config.enablePersonalization,
-    enableAIPersonalization: config.enablePersonalization,
-    dataRetentionDays: 365,
-    privacyMode: config.personalizationConfig?.privacyMode || 'full'
-  });
+  // These features are planned for future implementation
 
   // Business planning knowledge base
   const businessInsights = useMemo(() => ({
@@ -581,35 +561,6 @@ What aspect of your business would you like to explore?`;
 
   // Helper functions for enhanced response handling
   const handleFallbackResponse = async (content: string, nluResult: NLUResult): Promise<AIResponse> => {
-    // Try dynamic FAQ first
-    if (config.enableDynamicFAQ && dynamicFAQ.faqs.length > 0) {
-      const faqResults = FAQUtils.sortByRelevance(dynamicFAQ.faqs, content);
-      if (faqResults.length > 0 && faqResults[0].relevanceScore > 6) {
-        return {
-          content: faqResults[0].answer,
-          quickActions: faqResults[0].quickActions,
-          confidence: 0.7,
-          sources: ['Dynamic FAQ Database'],
-          memoryUpdate: {
-            previousTopics: [...conversationState.conversationMemory.previousTopics, faqResults[0].category].slice(-5)
-          }
-        };
-      }
-    }
-
-    // Try AI-generated answer
-    if (config.enableAIGeneratedAnswers) {
-      const aiAnswer = await dynamicFAQ.generateAIAnswer(content);
-      if (aiAnswer) {
-        return {
-          content: aiAnswer.answer,
-          confidence: aiAnswer.confidence,
-          sources: aiAnswer.sources,
-          messageType: 'recommendation'
-        };
-      }
-    }
-
     // Fallback to general response
     return {
       content: `I understand you're asking about "${content}". While I don't have a specific answer for that, I can help you with business planning, market research, financial planning, and other business-related topics. Could you provide more details about what you'd like to know?`,
@@ -977,15 +928,6 @@ What specific aspect of your business would you like to focus on first?`;
       data: { question: content } 
     });
 
-    // Track chatAnalytics
-    analyticsManager.trackInteraction({
-      sessionId,
-      eventType: 'message_sent',
-      data: { content, messageType: 'user_input' },
-      pageUrl: window.location.href,
-      userAgent: navigator.userAgent
-    });
-
     // Create user message
     const userMessage: ChatMessage = {
       id: generateId(),
@@ -1007,21 +949,6 @@ What specific aspect of your business would you like to focus on first?`;
       // Process with NLU if enabled
       if (config.enableNLU) {
         nluResult = await nlu.processMessage(content);
-        
-        // Track behavior for personalization
-        if (config.enablePersonalization) {
-          personalization.trackUserBehavior(sessionId, {
-            eventType: 'message_processed',
-            data: {
-              content,
-              intents: nluResult.intents.map(i => i.name),
-              entities: nluResult.entities.map(e => e.type),
-              sentiment: nluResult.sentiment.label,
-              confidence: nluResult.confidence
-            },
-            timestamp: new Date().toISOString()
-          });
-        }
 
         // Handle fallback scenarios
         if (nluResult.fallbackRequired) {
@@ -1034,29 +961,6 @@ What specific aspect of your business would you like to focus on first?`;
       } else {
         // Fallback to original response generation
         aiResponse = await generateAIResponse(content);
-      }
-
-      // Apply personalization if enabled
-      if (config.enablePersonalization && aiResponse) {
-        const personalizedResponse = await personalization.generatePersonalizedResponse(
-          aiResponse.content,
-          {
-            intent: nluResult?.intents[0]?.name || 'general',
-            entities: nluResult?.entities.map(e => e.type) || [],
-            sessionHistory: messages.slice(-5)
-          }
-        );
-
-        if (personalizedResponse) {
-          aiResponse.content = personalizedResponse.content;
-          aiResponse.quickActions = [
-            ...(aiResponse.quickActions || []),
-            ...personalizedResponse.recommendations.map(rec => ({
-              text: rec,
-              action: 'recommendation'
-            }))
-          ];
-        }
       }
 
       // Create bot response message
@@ -1072,20 +976,6 @@ What specific aspect of your business would you like to focus on first?`;
       };
 
       setMessages(prev => [...prev, botMessage]);
-
-      // Track bot response
-      analyticsManager.trackInteraction({
-        sessionId,
-        eventType: 'message_received',
-        data: { 
-          content: aiResponse.content,
-          messageType: aiResponse.messageType,
-          confidence: aiResponse.confidence,
-          intents: nluResult?.intents.map(i => i.name) || []
-        },
-        pageUrl: window.location.href,
-        userAgent: navigator.userAgent
-      });
 
       // Update conversation memory if provided
       if (aiResponse.memoryUpdate) {
@@ -1109,13 +999,6 @@ What specific aspect of your business would you like to focus on first?`;
 
     } catch (error) {
       console.error('Error generating AI response:', error);
-      
-      // Track error
-      analyticsManager.trackError(error as Error, {
-        sessionId,
-        content,
-        timestamp: new Date().toISOString()
-      });
       
       // Enhanced error handling with retry options
       const errorMessage: ChatMessage = {
@@ -1141,7 +1024,7 @@ What specific aspect of your business would you like to focus on first?`;
     } finally {
       setIsTyping(false);
     }
-  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, personalization, sessionId, messages]);
+  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messages]);
 
   // Handle quick action clicks - Compatible with ChatbotWidget expectations
   const handleQuickAction = useCallback(async (action: string, href?: string) => {
@@ -1335,25 +1218,24 @@ What specific aspect of your business would you like to focus on first?`;
   // Save conversation to backend
   const saveConversation = useCallback(async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from('chatbot_conversations')
-        .insert({
+        .insert([{
           session_id: sessionId,
-          messages: messages,
-          business_context: conversationState.businessContext,
-          conversation_memory: conversationState.conversationMemory,
-          chatAnalytics: chatAnalytics,
-          created_at: new Date().toISOString()
-        });
+          user_id: user?.id || null,
+          business_context: conversationState.businessContext as any
+        }]);
 
       if (error) throw error;
       
       return { success: true };
     } catch (error) {
       console.error('Error saving conversation:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: (error as any).message };
     }
-  }, [sessionId, messages, conversationState, chatAnalytics]);
+  }, [sessionId, conversationState]);
 
   // Cleanup function
   useEffect(() => {
@@ -1420,38 +1302,6 @@ What specific aspect of your business would you like to focus on first?`;
     nlu: config.enableNLU ? {
       processMessage: nlu.processMessage,
       getIntentSuggestions: nlu.getIntentSuggestions
-    } : null,
-    
-    dynamicFAQ: config.enableDynamicFAQ ? {
-      faqs: dynamicFAQ.faqs,
-      loading: dynamicFAQ.loading,
-      error: dynamicFAQ.error,
-      loadFAQs: dynamicFAQ.loadFAQs,
-      updateFAQ: dynamicFAQ.updateFAQ,
-      createFAQ: dynamicFAQ.createFAQ,
-      generateAIAnswer: dynamicFAQ.generateAIAnswer,
-      getFAQVersions: dynamicFAQ.getFAQVersions,
-      clearCache: dynamicFAQ.clearCache,
-      getCacheStats: dynamicFAQ.getCacheStats
-    } : null,
-    
-    analyticsManager: config.enableAnalytics ? {
-      trackInteraction: analyticsManager.trackInteraction,
-      trackUserSatisfaction: analyticsManager.trackUserSatisfaction,
-      trackConversationMetrics: analyticsManager.trackConversationMetrics,
-      trackError: analyticsManager.trackError
-    } : null,
-    
-    personalization: config.enablePersonalization ? {
-      userProfile: personalization.userProfile,
-      loading: personalization.loading,
-      error: personalization.error,
-      loadUserProfile: personalization.loadUserProfile,
-      updateUserProfile: personalization.updateUserProfile,
-      trackUserBehavior: personalization.trackUserBehavior,
-      generatePersonalizedResponse: personalization.generatePersonalizedResponse,
-      getPersonalizedRecommendations: personalization.getPersonalizedRecommendations,
-      anonymizeUserData: personalization.anonymizeUserData
     } : null,
     
     // Configuration
