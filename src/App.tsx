@@ -30,7 +30,6 @@ import Account from "./pages/Account";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
-import CreditAnalyticsPage from "./pages/CreditAnalyticsPage";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import CollaborationDemo from "./pages/CollaborationDemo";
 // import InteractiveCollaborationDemo from "./pages/InteractiveCollaborationDemo";
@@ -71,7 +70,6 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/account" element={<Account />} />
-            <Route path="/credits" element={<CreditAnalyticsPage />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/news" element={<Blog />} />
             <Route path="/news/:slug" element={<BlogPost />} />

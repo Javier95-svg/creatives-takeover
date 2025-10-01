@@ -4,9 +4,8 @@ import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
 import { supabase } from '@/integrations/supabase/client';
 import { useNLU, NLUResult, BusinessIntent, BusinessEntity } from './useNLU';
-import { useDynamicFAQ } from '@/data/useDynamicFAQ';
-import { useAnalytics, InteractionMetric, UserSatisfactionSignal, ConversationMetrics } from './useAnalytics';
-import { usePersonalization, PersonalizedResponse } from './usePersonalization';
+// Dynamic FAQ functionality removed - using static FAQs
+// Advanced analytics functionality removed - to be implemented per IMPLEMENTATION_PLAN.md
 
 // Enhanced message types for business planning - Compatible with ChatbotWidget
 export interface ChatMessage {
@@ -315,14 +314,7 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
     maxIntents: 3
   });
 
-  const dynamicFAQ = useDynamicFAQ({
-    enableLiveUpdates: config.enableDynamicFAQ && (config.dynamicFAQConfig?.enableLiveUpdates || false),
-    cacheTimeout: config.dynamicFAQConfig?.cacheTimeout || 300000,
-    enableVersioning: config.dynamicFAQConfig?.enableVersioning || false,
-    enableAIGeneratedAnswers: config.enableAIGeneratedAnswers && (config.dynamicFAQConfig?.enableAIGeneratedAnswers || false),
-    aiProvider: config.dynamicFAQConfig?.aiProvider || 'openai',
-    aiApiKey: undefined // Will be set via environment variables
-  });
+  // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
 
   const analyticsManager = useAnalytics({
     enableTracking: config.enableAnalytics && (config.chatAnalyticsConfig?.enableTracking || false),

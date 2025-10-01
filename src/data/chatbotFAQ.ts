@@ -501,10 +501,8 @@ export const searchFAQs = (query: string, options: {
     results = results.filter(faq => faq.category === category);
   }
   
-  // Apply search logic
-  if (query.trim()) {
-    results = FAQUtils.sortByRelevance(results, query);
-  }
+  // Apply search logic - results already filtered by relevance above
+  // No additional sorting needed as search already orders by relevance
   
   // Apply sorting
   switch (sortBy) {
