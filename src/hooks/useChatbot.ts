@@ -3,6 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
 import { supabase } from '@/integrations/supabase/client';
+import { useNLU, NLUResult, BusinessIntent, BusinessEntity } from './useNLU';
+import { useDynamicFAQ } from '@/data/useDynamicFAQ';
+import { useAnalytics, InteractionMetric, UserSatisfactionSignal, ConversationMetrics } from './useAnalytics';
+import { usePersonalization, PersonalizedResponse } from './usePersonalization';
 
 // Enhanced message types for business planning - Compatible with ChatbotWidget
 export interface ChatMessage {
@@ -196,11 +200,74 @@ const conversationReducer = (state: ConversationState, action: ConversationActio
   }
 };
 
-export const useChatbot = () => {
+// Enhanced configuration interface
+export interface EnhancedChatbotConfig {
+  enableNLU: boolean;
+  enableDynamicFAQ: boolean;
+  enableAnalytics: boolean;
+  enablePersonalization: boolean;
+  enableAIGeneratedAnswers: boolean;
+  nluConfig?: {
+    confidenceThreshold: number;
+    fallbackThreshold: number;
+    enableSentimentAnalysis: boolean;
+  };
+  chatAnalyticsConfig?: {
+    enableTracking: boolean;
+    enableRealTimeAnalytics: boolean;
+    enableUserSatisfaction: boolean;
+    analyticsProviders: ('supabase' | 'google_analytics' | 'mixpanel' | 'amplitude')[];
+  };
+  personalizationConfig?: {
+    enableProfileTracking: boolean;
+    enableBehaviorAnalysis: boolean;
+    enableContextualResponses: boolean;
+    privacyMode: 'full' | 'limited' | 'minimal';
+  };
+  dynamicFAQConfig?: {
+    enableLiveUpdates: boolean;
+    cacheTimeout: number;
+    enableVersioning: boolean;
+    enableAIGeneratedAnswers: boolean;
+    aiProvider?: 'openai' | 'anthropic' | 'local';
+  };
+}
+
+export const useChatbot = (config: EnhancedChatbotConfig = {
+  enableNLU: true,
+  enableDynamicFAQ: true,
+  enableAnalytics: true,
+  enablePersonalization: true,
+  enableAIGeneratedAnswers: true,
+  nluConfig: {
+    confidenceThreshold: 0.6,
+    fallbackThreshold: 0.4,
+    enableSentimentAnalysis: true
+  },
+  chatAnalyticsConfig: {
+    enableTracking: true,
+    enableRealTimeAnalytics: true,
+    enableUserSatisfaction: true,
+    analyticsProviders: ['supabase']
+  },
+  personalizationConfig: {
+    enableProfileTracking: true,
+    enableBehaviorAnalysis: true,
+    enableContextualResponses: true,
+    privacyMode: 'full'
+  },
+  dynamicFAQConfig: {
+    enableLiveUpdates: true,
+    cacheTimeout: 300000, // 5 minutes
+    enableVersioning: true,
+    enableAIGeneratedAnswers: true,
+    aiProvider: 'openai'
+  }
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [analytics, setAnalytics] = useState<ChatAnalytics>({
+  const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
     totalMessages: 0,
     averageResponseTime: 0,
     userSatisfactionScore: 0,
@@ -237,6 +304,46 @@ export const useChatbot = () => {
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const responseTimeTracker = useRef<number[]>([]);
   const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Enhanced hooks initialization
+  const nlu = useNLU({
+    enableIntentRecognition: config.enableNLU,
+    enableEntityExtraction: config.enableNLU,
+    enableSentimentAnalysis: config.nluConfig?.enableSentimentAnalysis || true,
+    confidenceThreshold: config.nluConfig?.confidenceThreshold || 0.6,
+    fallbackThreshold: config.nluConfig?.fallbackThreshold || 0.4,
+    maxIntents: 3
+  });
+
+  const dynamicFAQ = useDynamicFAQ({
+    enableLiveUpdates: config.enableDynamicFAQ && (config.dynamicFAQConfig?.enableLiveUpdates || false),
+    cacheTimeout: config.dynamicFAQConfig?.cacheTimeout || 300000,
+    enableVersioning: config.dynamicFAQConfig?.enableVersioning || false,
+    enableAIGeneratedAnswers: config.enableAIGeneratedAnswers && (config.dynamicFAQConfig?.enableAIGeneratedAnswers || false),
+    aiProvider: config.dynamicFAQConfig?.aiProvider || 'openai',
+    aiApiKey: undefined // Will be set via environment variables
+  });
+
+  const analyticsManager = useAnalytics({
+    enableTracking: config.enableAnalytics && (config.chatAnalyticsConfig?.enableTracking || false),
+    enableRealTimeAnalytics: config.enableAnalytics && (config.chatAnalyticsConfig?.enableRealTimeAnalytics || false),
+    enableUserSatisfaction: config.enableAnalytics && (config.chatAnalyticsConfig?.enableUserSatisfaction || false),
+    enableConversationMetrics: config.enableAnalytics,
+    enableErrorTracking: config.enableAnalytics,
+    batchSize: 10,
+    flushInterval: 30000,
+    analyticsProviders: config.chatAnalyticsConfig?.analyticsProviders || ['supabase']
+  });
+
+  const personalization = usePersonalization({
+    enableProfileTracking: config.enablePersonalization && (config.personalizationConfig?.enableProfileTracking || false),
+    enableBehaviorAnalysis: config.enablePersonalization && (config.personalizationConfig?.enableBehaviorAnalysis || false),
+    enableContextualResponses: config.enablePersonalization && (config.personalizationConfig?.enableContextualResponses || false),
+    enableRecommendations: config.enablePersonalization,
+    enableAIPersonalization: config.enablePersonalization,
+    dataRetentionDays: 365,
+    privacyMode: config.personalizationConfig?.privacyMode || 'full'
+  });
 
   // Business planning knowledge base
   const businessInsights = useMemo(() => ({
@@ -282,14 +389,14 @@ export const useChatbot = () => {
     }
   }, [location.pathname]);
 
-  // Session tracking and analytics updates
+  // Session tracking and chatAnalytics updates
   useEffect(() => {
     const interval = setInterval(() => {
       const duration = Date.now() - sessionStartTime.current;
       dispatch({ type: 'UPDATE_STATE', payload: { sessionDuration: duration } });
       
-      // Update analytics
-      setAnalytics(prev => ({
+      // Update chatAnalytics
+      setChatAnalytics(prev => ({
         ...prev,
         sessionDuration: duration,
         averageResponseTime: responseTimeTracker.current.length > 0 
@@ -309,7 +416,7 @@ export const useChatbot = () => {
     type: 'question_asked' | 'quick_action_clicked' | 'satisfaction_rated' | 'conversation_completed';
     data?: any;
   }) => {
-    setAnalytics(prev => {
+    setChatAnalytics(prev => {
       const updated = { ...prev };
       
       switch (interaction.type) {
@@ -480,8 +587,68 @@ What aspect of your business would you like to explore?`;
     }, duration);
   };
 
+  // Helper functions for enhanced response handling
+  const handleFallbackResponse = async (content: string, nluResult: NLUResult): Promise<AIResponse> => {
+    // Try dynamic FAQ first
+    if (config.enableDynamicFAQ && dynamicFAQ.faqs.length > 0) {
+      const faqResults = FAQUtils.sortByRelevance(dynamicFAQ.faqs, content);
+      if (faqResults.length > 0 && faqResults[0].relevanceScore > 6) {
+        return {
+          content: faqResults[0].answer,
+          quickActions: faqResults[0].quickActions,
+          confidence: 0.7,
+          sources: ['Dynamic FAQ Database'],
+          memoryUpdate: {
+            previousTopics: [...conversationState.conversationMemory.previousTopics, faqResults[0].category].slice(-5)
+          }
+        };
+      }
+    }
+
+    // Try AI-generated answer
+    if (config.enableAIGeneratedAnswers) {
+      const aiAnswer = await dynamicFAQ.generateAIAnswer(content);
+      if (aiAnswer) {
+        return {
+          content: aiAnswer.answer,
+          confidence: aiAnswer.confidence,
+          sources: aiAnswer.sources,
+          messageType: 'recommendation'
+        };
+      }
+    }
+
+    // Fallback to general response
+    return {
+      content: `I understand you're asking about "${content}". While I don't have a specific answer for that, I can help you with business planning, market research, financial planning, and other business-related topics. Could you provide more details about what you'd like to know?`,
+      quickActions: nluResult.suggestedQuestions?.map(q => ({ text: q, action: 'suggested_question' })) || [],
+      confidence: 0.3,
+      sources: ['General Knowledge Base']
+    };
+  };
+
+  const handleClarificationResponse = async (content: string, nluResult: NLUResult): Promise<AIResponse> => {
+    const topIntents = nluResult.intents.slice(0, 2);
+    
+    return {
+      content: `I want to make sure I understand you correctly. Are you asking about:
+      
+1. **${topIntents[0]?.name.replace('_', ' ')}** - ${topIntents[0]?.confidence > 0.7 ? 'This seems most likely' : 'This is one possibility'}
+2. **${topIntents[1]?.name.replace('_', ' ')}** - ${topIntents[1]?.confidence > 0.7 ? 'This also seems likely' : 'This is another possibility'}
+
+Or perhaps something else entirely? Please let me know which direction you'd like to go, or provide more details about your question.`,
+      quickActions: [
+        { text: `Yes, ${topIntents[0]?.name.replace('_', ' ')}`, action: 'clarify_intent', href: topIntents[0]?.name },
+        { text: `Yes, ${topIntents[1]?.name.replace('_', ' ')}`, action: 'clarify_intent', href: topIntents[1]?.name },
+        { text: 'Something else', action: 'rephrase_question' }
+      ],
+      confidence: 0.5,
+      sources: ['Clarification System']
+    };
+  };
+
   // Enhanced AI response generation with memory and context awareness
-  const generateAIResponse = async (userMessage: string): Promise<AIResponse> => {
+  const generateAIResponse = async (userMessage: string, nluResult?: NLUResult): Promise<AIResponse> => {
     const startTime = Date.now();
     dispatch({ type: 'SET_PROCESSING', payload: true });
     
@@ -522,7 +689,7 @@ What aspect of your business would you like to explore?`;
       const faqResults = FAQUtils.sortByRelevance(allFAQs, userMessage);
       
       if (faqResults.length > 0 && faqResults[0].relevanceScore > 8) {
-        // Track FAQ usage for analytics
+        // Track FAQ usage for chatAnalytics
         trackUserInteraction({ 
           type: 'question_asked', 
           data: { question: userMessage, source: 'FAQ' } 
@@ -808,7 +975,7 @@ What specific aspect of your business would you like to focus on first?`;
     };
   };
 
-  // Enhanced message sending function with better error handling and analytics
+  // Enhanced message sending function with NLU, personalization, and chatAnalytics
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || conversationState.isProcessing) return;
 
@@ -816,6 +983,15 @@ What specific aspect of your business would you like to focus on first?`;
     trackUserInteraction({ 
       type: 'question_asked', 
       data: { question: content } 
+    });
+
+    // Track chatAnalytics
+    analyticsManager.trackInteraction({
+      sessionId,
+      eventType: 'message_sent',
+      data: { content, messageType: 'user_input' },
+      pageUrl: window.location.href,
+      userAgent: navigator.userAgent
     });
 
     // Create user message
@@ -833,9 +1009,64 @@ What specific aspect of your business would you like to focus on first?`;
     simulateTyping();
 
     try {
-      // Try AI response generation first
-      const aiResponse = await generateAIResponse(content);
-      
+      let aiResponse;
+      let nluResult: NLUResult | null = null;
+
+      // Process with NLU if enabled
+      if (config.enableNLU) {
+        nluResult = await nlu.processMessage(content);
+        
+        // Track behavior for personalization
+        if (config.enablePersonalization) {
+          personalization.trackUserBehavior(sessionId, {
+            eventType: 'message_processed',
+            data: {
+              content,
+              intents: nluResult.intents.map(i => i.name),
+              entities: nluResult.entities.map(e => e.type),
+              sentiment: nluResult.sentiment.label,
+              confidence: nluResult.confidence
+            },
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        // Handle fallback scenarios
+        if (nluResult.fallbackRequired) {
+          aiResponse = await handleFallbackResponse(content, nluResult);
+        } else if (nluResult.clarificationNeeded) {
+          aiResponse = await handleClarificationResponse(content, nluResult);
+        } else {
+          aiResponse = await generateAIResponse(content, nluResult);
+        }
+      } else {
+        // Fallback to original response generation
+        aiResponse = await generateAIResponse(content);
+      }
+
+      // Apply personalization if enabled
+      if (config.enablePersonalization && aiResponse) {
+        const personalizedResponse = await personalization.generatePersonalizedResponse(
+          aiResponse.content,
+          {
+            intent: nluResult?.intents[0]?.name || 'general',
+            entities: nluResult?.entities.map(e => e.type) || [],
+            sessionHistory: messages.slice(-5)
+          }
+        );
+
+        if (personalizedResponse) {
+          aiResponse.content = personalizedResponse.content;
+          aiResponse.quickActions = [
+            ...(aiResponse.quickActions || []),
+            ...personalizedResponse.recommendations.map(rec => ({
+              text: rec,
+              action: 'recommendation'
+            }))
+          ];
+        }
+      }
+
       // Create bot response message
       const botMessage: ChatMessage = {
         id: generateId(),
@@ -849,6 +1080,20 @@ What specific aspect of your business would you like to focus on first?`;
       };
 
       setMessages(prev => [...prev, botMessage]);
+
+      // Track bot response
+      analyticsManager.trackInteraction({
+        sessionId,
+        eventType: 'message_received',
+        data: { 
+          content: aiResponse.content,
+          messageType: aiResponse.messageType,
+          confidence: aiResponse.confidence,
+          intents: nluResult?.intents.map(i => i.name) || []
+        },
+        pageUrl: window.location.href,
+        userAgent: navigator.userAgent
+      });
 
       // Update conversation memory if provided
       if (aiResponse.memoryUpdate) {
@@ -872,6 +1117,13 @@ What specific aspect of your business would you like to focus on first?`;
 
     } catch (error) {
       console.error('Error generating AI response:', error);
+      
+      // Track error
+      analyticsManager.trackError(error as Error, {
+        sessionId,
+        content,
+        timestamp: new Date().toISOString()
+      });
       
       // Enhanced error handling with retry options
       const errorMessage: ChatMessage = {
@@ -897,7 +1149,7 @@ What specific aspect of your business would you like to focus on first?`;
     } finally {
       setIsTyping(false);
     }
-  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError]);
+  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, personalization, sessionId, messages]);
 
   // Handle quick action clicks - Compatible with ChatbotWidget expectations
   const handleQuickAction = useCallback(async (action: string, href?: string) => {
@@ -967,7 +1219,7 @@ What specific aspect of your business would you like to focus on first?`;
     }
   }, [sendMessage, navigate]);
 
-  // Enhanced clear conversation function with analytics reset
+  // Enhanced clear conversation function with chatAnalytics reset
   const clearChat = useCallback(() => {
     setMessages([]);
     dispatch({ 
@@ -993,8 +1245,8 @@ What specific aspect of your business would you like to focus on first?`;
     sessionStartTime.current = Date.now();
     responseTimeTracker.current = [];
     
-    // Reset analytics for new session
-    setAnalytics({
+    // Reset chatAnalytics for new session
+    setChatAnalytics({
       totalMessages: 0,
       averageResponseTime: 0,
       userSatisfactionScore: 0,
@@ -1024,7 +1276,7 @@ What specific aspect of your business would you like to focus on first?`;
     setIsOpen(prev => !prev);
   }, []);
 
-  // Enhanced export conversation data with analytics
+  // Enhanced export conversation data with chatAnalytics
   const exportConversation = useCallback(() => {
     const exportData = {
       conversation: messages.map(msg => ({
@@ -1038,7 +1290,7 @@ What specific aspect of your business would you like to focus on first?`;
       businessContext: conversationState.businessContext,
       conversationMemory: conversationState.conversationMemory,
       conversationFlow: conversationState.conversationFlow,
-      analytics: analytics,
+      chatAnalytics: chatAnalytics,
       sessionDuration: conversationState.sessionDuration,
       messageCount: conversationState.messageCount,
       errorCount: conversationState.errorCount,
@@ -1056,7 +1308,7 @@ What specific aspect of your business would you like to focus on first?`;
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [messages, conversationState, analytics]);
+  }, [messages, conversationState, chatAnalytics]);
 
   // Rate conversation satisfaction
   const rateSatisfaction = useCallback((score: number) => {
@@ -1065,7 +1317,7 @@ What specific aspect of your business would you like to focus on first?`;
       data: { score } 
     });
     
-    setAnalytics(prev => ({
+    setChatAnalytics(prev => ({
       ...prev,
       userSatisfactionScore: score
     }));
@@ -1076,9 +1328,9 @@ What specific aspect of your business would you like to focus on first?`;
     return {
       totalMessages: conversationState.messageCount,
       sessionDuration: conversationState.sessionDuration,
-      errorRate: analytics.errorRate,
-      averageResponseTime: analytics.averageResponseTime,
-      userSatisfaction: analytics.userSatisfactionScore,
+      errorRate: chatAnalytics.errorRate,
+      averageResponseTime: chatAnalytics.averageResponseTime,
+      userSatisfaction: chatAnalytics.userSatisfactionScore,
       popularTopics: conversationState.conversationMemory.previousTopics,
       businessContext: conversationState.businessContext,
       conversationFlow: conversationState.conversationFlow,
@@ -1086,7 +1338,7 @@ What specific aspect of your business would you like to focus on first?`;
       hasErrors: conversationState.errorCount > 0,
       lastError: conversationState.lastError
     };
-  }, [conversationState, analytics]);
+  }, [conversationState, chatAnalytics]);
 
   // Save conversation to backend
   const saveConversation = useCallback(async () => {
@@ -1098,7 +1350,7 @@ What specific aspect of your business would you like to focus on first?`;
           messages: messages,
           business_context: conversationState.businessContext,
           conversation_memory: conversationState.conversationMemory,
-          analytics: analytics,
+          chatAnalytics: chatAnalytics,
           created_at: new Date().toISOString()
         });
 
@@ -1109,7 +1361,7 @@ What specific aspect of your business would you like to focus on first?`;
       console.error('Error saving conversation:', error);
       return { success: false, error: error.message };
     }
-  }, [sessionId, messages, conversationState, analytics]);
+  }, [sessionId, messages, conversationState, chatAnalytics]);
 
   // Cleanup function
   useEffect(() => {
@@ -1140,7 +1392,7 @@ What specific aspect of your business would you like to focus on first?`;
     messageCount: conversationState.messageCount,
     
     // New enhanced features
-    analytics,
+    chatAnalytics: chatAnalytics,
     conversationMemory: conversationState.conversationMemory,
     conversationFlow: conversationState.conversationFlow,
     isProcessing: conversationState.isProcessing,
@@ -1170,6 +1422,47 @@ What specific aspect of your business would you like to focus on first?`;
     
     // Error handling
     hasErrors: conversationState.errorCount > 0,
-    canRetry: conversationState.retryCount < 3
+    canRetry: conversationState.retryCount < 3,
+    
+    // Enhanced features
+    nlu: config.enableNLU ? {
+      processMessage: nlu.processMessage,
+      getIntentSuggestions: nlu.getIntentSuggestions
+    } : null,
+    
+    dynamicFAQ: config.enableDynamicFAQ ? {
+      faqs: dynamicFAQ.faqs,
+      loading: dynamicFAQ.loading,
+      error: dynamicFAQ.error,
+      loadFAQs: dynamicFAQ.loadFAQs,
+      updateFAQ: dynamicFAQ.updateFAQ,
+      createFAQ: dynamicFAQ.createFAQ,
+      generateAIAnswer: dynamicFAQ.generateAIAnswer,
+      getFAQVersions: dynamicFAQ.getFAQVersions,
+      clearCache: dynamicFAQ.clearCache,
+      getCacheStats: dynamicFAQ.getCacheStats
+    } : null,
+    
+    analyticsManager: config.enableAnalytics ? {
+      trackInteraction: analyticsManager.trackInteraction,
+      trackUserSatisfaction: analyticsManager.trackUserSatisfaction,
+      trackConversationMetrics: analyticsManager.trackConversationMetrics,
+      trackError: analyticsManager.trackError
+    } : null,
+    
+    personalization: config.enablePersonalization ? {
+      userProfile: personalization.userProfile,
+      loading: personalization.loading,
+      error: personalization.error,
+      loadUserProfile: personalization.loadUserProfile,
+      updateUserProfile: personalization.updateUserProfile,
+      trackUserBehavior: personalization.trackUserBehavior,
+      generatePersonalizedResponse: personalization.generatePersonalizedResponse,
+      getPersonalizedRecommendations: personalization.getPersonalizedRecommendations,
+      anonymizeUserData: personalization.anonymizeUserData
+    } : null,
+    
+    // Configuration
+    config
   };
 };
