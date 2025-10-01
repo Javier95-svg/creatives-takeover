@@ -14,8 +14,10 @@ const ChatbotWidget = () => {
     sendMessage,
     handleQuickAction,
     toggleChat,
-    setIsOpen
-  } = useChatbot();
+    setIsOpen,
+    streamingMessage,
+    isStreaming
+  } = useChatbot() as any; // Cast to any to access new streaming properties
   
   const [inputValue, setInputValue] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);  
@@ -117,7 +119,7 @@ const ChatbotWidget = () => {
     if (isOpen && !isMinimized) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [messages, isOpen, isMinimized, streamingMessage]); // Add streamingMessage as dependency
 
   useEffect(() => {
     if (isOpen && !isMinimized && inputRef.current) {
@@ -198,11 +200,27 @@ const ChatbotWidget = () => {
                 {messages.map((message, index) => (
                   <div key={message.id}>
                     {message.isBot ? (
-                      <TypingMessage
-                        content={message.content}
-                        speed={index === messages.length - 1 ? 30 : 0}
-                        deviceType={deviceType}
-                      />
+                      message.id === 'streaming' ? (
+                        // Streaming message - show real-time content
+                        <div className="flex gap-3">
+                          <div className={`${config.avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0`}>
+                            <MessageCircle className={config.avatarIconSize} />
+                          </div>
+                          <div className={`max-w-[85%] bg-muted ${config.messagePadding} rounded-lg rounded-bl-none ${config.messageTextSize} whitespace-pre-wrap`}>
+                            {streamingMessage || '...'}
+                            {isStreaming && (
+                              <span className="inline-block w-2 h-4 ml-1 bg-foreground/60 animate-pulse" />
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        // Regular bot message with typing animation
+                        <TypingMessage
+                          content={message.content}
+                          speed={index === messages.length - 1 && !isStreaming ? 30 : 0}
+                          deviceType={deviceType}
+                        />
+                      )
                     ) : (
                       <div className="flex justify-end">
                         <div className={`max-w-[85%] bg-primary text-primary-foreground ${config.messagePadding} rounded-lg rounded-br-none ${config.messageTextSize}`}>
@@ -212,7 +230,7 @@ const ChatbotWidget = () => {
                     )}
                     
                     {/* Quick Actions */}
-                    {message.quickActions && message.isBot && (
+                    {message.quickActions && message.isBot && message.id !== 'streaming' && (
                       <div className={`flex flex-wrap gap-2 ${deviceType === 'mobile' ? 'mt-4 ml-14' : 'mt-3 ml-11'}`}>
                         {message.quickActions.map((action, actionIndex) => (
                           <Button
@@ -236,7 +254,7 @@ const ChatbotWidget = () => {
                   </div>
                 ))}
                 
-                {isTyping && (
+                {isTyping && !isStreaming && (
                   <div className="flex gap-3">
                     <div className={`${config.avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0`}>
                       <MessageCircle className={config.avatarIconSize} />

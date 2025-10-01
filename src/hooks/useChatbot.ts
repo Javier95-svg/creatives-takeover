@@ -4,6 +4,7 @@ import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
 import { supabase } from '@/integrations/supabase/client';
 import { useNLU, NLUResult, BusinessIntent, BusinessEntity } from './useNLU';
+import { useStreamingChat } from './useStreamingChat';
 // Dynamic FAQ functionality removed - using static FAQs
 // Advanced analytics functionality removed - to be implemented per IMPLEMENTATION_PLAN.md
 
@@ -296,6 +297,7 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
   });
   
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [enableStreaming] = useState(true); // Enable streaming by default
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -312,6 +314,51 @@ export const useChatbot = (config: EnhancedChatbotConfig = {
     confidenceThreshold: config.nluConfig?.confidenceThreshold || 0.6,
     fallbackThreshold: config.nluConfig?.fallbackThreshold || 0.4,
     maxIntents: 3
+  });
+
+  // Initialize streaming chat hook
+  const { streamingMessage, isStreaming, streamChat } = useStreamingChat({
+    onMessageComplete: (message) => {
+      // Update the streaming message with final content
+      setMessages(prev => prev.map(msg => 
+        msg.id === 'streaming' 
+          ? {
+              ...msg,
+              id: generateId(),
+              content: message.content,
+              quickActions: message.quickActions?.map(action => ({
+                text: action,
+                action: action.toLowerCase().replace(/\s+/g, '_')
+              }))
+            }
+          : msg
+      ));
+
+      // Update business context if provided
+      if (message.businessContext) {
+        updateConversationState({
+          businessContext: { ...conversationState.businessContext, ...message.businessContext }
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Streaming error:', error);
+      setMessages(prev => prev.filter(msg => msg.id !== 'streaming'));
+      
+      const errorMessage: ChatMessage = {
+        id: generateId(),
+        content: error.includes('Rate limit') 
+          ? "I'm currently experiencing high demand. Please try again in a moment."
+          : "I apologize for the technical issue. Let me try a different approach.",
+        isBot: true,
+        timestamp: new Date(),
+        quickActions: [
+          { text: '🔄 Try Again', action: 'retry_message' },
+          { text: '📞 Contact Support', action: 'contact_support' }
+        ]
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
   });
 
   // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
@@ -943,59 +990,95 @@ What specific aspect of your business would you like to focus on first?`;
     simulateTyping();
 
     try {
-      let aiResponse;
-      let nluResult: NLUResult | null = null;
+      // Get user ID for database tracking
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || null;
 
-      // Process with NLU if enabled
-      if (config.enableNLU) {
-        nluResult = await nlu.processMessage(content);
+      // Use streaming if enabled
+      if (enableStreaming) {
+        // Add placeholder streaming message
+        const streamingMsg: ChatMessage = {
+          id: 'streaming',
+          content: '',
+          isBot: true,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, streamingMsg]);
+        setIsTyping(false); // Remove typing indicator when streaming starts
 
-        // Handle fallback scenarios
-        if (nluResult.fallbackRequired) {
-          aiResponse = await handleFallbackResponse(content, nluResult);
-        } else if (nluResult.clarificationNeeded) {
-          aiResponse = await handleClarificationResponse(content, nluResult);
-        } else {
-          aiResponse = await generateAIResponse(content, nluResult);
-        }
+        // Prepare conversation history for API
+        const conversationHistory = messages
+          .filter(msg => msg.id !== 'streaming')
+          .map(msg => ({
+            role: msg.isBot ? 'assistant' as const : 'user' as const,
+            content: msg.content
+          }));
+
+        // Start streaming
+        await streamChat(
+          content,
+          sessionId,
+          conversationHistory,
+          conversationState.businessContext,
+          userId
+        );
+
       } else {
-        // Fallback to original response generation
-        aiResponse = await generateAIResponse(content);
+        // Fallback to non-streaming response
+        let aiResponse;
+        let nluResult: NLUResult | null = null;
+
+        // Process with NLU if enabled
+        if (config.enableNLU) {
+          nluResult = await nlu.processMessage(content);
+
+          // Handle fallback scenarios
+          if (nluResult.fallbackRequired) {
+            aiResponse = await handleFallbackResponse(content, nluResult);
+          } else if (nluResult.clarificationNeeded) {
+            aiResponse = await handleClarificationResponse(content, nluResult);
+          } else {
+            aiResponse = await generateAIResponse(content, nluResult);
+          }
+        } else {
+          // Fallback to original response generation
+          aiResponse = await generateAIResponse(content);
+        }
+
+        // Create bot response message
+        const botMessage: ChatMessage = {
+          id: generateId(),
+          content: aiResponse.content,
+          isBot: true,
+          timestamp: new Date(),
+          quickActions: aiResponse.quickActions,
+          messageType: aiResponse.messageType || 'text',
+          confidence: aiResponse.confidence,
+          sources: aiResponse.sources
+        };
+
+        setMessages(prev => [...prev, botMessage]);
+
+        // Update conversation memory if provided
+        if (aiResponse.memoryUpdate) {
+          dispatch({ type: 'UPDATE_MEMORY', payload: aiResponse.memoryUpdate });
+        }
+
+        // Update business context if provided
+        if (aiResponse.contextUpdate) {
+          updateConversationState({
+            businessContext: { ...conversationState.businessContext, ...aiResponse.contextUpdate }
+          });
+        }
+
+        // Update conversation flow if provided
+        if (aiResponse.conversationFlowUpdate) {
+          dispatch({ type: 'UPDATE_FLOW', payload: aiResponse.conversationFlowUpdate });
+        }
+
+        // Clear any previous errors
+        clearError();
       }
-
-      // Create bot response message
-      const botMessage: ChatMessage = {
-        id: generateId(),
-        content: aiResponse.content,
-        isBot: true,
-        timestamp: new Date(),
-        quickActions: aiResponse.quickActions,
-        messageType: aiResponse.messageType || 'text',
-        confidence: aiResponse.confidence,
-        sources: aiResponse.sources
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-
-      // Update conversation memory if provided
-      if (aiResponse.memoryUpdate) {
-        dispatch({ type: 'UPDATE_MEMORY', payload: aiResponse.memoryUpdate });
-      }
-
-      // Update business context if provided
-      if (aiResponse.contextUpdate) {
-        updateConversationState({
-          businessContext: { ...conversationState.businessContext, ...aiResponse.contextUpdate }
-        });
-      }
-
-      // Update conversation flow if provided
-      if (aiResponse.conversationFlowUpdate) {
-        dispatch({ type: 'UPDATE_FLOW', payload: aiResponse.conversationFlowUpdate });
-      }
-
-      // Clear any previous errors
-      clearError();
 
     } catch (error) {
       console.error('Error generating AI response:', error);
@@ -1257,6 +1340,10 @@ What specific aspect of your business would you like to focus on first?`;
     handleQuickAction,
     clearChat,
     toggleChat,
+    
+    // Streaming properties
+    streamingMessage,
+    isStreaming,
     
     // Enhanced business planning features
     conversationState,

@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.business-insights-generator]
 verify_jwt = false
+
+[functions.chatbot-streaming]
+verify_jwt = false
