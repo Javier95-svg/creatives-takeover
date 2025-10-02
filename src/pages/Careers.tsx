@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -110,8 +111,8 @@ const Careers = () => {
                 <Button size="lg" className="text-lg px-8 py-6 hover-scale" asChild>
                   <a href="#positions">View Open Positions</a>
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 hover-scale">
-                  Learn About Our Culture
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6 hover-scale" asChild>
+                  <Link to="/about">Learn About Our Culture</Link>
                 </Button>
               </div>
               
