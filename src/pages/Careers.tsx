@@ -82,27 +82,68 @@ const Careers = () => {
           <Navigation />
           
           {/* Hero Section */}
-          <section className="pt-32 pb-16 px-4">
-            <div className="container mx-auto max-w-4xl text-center">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Join Our Team
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                We're building the future of creative entrepreneurship. Join us in empowering creators 
-                and innovators worldwide with cutting-edge tools and insights.
-              </p>
-              <Badge variant="secondary" className="text-base px-4 py-2">
-                🚀 We're growing fast and hiring great talent
+          <section className="relative pt-32 pb-24 px-4 overflow-hidden">
+            {/* Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 pointer-events-none" />
+            
+            {/* Decorative Elements */}
+            <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-10 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000" />
+            
+            <div className="container mx-auto max-w-5xl text-center relative z-10">
+              <Badge variant="secondary" className="text-sm px-4 py-2 mb-6 animate-fade-in">
+                🚀 We're Hiring
               </Badge>
+              
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                Build the Future
+                <br />
+                <span className="text-primary">With Us</span>
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in leading-relaxed">
+                Join a team of passionate innovators creating tools that empower 
+                <span className="text-foreground font-semibold"> creators and entrepreneurs worldwide</span>
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-fade-in">
+                <Button size="lg" className="text-lg px-8 py-6 hover-scale" asChild>
+                  <a href="#positions">View Open Positions</a>
+                </Button>
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6 hover-scale">
+                  Learn About Our Culture
+                </Button>
+              </div>
+              
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-8 border-t border-border/50 animate-fade-in">
+                <div>
+                  <div className="text-3xl md:text-4xl font-bold text-primary mb-2">3+</div>
+                  <div className="text-sm text-muted-foreground">Open Roles</div>
+                </div>
+                <div>
+                  <div className="text-3xl md:text-4xl font-bold text-primary mb-2">100%</div>
+                  <div className="text-sm text-muted-foreground">Remote First</div>
+                </div>
+                <div>
+                  <div className="text-3xl md:text-4xl font-bold text-primary mb-2">∞</div>
+                  <div className="text-sm text-muted-foreground">Growth Potential</div>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Open Positions Section */}
-          <section className="py-16 px-4">
+          <section id="positions" className="py-16 px-4 scroll-mt-20">
             <div className="container mx-auto max-w-6xl">
-              <h2 className="text-3xl font-bold text-center mb-12">
-                Open Positions
-              </h2>
+              <div className="text-center mb-12 animate-fade-in">
+                <h2 className="text-4xl font-bold mb-4">
+                  Open Positions
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Find your perfect role and start making an impact
+                </p>
+              </div>
 
               {loading ? (
                 <div className="grid md:grid-cols-3 gap-6">
