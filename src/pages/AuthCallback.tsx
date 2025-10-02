@@ -46,10 +46,7 @@ const AuthCallback = () => {
           console.log('Auth successful, redirecting to home');
           setStatus('success');
           toast.success('Successfully signed in!');
-          
-          // Clean URL and redirect without hash
-          window.history.replaceState(null, '', '/');
-          navigate('/', { replace: true });
+          navigate('/');
         } else {
           console.log('No session found, redirecting to login');
           setStatus('error');
