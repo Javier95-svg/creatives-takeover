@@ -16,28 +16,28 @@ const CreativesTakeoverHeader = () => {
   return (
     <header className="site-header sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
       <div className="header-inner container mx-auto px-4 lg:px-6">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-8">
           {/* Logo */}
-          <Link to="/" className="creatives-font text-xl font-bold takeover-gradient">
+          <Link to="/" className="creatives-font text-xl font-bold takeover-gradient flex-shrink-0">
             Creatives Takeover
           </Link>
 
           {/* Desktop Navigation */}
           <nav 
             id="site-nav" 
-            className="hidden md:flex items-center space-x-8"
+            className="hidden md:flex items-center space-x-8 ml-auto"
             aria-hidden="false"
           >
-            <Link to="#work" className="text-foreground hover:text-primary animated-underline transition-colors">
+            <Link to="#work" className="text-foreground hover:text-primary animated-underline transition-colors text-sm font-medium">
               Work
             </Link>
-            <Link to="#services" className="text-foreground hover:text-primary animated-underline transition-colors">
+            <Link to="#services" className="text-foreground hover:text-primary animated-underline transition-colors text-sm font-medium">
               Services
             </Link>
-            <Link to="#about" className="text-foreground hover:text-primary animated-underline transition-colors">
+            <Link to="#about" className="text-foreground hover:text-primary animated-underline transition-colors text-sm font-medium">
               About
             </Link>
-            <Link to="#contact" className="text-foreground hover:text-primary animated-underline transition-colors">
+            <Link to="#contact" className="text-foreground hover:text-primary animated-underline transition-colors text-sm font-medium">
               Contact
             </Link>
           </nav>
@@ -45,7 +45,7 @@ const CreativesTakeoverHeader = () => {
           {/* Mobile Menu Button */}
           <button
             id="navToggle"
-            className="nav-toggle md:hidden p-2 text-foreground hover:text-primary transition-colors"
+            className="nav-toggle md:hidden p-2 text-foreground hover:text-primary transition-colors ml-auto"
             onClick={toggleNav}
             aria-expanded={isNavOpen}
             aria-controls="site-nav"
