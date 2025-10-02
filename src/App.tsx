@@ -17,6 +17,7 @@ import FAQPage from "./pages/FAQPage";
 import NotFound from "./pages/NotFound";
 import Software from "./pages/Software";
 import Contact from "./pages/Contact";
+import Careers from "./pages/Careers";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import IPPolicy from "./pages/IPPolicy";
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/community" element={<CommunityPage />} />
+            <Route path="/careers" element={<Careers />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/prompt-library" element={<PromptLibrary />} />
             <Route path="/resources" element={<Resources />} />

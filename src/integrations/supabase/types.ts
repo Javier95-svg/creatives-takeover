@@ -1488,6 +1488,92 @@ export type Database = {
           },
         ]
       }
+      job_applications: {
+        Row: {
+          cover_message: string | null
+          created_at: string
+          cv_file_path: string
+          email: string
+          id: string
+          linkedin_url: string
+          name: string
+          portfolio_url: string | null
+          position_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cover_message?: string | null
+          created_at?: string
+          cv_file_path: string
+          email: string
+          id?: string
+          linkedin_url: string
+          name: string
+          portfolio_url?: string | null
+          position_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cover_message?: string | null
+          created_at?: string
+          cv_file_path?: string
+          email?: string
+          id?: string
+          linkedin_url?: string
+          name?: string
+          portfolio_url?: string | null
+          position_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "job_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_positions: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          requirements: string[]
+          responsibilities: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          requirements?: string[]
+          responsibilities?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          requirements?: string[]
+          responsibilities?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       live_comments: {
         Row: {
           content: string
