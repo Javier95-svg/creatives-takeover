@@ -103,8 +103,8 @@ const Careers = () => {
               </h1>
               
               <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in leading-relaxed">
-                Join a team of passionate innovators creating tools that empower 
-                <span className="text-foreground font-semibold"> creators and entrepreneurs worldwide</span>
+                Be part of a passionate team building tools that empower 
+                <span className="text-foreground font-semibold"> creators and entrepreneurs across the globe.</span>
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-fade-in">
