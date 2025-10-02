@@ -89,19 +89,41 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
       if (uploadError) throw uploadError;
 
       // Create job application
-      const { error: insertError } = await supabase.from("job_applications").insert({
-        user_id: user?.id || null,
-        position_id: position.id,
-        name: data.name,
-        email: data.email,
-        linkedin_url: data.linkedin_url,
-        portfolio_url: data.portfolio_url || null,
-        cv_file_path: filePath,
-        cover_message: data.cover_message || null,
-        status: "pending",
-      });
+      const { data: applicationData, error: insertError } = await supabase
+        .from("job_applications")
+        .insert({
+          user_id: user?.id || null,
+          position_id: position.id,
+          name: data.name,
+          email: data.email,
+          linkedin_url: data.linkedin_url,
+          portfolio_url: data.portfolio_url || null,
+          cv_file_path: filePath,
+          cover_message: data.cover_message || null,
+          status: "pending",
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+
+      // Send notification email to admins
+      try {
+        await supabase.functions.invoke('notify-job-application', {
+          body: {
+            application_id: applicationData.id,
+            position_title: position.title,
+            applicant_name: data.name,
+            applicant_email: data.email,
+            linkedin_url: data.linkedin_url,
+            portfolio_url: data.portfolio_url || null,
+            cover_message: data.cover_message || 'No cover message provided'
+          }
+        });
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+        // Don't fail the application if notification fails
+      }
 
       setSubmitSuccess(true);
       toast({

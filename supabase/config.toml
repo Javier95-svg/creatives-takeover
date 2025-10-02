@@ -1,5 +1,8 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
+[functions.notify-job-application]
+verify_jwt = false
+
 [functions.ai-model-router]
 verify_jwt = false
 

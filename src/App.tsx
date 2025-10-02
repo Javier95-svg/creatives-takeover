@@ -35,6 +35,7 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import CollaborationDemo from "./pages/CollaborationDemo";
 // import InteractiveCollaborationDemo from "./pages/InteractiveCollaborationDemo";
 import Phase4CollaborationDemo from "./pages/Phase4CollaborationDemo";
+import AdminJobApplications from "./pages/AdminJobApplications";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/collaboration-demo" element={<CollaborationDemo />} />
             {/* <Route path="/interactive-collaboration" element={<InteractiveCollaborationDemo />} /> */}
             <Route path="/phase4-collaboration" element={<Phase4CollaborationDemo />} />
+            <Route path="/admin/job-applications" element={<AdminJobApplications />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

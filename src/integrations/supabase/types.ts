@@ -1490,6 +1490,7 @@ export type Database = {
       }
       job_applications: {
         Row: {
+          admin_notes: string | null
           cover_message: string | null
           created_at: string
           cv_file_path: string
@@ -1499,11 +1500,14 @@ export type Database = {
           name: string
           portfolio_url: string | null
           position_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          admin_notes?: string | null
           cover_message?: string | null
           created_at?: string
           cv_file_path: string
@@ -1513,11 +1517,14 @@ export type Database = {
           name: string
           portfolio_url?: string | null
           position_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          admin_notes?: string | null
           cover_message?: string | null
           created_at?: string
           cv_file_path?: string
@@ -1527,6 +1534,8 @@ export type Database = {
           name?: string
           portfolio_url?: string | null
           position_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -2631,6 +2640,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_status: {
         Row: {
           activity_type: string | null
@@ -2882,6 +2912,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       refresh_expired_trends: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2896,6 +2933,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       credit_tx_type:
         | "grant"
         | "deduct"
@@ -3030,6 +3068,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       credit_tx_type: [
         "grant",
         "deduct",
