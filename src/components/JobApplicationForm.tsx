@@ -75,6 +75,18 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
   const onSubmit = async (data: FormData) => {
     if (!position) return;
 
+    console.log('🔍 Form submission started');
+    console.log('📋 Position:', position);
+    console.log('👤 User:', user);
+    console.log('📝 Form data:', {
+      name: data.name,
+      email: data.email,
+      linkedin_url: data.linkedin_url,
+      portfolio_url: data.portfolio_url,
+      cv_file: data.cv_file?.name,
+      cover_message_length: data.cover_message?.length || 0
+    });
+
     setIsSubmitting(true);
     try {
       // Upload CV file
@@ -82,34 +94,51 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
       const fileName = `${user?.id || "guest"}_${Date.now()}.${fileExt}`;
       const filePath = `${user?.id || "guest"}/${fileName}`;
 
+      console.log('📤 Uploading CV:', { fileName, filePath, size: data.cv_file.size });
+
       const { error: uploadError } = await supabase.storage
         .from("cv-uploads")
         .upload(filePath, data.cv_file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ CV upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('✅ CV uploaded successfully');
 
       // Create job application
+      const insertData = {
+        user_id: user?.id || null,
+        position_id: position.id,
+        name: data.name,
+        email: data.email,
+        linkedin_url: data.linkedin_url,
+        portfolio_url: data.portfolio_url || null,
+        cv_file_path: filePath,
+        cover_message: data.cover_message || null,
+        status: "pending",
+      };
+
+      console.log('💾 Inserting application data:', insertData);
+
       const { data: applicationData, error: insertError } = await supabase
         .from("job_applications")
-        .insert({
-          user_id: user?.id || null,
-          position_id: position.id,
-          name: data.name,
-          email: data.email,
-          linkedin_url: data.linkedin_url,
-          portfolio_url: data.portfolio_url || null,
-          cv_file_path: filePath,
-          cover_message: data.cover_message || null,
-          status: "pending",
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('❌ Database insert error:', insertError);
+        throw insertError;
+      }
+
+      console.log('✅ Application inserted successfully:', applicationData);
 
       // Send notification email to admins
+      console.log('📧 Sending admin notification...');
       try {
-        await supabase.functions.invoke('notify-job-application', {
+        const notifyResult = await supabase.functions.invoke('notify-job-application', {
           body: {
             application_id: applicationData.id,
             position_title: position.title,
@@ -120,8 +149,14 @@ const JobApplicationForm = ({ isOpen, onClose, position }: JobApplicationFormPro
             cover_message: data.cover_message || 'No cover message provided'
           }
         });
+        
+        if (notifyResult.error) {
+          console.warn('⚠️ Notification failed:', notifyResult.error);
+        } else {
+          console.log('✅ Notification sent successfully');
+        }
       } catch (notifyError) {
-        console.error('Notification error:', notifyError);
+        console.error('❌ Notification error:', notifyError);
         // Don't fail the application if notification fails
       }
 
