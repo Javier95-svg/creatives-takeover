@@ -212,33 +212,33 @@ const Careers = () => {
           {/* Why Join Us Section */}
           <section className="py-16 px-4 bg-muted/30">
             <div className="container mx-auto max-w-4xl">
-              <h2 className="text-3xl font-bold text-center mb-12">
+              <h2 className="text-3xl font-bold text-center mb-12 animate-fade-in">
                 Why Join Creatives Takeover?
               </h2>
               <div className="grid md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Target className="h-6 w-6 text-primary" />
+                <div className="text-center animate-fade-in group">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-lg">
+                    <Target className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
                   </div>
-                  <h3 className="font-semibold mb-2">Impact</h3>
+                  <h3 className="font-semibold mb-2 transition-colors duration-300 group-hover:text-primary">Impact</h3>
                   <p className="text-sm text-muted-foreground">
                     Work on products that empower creators and entrepreneurs worldwide
                   </p>
                 </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-6 w-6 text-primary" />
+                <div className="text-center animate-fade-in [animation-delay:150ms] group">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-lg">
+                    <Users className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
                   </div>
-                  <h3 className="font-semibold mb-2">Culture</h3>
+                  <h3 className="font-semibold mb-2 transition-colors duration-300 group-hover:text-primary">Culture</h3>
                   <p className="text-sm text-muted-foreground">
                     Join a collaborative team of passionate innovators and creatives
                   </p>
                 </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Briefcase className="h-6 w-6 text-primary" />
+                <div className="text-center animate-fade-in [animation-delay:300ms] group">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-lg">
+                    <Briefcase className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
                   </div>
-                  <h3 className="font-semibold mb-2">Growth</h3>
+                  <h3 className="font-semibold mb-2 transition-colors duration-300 group-hover:text-primary">Growth</h3>
                   <p className="text-sm text-muted-foreground">
                     Rapid growth opportunities with cutting-edge technologies
                   </p>
