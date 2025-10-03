@@ -1095,6 +1095,7 @@ Subject: "Quick question about [their pain point]"
                   <ChatSidebar 
                     onSessionSelect={handleSessionSelect}
                     onNewChat={handleNewChat}
+                    onTabChange={(tab) => setActiveTab(tab)}
                     className="hidden lg:flex"
                   />
 
