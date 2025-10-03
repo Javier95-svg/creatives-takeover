@@ -30,6 +30,7 @@ import { useSprints } from "@/hooks/useSprints";
 import { ArrowLeft, Zap } from "lucide-react";
 import PDFGenerator from "@/components/PDFGenerator";
 import ChatbotWidget from "@/components/ChatbotWidget";
+import { BizMapChat } from "@/components/BizMapChat";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -1097,236 +1098,25 @@ Subject: "Quick question about [their pain point]"
                     className="hidden lg:flex"
                   />
 
-                  {/* Enhanced Main Chat Interface */}
+                  {/* Enhanced BizMapChat Component with 7 Principles */}
                   <div className="flex-1 min-w-0">
-                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[500px] sm:h-[600px] lg:h-[700px] flex flex-col hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
-                      <div className="flex flex-col h-full">
-                        {/* Enhanced Chat Header */}
-                        <div className="p-3 sm:p-4 lg:p-6 border-b border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-                              <div className="relative">
-                                <div className="w-8 sm:w-10 lg:w-12 h-8 sm:h-10 lg:h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg animate-pulse-glow">
-                                  <Bot className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6 text-white" />
-                                </div>
-                                <div className="absolute -top-1 -right-1 w-3 sm:w-4 h-3 sm:h-4 bg-green-400 rounded-full animate-pulse border-2 border-card"></div>
-                              </div>
-                              <div className="min-w-0">
-                                <h4 className="text-sm sm:text-base lg:text-lg font-semibold gradient-text truncate">BizMap AI Assistant</h4>
-                                <p className="text-xs sm:text-sm text-muted-foreground">
-                                  {isCompleted ? "🎉 Launch Report Complete!" : 
-                                   `Step ${currentStep + 1} of ${wizardSteps.length} • Your AI Co-founder`}
-                                </p>
-                              </div>
-                            </div>
-                            {!isCompleted && (
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <span className="text-xs sm:text-sm font-medium text-primary">
-                                  {Math.round(getProgressPercentage())}%
-                                </span>
-                                <div className="w-12 sm:w-16 lg:w-20 h-2 sm:h-3 bg-muted/50 rounded-full overflow-hidden border border-primary/20">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 animate-glow"
-                                    style={{ width: `${getProgressPercentage()}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Enhanced Messages */}
-                        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 bg-gradient-to-b from-transparent to-primary/2">
-                          {messages.map((msg, index) => {
-                            const isLastAIMessage = msg.type === "ai" && index === messages.length - 1 && !isLoading;
-                            
-                            if (msg.type === "user") {
-                              return (
-                                <div key={index} className="flex gap-2 sm:gap-3 lg:gap-4 flex-row-reverse animate-slide-in-right" style={{ animationDelay: `${index * 0.1}s` }}>
-                                  <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-secondary to-accent shadow-lg hover:scale-110 transition-transform duration-300">
-                                    <User className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
-                                  </div>
-                                  <div className="max-w-[85%] sm:max-w-[80%] group">
-                                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm whitespace-pre-wrap bg-gradient-to-br from-secondary/20 to-accent/10 border border-secondary/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm rounded-br-sm">
-                                      {msg.content}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-1 text-right px-2">
-                                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            }
-                            
-                            if (isLastAIMessage) {
-                              return (
-                                <div key={index} className="flex gap-2 sm:gap-3 lg:gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
-                                  <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse-glow hover:scale-110 transition-transform duration-300">
-                                    <Bot className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
-                                  </div>
-                                  <div className="max-w-[85%] sm:max-w-[80%]">
-                                    <TypingMessage 
-                                      content={msg.content}
-                                      speed={25}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            }
-                            
-                            return (
-                              <div key={index} className="flex gap-2 sm:gap-3 lg:gap-4 animate-slide-in-left" style={{ animationDelay: `${index * 0.1}s` }}>
-                                <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg hover:scale-110 transition-transform duration-300">
-                                  <Bot className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
-                                </div>
-                                <div className="max-w-[85%] sm:max-w-[80%] group">
-                                  <div className="glass-card border-primary/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm whitespace-pre-wrap hover:shadow-xl hover:scale-[1.02] transition-all duration-300 rounded-bl-sm backdrop-blur-sm">
-                                    {msg.content}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground mt-1 px-2">
-                                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {isLoading && (
-                            <div className="flex gap-2 sm:gap-3 lg:gap-4 animate-fade-in">
-                              <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center animate-pulse-glow shadow-lg">
-                                <Bot className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
-                              </div>
-                              <div className="glass-card border-primary/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl rounded-bl-sm">
-                                <div className="flex items-center gap-2">
-                                  <Loader2 className="w-3 sm:w-4 h-3 sm:h-4 animate-spin text-primary" />
-                                  <div className="flex space-x-1">
-                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-primary rounded-full animate-pulse"></div>
-                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Enhanced Input Area */}
-                        <div className="p-3 sm:p-4 lg:p-6 border-t border-primary/20 bg-gradient-to-t from-card/50 via-primary/2 to-transparent">
-                          {isCompleted && (
-                            <div className="mb-4 sm:mb-6 grid grid-cols-3 gap-2 sm:gap-3">
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                className="glass border-primary/30 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/5 transition-all duration-300 hover:scale-105 text-xs sm:text-sm p-2 sm:p-3"
-                                onClick={() => handleQuickAction('outreach')}
-                              >
-                                <span className="mr-1 sm:mr-2">📧</span>
-                                Email
-                              </Button>
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                className="glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 text-xs sm:text-sm p-2 sm:p-3"
-                                onClick={() => handleQuickAction('social')}
-                              >
-                                <span className="mr-1 sm:mr-2">📱</span>
-                                Social
-                              </Button>
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                className="glass border-accent/30 hover:bg-gradient-to-r hover:from-accent/10 hover:to-primary/5 transition-all duration-300 hover:scale-105 text-xs sm:text-sm p-2 sm:p-3"
-                                onClick={() => handleQuickAction('landing')}
-                              >
-                                <span className="mr-1 sm:mr-2">🏗️</span>
-                                Landing
-                              </Button>
-                            </div>
-                          )}
-                          
-                          <div className="flex gap-2 sm:gap-3 items-end">
-                            <div className="flex-1">
-                              <div className="relative">
-                                <Input
-                                  placeholder={getCurrentPlaceholder()}
-                                  value={message}
-                                  onChange={(e) => setMessage(e.target.value)}
-                                  onKeyPress={handleKeyPress}
-                                  className="glass bg-input/50 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/70 transition-all duration-300 hover:border-primary/50 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-base"
-                                  disabled={isLoading}
-                                />
-                                {message && (
-                                  <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2">
-                                    <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <AudioRecorder 
-                              onTranscription={handleAudioTranscription}
-                              disabled={isLoading}
-                            />
-                            
-                            <Button 
-                              onClick={() => handleSendMessage()} 
-                              size="icon" 
-                              disabled={isLoading || (currentStep < wizardSteps.length && !message.trim())}
-                              className="btn-magnetic bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white border border-primary/30 shadow-lg w-10 sm:w-12 h-10 sm:h-12"
-                            >
-                              {isLoading ? <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" /> : <Send className="w-4 sm:w-5 h-4 sm:h-5" />}
-                            </Button>
-                          </div>
-                          
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 sm:mt-4 gap-2 sm:gap-0">
-                            <p className="text-xs sm:text-sm text-muted-foreground">
-                              {isCompleted ? "✨ Launch Report generated! Ready to create your sprint?" :
-                               `💬 Answer to continue to step ${currentStep + 2}`}
-                            </p>
-                            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-                              {isCompleted && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => setActiveTab("sprint")}
-                                  className="btn-magnetic glass border-secondary/30 hover:bg-gradient-to-r hover:from-secondary/10 hover:to-accent/5 flex-1 sm:flex-none"
-                                >
-                                  <Zap className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                                  Create Sprint
-                                </Button>
-                              )}
-                              {!isCompleted && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => handleSendMessage()}
-                                  disabled={isLoading || !message.trim()}
-                                  className="hover:bg-primary/10 transition-all duration-300 flex-1 sm:flex-none"
-                                >
-                                  {getButtonText()}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {!isCompleted && currentStep < wizardSteps.length && (
-                            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                              <div className="flex items-start gap-2 sm:gap-3">
-                                <div className="w-4 sm:w-5 h-4 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  <span className="text-white text-xs font-bold">🧠</span>
-                                </div>
-                                <div className="text-xs sm:text-sm">
-                                  <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                                    Enhanced AI Validation Active
-                                  </p>
-                                  <p className="text-blue-700 dark:text-blue-200">
-                                    Our improved AI will detect vague answers and ask clarifying questions to help you create a more detailed business plan.
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[500px] sm:h-[600px] lg:h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
+                      <BizMapChat
+                        wizardSteps={wizardSteps}
+                        onStepComplete={(step, answer) => {
+                          setCurrentStep(step + 1);
+                          setUserAnswers(prev => ({
+                            ...prev,
+                            [wizardSteps[step].key]: answer
+                          }));
+                        }}
+                        onWizardComplete={(finalAnswers) => {
+                          setUserAnswers(prev => ({ ...prev, ...finalAnswers }));
+                          generateLaunchReport(finalAnswers);
+                        }}
+                        currentStep={currentStep}
+                        answers={userAnswers}
+                      />
                     </div>
                   </div>
                 </div>
