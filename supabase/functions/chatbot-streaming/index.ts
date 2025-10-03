@@ -244,6 +244,32 @@ function buildSystemPrompt(businessContext: BusinessContext, marketData: any[]):
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity'}`
   ).join('\n') || '';
 
+  // Phase 4: Smart Automation - Industry benchmarks
+  const industryBenchmarks: Record<string, any> = {
+    technology: {
+      avgPricing: "$50-500/month SaaS",
+      customerAcquisition: "$200-1000 CAC",
+      suggestions: ["Freemium model", "Annual discount", "Usage-based pricing"]
+    },
+    creative: {
+      avgPricing: "$100-5000/project",
+      customerAcquisition: "$50-300 CAC",
+      suggestions: ["Portfolio-based pricing", "Retainer packages", "Value-based pricing"]
+    },
+    ecommerce: {
+      avgPricing: "30-50% markup",
+      customerAcquisition: "$20-100 CAC",
+      suggestions: ["Bundle pricing", "Volume discounts", "Subscription boxes"]
+    }
+  };
+
+  const currentIndustry = businessContext.industry?.toLowerCase() || '';
+  const benchmarks = Object.keys(industryBenchmarks).find(key => 
+    currentIndustry.includes(key)
+  ) ? industryBenchmarks[Object.keys(industryBenchmarks).find(key => 
+    currentIndustry.includes(key)
+  )!] : null;
+
   // Stage-specific guidance
   const stageGuidance = {
     idea: "Focus on validating the core concept. Ask about the problem being solved and who experiences it.",
@@ -281,7 +307,13 @@ function buildSystemPrompt(businessContext: BusinessContext, marketData: any[]):
    - "Financial projections" → "Money planning" or "Financial roadmap"
    - "Stakeholders" → "People who matter to your business"
 
-4. FUNCTIONALITY & FEATURES
+4. AUTOMATION & SMART SUGGESTIONS
+   - When users struggle with pricing, suggest: ${benchmarks ? benchmarks.suggestions.join(', ') : 'market research, competitor analysis, value-based pricing'}
+   - Auto-populate industry benchmarks when relevant: ${benchmarks ? `Typical ${currentIndustry} metrics: ${benchmarks.avgPricing} pricing, ${benchmarks.customerAcquisition} acquisition cost` : 'Research your industry standards'}
+   - Generate and refine pattern: Offer to "generate a draft" then help them customize
+   - Pre-fill common responses based on context to speed up the process
+
+5. FUNCTIONALITY & FEATURES
    - Suggest specific tools, templates, or frameworks when helpful
    - Offer to generate content (mission statements, pricing ideas, marketing angles)
    - Pattern: "Would you like me to suggest..." rather than interrogating

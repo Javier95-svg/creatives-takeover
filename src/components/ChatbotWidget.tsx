@@ -16,11 +16,17 @@ const ChatbotWidget = () => {
     toggleChat,
     setIsOpen,
     streamingMessage,
-    isStreaming
+    isStreaming,
+    businessContext,
+    conversationFlow,
+    showFeedbackPrompt,
+    rateSectionCompletion
   } = useChatbot();
   
   const [inputValue, setInputValue] = useState('');
-  const [isMinimized, setIsMinimized] = useState(false);  
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [showProgress, setShowProgress] = useState(false); // Phase 5: Progress indicator
+  const [celebrationMode, setCelebrationMode] = useState(false); // Phase 5: Celebration animation
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -110,6 +116,19 @@ const ChatbotWidget = () => {
   };
 
   const config = getDeviceConfig();
+
+  // Phase 5: Celebration animations for milestones
+  useEffect(() => {
+    const completedSections = businessContext?.completedSections?.length || 0;
+    if (completedSections > 0 && completedSections % 3 === 0) {
+      setCelebrationMode(true);
+      setTimeout(() => setCelebrationMode(false), 3000);
+    }
+  }, [businessContext?.completedSections]);
+
+  // Phase 5: Progress tracking
+  const planProgress = conversationFlow ? 
+    Math.round((conversationFlow.completedSteps.length / conversationFlow.totalSteps) * 100) : 0;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -15,6 +15,19 @@ const InteractiveProgress = ({
   onStepClick,
   isComplete = false 
 }: InteractiveProgressProps) => {
+  // Enhanced step titles reflecting new chatbot features
+  const enhancedStepTitles = [
+    "🎯 Discovery & Vision",
+    "🔍 Market Intelligence", 
+    "💡 Solution Design",
+    "📊 Financial Blueprint",
+    "🚀 Launch Strategy",
+    "📈 Growth & Scaling",
+    "✅ Plan Refinement"
+  ];
+
+  const displayTitles = stepTitles.length > 0 ? stepTitles : enhancedStepTitles;
+
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStep) return "completed";
     if (stepIndex === currentStep) return "current";
@@ -47,8 +60,8 @@ const InteractiveProgress = ({
             </div>
             <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
               {isComplete 
-                ? "Your comprehensive business plan is ready to launch" 
-                : `Currently working on: ${stepTitles[currentStep]}`
+                ? "✨ Your AI-powered comprehensive business plan is ready with industry insights and smart recommendations" 
+                : `Currently working on: ${displayTitles[currentStep]}`
               }
             </p>
           </div>
@@ -66,7 +79,7 @@ const InteractiveProgress = ({
 
             {/* Steps */}
             <div className="flex justify-between items-center relative">
-              {stepTitles.map((title, index) => {
+              {displayTitles.map((title, index) => {
                 const status = getStepStatus(index);
                 const isCompleted = status === "completed";
                 const isCurrent = status === "current";
@@ -149,7 +162,7 @@ const InteractiveProgress = ({
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                🚀 Your comprehensive business plan is ready to turn into reality
+                🚀 Your AI-enhanced business plan with smart insights, industry benchmarks, and personalized recommendations is ready to launch
               </p>
             </div>
           )}

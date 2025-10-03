@@ -505,7 +505,8 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      await supabase.from('chatbot_feedback').insert({
+      // Type assertion for new table not yet in generated types
+      await supabase.from('chatbot_feedback' as any).insert({
         user_id: user?.id,
         session_id: sessionId,
         feedback_type: feedbackData.type,
@@ -514,7 +515,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
         section: feedbackData.section,
         business_context: conversationState.businessContext,
         message_count: conversationState.messageCount
-      });
+      } as any);
       
       if (feedbackData.rating) {
         trackUserInteraction({ type: 'satisfaction_rated', data: { score: feedbackData.rating } });
@@ -1549,6 +1550,13 @@ What specific aspect of your business would you like to focus on first?`;
       processMessage: nlu.processMessage,
       getIntentSuggestions: nlu.getIntentSuggestions
     } : null,
+    
+    // Phase 3: Feedback collection
+    collectFeedback,
+    rateSectionCompletion,
+    showFeedbackPrompt,
+    setShowFeedbackPrompt,
+    sectionCompletionFeedback,
     
     // Configuration
     config

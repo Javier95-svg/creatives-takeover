@@ -430,6 +430,45 @@ export type Database = {
         }
         Relationships: []
       }
+      chatbot_feedback: {
+        Row: {
+          business_context: Json | null
+          comment: string | null
+          created_at: string
+          feedback_type: string
+          id: string
+          message_count: number | null
+          rating: number | null
+          section: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          business_context?: Json | null
+          comment?: string | null
+          created_at?: string
+          feedback_type: string
+          id?: string
+          message_count?: number | null
+          rating?: number | null
+          section?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          business_context?: Json | null
+          comment?: string | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message_count?: number | null
+          rating?: number | null
+          section?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chatbot_messages: {
         Row: {
           content: string
