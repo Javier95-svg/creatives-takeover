@@ -24,7 +24,9 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
     sessionId: string,
     conversationHistory: any[] = [],
     businessContext: any = {},
-    userId: string | null = null
+    userId: string | null = null,
+    wizardMode: any = null,
+    currentStep: number | null = null
   ) => {
     // Cancel any existing stream
     if (abortControllerRef.current) {
@@ -53,6 +55,8 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
           conversationHistory,
           businessContext,
           userId,
+          wizardMode,
+          currentStep,
         }),
         signal: abortControllerRef.current.signal,
       });

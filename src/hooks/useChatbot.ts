@@ -1098,7 +1098,7 @@ What specific aspect of your business would you like to focus on first?`;
     setMessages(prev => [...prev, userMessage]);
     dispatch({ type: 'ADD_MESSAGE' });
 
-    // Handle wizard mode
+    // Handle wizard mode with AI-enhanced responses
     if (config.wizardMode?.enabled && config.wizardMode.steps) {
       const currentStepData = config.wizardMode.steps[wizardStep];
       if (currentStepData) {
@@ -1106,31 +1106,60 @@ What specific aspect of your business would you like to focus on first?`;
         const newAnswers = { ...wizardAnswers, [currentStepData.key]: content.trim() };
         setWizardAnswers(newAnswers);
         
-        // Call step complete callback
-        config.wizardMode.onStepComplete?.(wizardStep, content.trim());
+        // Show typing indicator for AI response
+        simulateTyping();
         
-        // Move to next step
-        const nextStep = wizardStep + 1;
-        
-        if (nextStep < config.wizardMode.steps.length) {
-          // Show transition and next question
-          setWizardStep(nextStep);
-          const nextStepData = config.wizardMode.steps[nextStep];
-          const transitionText = currentStepData.transition || '';
+        try {
+          // Get user ID
+          const { data: { user } } = await supabase.auth.getUser();
+          const userId = user?.id || null;
           
-          const botMessage: ChatMessage = {
-            id: generateId(),
-            content: transitionText ? `${transitionText}\n\n${nextStepData.question}` : nextStepData.question,
+          // Prepare conversation history
+          const conversationHistory = messages.map(msg => ({
+            role: msg.isBot ? 'assistant' as const : 'user' as const,
+            content: msg.content
+          }));
+          
+          // Add placeholder streaming message
+          const streamingMsg: ChatMessage = {
+            id: 'streaming',
+            content: '',
             isBot: true,
             timestamp: new Date()
           };
+          setMessages(prev => [...prev, streamingMsg]);
+          setIsTyping(false);
           
-          setTimeout(() => {
-            setMessages(prev => [...prev, botMessage]);
-          }, 500);
-        } else {
-          // Wizard complete
-          config.wizardMode.onWizardComplete?.(newAnswers);
+          // Stream AI response with full wizard context
+          await streamChat(
+            content,
+            sessionId,
+            conversationHistory,
+            conversationState.businessContext,
+            userId,
+            {
+              enabled: true,
+              steps: config.wizardMode.steps,
+              currentStep: wizardStep,
+              answers: newAnswers
+            },
+            wizardStep
+          );
+          
+          // Notify parent of step completion
+          config.wizardMode.onStepComplete?.(wizardStep, content.trim());
+          
+          // Move to next step
+          setWizardStep(wizardStep + 1);
+          
+          // Check if wizard complete
+          if (wizardStep + 1 >= config.wizardMode.steps.length) {
+            config.wizardMode.onWizardComplete?.(newAnswers);
+          }
+          
+        } catch (error) {
+          console.error('Wizard mode streaming error:', error);
+          handleError(error instanceof Error ? error : new Error('Unknown wizard error'));
         }
         
         return;
@@ -1166,13 +1195,15 @@ What specific aspect of your business would you like to focus on first?`;
           }));
 
         // Start streaming
-        await streamChat(
-          content,
-          sessionId,
-          conversationHistory,
-          conversationState.businessContext,
-          userId
-        );
+          await streamChat(
+            content,
+            sessionId,
+            conversationHistory,
+            conversationState.businessContext,
+            userId,
+            config.wizardMode,
+            config.wizardMode?.currentStep || wizardStep
+          );
 
       } else {
         // Fallback to non-streaming response
@@ -1470,6 +1501,19 @@ What specific aspect of your business would you like to focus on first?`;
       return { success: false, error: (error as any).message };
     }
   }, [sessionId, conversationState]);
+
+  // Trigger feedback at wizard milestones
+  useEffect(() => {
+    if (config.wizardMode?.enabled && wizardStep > 0) {
+      // Trigger feedback at steps 2, 4, and 6
+      if (wizardStep === 2 || wizardStep === 4 || wizardStep === 6) {
+        const timer = setTimeout(() => {
+          triggerFeedbackCheckIn();
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [wizardStep, config.wizardMode?.enabled]);
 
   // Cleanup function
   useEffect(() => {
