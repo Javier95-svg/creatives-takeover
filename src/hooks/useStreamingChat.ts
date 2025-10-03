@@ -41,7 +41,13 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
       const CHAT_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
       const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng";
 
-      console.log('🚀 Starting streaming chat request:', { sessionId, messageLength: message.length });
+      console.log('🚀 Starting streaming chat request:', { 
+        sessionId, 
+        messageLength: message.length,
+        wizardMode: wizardMode?.enabled,
+        currentStep,
+        url: CHAT_URL 
+      });
 
       const response = await fetch(CHAT_URL, {
         method: 'POST',

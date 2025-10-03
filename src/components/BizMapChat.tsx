@@ -31,6 +31,8 @@ export const BizMapChat = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
+  console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
+
   const { 
     messages, 
     isTyping, 
@@ -73,8 +75,11 @@ export const BizMapChat = ({
 
   const handleSend = () => {
     if (message.trim() && !isTyping && !isStreaming) {
+      console.log('💬 Sending message:', message);
       sendMessage(message);
       setMessage("");
+    } else {
+      console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), isTyping, isStreaming });
     }
   };
 

@@ -424,6 +424,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     if (messages.length === 0) {
       if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
         // Initialize wizard mode with first question
+        console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
         const firstMessage: ChatMessage = {
           id: generateId(),
           content: config.wizardMode.steps[0].question,
@@ -432,6 +433,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
         };
         setMessages([firstMessage]);
       } else {
+        console.log('👋 Initializing with welcome message');
         const welcomeMessage = createWelcomeMessage();
         setMessages([welcomeMessage]);
       }
