@@ -314,6 +314,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
   
+  // Phase 3: Feedback Collection
+  const [feedbackTriggerCount, setFeedbackTriggerCount] = useState(0);
+  const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
+  const [sectionCompletionFeedback, setSectionCompletionFeedback] = useState<Record<string, number>>({});
+  
   const location = useLocation();
   const navigate = useNavigate();
   const sessionStartTime = useRef(Date.now());
@@ -489,6 +494,86 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
       return updated;
     });
   }, [conversationState.conversationFlow]);
+
+  // Phase 3: Feedback collection functions
+  const collectFeedback = useCallback(async (feedbackData: {
+    type: 'mid_conversation' | 'section_completion' | 'exit_intent';
+    rating?: number;
+    comment?: string;
+    section?: string;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      await supabase.from('chatbot_feedback').insert({
+        user_id: user?.id,
+        session_id: sessionId,
+        feedback_type: feedbackData.type,
+        rating: feedbackData.rating,
+        comment: feedbackData.comment,
+        section: feedbackData.section,
+        business_context: conversationState.businessContext,
+        message_count: conversationState.messageCount
+      });
+      
+      if (feedbackData.rating) {
+        trackUserInteraction({ type: 'satisfaction_rated', data: { score: feedbackData.rating } });
+      }
+    } catch (error) {
+      console.error('Error collecting feedback:', error);
+    }
+  }, [sessionId, conversationState, trackUserInteraction]);
+
+  const triggerFeedbackCheckIn = useCallback(() => {
+    if (conversationState.messageCount % 10 === 0 && conversationState.messageCount > 0) {
+      setShowFeedbackPrompt(true);
+      setFeedbackTriggerCount(prev => prev + 1);
+      
+      const feedbackMessage: ChatMessage = {
+        id: generateId(),
+        content: "How's your experience so far? Your feedback helps me assist you better! 😊",
+        isBot: true,
+        timestamp: new Date(),
+        quickActions: [
+          { text: '⭐ Excellent (5)', action: 'rate_5' },
+          { text: '👍 Good (4)', action: 'rate_4' },
+          { text: '😐 Okay (3)', action: 'rate_3' },
+          { text: '👎 Needs Work (2)', action: 'rate_2' }
+        ]
+      };
+      
+      setMessages(prev => [...prev, feedbackMessage]);
+    }
+  }, [conversationState.messageCount]);
+
+  const rateSectionCompletion = useCallback((section: string, rating: number) => {
+    setSectionCompletionFeedback(prev => ({ ...prev, [section]: rating }));
+    collectFeedback({
+      type: 'section_completion',
+      rating,
+      section
+    });
+  }, [collectFeedback]);
+
+  // Phase 3: Exit intent feedback
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (conversationState.messageCount > 5 && !conversationState.conversationFlow?.isCompleted) {
+        collectFeedback({
+          type: 'exit_intent',
+          comment: 'User left before completing conversation'
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [conversationState, collectFeedback]);
+
+  // Trigger feedback check-ins
+  useEffect(() => {
+    triggerFeedbackCheckIn();
+  }, [conversationState.messageCount, triggerFeedbackCheckIn]);
 
   const generateId = (): string => {
     return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
