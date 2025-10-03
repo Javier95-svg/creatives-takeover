@@ -114,34 +114,35 @@ export const BizMapChat = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        {messages.map((msg, index) => (
           <div
             key={msg.id}
-            className={`flex gap-3 ${msg.isBot ? 'justify-start' : 'justify-end'}`}
+            className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             {msg.isBot && (
-              <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-foreground" />
+              <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10">
+                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
             )}
             <div
-              className={`max-w-[80%] rounded-lg p-4 ${
+              className={`max-w-[80%] sm:max-w-[75%] rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg ${
                 msg.isBot
-                  ? 'bg-muted'
-                  : 'bg-primary text-primary-foreground'
+                  ? 'bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm hover:shadow-primary/5'
+                  : 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
               {msg.quickActions && msg.quickActions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border/30">
                   {msg.quickActions.map((action, idx) => (
                     <Button
                       key={idx}
                       variant="outline"
                       size="sm"
                       onClick={() => sendMessage(action.text)}
-                      className="text-xs"
+                      className="text-xs sm:text-sm hover:scale-105 transition-transform duration-200 bg-background/50 hover:bg-background"
                     >
                       {action.text}
                     </Button>
@@ -150,8 +151,8 @@ export const BizMapChat = ({
               )}
             </div>
             {!msg.isBot && (
-              <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-primary-foreground" />
+              <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
             )}
           </div>
@@ -159,14 +160,14 @@ export const BizMapChat = ({
 
         {/* Streaming message */}
         {isStreaming && streamingMessage && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary-foreground" />
+          <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
+            <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10 animate-pulse">
+              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
             </div>
-            <div className="max-w-[80%] rounded-lg p-4 bg-muted">
-              <p className="text-sm whitespace-pre-wrap">
+            <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm">
+              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
                 {streamingMessage}
-                <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
+                <span className="inline-block w-0.5 h-5 ml-1 bg-primary animate-pulse" />
               </p>
             </div>
           </div>
@@ -174,15 +175,15 @@ export const BizMapChat = ({
 
         {/* Typing indicator */}
         {isTyping && !isStreaming && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary-foreground" />
+          <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
+            <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10">
+              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-pulse" />
             </div>
-            <div className="max-w-[80%] rounded-lg p-4 bg-muted">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -192,25 +193,26 @@ export const BizMapChat = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t p-4 bg-background">
-        <div className="flex gap-2">
+      <div className="border-t border-border/50 p-4 sm:p-5 bg-gradient-to-br from-background to-muted/20">
+        <div className="flex gap-2 sm:gap-3">
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={getCurrentPlaceholder()}
             disabled={isTyping || isStreaming}
-            className="flex-1"
+            className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
           />
           <Button 
             onClick={handleSend}
             disabled={!message.trim() || isTyping || isStreaming}
             size="icon"
+            className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
             {isTyping || isStreaming ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </Button>
         </div>
