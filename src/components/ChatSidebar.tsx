@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Plus, MessageSquare, Trash2, Calendar, CheckCircle, Circle, Search, Menu, X,
+  Plus, MessageSquare, Trash2, Calendar, CheckCircle, Circle, Search, ChevronLeft, ChevronRight,
   Sparkles, BookOpen, Users, Target, Settings, LogOut, CreditCard, 
   MoreVertical, Archive, Copy, Download, Share2, Edit, ChevronDown
 } from 'lucide-react';
@@ -42,6 +42,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface ChatSidebarProps {
   onSessionSelect: (session: ChatSession | null) => void;
@@ -240,27 +246,51 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
     return <Badge variant="secondary" className="text-xs">Step {session.current_step}/7</Badge>;
   };
 
+  const sidebarWidth = isCollapsed ? 56 : 320;
+
   if (!user) {
     return (
-      <div className={cn(
-        "glass-card-silver h-[700px] flex flex-col hover-lift transition-all duration-300",
-        isCollapsed ? "w-16" : "w-80",
-        className
-      )}>
-        <div className="p-4 border-b border-border/50 space-y-3">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-            >
-              {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
-              {!isCollapsed && <span className="ml-2 font-semibold">Chats</span>}
-            </Button>
-          </div>
+      <TooltipProvider>
+        <div 
+          className={cn(
+            "glass-card-silver h-[700px] flex flex-col hover-lift relative overflow-hidden",
+            className
+          )}
+          style={{
+            width: `${sidebarWidth}px`,
+            transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          {/* Toggle button on right edge */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0 bg-background border border-border shadow-lg hover:scale-110 transition-transform"
+                aria-expanded={!isCollapsed}
+              >
+                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="p-4 border-b border-border/50 space-y-3">
+            {!isCollapsed && (
+              <h2 className="font-semibold text-sm px-1">Chats</h2>
+            )}
           
           {!isCollapsed && (
-            <>
+            <div 
+              className="space-y-3"
+              style={{
+                animation: 'fadeIn 0.3s ease-out 0.1s both',
+              }}
+            >
               {/* Quick Actions Menu - Available for everyone */}
               <div className="grid grid-cols-2 gap-2">
                 {quickActions.map((action) => (
@@ -286,7 +316,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
                 <CreditCard className="w-4 h-4" />
                 Sign In to Save Chats
               </Button>
-            </>
+            </div>
           )}
         </div>
 
@@ -317,44 +347,72 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
         {isCollapsed && (
           <div className="p-2 space-y-2">
             {quickActions.slice(0, 4).map((action) => (
-              <Button
-                key={action.label}
-                variant="ghost"
-                size="sm"
-                onClick={action.onClick}
-                className="w-full aspect-square p-0"
-                title={action.label}
-              >
-                <action.icon className="w-4 h-4" />
-              </Button>
+              <Tooltip key={action.label}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={action.onClick}
+                    className="w-full aspect-square p-0 hover:bg-primary/10"
+                  >
+                    <action.icon className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {action.label}
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
         )}
       </div>
+      </TooltipProvider>
     );
   }
 
   return (
-    <div className={cn(
-      "glass-card-silver h-[700px] flex flex-col hover-lift transition-all duration-300",
-      isCollapsed ? "w-16" : "w-80",
-      className
-    )}>
-      {/* Header */}
-      <div className="p-4 border-b border-border/50 space-y-3">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
-            {!isCollapsed && <span className="ml-2 font-semibold">Chats</span>}
-          </Button>
-        </div>
+    <TooltipProvider>
+      <div 
+        className={cn(
+          "glass-card-silver h-[700px] flex flex-col hover-lift relative overflow-hidden",
+          className
+        )}
+        style={{
+          width: `${sidebarWidth}px`,
+          transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        {/* Toggle button on right edge */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0 bg-background border border-border shadow-lg hover:scale-110 transition-transform"
+              aria-expanded={!isCollapsed}
+            >
+              {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Header */}
+        <div className="p-4 border-b border-border/50 space-y-3">
+          {!isCollapsed && (
+            <h2 className="font-semibold text-sm px-1">Chats</h2>
+          )}
         
         {!isCollapsed && (
-          <>
+          <div 
+            className="space-y-3"
+            style={{
+              animation: 'fadeIn 0.3s ease-out 0.1s both',
+            }}
+          >
             {/* Quick Actions Menu */}
             <div className="grid grid-cols-2 gap-2">
               {quickActions.map((action) => (
@@ -414,7 +472,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
                 </SelectContent>
               </Select>
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -620,40 +678,52 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
 
       {/* Collapsed state indicator */}
       {isCollapsed && (
-        <div className="p-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleNewChat}
-            className="w-full aspect-square p-0"
-            title="New Chat"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+        <div className="p-2 space-y-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNewChat}
+                className="w-full aspect-square p-0 hover:bg-primary/10"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              New Chat
+            </TooltipContent>
+          </Tooltip>
           <Separator className="my-2" />
           <div className="space-y-1">
             {sessions.slice(0, 3).map((session) => (
-              <Button
-                key={session.id}
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "w-full aspect-square p-0",
-                  currentSessionId === session.id && "bg-muted"
-                )}
-                onClick={() => handleSessionClick(session)}
-                title={session.title}
-              >
-                {session.is_completed ? (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                ) : (
-                  <Circle className="w-4 h-4 text-muted-foreground" />
-                )}
-              </Button>
+              <Tooltip key={session.id}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "w-full aspect-square p-0 hover:bg-primary/10",
+                      currentSessionId === session.id && "bg-primary/20"
+                    )}
+                    onClick={() => handleSessionClick(session)}
+                  >
+                    {session.is_completed ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {session.title}
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 };
