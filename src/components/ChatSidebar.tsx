@@ -243,27 +243,91 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
   if (!user) {
     return (
       <div className={cn(
-        "glass-card-silver h-[700px] flex flex-col hover-lift",
+        "glass-card-silver h-[700px] flex flex-col hover-lift transition-all duration-300",
         isCollapsed ? "w-16" : "w-80",
         className
       )}>
-        <div className="p-4 border-b border-border/50">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full justify-start"
-          >
-            <Menu className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">Chats</span>}
-          </Button>
+        <div className="p-4 border-b border-border/50 space-y-3">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+              {!isCollapsed && <span className="ml-2 font-semibold">Chats</span>}
+            </Button>
+          </div>
+          
+          {!isCollapsed && (
+            <>
+              {/* Quick Actions Menu - Available for everyone */}
+              <div className="grid grid-cols-2 gap-2">
+                {quickActions.map((action) => (
+                  <Button
+                    key={action.label}
+                    variant="outline"
+                    size="sm"
+                    onClick={action.onClick}
+                    className="justify-start gap-2 text-xs h-9 hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    <action.icon className="w-3.5 h-3.5" />
+                    <span className="truncate">{action.label}</span>
+                  </Button>
+                ))}
+              </div>
+
+              {/* Sign in CTA with gradient */}
+              <Button
+                onClick={() => navigate('/login')}
+                className="w-full justify-start gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                size="lg"
+              >
+                <CreditCard className="w-4 h-4" />
+                Sign In to Save Chats
+              </Button>
+            </>
+          )}
         </div>
+
         {!isCollapsed && (
-          <div className="flex-1 flex items-center justify-center p-4">
-            <div className="text-center text-muted-foreground">
-              <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Sign in to save your conversations</p>
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="glass-card-silver p-6 rounded-xl text-center">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-primary/50" />
+              <p className="text-sm font-medium mb-2">Ready to get started?</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Sign in to save your conversations and track your progress
+              </p>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => navigate('/prompt-library')}
+                  className="h-auto p-0 text-primary"
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Or explore our prompt library
+                </Button>
+              </div>
             </div>
+          </div>
+        )}
+
+        {/* Collapsed state */}
+        {isCollapsed && (
+          <div className="p-2 space-y-2">
+            {quickActions.slice(0, 4).map((action) => (
+              <Button
+                key={action.label}
+                variant="ghost"
+                size="sm"
+                onClick={action.onClick}
+                className="w-full aspect-square p-0"
+                title={action.label}
+              >
+                <action.icon className="w-4 h-4" />
+              </Button>
+            ))}
           </div>
         )}
       </div>
