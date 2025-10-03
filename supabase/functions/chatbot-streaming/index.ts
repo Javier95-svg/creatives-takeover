@@ -31,7 +31,9 @@ serve(async (req) => {
       sessionId, 
       conversationHistory = [], 
       businessContext = {},
-      userId = null 
+      userId = null,
+      wizardMode = null,
+      currentStep = null
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -86,7 +88,7 @@ serve(async (req) => {
       .limit(5);
 
     // Build system prompt
-    const systemPrompt = buildSystemPrompt(businessContext, marketData);
+    const systemPrompt = buildSystemPrompt(businessContext, marketData, wizardMode, currentStep);
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
@@ -239,7 +241,7 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(businessContext: BusinessContext, marketData: any[]): string {
+function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], wizardMode: any = null, currentStep: number | null = null): string {
   const marketInsights = marketData?.map(d => 
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity'}`
   ).join('\n') || '';
@@ -279,6 +281,18 @@ function buildSystemPrompt(businessContext: BusinessContext, marketData: any[]):
   };
 
   const currentStage = businessContext.stage || 'idea';
+
+  // Wizard mode specific guidance
+  const wizardGuidance = wizardMode ? `
+🎯 WIZARD MODE ACTIVE (Step ${(currentStep || 0) + 1}/${wizardMode.steps?.length || 7}):
+- You're guiding the user through a structured planning process
+- Keep responses warm, encouraging, and focused on the current step
+- Acknowledge their answers positively before moving forward
+- If an answer is vague, gently ask clarifying questions
+- Celebrate progress: "You're ${Math.round(((currentStep || 0) / (wizardMode.steps?.length || 7)) * 100)}% through the planning!"
+- Use emojis sparingly but meaningfully to maintain energy
+- When users express doubt, acknowledge imposter syndrome and encourage them
+` : '';
 
   return `You are BizMap AI, a warm and supportive business planning companion for creative entrepreneurs.
 
@@ -332,6 +346,8 @@ function buildSystemPrompt(businessContext: BusinessContext, marketData: any[]):
    - Prioritize scrappy, bootstrap-friendly solutions
    - When suggesting tools, mention free alternatives first
    - Respect their time - offer to "fast-forward" through obvious sections
+
+${wizardGuidance}
 
 CURRENT USER CONTEXT:
 ${businessContext.industry ? `Industry: ${businessContext.industry}` : 'Industry: Not yet specified'}

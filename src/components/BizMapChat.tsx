@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
 import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
+import { Progress } from "@/components/ui/progress";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -26,6 +27,7 @@ export const BizMapChat = ({
   answers
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
+  const [celebrationMode, setCelebrationMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
@@ -51,6 +53,8 @@ export const BizMapChat = ({
     }
   });
 
+  const progress = (currentStep / wizardSteps.length) * 100;
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -58,6 +62,14 @@ export const BizMapChat = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
+
+  // Celebration on milestones
+  useEffect(() => {
+    if (currentStep === 2 || currentStep === 4 || currentStep === 6) {
+      setCelebrationMode(true);
+      setTimeout(() => setCelebrationMode(false), 3000);
+    }
+  }, [currentStep]);
 
   const handleSend = () => {
     if (message.trim() && !isTyping && !isStreaming) {
@@ -82,6 +94,20 @@ export const BizMapChat = ({
 
   return (
     <div className="flex flex-col h-full">
+      {/* Progress Bar */}
+      <div className="p-4 border-b bg-muted/30">
+        <div className="flex items-center gap-3 mb-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">
+            Step {currentStep + 1} of {wizardSteps.length}
+          </span>
+          {celebrationMode && (
+            <span className="text-lg animate-bounce">🎉</span>
+          )}
+        </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg) => (

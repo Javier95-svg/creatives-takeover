@@ -82,51 +82,51 @@ const BizMapAI = () => {
     {
       key: "overview",
       title: "Business Overview",
-      question: "In a few sentences, what are you planning to create or offer?",
-      placeholder: "e.g., A mobile app that helps busy parents find and book last-minute childcare services in their neighborhood...",
-      transition: "That sounds really interesting! I can already see the potential. Now, let's talk about who would benefit most from this."
+      question: "Let's start with your business idea! 🚀 In a few sentences, what are you planning to create or offer? (Don't worry if it's not fully formed yet—that's what we're here for!)",
+      placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
+      transition: "Love that! I can already see the potential. Now, let's talk about who would benefit most from this..."
     },
     {
       key: "market", 
       title: "Target Market",
-      question: "Who's your ideal customer? Tell me about the specific people who would love what you're building.",
-      placeholder: "e.g., Working parents aged 28-45 in urban areas who currently struggle with childcare arrangements and use Facebook groups to find sitters...",
-      transition: "Perfect! I'm getting a clear picture of your audience. Now I want to understand the problem you're solving for them."
+      question: "Who are your ideal customers? Tell me about the people who would absolutely love what you're creating. 💡",
+      placeholder: "Example: Working parents aged 28-45 in urban areas who currently struggle with childcare...",
+      transition: "Perfect! Understanding your audience is everything. Now I want to understand the problem you're solving..."
     },
     {
       key: "problem",
       title: "Problem Definition", 
-      question: "What specific pain point or challenge does your business address? How do people deal with this frustration today?",
-      placeholder: "e.g., Parents waste hours searching unreliable Facebook groups and calling multiple sitters, often finding no one available for urgent needs...",
-      transition: "Wow, that's definitely a real problem! I can see why people would be frustrated. Now, tell me about your solution."
+      question: "What specific frustration or pain point does your business solve? What keeps your customers up at night? 🤔",
+      placeholder: "Example: Parents waste hours searching unreliable Facebook groups, often finding no one available...",
+      transition: "Excellent! A clear problem is half the battle won. Now, tell me about your solution..."
     },
     {
       key: "solution",
       title: "Your Solution",
-      question: "How does your approach solve this problem better than what's currently available? What makes you different?", 
-      placeholder: "e.g., Our app provides verified sitters with real-time availability, instant booking, and background checks - solving the problem in under 5 minutes...",
-      transition: "That's a solid approach! I love how you're thinking about the competitive advantage. Now, let's figure out how to reach your customers."
+      question: "Describe your solution—what makes your approach special or different from what's already out there? What's your unfair advantage? ✨", 
+      placeholder: "Example: Our app provides verified sitters with real-time availability and instant booking...",
+      transition: "Love it! Your uniqueness is your strength. Now, let's figure out how to reach your customers..."
     },
     {
       key: "channels",
       title: "Marketing Channels",
-      question: "How will you get your first customers? Where do your ideal customers spend their time and discover new solutions?",
-      placeholder: "e.g., Instagram ads targeting parent hashtags, partnerships with pediatricians, referral program, local parenting Facebook groups...",
-      transition: "Great marketing thinking! Now let's talk about the business side - how will this actually make money?"
+      question: "How will you reach and attract your first customers? Where do your ideal customers hang out? 📢",
+      placeholder: "Example: Instagram ads targeting parent hashtags, partnerships with pediatricians, referral program...",
+      transition: "Smart thinking! Getting visible is crucial. Now let's talk about the money side (I promise it won't be scary!)..."
     },
     {
       key: "pricing",
       title: "Pricing & Costs", 
-      question: "What's your revenue model? What will it cost to run this business, and what's your budget to get started?",
-      placeholder: "e.g., 15% commission per booking, avg $60/booking. Main costs: app development ($5K), marketing ($2K/month). Available budget: $10K...",
-      transition: "Perfect! The economics are starting to come together. Finally, let's talk about your timeline and goals."
+      question: "How will you price your product or service? What would make this a no-brainer for your customers? 💰",
+      placeholder: "Example: 15% commission per booking, avg $60/booking. Main costs: app development ($5K)...",
+      transition: "Great! You're thinking about sustainability and value. Finally, let's set some achievable goals..."
     },
     {
       key: "goals",
       title: "Goals & Timeline",
-      question: "What do you want to achieve in the next 90 days? How much time can you realistically commit to this each week?",
-      placeholder: "e.g., Launch MVP, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week, want to launch in 8 weeks...",
-      transition: "Excellent! I have everything I need to create your personalized Launch Report."
+      question: "What are your goals for the next 90 days? What would make you do a happy dance? 🎯",
+      placeholder: "Example: Launch MVP, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week...",
+      transition: "Awesome work! You've completed the planning journey. Generating your personalized launch report... 🎉"
     }
   ];
 
