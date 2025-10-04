@@ -285,10 +285,15 @@ const BizMapAI = () => {
     const savedTemplate = localStorage.getItem('bizmap_template');
     
     if (savedPrompt) {
-      setUserAnswers(prev => ({ ...prev, overview: savedPrompt }));
+      // Set the message and automatically submit it
       setMessage(savedPrompt);
       localStorage.removeItem('bizmap_prompt');
       toast.success("Prompt loaded from Prompt Library!");
+      
+      // Automatically submit after a brief delay to ensure state is updated
+      setTimeout(() => {
+        handleSendMessage(savedPrompt);
+      }, 100);
     } else if (savedTemplate) {
       const template = JSON.parse(savedTemplate);
       setUserAnswers(template.answers);
