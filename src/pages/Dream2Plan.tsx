@@ -279,20 +279,25 @@ const BizMapAI = () => {
     }
   }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
-  // Check for pre-populated prompt from Prompt Library or Template
+  // Check for pre-populated prompt from Prompt Library or Template on mount
+  const [loadedFromPromptLibrary, setLoadedFromPromptLibrary] = useState(false);
+  const [preparedInitialMessages, setPreparedInitialMessages] = useState<Array<{ type: "assistant" | "user"; content: string }> | undefined>();
+  
   useEffect(() => {
     const savedPrompt = localStorage.getItem('bizmap_prompt');
     const savedTemplate = localStorage.getItem('bizmap_template');
     
     if (savedPrompt) {
+      console.log('📥 Loading prompt from Prompt Library:', savedPrompt.substring(0, 50) + '...');
       // Set the overview answer directly and move to next step
       setUserAnswers(prev => ({ ...prev, overview: savedPrompt }));
       setCurrentStep(1);
+      setLoadedFromPromptLibrary(true);
       localStorage.removeItem('bizmap_prompt');
       toast.success("Prompt loaded! Answer saved - ready for next question.");
       
-      // Add the messages to show the conversation
-      setMessages([
+      // Prepare initial messages to pass to BizMapChat
+      setPreparedInitialMessages([
         {
           type: "assistant",
           content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
@@ -307,14 +312,15 @@ const BizMapAI = () => {
         }
       ]);
     } else if (savedTemplate) {
+      console.log('📥 Loading template...');
       const template = JSON.parse(savedTemplate);
       setUserAnswers(template.answers);
       setCurrentStep(7); // Move to end since template is complete
       localStorage.removeItem('bizmap_template');
       toast.success(`${template.title} template loaded!`);
       
-      // Reconstruct messages for template
-      const templateMessages = [
+      // Prepare template messages
+      const templateMessages: Array<{ type: "assistant" | "user"; content: string }> = [
         {
           type: "assistant",
           content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
@@ -339,7 +345,7 @@ const BizMapAI = () => {
         content: "Excellent! I have everything I need to create your personalized Launch Report. This template provides a solid foundation - let's generate your comprehensive business plan!"
       });
       
-      setMessages(templateMessages);
+      setPreparedInitialMessages(templateMessages);
     }
   }, []);
 
@@ -1134,6 +1140,7 @@ Subject: "Quick question about [their pain point]"
                         }}
                         currentStep={currentStep}
                         answers={userAnswers}
+                        initialMessages={preparedInitialMessages}
                       />
                     </div>
                   </div>

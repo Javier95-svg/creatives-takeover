@@ -17,6 +17,10 @@ interface BizMapChatProps {
   onWizardComplete: (answers: Record<string, string>) => void;
   currentStep: number;
   answers: Record<string, string>;
+  initialMessages?: Array<{
+    type: "assistant" | "user";
+    content: string;
+  }>;
 }
 
 export const BizMapChat = ({ 
@@ -24,14 +28,23 @@ export const BizMapChat = ({
   onStepComplete, 
   onWizardComplete,
   currentStep,
-  answers
+  answers,
+  initialMessages
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [celebrationMode, setCelebrationMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
-  console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
+  console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length, hasInitialMessages: !!initialMessages });
+
+  // Convert initialMessages to ChatMessage format if provided
+  const formattedInitialMessages = initialMessages?.map((msg, idx) => ({
+    id: `init_${idx}`,
+    content: msg.content,
+    isBot: msg.type === "assistant",
+    timestamp: new Date()
+  }));
 
   const { 
     messages, 
@@ -45,6 +58,7 @@ export const BizMapChat = ({
     enableAnalytics: true,
     enablePersonalization: true,
     enableAIGeneratedAnswers: false,
+    initialMessages: formattedInitialMessages, // Pass initial messages to useChatbot
     wizardMode: {
       enabled: true,
       currentStep,
