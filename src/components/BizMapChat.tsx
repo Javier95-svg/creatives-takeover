@@ -65,6 +65,16 @@ export const BizMapChat = ({
     scrollToBottom();
   }, [messages, streamingMessage]);
 
+  // Load prompt from Prompt Library
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem('bizmap_prompt');
+    if (savedPrompt) {
+      console.log('📥 Loading prompt from Prompt Library into input field');
+      setMessage(savedPrompt);
+      localStorage.removeItem('bizmap_prompt');
+    }
+  }, []);
+
   // Celebration on milestones
   useEffect(() => {
     if (currentStep === 2 || currentStep === 4 || currentStep === 6) {

@@ -508,24 +508,13 @@ const PromptLibrary = () => {
   };
 
   const useInBizMap = (prompt: string) => {
-    try {
-      console.log("🔵 useInBizMap START");
-      
-      // Copy to clipboard
-      navigator.clipboard.writeText(prompt);
-      console.log("✅ Clipboard copy executed");
-      
-      // Open BizMap AI in new tab
-      window.open('/dream2plan', '_blank');
-      console.log("🪟 Window.open executed");
-      
-      // Show toast
-      toast.success("Prompt copied! Paste it into BizMap AI to get started.");
-      console.log("🎉 Toast shown");
-    } catch (error) {
-      console.error("❌ Error in useInBizMap:", error);
-      toast.error("Something went wrong. Please try again.");
-    }
+    // Store prompt in localStorage
+    localStorage.setItem('bizmap_prompt', prompt);
+    // Also copy to clipboard as backup
+    navigator.clipboard.writeText(prompt);
+    // Open Dream2Plan in new tab
+    window.open('/dream2plan', '_blank');
+    toast.success("Opening BizMap AI with your prompt!");
   };
 
   const getDifficultyColor = (difficulty: string) => {
