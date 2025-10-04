@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.chatbot-streaming]
 verify_jwt = false
+
+[functions.commitment-manager]
+verify_jwt = true
