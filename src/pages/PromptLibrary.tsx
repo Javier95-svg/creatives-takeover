@@ -508,10 +508,12 @@ const PromptLibrary = () => {
   };
 
   const useInBizMap = (prompt: string) => {
-    // Store the prompt in localStorage so it can be used in BizMap AI
-    localStorage.setItem('bizmap_prompt', prompt);
+    // Copy to clipboard
+    navigator.clipboard.writeText(prompt);
+    // Open BizMap AI in new tab
     window.open('/dream2plan', '_blank');
-    toast.success("Opening BizMap AI with this prompt!");
+    // Inform user to paste
+    toast.success("Prompt copied! Paste it into BizMap AI to get started.");
   };
 
   const getDifficultyColor = (difficulty: string) => {
