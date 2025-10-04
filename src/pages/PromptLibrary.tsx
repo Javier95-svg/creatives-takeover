@@ -508,12 +508,22 @@ const PromptLibrary = () => {
   };
 
   const useInBizMap = (prompt: string) => {
+    console.log("🔵 useInBizMap clicked with prompt:", prompt.substring(0, 50) + "...");
+    
     // Copy to clipboard
-    navigator.clipboard.writeText(prompt);
+    navigator.clipboard.writeText(prompt).then(() => {
+      console.log("✅ Prompt copied to clipboard successfully");
+    }).catch((err) => {
+      console.error("❌ Failed to copy to clipboard:", err);
+    });
+    
     // Open BizMap AI in new tab
-    window.open('/dream2plan', '_blank');
+    const newWindow = window.open('/dream2plan', '_blank');
+    console.log("🪟 Attempted to open new window:", newWindow ? "Success" : "Blocked by browser");
+    
     // Inform user to paste
     toast.success("Prompt copied! Paste it into BizMap AI to get started.");
+    console.log("🎉 Toast displayed");
   };
 
   const getDifficultyColor = (difficulty: string) => {
