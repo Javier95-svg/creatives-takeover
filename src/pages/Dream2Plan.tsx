@@ -285,15 +285,27 @@ const BizMapAI = () => {
     const savedTemplate = localStorage.getItem('bizmap_template');
     
     if (savedPrompt) {
-      // Set the message and automatically submit it
-      setMessage(savedPrompt);
+      // Set the overview answer directly and move to next step
+      setUserAnswers(prev => ({ ...prev, overview: savedPrompt }));
+      setCurrentStep(1);
       localStorage.removeItem('bizmap_prompt');
-      toast.success("Prompt loaded from Prompt Library!");
+      toast.success("Prompt loaded! Answer saved - ready for next question.");
       
-      // Automatically submit after a brief delay to ensure state is updated
-      setTimeout(() => {
-        handleSendMessage(savedPrompt);
-      }, 100);
+      // Add the messages to show the conversation
+      setMessages([
+        {
+          type: "assistant",
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
+        },
+        {
+          type: "user",
+          content: savedPrompt
+        },
+        {
+          type: "assistant",
+          content: wizardSteps[0].transition + "\n\n" + wizardSteps[1].question
+        }
+      ]);
     } else if (savedTemplate) {
       const template = JSON.parse(savedTemplate);
       setUserAnswers(template.answers);
