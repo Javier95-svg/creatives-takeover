@@ -33,7 +33,52 @@ import ChatbotWidget from "@/components/ChatbotWidget";
 import { BizMapChat } from "@/components/BizMapChat";
 
 const BizMapAI = () => {
-  // Define wizardSteps first
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userAnswers, setUserAnswers] = useState({
+    overview: "",
+    market: "",
+    problem: "",
+    solution: "",
+    channels: "",
+    pricing: "",
+    goals: ""
+  });
+  const [refinedContext, setRefinedContext] = useState(null);
+  const [isRefiningContext, setIsRefiningContext] = useState(false);
+  const [launchReport, setLaunchReport] = useState("");
+  const [successScore, setSuccessScore] = useState<any>(null);
+  
+  // Simplified states - no more research complexity
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      type: "assistant",
+      content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
+    }
+  ]);
+
+  const { user, isAuthenticated } = useAuth();
+  const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
+  const { sprints, currentSprint, setCurrentSprint } = useSprints();
+  const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("bizmap");
+  
+  // Sprint Planner handlers
+  const handleSprintCreated = (sprintId: string) => {
+    const sprint = sprints.find(s => s.id === sprintId);
+    if (sprint) {
+      setCurrentSprint(sprint);
+      setActiveSprintId(sprintId);
+      setActiveTab("sprint");
+    }
+  };
+
+  const activeSprint = activeSprintId 
+    ? sprints.find(s => s.id === activeSprintId) 
+    : currentSprint;
+
+  // Define wizardSteps before using it in hooks
   const wizardSteps = [
     {
       key: "overview",
@@ -85,148 +130,6 @@ const BizMapAI = () => {
       transition: "Awesome work! You've completed the planning journey. Generating your personalized launch report... 🎉"
     }
   ];
-
-  // Initialize from localStorage BEFORE state setup
-  const getInitialStateFromStorage = () => {
-    console.log('🔍 Checking localStorage for prompts...');
-    const savedPrompt = localStorage.getItem('bizmap_prompt');
-    const savedTemplate = localStorage.getItem('bizmap_template');
-    
-    console.log('📦 localStorage check:', { 
-      hasPrompt: !!savedPrompt, 
-      hasTemplate: !!savedTemplate,
-      promptPreview: savedPrompt?.substring(0, 50)
-    });
-    
-    if (savedPrompt) {
-      console.log('✅ Found prompt in localStorage!', savedPrompt);
-      localStorage.removeItem('bizmap_prompt');
-      return {
-        currentStep: 1,
-        userAnswers: { 
-          overview: savedPrompt, 
-          market: "", 
-          problem: "", 
-          solution: "", 
-          channels: "", 
-          pricing: "", 
-          goals: "" 
-        },
-        initialMessages: [
-          {
-            type: "assistant" as const,
-            content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
-          },
-          {
-            type: "user" as const,
-            content: savedPrompt
-          },
-          {
-            type: "assistant" as const,
-            content: wizardSteps[0].transition + "\n\n" + wizardSteps[1].question
-          }
-        ],
-        toastMessage: "Prompt loaded! Answer saved - ready for next question."
-      };
-    } else if (savedTemplate) {
-      console.log('✅ Found template in localStorage!');
-      const template = JSON.parse(savedTemplate);
-      localStorage.removeItem('bizmap_template');
-      
-      const templateMessages: Array<{ type: "assistant" | "user"; content: string }> = [
-        {
-          type: "assistant" as const,
-          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
-        }
-      ];
-      
-      wizardSteps.forEach((step, index) => {
-        if (index > 0) {
-          templateMessages.push({
-            type: "assistant" as const,
-            content: wizardSteps[index - 1].transition + "\n\n" + step.question
-          });
-        }
-        templateMessages.push({
-          type: "user" as const,
-          content: template.answers[step.key]
-        });
-      });
-      
-      templateMessages.push({
-        type: "assistant" as const,
-        content: "Excellent! I have everything I need to create your personalized Launch Report. This template provides a solid foundation - let's generate your comprehensive business plan!"
-      });
-      
-      return {
-        currentStep: 7,
-        userAnswers: template.answers,
-        initialMessages: templateMessages,
-        toastMessage: `${template.title} template loaded successfully!`
-      };
-    }
-    
-    console.log('ℹ️ No saved prompt or template found');
-    return {
-      currentStep: 0,
-      userAnswers: { 
-        overview: "", 
-        market: "", 
-        problem: "", 
-        solution: "", 
-        channels: "", 
-        pricing: "", 
-        goals: "" 
-      },
-      initialMessages: undefined,
-      toastMessage: null
-    };
-  };
-
-  const initialStateData = getInitialStateFromStorage();
-  
-  const [currentStep, setCurrentStep] = useState(initialStateData.currentStep);
-  const [userAnswers, setUserAnswers] = useState(initialStateData.userAnswers);
-  const [preparedInitialMessages] = useState(initialStateData.initialMessages); // Store for BizMapChat
-  const [isLoading, setIsLoading] = useState(false);
-  const [refinedContext, setRefinedContext] = useState(null);
-  const [isRefiningContext, setIsRefiningContext] = useState(false);
-  const [launchReport, setLaunchReport] = useState("");
-  const [successScore, setSuccessScore] = useState<any>(null);
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [messages, setMessages] = useState(initialStateData.initialMessages || [
-    {
-      type: "assistant",
-      content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
-    }
-  ]);
-
-  const { user, isAuthenticated } = useAuth();
-  const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
-  const { sprints, currentSprint, setCurrentSprint } = useSprints();
-  const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("bizmap");
-  
-  // Sprint Planner handlers
-  const handleSprintCreated = (sprintId: string) => {
-    const sprint = sprints.find(s => s.id === sprintId);
-    if (sprint) {
-      setCurrentSprint(sprint);
-      setActiveSprintId(sprintId);
-      setActiveTab("sprint");
-    }
-  };
-
-  const activeSprint = activeSprintId 
-    ? sprints.find(s => s.id === activeSprintId) 
-    : currentSprint;
-  
-  // Show toast for loaded prompts/templates
-  useEffect(() => {
-    if (initialStateData.toastMessage) {
-      toast.success(initialStateData.toastMessage);
-    }
-  }, []);
 
   const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
   const { hasPendingCredits } = useFeedbackCredits();
@@ -375,6 +278,53 @@ const BizMapAI = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
+
+  // Check for pre-populated prompt from Prompt Library or Template
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem('bizmap_prompt');
+    const savedTemplate = localStorage.getItem('bizmap_template');
+    
+    if (savedPrompt) {
+      setUserAnswers(prev => ({ ...prev, overview: savedPrompt }));
+      setMessage(savedPrompt);
+      localStorage.removeItem('bizmap_prompt');
+      toast.success("Prompt loaded from Prompt Library!");
+    } else if (savedTemplate) {
+      const template = JSON.parse(savedTemplate);
+      setUserAnswers(template.answers);
+      setCurrentStep(7); // Move to end since template is complete
+      localStorage.removeItem('bizmap_template');
+      toast.success(`${template.title} template loaded!`);
+      
+      // Reconstruct messages for template
+      const templateMessages = [
+        {
+          type: "assistant",
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
+        }
+      ];
+      
+      wizardSteps.forEach((step, index) => {
+        if (index > 0) {
+          templateMessages.push({
+            type: "assistant", 
+            content: wizardSteps[index - 1].transition + "\n\n" + step.question
+          });
+        }
+        templateMessages.push({
+          type: "user",
+          content: template.answers[step.key]
+        });
+      });
+      
+      templateMessages.push({
+        type: "assistant",
+        content: "Excellent! I have everything I need to create your personalized Launch Report. This template provides a solid foundation - let's generate your comprehensive business plan!"
+      });
+      
+      setMessages(templateMessages);
+    }
+  }, []);
 
   // Helper: compute and store success score
   const computeAndStoreSuccessScore = async (answers: any) => {
@@ -1167,7 +1117,6 @@ Subject: "Quick question about [their pain point]"
                         }}
                         currentStep={currentStep}
                         answers={userAnswers}
-                        initialMessages={preparedInitialMessages}
                       />
                     </div>
                   </div>

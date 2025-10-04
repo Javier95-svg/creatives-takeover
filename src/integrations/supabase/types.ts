@@ -917,38 +917,6 @@ export type Database = {
           },
         ]
       }
-      commitment_reactions: {
-        Row: {
-          commitment_id: string
-          created_at: string
-          id: string
-          reaction_type: string
-          user_id: string
-        }
-        Insert: {
-          commitment_id: string
-          created_at?: string
-          id?: string
-          reaction_type: string
-          user_id: string
-        }
-        Update: {
-          commitment_id?: string
-          created_at?: string
-          id?: string
-          reaction_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commitment_reactions_commitment_id_fkey"
-            columns: ["commitment_id"]
-            isOneToOne: false
-            referencedRelation: "sprint_commitments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       community_posts: {
         Row: {
           ai_insights: string[] | null
@@ -2215,80 +2183,6 @@ export type Database = {
           },
         ]
       }
-      sprint_commitments: {
-        Row: {
-          actual_metric_value: number | null
-          commitment_text: string
-          created_at: string
-          credits_locked: boolean | null
-          credits_staked: number
-          deadline: string
-          id: string
-          measurable_metric: string
-          metric_unit: string | null
-          metric_value: number | null
-          proof_notes: string | null
-          proof_url: string | null
-          resolved_at: string | null
-          sprint_id: string
-          status: Database["public"]["Enums"]["commitment_status"]
-          updated_at: string
-          user_id: string
-          verified_at: string | null
-          verified_by: string | null
-        }
-        Insert: {
-          actual_metric_value?: number | null
-          commitment_text: string
-          created_at?: string
-          credits_locked?: boolean | null
-          credits_staked: number
-          deadline: string
-          id?: string
-          measurable_metric: string
-          metric_unit?: string | null
-          metric_value?: number | null
-          proof_notes?: string | null
-          proof_url?: string | null
-          resolved_at?: string | null
-          sprint_id: string
-          status?: Database["public"]["Enums"]["commitment_status"]
-          updated_at?: string
-          user_id: string
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Update: {
-          actual_metric_value?: number | null
-          commitment_text?: string
-          created_at?: string
-          credits_locked?: boolean | null
-          credits_staked?: number
-          deadline?: string
-          id?: string
-          measurable_metric?: string
-          metric_unit?: string | null
-          metric_value?: number | null
-          proof_notes?: string | null
-          proof_url?: string | null
-          resolved_at?: string | null
-          sprint_id?: string
-          status?: Database["public"]["Enums"]["commitment_status"]
-          updated_at?: string
-          user_id?: string
-          verified_at?: string | null
-          verified_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sprint_commitments_sprint_id_fkey"
-            columns: ["sprint_id"]
-            isOneToOne: false
-            referencedRelation: "sprints"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sprint_tasks: {
         Row: {
           actual_hours: number | null
@@ -3079,7 +2973,6 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      commitment_status: "active" | "achieved" | "failed" | "withdrawn"
       credit_tx_type:
         | "grant"
         | "deduct"
@@ -3215,7 +3108,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      commitment_status: ["active", "achieved", "failed", "withdrawn"],
       credit_tx_type: [
         "grant",
         "deduct",

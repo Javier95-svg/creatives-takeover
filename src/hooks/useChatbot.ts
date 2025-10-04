@@ -207,7 +207,6 @@ export interface EnhancedChatbotConfig {
   enableAnalytics: boolean;
   enablePersonalization: boolean;
   enableAIGeneratedAnswers: boolean;
-  initialMessages?: ChatMessage[]; // Add support for pre-populated messages
   nluConfig?: {
     confidenceThreshold: number;
     fallbackThreshold: number;
@@ -326,7 +325,6 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const responseTimeTracker = useRef<number[]>([]);
   const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasInitialized = useRef(false); // Prevent re-initialization
 
   // Enhanced hooks initialization
   const nlu = useNLU({
@@ -423,40 +421,25 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
 
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
-    // Only initialize once, and skip if already initialized
-    if (hasInitialized.current || messages.length > 0) {
-      return;
-    }
-
-    // Check for pre-populated initial messages first (highest priority)
-    if (config.initialMessages && config.initialMessages.length > 0) {
-      console.log('📥 Initializing with pre-populated messages:', config.initialMessages.length);
-      setMessages(config.initialMessages);
-      hasInitialized.current = true;
+    if (messages.length === 0) {
+      if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
+        // Initialize wizard mode with first question
+        console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
+        const firstMessage: ChatMessage = {
+          id: generateId(),
+          content: config.wizardMode.steps[0].question,
+          isBot: true,
+          timestamp: new Date()
+        };
+        setMessages([firstMessage]);
+      } else {
+        console.log('👋 Initializing with welcome message');
+        const welcomeMessage = createWelcomeMessage();
+        setMessages([welcomeMessage]);
+      }
       updateConversationState({ context: ConversationContext.WELCOME });
-      return;
     }
-
-    // Otherwise, initialize based on wizard mode or default welcome
-    if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
-      // Initialize wizard mode with first question
-      console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
-      const firstMessage: ChatMessage = {
-        id: generateId(),
-        content: config.wizardMode.steps[0].question,
-        isBot: true,
-        timestamp: new Date()
-      };
-      setMessages([firstMessage]);
-    } else {
-      console.log('👋 Initializing with welcome message');
-      const welcomeMessage = createWelcomeMessage();
-      setMessages([welcomeMessage]);
-    }
-    
-    hasInitialized.current = true;
-    updateConversationState({ context: ConversationContext.WELCOME });
-  }, []); // Remove dependencies to ensure single initialization
+  }, [location.pathname, config.wizardMode]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
