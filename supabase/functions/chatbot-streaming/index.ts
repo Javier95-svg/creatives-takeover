@@ -187,7 +187,7 @@ serve(async (req) => {
           // Extract context and generate quick actions
           const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
           const stage = determineConversationStage(updatedContext, conversationHistory.length);
-          const quickActions = generateQuickActions(stage, updatedContext);
+          const quickActions = generateQuickActions(stage, updatedContext, message);
 
           // Update conversation
           await supabase
@@ -413,12 +413,103 @@ function determineConversationStage(context: BusinessContext, messageCount: numb
   return 'execution';
 }
 
-function generateQuickActions(stage: string, context: BusinessContext): string[] {
-  const actions = {
-    discovery: ['Tell me about your idea', 'What industry?', 'What problem?'],
-    validation: ['Analyze opportunity', 'Competition check', 'Validate idea'],
-    planning: ['Business plan', 'Pricing strategy', 'Marketing plan'],
-    execution: ['90-day plan', 'Launch checklist', 'Funding options']
+function detectSentiment(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.match(/overwhelm|too much|confused|stuck|lost|don't know|hard|difficult|unsure/)) return 'overwhelmed';
+  if (lower.match(/excited|ready|let's go|can't wait|awesome|love|great|amazing/)) return 'excited';
+  if (lower.match(/not sure|maybe|unclear|hesitant|worried|nervous/)) return 'confused';
+  return 'neutral';
+}
+
+function detectMissingContext(context: BusinessContext): string[] {
+  const missing = [];
+  if (!context.industry) missing.push('industry');
+  if (!context.stage) missing.push('stage');
+  if (!context.goals?.length) missing.push('goals');
+  return missing;
+}
+
+function generateQuickActions(stage: string, context: BusinessContext, userMessage: string): string[] {
+  const sentiment = detectSentiment(userMessage);
+  const missingInfo = detectMissingContext(context);
+  
+  // Base actions by stage with benefit-focused, conversational language
+  const stageActions: Record<string, string[]> = {
+    discovery: [
+      "Show me industries that fit my vibe 🎨",
+      "Help me describe what makes this special 💎",
+      "I'm exploring - give me options 🧭",
+      "What questions should I be asking? 🤔"
+    ],
+    validation: [
+      "Who would pay for this (honestly)? 💰",
+      "Show me what competitors miss 🎯",
+      "Help me test this idea safely 🧪",
+      "Give me reasons to believe in this ⚡"
+    ],
+    planning: [
+      "Create a draft business plan for me 📋",
+      "Show me pricing that makes sense 💵",
+      "Map out my first 90 days 🗓️",
+      "What matters most right now? 🎯"
+    ],
+    execution: [
+      "Give me a launch playbook 🚀",
+      "Calculate my startup costs 💰",
+      "Show me how to find customers 🎉",
+      "Walk me through next steps ✅"
+    ]
   };
-  return actions[stage as keyof typeof actions] || ['Get started', 'Ask anything'];
+  
+  // Adapt based on sentiment
+  if (sentiment === 'overwhelmed') {
+    return [
+      "Let's simplify this into one step 🧘",
+      "Show me just what matters today 🎯",
+      "Skip to the quick wins ⚡",
+      stageActions[stage]?.[0] || "Start with the basics 🌟"
+    ];
+  }
+  
+  if (sentiment === 'excited') {
+    return [
+      "Let's capture this momentum 🚀",
+      "Show me the fast track forward ⚡",
+      ...(stageActions[stage]?.slice(0, 2) || ["Get started now 🎯", "Build on this energy 💪"])
+    ];
+  }
+  
+  if (sentiment === 'confused') {
+    return [
+      "Break this down with examples 💡",
+      "Show me how others figured this out 🔍",
+      "Let me walk you through it step-by-step 🚶",
+      stageActions[stage]?.[0] || "Start simple and build up 🌱"
+    ];
+  }
+  
+  // Adapt based on missing context
+  if (missingInfo.includes('industry')) {
+    return [
+      "Show me industries perfect for creatives 🎨",
+      "Help me pick what fits my strengths 💪",
+      ...(stageActions[stage]?.slice(1, 3) || ["Explore my options 🧭"])
+    ];
+  }
+  
+  if (missingInfo.includes('goals')) {
+    return [
+      "Help me figure out what I want 🎯",
+      "Show me what success could look like ✨",
+      ...(stageActions[stage]?.slice(0, 2) || ["Define my direction 🧭"])
+    ];
+  }
+  
+  // Return stage-appropriate actions
+  return stageActions[stage] || [
+    "Help me get started 🌟",
+    "Show me what's possible 🚀",
+    "Guide me through this 🧭",
+    "I want to explore options 💡"
+  ];
 }
