@@ -95,45 +95,36 @@ const TrendingSection = ({
 
   if (isLoading || isGenerating) {
     return (
-      <section className="relative py-6 overflow-hidden" data-section="opportunities">
-      {/* Animated Background with Multiple Layers */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-30"
-        style={{ backgroundImage: `url(${opportunitiesImage})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
-      
-      {/* Enhanced Animated Floating Elements */}
-      <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-60" />
-      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '3s' }} />
-      <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/30 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '4s' }} />
-      <div className="absolute top-1/3 right-10 w-6 h-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
-      <div className="absolute bottom-1/3 left-10 w-4 h-4 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-30" style={{ animationDelay: '6s' }} />
-      
-      {/* Additional Dynamic Elements */}
-      <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/40 rounded-full animate-drift opacity-60" style={{ animationDelay: '0.5s' }} />
-      <div className="absolute top-80 right-1/4 w-5 h-5 bg-secondary/20 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-accent/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.5s' }} />
-      <div className="absolute top-24 right-1/3 w-8 h-8 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-orbit opacity-20 blur-sm" style={{ animationDelay: '7s' }} />
-      <div className="absolute bottom-24 left-1/3 w-10 h-10 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-15 blur-md" style={{ animationDelay: '8s' }} />
-      
-      {/* Tiny Floating Particles */}
-      <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '11s' }} />
-      <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/60 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '12s' }} />
-      <div className="absolute top-72 left-12 w-2 h-2 bg-accent/40 rounded-full animate-orbit opacity-55" style={{ animationDelay: '13s' }} />
-      <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '14s' }} />
+      <section className="py-20 relative overflow-hidden -mt-32 pt-40" data-section="opportunities">
+        {/* Unified Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
         
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 mb-4">
+        {/* Subtle Floating Elements */}
+        <div className="absolute top-40 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" />
+        <div className="absolute top-60 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-40 right-10 w-10 h-10 bg-gradient-to-r from-primary/12 to-secondary/12 rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '2s' }} />
+        
+        {/* Decorative Wave Bridge */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
+        <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
+          <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#waveGradientLoading)" />
+          <defs>
+            <linearGradient id="waveGradientLoading" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="hsl(var(--secondary))" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
+        </svg>
+        
+        <div className="container mx-auto px-4 relative z-10 max-w-7xl">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 mb-3">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-              <h2 className="text-3xl font-bold">Latest Opportunities</h2>
+              <h2 className="text-4xl md:text-5xl font-bold gradient-text">Latest Opportunities</h2>
             </div>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {isGenerating ? 'AI is discovering new business opportunities...' : 'Freshly discovered business opportunities with AI-generated insights'}
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              {isGenerating ? 'AI is discovering new business opportunities...' : 'AI-powered insights updated daily'}
             </p>
           </div>
             
@@ -160,39 +151,29 @@ const TrendingSection = ({
 
   if (error) {
     return (
-      <section className="relative py-6 overflow-hidden" data-section="opportunities">
-        {/* Animated Background with Multiple Layers */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{ backgroundImage: `url(${opportunitiesImage})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+      <section className="py-20 relative overflow-hidden -mt-32 pt-40" data-section="opportunities">
+        {/* Unified Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
         
-        {/* Enhanced Animated Floating Elements */}
-        <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-60" />
-        <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '3s' }} />
-        <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/30 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-1/3 right-10 w-6 h-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
-        <div className="absolute bottom-1/3 left-10 w-4 h-4 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-30" style={{ animationDelay: '6s' }} />
+        {/* Subtle Floating Elements */}
+        <div className="absolute top-40 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" />
+        <div className="absolute top-60 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1s' }} />
         
-        {/* Additional Dynamic Elements */}
-        <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/40 rounded-full animate-drift opacity-60" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute top-80 right-1/4 w-5 h-5 bg-secondary/20 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1.5s' }} />
-        <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-accent/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.5s' }} />
-        <div className="absolute top-24 right-1/3 w-8 h-8 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-orbit opacity-20 blur-sm" style={{ animationDelay: '7s' }} />
-        <div className="absolute bottom-24 left-1/3 w-10 h-10 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-15 blur-md" style={{ animationDelay: '8s' }} />
+        {/* Decorative Wave Bridge */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
+        <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
+          <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#waveGradient2)" />
+          <defs>
+            <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="hsl(var(--secondary))" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
+        </svg>
         
-        {/* Tiny Floating Particles */}
-        <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '11s' }} />
-        <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/60 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '12s' }} />
-        <div className="absolute top-72 left-12 w-2 h-2 bg-accent/40 rounded-full animate-orbit opacity-55" style={{ animationDelay: '13s' }} />
-        <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '14s' }} />
-        
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="text-3xl font-bold mb-4">Latest Opportunities</h2>
+        <div className="container mx-auto px-4 text-center relative z-10 max-w-7xl">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Latest Opportunities</h2>
           <p className="text-muted-foreground mb-6">
             Unable to load opportunities at the moment. Please try again.
           </p>
@@ -206,60 +187,59 @@ const TrendingSection = ({
   }
 
   return (
-    <section className="relative py-6 overflow-hidden" data-section="opportunities">
-      {/* Animated Background with Multiple Layers */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-30"
-        style={{ backgroundImage: `url(${opportunitiesImage})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/85 to-background/95" />
+    <section 
+      data-section="opportunities"
+      className="py-20 relative overflow-hidden -mt-32 pt-40"
+    >
+      {/* Unified Background with Gradient Blend */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
       
-      {/* Enhanced Animated Floating Elements */}
-      <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-60" />
-      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '3s' }} />
-      <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/30 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '4s' }} />
-      <div className="absolute top-1/3 right-10 w-6 h-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
-      <div className="absolute bottom-1/3 left-10 w-4 h-4 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-30" style={{ animationDelay: '6s' }} />
+      {/* Subtle Floating Elements - Matching Hero Style */}
+      <div className="absolute top-40 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute top-60 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1.5s' }} />
+      <div className="absolute bottom-40 right-10 w-10 h-10 bg-gradient-to-r from-primary/12 to-secondary/12 rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '2.5s' }} />
+      <div className="absolute top-1/2 left-1/3 w-12 h-12 bg-gradient-to-l from-accent/8 to-transparent rounded-full animate-diagonal-float opacity-25 blur-lg" style={{ animationDelay: '3.5s' }} />
       
-      {/* Additional Dynamic Elements */}
-      <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/40 rounded-full animate-drift opacity-60" style={{ animationDelay: '0.5s' }} />
-      <div className="absolute top-80 right-1/4 w-5 h-5 bg-secondary/20 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-accent/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.5s' }} />
-      <div className="absolute top-24 right-1/3 w-8 h-8 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-orbit opacity-20 blur-sm" style={{ animationDelay: '7s' }} />
-      <div className="absolute bottom-24 left-1/3 w-10 h-10 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-15 blur-md" style={{ animationDelay: '8s' }} />
-      
-      {/* Tiny Floating Particles */}
-      <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '11s' }} />
-      <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/60 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '12s' }} />
-      <div className="absolute top-72 left-12 w-2 h-2 bg-accent/40 rounded-full animate-orbit opacity-55" style={{ animationDelay: '13s' }} />
-      <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '14s' }} />
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">
-              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Opportunities'}
-            </h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefresh}
-              className="ml-2"
-              disabled={isGenerating}
-            >
-              <RefreshCw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-            </Button>
+      {/* Decorative Wave Bridge */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
+      <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
+        <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#waveGradient)" />
+        <defs>
+          <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="hsl(var(--secondary))" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div className="container mx-auto px-4 relative z-10 max-w-7xl">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-16">
+          <div className="animate-slide-up">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <h2 className="text-4xl md:text-5xl font-bold gradient-text">
+                {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Opportunities'}
+              </h2>
+            </div>
+            <p className="text-muted-foreground text-lg md:text-xl">
+              {hasActiveFilters 
+                ? 'Filtered business opportunities matching your criteria'
+                : 'AI-powered insights updated daily'
+              }
+            </p>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {hasActiveFilters 
-              ? 'Filtered business opportunities matching your criteria'
-              : 'Freshly discovered business opportunities with AI-generated market analysis and action plans'
-            }
-          </p>
+          
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={handleRefresh}
+            disabled={isGenerating}
+            className="glass hover:bg-primary/10"
+          >
+            <RefreshCw className={`h-5 w-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
         <CategoryTabs

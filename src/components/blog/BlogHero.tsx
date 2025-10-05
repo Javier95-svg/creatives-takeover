@@ -26,24 +26,20 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
   };
 
   return (
-    <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0">
+    <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
       {/* Animated Background with Multiple Layers */}
       <div 
         className="absolute inset-0 bg-cover bg-center animate-pulse-glow"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-transparent" />
       
-      {/* Simplified Floating Elements - 8 strategic animations */}
-      <div className="absolute top-20 left-10 w-4 h-4 bg-primary/60 rounded-full animate-float opacity-70" />
-      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary/50 rounded-full animate-spiral opacity-60" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent/60 rounded-full animate-zigzag opacity-70" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-1/3 right-10 w-8 h-8 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full animate-orbit opacity-50 blur-sm" style={{ animationDelay: '3s' }} />
-      <div className="absolute bottom-1/3 left-10 w-6 h-6 bg-gradient-to-r from-accent/30 to-primary/30 rounded-full animate-float-reverse opacity-40 blur-sm" style={{ animationDelay: '4s' }} />
-      <div className="absolute top-24 right-1/3 w-10 h-10 bg-gradient-to-r from-primary/10 to-transparent rounded-full animate-diagonal-float opacity-30 blur-md" style={{ animationDelay: '5s' }} />
-      <div className="absolute bottom-24 left-1/3 w-12 h-12 bg-gradient-to-l from-secondary/8 to-transparent rounded-full animate-spiral opacity-25 blur-md" style={{ animationDelay: '6s' }} />
-      <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-primary/70 rounded-full animate-drift opacity-80" style={{ animationDelay: '7s' }} />
+      {/* Simplified Floating Elements - Subtle animations */}
+      <div className="absolute top-20 left-10 w-4 h-4 bg-primary/40 rounded-full animate-float opacity-60" />
+      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/3 right-10 w-8 h-8 bg-gradient-to-r from-primary/15 to-secondary/15 rounded-full animate-orbit opacity-40 blur-sm" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-24 right-1/3 w-10 h-10 bg-gradient-to-r from-primary/8 to-transparent rounded-full animate-diagonal-float opacity-25 blur-md" style={{ animationDelay: '3s' }} />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
@@ -96,14 +92,17 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
           </form>
 
           {/* Scroll Down Indicator */}
-          <div className="mt-16 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+          <div className="mt-20 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <Button
               variant="ghost"
               onClick={scrollToOpportunities}
-              className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors group"
+              className="flex flex-col items-center gap-3 text-muted-foreground hover:text-primary transition-all duration-300 group"
             >
-              <span className="text-sm font-medium">Latest Opportunities</span>
-              <ChevronDown className="w-5 h-5 animate-bounce group-hover:animate-pulse" />
+              <span className="text-base font-semibold">Explore Latest Opportunities</span>
+              <div className="relative">
+                <ChevronDown className="w-6 h-6 animate-bounce group-hover:animate-pulse" />
+                <div className="absolute inset-0 w-6 h-6 bg-primary/20 rounded-full blur-lg animate-pulse" />
+              </div>
             </Button>
           </div>
         </div>
