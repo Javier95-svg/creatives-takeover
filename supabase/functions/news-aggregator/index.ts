@@ -14,8 +14,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 // Initialize Supabase client with service role for inserting data
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-// Business-focused domains for better opportunity discovery
+// Tier-1 business, technology, and entrepreneurship domains
 const CURATED_DOMAINS = [
+  // Original Core Sources
   'techcrunch.com',
   'wired.com',
   'hbr.org', // Harvard Business Review
@@ -29,7 +30,40 @@ const CURATED_DOMAINS = [
   'businessinsider.com',
   'bloomberg.com',
   'reuters.com',
-  'wsj.com' // Wall Street Journal
+  'wsj.com', // Wall Street Journal
+  
+  // Business & Strategy Publications
+  'mckinsey.com',
+  'stratechery.com',
+  'economist.com',
+  'ft.com', // Financial Times
+  'hbsp.harvard.edu',
+  
+  // Technology & Innovation
+  'arstechnica.com',
+  'venturebeat.com',
+  'spectrum.ieee.org',
+  'protocol.com',
+  'theinformation.com',
+  
+  // Startup & Entrepreneurship
+  'ycombinator.com',
+  'review.firstround.com',
+  'a16z.com',
+  'news.crunchbase.com',
+  'producthunt.com',
+  
+  // Marketing & Growth
+  'adage.com',
+  'marketingprofs.com',
+  
+  // SaaS & Product
+  'saastr.com',
+  'chartmogul.com',
+  
+  // No-Code & Tools
+  'zapier.com',
+  'webflow.com'
 ];
 
 const ALLOWED_DOMAINS = CURATED_DOMAINS;
@@ -52,15 +86,43 @@ const CURATED_KEYWORDS = [
   'creator', 'content', 'influencer', 'freelance', 'gig economy', 'service business', 'consulting'
 ];
 
-// Business opportunity-focused query variations
+// Expanded business opportunity-focused query variations for better category balance
 const QUERY_VARIATIONS = [
-  'business opportunity OR market gap OR startup idea OR entrepreneurship',
+  // AI & Tech Opportunities
   'AI business OR artificial intelligence startup OR automation opportunity',
+  'machine learning applications OR AI tools for business',
+  
+  // Startup & Entrepreneurship
+  'business opportunity OR market gap OR startup idea OR entrepreneurship',
+  'startup validation OR MVP development OR early-stage funding',
+  'bootstrapping strategies OR solopreneur business models',
+  
+  // Marketing & Growth
+  'growth marketing OR content marketing strategies OR digital marketing trends',
+  'product-led growth OR community-driven marketing',
+  'B2B marketing OR SaaS marketing strategies',
+  
+  // SaaS & Product
   'no-code business OR SaaS opportunity OR software startup',
+  'SaaS pricing models OR revenue optimization OR MRR growth',
+  'API-first products OR developer tools OR productivity software',
+  
+  // Business Models
   'creator economy OR content monetization OR influencer business',
-  'service business OR consulting opportunity OR freelance market',
   'marketplace startup OR platform business OR subscription model',
-  'consumer trend OR market shift OR industry disruption'
+  'Web3 business applications OR decentralized platforms',
+  
+  // Industry Verticals
+  'HealthTech opportunities OR digital health startups',
+  'EdTech innovation OR online learning platforms',
+  'FinTech trends OR payment solutions OR financial services',
+  'Climate tech OR sustainability business OR green technology',
+  
+  // Practical Business
+  'service business OR consulting opportunity OR freelance market',
+  'remote work tools OR distributed team management',
+  'customer acquisition strategies OR sales automation',
+  'building in public OR transparent entrepreneurship'
 ];
 
 interface NewsAPIArticle {

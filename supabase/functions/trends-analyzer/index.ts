@@ -116,16 +116,53 @@ serve(async (req) => {
       });
     }
 
-    // Insighta's popular topics for article discovery
+    // Expanded and balanced topic clusters for better category distribution
     const insightaTopics = [
+      // AI & Technology (AI-Tech category)
       'AI productivity tools for entrepreneurs',
-      'no-code MVP development strategies', 
-      'growth hacking techniques for startups',
+      'machine learning applications for small business',
+      'business automation tools and workflows',
+      'AI-powered customer service solutions',
+      
+      // Startup & Validation (Startup category)
+      'no-code MVP development strategies',
+      'startup validation methods and frameworks',
+      'bootstrapping vs venture capital funding',
+      'Y Combinator startup advice and insights',
+      'product-market fit strategies',
+      
+      // Marketing & Growth (Marketing category)
       'creative marketing strategies 2024',
-      'startup validation methods',
-      'business automation tools',
-      'solopreneur business models',
-      'innovation leadership strategies'
+      'growth hacking techniques for startups',
+      'content marketing for B2B SaaS',
+      'product-led growth strategies',
+      'community-driven marketing approaches',
+      'influencer marketing ROI measurement',
+      
+      // SaaS & Product (SaaS category)
+      'SaaS pricing models and optimization',
+      'customer onboarding best practices',
+      'SaaS metrics and analytics',
+      'API-first product strategies',
+      
+      // Business Models & Innovation
+      'creator economy platforms and monetization',
+      'subscription business model innovations',
+      'marketplace business strategies',
+      'Web3 practical business applications',
+      
+      // Industry Verticals
+      'HealthTech entrepreneurship opportunities',
+      'EdTech innovation and market trends',
+      'FinTech regulatory opportunities',
+      'Climate tech business opportunities',
+      
+      // Practical Entrepreneurship
+      'solopreneur business models and systems',
+      'remote team building and management',
+      'customer acquisition for service businesses',
+      'building in public strategies and benefits',
+      'side hustle to full-time business transition'
     ];
 
     console.log('📰 Searching for articles on topics:', insightaTopics.slice(0, 4));
@@ -191,7 +228,21 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
                 search_recency_filter: 'week',
                 return_images: false,
                 return_related_questions: false,
-                search_domain_filter: ['forbes.com', 'techcrunch.com', 'entrepreneur.com', 'hbr.org', 'technologyreview.com', 'fastcompany.com']
+                search_domain_filter: [
+                  // Core Business & Strategy
+                  'forbes.com', 'entrepreneur.com', 'hbr.org', 'fastcompany.com', 'inc.com',
+                  'mckinsey.com', 'stratechery.com', 'economist.com',
+                  
+                  // Technology & Innovation
+                  'techcrunch.com', 'technologyreview.com', 'wired.com', 'theverge.com',
+                  'arstechnica.com', 'venturebeat.com', 'protocol.com',
+                  
+                  // Startup Ecosystem
+                  'ycombinator.com', 'review.firstround.com', 'a16z.com', 'news.crunchbase.com',
+                  
+                  // Industry-Specific
+                  'saastr.com', 'chartmogul.com', 'zapier.com', 'webflow.com'
+                ]
               }),
             });
 
