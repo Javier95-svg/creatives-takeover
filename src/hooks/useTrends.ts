@@ -145,11 +145,8 @@ export const useTrends = () => {
   };
 
   useEffect(() => {
-    console.log('🚀 useTrends: Force generating fresh NewsAPI articles...');
-    generateNewTrends().catch((err) => {
-      console.error('❌ Failed to generate fresh articles:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch fresh articles');
-    });
+    console.log('🚀 useTrends: Fetching existing trends from database...');
+    fetchTrends();
   }, []);
 
   return {
