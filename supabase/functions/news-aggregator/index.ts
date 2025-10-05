@@ -220,12 +220,12 @@ async function verifyAndCanonicalizeUrl(url: string): Promise<string | null> {
   }
 }
 
-// Check if article already exists in database
-async function articleExists(url: string, title: string): Promise<boolean> {
+// Check if article already exists in database (only by URL to allow similar titles from different sources)
+async function articleExists(url: string): Promise<boolean> {
   const { data } = await supabase
     .from('trends')
     .select('id')
-    .or(`article_url.eq.${url},title.eq.${title}`)
+    .eq('article_url', url)
     .limit(1);
   
   return (data?.length || 0) > 0;
@@ -606,8 +606,8 @@ serve(async (req) => {
           continue;
         }
 
-        // Check if already exists
-        if (await articleExists(normalizedUrl, article.title)) {
+        // Check if already exists (by URL only)
+        if (await articleExists(normalizedUrl)) {
           console.log('❌ Skipped: Already exists in database');
           skipped++;
           continue;
