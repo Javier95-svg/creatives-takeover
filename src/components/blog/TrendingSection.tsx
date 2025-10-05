@@ -44,6 +44,16 @@ const TrendingSection = ({
     }
   }, [searchTerm, setSearchTerm]);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🔍 TrendingSection Debug:', {
+      'Total trends from hook': trends.length,
+      'After useSearch filter': filteredTrends.length,
+      'Selected category': selectedCategory,
+      'Sample trend categories': trends.slice(0, 3).map(t => ({ title: t.title, category: t.category, keywords: t.keywords }))
+    });
+  }, [trends, filteredTrends, selectedCategory]);
+
   // Filter by category
   const categoryFilteredTrends = selectedCategory === "all" 
     ? filteredTrends 
@@ -60,6 +70,11 @@ const TrendingSection = ({
         if (selectedCategory === "productivity") return allTerms.some(t => t.includes("productivity") || t.includes("efficiency") || t.includes("workflow") || t.includes("tool"));
         return true;
       });
+
+  console.log('📊 After category filter:', {
+    'Category filtered count': categoryFilteredTrends.length,
+    'Display count': Math.min(categoryFilteredTrends.length, 12)
+  });
   
   // Show maximum of 12 articles after filtering
   const displayedTrends = categoryFilteredTrends.slice(0, 12);
