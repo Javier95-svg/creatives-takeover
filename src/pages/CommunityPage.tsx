@@ -24,9 +24,11 @@ const CommunityPage = () => {
         <AnimatedBackground />
         <div className="relative z-10">
           <Navigation />
-          <CommunityHero />
-          <CommunityFeed />
-          <Footer />
+          <div className="pt-16">
+            <CommunityHero />
+            <CommunityFeed />
+            <Footer />
+          </div>
           <ChatbotWidget />
         </div>
       </div>
