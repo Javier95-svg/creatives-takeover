@@ -187,7 +187,7 @@ serve(async (req) => {
           // Extract context and generate quick actions
           const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
           const stage = determineConversationStage(updatedContext, conversationHistory.length);
-          const quickActions = generateQuickActions(stage, updatedContext, message);
+          const quickActions = generateQuickActions(stage, updatedContext, message, fullMessage);
 
           // Update conversation
           await supabase
@@ -429,87 +429,157 @@ function detectMissingContext(context: BusinessContext): string[] {
   return missing;
 }
 
-function generateQuickActions(stage: string, context: BusinessContext, userMessage: string): string[] {
-  const sentiment = detectSentiment(userMessage);
-  const missingInfo = detectMissingContext(context);
+function detectConversationTopic(aiResponse: string, userMessage: string): {
+  mainTopic: string;
+  subtopics: string[];
+  questionAsked: boolean;
+  actionSuggested: boolean;
+} {
+  const lower = aiResponse.toLowerCase();
   
-  // Base actions by stage with benefit-focused, conversational language
-  const stageActions: Record<string, string[]> = {
-    discovery: [
-      "Show me industries that fit my vibe 🎨",
-      "Help me describe what makes this special 💎",
-      "I'm exploring - give me options 🧭",
-      "What questions should I be asking? 🤔"
-    ],
-    validation: [
-      "Who would pay for this (honestly)? 💰",
-      "Show me what competitors miss 🎯",
-      "Help me test this idea safely 🧪",
-      "Give me reasons to believe in this ⚡"
-    ],
-    planning: [
-      "Create a draft business plan for me 📋",
-      "Show me pricing that makes sense 💵",
-      "Map out my first 90 days 🗓️",
-      "What matters most right now? 🎯"
-    ],
-    execution: [
-      "Give me a launch playbook 🚀",
-      "Calculate my startup costs 💰",
-      "Show me how to find customers 🎉",
-      "Walk me through next steps ✅"
-    ]
+  // Topic detection patterns
+  const topics = {
+    customers: /target (market|customer|audience)|ideal customer|who (will|would) (buy|pay)|customer avatar|buyer persona/i,
+    pricing: /pricing|how much|charge|revenue model|monetiz|subscription|price point|cost structure/i,
+    competition: /competitor|competitive|competition|alternative|similar business|rival|market player/i,
+    problem: /problem|pain point|frustrat|struggle|challenge|issue|difficulty/i,
+    solution: /solution|product|service|offer|value proposition|what you're building/i,
+    marketing: /marketing|advertis|promotion|reach|channel|social media|seo|content|campaign/i,
+    funding: /funding|capital|investment|budget|cost|startup costs|financing|bootstrap/i,
+    validation: /validat|test|mvp|prototype|feedback|proof|experiment|pilot/i,
+    goals: /goal|objective|timeline|milestone|90 days|launch|roadmap|plan/i,
+    industry: /industry|sector|market|niche|space|field|vertical/i
   };
   
-  // Adapt based on sentiment
+  const detected = Object.entries(topics)
+    .filter(([_, pattern]) => pattern.test(aiResponse))
+    .map(([topic, _]) => topic);
+  
+  return {
+    mainTopic: detected[0] || 'general',
+    subtopics: detected.slice(1),
+    questionAsked: /\?/.test(aiResponse),
+    actionSuggested: /(try|consider|start with|next step|would you like|let me|can I help)/i.test(aiResponse)
+  };
+}
+
+const topicCTAs: Record<string, string[]> = {
+  customers: [
+    "Help me identify my ideal customers 👥",
+    "Show me customer research examples 🔍",
+    "I already know who I'm targeting ✅",
+    "Give me a customer avatar template 📝"
+  ],
+  pricing: [
+    "Show me what others charge in my space 💰",
+    "Help me calculate my pricing 🧮",
+    "I want to see pricing strategy options 💵",
+    "Compare pricing models for me 📊"
+  ],
+  competition: [
+    "Show me who I'm competing against 🎯",
+    "Find gaps competitors are missing 🔍",
+    "Help me analyze their weaknesses 💡",
+    "I want to see competitive analysis 📊"
+  ],
+  problem: [
+    "Help me articulate the problem better 💬",
+    "Show me how to validate this problem 🧪",
+    "Give me examples of this problem 📋",
+    "I want to research pain points 🔍"
+  ],
+  solution: [
+    "Help me describe my solution clearly 💡",
+    "Show me what makes this unique 💎",
+    "Compare my solution to alternatives ⚖️",
+    "Give me positioning examples 🎯"
+  ],
+  marketing: [
+    "Show me marketing channels that work 📢",
+    "Help me create a marketing plan 📋",
+    "Give me low-budget marketing ideas 💡",
+    "I want to see campaign examples 🎨"
+  ],
+  funding: [
+    "Calculate my startup costs 💰",
+    "Show me funding options 💵",
+    "Help me plan my budget 📊",
+    "I want bootstrap strategies 🌱"
+  ],
+  validation: [
+    "Show me how to test this safely 🧪",
+    "Give me MVP building steps 🚀",
+    "Help me get early feedback 💬",
+    "I want validation frameworks 📋"
+  ],
+  goals: [
+    "Help me set realistic goals 🎯",
+    "Show me a 90-day roadmap 🗓️",
+    "Break this into milestones 📍",
+    "I want to prioritize next steps ✅"
+  ],
+  industry: [
+    "Show me what works in my industry 🏭",
+    "Give me industry-specific advice 💡",
+    "Compare industries for me 📊",
+    "I want to explore other options 🧭"
+  ],
+  general: [
+    "Help me get clarity on this 💡",
+    "Show me what to focus on first 🎯",
+    "I want to see examples 📋",
+    "Let's talk about something else 🔄"
+  ]
+};
+
+function generateQuickActions(
+  stage: string, 
+  context: BusinessContext, 
+  userMessage: string, 
+  aiResponse: string
+): string[] {
+  const sentiment = detectSentiment(userMessage);
+  const missingInfo = detectMissingContext(context);
+  const topic = detectConversationTopic(aiResponse, userMessage);
+  
+  // Priority 1: If user is overwhelmed, simplify immediately
   if (sentiment === 'overwhelmed') {
+    const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
     return [
-      "Let's simplify this into one step 🧘",
-      "Show me just what matters today 🎯",
-      "Skip to the quick wins ⚡",
-      stageActions[stage]?.[0] || "Start with the basics 🌟"
+      "Let's simplify - just tell me one thing 🧘",
+      "Skip this for now ⏭️",
+      topicOptions[0]
     ];
   }
   
+  // Priority 2: If AI asked a direct question, provide relevant answer options
+  if (topic.questionAsked && topic.mainTopic !== 'general') {
+    const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
+    return topicOptions.slice(0, 4);
+  }
+  
+  // Priority 3: If user is excited, capitalize on momentum with topic-specific actions
   if (sentiment === 'excited') {
+    const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
     return [
-      "Let's capture this momentum 🚀",
-      "Show me the fast track forward ⚡",
-      ...(stageActions[stage]?.slice(0, 2) || ["Get started now 🎯", "Build on this energy 💪"])
+      topicOptions[0],
+      topicOptions[1],
+      "Let's capture this momentum 🚀"
     ];
   }
   
-  if (sentiment === 'confused') {
-    return [
-      "Break this down with examples 💡",
-      "Show me how others figured this out 🔍",
-      "Let me walk you through it step-by-step 🚶",
-      stageActions[stage]?.[0] || "Start simple and build up 🌱"
-    ];
-  }
+  // Priority 4: Mix topic-specific + natural next steps
+  const mainTopicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
+  const nextTopicOptions = topic.subtopics.length > 0 
+    ? topic.subtopics.map(t => topicCTAs[t]?.[0]).filter(Boolean)
+    : [];
   
-  // Adapt based on missing context
-  if (missingInfo.includes('industry')) {
-    return [
-      "Show me industries perfect for creatives 🎨",
-      "Help me pick what fits my strengths 💪",
-      ...(stageActions[stage]?.slice(1, 3) || ["Explore my options 🧭"])
-    ];
-  }
+  // Build contextual CTAs
+  const contextualCTAs = [
+    ...mainTopicOptions.slice(0, 2),
+    ...nextTopicOptions.slice(0, 1),
+    "I want to talk about something else 🔄"
+  ].slice(0, 4);
   
-  if (missingInfo.includes('goals')) {
-    return [
-      "Help me figure out what I want 🎯",
-      "Show me what success could look like ✨",
-      ...(stageActions[stage]?.slice(0, 2) || ["Define my direction 🧭"])
-    ];
-  }
-  
-  // Return stage-appropriate actions
-  return stageActions[stage] || [
-    "Help me get started 🌟",
-    "Show me what's possible 🚀",
-    "Guide me through this 🧭",
-    "I want to explore options 💡"
-  ];
+  return contextualCTAs;
 }
