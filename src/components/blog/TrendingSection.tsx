@@ -11,9 +11,15 @@ import opportunitiesImage from "@/assets/opportunities-bg.jpg";
 
 interface TrendingSectionProps {
   searchTerm?: string;
+  selectedCategory?: string;
+  onCategoryChange?: (category: string) => void;
 }
 
-const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
+const TrendingSection = ({ 
+  searchTerm, 
+  selectedCategory: externalCategory = "all",
+  onCategoryChange 
+}: TrendingSectionProps) => {
   const { trends, isLoading, error, refetch, generateNewTrends } = useTrends();
   const { 
     searchTerm: localSearchTerm, 
@@ -25,7 +31,11 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
     hasActiveFilters 
   } = useSearch(trends);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [internalCategory, setInternalCategory] = useState("all");
+  
+  // Use external category if provided, otherwise use internal
+  const selectedCategory = onCategoryChange ? externalCategory : internalCategory;
+  const handleCategoryChange = onCategoryChange || setInternalCategory;
 
   // Update local search when prop changes
   React.useEffect(() => {
@@ -254,7 +264,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
 
         <CategoryTabs
           selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          onCategoryChange={handleCategoryChange}
           resultCount={displayedTrends.length}
         />
 
@@ -264,6 +274,8 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
           clearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
           resultCount={displayedTrends.length}
+          onSearchChange={setSearchTerm}
+          searchTerm={localSearchTerm}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
