@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { RefreshCw, Sparkles, TrendingUp } from "lucide-react";
 import TrendCard from "./TrendCard";
 import SearchFilters from "./SearchFilters";
+import CategoryTabs from "./CategoryTabs";
 import { useTrends } from "@/hooks/useTrends";
 import { useSearch } from "@/hooks/useSearch";
 import opportunitiesImage from "@/assets/opportunities-bg.jpg";
@@ -24,6 +25,7 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
     hasActiveFilters 
   } = useSearch(trends);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Update local search when prop changes
   React.useEffect(() => {
@@ -32,8 +34,25 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
     }
   }, [searchTerm, setSearchTerm]);
 
+  // Filter by category
+  const categoryFilteredTrends = selectedCategory === "all" 
+    ? filteredTrends 
+    : filteredTrends.filter(trend => {
+        // Match with actual trend categories and keywords
+        const category = trend.category?.toLowerCase() || "";
+        const keywords = trend.keywords?.map(k => k.toLowerCase()) || [];
+        const allTerms = [category, ...keywords];
+        
+        if (selectedCategory === "ai-tech") return allTerms.some(t => t.includes("ai") || t.includes("tech") || t.includes("software") || t.includes("automation"));
+        if (selectedCategory === "business") return allTerms.some(t => t.includes("business") || t.includes("startup") || t.includes("entrepreneur") || t.includes("market"));
+        if (selectedCategory === "marketing") return allTerms.some(t => t.includes("marketing") || t.includes("social") || t.includes("brand") || t.includes("advertising"));
+        if (selectedCategory === "funding") return allTerms.some(t => t.includes("funding") || t.includes("investment") || t.includes("venture") || t.includes("capital"));
+        if (selectedCategory === "productivity") return allTerms.some(t => t.includes("productivity") || t.includes("efficiency") || t.includes("workflow") || t.includes("tool"));
+        return true;
+      });
+  
   // Show maximum of 12 articles after filtering
-  const displayedTrends = filteredTrends.slice(0, 12);
+  const displayedTrends = categoryFilteredTrends.slice(0, 12);
 
   const handleRefresh = async () => {
     try {
@@ -233,6 +252,12 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
           </p>
         </div>
 
+        <CategoryTabs
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          resultCount={displayedTrends.length}
+        />
+
         <SearchFilters
           filters={filters}
           updateFilter={updateFilter}
@@ -284,10 +309,10 @@ const TrendingSection = ({ searchTerm }: TrendingSectionProps) => {
           </div>
         )}
 
-        {filteredTrends.length > 12 && (
+        {categoryFilteredTrends.length > 12 && (
           <div className="text-center mt-8">
             <p className="text-muted-foreground text-sm">
-              Showing {displayedTrends.length} of {filteredTrends.length} opportunities
+              Showing {displayedTrends.length} of {categoryFilteredTrends.length} opportunities
             </p>
           </div>
         )}
