@@ -214,32 +214,19 @@ const TrendingSection = ({
       </svg>
 
       <div className="container mx-auto px-4 relative z-10 max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-16">
-          <div className="animate-slide-up">
-            <div className="inline-flex items-center gap-2 mb-3">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <h2 className="text-4xl md:text-5xl font-bold gradient-text">
-                {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Opportunities'}
-              </h2>
-            </div>
-            <p className="text-muted-foreground text-lg md:text-xl">
-              {hasActiveFilters 
-                ? 'Filtered business opportunities matching your criteria'
-                : 'AI-powered insights updated daily'
-              }
-            </p>
+        <div className="text-center mb-16 animate-slide-up">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <h2 className="text-4xl md:text-5xl font-bold gradient-text">
+              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Opportunities'}
+            </h2>
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="lg"
-            onClick={handleRefresh}
-            disabled={isGenerating}
-            className="glass hover:bg-primary/10"
-          >
-            <RefreshCw className={`h-5 w-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <p className="text-muted-foreground text-lg md:text-xl">
+            {hasActiveFilters 
+              ? 'Filtered business opportunities matching your criteria'
+              : 'AI-powered insights updated daily'
+            }
+          </p>
         </div>
 
         <CategoryTabs
