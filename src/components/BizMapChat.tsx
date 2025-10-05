@@ -58,7 +58,11 @@ export const BizMapChat = ({
   const progress = (currentStep / wizardSteps.length) * 100;
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: "smooth",
+      block: "nearest",
+      inline: "nearest"
+    });
   };
 
   useEffect(() => {
