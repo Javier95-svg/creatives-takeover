@@ -2,8 +2,12 @@ import { useParams, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import ReadingProgress from "@/components/blog/ReadingProgress";
+import RelatedArticles from "@/components/blog/RelatedArticles";
+import BookmarkButton from "@/components/blog/BookmarkButton";
 import { blogPosts } from "@/data/blogPosts";
 import { useArticles } from "@/hooks/useArticles";
+import { useTrends } from "@/hooks/useTrends";
 import { Calendar, Clock, Share2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -13,7 +17,9 @@ import { useEffect, useState } from "react";
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { getArticleBySlug, loading } = useArticles();
+  const { trends } = useTrends();
   const [post, setPost] = useState(null);
+  const [readingComplete, setReadingComplete] = useState(false);
 
   useEffect(() => {
     if (!loading && slug) {
@@ -77,6 +83,11 @@ const BlogPost = () => {
     window.open(shareUrls[platform as keyof typeof shareUrls], '_blank');
   };
 
+  const handleReadingComplete = () => {
+    setReadingComplete(true);
+    toast.success("Great read! Check out related opportunities below.");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -98,6 +109,12 @@ const BlogPost = () => {
       </Helmet>
       
       <Navigation />
+
+      {/* Reading Progress Bar */}
+      <ReadingProgress 
+        readTime={post.readTime} 
+        onComplete={handleReadingComplete}
+      />
       
       <main className="pt-24 pb-16">
         <article className="container mx-auto px-6 max-w-4xl">
@@ -144,7 +161,7 @@ const BlogPost = () => {
             </div>
 
             {/* Share Buttons */}
-            <div className="flex items-center gap-3 pb-8 border-b border-border">
+            <div className="flex flex-wrap items-center gap-3 pb-8 border-b border-border">
               <span className="text-sm font-medium">Share:</span>
               <Button 
                 variant="ghost" 
@@ -179,6 +196,15 @@ const BlogPost = () => {
               >
                 Facebook
               </Button>
+              
+              {/* Bookmark Button */}
+              <div className="ml-auto">
+                <BookmarkButton 
+                  postId={post.id} 
+                  showLabel 
+                  variant="outline"
+                />
+              </div>
             </div>
           </header>
 
@@ -197,6 +223,18 @@ const BlogPost = () => {
           <div 
             className="prose prose-lg max-w-none prose-headings:gradient-text prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded"
             dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+
+          {/* Related Articles Section */}
+          <RelatedArticles
+            currentArticle={{
+              id: post.id,
+              tags: post.tags,
+              category: post.tags?.[0], // Use first tag as category
+            }}
+            allArticles={blogPosts}
+            allTrends={trends}
+            maxItems={3}
           />
         </article>
       </main>

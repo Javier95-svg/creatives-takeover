@@ -1,20 +1,52 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, MapPin, Activity, Lightbulb, Users, DollarSign, CheckCircle, ArrowRight, Bookmark, BookmarkCheck } from "lucide-react";
+import { TrendingUp, MapPin, Activity, Lightbulb, Users, DollarSign, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Trend } from "@/hooks/useTrends";
-import { useBookmarks } from "@/hooks/useBookmarks";
+import { useTrends } from "@/hooks/useTrends";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
+import BookmarkButton from "./BookmarkButton";
 
 interface TrendCardProps {
   trend: Trend;
   onClick?: () => void;
+  showRelated?: boolean;
 }
 
-const TrendCard = ({ trend, onClick }: TrendCardProps) => {
+const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
   const navigate = useNavigate();
-  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { trends } = useTrends();
+
+  // Find related opportunities based on shared tags/keywords
+  const relatedOpportunities = useMemo(() => {
+    if (!showRelated) return [];
+    
+    const trendKeywords = trend.keywords?.map(k => k.toLowerCase()) || [];
+    const trendCategory = trend.category?.toLowerCase();
+
+    return trends
+      .filter(t => t.id !== trend.id)
+      .map(t => {
+        let score = 0;
+        const tKeywords = t.keywords?.map(k => k.toLowerCase()) || [];
+        
+        // Keyword matching
+        trendKeywords.forEach(keyword => {
+          if (tKeywords.includes(keyword)) score += 2;
+        });
+
+        // Category matching
+        if (t.category?.toLowerCase() === trendCategory) score += 1;
+
+        return { trend: t, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 2)
+      .map(item => item.trend);
+  }, [trend, trends, showRelated]);
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -67,46 +99,38 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
 
   const handleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await toggleBookmark(trend.id);
   };
 
   const isArticle = Boolean(trend.article_url);
   const hasBusinessOpportunity = Boolean(trend.business_opportunity);
 
   return (
-    <Card 
-      className={cn(
-        "hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20",
-        isBookmarked(trend.id) && "ring-2 ring-primary/20 bg-gradient-to-br from-primary/5 to-muted/20"
-      )}
-      onClick={handleClick}
-    >
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
-            {trend.title}
-          </CardTitle>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBookmark}
-              className="h-8 w-8 p-0 hover:bg-primary/10"
-            >
-              {isBookmarked(trend.id) ? (
-                <BookmarkCheck className="h-4 w-4 text-primary" />
-              ) : (
-                <Bookmark className="h-4 w-4 text-muted-foreground hover:text-primary" />
-              )}
-            </Button>
-            <div className="flex items-center gap-1 text-sm font-medium">
-              <TrendingUp className="h-4 w-4" />
-              <span className={getScoreColor(trend.opportunity_score)}>
-                {trend.opportunity_score.toFixed(0)}
-              </span>
+    <>
+      <Card 
+        className={cn(
+          "hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20"
+        )}
+        onClick={handleClick}
+      >
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors line-clamp-2">
+              {trend.title}
+            </CardTitle>
+            <div className="flex items-center gap-2 shrink-0">
+              <BookmarkButton 
+                postId={trend.id} 
+                size="icon"
+                className="h-8 w-8"
+              />
+              <div className="flex items-center gap-1 text-sm font-medium">
+                <TrendingUp className="h-4 w-4" />
+                <span className={getScoreColor(trend.opportunity_score)}>
+                  {trend.opportunity_score.toFixed(0)}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
         
         <div className="flex items-center gap-2 text-sm">
           <Badge variant="outline" className="text-xs font-medium">
@@ -267,6 +291,49 @@ const TrendCard = ({ trend, onClick }: TrendCardProps) => {
         </div>
       </CardContent>
     </Card>
+
+    {/* Related Opportunities Section */}
+    {showRelated && relatedOpportunities.length > 0 && (
+      <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-muted">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold">Related Opportunities</span>
+        </div>
+        <div className="space-y-2">
+          {relatedOpportunities.map((relatedTrend) => (
+            <button
+              key={relatedTrend.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (relatedTrend.article_url) {
+                  window.open(relatedTrend.article_url, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              className="w-full text-left p-3 bg-background hover:bg-muted/50 rounded-md transition-colors group/related"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium line-clamp-1 group-hover/related:text-primary transition-colors">
+                    {relatedTrend.title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-xs">
+                      {relatedTrend.category}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <TrendingUp className="w-3 h-3" />
+                      <span>{relatedTrend.opportunity_score.toFixed(0)}</span>
+                    </div>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover/related:text-primary transition-all group-hover/related:translate-x-1 shrink-0" />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+  </>
   );
 };
 
