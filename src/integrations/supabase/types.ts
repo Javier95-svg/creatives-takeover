@@ -1197,6 +1197,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_widgets: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_visible: boolean | null
+          position: number
+          updated_at: string | null
+          user_id: string
+          widget_settings: Json | null
+          widget_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean | null
+          position: number
+          updated_at?: string | null
+          user_id: string
+          widget_settings?: Json | null
+          widget_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean | null
+          position?: number
+          updated_at?: string | null
+          user_id?: string
+          widget_settings?: Json | null
+          widget_type?: string
+        }
+        Relationships: []
+      }
       data_refresh_jobs: {
         Row: {
           created_at: string
@@ -1916,6 +1949,54 @@ export type Database = {
           },
         ]
       }
+      personalized_recommendations: {
+        Row: {
+          action_url: string | null
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_completed: boolean | null
+          is_dismissed: boolean | null
+          metadata: Json | null
+          priority: number | null
+          reason: string | null
+          recommendation_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_dismissed?: boolean | null
+          metadata?: Json | null
+          priority?: number | null
+          reason?: string | null
+          recommendation_type: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_dismissed?: boolean | null
+          metadata?: Json | null
+          priority?: number | null
+          reason?: string | null
+          recommendation_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       poll_votes: {
         Row: {
           comment: string | null
@@ -2034,7 +2115,9 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          business_stage: string | null
           created_at: string
+          creative_niche: string | null
           credit_balance: number
           followers_count: number
           following_count: number
@@ -2045,15 +2128,20 @@ export type Database = {
           instagram_url: string | null
           last_credit_reset_at: string
           linkedin_url: string | null
+          onboarding_completed: boolean | null
+          preferred_dashboard_view: string | null
           subscription_tier: string
           twitter_url: string | null
           updated_at: string
+          user_preferences: Json | null
           website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          business_stage?: string | null
           created_at?: string
+          creative_niche?: string | null
           credit_balance?: number
           followers_count?: number
           following_count?: number
@@ -2064,15 +2152,20 @@ export type Database = {
           instagram_url?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
+          onboarding_completed?: boolean | null
+          preferred_dashboard_view?: string | null
           subscription_tier?: string
           twitter_url?: string | null
           updated_at?: string
+          user_preferences?: Json | null
           website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          business_stage?: string | null
           created_at?: string
+          creative_niche?: string | null
           credit_balance?: number
           followers_count?: number
           following_count?: number
@@ -2083,9 +2176,12 @@ export type Database = {
           instagram_url?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
+          onboarding_completed?: boolean | null
+          preferred_dashboard_view?: string | null
           subscription_tier?: string
           twitter_url?: string | null
           updated_at?: string
+          user_preferences?: Json | null
           website_url?: string | null
         }
         Relationships: []
@@ -2548,6 +2644,33 @@ export type Database = {
           title?: string
           trend_score?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_activity_log: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string | null
+          id: string
+          page_path: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          page_path?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          page_path?: string | null
+          user_id?: string
         }
         Relationships: []
       }
