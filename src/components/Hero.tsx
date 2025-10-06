@@ -44,7 +44,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.2s' }}>
-            From scattered ideas to profitable launch in 30 days
+            From scattered ideas to a structured plan, validated offer, and profitable launch in 30 days
           </p>
           
           {/* Trust Indicators */}
