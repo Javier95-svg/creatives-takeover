@@ -39,12 +39,14 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
-            <span className="takeover-gradient">Your Business Blueprint Generator</span>
+            <span className="takeover-gradient">The Creative Entrepreneur's</span>
+            <br />
+            <span className="animated-gradient">AI Co-Founder</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.2s' }}>
-            Turn your creative idea into a complete launch roadmap—in minutes, not months
+            From scattered ideas to profitable launch in 30 days
           </p>
           
           {/* Trust Indicators */}
@@ -55,15 +57,15 @@ const Hero = () => {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Complete roadmap in 5 minutes</span>
+              <span>Average first dollar in 28 days</span>
             </div>
           </div>
 
           {/* CTA Buttons */}
           <div className="flex justify-center mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto max-w-sm sm:max-w-none" aria-label="Generate your business blueprint" asChild>
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto max-w-sm sm:max-w-none" aria-label="Start your 30-day launch" asChild>
               <Link to="/dream2plan">
-                <span className="relative z-10">Generate My Blueprint</span>
+                <span className="relative z-10">Start My 30-Day Launch</span>
                 <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
@@ -76,8 +78,8 @@ const Hero = () => {
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
               </div>
-              <div className="text-base sm:text-lg font-semibold takeover-gradient mb-2">Instant Blueprint</div>
-              <div className="text-muted-foreground text-xs sm:text-sm">Complete business roadmap generated in minutes with AI analysis</div>
+              <div className="text-base sm:text-lg font-semibold takeover-gradient mb-2">Launch in 30 Days</div>
+              <div className="text-muted-foreground text-xs sm:text-sm">Sprint-based roadmap gets you from idea to first customer fast</div>
             </div>
             <div className="glass-card btn-magnetic p-4 sm:p-6">
               <div className="flex justify-center mb-3">
