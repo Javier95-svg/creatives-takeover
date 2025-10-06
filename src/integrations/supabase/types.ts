@@ -1032,6 +1032,68 @@ export type Database = {
           },
         ]
       }
+      conversation_memory: {
+        Row: {
+          ai_response_tone: string | null
+          business_stage: string | null
+          content: string
+          created_at: string
+          id: string
+          importance_score: number | null
+          last_referenced_at: string
+          memory_type: string
+          reference_count: number | null
+          related_memories: string[] | null
+          session_id: string | null
+          tags: string[] | null
+          title: string
+          user_id: string
+          user_mood: string | null
+        }
+        Insert: {
+          ai_response_tone?: string | null
+          business_stage?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          importance_score?: number | null
+          last_referenced_at?: string
+          memory_type: string
+          reference_count?: number | null
+          related_memories?: string[] | null
+          session_id?: string | null
+          tags?: string[] | null
+          title: string
+          user_id: string
+          user_mood?: string | null
+        }
+        Update: {
+          ai_response_tone?: string | null
+          business_stage?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          importance_score?: number | null
+          last_referenced_at?: string
+          memory_type?: string
+          reference_count?: number | null
+          related_memories?: string[] | null
+          session_id?: string | null
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+          user_mood?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_memory_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -2113,6 +2175,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_personality: string | null
           avatar_url: string | null
           bio: string | null
           business_stage: string | null
@@ -2128,6 +2191,7 @@ export type Database = {
           instagram_url: string | null
           last_credit_reset_at: string
           linkedin_url: string | null
+          memory_preference: string | null
           onboarding_completed: boolean | null
           preferred_dashboard_view: string | null
           subscription_tier: string
@@ -2137,6 +2201,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          ai_personality?: string | null
           avatar_url?: string | null
           bio?: string | null
           business_stage?: string | null
@@ -2152,6 +2217,7 @@ export type Database = {
           instagram_url?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
+          memory_preference?: string | null
           onboarding_completed?: boolean | null
           preferred_dashboard_view?: string | null
           subscription_tier?: string
@@ -2161,6 +2227,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          ai_personality?: string | null
           avatar_url?: string | null
           bio?: string | null
           business_stage?: string | null
@@ -2176,6 +2243,7 @@ export type Database = {
           instagram_url?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
+          memory_preference?: string | null
           onboarding_completed?: boolean | null
           preferred_dashboard_view?: string | null
           subscription_tier?: string
