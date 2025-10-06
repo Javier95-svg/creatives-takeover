@@ -51,11 +51,11 @@ const Hero = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 mb-8 sm:mb-10 text-xs sm:text-sm text-muted-foreground px-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>15,000+ creatives launched</span>
+              <span>Launch before perfection</span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Average first dollar in 28 days</span>
+              <span>No investors needed</span>
             </div>
           </div>
 
