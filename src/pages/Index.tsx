@@ -26,9 +26,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Creatives Takeover - From Idea to Execution | AI-Powered Business Plans</title>
-        <meta name="description" content="Transform your business ideas into comprehensive, actionable business plans in minutes with BizMap AI. Get GPT-5 powered analysis, validation experiments, and custom execution strategies." />
-        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, GPT-5" />
+        <title>Creatives Takeover - Your AI Co-Founder for Creative Businesses | Launch in 30 Days</title>
+        <meta name="description" content="The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days. Join 15,000+ creatives building real businesses with sprint-based planning, accountability partners, and creative-first intelligence." />
+        <meta name="keywords" content="creative business, AI co-founder, creative entrepreneur, launch in 30 days, creative business planning, accountability partners, creative startup, business for creatives" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
         <meta name="theme-color" content="hsl(195 100% 50%)" />
         <meta name="mobile-web-app-capable" content="yes" />

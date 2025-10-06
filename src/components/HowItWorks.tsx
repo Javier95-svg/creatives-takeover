@@ -17,33 +17,33 @@ const HowItWorks = () => {
     {
       number: "01",
       icon: <Lightbulb className="w-8 h-8 text-primary" />,
-      title: "Share Your Creative Vision",
-      description: "Tell our AI about your creative idea, passion project, or business concept.",
-      details: ["Describe your vision", "Upload inspiration", "Set your goals"],
-      time: "2 minutes"
+      title: "Brain Dump Your Idea (Day 1-3)",
+      description: "Talk to your AI co-founder like a real business partner. No jargon, no 50-page plans - just honest conversation about your creative vision.",
+      details: ["Conversational AI planning", "No business jargon required", "Your creative language"],
+      time: "15 min"
     },
     {
       number: "02",
       icon: <Brain className="w-8 h-8 text-primary" />,
-      title: "AI Analyzes & Strategizes",
-      description: "Our AI instantly analyzes market potential and creates a custom business strategy.",
-      details: ["Market analysis", "Competitor research", "Revenue modeling"],
-      time: "30 seconds"
+      title: "Get Your Launch Roadmap (Day 4-7)",
+      description: "AI analyzes creative business models (not corporate playbooks) to build your custom 30-day roadmap with daily milestones.",
+      details: ["Creative-first analysis", "Daily action items", "Revenue-focused milestones"],
+      time: "Instant"
     },
     {
       number: "03",
       icon: <TrendingUp className="w-8 h-8 text-primary" />,
-      title: "Get Your Action Plan",
-      description: "Receive a detailed roadmap with specific steps to turn your idea into reality.",
-      details: ["Step-by-step roadmap", "Resource recommendations", "Timeline planning"],
-      time: "Instant"
+      title: "Sprint to First Dollar (Day 8-28)",
+      description: "Daily check-ins, accountability partner support, and real-time market intelligence keep you moving. No ghosting allowed.",
+      details: ["Daily accountability", "Partner matching", "Live market data"],
+      time: "21 days"
     },
     {
       number: "04",
       icon: <Rocket className="w-8 h-8 text-primary" />,
-      title: "Launch & Scale",
-      description: "Execute your plan with our community support and automated tools.",
-      details: ["Community feedback", "Progress tracking", "Growth optimization"],
+      title: "Celebrate & Scale (Day 29-30+)",
+      description: "Make your first dollar, join Demo Day to showcase your launch, then scale with the community cheering you on.",
+      details: ["First dollar celebration", "Monthly demo days", "Revenue scaling support"],
       time: "Ongoing"
     }
   ];
@@ -96,14 +96,13 @@ const HowItWorks = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in">
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            Simple 4-Step Process
+            Your 30-Day Launch System
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 gradient-text px-4">
-            From Idea to Business in Minutes
+            From Scattered Idea to First Dollar
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Our proven process has helped thousands of creative entrepreneurs transform 
-            their ideas into profitable businesses. Here's exactly how it works.
+            The exact framework 15,000+ creatives used to go from idea to first paying customer
           </p>
         </div>
 

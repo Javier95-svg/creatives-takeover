@@ -16,40 +16,40 @@ import {
 const EntrepreneurProblems = () => {
   const problems = [
     {
-      icon: <Brain className="w-8 h-8 text-red-500" />,
-      problem: "Creative Idea Overwhelm",
-      description: "You have amazing creative concepts but struggle to turn them into viable business models.",
-      solution: "AI-powered business planning that transforms creative ideas into structured, profitable strategies."
-    },
-    {
       icon: <Clock className="w-8 h-8 text-red-500" />,
-      problem: "Manual Business Planning",
-      description: "Spending weeks on research and planning when you could be creating and building instead.",
-      solution: "Automated business planning tools that handle the heavy lifting so you can focus on innovation."
+      problem: "Endless Planning, No Revenue",
+      description: "Six months of 'perfect planning' while competitors are already making money. You're stuck in research mode.",
+      solution: "30-day sprint roadmap forces you to ship fast and validate with real customers, not hypothetical plans."
     },
     {
-      icon: <Users className="w-8 h-8 text-red-500" />,
-      problem: "Creative Isolation", 
-      description: "Working alone without feedback from other creative entrepreneurs who understand your vision.",
-      solution: "Join a community of 15,000+ creative entrepreneurs, innovators, and startup founders."
+      icon: <Brain className="w-8 h-8 text-red-500" />,
+      problem: "Generic MBA Advice",
+      description: "Business consultants who've never launched a creative business telling you to 'write a 50-page business plan.'",
+      solution: "AI trained specifically on creative business models - understands your vision without corporate jargon."
     },
     {
       icon: <TrendingDown className="w-8 h-8 text-red-500" />,
-      problem: "Missing Market Opportunities",
-      description: "Great ideas but lack of market intelligence to know what creative solutions are in demand.",
-      solution: "AI-driven market insights show you exactly where creative opportunities are emerging."
+      problem: "Launching in the Dark",
+      description: "No idea if anyone will actually pay for your idea. You're guessing instead of validating with real data.",
+      solution: "Real-time market intelligence shows what creative businesses are working RIGHT NOW in your niche."
+    },
+    {
+      icon: <Users className="w-8 h-8 text-red-500" />,
+      problem: "Zero Accountability",
+      description: "Starting strong on Monday, ghosting your project by Friday. No one to keep you on track or celebrate wins with.",
+      solution: "Accountability partners, daily check-ins, and monthly demo days keep you shipping and celebrating progress."
     },
     {
       icon: <Target className="w-8 h-8 text-red-500" />,
-      problem: "Complex Tool Integration",
-      description: "Juggling multiple business tools instead of having one integrated no-code solution.",
-      solution: "All-in-one platform with no-code automation that replaces 10+ separate business tools."
+      problem: "Fear of Being 'Too Creative'",
+      description: "Everyone says 'be practical' and 'play it safe.' You water down your bold ideas trying to fit corporate molds.",
+      solution: "Built FOR creatives BY creatives. We celebrate bold ideas and help you monetize your unique vision."
     },
     {
       icon: <Zap className="w-8 h-8 text-red-500" />,
-      problem: "Slow Execution Speed",
-      description: "Creative projects taking months to execute when competitors are shipping in weeks.",
-      solution: "AI-powered automation and templates designed for rapid creative business execution."
+      problem: "No Clear First Steps",
+      description: "Overwhelmed by all the things you 'should' do. Where do you even start? What matters most?",
+      solution: "Day-by-day roadmap tells you exactly what to do today to get to your first paying customer."
     }
   ];
 
@@ -92,14 +92,13 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in">
           <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            Creative Entrepreneur Challenges
+            Why Most Creative Businesses Fail
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Stop Struggling with <span className="text-red-500">These Problems</span>
+            Why Most Creative Businesses <span className="text-red-500">Never Launch</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Every creative entrepreneur faces these challenges. The difference? Having AI-powered tools 
-            and automation to solve them <strong className="text-foreground">instantly</strong>.
+            Generic business advice doesn't work for creatives. You need a system built specifically for how you think and create.
           </p>
         </div>
 
