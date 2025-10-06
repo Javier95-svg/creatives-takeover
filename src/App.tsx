@@ -28,6 +28,7 @@ import Login from "./pages/Login";
 import PromptLibrary from "./pages/PromptLibrary";
 import AuthCallback from "./pages/AuthCallback";
 import Account from "./pages/Account";
+import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/news" element={<Blog />} />
             <Route path="/news/:slug" element={<BlogPost />} />

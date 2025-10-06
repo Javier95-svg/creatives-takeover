@@ -1,0 +1,245 @@
+import { useEffect } from 'react';
+import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Sparkles, 
+  Target, 
+  TrendingUp, 
+  CheckCircle2, 
+  X,
+  ArrowRight,
+  Flame,
+  Calendar,
+  Rocket
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+export const PersonalizedDashboard = () => {
+  const {
+    data,
+    loading,
+    dismissRecommendation,
+    completeRecommendation,
+    trackActivity
+  } = usePersonalizedDashboard();
+
+  useEffect(() => {
+    trackActivity('dashboard_view');
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-32 bg-muted rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="h-40 bg-muted rounded-lg" />
+            <div className="h-40 bg-muted rounded-lg" />
+            <div className="h-40 bg-muted rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { profile, recommendations, stats } = data;
+
+  // Determine greeting based on time
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+  return (
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background rounded-2xl p-8">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">
+              {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              {profile?.creative_niche 
+                ? `Let's make progress on your ${profile.creative_niche} journey`
+                : "Let's build something amazing today"
+              }
+            </p>
+          </div>
+          {stats.currentStreak > 0 && (
+            <div className="flex items-center gap-2 bg-orange-500/10 px-4 py-2 rounded-full">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <span className="font-bold text-orange-500">{stats.currentStreak} day streak</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <Rocket className="h-8 w-8 text-primary" />
+            <Badge variant="secondary">{stats.activeSprints} active</Badge>
+          </div>
+          <h3 className="text-2xl font-bold">{stats.activeSprints}</h3>
+          <p className="text-sm text-muted-foreground">Active Sprints</p>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <CheckCircle2 className="h-8 w-8 text-green-500" />
+            <Badge variant="secondary">{stats.completedSessions} done</Badge>
+          </div>
+          <h3 className="text-2xl font-bold">{stats.completedSessions}</h3>
+          <p className="text-sm text-muted-foreground">Sessions Completed</p>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <Calendar className="h-8 w-8 text-blue-500" />
+            <Badge variant="secondary">{stats.totalCheckIns} total</Badge>
+          </div>
+          <h3 className="text-2xl font-bold">{stats.totalCheckIns}</h3>
+          <p className="text-sm text-muted-foreground">Check-ins</p>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <TrendingUp className="h-8 w-8 text-purple-500" />
+            <Badge variant="secondary">Track progress</Badge>
+          </div>
+          <h3 className="text-2xl font-bold">{profile?.business_stage || 'Idea'}</h3>
+          <p className="text-sm text-muted-foreground">Current Stage</p>
+        </Card>
+      </div>
+
+      {/* Personalized Recommendations */}
+      {recommendations.length > 0 && (
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="text-2xl font-bold">Recommended For You</h2>
+          </div>
+
+          <div className="space-y-4">
+            {recommendations.map((rec) => (
+              <div
+                key={rec.id}
+                className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              >
+                <div className="mt-1">
+                  {rec.recommendation_type === 'action' && (
+                    <Target className="h-5 w-5 text-primary" />
+                  )}
+                  {rec.recommendation_type === 'resource' && (
+                    <Sparkles className="h-5 w-5 text-purple-500" />
+                  )}
+                  {rec.recommendation_type === 'feature' && (
+                    <TrendingUp className="h-5 w-5 text-blue-500" />
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-semibold text-lg">{rec.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{rec.description}</p>
+                      {rec.reason && (
+                        <p className="text-xs text-muted-foreground mt-2 italic">
+                          Why: {rec.reason}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="ml-4">
+                      Priority {rec.priority}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4">
+                    <Link to={rec.action_url}>
+                      <Button 
+                        size="sm"
+                        onClick={() => trackActivity('recommendation_clicked', { recommendation_id: rec.id })}
+                      >
+                        Take Action
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => completeRecommendation(rec.id)}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => dismissRecommendation(rec.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Quick Actions */}
+      <Card className="p-6">
+        <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link to="/dream2plan">
+            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6" />
+              <span>Start Dream2Plan</span>
+            </Button>
+          </Link>
+          <Link to="/sprints">
+            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+              <Rocket className="h-6 w-6" />
+              <span>View My Sprints</span>
+            </Button>
+          </Link>
+          <Link to="/resources">
+            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+              <Target className="h-6 w-6" />
+              <span>Browse Resources</span>
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
+      {/* Progress Overview */}
+      {profile?.business_stage && (
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold mb-6">Your Journey Progress</h2>
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Business Development</span>
+                <span className="text-sm text-muted-foreground">
+                  {profile.business_stage === 'idea' && '25%'}
+                  {profile.business_stage === 'planning' && '50%'}
+                  {profile.business_stage === 'building' && '75%'}
+                  {profile.business_stage === 'launched' && '100%'}
+                </span>
+              </div>
+              <Progress 
+                value={
+                  profile.business_stage === 'idea' ? 25 :
+                  profile.business_stage === 'planning' ? 50 :
+                  profile.business_stage === 'building' ? 75 : 100
+                } 
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
