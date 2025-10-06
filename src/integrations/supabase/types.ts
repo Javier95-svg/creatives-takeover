@@ -403,32 +403,49 @@ export type Database = {
       chatbot_conversations: {
         Row: {
           business_context: Json | null
+          chat_mode: string | null
+          context_loaded_at: string | null
           conversation_stage: string | null
           created_at: string
           id: string
+          related_session_id: string | null
           session_id: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
           business_context?: Json | null
+          chat_mode?: string | null
+          context_loaded_at?: string | null
           conversation_stage?: string | null
           created_at?: string
           id?: string
+          related_session_id?: string | null
           session_id: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           business_context?: Json | null
+          chat_mode?: string | null
+          context_loaded_at?: string | null
           conversation_stage?: string | null
           created_at?: string
           id?: string
+          related_session_id?: string | null
           session_id?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_conversations_related_session_id_fkey"
+            columns: ["related_session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chatbot_feedback: {
         Row: {

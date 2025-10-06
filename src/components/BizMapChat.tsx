@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
@@ -38,7 +39,9 @@ export const BizMapChat = ({
     isTyping, 
     streamingMessage, 
     isStreaming, 
-    sendMessage 
+    sendMessage,
+    chatMode,
+    switchToFreeform
   } = useChatbot({
     enableNLU: true,
     enableDynamicFAQ: false,
@@ -113,18 +116,23 @@ export const BizMapChat = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Progress Bar */}
+      {/* Progress Bar with Mode Indicator */}
       <div className="p-4 border-b bg-muted/30">
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">
-            Step {currentStep + 1} of {wizardSteps.length}
-          </span>
-          {celebrationMode && (
-            <span className="text-lg animate-bounce">🎉</span>
-          )}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">
+              {chatMode === 'wizard' ? `Step ${currentStep + 1} of ${wizardSteps.length}` : 'Ask Me Anything'}
+            </span>
+            {celebrationMode && (
+              <span className="text-lg animate-bounce">🎉</span>
+            )}
+          </div>
+          <Badge variant={chatMode === 'freeform' ? 'default' : 'secondary'} className="text-xs">
+            {chatMode === 'freeform' ? '✨ Freeform' : '🧙 Wizard'}
+          </Badge>
         </div>
-        <Progress value={progress} className="h-2" />
+        {chatMode === 'wizard' && <Progress value={progress} className="h-2" />}
       </div>
 
       {/* Messages Area */}
@@ -208,12 +216,18 @@ export const BizMapChat = ({
 
       {/* Input Area */}
       <div className="border-t border-border/50 p-4 sm:p-5 bg-gradient-to-br from-background to-muted/20">
+        {chatMode === 'freeform' && (
+          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-primary" />
+            I remember your business context and journey
+          </p>
+        )}
         <div className="flex gap-2 sm:gap-3">
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={getCurrentPlaceholder()}
+            placeholder={chatMode === 'freeform' ? "Ask me anything about your business..." : getCurrentPlaceholder()}
             disabled={isTyping || isStreaming}
             className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
           />

@@ -33,7 +33,8 @@ serve(async (req) => {
       businessContext = {},
       userId = null,
       wizardMode = null,
-      currentStep = null
+      currentStep = null,
+      chatMode = 'wizard'
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -58,7 +59,8 @@ serve(async (req) => {
           session_id: sessionId,
           user_id: userId,
           business_context: businessContext,
-          conversation_stage: 'discovery'
+          conversation_stage: 'discovery',
+          chat_mode: chatMode
         })
         .select()
         .single();

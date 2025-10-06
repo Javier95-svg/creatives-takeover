@@ -282,6 +282,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [chatMode, setChatMode] = useState<'wizard' | 'freeform'>('wizard');
   const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
     totalMessages: 0,
     averageResponseTime: 0,
@@ -1209,7 +1210,8 @@ What specific aspect of your business would you like to focus on first?`;
               currentStep: wizardStep,
               answers: newAnswers
             },
-            wizardStep
+            wizardStep,
+            chatMode
           );
           
           // Notify parent of step completion
@@ -1268,7 +1270,8 @@ What specific aspect of your business would you like to focus on first?`;
             conversationState.businessContext,
             userId,
             config.wizardMode,
-            config.wizardMode?.currentStep || wizardStep
+            config.wizardMode?.currentStep || wizardStep,
+            chatMode
           );
 
       } else {
@@ -1669,6 +1672,25 @@ What specific aspect of your business would you like to focus on first?`;
     sectionCompletionFeedback,
     
     // Configuration
-    config
+    config,
+    
+    // Chat mode control
+    chatMode,
+    switchToFreeform: useCallback(() => {
+      setChatMode('freeform');
+      // Add a system message about the mode switch
+      const switchMessage: ChatMessage = {
+        id: generateId(),
+        content: "✨ You're now in **Ask Me Anything** mode! I remember your business context and can help you with anything related to your venture. What's on your mind?",
+        isBot: true,
+        timestamp: new Date(),
+        messageType: 'recommendation',
+        confidence: 1.0
+      };
+      setMessages(prev => [...prev, switchMessage]);
+    }, []),
+    switchToWizard: useCallback(() => {
+      setChatMode('wizard');
+    }, [])
   };
 };

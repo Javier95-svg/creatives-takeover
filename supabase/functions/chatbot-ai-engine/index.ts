@@ -33,7 +33,8 @@ serve(async (req) => {
       sessionId, 
       conversationHistory = [], 
       businessContext = {},
-      userId = null 
+      userId = null,
+      chatMode = 'wizard' // 'wizard' or 'freeform'
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -60,7 +61,8 @@ serve(async (req) => {
           session_id: sessionId,
           user_id: userId,
           business_context: businessContext,
-          conversation_stage: 'discovery'
+          conversation_stage: 'discovery',
+          chat_mode: chatMode
         })
         .select()
         .single();
@@ -69,6 +71,18 @@ serve(async (req) => {
       conversation = newConv;
     } else if (convError) {
       throw convError;
+    }
+
+    // Load enriched context for freeform mode
+    let enrichedContext = businessContext;
+    if (chatMode === 'freeform' && userId) {
+      enrichedContext = await loadUserBusinessContext(supabase, userId);
+      
+      // Update context_loaded_at timestamp
+      await supabase
+        .from('chatbot_conversations')
+        .update({ context_loaded_at: new Date().toISOString() })
+        .eq('id', conversation.id);
     }
 
     // Save user message
@@ -90,7 +104,7 @@ serve(async (req) => {
       .limit(5);
 
     // Build enhanced system prompt
-    const systemPrompt = buildSystemPrompt(businessContext, marketData);
+    const systemPrompt = buildSystemPrompt(enrichedContext, marketData, chatMode, userId ? await getUserProfile(supabase, userId) : null);
 
     // Prepare conversation history for AI
     const messages: ChatMessage[] = [
@@ -181,11 +195,117 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(businessContext: BusinessContext, marketData: any[]): string {
+async function getUserProfile(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name, business_stage')
+    .eq('id', userId)
+    .single();
+  return data;
+}
+
+async function loadUserBusinessContext(supabase: any, userId: string): Promise<BusinessContext> {
+  const context: BusinessContext = {};
+
+  // Get latest chat session (launch report)
+  const { data: latestSession } = await supabase
+    .from('chat_sessions')
+    .select('answers, title')
+    .eq('user_id', userId)
+    .eq('is_completed', true)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (latestSession?.answers) {
+    context.businessIdea = latestSession.answers.concept || latestSession.title;
+    context.industry = latestSession.answers.industry;
+    context.stage = latestSession.answers.stage || 'idea';
+    context.goals = latestSession.answers.goals ? [latestSession.answers.goals] : [];
+  }
+
+  // Get recent conversation memories
+  const { data: memories } = await supabase
+    .from('conversation_memory')
+    .select('memory_type, title, content')
+    .eq('user_id', userId)
+    .order('importance_score', { ascending: false })
+    .limit(5);
+
+  if (memories?.length) {
+    context.challenges = memories
+      .filter((m: any) => m.memory_type === 'challenge')
+      .map((m: any) => m.title);
+    context.recentDecisions = memories
+      .filter((m: any) => m.memory_type === 'decision')
+      .map((m: any) => m.title);
+  }
+
+  // Get last 3 daily check-ins
+  const { data: checkIns } = await supabase
+    .from('daily_check_ins')
+    .select('progress_summary, blockers, check_in_date')
+    .eq('user_id', userId)
+    .order('check_in_date', { ascending: false })
+    .limit(3);
+
+  if (checkIns?.length) {
+    context.recentProgress = checkIns[0]?.progress_summary;
+    context.currentBlockers = checkIns
+      .filter((c: any) => c.blockers)
+      .map((c: any) => c.blockers)
+      .join('; ');
+  }
+
+  return context;
+}
+
+function buildSystemPrompt(businessContext: any, marketData: any[], chatMode: string, userProfile: any): string {
   const marketInsights = marketData?.map(d => 
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity detected'}`
   ).join('\n') || '';
 
+  if (chatMode === 'freeform') {
+    // Freeform "Ask Me Anything" mode - context-aware co-pilot
+    return `You are BizMap AI, a personal AI business co-pilot who intimately knows this user's business and journey.
+
+USER PROFILE:
+- Name: ${userProfile?.full_name || 'Entrepreneur'}
+- Business: ${businessContext.businessIdea || 'New venture in planning'}
+- Industry: ${businessContext.industry || 'To be determined'}
+- Stage: ${businessContext.stage || 'Early stage'}
+${businessContext.goals?.length ? `- Goals: ${businessContext.goals.join(', ')}` : ''}
+
+RECENT ACTIVITY & CONTEXT:
+${businessContext.recentProgress ? `Latest Progress: "${businessContext.recentProgress}"` : ''}
+${businessContext.currentBlockers ? `Current Challenges: ${businessContext.currentBlockers}` : ''}
+${businessContext.challenges?.length ? `Known Challenges: ${businessContext.challenges.join(', ')}` : ''}
+${businessContext.recentDecisions?.length ? `Recent Decisions: ${businessContext.recentDecisions.join(', ')}` : ''}
+
+RECENT MARKET INTELLIGENCE:
+${marketInsights}
+
+YOUR ROLE AS AI CO-PILOT:
+- You remember EVERYTHING about their business journey and context
+- Reference their specific business, progress, and challenges naturally in conversation
+- Provide deeply personalized, actionable advice based on their unique situation
+- Ask clarifying questions when you need more context
+- Celebrate their wins and acknowledge challenges empathetically
+- Connect the dots between their past decisions and current situation
+- Think strategically about their long-term business trajectory
+
+CONVERSATION STYLE:
+- Be conversational and supportive, like a trusted business partner
+- Keep responses focused (150-200 words) but thorough
+- Reference specific details from their journey to show you're paying attention
+- Provide practical next steps or specific recommendations
+- Don't repeat basic info they've already told you
+- Be honest about challenges while maintaining optimism
+
+Always relate your advice back to THEIR specific business context and goals.`;
+  }
+
+  // Wizard mode - guided discovery
   return `You are BizMap AI, an expert business planning assistant specialized in helping entrepreneurs validate, plan, and launch their business ideas.
 
 CURRENT USER CONTEXT:
