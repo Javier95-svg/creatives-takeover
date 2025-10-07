@@ -21,6 +21,10 @@ import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { BusinessHealthScore } from './BusinessHealthScore';
+import { MomentumMeter } from './MomentumMeter';
+import { EnhancedStreakVisualization } from './EnhancedStreakVisualization';
+import { QuickWinZone } from './QuickWinZone';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();

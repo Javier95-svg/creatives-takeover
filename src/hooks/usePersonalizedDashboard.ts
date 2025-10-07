@@ -102,11 +102,52 @@ export const usePersonalizedDashboard = () => {
         .eq('is_visible', true)
         .order('position');
 
-      // TODO: Implement proper stats loading (Supabase types causing issues)
-      // For now, using placeholder stats
-      const activeSprints = 0;
-      const completedSessions = 0;
-      const totalCheckIns = 0;
+      // Load real stats
+      const { count: activeSprints } = await supabase
+        .from('sprints')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+      const { count: completedSessions } = await supabase
+        .from('chat_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_completed', true);
+
+      const { count: totalCheckIns } = await supabase
+        .from('daily_check_ins')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Calculate current streak
+      const { data: checkIns } = await supabase
+        .from('daily_check_ins')
+        .select('check_in_date')
+        .eq('user_id', user.id)
+        .order('check_in_date', { ascending: false })
+        .limit(100);
+
+      let currentStreak = 0;
+      if (checkIns && checkIns.length > 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < checkIns.length; i++) {
+          const checkInDate = new Date(checkIns[i].check_in_date);
+          checkInDate.setHours(0, 0, 0, 0);
+          
+          const expectedDate = new Date(today);
+          expectedDate.setDate(today.getDate() - i);
+          expectedDate.setHours(0, 0, 0, 0);
+          
+          if (checkInDate.getTime() === expectedDate.getTime()) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
 
       setData({
         profile: profile as UserProfile,
@@ -115,7 +156,7 @@ export const usePersonalizedDashboard = () => {
         stats: {
           activeSprints: activeSprints ?? 0,
           completedSessions: completedSessions ?? 0,
-          currentStreak: 0, // TODO: Calculate streak
+          currentStreak,
           totalCheckIns: totalCheckIns ?? 0
         }
       });
