@@ -18,6 +18,7 @@ interface BizMapChatProps {
   onWizardComplete: (answers: Record<string, string>) => void;
   currentStep: number;
   answers: Record<string, string>;
+  onChatModeReady?: (switchToFreeform: () => void) => void;
 }
 
 export const BizMapChat = ({ 
@@ -25,7 +26,8 @@ export const BizMapChat = ({
   onStepComplete, 
   onWizardComplete,
   currentStep,
-  answers
+  answers,
+  onChatModeReady
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [celebrationMode, setCelebrationMode] = useState(false);
@@ -89,6 +91,13 @@ export const BizMapChat = ({
       setTimeout(() => setCelebrationMode(false), 3000);
     }
   }, [currentStep]);
+
+  // Expose switchToFreeform to parent
+  useEffect(() => {
+    if (onChatModeReady) {
+      onChatModeReady(switchToFreeform);
+    }
+  }, [switchToFreeform, onChatModeReady]);
 
   const handleSend = () => {
     if (message.trim() && !isTyping && !isStreaming) {

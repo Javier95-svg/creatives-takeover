@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText } from "lucide-react";
+import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
@@ -48,6 +48,7 @@ const BizMapAI = () => {
   const [isRefiningContext, setIsRefiningContext] = useState(false);
   const [launchReport, setLaunchReport] = useState("");
   const [successScore, setSuccessScore] = useState<any>(null);
+  const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -1117,6 +1118,9 @@ Subject: "Quick question about [their pain point]"
                         }}
                         currentStep={currentStep}
                         answers={userAnswers}
+                        onChatModeReady={(switchToFreeform) => {
+                          setSwitchToFreeformFunc(() => switchToFreeform);
+                        }}
                       />
                     </div>
                   </div>
@@ -1248,6 +1252,34 @@ Subject: "Quick question about [their pain point]"
                       <p className="text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3">
                         💡 Pro tip: The PDF version includes professional formatting, charts, and your success score analysis.
                       </p>
+                    </div>
+                    
+                    {/* Switch to Ask Me Anything Mode Button */}
+                    <div className="glass-card border border-accent/20 p-4 sm:p-6 rounded-xl bg-gradient-to-br from-accent/5 via-transparent to-accent/10">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-base sm:text-lg font-semibold mb-2 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-accent" />
+                            Continue Your Journey
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Your launch report is ready! Now switch to Ask Me Anything mode to get personalized advice, refine your strategy, or explore new ideas.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            if (switchToFreeformFunc) {
+                              switchToFreeformFunc();
+                              toast.success("Switched to Ask Me Anything mode! 🎉");
+                            }
+                          }}
+                          className="gap-2 whitespace-nowrap"
+                          size="lg"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          Ask Me Anything
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
