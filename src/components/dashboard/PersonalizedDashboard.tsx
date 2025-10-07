@@ -146,44 +146,15 @@ export const PersonalizedDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Rocket className="h-8 w-8 text-primary" />
-            <Badge variant="secondary">{stats.activeSprints} active</Badge>
-          </div>
-          <h3 className="text-2xl font-bold">{stats.activeSprints}</h3>
-          <p className="text-sm text-muted-foreground">Active Sprints</p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <CheckCircle2 className="h-8 w-8 text-green-500" />
-            <Badge variant="secondary">{stats.completedSessions} done</Badge>
-          </div>
-          <h3 className="text-2xl font-bold">{stats.completedSessions}</h3>
-          <p className="text-sm text-muted-foreground">Sessions Completed</p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <Calendar className="h-8 w-8 text-blue-500" />
-            <Badge variant="secondary">{stats.totalCheckIns} total</Badge>
-          </div>
-          <h3 className="text-2xl font-bold">{stats.totalCheckIns}</h3>
-          <p className="text-sm text-muted-foreground">Check-ins</p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <TrendingUp className="h-8 w-8 text-purple-500" />
-            <Badge variant="secondary">Track progress</Badge>
-          </div>
-          <h3 className="text-2xl font-bold">{profile?.business_stage || 'Idea'}</h3>
-          <p className="text-sm text-muted-foreground">Current Stage</p>
-        </Card>
+      {/* Enhanced Feature Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <BusinessHealthScore userId={user.id} />
+        <MomentumMeter userId={user.id} stats={stats} />
+        <EnhancedStreakVisualization userId={user.id} currentStreak={stats.currentStreak} />
       </div>
+
+      {/* Quick Win Zone */}
+      <QuickWinZone />
 
       {/* Personalized Recommendations */}
       {recommendations.length > 0 && (
