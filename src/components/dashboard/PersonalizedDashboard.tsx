@@ -259,19 +259,19 @@ export const PersonalizedDashboard = () => {
           <Link to="/dream2plan">
             <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
               <Sparkles className="h-6 w-6" />
-              <span>Start Dream2Plan</span>
+              <span>Start Planning</span>
             </Button>
           </Link>
           <Link to="/sprints">
             <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
               <Rocket className="h-6 w-6" />
-              <span>View My Sprints</span>
+              <span>Make a Commitment</span>
             </Button>
           </Link>
-          <Link to="/resources">
+          <Link to="/blog">
             <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
               <Target className="h-6 w-6" />
-              <span>Browse Resources</span>
+              <span>Stay Informed</span>
             </Button>
           </Link>
         </div>
