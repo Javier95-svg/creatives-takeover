@@ -23,6 +23,13 @@ serve(async (req) => {
       throw new Error("user_id is required");
     }
 
+    // Delete old/expired recommendations first
+    await supabase
+      .from("personalized_recommendations")
+      .delete()
+      .eq("user_id", user_id)
+      .or("is_dismissed.eq.true,expires_at.lt." + new Date().toISOString());
+
     // Fetch user context
     const { data: profile } = await supabase
       .from("profiles")
@@ -50,7 +57,16 @@ serve(async (req) => {
       .from("sprints")
       .select("*")
       .eq("user_id", user_id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    // Fetch check-ins
+    const { data: checkIns } = await supabase
+      .from("daily_check_ins")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false })
+      .limit(7);
 
     // Fetch activity
     const { data: activity } = await supabase
@@ -60,22 +76,38 @@ serve(async (req) => {
       .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order("created_at", { ascending: false });
 
+    // Fetch commitments
+    const { data: commitments } = await supabase
+      .from("sprint_commitments")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
     // Generate recommendations based on context
     const recommendations = generateRecommendations({
       profile,
       scores: scores?.[0],
       sessions,
       sprints,
-      activity
+      checkIns,
+      activity,
+      commitments
     });
 
-    // Store recommendations
+    // Store only unique recommendations (limit to top 5)
     const insertResults = [];
-    for (const rec of recommendations) {
+    const uniqueRecs = recommendations.slice(0, 5);
+    
+    for (const rec of uniqueRecs) {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expire in 7 days
+      
       const { data, error } = await supabase
         .from("personalized_recommendations")
         .insert({
           user_id,
+          expires_at: expiresAt.toISOString(),
           ...rec
         })
         .select()
@@ -113,129 +145,191 @@ serve(async (req) => {
 
 function generateRecommendations(context: any): any[] {
   const recs = [];
+  const now = new Date();
   
-  // Onboarding not completed
-  if (!context.profile?.onboarding_completed) {
-    recs.push({
-      recommendation_type: "action",
-      title: "Complete Your Profile",
-      description: "Tell us about your creative journey to get personalized recommendations",
-      priority: 10,
-      reason: "New user onboarding",
-      action_url: "/account",
-      metadata: { category: "onboarding" }
-    });
-  }
-
-  // No active sprint
+  // Get user context
+  const niche = context.profile?.creative_niche || "creative";
+  const stage = context.profile?.business_stage || "idea";
   const hasActiveSprint = context.sprints?.some((s: any) => s.is_active);
-  if (!hasActiveSprint) {
-    recs.push({
-      recommendation_type: "action",
-      title: "Start Your 30-Day Launch Challenge",
-      description: "Turn your idea into reality with our guided sprint system",
-      priority: 9,
-      reason: "No active sprint detected",
-      action_url: "/laboratory",
-      metadata: { category: "sprint" }
-    });
-  }
-
-  // Low score areas
-  if (context.scores) {
-    if (context.scores.market_clarity_score < 60) {
-      recs.push({
-        recommendation_type: "resource",
-        title: "Define Your Target Market",
-        description: "Learn how to identify and validate your ideal customer",
-        priority: 8,
-        reason: `Low market clarity score: ${context.scores.market_clarity_score}/100`,
-        action_url: "/resources",
-        metadata: { category: "market_research", score: context.scores.market_clarity_score }
-      });
-    }
-
-    if (context.scores.solution_strength_score < 60) {
-      recs.push({
-        recommendation_type: "resource",
-        title: "Strengthen Your Solution",
-        description: "Clarify what makes your offering unique and valuable",
-        priority: 7,
-        reason: `Low solution strength: ${context.scores.solution_strength_score}/100`,
-        action_url: "/resources",
-        metadata: { category: "product", score: context.scores.solution_strength_score }
-      });
-    }
-
-    if (context.scores.financial_planning_score < 60) {
-      recs.push({
-        recommendation_type: "resource",
-        title: "Build Your Financial Model",
-        description: "Create a realistic pricing and revenue strategy",
-        priority: 6,
-        reason: `Low financial planning: ${context.scores.financial_planning_score}/100`,
-        action_url: "/resources",
-        metadata: { category: "finance", score: context.scores.financial_planning_score }
-      });
-    }
-  }
-
-  // Incomplete chat session
-  const hasIncompleteSessions = context.sessions?.some((s: any) => !s.is_completed);
-  if (hasIncompleteSessions) {
-    recs.push({
-      recommendation_type: "action",
-      title: "Complete Your Business Blueprint",
-      description: "Finish your Dream2Plan session to get your full analysis",
-      priority: 8,
-      reason: "Incomplete Dream2Plan session found",
-      action_url: "/dream2plan",
-      metadata: { category: "dream2plan" }
-    });
-  }
-
-  // Inactive user
-  const daysSinceActivity = context.activity?.length > 0 
-    ? Math.floor((Date.now() - new Date(context.activity[0].created_at).getTime()) / (1000 * 60 * 60 * 24))
+  const hasSessions = context.sessions && context.sessions.length > 0;
+  const hasCompletedSession = context.sessions?.some((s: any) => s.is_completed);
+  const recentCheckIns = context.checkIns?.filter((c: any) => {
+    const checkInDate = new Date(c.created_at);
+    const daysDiff = (now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff <= 7;
+  }) || [];
+  const hasRecentActivity = context.activity && context.activity.length > 0;
+  const lastActivity = hasRecentActivity ? new Date(context.activity[0].created_at) : null;
+  const daysSinceActivity = lastActivity 
+    ? Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24))
     : 999;
-  
-  if (daysSinceActivity > 3 && context.sprints?.length > 0) {
-    recs.push({
-      recommendation_type: "action",
-      title: "Check In With Your Progress",
-      description: "Daily check-ins keep you accountable and on track",
-      priority: 7,
-      reason: `No activity in ${daysSinceActivity} days`,
-      action_url: "/laboratory",
-      metadata: { category: "check_in", days_inactive: daysSinceActivity }
-    });
-  }
 
-  // No sessions at all - encourage starting
-  if (!context.sessions || context.sessions.length === 0) {
+  // Priority 1: Critical next steps based on user stage
+  if (!hasSessions) {
     recs.push({
       recommendation_type: "action",
-      title: "Start Your Business Blueprint",
-      description: "Answer a few questions to get personalized guidance",
+      title: "🎯 Create Your Business Blueprint",
+      description: `Get AI-powered guidance tailored to ${niche} businesses. Answer strategic questions to uncover your path forward.`,
       priority: 10,
-      reason: "No Dream2Plan sessions yet",
+      reason: "Starting with a clear plan increases success rate by 3x",
       action_url: "/dream2plan",
-      metadata: { category: "dream2plan" }
+      metadata: { category: "dream2plan", stage: "start" }
+    });
+  } else if (!hasCompletedSession && context.sessions?.length > 0) {
+    const lastSession = context.sessions[0];
+    const progress = Math.round((lastSession.current_step / 7) * 100);
+    recs.push({
+      recommendation_type: "action",
+      title: "⚡ Finish Your Blueprint",
+      description: `You're ${progress}% complete! Finish to unlock your personalized success score and action plan.`,
+      priority: 10,
+      reason: "Users who complete their blueprint are 5x more likely to launch",
+      action_url: "/dream2plan",
+      metadata: { category: "dream2plan", progress }
     });
   }
 
-  // Community engagement
-  if (context.sprints?.length > 0) {
+  // Priority 2: Daily momentum & consistency
+  if (hasActiveSprint && recentCheckIns.length === 0) {
+    recs.push({
+      recommendation_type: "action",
+      title: "📅 Log Today's Progress",
+      description: "Daily check-ins keep you on track. Share what you accomplished today and maintain your momentum.",
+      priority: 9,
+      reason: "Consistent check-ins lead to 4x higher completion rates",
+      action_url: "/laboratory",
+      metadata: { category: "check_in", streak_risk: true }
+    });
+  } else if (!hasActiveSprint && hasCompletedSession) {
+    recs.push({
+      recommendation_type: "action",
+      title: "🚀 Start Your 30-Day Launch Sprint",
+      description: `Turn your ${stage} into reality. Break down your goals into daily actions with AI-powered task generation.`,
+      priority: 9,
+      reason: "Sprints help you ship 10x faster than planning alone",
+      action_url: "/laboratory",
+      metadata: { category: "sprint", action: "create" }
+    });
+  }
+
+  // Priority 3: Skill-building based on scores
+  if (context.scores) {
+    const weakAreas = [];
+    
+    if (context.scores.market_clarity_score < 65) {
+      weakAreas.push({
+        area: "market_clarity",
+        score: context.scores.market_clarity_score,
+        title: "🎯 Sharpen Your Target Market",
+        description: `Your market clarity score is ${context.scores.market_clarity_score}/100. Learn to identify and reach your ideal customers in the ${niche} space.`,
+        action_url: "/blog",
+        reason: "Clear market definition = higher conversion rates"
+      });
+    }
+    
+    if (context.scores.solution_strength_score < 65) {
+      weakAreas.push({
+        area: "solution",
+        score: context.scores.solution_strength_score,
+        title: "💡 Differentiate Your Offering",
+        description: `Score: ${context.scores.solution_strength_score}/100. Discover what makes your ${niche} solution uniquely valuable.`,
+        action_url: "/blog",
+        reason: "Strong differentiation = premium pricing power"
+      });
+    }
+    
+    if (context.scores.financial_planning_score < 65) {
+      weakAreas.push({
+        area: "financial",
+        score: context.scores.financial_planning_score,
+        title: "💰 Build Your Revenue Model",
+        description: `Financial planning: ${context.scores.financial_planning_score}/100. Create a realistic pricing strategy that reflects your value.`,
+        action_url: "/blog",
+        reason: "Solid financials = investor & customer confidence"
+      });
+    }
+
+    if (context.scores.execution_feasibility_score < 65) {
+      weakAreas.push({
+        area: "execution",
+        score: context.scores.execution_feasibility_score,
+        title: "⚙️ Plan Your Execution Path",
+        description: `Execution score: ${context.scores.execution_feasibility_score}/100. Break down your vision into achievable milestones.`,
+        action_url: "/laboratory",
+        reason: "Clear execution plan = momentum & progress"
+      });
+    }
+
+    // Sort by lowest score and add the top 2
+    weakAreas.sort((a, b) => a.score - b.score);
+    weakAreas.slice(0, 2).forEach(area => {
+      recs.push({
+        recommendation_type: "resource",
+        title: area.title,
+        description: area.description,
+        priority: 8,
+        reason: area.reason,
+        action_url: area.action_url,
+        metadata: { category: area.area, score: area.score }
+      });
+    });
+  }
+
+  // Priority 4: Community & accountability
+  if (hasActiveSprint && recentCheckIns.length >= 3 && !context.commitments?.length) {
     recs.push({
       recommendation_type: "feature",
-      title: "Find Your Accountability Partner",
-      description: "Connect with fellow creators for mutual support and motivation",
-      priority: 5,
-      reason: "Boost success with accountability",
-      action_url: "/accountability",
-      metadata: { category: "community" }
+      title: "📢 Make a Public Commitment",
+      description: "You're building momentum! Share your sprint goal with the community for extra accountability and support.",
+      priority: 7,
+      reason: "Public commitments increase follow-through by 65%",
+      action_url: "/laboratory",
+      metadata: { category: "commitment" }
+    });
+  } else if (!hasActiveSprint && daysSinceActivity > 5) {
+    recs.push({
+      recommendation_type: "action",
+      title: "🔄 Get Back on Track",
+      description: `It's been ${daysSinceActivity} days since your last activity. Small steps today lead to big wins tomorrow.`,
+      priority: 8,
+      reason: "Consistency matters more than intensity",
+      action_url: "/dashboard",
+      metadata: { category: "re_engagement", days_inactive: daysSinceActivity }
     });
   }
 
-  return recs;
+  // Priority 5: Stay informed
+  if (recs.length < 5) {
+    const insightTopics = [
+      {
+        title: "📰 Latest Industry Insights",
+        description: `Stay ahead with trends, strategies, and success stories from the ${niche} community.`,
+        reason: "Knowledge is competitive advantage"
+      },
+      {
+        title: "🎓 Learn from Successful Creators",
+        description: `Discover how other ${niche} entrepreneurs turned ideas into thriving businesses.`,
+        reason: "Model what works, skip what doesn't"
+      },
+      {
+        title: "🧰 Explore Growth Strategies",
+        description: "Get practical tactics for marketing, monetization, and scaling your creative business.",
+        reason: "Strategy + execution = sustainable growth"
+      }
+    ];
+    
+    const randomInsight = insightTopics[Math.floor(Math.random() * insightTopics.length)];
+    recs.push({
+      recommendation_type: "resource",
+      title: randomInsight.title,
+      description: randomInsight.description,
+      priority: 5,
+      reason: randomInsight.reason,
+      action_url: "/blog",
+      metadata: { category: "education" }
+    });
+  }
+
+  // Sort by priority (highest first) and return top 5 unique
+  return recs.sort((a, b) => b.priority - a.priority).slice(0, 5);
 }
