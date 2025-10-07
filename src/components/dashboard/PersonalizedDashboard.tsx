@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,12 @@ import {
   Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { DailyGoalModal } from './DailyGoalModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const PersonalizedDashboard = () => {
+  const { user } = useAuth();
   const {
     data,
     loading,
@@ -26,9 +30,58 @@ export const PersonalizedDashboard = () => {
     trackActivity
   } = usePersonalizedDashboard();
 
+  const [showDailyGoal, setShowDailyGoal] = useState(false);
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+
+  // Check if user has checked in today and calculate streak
   useEffect(() => {
+    const checkDailyCheckIn = async () => {
+      if (!user) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: todayCheckIn } = await supabase
+        .from('daily_check_ins')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('check_in_date', today)
+        .maybeSingle();
+
+      setHasCheckedInToday(!!todayCheckIn);
+
+      // Calculate streak
+      const { data: recentCheckIns } = await supabase
+        .from('daily_check_ins')
+        .select('check_in_date, streak_count')
+        .eq('user_id', user.id)
+        .order('check_in_date', { ascending: false })
+        .limit(1);
+
+      if (recentCheckIns && recentCheckIns.length > 0) {
+        const lastCheckIn = recentCheckIns[0];
+        const lastDate = new Date(lastCheckIn.check_in_date);
+        const todayDate = new Date(today);
+        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // If checked in yesterday, continue streak, otherwise start from 0
+        if (diffDays === 1 || (diffDays === 0 && lastCheckIn.check_in_date === today)) {
+          setCurrentStreak(lastCheckIn.streak_count || 0);
+        } else {
+          setCurrentStreak(0);
+        }
+      }
+
+      // Show modal if haven't checked in today
+      if (!todayCheckIn) {
+        setShowDailyGoal(true);
+      }
+    };
+
+    checkDailyCheckIn();
     trackActivity('dashboard_view');
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -53,6 +106,16 @@ export const PersonalizedDashboard = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-8">
+      {/* Daily Goal Modal */}
+      <DailyGoalModal 
+        open={showDailyGoal}
+        onOpenChange={setShowDailyGoal}
+        currentStreak={currentStreak}
+        onCheckInComplete={() => {
+          setHasCheckedInToday(true);
+          setCurrentStreak(prev => prev + 1);
+        }}
+      />
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background rounded-2xl p-8">
         <div className="flex items-start justify-between">
