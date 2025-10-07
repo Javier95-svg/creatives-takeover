@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-bg-animated.jpg";
 
 const Hero = () => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20 px-4 sm:px-6">
       {/* Creative Wallpaper Background */}
@@ -60,14 +63,23 @@ const Hero = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex justify-center mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
-            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto max-w-sm sm:max-w-none" aria-label="Create My Plan" asChild>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
+            <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto" aria-label="Create My Plan" asChild>
               <Link to="/dream2plan">
                 <span className="relative z-10">Create My Plan</span>
                 <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
             </Button>
+            
+            {isAuthenticated && (
+              <Button size="lg" variant="outline" className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" aria-label="Go to Dashboard" asChild>
+                <Link to="/dashboard">
+                  <LayoutDashboard className="mr-2 w-4 sm:w-5 h-4 sm:h-5" />
+                  <span>Go to Dashboard</span>
+                </Link>
+              </Button>
+            )}
           </div>
 
           {/* Key Features */}
