@@ -13,12 +13,14 @@ import {
   ArrowRight,
   Flame,
   Calendar,
-  Rocket
+  Rocket,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -27,7 +29,8 @@ export const PersonalizedDashboard = () => {
     loading,
     dismissRecommendation,
     completeRecommendation,
-    trackActivity
+    trackActivity,
+    refreshDashboard
   } = usePersonalizedDashboard();
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
@@ -181,9 +184,24 @@ export const PersonalizedDashboard = () => {
       {/* Personalized Recommendations */}
       {recommendations.length > 0 && (
         <Card className="p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h2 className="text-2xl font-bold">Recommended For You</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-2xl font-bold">Recommended For You</h2>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                trackActivity('recommendations_refresh');
+                toast.info('Refreshing recommendations...');
+                await refreshDashboard();
+                toast.success('Recommendations updated!');
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
 
           <div className="space-y-4">
