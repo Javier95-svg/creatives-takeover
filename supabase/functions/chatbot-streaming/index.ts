@@ -34,8 +34,7 @@ serve(async (req) => {
       userId = null,
       wizardMode = null,
       currentStep = null,
-      chatMode = 'wizard',
-      attachments = []
+      chatMode = 'wizard'
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -90,20 +89,8 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(5);
 
-    // Process attachments if present
-    let attachmentContext = '';
-    if (attachments && attachments.length > 0) {
-      console.log('[CHATBOT-STREAMING] Processing', attachments.length, 'attachments');
-      try {
-        attachmentContext = await processAttachments(attachments, supabase);
-        console.log('[CHATBOT-STREAMING] Attachment context generated:', attachmentContext.substring(0, 200));
-      } catch (error) {
-        console.error('[CHATBOT-STREAMING] Error processing attachments:', error);
-      }
-    }
-
-    // Build system prompt with attachment context
-    const systemPrompt = buildSystemPrompt(businessContext, marketData, wizardMode, currentStep, attachmentContext);
+    // Build system prompt
+    const systemPrompt = buildSystemPrompt(businessContext, marketData, wizardMode, currentStep);
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
@@ -256,7 +243,7 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], wizardMode: any = null, currentStep: number | null = null, attachmentContext: string = ''): string {
+function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], wizardMode: any = null, currentStep: number | null = null): string {
   const marketInsights = marketData?.map(d => 
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity'}`
   ).join('\n') || '';
@@ -372,19 +359,6 @@ ${businessContext.goals?.length ? `Goals: ${businessContext.goals.join(', ')}` :
 RECENT MARKET INTELLIGENCE:
 ${marketInsights || 'No specific market data available yet - will provide general guidance'}
 
-${attachmentContext ? `
-UPLOADED FILES ANALYSIS:
-${attachmentContext}
-
-When responding to files:
-- Reference specific details from uploaded documents
-- For logos/images: Comment on branding, clarity, professional appeal
-- For business plans: Review structure, identify gaps, suggest improvements  
-- For financial data: Analyze assumptions, validate calculations
-- For market data: Extract insights, compare to benchmarks
-- Provide actionable feedback tailored to file content
-` : ''}
-
 CONVERSATION GUIDELINES:
 ✅ DO:
 - Keep responses under 120 words
@@ -417,75 +391,6 @@ MILESTONE CELEBRATIONS:
 - User expresses doubt: Normalize it and share that uncertainty is part of the process
 
 Remember: You're not just gathering information - you're building their confidence to take action.`;
-}
-
-// Process uploaded attachments and return context for AI
-async function processAttachments(attachments: Array<{ storagePath: string; fileName: string; fileType: string; fileSize: number }>, supabase: any): Promise<string> {
-  const contexts: string[] = [];
-  
-  for (const attachment of attachments) {
-    const { storagePath, fileName, fileType, fileSize } = attachment;
-    
-    console.log('[CHATBOT-STREAMING] Processing file:', fileName, 'Type:', fileType);
-    
-    try {
-      // Download file from storage
-      const { data: fileData, error } = await supabase.storage
-        .from('chatbot-attachments')
-        .download(storagePath);
-
-      if (error) {
-        console.error('[CHATBOT-STREAMING] Error downloading file:', error);
-        contexts.push(`❌ Failed to process: ${fileName}`);
-        continue;
-      }
-
-      // Image analysis with AI vision
-      if (fileType.startsWith('image/')) {
-        // Convert blob to base64 for AI vision
-        const arrayBuffer = await fileData.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        const base64Data = `data:${fileType};base64,${base64}`;
-        
-        contexts.push(`📷 Image: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)
-[IMAGE_DATA:${base64Data}]
-- This image will be analyzed by AI vision for business insights
-- Analysis includes: visual elements, text extraction, brand elements, data visualization`);
-      }
-      
-      // PDF processing
-      else if (fileType === 'application/pdf') {
-        contexts.push(`📄 PDF Document: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)
-- Document uploaded for reference
-- Contains structured business information`);
-      }
-      
-      // Spreadsheet processing
-      else if (fileType.includes('spreadsheet') || fileType.includes('excel') || fileName.endsWith('.csv')) {
-        if (fileName.endsWith('.csv')) {
-          const text = await fileData.text();
-          contexts.push(`📊 CSV Data: ${fileName}
-${text.substring(0, 2000)}${text.length > 2000 ? '...(truncated)' : ''}`);
-        } else {
-          contexts.push(`📊 Spreadsheet: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)
-- Data file uploaded for reference`);
-        }
-      }
-      
-      // Text files
-      else if (fileType.startsWith('text/') || fileName.endsWith('.txt') || fileName.endsWith('.md')) {
-        const textContent = await fileData.text();
-        contexts.push(`📝 Text File: ${fileName}
-Content:
-${textContent.substring(0, 2000)}${textContent.length > 2000 ? '...(truncated)' : ''}`);
-      }
-    } catch (error) {
-      console.error('[CHATBOT-STREAMING] Error processing attachment:', error);
-      contexts.push(`❌ Failed to process: ${fileName}`);
-    }
-  }
-  
-  return contexts.join('\n\n');
 }
 
 async function extractBusinessContext(userMessage: string, aiResponse: string, currentContext: BusinessContext): Promise<BusinessContext> {

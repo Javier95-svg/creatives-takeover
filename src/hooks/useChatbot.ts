@@ -4,7 +4,7 @@ import { chatbotFAQ, getContextualFAQ } from '@/data/chatbotFAQ';
 import { FAQItem, FAQUtils } from '@/types/faq';
 import { supabase } from '@/integrations/supabase/client';
 import { useNLU, NLUResult, BusinessIntent, BusinessEntity } from './useNLU';
-import { useStreamingChat } from './useStreamingChat';
+import { streamChat } from './useStreamingChat';
 import { useConversationMemory } from './useConversationMemory';
 import { MEMORY_PATTERNS, detectMood, detectTone, extractTitle } from './useChatbot-memory-helpers';
 // Dynamic FAQ functionality removed - using static FAQs
@@ -51,7 +51,7 @@ export interface BusinessContext {
   businessType?: 'startup' | 'existing' | 'franchise' | 'acquisition';
   stage?: 'idea' | 'planning' | 'launch' | 'growth' | 'expansion';
   location?: string;
-  budget?: number;
+  budget?: string;
   timeline?: string;
   experience?: 'first-time' | 'experienced' | 'serial-entrepreneur';
   goals?: string[];
@@ -342,56 +342,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
 
   const { createMemory } = useConversationMemory();
 
-  // Initialize streaming chat hook
-  const { streamingMessage, isStreaming, streamChat } = useStreamingChat({
-    onMessageComplete: async (message) => {
-      // Update the streaming message with final content
-      setMessages(prev => prev.map(msg => 
-        msg.id === 'streaming' 
-          ? {
-              ...msg,
-              id: generateId(),
-              content: message.content,
-              quickActions: message.quickActions?.map(action => ({
-                text: action,
-                action: action.toLowerCase().replace(/\s+/g, '_')
-              }))
-            }
-          : msg
-      ));
-
-      // Update business context if provided
-      if (message.businessContext) {
-        updateConversationState({
-          businessContext: { ...conversationState.businessContext, ...message.businessContext }
-        });
-      }
-
-      // Extract and store memory from conversation
-      const lastUserMessage = messages[messages.length - 1];
-      if (lastUserMessage?.isBot === false) {
-        await extractAndStoreMemory(lastUserMessage.content, message.content);
-      }
-    },
-    onError: (error) => {
-      console.error('Streaming error:', error);
-      setMessages(prev => prev.filter(msg => msg.id !== 'streaming'));
-      
-      const errorMessage: ChatMessage = {
-        id: generateId(),
-        content: error.includes('Rate limit') 
-          ? "I'm currently experiencing high demand. Please try again in a moment."
-          : "I apologize for the technical issue. Let me try a different approach.",
-        isBot: true,
-        timestamp: new Date(),
-        quickActions: [
-          { text: '🔄 Try Again', action: 'retry_message' },
-          { text: '📞 Contact Support', action: 'contact_support' }
-        ]
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    }
-  });
+  // Streaming state
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
 
   // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
   // These features are planned for future implementation
@@ -1182,28 +1135,6 @@ What specific aspect of your business would you like to focus on first?`;
           const { data: { user } } = await supabase.auth.getUser();
           const userId = user?.id || null;
           
-          // Upload attachments to storage first
-          let uploadedAttachments: Array<{ storagePath: string; fileName: string; fileType: string; fileSize: number }> = [];
-          if (messageAttachments.length > 0 && userId) {
-            const { uploadFile } = await import('./useFileUpload');
-            
-            for (const file of messageAttachments) {
-              try {
-                const storagePath = await uploadFile(file, userId, sessionId);
-                if (storagePath) {
-                  uploadedAttachments.push({
-                    storagePath,
-                    fileName: file.name,
-                    fileType: file.type,
-                    fileSize: file.size,
-                  });
-                }
-              } catch (error) {
-                console.error('Failed to upload attachment:', error);
-              }
-            }
-          }
-          
           // Prepare conversation history
           const conversationHistory = messages.map(msg => ({
             role: msg.isBot ? 'assistant' as const : 'user' as const,
@@ -1234,9 +1165,7 @@ What specific aspect of your business would you like to focus on first?`;
               answers: newAnswers
             },
             wizardStep,
-            chatMode,
-            [],
-            uploadedAttachments
+            chatMode
           );
           
           // Notify parent of step completion
@@ -1267,28 +1196,6 @@ What specific aspect of your business would you like to focus on first?`;
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || null;
 
-      // Upload attachments to storage first
-      let uploadedAttachments: Array<{ storagePath: string; fileName: string; fileType: string; fileSize: number }> = [];
-      if (messageAttachments.length > 0 && userId) {
-        const { uploadFile } = await import('./useFileUpload');
-        
-        for (const file of messageAttachments) {
-          try {
-            const storagePath = await uploadFile(file, userId, sessionId);
-            if (storagePath) {
-              uploadedAttachments.push({
-                storagePath,
-                fileName: file.name,
-                fileType: file.type,
-                fileSize: file.size,
-              });
-            }
-          } catch (error) {
-            console.error('Failed to upload attachment:', error);
-          }
-        }
-      }
-
       // Use streaming if enabled
       if (enableStreaming) {
         // Add placeholder streaming message
@@ -1318,9 +1225,7 @@ What specific aspect of your business would you like to focus on first?`;
             userId,
             config.wizardMode,
             config.wizardMode?.currentStep || wizardStep,
-            chatMode,
-            [],
-            uploadedAttachments
+            chatMode
           );
 
       } else {

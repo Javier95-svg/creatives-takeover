@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, X, FileText, Image as ImageIcon, File } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
-import { useFileUpload } from "@/hooks/useFileUpload";
-import { useToast } from "@/hooks/use-toast";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -127,13 +125,8 @@ export const BizMapChat = ({
   const [celebrationMode, setCelebrationMode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
-  const [fileAttachments, setFileAttachments] = useState<File[]>([]);
-  const [filePreviews, setFilePreviews] = useState<{ [key: string]: string }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const { toast } = useToast();
-  const { createThumbnail } = useFileUpload();
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
@@ -201,14 +194,12 @@ export const BizMapChat = ({
   }, [switchToFreeform, onChatModeReady]);
 
   const handleSend = () => {
-    if ((message.trim() || fileAttachments.length > 0) && !isTyping && !isStreaming) {
-      console.log('💬 Sending message:', message, 'with', fileAttachments.length, 'attachments');
-      sendMessage(message, fileAttachments);
+    if (message.trim() && !isTyping && !isStreaming) {
+      console.log('💬 Sending message:', message);
+      sendMessage(message);
       setMessage("");
-      setFileAttachments([]);
-      setFilePreviews({});
     } else {
-      console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), hasAttachments: fileAttachments.length > 0, isTyping, isStreaming });
+      console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), isTyping, isStreaming });
     }
   };
 
@@ -224,63 +215,6 @@ export const BizMapChat = ({
       return wizardSteps[currentStep].placeholder || "Type your answer here...";
     }
     return "Type your message...";
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    
-    // Validate file count
-    if (fileAttachments.length + files.length > 10) {
-      toast({
-        title: "Too many files",
-        description: "You can upload a maximum of 10 files at once.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file sizes
-    const invalidFiles = files.filter(f => f.size > 20 * 1024 * 1024);
-    if (invalidFiles.length > 0) {
-      toast({
-        title: "File too large",
-        description: `${invalidFiles[0].name} exceeds the 20MB limit.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Generate previews for images
-    const newPreviews: { [key: string]: string } = {};
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        const preview = await createThumbnail(file);
-        newPreviews[file.name] = preview;
-      }
-    }
-
-    setFileAttachments(prev => [...prev, ...files]);
-    setFilePreviews(prev => ({ ...prev, ...newPreviews }));
-    
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const removeFile = (fileName: string) => {
-    setFileAttachments(prev => prev.filter(f => f.name !== fileName));
-    setFilePreviews(prev => {
-      const newPreviews = { ...prev };
-      delete newPreviews[fileName];
-      return newPreviews;
-    });
-  };
-
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <ImageIcon className="h-5 w-5 text-muted-foreground" />;
-    if (fileType === 'application/pdf' || fileType.startsWith('text/')) return <FileText className="h-5 w-5 text-muted-foreground" />;
-    return <File className="h-5 w-5 text-muted-foreground" />;
   };
 
   return (
@@ -408,44 +342,6 @@ export const BizMapChat = ({
           </p>
         )}
         
-        {/* File Attachments Preview */}
-        {fileAttachments.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {fileAttachments.map((file) => (
-              <div
-                key={file.name}
-                className="relative group bg-muted border border-border rounded-lg p-2 flex items-center gap-2 max-w-xs"
-              >
-                {filePreviews[file.name] ? (
-                  <img 
-                    src={filePreviews[file.name]} 
-                    alt={file.name}
-                    className="w-10 h-10 object-cover rounded"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-muted-foreground/10 rounded flex items-center justify-center">
-                    {getFileIcon(file.type)}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(file.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeFile(file.name)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-        
         {/* Share to Community Button - Shows when there are messages */}
         {messages.length > 0 && (
           <div className="mb-3">
@@ -479,24 +375,6 @@ export const BizMapChat = ({
         )}
 
         <div className="flex gap-2 sm:gap-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*,.pdf,.csv,.txt,.md"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isTyping || isStreaming || fileAttachments.length >= 10}
-            className="h-10 w-10 sm:h-11 sm:w-11"
-            title="Attach files"
-          >
-            <Paperclip className="h-4 w-4 sm:h-5 sm:h-5" />
-          </Button>
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -507,7 +385,7 @@ export const BizMapChat = ({
           />
           <Button 
             onClick={handleSend}
-            disabled={(!message.trim() && fileAttachments.length === 0) || isTyping || isStreaming}
+            disabled={!message.trim() || isTyping || isStreaming}
             size="icon"
             className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
@@ -525,9 +403,9 @@ export const BizMapChat = ({
         <ShareToCommunityDialog
           open={showShareDialog}
           onOpenChange={setShowShareDialog}
-          conversationId={shareData.conversationId}
-          reportType="conversation"
           reportData={shareData.reportData}
+          reportType="business_plan"
+          conversationId={shareData.conversationId}
           defaultTitle={shareData.defaultTitle}
           defaultContent={shareData.defaultContent}
         />
