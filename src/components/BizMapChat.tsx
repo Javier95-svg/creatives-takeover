@@ -201,12 +201,14 @@ export const BizMapChat = ({
   }, [switchToFreeform, onChatModeReady]);
 
   const handleSend = () => {
-    if (message.trim() && !isTyping && !isStreaming) {
-      console.log('💬 Sending message:', message);
-      sendMessage(message);
+    if ((message.trim() || fileAttachments.length > 0) && !isTyping && !isStreaming) {
+      console.log('💬 Sending message:', message, 'with', fileAttachments.length, 'attachments');
+      sendMessage(message, fileAttachments);
       setMessage("");
+      setFileAttachments([]);
+      setFilePreviews({});
     } else {
-      console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), isTyping, isStreaming });
+      console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), hasAttachments: fileAttachments.length > 0, isTyping, isStreaming });
     }
   };
 
@@ -222,6 +224,63 @@ export const BizMapChat = ({
       return wizardSteps[currentStep].placeholder || "Type your answer here...";
     }
     return "Type your message...";
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Validate file count
+    if (fileAttachments.length + files.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "You can upload a maximum of 10 files at once.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file sizes
+    const invalidFiles = files.filter(f => f.size > 20 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "File too large",
+        description: `${invalidFiles[0].name} exceeds the 20MB limit.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Generate previews for images
+    const newPreviews: { [key: string]: string } = {};
+    for (const file of files) {
+      if (file.type.startsWith('image/')) {
+        const preview = await createThumbnail(file);
+        newPreviews[file.name] = preview;
+      }
+    }
+
+    setFileAttachments(prev => [...prev, ...files]);
+    setFilePreviews(prev => ({ ...prev, ...newPreviews }));
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (fileName: string) => {
+    setFileAttachments(prev => prev.filter(f => f.name !== fileName));
+    setFilePreviews(prev => {
+      const newPreviews = { ...prev };
+      delete newPreviews[fileName];
+      return newPreviews;
+    });
+  };
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return <ImageIcon className="h-5 w-5 text-muted-foreground" />;
+    if (fileType === 'application/pdf' || fileType.startsWith('text/')) return <FileText className="h-5 w-5 text-muted-foreground" />;
+    return <File className="h-5 w-5 text-muted-foreground" />;
   };
 
   return (
