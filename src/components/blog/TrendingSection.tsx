@@ -136,7 +136,7 @@ const TrendingSection = ({
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 mb-3">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-              <h2 className="text-4xl md:text-5xl font-bold gradient-text">Latest Opportunities</h2>
+              <h2 className="text-4xl md:text-5xl font-bold gradient-text">Latest Trends</h2>
             </div>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               {isGenerating ? 'AI is discovering new business opportunities...' : 'AI-powered insights updated daily'}
@@ -188,9 +188,9 @@ const TrendingSection = ({
         </svg>
         
         <div className="container mx-auto px-4 text-center relative z-10 max-w-7xl">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Latest Opportunities</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Latest Trends</h2>
           <p className="text-muted-foreground mb-6">
-            Unable to load opportunities at the moment. Please try again.
+            Unable to load trends at the moment. Please try again.
           </p>
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -233,7 +233,7 @@ const TrendingSection = ({
           <div className="inline-flex items-center gap-2 mb-3">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold gradient-text">
-              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Opportunities'}
+              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Trends'}
             </h2>
           </div>
           <p className="text-muted-foreground text-lg md:text-xl">
