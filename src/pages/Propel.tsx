@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -6,26 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Rocket, 
-  TrendingUp, 
-  DollarSign, 
-  MapPin, 
-  Calendar, 
-  Search,
-  ExternalLink,
-  Clock,
-  Building2,
-  Award,
-  Sparkles
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Star, Rocket, TrendingUp, DollarSign, MapPin, Calendar, Search, ExternalLink, Clock, Building2, Award, Sparkles } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from '@/integrations/supabase/client';
+import FeaturedStartupCard from '@/components/propel/FeaturedStartupCard';
+import { useJourneyProgress } from '@/hooks/useJourneyProgress';
 
 interface Opportunity {
   id: string;
@@ -48,435 +33,357 @@ const opportunities: Opportunity[] = [
     type: 'accelerator',
     region: 'Global',
     industry: 'All Industries',
-    fundingRange: '$500,000',
-    deadline: 'Rolling Applications',
+    fundingRange: '$500k',
+    deadline: 'Rolling',
     featured: true,
     applyUrl: 'https://www.ycombinator.com/apply'
   },
   {
     id: '2',
-    name: 'TechStars',
-    description: 'Global startup accelerator with programs in multiple cities. Offers $120k investment and extensive mentor network.',
+    name: 'Techstars',
+    description: 'Another top-tier accelerator program. Offers $120k and intensive mentorship over a 3-month program.',
     type: 'accelerator',
     region: 'Global',
-    industry: 'Technology',
-    fundingRange: '$120,000',
-    deadline: 'Quarterly Deadlines',
+    industry: 'All Industries',
+    fundingRange: '$120k',
+    deadline: 'Rolling',
     featured: true,
-    applyUrl: 'https://www.techstars.com/apply'
+    applyUrl: 'https://www.techstars.com/accelerators/'
   },
   {
     id: '3',
-    name: 'SBIR/STTR Programs',
-    description: 'US government grants for R&D innovation. Non-dilutive funding for tech-based businesses.',
-    type: 'grant',
-    region: 'USA',
-    industry: 'Technology, R&D',
-    fundingRange: '$50k - $1.5M',
-    deadline: 'Multiple Yearly',
-    featured: true,
-    applyUrl: 'https://www.sbir.gov/'
+    name: '500 Startups',
+    description: 'Global venture capital firm and startup accelerator. Provides seed funding, mentorship, and access to a global network.',
+    type: 'accelerator',
+    region: 'Global',
+    industry: 'All Industries',
+    fundingRange: '$150k',
+    deadline: 'Rolling',
+    featured: false,
+    applyUrl: 'https://www.500.co/'
   },
   {
     id: '4',
-    name: 'Google for Startups',
-    description: 'Google\'s accelerator program focusing on AI/ML startups with mentorship and cloud credits.',
-    type: 'accelerator',
-    region: 'Global',
-    industry: 'AI/ML, Technology',
-    fundingRange: 'Cloud Credits + Mentorship',
-    deadline: 'Biannual Applications',
-    featured: false,
-    applyUrl: 'https://startup.google.com/'
+    name: 'National Science Foundation SBIR',
+    description: 'Offers grants to small businesses conducting research and development work that has the potential for commercialization.',
+    type: 'grant',
+    region: 'US',
+    industry: 'Science & Technology',
+    fundingRange: '$256k',
+    deadline: 'Varies',
+    featured: true,
+    applyUrl: 'https://seedfund.nsf.gov/'
   },
   {
     id: '5',
-    name: 'Indie Hackers Pitch',
-    description: 'Monthly pitch competition for bootstrapped startups. Winner gets $1,000 and community exposure.',
-    type: 'competition',
-    region: 'Global',
+    name: 'Small Business Innovation Research (SBIR)',
+    description: 'A highly competitive program that encourages domestic small businesses to engage in Federal Research/Research and Development (R/R&D) with the potential for commercialization.',
+    type: 'grant',
+    region: 'US',
     industry: 'All Industries',
-    fundingRange: '$1,000',
-    deadline: 'Monthly',
+    fundingRange: '$50k - $250k',
+    deadline: 'Varies',
     featured: false,
-    applyUrl: 'https://www.indiehackers.com/'
+    applyUrl: 'https://www.sbir.gov/'
   },
   {
     id: '6',
-    name: 'MassChallenge',
-    description: 'Zero-equity accelerator offering cash prizes and mentorship to high-impact startups.',
-    type: 'accelerator',
-    region: 'USA, Europe',
+    name: 'AngelList',
+    description: 'Connect with angel investors and venture capitalists. Raise funding for your startup through syndicates and rolling funds.',
+    type: 'equity',
+    region: 'Global',
     industry: 'All Industries',
-    fundingRange: 'Up to $1M Prizes',
-    deadline: 'Spring/Fall',
-    featured: true,
-    applyUrl: 'https://masschallenge.org/'
+    fundingRange: 'Varies',
+    deadline: 'Ongoing',
+    featured: false,
+    applyUrl: 'https://angel.co/'
   },
   {
     id: '7',
-    name: 'Creative Destruction Lab',
-    description: 'Science-based accelerator for massively scalable tech ventures.',
-    type: 'accelerator',
-    region: 'North America',
-    industry: 'Deep Tech, AI',
-    fundingRange: 'Mentorship + Network',
-    deadline: 'Annual',
+    name: 'SeedInvest',
+    description: 'Online platform for investing in startups. Raise capital from accredited and non-accredited investors.',
+    type: 'equity',
+    region: 'US',
+    industry: 'All Industries',
+    fundingRange: 'Varies',
+    deadline: 'Ongoing',
     featured: false,
-    applyUrl: 'https://creativedestructionlab.com/'
+    applyUrl: 'https://www.seedinvest.com/'
   },
   {
     id: '8',
-    name: 'Founder Institute',
-    description: 'Pre-seed accelerator helping solo founders build their startup from idea stage.',
+    name: 'MassChallenge',
+    description: 'Startup accelerator program with no equity taken. Provides mentorship, resources, and access to a global network.',
     type: 'accelerator',
     region: 'Global',
     industry: 'All Industries',
-    fundingRange: '$50k - $100k',
-    deadline: 'Rolling',
+    fundingRange: 'N/A',
+    deadline: 'Varies',
     featured: false,
-    applyUrl: 'https://fi.co/'
-  }
+    applyUrl: 'https://masschallenge.org/'
+  },
+  {
+    id: '9',
+    name: 'Startup World Cup',
+    description: 'A global startup competition that brings together startups, investors, and ecosystem leaders from around the world.',
+    type: 'competition',
+    region: 'Global',
+    industry: 'All Industries',
+    fundingRange: '$1M',
+    deadline: 'Varies',
+    featured: true,
+    applyUrl: 'https://startupworldcup.com/'
+  },
+  {
+    id: '10',
+    name: 'Clarity Prize',
+    description: 'Annual competition awarding funding to the most promising social ventures addressing global challenges.',
+    type: 'competition',
+    region: 'Global',
+    industry: 'Social Impact',
+    fundingRange: '$50k',
+    deadline: 'Varies',
+    featured: false,
+    applyUrl: 'https://www.studentcompetitions.com/competitions/clarity-prize'
+  },
 ];
 
 const Propel = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [regionFilter, setRegionFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [industryFilter, setIndustryFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [regionFilter, setRegionFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [industryFilter, setIndustryFilter] = useState("all");
+  const [featuredPosts, setFeaturedPosts] = useState<any[]>([]);
+  const { updateProgress } = useJourneyProgress();
 
-  const featuredOpportunities = opportunities.filter(opp => opp.featured);
+  useEffect(() => {
+    updateProgress('propel_viewed', true);
+    fetchFeaturedPosts();
+  }, []);
 
-  const filteredOpportunities = opportunities.filter(opp => {
-    const matchesSearch = opp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         opp.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRegion = regionFilter === 'all' || opp.region.includes(regionFilter);
-    const matchesType = typeFilter === 'all' || opp.type === typeFilter;
-    const matchesIndustry = industryFilter === 'all' || opp.industry.toLowerCase().includes(industryFilter.toLowerCase());
+  const fetchFeaturedPosts = async () => {
+    const { data } = await supabase
+      .from('community_posts')
+      .select('*')
+      .eq('featured_on_propel', true)
+      .limit(6);
     
-    return matchesSearch && matchesRegion && matchesType && matchesIndustry;
+    if (data) setFeaturedPosts(data);
+  };
+
+  const filteredOpportunities = opportunities.filter(opportunity => {
+    const searchMatch = opportunity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        opportunity.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const regionMatch = regionFilter === "all" || opportunity.region === regionFilter;
+    const typeMatch = typeFilter === "all" || opportunity.type === typeFilter;
+    const industryMatch = industryFilter === "all" || opportunity.industry === industryFilter;
+
+    return searchMatch && regionMatch && typeMatch && industryMatch;
   });
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'grant': return 'bg-green-500/10 text-green-600 border-green-500/20';
       case 'equity': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-      case 'competition': return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
-      case 'accelerator': return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
-      default: return 'bg-muted text-muted-foreground';
+      case 'competition': return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+      case 'accelerator': return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
+      default: return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Helmet>
-        <title>Propel - Find Investment Opportunities | BizMap AI</title>
-        <meta name="description" content="Discover startup contests, accelerator programs, funding opportunities, and investor networks to take your business to the next level." />
+        <title>Propel - Investment Opportunities | Creatives Takeover</title>
+        <meta name="description" content="Discover funding opportunities, accelerators, and competitions to propel your startup forward." />
+        <meta property="og:title" content="Propel - Investment Opportunities | Creatives Takeover" />
+        <meta property="og:description" content="Find the right funding and support to take your business to the next level." />
+        <meta property="og:image" content="/og-propel.png" />
+        <meta property="og:url" content="https://creativestakeover.com/propel" />
       </Helmet>
-      
-      <Navigation />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-background via-card to-muted py-20 md:py-32">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+      <div className="min-h-screen bg-background">
+        <Navigation />
         
-        <div className="container relative z-10 mx-auto px-4 lg:px-6">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-              <Rocket className="w-4 h-4" />
-              <span className="text-sm font-medium">Your Path to Funding</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 takeover-gradient creatives-font">
-              Find Your Next Investment Opportunity
+        <main className="container mx-auto px-4 py-16">
+          {/* Hero Section */}
+          <section className="text-center mb-16">
+            <h1 className="text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-3">
+              <Rocket className="w-10 h-10 text-primary" />
+              Propel Your Startup
             </h1>
-            
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
-              Discover startup contests, funding programs, and investor networks that can help your idea take off.
-              From accelerators to pitch competitions, find the perfect opportunity to propel your business forward.
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+              Unlock funding opportunities, connect with accelerators, and compete for prizes to take your business to new heights.
             </p>
-            
-            <Button 
-              size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
-              onClick={() => document.getElementById('opportunities')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Explore Opportunities
-              <TrendingUp className="ml-2 w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Opportunities */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4 lg:px-6">
-          <div className="text-center mb-12">
-            <Badge variant="outline" className="mb-4">
-              <Sparkles className="w-3 h-3 mr-1" />
-              Featured
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Top Opportunities Right Now
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Hand-picked programs with proven track records of helping startups succeed
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredOpportunities.map((opp) => (
-              <Card key={opp.id} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                        {opp.name}
-                      </h3>
-                      <Badge className={getTypeColor(opp.type)}>
-                        {opp.type.charAt(0).toUpperCase() + opp.type.slice(1)}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <p className="text-muted-foreground mb-4 line-clamp-3">
-                    {opp.description}
+          </section>
+          
+          {/* Featured Community Projects */}
+          {featuredPosts.length > 0 && (
+            <section className="mb-16">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                    <Star className="w-8 h-8 text-amber-500" />
+                    Investment-Ready Projects from Our Community
+                  </h2>
+                  <p className="text-muted-foreground mt-2">
+                    Validated business plans from fellow entrepreneurs
                   </p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <DollarSign className="w-4 h-4 mr-2 text-green-600" />
-                      <span>{opp.fundingRange}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-2 text-blue-600" />
-                      <span>{opp.region}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4 mr-2 text-purple-600" />
-                      <span>{opp.deadline}</span>
-                    </div>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredPosts.map((post) => (
+                  <FeaturedStartupCard key={post.id} post={post} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Featured Opportunities */}
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                  <TrendingUp className="w-8 h-8 text-green-500" />
+                  Featured Opportunities
+                </h2>
+                <p className="text-muted-foreground mt-2">
+                  Hand-picked programs and funding sources to accelerate your growth
+                </p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredOpportunities.filter(o => o.featured).map(opportunity => (
+                <Card key={opportunity.id} className="p-6 hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
+                  <div className="flex items-start justify-between mb-4">
+                    <Badge className={getTypeColor(opportunity.type)}>
+                      {opportunity.type}
+                    </Badge>
                   </div>
-                  
-                  <Button 
-                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                    variant="outline"
-                    asChild
-                  >
-                    <a href={opp.applyUrl} target="_blank" rel="noopener noreferrer">
+                  <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">
+                    {opportunity.name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                    {opportunity.description}
+                  </p>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                    <DollarSign className="w-4 h-4" />
+                    <span>{opportunity.fundingRange}</span>
+                    <MapPin className="w-4 h-4" />
+                    <span>{opportunity.region}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>Deadline: {opportunity.deadline}</span>
+                  </div>
+                  <Button asChild variant="default" className="mt-4 w-full gap-2">
+                    <a href={opportunity.applyUrl} target="_blank" rel="noopener noreferrer">
                       Apply Now
-                      <ExternalLink className="ml-2 w-4 h-4" />
+                      <ExternalLink className="w-4 h-4" />
                     </a>
                   </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Investment Programs Directory */}
-      <section id="opportunities" className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4 lg:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Investment Programs Directory
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Browse and filter through all available opportunities to find the perfect match for your startup
-            </p>
-          </div>
-
-          {/* Filters */}
-          <Card className="p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search opportunities..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Region" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  <SelectItem value="Global">Global</SelectItem>
-                  <SelectItem value="USA">USA</SelectItem>
-                  <SelectItem value="Europe">Europe</SelectItem>
-                  <SelectItem value="North America">North America</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="grant">Grant</SelectItem>
-                  <SelectItem value="equity">Equity</SelectItem>
-                  <SelectItem value="competition">Competition</SelectItem>
-                  <SelectItem value="accelerator">Accelerator</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Industries</SelectItem>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="ai">AI/ML</SelectItem>
-                  <SelectItem value="deep tech">Deep Tech</SelectItem>
-                  <SelectItem value="all industries">All Industries</SelectItem>
-                </SelectContent>
-              </Select>
+                </Card>
+              ))}
             </div>
-          </Card>
+          </section>
 
-          {/* Opportunities List */}
-          <div className="space-y-4">
-            {filteredOpportunities.map((opp) => (
-              <Card key={opp.id} className="hover:shadow-md transition-shadow">
-                <div className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold mb-1">{opp.name}</h3>
-                          <p className="text-muted-foreground">{opp.description}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-3">
-                        <Badge className={getTypeColor(opp.type)}>
-                          {opp.type.charAt(0).toUpperCase() + opp.type.slice(1)}
-                        </Badge>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <DollarSign className="w-4 h-4 mr-1" />
-                          {opp.fundingRange}
-                        </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {opp.region}
-                        </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {opp.deadline}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <Button asChild>
-                      <a href={opp.applyUrl} target="_blank" rel="noopener noreferrer">
-                        Apply Now
-                        <ExternalLink className="ml-2 w-4 h-4" />
-                      </a>
-                    </Button>
+          {/* Opportunity Directory */}
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                  <Building2 className="w-8 h-8 text-blue-500" />
+                  All Opportunities
+                </h2>
+                <p className="text-muted-foreground mt-2">
+                  Explore a comprehensive directory of funding and support programs
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="max-w-xs">
+                  <Input
+                    type="search"
+                    placeholder="Search opportunities..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                  />
+                </div>
+                <Select onValueChange={setRegionFilter} defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Regions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Regions</SelectItem>
+                    <SelectItem value="Global">Global</SelectItem>
+                    <SelectItem value="US">United States</SelectItem>
+                    {/* Add more regions as needed */}
+                  </SelectContent>
+                </Select>
+                <Select onValueChange={setTypeFilter} defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="grant">Grants</SelectItem>
+                    <SelectItem value="equity">Equity</SelectItem>
+                    <SelectItem value="competition">Competitions</SelectItem>
+                    <SelectItem value="accelerator">Accelerators</SelectItem>
+                  </SelectContent>
+                </Select>
+                 <Select onValueChange={setIndustryFilter} defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Industries" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Industries</SelectItem>
+                    <SelectItem value="Science & Technology">Science & Technology</SelectItem>
+                    <SelectItem value="Social Impact">Social Impact</SelectItem>
+                    {/* Add more industries as needed */}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredOpportunities.map(opportunity => (
+                <Card key={opportunity.id} className="p-6 hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
+                  <div className="flex items-start justify-between mb-4">
+                    <Badge className={getTypeColor(opportunity.type)}>
+                      {opportunity.type}
+                    </Badge>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {filteredOpportunities.length === 0 && (
-            <Card className="p-12 text-center">
-              <div className="text-muted-foreground">
-                <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">No opportunities match your filters. Try adjusting your search criteria.</p>
-              </div>
-            </Card>
-          )}
-        </div>
-      </section>
-
-      {/* Investor Discovery Coming Soon */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4 lg:px-6">
-          <Card className="relative overflow-hidden border-2 border-dashed border-primary/50">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
-            <div className="relative p-12 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-                <Award className="w-8 h-8 text-primary" />
-              </div>
-              
-              <Badge variant="outline" className="mb-4">
-                <Clock className="w-3 h-3 mr-1" />
-                Coming Soon
-              </Badge>
-              
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Angel Investor Directory
-              </h2>
-              
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-                Soon, you'll be able to connect directly with verified angel investors and venture partners 
-                inside Creatives Takeover. Get one-on-one introductions, pitch your project, and secure funding 
-                without leaving the platform.
-              </p>
-              
-              <Button size="lg" variant="outline" disabled>
-                Notify Me When Available
-              </Button>
+                  <h3 className="text-xl font-bold text-foreground mb-2 line-clamp-2">
+                    {opportunity.name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                    {opportunity.description}
+                  </p>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                    <DollarSign className="w-4 h-4" />
+                    <span>{opportunity.fundingRange}</span>
+                    <MapPin className="w-4 h-4" />
+                    <span>{opportunity.region}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>Deadline: {opportunity.deadline}</span>
+                  </div>
+                  <Button asChild variant="default" className="mt-4 w-full gap-2">
+                    <a href={opportunity.applyUrl} target="_blank" rel="noopener noreferrer">
+                      Apply Now
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </Button>
+                </Card>
+              ))}
             </div>
-          </Card>
-        </div>
-      </section>
+          </section>
+        </main>
 
-      {/* Community Spotlight */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4 lg:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              From Community to Funding
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Polish your business plan with community feedback before applying to these opportunities
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="p-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💡</span>
-              </div>
-              <h3 className="text-xl font-bold mb-3">Refine Your Plan</h3>
-              <p className="text-muted-foreground mb-4">
-                Share your business plan in the Community tab and get valuable feedback from experienced entrepreneurs
-              </p>
-              <Button variant="outline" asChild>
-                <a href="/community">Visit Community</a>
-              </Button>
-            </Card>
-
-            <Card className="p-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🚀</span>
-              </div>
-              <h3 className="text-xl font-bold mb-3">Build with BizMap AI</h3>
-              <p className="text-muted-foreground mb-4">
-                Use our AI-powered tools to create a comprehensive business plan that's ready for investor review
-              </p>
-              <Button variant="outline" asChild>
-                <a href="/dream2plan">Try BizMap AI</a>
-              </Button>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 };
 

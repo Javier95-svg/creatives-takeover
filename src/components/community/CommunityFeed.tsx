@@ -4,9 +4,11 @@ import PostCard, { Post } from "./PostCard";
 import { ChatbotReportCard } from "./ChatbotReportCard";
 import AdvancedFilters from "./AdvancedFilters";
 import CommunityInsights from "./CommunityInsights";
+import FeedbackRequestBanner from "./FeedbackRequestBanner";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +25,7 @@ const CommunityFeed: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [postType, setPostType] = useState("all");
   const [engagement, setEngagement] = useState("all");
+  const [feedbackFilter, setFeedbackFilter] = useState(false);
 
   // Fetch posts from database
   const fetchPosts = async () => {
@@ -187,6 +190,11 @@ const CommunityFeed: React.FC = () => {
     
     // Tag filtering
     if (selectedTag) list = list.filter((p) => p.tags.includes(selectedTag));
+    
+    // Feedback filter
+    if (feedbackFilter) {
+      list = list.filter(p => p.feedbackRequested && p.feedbackRequested === true);
+    }
     
     // Post type filtering
     if (postType !== "all") {
@@ -363,6 +371,9 @@ const CommunityFeed: React.FC = () => {
 
           {/* Post Composer */}
           <PostComposer onPublish={publish} requireAuth={true} />
+
+          {/* Feedback Request Banner */}
+          <FeedbackRequestBanner onFilterFeedback={() => setFeedbackFilter(true)} />
 
           {/* Results Summary */}
           {search && (
