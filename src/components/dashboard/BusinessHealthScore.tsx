@@ -24,7 +24,7 @@ export const BusinessHealthScore = ({ userId }: BusinessHealthScoreProps) => {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (data) {
       const chartData = [
