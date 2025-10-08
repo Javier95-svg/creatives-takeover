@@ -7,14 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Sparkles, 
   Target, 
-  TrendingUp, 
-  CheckCircle2, 
-  X,
-  ArrowRight,
   Flame,
-  Calendar,
-  Rocket,
-  RefreshCw
+  Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DailyGoalModal } from './DailyGoalModal';
@@ -31,10 +25,7 @@ export const PersonalizedDashboard = () => {
   const {
     data,
     loading,
-    dismissRecommendation,
-    completeRecommendation,
-    trackActivity,
-    refreshDashboard
+    trackActivity
   } = usePersonalizedDashboard();
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
@@ -105,7 +96,7 @@ export const PersonalizedDashboard = () => {
     );
   }
 
-  const { profile, recommendations, stats } = data;
+  const { profile, stats } = data;
 
   // Determine greeting based on time
   const hour = new Date().getHours();
@@ -155,95 +146,6 @@ export const PersonalizedDashboard = () => {
 
       {/* Quick Win Zone */}
       <QuickWinZone />
-
-      {/* Personalized Recommendations */}
-      {recommendations.length > 0 && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-2xl font-bold">Recommended For You</h2>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                trackActivity('recommendations_refresh');
-                toast.info('Refreshing recommendations...');
-                await refreshDashboard();
-                toast.success('Recommendations updated!');
-              }}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {recommendations.map((rec) => (
-              <div
-                key={rec.id}
-                className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="mt-1">
-                  {rec.recommendation_type === 'action' && (
-                    <Target className="h-5 w-5 text-primary" />
-                  )}
-                  {rec.recommendation_type === 'resource' && (
-                    <Sparkles className="h-5 w-5 text-purple-500" />
-                  )}
-                  {rec.recommendation_type === 'feature' && (
-                    <TrendingUp className="h-5 w-5 text-blue-500" />
-                  )}
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-lg">{rec.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{rec.description}</p>
-                      {rec.reason && (
-                        <p className="text-xs text-muted-foreground mt-2 italic">
-                          Why: {rec.reason}
-                        </p>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="ml-4">
-                      Priority {rec.priority}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-4">
-                    <Link to={rec.action_url}>
-                      <Button 
-                        size="sm"
-                        onClick={() => trackActivity('recommendation_clicked', { recommendation_id: rec.id })}
-                      >
-                        Take Action
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </Link>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => completeRecommendation(rec.id)}
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => dismissRecommendation(rec.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
       {/* Quick Actions */}
       <Card className="p-6">
