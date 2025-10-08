@@ -32,6 +32,7 @@ import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
+import Propel from "./pages/Propel";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import CollaborationDemo from "./pages/CollaborationDemo";
 // import InteractiveCollaborationDemo from "./pages/InteractiveCollaborationDemo";
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/careers" element={<Careers />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/prompt-library" element={<PromptLibrary />} />
+            <Route path="/propel" element={<Propel />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
