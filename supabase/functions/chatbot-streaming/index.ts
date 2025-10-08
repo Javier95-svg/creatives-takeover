@@ -487,11 +487,6 @@ ${textContent.substring(0, 2000)}${textContent.length > 2000 ? '...(truncated)' 
   
   return contexts.join('\n\n');
 }
-      context += `\n- ⚠️ Could not process file: ${attachment.name}`;
-  }
-  
-  return context;
-}
 
 async function extractBusinessContext(userMessage: string, aiResponse: string, currentContext: BusinessContext): Promise<BusinessContext> {
   const message = userMessage.toLowerCase();
