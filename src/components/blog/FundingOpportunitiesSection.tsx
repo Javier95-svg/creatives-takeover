@@ -29,13 +29,36 @@ const FundingOpportunitiesSection = () => {
 
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/20">
-      <div className="container mx-auto max-w-7xl">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-            Discover Funding Opportunities
-          </h2>
-          <p className="text-muted-foreground">
+    <section className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/20">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+      
+      {/* Floating Elements */}
+      <div className="absolute top-20 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" />
+      <div className="absolute top-40 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-20 right-10 w-10 h-10 bg-gradient-to-r from-primary/12 to-secondary/12 rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '2s' }} />
+      
+      {/* Decorative Wave */}
+      <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
+        <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#fundingWaveGradient)" />
+        <defs>
+          <linearGradient id="fundingWaveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="hsl(var(--secondary))" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
+      </svg>
+      
+      <div className="container mx-auto max-w-7xl relative z-10">
+        <div className="text-center mb-12 animate-slide-up">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Discover Funding Opportunities
+            </h2>
+          </div>
+          <p className="text-muted-foreground text-lg">
             Investment contests, accelerator programs, and funding opportunities for your refined business plan
           </p>
         </div>
