@@ -1,5 +1,20 @@
 import { useState, useCallback, useRef } from 'react';
 
+// Helper to convert File to base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      // Remove data URL prefix
+      const base64Data = base64.split(',')[1];
+      resolve(base64Data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 interface StreamMessage {
   content: string;
   isComplete: boolean;
@@ -27,7 +42,8 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
     userId: string | null = null,
     wizardMode: any = null,
     currentStep: number | null = null,
-    chatMode: 'wizard' | 'freeform' = 'wizard'
+    chatMode: 'wizard' | 'freeform' = 'wizard',
+    attachments: File[] = []
   ) => {
     // Cancel any existing stream
     if (abortControllerRef.current) {
@@ -47,8 +63,22 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
         messageLength: message.length,
         wizardMode: wizardMode?.enabled,
         currentStep,
+        attachmentCount: attachments.length,
         url: CHAT_URL 
       });
+
+      // Prepare attachments data
+      const attachmentData = await Promise.all(
+        attachments.map(async (file) => {
+          const base64 = await fileToBase64(file);
+          return {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: base64,
+          };
+        })
+      );
 
       const response = await fetch(CHAT_URL, {
         method: 'POST',
@@ -65,6 +95,7 @@ export const useStreamingChat = ({ onMessageComplete, onError }: UseStreamingCha
           wizardMode,
           currentStep,
           chatMode,
+          attachments: attachmentData,
         }),
         signal: abortControllerRef.current.signal,
       });

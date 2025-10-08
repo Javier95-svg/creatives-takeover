@@ -34,7 +34,8 @@ serve(async (req) => {
       userId = null,
       wizardMode = null,
       currentStep = null,
-      chatMode = 'wizard'
+      chatMode = 'wizard',
+      attachments = []
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -89,8 +90,14 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(5);
 
-    // Build system prompt
-    const systemPrompt = buildSystemPrompt(businessContext, marketData, wizardMode, currentStep);
+    // Process attachments if present
+    let attachmentContext = '';
+    if (attachments && attachments.length > 0) {
+      attachmentContext = await processAttachments(attachments, supabase);
+    }
+
+    // Build system prompt with attachment context
+    const systemPrompt = buildSystemPrompt(businessContext, marketData, wizardMode, currentStep, attachmentContext);
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
@@ -243,7 +250,7 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], wizardMode: any = null, currentStep: number | null = null): string {
+function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], wizardMode: any = null, currentStep: number | null = null, attachmentContext: string = ''): string {
   const marketInsights = marketData?.map(d => 
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity'}`
   ).join('\n') || '';
@@ -359,6 +366,19 @@ ${businessContext.goals?.length ? `Goals: ${businessContext.goals.join(', ')}` :
 RECENT MARKET INTELLIGENCE:
 ${marketInsights || 'No specific market data available yet - will provide general guidance'}
 
+${attachmentContext ? `
+UPLOADED FILES ANALYSIS:
+${attachmentContext}
+
+When responding to files:
+- Reference specific details from uploaded documents
+- For logos/images: Comment on branding, clarity, professional appeal
+- For business plans: Review structure, identify gaps, suggest improvements  
+- For financial data: Analyze assumptions, validate calculations
+- For market data: Extract insights, compare to benchmarks
+- Provide actionable feedback tailored to file content
+` : ''}
+
 CONVERSATION GUIDELINES:
 ✅ DO:
 - Keep responses under 120 words
@@ -391,6 +411,50 @@ MILESTONE CELEBRATIONS:
 - User expresses doubt: Normalize it and share that uncertainty is part of the process
 
 Remember: You're not just gathering information - you're building their confidence to take action.`;
+}
+
+// Process uploaded attachments
+async function processAttachments(attachments: any[], supabase: any): Promise<string> {
+  let context = '\n\n📎 USER PROVIDED FILES:\n';
+  
+  for (const attachment of attachments) {
+    try {
+      const { name, type, size, data } = attachment;
+      
+      if (type.startsWith('image/')) {
+        // For images, include them for vision analysis
+        context += `\n- 🖼️ Image: ${name} (${Math.round(size / 1024)}KB)`;
+        context += `\n  The user has uploaded an image. Analyze it and provide feedback on branding, design, or relevance to their business.`;
+        
+      } else if (type === 'application/pdf') {
+        // For PDFs, extract basic info
+        context += `\n- 📄 PDF Document: ${name} (${Math.round(size / 1024)}KB)`;
+        context += `\n  The user has uploaded a PDF document. Ask what specific aspects they'd like feedback on.`;
+        
+      } else if (type.includes('spreadsheet') || type === 'text/csv') {
+        // For spreadsheets
+        context += `\n- 📊 Spreadsheet: ${name} (${Math.round(size / 1024)}KB)`;
+        context += `\n  The user has uploaded financial or data spreadsheet. Review their numbers and assumptions.`;
+        
+      } else if (type.startsWith('text/')) {
+        // For text files, decode content
+        try {
+          const textContent = Buffer.from(data, 'base64').toString('utf-8');
+          context += `\n- 📝 Text File: ${name}`;
+          context += `\n  Content preview: ${textContent.substring(0, 500)}${textContent.length > 500 ? '...' : ''}`;
+        } catch (e) {
+          context += `\n- 📝 Text File: ${name} (could not read content)`;
+        }
+      } else {
+        context += `\n- 📎 File: ${name} (${type})`;
+      }
+    } catch (error) {
+      console.error('Error processing attachment:', error);
+      context += `\n- ⚠️ Could not process file: ${attachment.name}`;
+    }
+  }
+  
+  return context;
 }
 
 async function extractBusinessContext(userMessage: string, aiResponse: string, currentContext: BusinessContext): Promise<BusinessContext> {

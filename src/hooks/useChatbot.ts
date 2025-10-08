@@ -283,6 +283,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [chatMode, setChatMode] = useState<'wizard' | 'freeform'>('wizard');
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
     totalMessages: 0,
     averageResponseTime: 0,
@@ -1145,7 +1146,7 @@ What specific aspect of your business would you like to focus on first?`;
   };
 
   // Enhanced message sending function with NLU, personalization, and chatAnalytics
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, messageAttachments: File[] = []) => {
     if (!content.trim() || conversationState.isProcessing) return;
 
     // Track user interaction
@@ -1211,7 +1212,8 @@ What specific aspect of your business would you like to focus on first?`;
               answers: newAnswers
             },
             wizardStep,
-            chatMode
+            chatMode,
+            messageAttachments
           );
           
           // Notify parent of step completion
@@ -1271,7 +1273,8 @@ What specific aspect of your business would you like to focus on first?`;
             userId,
             config.wizardMode,
             config.wizardMode?.currentStep || wizardStep,
-            chatMode
+            chatMode,
+            messageAttachments
           );
 
       } else {
@@ -1608,6 +1611,10 @@ What specific aspect of your business would you like to focus on first?`;
     // Streaming properties
     streamingMessage,
     isStreaming,
+    
+    // Attachments
+    attachments,
+    setAttachments,
     
     // Wizard mode properties
     wizardMode: config.wizardMode?.enabled ? {
