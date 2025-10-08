@@ -16,7 +16,7 @@ const CommunityHero = () => {
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-br from-foreground to-primary bg-clip-text text-transparent px-2">
-            Share Your Entrepreneurial Journey
+            Ask for Feedback
           </h1>
           
           <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
