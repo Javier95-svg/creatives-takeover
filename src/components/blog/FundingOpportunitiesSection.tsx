@@ -85,24 +85,13 @@ const FundingOpportunitiesSection = () => {
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-              Discover Funding Opportunities
-            </h2>
-            <p className="text-muted-foreground">
-              Investment contests, accelerator programs, and funding opportunities for your refined business plan
-            </p>
-          </div>
-          <Button 
-            onClick={handleRefresh} 
-            disabled={isRefreshing}
-            variant="outline"
-            className="gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
+            Discover Funding Opportunities
+          </h2>
+          <p className="text-muted-foreground">
+            Investment contests, accelerator programs, and funding opportunities for your refined business plan
+          </p>
         </div>
 
         {fundingTrends.length === 0 ? (
