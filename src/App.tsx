@@ -39,6 +39,7 @@ import Phase4CollaborationDemo from "./pages/Phase4CollaborationDemo";
 import AdminJobApplications from "./pages/AdminJobApplications";
 import AdminTools from "./pages/AdminTools";
 import ScrollToTop from "./components/ScrollToTop";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/admin/tools" element={<AdminTools />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

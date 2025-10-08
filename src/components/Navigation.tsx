@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -8,10 +8,15 @@ import { CreditDisplay } from "@/components/CreditDisplay";
 import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import { useHoverPopup } from "@/hooks/useHoverPopup";
+import { useSocial } from "@/hooks/useSocial";
+import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
+import { Badge } from "@/components/ui/badge";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showFriendRequests, setShowFriendRequests] = useState(false);
   const { user, signOut, loading, isAuthenticated } = useAuth();
+  const { pendingFriendRequests } = useSocial(user?.id || '');
   
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
@@ -77,6 +82,31 @@ const Navigation = () => {
               <div className="flex items-center space-x-2">
                 <CreditDisplay variant="navigation" showPurchaseButton={true} />
                 <SubscriptionStatus variant="inline" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="flex items-center gap-2 relative"
+                >
+                  <Link to="/messages">
+                    <MessageCircle className="w-4 h-4" />
+                    Messages
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFriendRequests(true)}
+                  className="flex items-center gap-2 relative"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Requests
+                  {pendingFriendRequests.length > 0 && (
+                    <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                      {pendingFriendRequests.length}
+                    </Badge>
+                  )}
+                </Button>
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="w-4 h-4" />
                   <span className="text-muted-foreground">
@@ -162,6 +192,35 @@ const Navigation = () => {
                       onClick={() => setIsOpen(false)}
                       asChild
                     >
+                      <Link to="/messages" className="flex items-center">
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Messages
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start relative" 
+                      onClick={() => {
+                        setIsOpen(false);
+                        setShowFriendRequests(true);
+                      }}
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Friend Requests
+                      {pendingFriendRequests.length > 0 && (
+                        <Badge variant="destructive" className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs">
+                          {pendingFriendRequests.length}
+                        </Badge>
+                      )}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start" 
+                      onClick={() => setIsOpen(false)}
+                      asChild
+                    >
                       <Link to="/account" className="flex items-center">
                         <Settings className="w-4 h-4 mr-2" />
                         Account
@@ -206,6 +265,12 @@ const Navigation = () => {
           onClose={bizMapHover.closePopup}
         />
       )}
+      
+      {/* Friend Requests Modal */}
+      <FriendRequestsModal 
+        open={showFriendRequests}
+        onOpenChange={setShowFriendRequests}
+      />
     </nav>
   );
 };
