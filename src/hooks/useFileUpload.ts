@@ -9,58 +9,66 @@ export interface FileAttachment {
   id?: string;
 }
 
+// Export uploadFile as a standalone function
+export const uploadFile = async (
+  file: File,
+  userId: string,
+  conversationId: string
+): Promise<string | null> => {
+  try {
+    // Validate file size (20MB limit)
+    if (file.size > 20971520) {
+      throw new Error('File size exceeds 20MB limit');
+    }
+
+    const fileName = `${userId}/${conversationId}/${Date.now()}_${file.name}`;
+    
+    const { data, error } = await supabase.storage
+      .from('chatbot-attachments')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    // Save metadata to database
+    const { error: dbError } = await supabase
+      .from('chatbot_attachments')
+      .insert({
+        user_id: userId,
+        conversation_id: conversationId,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        storage_path: data.path,
+      });
+
+    if (dbError) {
+      console.error('Failed to save attachment metadata:', dbError);
+    }
+
+    return data.path;
+  } catch (error) {
+    console.error('File upload error:', error);
+    throw error;
+  }
+};
+
 export const useFileUpload = () => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
 
-  const uploadFile = async (
+  const uploadFileWithToast = async (
     file: File,
     userId: string,
     conversationId: string
   ): Promise<string | null> => {
     try {
       setUploading(true);
-      
-      // Validate file size (20MB limit)
-      if (file.size > 20971520) {
-        toast({
-          title: "File too large",
-          description: "Maximum file size is 20MB",
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      const fileName = `${userId}/${conversationId}/${Date.now()}_${file.name}`;
-      
-      const { data, error } = await supabase.storage
-        .from('chatbot-attachments')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) throw error;
-
-      // Save metadata to database
-      const { error: dbError } = await supabase
-        .from('chatbot_attachments')
-        .insert({
-          user_id: userId,
-          conversation_id: conversationId,
-          file_name: file.name,
-          file_type: file.type,
-          file_size: file.size,
-          storage_path: data.path,
-        });
-
-      if (dbError) {
-        console.error('Failed to save attachment metadata:', dbError);
-      }
-
-      return data.path;
+      const result = await uploadFile(file, userId, conversationId);
+      return result;
     } catch (error) {
-      console.error('File upload error:', error);
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "Failed to upload file",
@@ -109,7 +117,7 @@ export const useFileUpload = () => {
   };
 
   return {
-    uploadFile,
+    uploadFile: uploadFileWithToast,
     extractContent,
     createThumbnail,
     deleteFile,

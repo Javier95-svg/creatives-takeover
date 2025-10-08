@@ -93,7 +93,13 @@ serve(async (req) => {
     // Process attachments if present
     let attachmentContext = '';
     if (attachments && attachments.length > 0) {
-      attachmentContext = await processAttachments(attachments, supabase);
+      console.log('[CHATBOT-STREAMING] Processing', attachments.length, 'attachments');
+      try {
+        attachmentContext = await processAttachments(attachments, supabase);
+        console.log('[CHATBOT-STREAMING] Attachment context generated:', attachmentContext.substring(0, 200));
+      } catch (error) {
+        console.error('[CHATBOT-STREAMING] Error processing attachments:', error);
+      }
     }
 
     // Build system prompt with attachment context
@@ -413,45 +419,75 @@ MILESTONE CELEBRATIONS:
 Remember: You're not just gathering information - you're building their confidence to take action.`;
 }
 
-// Process uploaded attachments
-async function processAttachments(attachments: any[], supabase: any): Promise<string> {
-  let context = '\n\n📎 USER PROVIDED FILES:\n';
+// Process uploaded attachments and return context for AI
+async function processAttachments(attachments: Array<{ storagePath: string; fileName: string; fileType: string; fileSize: number }>, supabase: any): Promise<string> {
+  const contexts: string[] = [];
   
   for (const attachment of attachments) {
+    const { storagePath, fileName, fileType, fileSize } = attachment;
+    
+    console.log('[CHATBOT-STREAMING] Processing file:', fileName, 'Type:', fileType);
+    
     try {
-      const { name, type, size, data } = attachment;
+      // Download file from storage
+      const { data: fileData, error } = await supabase.storage
+        .from('chatbot-attachments')
+        .download(storagePath);
+
+      if (error) {
+        console.error('[CHATBOT-STREAMING] Error downloading file:', error);
+        contexts.push(`❌ Failed to process: ${fileName}`);
+        continue;
+      }
+
+      // Image analysis with AI vision
+      if (fileType.startsWith('image/')) {
+        // Convert blob to base64 for AI vision
+        const arrayBuffer = await fileData.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        const base64Data = `data:${fileType};base64,${base64}`;
+        
+        contexts.push(`📷 Image: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)
+[IMAGE_DATA:${base64Data}]
+- This image will be analyzed by AI vision for business insights
+- Analysis includes: visual elements, text extraction, brand elements, data visualization`);
+      }
       
-      if (type.startsWith('image/')) {
-        // For images, include them for vision analysis
-        context += `\n- 🖼️ Image: ${name} (${Math.round(size / 1024)}KB)`;
-        context += `\n  The user has uploaded an image. Analyze it and provide feedback on branding, design, or relevance to their business.`;
-        
-      } else if (type === 'application/pdf') {
-        // For PDFs, extract basic info
-        context += `\n- 📄 PDF Document: ${name} (${Math.round(size / 1024)}KB)`;
-        context += `\n  The user has uploaded a PDF document. Ask what specific aspects they'd like feedback on.`;
-        
-      } else if (type.includes('spreadsheet') || type === 'text/csv') {
-        // For spreadsheets
-        context += `\n- 📊 Spreadsheet: ${name} (${Math.round(size / 1024)}KB)`;
-        context += `\n  The user has uploaded financial or data spreadsheet. Review their numbers and assumptions.`;
-        
-      } else if (type.startsWith('text/')) {
-        // For text files, decode content
-        try {
-          const textContent = Buffer.from(data, 'base64').toString('utf-8');
-          context += `\n- 📝 Text File: ${name}`;
-          context += `\n  Content preview: ${textContent.substring(0, 500)}${textContent.length > 500 ? '...' : ''}`;
-        } catch (e) {
-          context += `\n- 📝 Text File: ${name} (could not read content)`;
+      // PDF processing
+      else if (fileType === 'application/pdf') {
+        contexts.push(`📄 PDF Document: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)
+- Document uploaded for reference
+- Contains structured business information`);
+      }
+      
+      // Spreadsheet processing
+      else if (fileType.includes('spreadsheet') || fileType.includes('excel') || fileName.endsWith('.csv')) {
+        if (fileName.endsWith('.csv')) {
+          const text = await fileData.text();
+          contexts.push(`📊 CSV Data: ${fileName}
+${text.substring(0, 2000)}${text.length > 2000 ? '...(truncated)' : ''}`);
+        } else {
+          contexts.push(`📊 Spreadsheet: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)
+- Data file uploaded for reference`);
         }
-      } else {
-        context += `\n- 📎 File: ${name} (${type})`;
+      }
+      
+      // Text files
+      else if (fileType.startsWith('text/') || fileName.endsWith('.txt') || fileName.endsWith('.md')) {
+        const textContent = await fileData.text();
+        contexts.push(`📝 Text File: ${fileName}
+Content:
+${textContent.substring(0, 2000)}${textContent.length > 2000 ? '...(truncated)' : ''}`);
       }
     } catch (error) {
-      console.error('Error processing attachment:', error);
-      context += `\n- ⚠️ Could not process file: ${attachment.name}`;
+      console.error('[CHATBOT-STREAMING] Error processing attachment:', error);
+      contexts.push(`❌ Failed to process: ${fileName}`);
     }
+  }
+  
+  return contexts.join('\n\n');
+}
+      context += `\n- ⚠️ Could not process file: ${attachment.name}`;
   }
   
   return context;

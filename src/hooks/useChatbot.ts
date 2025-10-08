@@ -1182,6 +1182,28 @@ What specific aspect of your business would you like to focus on first?`;
           const { data: { user } } = await supabase.auth.getUser();
           const userId = user?.id || null;
           
+          // Upload attachments to storage first
+          let uploadedAttachments: Array<{ storagePath: string; fileName: string; fileType: string; fileSize: number }> = [];
+          if (messageAttachments.length > 0 && userId) {
+            const { uploadFile } = await import('./useFileUpload');
+            
+            for (const file of messageAttachments) {
+              try {
+                const storagePath = await uploadFile(file, userId, sessionId);
+                if (storagePath) {
+                  uploadedAttachments.push({
+                    storagePath,
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileSize: file.size,
+                  });
+                }
+              } catch (error) {
+                console.error('Failed to upload attachment:', error);
+              }
+            }
+          }
+          
           // Prepare conversation history
           const conversationHistory = messages.map(msg => ({
             role: msg.isBot ? 'assistant' as const : 'user' as const,
@@ -1213,7 +1235,8 @@ What specific aspect of your business would you like to focus on first?`;
             },
             wizardStep,
             chatMode,
-            messageAttachments
+            [],
+            uploadedAttachments
           );
           
           // Notify parent of step completion
@@ -1243,6 +1266,28 @@ What specific aspect of your business would you like to focus on first?`;
       // Get user ID for database tracking
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || null;
+
+      // Upload attachments to storage first
+      let uploadedAttachments: Array<{ storagePath: string; fileName: string; fileType: string; fileSize: number }> = [];
+      if (messageAttachments.length > 0 && userId) {
+        const { uploadFile } = await import('./useFileUpload');
+        
+        for (const file of messageAttachments) {
+          try {
+            const storagePath = await uploadFile(file, userId, sessionId);
+            if (storagePath) {
+              uploadedAttachments.push({
+                storagePath,
+                fileName: file.name,
+                fileType: file.type,
+                fileSize: file.size,
+              });
+            }
+          } catch (error) {
+            console.error('Failed to upload attachment:', error);
+          }
+        }
+      }
 
       // Use streaming if enabled
       if (enableStreaming) {
@@ -1274,7 +1319,8 @@ What specific aspect of your business would you like to focus on first?`;
             config.wizardMode,
             config.wizardMode?.currentStep || wizardStep,
             chatMode,
-            messageAttachments
+            [],
+            uploadedAttachments
           );
 
       } else {
