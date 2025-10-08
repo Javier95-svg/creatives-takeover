@@ -74,32 +74,8 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
     return 'Hard';
   };
 
-  const getFundingCategory = () => {
-    const allTerms = [
-      trend.title?.toLowerCase() || "",
-      trend.description?.toLowerCase() || "",
-      ...(trend.keywords?.map(k => k.toLowerCase()) || [])
-    ].join(" ");
-    
-    if (allTerms.includes("contest") || allTerms.includes("competition")) {
-      return "contests";
-    }
-    if (allTerms.includes("accelerator") || allTerms.includes("incubator") || allTerms.includes("program")) {
-      return "programs";
-    }
-    if (allTerms.includes("investor") || allTerms.includes("venture") || allTerms.includes("capital") || allTerms.includes("funding")) {
-      return "networks";
-    }
-    return null;
-  };
-
   const handleClick = () => {
-    const fundingCategory = getFundingCategory();
-    
-    if (fundingCategory) {
-      // Navigate to community with funding filter
-      navigate(`/community?filter=${fundingCategory}`);
-    } else if (trend.article_url) {
+    if (trend.article_url) {
       window.open(trend.article_url, '_blank', 'noopener,noreferrer');
     } else if (onClick) {
       onClick();
@@ -108,11 +84,8 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
 
   const handleGenerateBusinessPlan = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const fundingCategory = getFundingCategory();
-    
-    if (fundingCategory) {
-      // Navigate to community with funding filter
-      navigate(`/community?filter=${fundingCategory}`);
+    if (trend.article_url) {
+      window.open(trend.article_url, '_blank', 'noopener,noreferrer');
     } else {
       // Navigate to Dream2Plan with pre-filled context from this trend
       navigate('/dream2plan', { 
@@ -297,31 +270,27 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2">
-            <Button 
-              onClick={getFundingCategory() ? handleClick : (hasBusinessOpportunity ? handleGenerateBusinessPlan : handleClick)}
-              size="sm" 
-              className="flex-1 text-xs h-8"
-              variant={getFundingCategory() ? "default" : hasBusinessOpportunity ? "default" : "outline"}
-            >
-              {getFundingCategory() ? (
-                <>
-                  <Lightbulb className="h-3 w-3 mr-1" />
-                  Explore {getFundingCategory() === 'contests' ? 'Contests' : getFundingCategory() === 'programs' ? 'Programs' : 'Networks'}
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </>
-              ) : hasBusinessOpportunity ? (
-                <>
-                  <Lightbulb className="h-3 w-3 mr-1" />
-                  Create Business Plan
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </>
-              ) : (
-                <>
-                  {isArticle ? 'Read Full Article' : 'Learn More'}
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </>
-              )}
-            </Button>
+            {hasBusinessOpportunity || isArticle ? (
+              <Button 
+                onClick={handleGenerateBusinessPlan}
+                size="sm" 
+                className="flex-1 text-xs h-8"
+              >
+                <Lightbulb className="h-3 w-3 mr-1" />
+                {isArticle ? 'Visit Program' : 'Create Business Plan'}
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleClick}
+                variant="outline" 
+                size="sm" 
+                className="flex-1 text-xs h-8"
+              >
+                Learn More
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
