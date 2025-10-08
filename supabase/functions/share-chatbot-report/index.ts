@@ -41,12 +41,26 @@ serve(async (req) => {
 
     console.log('Sharing report to community:', { userId: user.id, reportType, conversationId });
 
-    // Generate AI summary if using Lovable AI
+    // Generate AI-enhanced summary using Lovable AI
     let aiSummary = content;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
-    if (LOVABLE_API_KEY && content.length > 200) {
+    if (LOVABLE_API_KEY) {
       try {
+        // Extract structured data from reportData
+        const extractedContent = reportData?.extractedContent || {};
+        const businessContext = reportData?.industry ? reportData : {};
+        const keyPoints = extractedContent.keyPoints || [];
+        const messageTypes = extractedContent.messageTypes || [];
+        
+        // Build context-rich prompt for AI
+        const contextInfo = [
+          businessContext.industry ? `Industry: ${businessContext.industry}` : '',
+          businessContext.stage ? `Stage: ${businessContext.stage}` : '',
+          businessContext.targetMarket ? `Target Market: ${businessContext.targetMarket}` : '',
+          keyPoints.length > 0 ? `Key Points:\n${keyPoints.map((p: string) => `- ${p}`).join('\n')}` : '',
+        ].filter(Boolean).join('\n');
+
         const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -58,11 +72,26 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: 'You are a helpful assistant that summarizes business plans and reports. Create a concise, engaging summary that highlights key points and makes the post attractive to community members.',
+                content: `You are an expert business advisor helping entrepreneurs share their business plans with a community for feedback. Create an engaging, well-structured summary that:
+
+1. Opens with a compelling hook about the business opportunity
+2. Highlights what makes this business unique or differentiated
+3. Identifies 2-3 key opportunities or strengths
+4. Mentions main challenges or areas needing validation
+5. Ends with a clear call for specific feedback areas
+
+Keep it professional yet conversational. Use 3-4 concise paragraphs. Make it scannable and engaging for community members who want to provide valuable feedback.`,
               },
               {
                 role: 'user',
-                content: `Summarize this business report in 2-3 sentences:\n\n${content}`,
+                content: `Create an engaging community post summary for this business analysis:
+
+${contextInfo}
+
+Main Analysis:
+${content.substring(0, 2000)}
+
+Feedback Categories Requested: ${feedbackCategories?.join(', ') || 'General feedback'}`,
               },
             ],
           }),
@@ -71,10 +100,18 @@ serve(async (req) => {
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
           aiSummary = aiData.choices[0]?.message?.content || content;
+          console.log('AI summary generated successfully');
+        } else {
+          console.error('AI summarization failed:', aiResponse.status, await aiResponse.text());
         }
       } catch (error) {
         console.error('Error generating AI summary:', error);
+        // Fallback to first 600 chars if AI fails
+        aiSummary = content.substring(0, 600) + (content.length > 600 ? '...' : '');
       }
+    } else {
+      // No AI key, use smart truncation
+      aiSummary = content.substring(0, 600) + (content.length > 600 ? '...' : '');
     }
 
     // Create community post

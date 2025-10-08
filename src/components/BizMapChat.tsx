@@ -22,6 +22,97 @@ interface BizMapChatProps {
   onChatModeReady?: (switchToFreeform: () => void) => void;
 }
 
+// Helper function to categorize message importance
+const categorizeMessageImportance = (content: string): number => {
+  const highPriorityKeywords = [
+    'recommend', 'suggestion', 'insight', 'analysis', 'concern', 'opportunity',
+    'risk', 'strength', 'weakness', 'strategy', 'metric', 'score', 'validation',
+    'differentiation', 'competitive', 'market', 'financial', 'revenue', 'cost'
+  ];
+  
+  const lowPriorityKeywords = [
+    'hello', 'hi', 'welcome', 'thank you', 'let me know', 'what do you think',
+    'can you tell me', 'please share', 'i understand'
+  ];
+  
+  const contentLower = content.toLowerCase();
+  
+  // Skip very short messages
+  if (content.length < 50) return 0;
+  
+  // Check for low priority
+  if (lowPriorityKeywords.some(keyword => contentLower.includes(keyword)) && content.length < 150) {
+    return 1;
+  }
+  
+  // Check for high priority
+  const highPriorityCount = highPriorityKeywords.filter(keyword => contentLower.includes(keyword)).length;
+  if (highPriorityCount >= 3) return 5;
+  if (highPriorityCount >= 2) return 4;
+  if (highPriorityCount >= 1) return 3;
+  
+  // Check for structured data (numbers, percentages, etc.)
+  if (/\d+%|\$\d+|score|rating/i.test(content)) return 4;
+  
+  return 2;
+};
+
+// Helper function to extract key content for sharing
+const extractKeyContent = (messages: any[], businessContext: any) => {
+  const botMessages = messages.filter(m => m.isBot);
+  
+  if (botMessages.length === 0) {
+    return { summary: '', keyPoints: [] };
+  }
+  
+  // Score and sort messages by importance
+  const scoredMessages = botMessages.map(msg => ({
+    content: msg.content,
+    score: categorizeMessageImportance(msg.content),
+    context: msg.businessContext
+  })).filter(m => m.score >= 2);
+  
+  scoredMessages.sort((a, b) => b.score - a.score);
+  
+  // Take the most recent substantive messages (last 2-3)
+  const recentMessages = botMessages.slice(-3).filter(m => 
+    categorizeMessageImportance(m.content) >= 2
+  );
+  
+  // Combine high-scored messages and recent messages
+  const importantMessages = [
+    ...scoredMessages.slice(0, 2),
+    ...recentMessages.slice(-2)
+  ].filter((msg, index, self) => 
+    index === self.findIndex(m => m.content === msg.content)
+  );
+  
+  // Extract key points
+  const keyPoints: string[] = [];
+  importantMessages.forEach(msg => {
+    // Extract bullet points or numbered lists
+    const bulletPoints = msg.content.match(/^[-•*]\s+(.+)$/gm);
+    if (bulletPoints && bulletPoints.length > 0) {
+      keyPoints.push(...bulletPoints.slice(0, 3).map(bp => bp.replace(/^[-•*]\s+/, '')));
+    }
+  });
+  
+  return {
+    summary: importantMessages.map(m => m.content).join('\n\n---\n\n'),
+    keyPoints: keyPoints.slice(0, 5),
+    businessContext,
+    messageTypes: importantMessages.map(m => {
+      const content = m.content.toLowerCase();
+      if (content.includes('recommend') || content.includes('suggestion')) return 'recommendation';
+      if (content.includes('risk') || content.includes('concern')) return 'risk_assessment';
+      if (content.includes('opportunity')) return 'opportunity';
+      if (content.includes('market') || content.includes('competitive')) return 'market_analysis';
+      if (content.includes('financial') || content.includes('revenue')) return 'financial';
+      return 'general_insight';
+    })
+  };
+};
+
 export const BizMapChat = ({ 
   wizardSteps, 
   onStepComplete, 
@@ -260,13 +351,18 @@ export const BizMapChat = ({
               onClick={() => {
                 const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
                 const context: any = typeof lastBotMessage?.businessContext === 'object' ? lastBotMessage.businessContext : {};
+                const extractedContent = extractKeyContent(messages, context);
+                
                 setShareData({
                   conversationId: user?.id,
-                  reportData: context,
+                  reportData: {
+                    ...context,
+                    extractedContent
+                  },
                   defaultTitle: context?.industry 
                     ? `${context.industry} Business Plan - Seeking Feedback`
                     : 'Business Plan - Seeking Community Feedback',
-                  defaultContent: messages.filter(m => m.isBot).map(m => m.content).join('\n\n').substring(0, 800),
+                  defaultContent: extractedContent.summary,
                 });
                 setShowShareDialog(true);
               }}
