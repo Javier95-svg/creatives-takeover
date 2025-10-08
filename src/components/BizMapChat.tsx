@@ -7,8 +7,6 @@ import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
-import ShareSuccessModal from "./chatbot/ShareSuccessModal";
-import { useJourneyProgress } from "@/hooks/useJourneyProgress";
 
 interface BizMapChatProps {
   wizardSteps: Array<{

@@ -34,7 +34,6 @@ const Navigation = () => {
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/dream2plan" },
     { name: "Prompt Library", href: "/prompt-library" },
-    { name: "Propel", href: "/propel" },
     { name: "Insighta", href: "/news" },
     { name: "Community", href: "/community" },
     { name: "Careers", href: "/careers" },

@@ -11,8 +11,7 @@ import {
   Repeat2, 
   MapPin, 
   MoreHorizontal,
-  Send,
-  AlertCircle
+  Send
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -24,8 +23,6 @@ import SignInModal from "./SignInModal";
 import { SocialButtons } from "@/components/social/SocialButtons";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import FeedbackCategoryBadges from "./FeedbackCategoryBadges";
-import FeedbackRatingWidget from "./FeedbackRatingWidget";
 
 export interface Post {
   id: string;
@@ -76,7 +73,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [localLikes, setLocalLikes] = useState(post.votes);
   const [localReposts, setLocalReposts] = useState(post.repostCount || 0);
   const [localComments, setLocalComments] = useState(post.commentsCount);
-  const [showRatingForm, setShowRatingForm] = useState(false);
 
   const timeAgo = (dateString: string) => {
     const now = new Date();
@@ -339,21 +335,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             </Button>
           </div>
           
-          {/* Feedback Request Banner */}
-          {post.feedbackRequested && (
-            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                  Seeking Community Feedback
-                </p>
-                <p className="text-xs text-amber-600/80 dark:text-amber-500/80 mt-0.5">
-                  This entrepreneur is looking for structured feedback to improve their plan
-                </p>
-              </div>
-            </div>
-          )}
-          
           {/* Post Content */}
           <div className="mb-4">
             <h2 className="text-xl font-bold mb-3 text-foreground">{post.title}</h2>
@@ -377,14 +358,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                   #{tag}
                 </Badge>
               ))}
-            </div>
-          )}
-          
-          {/* Feedback Categories */}
-          {post.feedbackCategory && post.feedbackCategory.length > 0 && (
-            <div className="mb-4">
-              <p className="text-xs text-muted-foreground mb-2">Feedback needed on:</p>
-              <FeedbackCategoryBadges categories={post.feedbackCategory} />
             </div>
           )}
           
@@ -515,27 +488,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
               {comments.length === 0 && (
                 <div className="text-center py-4 text-muted-foreground text-sm">
                   No comments yet. Be the first to comment!
-                </div>
-              )}
-              
-              {/* Feedback Rating Widget */}
-              {post.feedbackRequested && (
-                <div className="mt-4 pt-4 border-t border-border/50">
-                  {!showRatingForm ? (
-                    <div className="flex flex-col gap-3">
-                      <FeedbackRatingWidget postId={post.id} showRatingForm={false} />
-                      <Button
-                        onClick={() => setShowRatingForm(true)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        Provide Structured Feedback
-                      </Button>
-                    </div>
-                  ) : (
-                    <FeedbackRatingWidget postId={post.id} showRatingForm={true} />
-                  )}
                 </div>
               )}
             </div>

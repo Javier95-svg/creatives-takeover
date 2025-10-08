@@ -1096,10 +1096,8 @@ export type Database = {
           content: string
           created_at: string
           downvotes: number | null
-          featured_on_propel: boolean | null
           feedback_category: string[] | null
           feedback_requested: boolean | null
-          feedback_status: string | null
           id: string
           is_repost: boolean | null
           location: string | null
@@ -1126,10 +1124,8 @@ export type Database = {
           content: string
           created_at?: string
           downvotes?: number | null
-          featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
-          feedback_status?: string | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
@@ -1156,10 +1152,8 @@ export type Database = {
           content?: string
           created_at?: string
           downvotes?: number | null
-          featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
-          feedback_status?: string | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
@@ -2296,47 +2290,6 @@ export type Database = {
           },
         ]
       }
-      post_feedback_ratings: {
-        Row: {
-          clarity_score: number | null
-          created_at: string
-          id: string
-          innovation_score: number | null
-          market_fit_score: number | null
-          post_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          clarity_score?: number | null
-          created_at?: string
-          id?: string
-          innovation_score?: number | null
-          market_fit_score?: number | null
-          post_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          clarity_score?: number | null
-          created_at?: string
-          id?: string
-          innovation_score?: number | null
-          market_fit_score?: number | null
-          post_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_feedback_ratings_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "community_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       post_reposts: {
         Row: {
           created_at: string | null
@@ -3126,57 +3079,6 @@ export type Database = {
           refresh_token?: string | null
           sync_frequency?: string
           token_expires_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_journey_progress: {
-        Row: {
-          created_at: string
-          id: string
-          plan_it_completed: boolean | null
-          plan_it_completed_at: string | null
-          propel_applied: boolean | null
-          propel_applied_at: string | null
-          propel_viewed: boolean | null
-          propel_viewed_at: string | null
-          refine_it_feedback_received: boolean | null
-          refine_it_feedback_received_at: string | null
-          refine_it_shared: boolean | null
-          refine_it_shared_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          plan_it_completed?: boolean | null
-          plan_it_completed_at?: string | null
-          propel_applied?: boolean | null
-          propel_applied_at?: string | null
-          propel_viewed?: boolean | null
-          propel_viewed_at?: string | null
-          refine_it_feedback_received?: boolean | null
-          refine_it_feedback_received_at?: string | null
-          refine_it_shared?: boolean | null
-          refine_it_shared_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          plan_it_completed?: boolean | null
-          plan_it_completed_at?: string | null
-          propel_applied?: boolean | null
-          propel_applied_at?: string | null
-          propel_viewed?: boolean | null
-          propel_viewed_at?: string | null
-          refine_it_feedback_received?: boolean | null
-          refine_it_feedback_received_at?: string | null
-          refine_it_shared?: boolean | null
-          refine_it_shared_at?: string | null
           updated_at?: string
           user_id?: string
         }
