@@ -20,27 +20,37 @@ export const QuickWinZone = () => {
   const quickWins: QuickWin[] = [
     {
       id: '1',
-      title: 'Start a 7-Day Sprint',
-      description: 'Build momentum with a focused weekly goal',
-      timeEstimate: '5 min',
-      action: 'Start Sprint',
-      actionLink: '/software',
-      icon: Rocket,
-      category: 'action'
-    },
-    {
-      id: '2',
       title: 'Complete Business Assessment',
       description: 'Get personalized insights about your idea',
       timeEstimate: '10 min',
       creditCost: 1,
-      action: 'Get Insights',
+      action: 'Start Assessment',
       actionLink: '/dream2plan',
       icon: CheckCircle,
       category: 'learn'
     },
     {
+      id: '2',
+      title: 'Browse Prompt Library',
+      description: 'Access ready-to-use business prompts',
+      timeEstimate: '3 min',
+      action: 'View Templates',
+      actionLink: '/prompt-library',
+      icon: Rocket,
+      category: 'action'
+    },
+    {
       id: '3',
+      title: 'Get Market Insights',
+      description: 'Stay updated with latest business trends',
+      timeEstimate: '5 min',
+      action: 'View Insights',
+      actionLink: '/news',
+      icon: Zap,
+      category: 'learn'
+    },
+    {
+      id: '4',
       title: 'Join Community',
       description: 'Connect with fellow entrepreneurs',
       timeEstimate: '2 min',
