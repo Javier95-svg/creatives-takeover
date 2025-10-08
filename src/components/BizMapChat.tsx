@@ -250,6 +250,34 @@ export const BizMapChat = ({
             I remember your business context and journey
           </p>
         )}
+        
+        {/* Share to Community Button - Shows when there are messages */}
+        {messages.length > 0 && (
+          <div className="mb-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
+                const context: any = typeof lastBotMessage?.businessContext === 'object' ? lastBotMessage.businessContext : {};
+                setShareData({
+                  conversationId: user?.id,
+                  reportData: context,
+                  defaultTitle: context?.industry 
+                    ? `${context.industry} Business Plan - Seeking Feedback`
+                    : 'Business Plan - Seeking Community Feedback',
+                  defaultContent: messages.filter(m => m.isBot).map(m => m.content).join('\n\n').substring(0, 800),
+                });
+                setShowShareDialog(true);
+              }}
+              className="w-full sm:w-auto flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share to Community for Feedback
+            </Button>
+          </div>
+        )}
+
         <div className="flex gap-2 sm:gap-3">
           <Input
             value={message}
