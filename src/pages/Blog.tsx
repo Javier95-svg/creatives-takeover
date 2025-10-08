@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
+import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import TrendingSection from "@/components/blog/TrendingSection";
 import SignupInviteModal from "@/components/blog/SignupInviteModal";
 import { useSignupInvite } from "@/hooks/useSignupInvite";
@@ -74,6 +75,7 @@ const Blog = () => {
         <div ref={heroRef}>
           <BlogHero onSearch={handleSearch} />
         </div>
+        <FundingOpportunitiesSection />
         <TrendingSection 
           searchTerm={searchTerm} 
           selectedCategory={selectedCategory}
