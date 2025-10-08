@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
+import { ChatbotReportCard } from "./ChatbotReportCard";
 import AdvancedFilters from "./AdvancedFilters";
 import CommunityInsights from "./CommunityInsights";
 import { Input } from "@/components/ui/input";
@@ -87,7 +88,11 @@ const CommunityFeed: React.FC = () => {
           aiRelatedTopics: post.ai_related_topics,
           aiStructuredIdea: post.ai_structured_idea as Post['aiStructuredIdea'],
           aiTrendingAngle: post.ai_trending_angle,
-          aiNextStep: post.ai_next_step
+          aiNextStep: post.ai_next_step,
+          sourceType: post.source_type,
+          sourceData: post.source_data,
+          feedbackRequested: post.feedback_requested,
+          feedbackCategory: post.feedback_category
         };
       });
 
@@ -376,7 +381,16 @@ const CommunityFeed: React.FC = () => {
           {filtered.length > 0 ? (
             <div className="space-y-6">
               {filtered.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <div key={post.id} className="space-y-4">
+                  {post.sourceType === 'chatbot_report' && post.sourceData && (
+                    <ChatbotReportCard 
+                      reportType={post.sourceData.report_type || 'conversation'}
+                      reportData={post.sourceData}
+                      feedbackCategories={post.feedbackCategory || []}
+                    />
+                  )}
+                  <PostCard post={post} />
+                </div>
               ))}
             </div>
           ) : (

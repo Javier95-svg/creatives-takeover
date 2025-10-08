@@ -29,19 +29,28 @@ export type ComposerPayload = {
 interface PostComposerProps {
   onPublish: (payload: ComposerPayload) => void;
   requireAuth?: boolean;
+  reportData?: {
+    title?: string;
+    content?: string;
+    tags?: string[];
+    reportType?: string;
+    businessContext?: any;
+  };
 }
 
-const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = false }) => {
+const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = false, reportData }) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
+  const [title, setTitle] = useState(reportData?.title || "");
+  const [content, setContent] = useState(reportData?.content || "");
+  const [tagsInput, setTagsInput] = useState(reportData?.tags?.join(', ') || "");
   const [imagePreview, setImagePreview] = useState<string | undefined>();
   const [location, setLocation] = useState("");
   const [locationData, setLocationData] = useState<{ address: string; coordinates?: { lng: number; lat: number; } } | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
+  const isAIReport = !!reportData?.reportType;
 
   const tags = useMemo(
     () =>
@@ -127,9 +136,17 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     <>
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-xl">Share your entrepreneurial story</CardTitle>
+          <CardTitle className="text-xl flex items-center gap-2">
+            {isAIReport && <Badge variant="secondary" className="text-xs">🤖 AI-Generated Report</Badge>}
+            {isAIReport ? 'Share AI Business Report' : 'Share your entrepreneurial story'}
+          </CardTitle>
           {requireAuth && !isAuthenticated && (
             <p className="text-sm text-muted-foreground">Sign in to share your story with the community</p>
+          )}
+          {isAIReport && (
+            <p className="text-sm text-muted-foreground">
+              Share your BizMap AI analysis with the community for feedback and suggestions
+            </p>
           )}
         </CardHeader>
         <CardContent>

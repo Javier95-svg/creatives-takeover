@@ -521,6 +521,60 @@ export type Database = {
           },
         ]
       }
+      chatbot_shared_reports: {
+        Row: {
+          community_post_id: string | null
+          conversation_id: string | null
+          feedback_count: number | null
+          id: string
+          is_anonymous: boolean | null
+          report_data: Json
+          report_type: string
+          shared_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          community_post_id?: string | null
+          conversation_id?: string | null
+          feedback_count?: number | null
+          id?: string
+          is_anonymous?: boolean | null
+          report_data?: Json
+          report_type: string
+          shared_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          community_post_id?: string | null
+          conversation_id?: string | null
+          feedback_count?: number | null
+          id?: string
+          is_anonymous?: boolean | null
+          report_data?: Json
+          report_type?: string
+          shared_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_shared_reports_community_post_id_fkey"
+            columns: ["community_post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chatbot_shared_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaboration_activity: {
         Row: {
           activity_data: Json | null
@@ -979,12 +1033,16 @@ export type Database = {
           content: string
           created_at: string
           downvotes: number | null
+          feedback_category: string[] | null
+          feedback_requested: boolean | null
           id: string
           is_repost: boolean | null
           location: string | null
           original_post_id: string | null
           repost_count: number | null
           share_count: number | null
+          source_data: Json | null
+          source_type: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -1003,12 +1061,16 @@ export type Database = {
           content: string
           created_at?: string
           downvotes?: number | null
+          feedback_category?: string[] | null
+          feedback_requested?: boolean | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
           original_post_id?: string | null
           repost_count?: number | null
           share_count?: number | null
+          source_data?: Json | null
+          source_type?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -1027,12 +1089,16 @@ export type Database = {
           content?: string
           created_at?: string
           downvotes?: number | null
+          feedback_category?: string[] | null
+          feedback_requested?: boolean | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
           original_post_id?: string | null
           repost_count?: number | null
           share_count?: number | null
+          source_data?: Json | null
+          source_type?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
+import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -31,6 +32,8 @@ export const BizMapChat = ({
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [celebrationMode, setCelebrationMode] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareData, setShareData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
@@ -172,9 +175,25 @@ export const BizMapChat = ({
                       key={idx}
                       variant="outline"
                       size="sm"
-                      onClick={() => sendMessage(action.text)}
+                      onClick={() => {
+                        if (action.text === '📤 Share for Community Feedback') {
+                          const context: any = typeof msg.businessContext === 'object' ? msg.businessContext : {};
+                          setShareData({
+                            conversationId: user?.id,
+                            reportData: context,
+                            defaultTitle: context?.industry 
+                              ? `${context.industry} Business Plan Feedback`
+                              : 'Business Plan Feedback Request',
+                            defaultContent: msg.content.substring(0, 500),
+                          });
+                          setShowShareDialog(true);
+                        } else {
+                          sendMessage(action.text);
+                        }
+                      }}
                       className="text-xs sm:text-sm hover:scale-105 transition-transform duration-200 bg-background/50 hover:bg-background"
                     >
+                      {action.text === '📤 Share for Community Feedback' && <Share2 className="h-3 w-3 mr-1" />}
                       {action.text}
                     </Button>
                   ))}
@@ -254,6 +273,19 @@ export const BizMapChat = ({
           </Button>
         </div>
       </div>
+
+      {/* Share to Community Dialog */}
+      {showShareDialog && shareData && (
+        <ShareToCommunityDialog
+          open={showShareDialog}
+          onOpenChange={setShowShareDialog}
+          conversationId={shareData.conversationId}
+          reportType="conversation"
+          reportData={shareData.reportData}
+          defaultTitle={shareData.defaultTitle}
+          defaultContent={shareData.defaultContent}
+        />
+      )}
     </div>
   );
 };

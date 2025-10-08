@@ -48,6 +48,10 @@ export interface Post {
   };
   aiTrendingAngle?: string;
   aiNextStep?: string;
+  sourceType?: string;
+  sourceData?: any;
+  feedbackRequested?: boolean;
+  feedbackCategory?: string[];
 }
 
 interface PostCardProps {
