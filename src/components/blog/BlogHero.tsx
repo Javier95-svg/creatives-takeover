@@ -69,27 +69,12 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
             </div>
           </div>
 
-          {/* Search Bar - Prominent with larger size */}
-          <form 
-            onSubmit={handleSearch}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-2xl mx-auto animate-slide-up px-4 mb-8" 
-            style={{ animationDelay: '0.3s' }}
-          >
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search opportunities, trends, or topics..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 glass h-14 sm:h-16 text-base sm:text-lg touch-manipulation"
-              />
-            </div>
-            <Button type="submit" className="glass bg-primary hover:bg-primary/90 text-primary-foreground btn-magnetic h-14 sm:h-16 px-8 text-base sm:text-lg font-semibold touch-manipulation">
-              <Search className="h-5 w-5 mr-2" />
-              Discover
-            </Button>
-          </form>
+          {/* Description */}
+          <div className="max-w-3xl mx-auto animate-slide-up px-4" style={{ animationDelay: '0.3s' }}>
+            <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed text-center">
+              Insighta blends AI-driven analysis with curated market intelligence to help entrepreneurs uncover funding opportunities, identify market trends, and make informed, data-based decisions. Covering everything from investment contests to accelerator programs, Insighta turns complex market information into practical insights that empower creative businesses to seize the right opportunities at the perfect moment.
+            </p>
+          </div>
         </div>
       </div>
     </section>
