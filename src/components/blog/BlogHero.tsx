@@ -57,15 +57,15 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 animate-slide-up px-2" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
               <Sparkles className="w-3 sm:w-4 h-3 sm:h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium">AI-Powered Analysis</span>
+              <span className="text-xs sm:text-sm font-medium">AI-Powered</span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 bg-secondary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
               <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-secondary rounded-full"></div>
-              <span className="text-xs sm:text-sm font-medium">Market Intelligence</span>
+              <span className="text-xs sm:text-sm font-medium">Funding Opportunities</span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 bg-accent/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
               <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-accent rounded-full"></div>
-              <span className="text-xs sm:text-sm font-medium">Action Plans</span>
+              <span className="text-xs sm:text-sm font-medium">Market Trends</span>
             </div>
           </div>
 
