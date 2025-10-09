@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles } from "lucide-react";
+import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles, Compass, MessageSquare, Package, RefreshCw, Brain, ArrowRight, TrendingUp } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
@@ -1225,6 +1225,213 @@ Subject: "Quick question about [their pain point]"
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Where to Start Guide Section */}
+                <div className="mt-12 sm:mt-16 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                  <Card className="border-primary/20 bg-gradient-to-br from-background via-card/50 to-muted/30 overflow-hidden">
+                    <CardContent className="p-6 sm:p-8 lg:p-10">
+                      {/* Section Header */}
+                      <div className="text-center mb-10 sm:mb-12">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent flex items-center justify-center gap-3">
+                          <Compass className="w-8 h-8 text-primary" />
+                          Where to Start — Mastering BizMap AI
+                        </h2>
+                        <p className="text-muted-foreground text-sm sm:text-base max-w-3xl mx-auto">
+                          Follow this step-by-step guide to transform your concepts into real products using BizMap AI effectively
+                        </p>
+                      </div>
+
+                      {/* Steps Grid */}
+                      <div className="space-y-6 sm:space-y-8">
+                        {/* Step 1 */}
+                        <Card className="border-primary/30 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-primary/5 to-transparent">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                                <Compass className="w-6 h-6 text-primary-foreground" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                                  🧭 Step 1: Define Your Vision
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                  Before chatting with BizMap AI, clarify your idea's purpose. Ask yourself:
+                                </p>
+                                <ul className="space-y-2 mb-4 ml-4">
+                                  <li className="text-sm flex items-start gap-2">
+                                    <span className="text-primary mt-1">•</span>
+                                    <span>What problem am I solving?</span>
+                                  </li>
+                                  <li className="text-sm flex items-start gap-2">
+                                    <span className="text-primary mt-1">•</span>
+                                    <span>Who will benefit from this idea?</span>
+                                  </li>
+                                  <li className="text-sm flex items-start gap-2">
+                                    <span className="text-primary mt-1">•</span>
+                                    <span>What's my ideal outcome — a product, service, or brand?</span>
+                                  </li>
+                                </ul>
+                                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
+                                  <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                  <p className="text-sm">
+                                    <span className="font-semibold">Tip:</span> The clearer your intent, the smarter BizMap AI's responses become.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Step 2 */}
+                        <Card className="border-secondary/30 hover:border-secondary/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-secondary/5 to-transparent">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-secondary/70 flex items-center justify-center">
+                                <MessageSquare className="w-6 h-6 text-secondary-foreground" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                                  💬 Step 2: Talk to BizMap AI Like a Partner
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                  Treat the chatbot as your creative strategist — not just a tool. Try prompts like:
+                                </p>
+                                <div className="space-y-2 mb-4">
+                                  <div className="bg-muted/50 rounded-md p-3 text-sm font-mono border border-border">
+                                    "Help me structure my business idea into key milestones."
+                                  </div>
+                                  <div className="bg-muted/50 rounded-md p-3 text-sm font-mono border border-border">
+                                    "Generate a brand identity concept based on [my idea]."
+                                  </div>
+                                  <div className="bg-muted/50 rounded-md p-3 text-sm font-mono border border-border">
+                                    "List potential customer segments for my product."
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Brain className="w-4 h-4 text-secondary" />
+                                  <span>Ask follow-up questions — BizMap AI adapts to your context.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Step 3 */}
+                        <Card className="border-accent/30 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-accent/5 to-transparent">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center">
+                                <Package className="w-6 h-6 text-accent-foreground" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                                  🧩 Step 3: From Concept to Product
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                  Once your idea feels defined:
+                                </p>
+                                <ul className="space-y-2 mb-4">
+                                  <li className="text-sm flex items-start gap-2">
+                                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                                    <span>Use BizMap AI to create your <strong>Product Roadmap</strong> — idea → MVP → launch.</span>
+                                  </li>
+                                  <li className="text-sm flex items-start gap-2">
+                                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                                    <span>Use <strong>Design Sprint tools</strong> to bring your vision to life.</span>
+                                  </li>
+                                  <li className="text-sm flex items-start gap-2">
+                                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                                    <span>Connect your results to Creative Journey steps (Brand, Build, Grow).</span>
+                                  </li>
+                                </ul>
+                                <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+                                  <p className="text-sm flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-accent" />
+                                    Each chat session builds a living map of your business.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Step 4 */}
+                        <Card className="border-primary/30 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-primary/5 to-transparent">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-primary flex items-center justify-center">
+                                <RefreshCw className="w-6 h-6 text-primary-foreground" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                                  🔄 Step 4: Iterate and Validate
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                  Innovation is a loop — revisit your BizMap conversations to:
+                                </p>
+                                <ul className="space-y-2 mb-4">
+                                  <li className="text-sm flex items-start gap-2">
+                                    <ArrowRight className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                    <span>Refine your business model.</span>
+                                  </li>
+                                  <li className="text-sm flex items-start gap-2">
+                                    <ArrowRight className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                    <span>Test pricing or positioning ideas.</span>
+                                  </li>
+                                  <li className="text-sm flex items-start gap-2">
+                                    <ArrowRight className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                    <span>Get fresh branding or marketing angles.</span>
+                                  </li>
+                                </ul>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <TrendingUp className="w-4 h-4 text-primary" />
+                                  <span className="font-semibold">Your BizMap evolves as your business grows.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Step 5 */}
+                        <Card className="border-accent/30 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-accent/5 via-primary/5 to-secondary/5">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
+                                <Zap className="w-6 h-6 text-primary-foreground" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                                  🧬 Step 5: Align with the Creatives Takeover Mindset
+                                </h3>
+                                <p className="text-muted-foreground mb-4">
+                                  Every project inside BizMap should embody our values:
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                                    <p className="font-semibold text-primary mb-1">Clarity</p>
+                                    <p className="text-sm text-muted-foreground">Make complex ideas simple.</p>
+                                  </div>
+                                  <div className="bg-secondary/10 border border-secondary/20 rounded-lg p-4">
+                                    <p className="font-semibold text-secondary mb-1">Creativity</p>
+                                    <p className="text-sm text-muted-foreground">Explore new angles.</p>
+                                  </div>
+                                  <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+                                    <p className="font-semibold text-accent mb-1">Collaboration</p>
+                                    <p className="text-sm text-muted-foreground">Use AI as your co-creator.</p>
+                                  </div>
+                                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                                    <p className="font-semibold text-primary mb-1">Momentum</p>
+                                    <p className="text-sm text-muted-foreground">Always move ideas forward.</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
                 
                  {/* PDF Generator and Download Component - Show only when report is completed */}
