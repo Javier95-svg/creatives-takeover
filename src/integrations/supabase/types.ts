@@ -1096,8 +1096,10 @@ export type Database = {
           content: string
           created_at: string
           downvotes: number | null
+          featured_on_propel: boolean | null
           feedback_category: string[] | null
           feedback_requested: boolean | null
+          feedback_status: string | null
           id: string
           is_repost: boolean | null
           location: string | null
@@ -1124,8 +1126,10 @@ export type Database = {
           content: string
           created_at?: string
           downvotes?: number | null
+          featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
+          feedback_status?: string | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
@@ -1152,8 +1156,10 @@ export type Database = {
           content?: string
           created_at?: string
           downvotes?: number | null
+          featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
+          feedback_status?: string | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
@@ -2290,6 +2296,47 @@ export type Database = {
           },
         ]
       }
+      post_feedback_ratings: {
+        Row: {
+          clarity_score: number | null
+          created_at: string
+          id: string
+          innovation_score: number | null
+          market_fit_score: number | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clarity_score?: number | null
+          created_at?: string
+          id?: string
+          innovation_score?: number | null
+          market_fit_score?: number | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clarity_score?: number | null
+          created_at?: string
+          id?: string
+          innovation_score?: number | null
+          market_fit_score?: number | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_feedback_ratings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_reposts: {
         Row: {
           created_at: string | null
@@ -2435,6 +2482,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reputation_transactions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          points: number
+          reference_id: string | null
+          reference_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          points: number
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          points?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reputation_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sprint_accountability: {
         Row: {
@@ -3084,6 +3169,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_journey_progress: {
+        Row: {
+          created_at: string
+          id: string
+          plan_it_completed: boolean | null
+          plan_it_completed_at: string | null
+          propel_applied: boolean | null
+          propel_applied_at: string | null
+          propel_viewed: boolean | null
+          propel_viewed_at: string | null
+          refine_it_feedback_received: boolean | null
+          refine_it_feedback_received_at: string | null
+          refine_it_shared: boolean | null
+          refine_it_shared_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_it_completed?: boolean | null
+          plan_it_completed_at?: string | null
+          propel_applied?: boolean | null
+          propel_applied_at?: string | null
+          propel_viewed?: boolean | null
+          propel_viewed_at?: string | null
+          refine_it_feedback_received?: boolean | null
+          refine_it_feedback_received_at?: string | null
+          refine_it_shared?: boolean | null
+          refine_it_shared_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_it_completed?: boolean | null
+          plan_it_completed_at?: string | null
+          propel_applied?: boolean | null
+          propel_applied_at?: string | null
+          propel_viewed?: boolean | null
+          propel_viewed_at?: string | null
+          refine_it_feedback_received?: boolean | null
+          refine_it_feedback_received_at?: string | null
+          refine_it_shared?: boolean | null
+          refine_it_shared_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           created_at: string
@@ -3118,6 +3254,50 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reputation: {
+        Row: {
+          achievements: Json | null
+          badges: Json | null
+          created_at: string | null
+          level: number | null
+          level_name: string | null
+          next_level_threshold: number | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievements?: Json | null
+          badges?: Json | null
+          created_at?: string | null
+          level?: number | null
+          level_name?: string | null
+          next_level_threshold?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievements?: Json | null
+          badges?: Json | null
+          created_at?: string | null
+          level?: number | null
+          level_name?: string | null
+          next_level_threshold?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reputation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3334,9 +3514,27 @@ export type Database = {
       }
     }
     Functions: {
+      award_reputation_points: {
+        Args: {
+          p_action_type: string
+          p_points: number
+          p_reference_id?: string
+          p_reference_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       calculate_business_success_score: {
         Args: { answers: Json }
         Returns: Json
+      }
+      calculate_user_level: {
+        Args: { points: number }
+        Returns: {
+          level: number
+          level_name: string
+          next_threshold: number
+        }[]
       }
       cleanup_expired_ai_cache: {
         Args: Record<PropertyKey, never>

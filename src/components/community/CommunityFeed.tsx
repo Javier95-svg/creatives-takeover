@@ -4,6 +4,7 @@ import PostCard, { Post } from "./PostCard";
 import { ChatbotReportCard } from "./ChatbotReportCard";
 import AdvancedFilters from "./AdvancedFilters";
 import CommunityInsights from "./CommunityInsights";
+import LeaderboardCard from "./LeaderboardCard";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -424,6 +425,9 @@ const CommunityFeed: React.FC = () => {
 
         {/* Enhanced Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
+          {/* Leaderboard */}
+          <LeaderboardCard />
+          
           {/* Community Insights */}
           <CommunityInsights />
           

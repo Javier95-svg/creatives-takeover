@@ -23,6 +23,7 @@ import SignInModal from "./SignInModal";
 import { SocialButtons } from "@/components/social/SocialButtons";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import ReputationBadge from "./ReputationBadge";
 
 export interface Post {
   id: string;
@@ -304,13 +305,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             </Avatar>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Link 
                   to={`/profile/${(post as any).user_id}`}
                   className="font-semibold text-foreground hover:text-primary transition-colors"
                 >
                   {post.author.name}
                 </Link>
+                {(post as any).user_id && (
+                  <ReputationBadge userId={(post as any).user_id} compact showPoints={false} />
+                )}
                 {isAuthenticated && user && (post as any).user_id !== user.id && (
                   <SocialButtons 
                     userId={(post as any).user_id} 
