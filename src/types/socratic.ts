@@ -41,10 +41,6 @@ export interface SocraticQuestion {
   followUp?: string;
   reasoningType: ReasoningType;
   priority: 'low' | 'medium' | 'high';
-  complexity: 'basic' | 'intermediate' | 'advanced' | 'expert';
-  targetAudience: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-  examples?: string[];
-  technicalTerms?: string[];
 }
 
 export type ReasoningType = 
@@ -67,7 +63,7 @@ export interface ReasoningAnalysis {
 }
 
 export interface LogicalFallacy {
-  type: 'confirmation_bias' | 'correlation_causation' | 'sunk_cost' | 'appeal_authority' | 'false_dichotomy' | 'hasty_generalization' | 'straw_man' | 'ad_hominem' | 'appeal_to_emotion' | 'slippery_slope' | 'post_hoc' | 'red_herring' | 'bandwagon';
+  type: 'confirmation_bias' | 'correlation_causation' | 'sunk_cost' | 'appeal_authority' | 'false_dichotomy' | 'hasty_generalization';
   description: string;
   impact: 'low' | 'medium' | 'high';
   correction: string;
@@ -135,25 +131,6 @@ export interface BusinessLogic {
   conclusions: string[];
 }
 
-export interface UserProfile {
-  expertiseLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-  reasoningStyle: 'analytical' | 'intuitive' | 'systematic' | 'creative';
-  industryExperience: Record<string, number>; // industry -> years of experience
-  learningPreferences: {
-    questionStyle: 'gentle' | 'challenging' | 'socratic';
-    detailLevel: 'summary' | 'detailed' | 'comprehensive';
-    examplesNeeded: boolean;
-    technicalDepth: 'basic' | 'intermediate' | 'advanced';
-  };
-  conversationHistory: {
-    totalSessions: number;
-    averageSessionLength: number;
-    preferredReasoningTypes: ReasoningType[];
-    improvementAreas: string[];
-    strengths: string[];
-  };
-}
-
 export interface SocraticContext {
   businessContext: {
     industry?: string;
@@ -166,7 +143,6 @@ export interface SocraticContext {
   currentFocus: ReasoningType;
   userConfidence: number;
   sessionGoals: string[];
-  userProfile: UserProfile;
 }
 
 export interface SocraticEngineConfig {

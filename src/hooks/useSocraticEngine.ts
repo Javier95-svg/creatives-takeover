@@ -10,8 +10,7 @@ import {
   QuestionGenerationResult,
   SocraticContext,
   SocraticEngineConfig,
-  LogicalFallacy,
-  UserProfile
+  LogicalFallacy
 } from '@/types/socratic';
 import { useSocraticNLP } from './useSocraticNLP';
 
@@ -31,207 +30,6 @@ export const useSocraticEngine = (config: SocraticEngineConfig = {
     enableFallacyDetection: true,
     confidenceThreshold: 0.6
   });
-
-  // Adaptive question complexity system
-  const adaptQuestionComplexity = (
-    baseQuestion: string, 
-    userProfile: UserProfile, 
-    reasoningType: ReasoningType
-  ): SocraticQuestion => {
-    const { expertiseLevel, learningPreferences } = userProfile;
-    
-    // Determine complexity level based on expertise
-    const complexityLevel = expertiseLevel === 'beginner' ? 'basic' :
-                           expertiseLevel === 'intermediate' ? 'intermediate' :
-                           expertiseLevel === 'advanced' ? 'advanced' : 'expert';
-    
-    // Adapt language and technical depth
-    let adaptedQuestion = baseQuestion;
-    let examples: string[] = [];
-    let technicalTerms: string[] = [];
-    
-    switch (complexityLevel) {
-      case 'basic':
-        adaptedQuestion = simplifyLanguage(baseQuestion);
-        examples = generateBasicExamples(reasoningType);
-        technicalTerms = [];
-        break;
-      case 'intermediate':
-        adaptedQuestion = addContext(baseQuestion, reasoningType);
-        examples = generateIntermediateExamples(reasoningType);
-        technicalTerms = extractBasicTechnicalTerms(baseQuestion);
-        break;
-      case 'advanced':
-        adaptedQuestion = addTechnicalDepth(baseQuestion, reasoningType);
-        examples = generateAdvancedExamples(reasoningType);
-        technicalTerms = extractAdvancedTechnicalTerms(baseQuestion);
-        break;
-      case 'expert':
-        adaptedQuestion = addExpertLevelDepth(baseQuestion, reasoningType);
-        examples = generateExpertExamples(reasoningType);
-        technicalTerms = extractExpertTechnicalTerms(baseQuestion);
-        break;
-    }
-    
-    return {
-      id: `question_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: 'clarification', // Will be overridden by caller
-      question: adaptedQuestion,
-      reasoningType,
-      priority: 'medium',
-      complexity: complexityLevel,
-      targetAudience: expertiseLevel,
-      examples: learningPreferences.examplesNeeded ? examples : undefined,
-      technicalTerms: technicalTerms.length > 0 ? technicalTerms : undefined
-    };
-  };
-
-  // Language simplification for beginners
-  const simplifyLanguage = (question: string): string => {
-    return question
-      .replace(/validate|validation/g, 'check')
-      .replace(/assumption|assumptions/g, 'beliefs or ideas')
-      .replace(/hypothesis|hypotheses/g, 'ideas to test')
-      .replace(/methodology/g, 'way of doing things')
-      .replace(/quantitative/g, 'numbers and data')
-      .replace(/qualitative/g, 'descriptions and stories')
-      .replace(/correlation/g, 'connection')
-      .replace(/causation/g, 'cause and effect')
-      .replace(/market penetration/g, 'getting customers')
-      .replace(/competitive advantage/g, 'what makes you better')
-      .replace(/value proposition/g, 'what you offer customers');
-  };
-
-  // Add context for intermediate users
-  const addContext = (question: string, reasoningType: ReasoningType): string => {
-    const contextHints = {
-      problem_solution_fit: 'Consider both the problem and your proposed solution',
-      market_validation: 'Think about your target customers and market demand',
-      financial_modeling: 'Consider your revenue sources and cost structure',
-      competitive_analysis: 'Compare your approach to existing alternatives',
-      growth_strategy: 'Think about how you'll scale your business',
-      risk_assessment: 'Consider potential challenges and how to address them'
-    };
-    
-    return `${contextHints[reasoningType]}. ${question}`;
-  };
-
-  // Add technical depth for advanced users
-  const addTechnicalDepth = (question: string, reasoningType: ReasoningType): string => {
-    const technicalHints = {
-      problem_solution_fit: 'Analyze the problem-solution fit using validation frameworks',
-      market_validation: 'Apply market research methodologies and customer development',
-      financial_modeling: 'Consider unit economics, customer lifetime value, and acquisition costs',
-      competitive_analysis: 'Use competitive positioning frameworks and differentiation strategies',
-      growth_strategy: 'Apply growth hacking principles and scalable acquisition channels',
-      risk_assessment: 'Conduct systematic risk analysis and mitigation planning'
-    };
-    
-    return `${technicalHints[reasoningType]}. ${question}`;
-  };
-
-  // Add expert-level depth
-  const addExpertLevelDepth = (question: string, reasoningType: ReasoningType): string => {
-    const expertHints = {
-      problem_solution_fit: 'Apply lean startup methodology and customer discovery frameworks',
-      market_validation: 'Conduct rigorous market analysis using TAM/SAM/SOM and customer interviews',
-      financial_modeling: 'Build comprehensive financial models with sensitivity analysis and scenario planning',
-      competitive_analysis: 'Perform thorough competitive intelligence and strategic positioning analysis',
-      growth_strategy: 'Develop sophisticated growth models with cohort analysis and viral mechanics',
-      risk_assessment: 'Implement enterprise-level risk management and contingency planning'
-    };
-    
-    return `${expertHints[reasoningType]}. ${question}`;
-  };
-
-  // Generate examples based on complexity level
-  const generateBasicExamples = (reasoningType: ReasoningType): string[] => {
-    const basicExamples = {
-      problem_solution_fit: [
-        'For example, if people struggle to find parking, your app could help them find available spots',
-        'Like how Uber solved the problem of calling a taxi by making it easier to get a ride'
-      ],
-      market_validation: [
-        'For instance, survey 20 potential customers to see if they would buy your product',
-        'Like how Dropbox validated demand by showing a simple video before building the product'
-      ],
-      financial_modeling: [
-        'For example, if you charge $10/month and have 100 customers, that\'s $1,000 monthly revenue',
-        'Like calculating how much it costs to make your product vs. what customers pay'
-      ]
-    };
-    return basicExamples[reasoningType] || [];
-  };
-
-  const generateIntermediateExamples = (reasoningType: ReasoningType): string[] => {
-    const intermediateExamples = {
-      problem_solution_fit: [
-        'Consider conducting customer interviews to validate the problem-solution fit',
-        'Use frameworks like the Value Proposition Canvas to align problems with solutions'
-      ],
-      market_validation: [
-        'Implement customer discovery interviews and build landing pages to test demand',
-        'Analyze market size using TAM (Total Addressable Market) calculations'
-      ],
-      financial_modeling: [
-        'Calculate unit economics including customer acquisition cost (CAC) and lifetime value (LTV)',
-        'Build financial projections with different growth scenarios and break-even analysis'
-      ]
-    };
-    return intermediateExamples[reasoningType] || [];
-  };
-
-  const generateAdvancedExamples = (reasoningType: ReasoningType): string[] => {
-    const advancedExamples = {
-      problem_solution_fit: [
-        'Apply lean startup methodology with MVP testing and pivot decisions',
-        'Use customer development frameworks like Steve Blank\'s approach'
-      ],
-      market_validation: [
-        'Conduct systematic market research with TAM/SAM/SOM analysis and customer segmentation',
-        'Implement A/B testing and cohort analysis for demand validation'
-      ],
-      financial_modeling: [
-        'Build comprehensive financial models with sensitivity analysis and Monte Carlo simulations',
-        'Implement advanced metrics like cohort analysis, churn prediction, and unit economics optimization'
-      ]
-    };
-    return advancedExamples[reasoningType] || [];
-  };
-
-  const generateExpertExamples = (reasoningType: ReasoningType): string[] => {
-    const expertExamples = {
-      problem_solution_fit: [
-        'Implement sophisticated customer discovery using design thinking and lean startup principles',
-        'Apply advanced validation techniques like conjoint analysis and choice modeling'
-      ],
-      market_validation: [
-        'Conduct comprehensive market intelligence with competitive analysis and trend forecasting',
-        'Implement advanced market research methodologies including ethnographic studies and behavioral analysis'
-      ],
-      financial_modeling: [
-        'Develop enterprise-level financial models with advanced scenario planning and risk modeling',
-        'Implement sophisticated financial analytics with machine learning for predictive modeling'
-      ]
-    };
-    return expertExamples[reasoningType] || [];
-  };
-
-  // Extract technical terms based on complexity
-  const extractBasicTechnicalTerms = (question: string): string[] => {
-    const basicTerms = question.match(/\b(market|customer|revenue|cost|competitor|growth|risk)\b/gi) || [];
-    return [...new Set(basicTerms.map(term => term.toLowerCase()))];
-  };
-
-  const extractAdvancedTechnicalTerms = (question: string): string[] => {
-    const advancedTerms = question.match(/\b(validation|methodology|hypothesis|quantitative|qualitative|penetration|advantage|proposition)\b/gi) || [];
-    return [...new Set(advancedTerms.map(term => term.toLowerCase()))];
-  };
-
-  const extractExpertTechnicalTerms = (question: string): string[] => {
-    const expertTerms = question.match(/\b(TAM|SAM|SOM|CAC|LTV|MVP|lean\s+startup|customer\s+development|cohort\s+analysis|unit\s+economics)\b/gi) || [];
-    return [...new Set(expertTerms.map(term => term.toLowerCase()))];
-  };
 
   // Socratic question templates by type and reasoning
   const questionTemplates = {
@@ -457,79 +255,46 @@ export const useSocraticEngine = (config: SocraticEngineConfig = {
     }
   };
 
-  // Generate Socratic questions based on reasoning analysis with adaptive complexity
+  // Generate Socratic questions based on reasoning analysis
   const generateSocraticQuestions = (
     analysis: ReasoningAnalysis,
-    context: QuestionContext,
-    userProfile?: UserProfile
+    context: QuestionContext
   ): QuestionGenerationResult => {
     const questions: SocraticQuestion[] = [];
     const { reasoningType, logicGaps, assumptions, logicalFallacies } = analysis;
 
-    // Generate questions based on logic gaps with adaptive complexity
+    // Generate questions based on logic gaps
     logicGaps.forEach((gap, index) => {
       if (index < 3) { // Limit to top 3 gaps
         const questionType = getQuestionTypeForGap(gap.type);
         const template = getQuestionTemplate(reasoningType, questionType);
         
         if (template) {
-          let question: SocraticQuestion;
-          
-          if (userProfile) {
-            // Use adaptive complexity
-            question = adaptQuestionComplexity(template, userProfile, reasoningType);
-            question.type = questionType;
-            question.id = `gap_${gap.id}_${Date.now()}`;
-            question.followUp = gap.suggestions[0];
-            question.priority = gap.impact === 'high' ? 'high' : 'medium';
-          } else {
-            // Fallback to basic question
-            question = {
-              id: `gap_${gap.id}_${Date.now()}`,
-              type: questionType,
-              question: template,
-              followUp: gap.suggestions[0],
-              reasoningType,
-              priority: gap.impact === 'high' ? 'high' : 'medium',
-              complexity: 'intermediate',
-              targetAudience: 'intermediate'
-            };
-          }
-          
-          questions.push(question);
+          questions.push({
+            id: `gap_${gap.id}_${Date.now()}`,
+            type: questionType,
+            question: template,
+            followUp: gap.suggestions[0],
+            reasoningType,
+            priority: gap.impact === 'high' ? 'high' : 'medium'
+          });
         }
       }
     });
 
-    // Generate questions for assumptions without evidence with adaptive complexity
+    // Generate questions for assumptions without evidence
     const unsupportedAssumptions = assumptions.filter(a => a.evidence.length === 0);
     unsupportedAssumptions.slice(0, 2).forEach((assumption, index) => {
       const template = getQuestionTemplate(reasoningType, 'assumption_testing');
       if (template) {
-        let question: SocraticQuestion;
-        
-        if (userProfile) {
-          // Use adaptive complexity
-          question = adaptQuestionComplexity(template, userProfile, reasoningType);
-          question.type = 'assumption_testing';
-          question.id = `assumption_${assumption.id}_${Date.now()}`;
-          question.followUp = `Specifically, how do you validate the assumption that "${assumption.text}"?`;
-          question.priority = 'medium';
-        } else {
-          // Fallback to basic question
-          question = {
-            id: `assumption_${assumption.id}_${Date.now()}`,
-            type: 'assumption_testing',
-            question: template,
-            followUp: `Specifically, how do you validate the assumption that "${assumption.text}"?`,
-            reasoningType,
-            priority: 'medium',
-            complexity: 'intermediate',
-            targetAudience: 'intermediate'
-          };
-        }
-        
-        questions.push(question);
+        questions.push({
+          id: `assumption_${assumption.id}_${Date.now()}`,
+          type: 'assumption_testing',
+          question: template,
+          followUp: `Specifically, how do you validate the assumption that "${assumption.text}"?`,
+          reasoningType,
+          priority: 'medium'
+        });
       }
     });
 
