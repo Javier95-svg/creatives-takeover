@@ -7,6 +7,8 @@ import { useNLU, NLUResult, BusinessIntent, BusinessEntity } from './useNLU';
 import { streamChat } from './useStreamingChat';
 import { useConversationMemory } from './useConversationMemory';
 import { MEMORY_PATTERNS, detectMood, detectTone, extractTitle } from './useChatbot-memory-helpers';
+import { useSocraticEngine } from './useSocraticEngine';
+import { SocraticContext, ReasoningAnalysis, SocraticQuestion } from '@/types/socratic';
 // Dynamic FAQ functionality removed - using static FAQs
 // Advanced analytics functionality removed - to be implemented per IMPLEMENTATION_PLAN.md
 
@@ -341,6 +343,25 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   });
 
   const { createMemory } = useConversationMemory();
+
+  // Socratic Logic Engine
+  const socraticEngine = useSocraticEngine({
+    enableFallacyDetection: true,
+    enableAssumptionSurfacing: true,
+    enableEvidenceEvaluation: true,
+    maxQuestionsPerSession: 8,
+    reasoningDepth: 'medium',
+    questionStyle: 'gentle'
+  });
+
+  // Socratic reasoning state
+  const [socraticContext, setSocraticContext] = useState<SocraticContext>({
+    businessContext: {},
+    reasoningHistory: [],
+    currentFocus: 'problem_solution_fit',
+    userConfidence: 0.5,
+    sessionGoals: []
+  });
 
   // Streaming state
   const [streamingMessage, setStreamingMessage] = useState('');
@@ -789,6 +810,43 @@ What aspect of your business would you like to explore?`;
     };
   };
 
+  // Socratic reasoning quick actions
+  const generateSocraticQuickActions = (reasoningAnalysis: ReasoningAnalysis): ChatMessage['quickActions'] => {
+    const actions: ChatMessage['quickActions'] = [];
+    
+    if (reasoningAnalysis.logicGaps.length > 0) {
+      actions.push({
+        text: '🧠 Explore Logic Gaps',
+        action: 'explore_logic_gaps',
+        href: '#logic-gaps'
+      });
+    }
+    
+    if (reasoningAnalysis.assumptions.length > 0) {
+      actions.push({
+        text: '🔍 Test Assumptions',
+        action: 'test_assumptions',
+        href: '#assumptions'
+      });
+    }
+    
+    if (reasoningAnalysis.confidence < 0.7) {
+      actions.push({
+        text: '💡 Strengthen Reasoning',
+        action: 'strengthen_reasoning',
+        href: '#reasoning'
+      });
+    }
+    
+    actions.push({
+      text: '📊 View Analysis',
+      action: 'view_reasoning_analysis',
+      href: '#analysis'
+    });
+    
+    return actions;
+  };
+
   const handleClarificationResponse = async (content: string, nluResult: NLUResult): Promise<AIResponse> => {
     const topIntents = nluResult.intents.slice(0, 2);
     
@@ -809,7 +867,7 @@ Or perhaps something else entirely? Please let me know which direction you'd lik
     };
   };
 
-  // Enhanced AI response generation with memory and context awareness
+  // Enhanced AI response generation with Socratic reasoning
   const generateAIResponse = async (userMessage: string, nluResult?: NLUResult): Promise<AIResponse> => {
     const startTime = Date.now();
     dispatch({ type: 'SET_PROCESSING', payload: true });
@@ -817,6 +875,54 @@ Or perhaps something else entirely? Please let me know which direction you'd lik
     try {
       const lowerMessage = userMessage.toLowerCase();
       const { context, businessContext, conversationMemory } = conversationState;
+
+      // Analyze reasoning with Socratic engine
+      const reasoningAnalysis = socraticEngine.analyzeReasoning(userMessage);
+      
+      // Update Socratic context
+      setSocraticContext(prev => ({
+        ...prev,
+        businessContext: {
+          ...prev.businessContext,
+          industry: businessContext.industry,
+          stage: businessContext.stage,
+          problem: reasoningAnalysis.entities.find(e => e.type === 'problem')?.text,
+          solution: reasoningAnalysis.entities.find(e => e.type === 'solution')?.text,
+          market: reasoningAnalysis.entities.find(e => e.type === 'market')?.text
+        },
+        reasoningHistory: [...prev.reasoningHistory, reasoningAnalysis],
+        currentFocus: reasoningAnalysis.reasoningType,
+        userConfidence: reasoningAnalysis.confidence
+      }));
+
+      // Generate Socratic questions if reasoning needs improvement
+      const needsSocraticGuidance = reasoningAnalysis.logicGaps.length > 0 || 
+                                   reasoningAnalysis.assumptions.length > 0 ||
+                                   reasoningAnalysis.confidence < 0.7;
+
+      if (needsSocraticGuidance) {
+        const socraticGuidance = socraticEngine.guideReasoning(socraticContext, userMessage);
+        
+        // If we have high-priority Socratic questions, use them
+        if (socraticGuidance.priority === 'high' && socraticGuidance.questions.length > 0) {
+          const topQuestion = socraticGuidance.questions[0];
+          return {
+            content: `I'd like to explore your thinking more deeply. ${topQuestion.question}
+
+${topQuestion.followUp ? `\n${topQuestion.followUp}` : ''}
+
+This will help us strengthen your business logic and ensure you're building on solid foundations.`,
+            messageType: 'business_plan',
+            quickActions: socraticGuidance.questions.slice(1, 3).map(q => ({
+              text: q.question.substring(0, 50) + '...',
+              action: 'socratic_question',
+              href: q.id
+            })),
+            confidence: 0.95,
+            sources: ['Socratic Logic Engine', 'Business Reasoning Analysis']
+          };
+        }
+      }
 
       // Track response time
       const responseTime = Date.now() - startTime;
@@ -1774,6 +1880,11 @@ What specific aspect of your business would you like to focus on first?`;
     
     // Configuration
     config,
+    
+    // Socratic Logic Engine
+    socraticEngine,
+    socraticContext,
+    generateSocraticQuickActions,
     
     // Chat mode control
     chatMode,

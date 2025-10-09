@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChatbot } from '@/hooks/useChatbot';
 import TypingMessage from '@/components/TypingMessage';
+import { ReasoningAnalysis } from '@/types/socratic';
+import SocraticReasoningPanel from './SocraticReasoningPanel';
 
 const ChatbotWidget = () => {
   const {
@@ -18,6 +20,9 @@ const ChatbotWidget = () => {
     streamingMessage,
     isStreaming,
     businessContext,
+    socraticEngine,
+    socraticContext,
+    generateSocraticQuickActions,
     conversationFlow,
     showFeedbackPrompt,
     rateSectionCompletion
@@ -27,6 +32,8 @@ const ChatbotWidget = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showProgress, setShowProgress] = useState(false); // Phase 5: Progress indicator
   const [celebrationMode, setCelebrationMode] = useState(false); // Phase 5: Celebration animation
+  const [showSocraticPanel, setShowSocraticPanel] = useState(false);
+  const [currentReasoningAnalysis, setCurrentReasoningAnalysis] = useState<ReasoningAnalysis | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -146,6 +153,46 @@ const ChatbotWidget = () => {
     }
   }, [isOpen, isMinimized]);
 
+  // Socratic reasoning handlers
+  const handleSocraticQuestion = (question: string) => {
+    setShowSocraticPanel(false);
+    sendMessage(question);
+  };
+
+  const handleExploreGap = (gap: any) => {
+    setShowSocraticPanel(false);
+    sendMessage(`Let's explore this logic gap: ${gap.description}. ${gap.suggestions[0]}`);
+  };
+
+  const handleTestAssumption = (assumption: any) => {
+    setShowSocraticPanel(false);
+    sendMessage(`Let's test this assumption: "${assumption.text}". How do you validate this ${assumption.type} assumption?`);
+  };
+
+  // Enhanced quick action handler with Socratic reasoning
+  const handleEnhancedQuickAction = (action: string, href?: string) => {
+    // Handle Socratic reasoning actions
+    if (action === 'explore_logic_gaps' || action === 'test_assumptions' || action === 'strengthen_reasoning' || action === 'view_reasoning_analysis') {
+      // Analyze the last user message for reasoning
+      const lastUserMessage = messages.filter(m => !m.isBot).pop();
+      if (lastUserMessage && socraticEngine) {
+        const analysis = socraticEngine.analyzeReasoning(lastUserMessage.content);
+        setCurrentReasoningAnalysis(analysis);
+        setShowSocraticPanel(true);
+      }
+      return;
+    }
+    
+    // Handle Socratic questions
+    if (action === 'socratic_question') {
+      // This would be handled by the specific question content
+      return;
+    }
+    
+    // Fallback to default handler
+    handleQuickAction(action, href);
+  };
+
   const handleSend = () => {
     if (inputValue.trim()) {
       sendMessage(inputValue.trim());
@@ -256,7 +303,7 @@ const ChatbotWidget = () => {
                             key={actionIndex}
                             variant="outline"
                             size="sm"
-                            onClick={() => handleQuickAction(action.action, action.href)}
+                            onClick={() => handleEnhancedQuickAction(action.action, action.href)}
                             className={`hover:bg-primary/10 ${
                               deviceType === 'mobile' 
                                 ? 'text-sm h-10 px-4 min-h-[44px]' 
@@ -319,6 +366,19 @@ const ChatbotWidget = () => {
           </>
         )}
       </div>
+
+      {/* Socratic Reasoning Panel */}
+      {showSocraticPanel && currentReasoningAnalysis && (
+        <div className="absolute bottom-20 right-4 z-50">
+          <SocraticReasoningPanel
+            analysis={currentReasoningAnalysis}
+            onClose={() => setShowSocraticPanel(false)}
+            onAskQuestion={handleSocraticQuestion}
+            onExploreGap={handleExploreGap}
+            onTestAssumption={handleTestAssumption}
+          />
+        </div>
+      )}
     </div>
   );
 };
