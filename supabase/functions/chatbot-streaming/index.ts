@@ -140,6 +140,7 @@ serve(async (req) => {
         const reader = aiResponse.body?.getReader();
         const decoder = new TextDecoder();
         let fullMessage = '';
+        let buffer = ''; // Buffer for incomplete chunks
 
         if (!reader) {
           controller.close();
@@ -151,24 +152,50 @@ serve(async (req) => {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+            // Decode and add to buffer
+            buffer += decoder.decode(value, { stream: true });
+            
+            // Split by newlines but keep the last incomplete line in buffer
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep last incomplete line
 
             for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6);
-                if (data === '[DONE]') continue;
+              // Skip empty lines and comments
+              if (line.trim() === '' || line.startsWith(':')) continue;
+              
+              // Process SSE data lines
+              if (!line.startsWith('data: ')) continue;
 
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    fullMessage += content;
-                    controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content, type: 'delta' })}\n\n`));
-                  }
-                } catch (e) {
-                  console.error('Parse error:', e);
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullMessage += content;
+                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content, type: 'delta' })}\n\n`));
                 }
+              } catch (e) {
+                console.error('Parse error for line:', data.substring(0, 100), 'Error:', e);
+                // Continue processing other lines
+              }
+            }
+          }
+
+          // Process final buffer if it contains data
+          if (buffer.trim() && buffer.startsWith('data: ')) {
+            const data = buffer.slice(6).trim();
+            if (data !== '[DONE]') {
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullMessage += content;
+                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content, type: 'delta' })}\n\n`));
+                }
+              } catch (e) {
+                console.error('Final buffer parse error:', e);
               }
             }
           }
