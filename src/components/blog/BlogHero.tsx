@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronDown, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import heroImage from "@/assets/hero-bg-animated.jpg";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 interface BlogHeroProps {
   onSearch?: (searchTerm: string) => void;
@@ -10,6 +11,13 @@ interface BlogHeroProps {
 
 const BlogHero = ({ onSearch }: BlogHeroProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const fullText = "Insighta blends AI-driven analysis with curated market intelligence to help entrepreneurs uncover funding opportunities, identify market trends, and make informed, data-based decisions. Covering everything from investment contests to accelerator programs, Insighta turns complex market information into practical insights that empower creative businesses to seize the right opportunities at the perfect moment.";
+  
+  const { displayedText, isTyping } = useTypingAnimation({ 
+    text: fullText, 
+    speed: 20,
+    startDelay: 500
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,8 +79,9 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
 
           {/* Description */}
           <div className="max-w-3xl mx-auto animate-slide-up px-4" style={{ animationDelay: '0.3s' }}>
-            <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed text-center">
-              Insighta blends AI-driven analysis with curated market intelligence to help entrepreneurs uncover funding opportunities, identify market trends, and make informed, data-based decisions. Covering everything from investment contests to accelerator programs, Insighta turns complex market information into practical insights that empower creative businesses to seize the right opportunities at the perfect moment.
+            <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed text-left">
+              {displayedText}
+              {isTyping && <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />}
             </p>
           </div>
         </div>
