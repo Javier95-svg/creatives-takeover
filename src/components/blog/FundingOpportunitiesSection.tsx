@@ -52,13 +52,13 @@ const FundingOpportunitiesSection = () => {
       
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="text-center mb-12 animate-slide-up">
-          <div className="inline-flex items-center gap-2 mb-3">
+          <div className="inline-flex items-center gap-2 mb-6">
             <Sparkles className="h-6 w-6 text-primary animate-pulse" />
             <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent animate-fade-in animate-glow">
               Discover Funding Opportunities
             </h2>
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg mt-4">
             Investment contests, accelerator programs, and funding opportunities for your refined business plan
           </p>
         </div>
