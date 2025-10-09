@@ -1327,6 +1327,45 @@ export type Database = {
           },
         ]
       }
+      daily_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_description: string | null
+          challenge_title: string
+          challenge_type: string
+          completion_count: number | null
+          created_at: string | null
+          id: string
+          participants_count: number | null
+          reward_badge_id: string | null
+          reward_points: number | null
+        }
+        Insert: {
+          challenge_date: string
+          challenge_description?: string | null
+          challenge_title: string
+          challenge_type: string
+          completion_count?: number | null
+          created_at?: string | null
+          id?: string
+          participants_count?: number | null
+          reward_badge_id?: string | null
+          reward_points?: number | null
+        }
+        Update: {
+          challenge_date?: string
+          challenge_description?: string | null
+          challenge_title?: string
+          challenge_type?: string
+          completion_count?: number | null
+          created_at?: string | null
+          id?: string
+          participants_count?: number | null
+          reward_badge_id?: string | null
+          reward_points?: number | null
+        }
+        Relationships: []
+      }
       daily_check_ins: {
         Row: {
           blockers: string | null
@@ -3002,6 +3041,51 @@ export type Database = {
           },
         ]
       }
+      user_challenge_completions: {
+        Row: {
+          challenge_id: string | null
+          completed_at: string | null
+          id: string
+          points_awarded: number | null
+          proof_reference_id: string | null
+          proof_reference_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          proof_reference_id?: string | null
+          proof_reference_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          proof_reference_id?: string | null
+          proof_reference_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_challenge_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_credits: {
         Row: {
           balance: number
@@ -3548,6 +3632,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      complete_daily_challenge: {
+        Args: {
+          p_challenge_id: string
+          p_proof_reference_id?: string
+          p_proof_reference_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       get_fresh_market_insights: {
         Args: {
           p_data_types?: string[]
@@ -3588,9 +3681,25 @@ export type Database = {
           author_name: string
         }[]
       }
+      get_todays_challenge: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          challenge_description: string
+          challenge_title: string
+          challenge_type: string
+          completion_count: number
+          id: string
+          participants_count: number
+          reward_points: number
+        }[]
+      }
       grant_monthly_credits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      has_completed_todays_challenge: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {

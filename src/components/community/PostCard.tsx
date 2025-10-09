@@ -264,6 +264,24 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
       setLocalComments(prev => prev + 1);
       loadComments();
       toast.success('Comment added!');
+      
+      // Auto-complete daily challenge if applicable (comment type)
+      try {
+        const { data: challengeData } = await supabase.rpc('get_todays_challenge');
+        if (challengeData && challengeData.length > 0) {
+          const challenge = challengeData[0];
+          if (challenge.challenge_type === 'comment') {
+            await supabase.rpc('complete_daily_challenge', {
+              p_user_id: user.id,
+              p_challenge_id: challenge.id,
+              p_proof_reference_id: post.id,
+              p_proof_reference_type: 'comment'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error auto-completing challenge:', error);
+      }
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
