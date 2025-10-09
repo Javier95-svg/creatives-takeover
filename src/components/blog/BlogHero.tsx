@@ -50,7 +50,7 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
           
           {/* Subtitle */}
           <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.1s' }}>
-            AI-Powered Business Opportunities & Market Intelligence
+            Discover curated funding opportunities, trending market insights, and AI-powered business intelligence tailored for entrepreneurs ready to turn ideas into reality.
           </p>
 
           {/* Value Proposition */}
