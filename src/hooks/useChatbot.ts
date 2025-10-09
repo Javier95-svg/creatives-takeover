@@ -579,58 +579,61 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     triggerFeedbackCheckIn();
   }, [conversationState.messageCount, triggerFeedbackCheckIn]);
 
-  // Extract and store memory from conversations
+  // Extract and store memory from conversations (background processing)
   const extractAndStoreMemory = useCallback(async (userMessage: string, aiResponse: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    // Move memory extraction to background to avoid blocking responses
+    setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      // Get user's memory preference
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('memory_preference')
-        .eq('id', user.id)
-        .single();
+        // Get user's memory preference
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('memory_preference')
+          .eq('id', user.id)
+          .single();
 
-      const memoryPreference = profile?.memory_preference || 'important';
-      
-      // Memory extraction with importance scores
-      const minImportance = memoryPreference === 'everything' ? 0.0 : 
-                           memoryPreference === 'important' ? 0.5 : 0.8;
+        const memoryPreference = profile?.memory_preference || 'important';
+        
+        // Memory extraction with importance scores
+        const minImportance = memoryPreference === 'everything' ? 0.0 : 
+                             memoryPreference === 'important' ? 0.5 : 0.8;
 
-      // Find matching pattern
-      for (const pattern of MEMORY_PATTERNS) {
-        if (pattern.regex.test(userMessage) && pattern.importance >= minImportance) {
-          // Extract title from first sentence
-          const title = extractTitle(userMessage, pattern.titlePrefix);
+        // Find matching pattern
+        for (const pattern of MEMORY_PATTERNS) {
+          if (pattern.regex.test(userMessage) && pattern.importance >= minImportance) {
+            // Extract title from first sentence
+            const title = extractTitle(userMessage, pattern.titlePrefix);
 
-          // Extract tags from business context
-          const tags: string[] = [];
-          if (conversationState.businessContext.industry) {
-            tags.push(conversationState.businessContext.industry);
+            // Extract tags from business context
+            const tags: string[] = [];
+            if (conversationState.businessContext.industry) {
+              tags.push(conversationState.businessContext.industry);
+            }
+            if (conversationState.businessContext.stage) {
+              tags.push(conversationState.businessContext.stage);
+            }
+
+            await createMemory({
+              memory_type: pattern.type,
+              title,
+              content: userMessage,
+              importance_score: pattern.importance,
+              tags: tags.length > 0 ? tags : undefined,
+              business_stage: conversationState.businessContext.stage as any,
+              user_mood: detectMood(userMessage) as any,
+              ai_response_tone: detectTone(aiResponse) as any
+            });
+
+            break; // Only create one memory per message
           }
-          if (conversationState.businessContext.stage) {
-            tags.push(conversationState.businessContext.stage);
-          }
-
-          await createMemory({
-            memory_type: pattern.type,
-            title,
-            content: userMessage,
-            importance_score: pattern.importance,
-            tags: tags.length > 0 ? tags : undefined,
-            business_stage: conversationState.businessContext.stage as any,
-            user_mood: detectMood(userMessage) as any,
-            ai_response_tone: detectTone(aiResponse) as any
-          });
-
-          break; // Only create one memory per message
         }
+      } catch (error) {
+        console.error('Error storing memory:', error);
+        // Don't block the conversation if memory storage fails
       }
-    } catch (error) {
-      console.error('Error storing memory:', error);
-      // Don't block the conversation if memory storage fails
-    }
+    }, 0);
   }, [conversationState.businessContext, createMemory]);
 
   const generateId = (): string => {
@@ -812,9 +815,6 @@ Or perhaps something else entirely? Please let me know which direction you'd lik
     dispatch({ type: 'SET_PROCESSING', payload: true });
     
     try {
-      // Simulate AI processing with realistic timing
-      await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 900));
-
       const lowerMessage = userMessage.toLowerCase();
       const { context, businessContext, conversationMemory } = conversationState;
 
@@ -825,43 +825,50 @@ Or perhaps something else entirely? Please let me know which direction you'd lik
         responseTimeTracker.current.shift(); // Keep only last 20 response times
       }
 
-      // Extract business information from message
+      // Extract business information from message (lightweight)
       const extractedInfo = extractBusinessInformation(userMessage);
       
-      // Update conversation memory with new information
+      // Update conversation memory with new information (background)
       if (extractedInfo.industry) {
-        dispatch({ 
-          type: 'UPDATE_MEMORY', 
-          payload: { 
-            industryContext: extractedInfo.industry,
-            importantDetails: {
-              ...conversationMemory.importantDetails,
-              industry: extractedInfo.industry
-            }
-          } 
-        });
+        // Use setTimeout to defer heavy state updates
+        setTimeout(() => {
+          dispatch({ 
+            type: 'UPDATE_MEMORY', 
+            payload: { 
+              industryContext: extractedInfo.industry,
+              importantDetails: {
+                ...conversationMemory.importantDetails,
+                industry: extractedInfo.industry
+              }
+            } 
+          });
+        }, 0);
       }
 
-      // Check FAQ first for quick answers with enhanced relevance scoring
+      // Check FAQ first for quick answers (optimized)
       const contextualFAQs = getContextualFAQ(location.pathname);
       const allFAQs = [...contextualFAQs, ...chatbotFAQ];
-      const faqResults = FAQUtils.sortByRelevance(allFAQs, userMessage);
       
-      if (faqResults.length > 0 && faqResults[0].relevanceScore > 8) {
-        // Track FAQ usage for chatAnalytics
-        trackUserInteraction({ 
-          type: 'question_asked', 
-          data: { question: userMessage, source: 'FAQ' } 
-        });
+      // Use simpler relevance scoring for faster processing
+      const faqMatch = allFAQs.find(faq => 
+        faq.question.toLowerCase().includes(lowerMessage) || 
+        lowerMessage.includes(faq.question.toLowerCase())
+      );
+      
+      if (faqMatch) {
+        // Track FAQ usage for chatAnalytics (background)
+        setTimeout(() => {
+          trackUserInteraction({ 
+            type: 'question_asked', 
+            data: { question: userMessage, source: 'FAQ' } 
+          });
+        }, 0);
         
         return {
-          content: faqResults[0].answer,
-          quickActions: faqResults[0].quickActions,
+          content: faqMatch.answer,
+          quickActions: faqMatch.quickActions,
           confidence: 0.9,
-          sources: ['FAQ Database'],
-          memoryUpdate: {
-            previousTopics: [...conversationMemory.previousTopics, faqResults[0].category].slice(-5)
-          }
+          sources: ['FAQ Database']
         };
       }
 
@@ -1243,11 +1250,14 @@ What specific aspect of your business would you like to focus on first?`;
           const { data: { user } } = await supabase.auth.getUser();
           const userId = user?.id || null;
           
-          // Prepare conversation history
-          const conversationHistory = messages.map(msg => ({
-            role: msg.isBot ? 'assistant' as const : 'user' as const,
-            content: msg.content
-          }));
+          // Prepare conversation history (optimized - only last 5 messages)
+          const conversationHistory = messages
+            .filter(msg => msg.id !== 'streaming')
+            .slice(-5)
+            .map(msg => ({
+              role: msg.isBot ? 'assistant' as const : 'user' as const,
+              content: msg.content
+            }));
           
           // Add placeholder streaming message
           const streamingMsg: ChatMessage = {
@@ -1258,6 +1268,7 @@ What specific aspect of your business would you like to focus on first?`;
           };
           setMessages(prev => [...prev, streamingMsg]);
           setIsTyping(false);
+          setIsStreaming(true);
           
           // Stream AI response with full wizard context
           await streamChat(
@@ -1273,7 +1284,18 @@ What specific aspect of your business would you like to focus on first?`;
               answers: newAnswers
             },
             wizardStep,
-            chatMode
+            chatMode,
+            (chunk) => setStreamingMessage(prev => prev + chunk),
+            (fullMessage) => {
+              // Replace streaming message with final message
+              setMessages(prev => prev.map(msg => 
+                msg.id === 'streaming' 
+                  ? { ...msg, id: generateId(), content: fullMessage }
+                  : msg
+              ));
+              setStreamingMessage('');
+              setIsStreaming(false);
+            }
           );
           
           // Notify parent of step completion
@@ -1316,25 +1338,38 @@ What specific aspect of your business would you like to focus on first?`;
         setMessages(prev => [...prev, streamingMsg]);
         setIsTyping(false); // Remove typing indicator when streaming starts
 
-        // Prepare conversation history for API
+        // Prepare conversation history for API (optimized - only last 5 messages)
         const conversationHistory = messages
           .filter(msg => msg.id !== 'streaming')
+          .slice(-5)
           .map(msg => ({
             role: msg.isBot ? 'assistant' as const : 'user' as const,
             content: msg.content
           }));
 
         // Start streaming
-          await streamChat(
-            content,
-            sessionId,
-            conversationHistory,
-            conversationState.businessContext,
-            userId,
-            config.wizardMode,
-            config.wizardMode?.currentStep || wizardStep,
-            chatMode
-          );
+        setIsStreaming(true);
+        await streamChat(
+          content,
+          sessionId,
+          conversationHistory,
+          conversationState.businessContext,
+          userId,
+          config.wizardMode,
+          config.wizardMode?.currentStep || wizardStep,
+          chatMode,
+          (chunk) => setStreamingMessage(prev => prev + chunk),
+          (fullMessage) => {
+            // Replace streaming message with final message
+            setMessages(prev => prev.map(msg => 
+              msg.id === 'streaming' 
+                ? { ...msg, id: generateId(), content: fullMessage }
+                : msg
+            ));
+            setStreamingMessage('');
+            setIsStreaming(false);
+          }
+        );
 
       } else {
         // Fallback to non-streaming response

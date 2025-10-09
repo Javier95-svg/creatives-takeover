@@ -29,7 +29,9 @@ export const streamChat = async (
   userId: string | null,
   wizardMode: WizardMode | null,
   currentStep: number | null,
-  chatMode: 'wizard' | 'freeform'
+  chatMode: 'wizard' | 'freeform',
+  onChunk?: (chunk: string) => void,
+  onComplete?: (fullMessage: string) => void
 ): Promise<string> => {
   const CHAT_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
   const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng";
@@ -113,6 +115,8 @@ export const streamChat = async (
 
           if (parsed.type === 'delta' && parsed.content) {
             fullMessage += parsed.content;
+            // Update UI in real-time
+            onChunk?.(parsed.content);
           }
         } catch (e) {
           console.error('⚠️ JSON parse error for chunk:', data.substring(0, 50), 'Error:', e);
@@ -129,6 +133,8 @@ export const streamChat = async (
           const parsed = JSON.parse(data);
           if (parsed.type === 'delta' && parsed.content) {
             fullMessage += parsed.content;
+            // Update UI in real-time for final chunk
+            onChunk?.(parsed.content);
           }
         } catch (e) {
           console.error('⚠️ Final buffer parse error:', e);
@@ -145,6 +151,9 @@ export const streamChat = async (
   }
 
   console.log('✅ Streaming complete:', { messageLength: fullMessage.length });
+
+  // Call completion callback
+  onComplete?.(fullMessage);
 
   return fullMessage;
 };

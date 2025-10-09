@@ -45,20 +45,12 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Parallelize: Get/create conversation + fetch market data
-    const [convResult, marketResult] = await Promise.all([
-      supabase
-        .from('chatbot_conversations')
-        .select('*')
-        .eq('session_id', sessionId)
-        .maybeSingle(),
-      supabase
-        .from('market_intelligence')
-        .select('data_payload, industry, relevance_score')
-        .gte('freshness_score', 0.3)
-        .order('created_at', { ascending: false })
-        .limit(3)
-    ]);
+    // Get/create conversation (simplified - remove market data for faster response)
+    const convResult = await supabase
+      .from('chatbot_conversations')
+      .select('*')
+      .eq('session_id', sessionId)
+      .maybeSingle();
 
     let conversation = convResult.data;
     
@@ -93,10 +85,8 @@ serve(async (req) => {
         if (error) console.error('Background: Error saving user message:', error);
       });
 
-    const marketData = marketResult.data || [];
-
-    // Build system prompt
-    const systemPrompt = buildSystemPrompt(businessContext, marketData, wizardMode, currentStep);
+    // Build system prompt (simplified - no market data)
+    const systemPrompt = buildSystemPrompt(businessContext, [], wizardMode, currentStep);
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
@@ -206,41 +196,39 @@ serve(async (req) => {
             }
           }
 
-          // Run all post-stream operations in parallel
-          const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
-          const stage = determineConversationStage(updatedContext, conversationHistory.length);
-          const quickActions = generateQuickActions(stage, updatedContext, message, fullMessage);
+          // Run post-stream operations in background (non-blocking)
+          setTimeout(async () => {
+            const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
+            const stage = determineConversationStage(updatedContext, conversationHistory.length);
 
-          await Promise.all([
-            supabase
-              .from('chatbot_messages')
-              .insert({
-                conversation_id: conversation.id,
-                role: 'assistant',
-                content: fullMessage,
-                metadata: { 
-                  timestamp: new Date().toISOString(),
-                  streaming: true
-                }
-              }),
-            supabase
-              .from('chatbot_conversations')
-              .update({
-                business_context: updatedContext,
-                conversation_stage: stage,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', conversation.id)
-          ]);
+            await Promise.all([
+              supabase
+                .from('chatbot_messages')
+                .insert({
+                  conversation_id: conversation.id,
+                  role: 'assistant',
+                  content: fullMessage,
+                  metadata: { 
+                    timestamp: new Date().toISOString(),
+                    streaming: true
+                  }
+                }),
+              supabase
+                .from('chatbot_conversations')
+                .update({
+                  business_context: updatedContext,
+                  conversation_stage: stage,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', conversation.id)
+            ]);
+          }, 0);
 
-          // Send completion metadata
+          // Send completion metadata (simplified)
           controller.enqueue(
             new TextEncoder().encode(
               `data: ${JSON.stringify({ 
                 type: 'complete',
-                businessContext: updatedContext,
-                stage,
-                quickActions,
                 conversationId: conversation.id
               })}\n\n`
             )
