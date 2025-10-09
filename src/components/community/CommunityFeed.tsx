@@ -7,6 +7,9 @@ import CommunityInsights from "./CommunityInsights";
 import LeaderboardCard from "./LeaderboardCard";
 import DailyChallengeCard from "./DailyChallengeCard";
 import StreakNotificationBanner from "./StreakNotificationBanner";
+import CommunityPulseCard from "./CommunityPulseCard";
+import TrendingPostsCard from "./TrendingPostsCard";
+import CommunityMilestones from "./CommunityMilestones";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,10 +18,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useBadgeSystem } from "@/hooks/useBadgeSystem";
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { checkAndAwardBadges } = useBadgeSystem(user?.id);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -280,6 +285,11 @@ const CommunityFeed: React.FC = () => {
 
       toast.success('Post created successfully!');
 
+      // Check for new badges
+      if (user) {
+        setTimeout(() => checkAndAwardBadges(), 1000);
+      }
+
       // Auto-complete daily challenge if applicable
       if (data?.id) {
         try {
@@ -449,13 +459,11 @@ const CommunityFeed: React.FC = () => {
 
         {/* Enhanced Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
-          {/* Daily Challenge */}
+          <CommunityPulseCard />
           <DailyChallengeCard />
-          
-          {/* Leaderboard */}
+          <TrendingPostsCard />
+          <CommunityMilestones />
           <LeaderboardCard />
-          
-          {/* Community Insights */}
           <CommunityInsights />
           
           {/* Advanced Filters */}

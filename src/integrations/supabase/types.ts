@@ -271,6 +271,42 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_definitions: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          rarity: string
+          requirement_data: Json | null
+          requirement_type: string
+          requirement_value: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          rarity?: string
+          requirement_data?: Json | null
+          requirement_type: string
+          requirement_value?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          rarity?: string
+          requirement_data?: Json | null
+          requirement_type?: string
+          requirement_value?: number | null
+        }
+        Relationships: []
+      }
       business_insights_cache: {
         Row: {
           business_stage: string
@@ -1083,6 +1119,48 @@ export type Database = {
           },
         ]
       }
+      community_milestones: {
+        Row: {
+          achieved: boolean | null
+          achieved_at: string | null
+          celebration_message: string | null
+          created_at: string
+          current_value: number | null
+          id: string
+          milestone_description: string | null
+          milestone_title: string
+          milestone_type: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          achieved?: boolean | null
+          achieved_at?: string | null
+          celebration_message?: string | null
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          milestone_description?: string | null
+          milestone_title: string
+          milestone_type: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          achieved?: boolean | null
+          achieved_at?: string | null
+          celebration_message?: string | null
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          milestone_description?: string | null
+          milestone_title?: string
+          milestone_type?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           ai_insights: string[] | null
@@ -1183,6 +1261,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_pulse: {
+        Row: {
+          active_users: number | null
+          avg_engagement_score: number | null
+          challenges_completed: number | null
+          created_at: string
+          id: string
+          new_users: number | null
+          pulse_date: string
+          total_comments: number | null
+          total_posts: number | null
+          total_upvotes: number | null
+          trending_topics: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          active_users?: number | null
+          avg_engagement_score?: number | null
+          challenges_completed?: number | null
+          created_at?: string
+          id?: string
+          new_users?: number | null
+          pulse_date: string
+          total_comments?: number | null
+          total_posts?: number | null
+          total_upvotes?: number | null
+          trending_topics?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          active_users?: number | null
+          avg_engagement_score?: number | null
+          challenges_completed?: number | null
+          created_at?: string
+          id?: string
+          new_users?: number | null
+          pulse_date?: string
+          total_comments?: number | null
+          total_posts?: number | null
+          total_upvotes?: number | null
+          trending_topics?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       conversation_memory: {
         Row: {
@@ -1707,6 +1830,45 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      featured_content: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          display_order: number | null
+          expires_at: string
+          featured_at: string
+          featured_by: string | null
+          featured_reason: string | null
+          id: string
+          is_active: boolean | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          display_order?: number | null
+          expires_at?: string
+          featured_at?: string
+          featured_by?: string | null
+          featured_reason?: string | null
+          id?: string
+          is_active?: boolean | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          display_order?: number | null
+          expires_at?: string
+          featured_at?: string
+          featured_by?: string | null
+          featured_reason?: string | null
+          id?: string
+          is_active?: boolean | null
         }
         Relationships: []
       }
@@ -2985,6 +3147,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_title: string
+          achievement_type: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          progress: number | null
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_title: string
+          achievement_type: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          progress?: number | null
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_title?: string
+          achievement_type?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          progress?: number | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_activity_log: {
         Row: {
           activity_data: Json | null
@@ -3585,6 +3789,17 @@ export type Database = {
       }
     }
     Views: {
+      admin_reputation_analytics: {
+        Row: {
+          action_type: string | null
+          active_users: number | null
+          avg_points_per_action: number | null
+          date: string | null
+          total_points_awarded: number | null
+          total_transactions: number | null
+        }
+        Relationships: []
+      }
       trending_market_topics: {
         Row: {
           avg_relevance: number | null
@@ -3612,6 +3827,10 @@ export type Database = {
         Args: { answers: Json }
         Returns: Json
       }
+      calculate_trending_score: {
+        Args: { p_post_id: string; p_time_decay_hours?: number }
+        Returns: number
+      }
       calculate_user_level: {
         Args: { points: number }
         Returns: {
@@ -3619,6 +3838,10 @@ export type Database = {
           level_name: string
           next_threshold: number
         }[]
+      }
+      check_and_award_badges: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       cleanup_expired_ai_cache: {
         Args: Record<PropertyKey, never>
@@ -3707,6 +3930,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      refresh_admin_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       refresh_expired_trends: {
         Args: Record<PropertyKey, never>
