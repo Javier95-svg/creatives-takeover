@@ -54,7 +54,7 @@ const FundingOpportunitiesSection = () => {
         <div className="text-center mb-12 animate-slide-up">
           <div className="inline-flex items-center gap-2 mb-6">
             <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent animate-fade-in animate-glow">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent animate-fade-in animate-glow leading-tight pb-2">
               Discover Funding Opportunities
             </h2>
           </div>
