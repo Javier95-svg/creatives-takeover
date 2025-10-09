@@ -17,7 +17,7 @@ const PlatformProcess = () => {
       number: "01",
       icon: <Brain className="w-8 h-8 text-primary" />,
       title: "AI-Powered Planning",
-      description: "Start with our BizMap AI chatbot to analyze your business idea and create a comprehensive strategy.",
+      description: "Start with our BizMap AI Creative Operating System to analyze your business idea and create a comprehensive strategy.",
       features: ["Business idea validation", "Market analysis", "Strategic recommendations"],
       link: "/dream2plan"
     },

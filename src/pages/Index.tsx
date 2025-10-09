@@ -51,7 +51,7 @@ const Index = () => {
       {/* Minimal Campaign Popup - Faster for testing */}
       <CreditCampaignPopup trigger="time" delay={5000} />
       
-      {/* AI Chatbot Assistant */}
+      {/* AI Creative Operating System */}
       <ChatbotWidget />
     </div>
   );
