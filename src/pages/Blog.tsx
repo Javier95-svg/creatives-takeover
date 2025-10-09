@@ -5,13 +5,10 @@ import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import TrendingSection from "@/components/blog/TrendingSection";
-import SignupInviteModal from "@/components/blog/SignupInviteModal";
-import { useSignupInvite } from "@/hooks/useSignupInvite";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState, useRef } from "react";
 
 const Blog = () => {
-  const { showInvite, closeInvite } = useSignupInvite();
   const { trackPageVisit } = useReadingAnalytics();
   const [searchTerm, setSearchTerm] = useState<string>();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -83,12 +80,6 @@ const Blog = () => {
         />
       </main>
       <Footer />
-      
-      {/* Signup Invite Modal */}
-      <SignupInviteModal 
-        isOpen={showInvite} 
-        onClose={closeInvite} 
-      />
     </div>
   );
 };
