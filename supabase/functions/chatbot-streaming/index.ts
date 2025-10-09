@@ -280,11 +280,30 @@ function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], 
   const stageHint = businessContext.stage ? `Stage: ${businessContext.stage}` : '';
   const wizardProgress = wizardMode ? `\n🎯 WIZARD MODE (Step ${(currentStep || 0) + 1}/${wizardMode.steps?.length || 7}): Guide through structured planning. Acknowledge answers positively. Celebrate progress.` : '';
   
-  return `You are BizMap AI, a warm and supportive business advisor for creative entrepreneurs.
+  return `You are BizMap AI, the intelligent business analysis and strategy assistant built for Creatives Takeover. Your main goal is to guide users from raw ideas to polished business reports and pitch-ready plans through smart questioning, structured outputs, and personalized insights.
 
 ${wizardProgress}
 
 CONTEXT: ${industryHint} ${stageHint}
+
+🎯 PRIMARY OBJECTIVES:
+- Help users define, structure, and validate their business ideas
+- Generate comprehensive business plans with market analysis, competitors, customer personas, monetization models, and go-to-market strategies
+- Suggest action steps and resources that move users closer to investor readiness
+- Adapt tone and detail to the user's experience level (beginner, intermediate, or expert)
+
+🧠 CORE CAPABILITIES:
+- Ask clarifying questions before generating long outputs
+- Produce clear, structured, investor-friendly business reports
+- Include real-world business insights and startup logic (product-market fit, scalability, revenue streams, etc.)
+- Generate data-driven insights (even simulated, labeled as "Estimates based on typical market data")
+- Provide feedback summaries and next-step checklists
+
+🗣️ INTERACTION STYLE:
+- Be friendly, smart, and confidence-boosting
+- Use concise and professional language with occasional motivational tone
+- Guide like a mentor who wants the user to succeed, not just an assistant
+- Ask one key follow-up question after every major response
 
 CORE PRINCIPLES:
 1. Speak like a supportive friend, not a corporate consultant
@@ -293,12 +312,18 @@ CORE PRINCIPLES:
 4. Keep responses under 120 words unless detailed analysis requested
 5. Ask ONE clear, specific question at a time
 
-CREATIVE-FRIENDLY LANGUAGE:
+CREATIVE-FRIENDLY LANGUAGE TRANSLATION:
 - "Your ideal customers" NOT "target market"
 - "What makes you special" NOT "value proposition"  
 - "How you'll earn money" NOT "revenue model"
 - "Your unfair advantage" NOT "competitive advantage"
 - "Getting first customers" NOT "market penetration"
+- "Money planning" NOT "financial projections"
+- "People who matter to your business" NOT "stakeholders"
+- "Numbers you're tracking" NOT "KPIs"
+- "Use" NOT "leverage"
+- "Teamwork" NOT "synergy"
+- "Time and energy" NOT "bandwidth"
 
 CONVERSATION APPROACH:
 1. Discovery - understand their idea and situation
@@ -306,6 +331,12 @@ CONVERSATION APPROACH:
 3. Validation - guide customer interviews and feedback
 4. MVP - support building simple first version
 5. Launch - help plan first sales
+
+INDUSTRY-SPECIFIC BENCHMARKS:
+Technology: $50-500/month SaaS, $200-1000 customer acquisition cost
+Creative Services: $100-5000/project, $50-300 customer acquisition cost
+E-commerce: 30-50% markup, $20-100 customer acquisition cost
+Food & Beverage: 28-35% food cost, 30-35% labor cost, <10% rent
 
 AUTOMATION SUGGESTIONS:
 - Recommend no-code tools (Zapier, Make) for repetitive tasks
@@ -319,9 +350,17 @@ RESPONSE STRUCTURE:
 3. Ask ONE focused question OR offer 2-3 options
 4. End with encouragement
 
-Example: "Love that you're thinking about sustainability! Many creative businesses find customers really care about this. It could be a key part of what makes you special. What aspect matters most to you - environmental impact, ethical sourcing, or community giving back?"
+HANDLING SPECIFIC SCENARIOS:
 
-Remember: Build their confidence to take action, not just gather information.`;
+Imposter Syndrome: "Let's talk about this - imposter syndrome is SO common with entrepreneurs. Here's the truth: You don't need a business degree or years of experience. You need: 1. A problem you understand deeply, 2. Willingness to learn as you go, 3. Resilience when things get tough. What specifically makes you feel unqualified? Let's tackle that together."
+
+Overwhelmed: "I hear you - this probably feels like drinking from a fire hose right now. That means we're moving too fast. Let's slow wayyy down. Forget everything we've covered. If you could only do ONE thing this week to move your business forward, what would it be? Just one thing. We'll build from there. 🙂"
+
+Unrealistic Expectations: "I love the ambition! Let's reality-check this together so we build a solid plan. Most businesses in [their industry] generate $50K-200K in year one. Here's the math: If you charge $X per [product/service], you'd need to sell Y per month, which means Z new customers monthly. Does that pace feel realistic?"
+
+Example Response: "Love that you're thinking about sustainability! Many creative businesses find customers really care about this. It could be a key part of what makes you special. What aspect matters most to you - environmental impact, ethical sourcing, or community giving back?"
+
+Remember: Build their confidence to take action, not just gather information. Make BizMap AI the entrepreneur's personal strategist — fast, insightful, and perfectly aligned with the Creatives Takeover mission: helping creators turn ideas into funded ventures.`;
 }
 
 async function extractBusinessContext(userMessage: string, aiResponse: string, currentContext: BusinessContext): Promise<BusinessContext> {
@@ -383,47 +422,73 @@ function detectConversationTopic(aiResponse: string, userMessage: string): {
   };
 }
 
-// Pre-computed topic CTAs for fast lookup
+// Pre-computed topic CTAs for fast lookup with enhanced engagement
 const topicCTAs: Record<string, string[]> = {
   validation: [
     "Show me validation methods 🧪",
     "Help me get feedback 💬",
-    "Give me MVP steps 🚀"
+    "Give me MVP steps 🚀",
+    "Test my idea for $0 💡"
   ],
   pricing: [
     "Show me pricing examples 💰",
     "Help calculate costs 🧮",
-    "Compare pricing models 📊"
+    "Compare pricing models 📊",
+    "Find my sweet spot 🎯"
   ],
   customers: [
     "Identify my ideal customers 👥",
     "Customer research tips 🔍",
-    "Create customer avatar 📝"
+    "Create customer avatar 📝",
+    "Find them online 🌐"
   ],
   marketing: [
     "Marketing channels that work 📢",
     "Low-budget ideas 💡",
-    "Create marketing plan 📋"
+    "Create marketing plan 📋",
+    "Start with one platform 🚀"
   ],
   problem: [
     "Articulate problem better 💬",
     "Validate the problem 🧪",
-    "Research pain points 🔍"
+    "Research pain points 🔍",
+    "Make it crystal clear ✨"
   ],
   solution: [
     "Describe solution clearly 💡",
     "What makes it unique 💎",
-    "Position vs alternatives ⚖️"
+    "Position vs alternatives ⚖️",
+    "Build my elevator pitch 🎤"
   ],
   goals: [
     "Set realistic goals 🎯",
     "Create 90-day plan 🗓️",
-    "Prioritize next steps ✅"
+    "Prioritize next steps ✅",
+    "Break it down 📝"
   ],
   general: [
     "Get clarity 💡",
     "Focus on first step 🎯",
-    "Show me examples 📋"
+    "Show me examples 📋",
+    "Start simple 🧘"
+  ],
+  overwhelmed: [
+    "Let's simplify this 🧘",
+    "Skip for now ⏭️",
+    "Focus on one thing 🎯",
+    "Take a break ☕"
+  ],
+  confidence: [
+    "Build my confidence 💪",
+    "Learn the basics 📚",
+    "Find a mentor 🤝",
+    "Start small 🌱"
+  ],
+  budget: [
+    "Bootstrap plan 💰",
+    "Free options first 🆓",
+    "Comfortable start 💸",
+    "Find funding 💳"
   ]
 };
 
@@ -436,20 +501,90 @@ function generateQuickActions(
   const sentiment = detectSentiment(userMessage);
   const topic = detectConversationTopic(aiResponse, userMessage);
   
-  // Simplified logic for faster generation
+  // Enhanced sentiment-based responses
   if (sentiment === 'overwhelmed') {
     return [
       "Let's simplify this 🧘",
       "Skip for now ⏭️",
-      (topicCTAs[topic.mainTopic] || topicCTAs.general)[0]
+      "Focus on one thing 🎯",
+      "Take a break ☕"
     ];
   }
   
-  const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
-  
   if (sentiment === 'excited') {
-    return [...topicOptions.slice(0, 2), "Capture momentum 🚀"];
+    const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
+    return [
+      ...topicOptions.slice(0, 2),
+      "Capture momentum 🚀",
+      "What's next? ⚡"
+    ];
   }
   
-  return topicOptions;
+  if (sentiment === 'confused') {
+    return [
+      "Get clarity 💡",
+      "Show me examples 📋",
+      "Start simple 🧘",
+      "Ask a friend 🤝"
+    ];
+  }
+  
+  // Industry-specific quick actions
+  if (context.industry) {
+    const industryActions = {
+      technology: ["Build MVP 🚀", "Find co-founder 👥", "Get funding 💰", "Validate idea 🧪"],
+      healthcare: ["Research regulations 📋", "Find partners 🤝", "Get certified ✅", "Test with users 🧪"],
+      retail: ["Create online store 🛒", "Find suppliers 📦", "Test products 🧪", "Build brand 🎨"],
+      food: ["Test recipes 👨‍🍳", "Find location 📍", "Get permits 📋", "Create menu 📝"],
+      education: ["Create curriculum 📚", "Find students 👥", "Build platform 💻", "Get certified ✅"],
+      finance: ["Research regulations 📋", "Build security 🔒", "Find partners 🤝", "Test with users 🧪"],
+      creative: ["Build portfolio 🎨", "Find clients 👥", "Set prices 💰", "Create website 🌐"]
+    };
+    
+    const industrySpecific = industryActions[context.industry as keyof typeof industryActions];
+    if (industrySpecific) {
+      return industrySpecific;
+    }
+  }
+  
+  // Stage-specific actions
+  if (stage === 'discovery') {
+    return [
+      "Define my idea 💡",
+      "Research the market 🔍",
+      "Find my customers 👥",
+      "Test the problem 🧪"
+    ];
+  }
+  
+  if (stage === 'validation') {
+    return [
+      "Get customer feedback 💬",
+      "Build a prototype 🚀",
+      "Test pricing 💰",
+      "Find early adopters 👥"
+    ];
+  }
+  
+  if (stage === 'planning') {
+    return [
+      "Create business plan 📋",
+      "Set up finances 💰",
+      "Plan marketing 📢",
+      "Build operations ⚙️"
+    ];
+  }
+  
+  if (stage === 'execution') {
+    return [
+      "Launch MVP 🚀",
+      "Get first customers 👥",
+      "Scale marketing 📈",
+      "Optimize operations ⚡"
+    ];
+  }
+  
+  // Default topic-based actions
+  const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
+  return topicOptions.slice(0, 3);
 }

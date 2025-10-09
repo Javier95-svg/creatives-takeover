@@ -349,27 +349,63 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
   // These features are planned for future implementation
 
-  // Business planning knowledge base
+  // Business planning knowledge base with expanded industry insights
   const businessInsights = useMemo(() => ({
     technology: {
       trends: 'AI, cloud computing, and cybersecurity are driving growth',
       challenges: 'Rapid technological change, talent acquisition, funding competition',
-      opportunities: 'Automation, SaaS solutions, mobile-first applications'
+      opportunities: 'Automation, SaaS solutions, mobile-first applications',
+      pricing: '$50-500/month SaaS, $200-1000 customer acquisition cost',
+      startupCosts: '$10K-50K for MVP, $50K-200K for full launch',
+      keyMetrics: 'MRR, CAC, LTV, churn rate, activation rate'
     },
     healthcare: {
       trends: 'Telemedicine, personalized medicine, and health tech solutions',
       challenges: 'Regulatory compliance, data privacy, insurance coverage',
-      opportunities: 'Aging population, preventive care, digital health'
+      opportunities: 'Aging population, preventive care, digital health',
+      pricing: '$100-500/consultation, $50-200/month subscriptions',
+      startupCosts: '$25K-100K for compliance, $100K-500K for full launch',
+      keyMetrics: 'Patient acquisition cost, retention rate, compliance score'
     },
     retail: {
       trends: 'E-commerce growth, omnichannel experiences, sustainability',
       challenges: 'Supply chain disruptions, changing consumer behavior',
-      opportunities: 'Direct-to-consumer, social commerce, personalization'
+      opportunities: 'Direct-to-consumer, social commerce, personalization',
+      pricing: '30-50% markup, $20-100 customer acquisition cost',
+      startupCosts: '$5K-25K for online store, $25K-100K for physical location',
+      keyMetrics: 'Conversion rate, AOV, inventory turnover'
     },
     food: {
       trends: 'Plant-based alternatives, food delivery, sustainability',
       challenges: 'Food safety regulations, supply chain complexity',
-      opportunities: 'Health-conscious consumers, local sourcing, meal kits'
+      opportunities: 'Health-conscious consumers, local sourcing, meal kits',
+      pricing: '28-35% food cost, 30-35% labor cost, <10% rent',
+      startupCosts: '$50K-200K for restaurant, $10K-50K for food truck',
+      keyMetrics: 'Food cost percentage, labor cost percentage, table turnover'
+    },
+    education: {
+      trends: 'Online learning, micro-credentials, personalized education',
+      challenges: 'Student engagement, technology adoption, competition',
+      opportunities: 'Skill gaps, lifelong learning, corporate training',
+      pricing: '$50-500/course, $20-100/month subscriptions',
+      startupCosts: '$5K-25K for online platform, $25K-100K for full program',
+      keyMetrics: 'Completion rate, student satisfaction, retention rate'
+    },
+    finance: {
+      trends: 'Fintech innovation, digital banking, cryptocurrency',
+      challenges: 'Regulatory compliance, security, trust building',
+      opportunities: 'Financial inclusion, automation, personalization',
+      pricing: '1-3% transaction fees, $10-50/month subscriptions',
+      startupCosts: '$100K-500K for compliance, $500K-2M for full launch',
+      keyMetrics: 'Transaction volume, user acquisition, compliance score'
+    },
+    creative: {
+      trends: 'Digital transformation, remote work, AI-assisted creativity',
+      challenges: 'Pricing pressure, client acquisition, portfolio building',
+      opportunities: 'Remote work, niche specialization, passive income',
+      pricing: '$100-5000/project, $50-300 customer acquisition cost',
+      startupCosts: '$2K-10K for portfolio, $10K-50K for full business',
+      keyMetrics: 'Project completion rate, client retention, referral rate'
     }
   }), []);
 
@@ -1062,6 +1098,78 @@ What specific aspect of the ${industry} industry interests you most?`;
   };
 
   const generateGeneralBusinessAdvice = (message: string): AIResponse => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Handle specific emotional states and common concerns
+    if (lowerMessage.includes('overwhelm') || lowerMessage.includes('too much') || lowerMessage.includes('confused')) {
+      return {
+        content: `I hear you - this probably feels like drinking from a fire hose right now. That means we're moving too fast. Let's slow wayyy down.
+
+Forget everything we've covered. If you could only do ONE thing this week to move your business forward, what would it be?
+
+Just one thing. We'll build from there. 🙂`,
+        quickActions: [
+          { text: '🧘 Let\'s Simplify', action: 'simplify_approach' },
+          { text: '⏭️ Skip for Now', action: 'skip_section' },
+          { text: '🎯 Focus on One Thing', action: 'single_focus' }
+        ],
+        confidence: 0.9,
+        sources: ['Emotional Support Guidelines']
+      };
+    }
+
+    if (lowerMessage.includes('don\'t know') || lowerMessage.includes('unqualified') || lowerMessage.includes('not qualified')) {
+      return {
+        content: `Let's talk about this - imposter syndrome is SO common with entrepreneurs. Here's the truth: You don't need a business degree or years of experience.
+
+You need:
+1. A problem you understand deeply
+2. Willingness to learn as you go  
+3. Resilience when things get tough
+
+You already have #1 (that's why you're interested in this!). #2 and #3? Those are choices, not prerequisites.
+
+What specifically makes you feel unqualified? Let's tackle that together.`,
+        quickActions: [
+          { text: '💪 Build Confidence', action: 'confidence_building' },
+          { text: '📚 Learn Basics', action: 'learn_fundamentals' },
+          { text: '🤝 Find Support', action: 'find_mentor' }
+        ],
+        confidence: 0.95,
+        sources: ['Imposter Syndrome Support']
+      };
+    }
+
+    if (lowerMessage.includes('money') || lowerMessage.includes('afford') || lowerMessage.includes('budget')) {
+      return {
+        content: `I hear you - money stress is real. Let's break this down:
+
+**Absolute Minimum to Start** (Bootstrap Mode):
+• Website: $12/year domain + free Wix/WordPress
+• Payment processing: Free to start (Stripe, PayPal)
+• Marketing: $0 (social media, word of mouth)
+• Tools: Free tiers of everything
+TOTAL: ~$50 to test your idea
+
+**Comfortable Start** (Recommended):
+• Website: $300-500 one-time + $20/mo hosting
+• Basic branding: $200-500 (Fiverr/Upwork)
+• Marketing: $500-1000 to test what works
+• Emergency buffer: $1000
+TOTAL: $2000-3000 for a solid launch
+
+Where does your budget land? Let's plan for what you've got.`,
+        quickActions: [
+          { text: '💰 Bootstrap Plan', action: 'bootstrap_plan' },
+          { text: '💸 Comfortable Start', action: 'comfortable_start' },
+          { text: '🎯 Free Options First', action: 'free_alternatives' }
+        ],
+        confidence: 0.9,
+        sources: ['Bootstrap Business Guide']
+      };
+    }
+
+    // Default general advice
     const content = `I'm here to help you succeed in your business journey! Based on your question, here's my guidance:
 
 Let me provide you with actionable insights tailored to your specific situation. To give you the most relevant advice, I'd like to understand:
