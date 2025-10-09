@@ -90,21 +90,6 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
               Discover
             </Button>
           </form>
-
-          {/* Scroll Down Indicator */}
-          <div className="mt-20 animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <Button
-              variant="ghost"
-              onClick={scrollToOpportunities}
-              className="flex flex-col items-center gap-3 text-muted-foreground hover:text-primary transition-all duration-300 group"
-            >
-              <span className="text-base font-semibold">Explore Latest Opportunities</span>
-              <div className="relative">
-                <ChevronDown className="w-6 h-6 animate-bounce group-hover:animate-pulse" />
-                <div className="absolute inset-0 w-6 h-6 bg-primary/20 rounded-full blur-lg animate-pulse" />
-              </div>
-            </Button>
-          </div>
         </div>
       </div>
     </section>
