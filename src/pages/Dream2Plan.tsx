@@ -1143,7 +1143,7 @@ Subject: "Quick question about [their pain point]"
                     <CardContent className="p-6 sm:p-8 lg:p-10">
                       {/* Section Header */}
                       <div className="text-center mb-10 sm:mb-12">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent flex items-center justify-center gap-3 animate-fade-in" style={{ animation: 'fadeInScale 0.6s ease-out' }}>
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent flex items-center justify-center gap-3 animate-fade-in pb-2" style={{ animation: 'fadeInScale 0.6s ease-out' }}>
                           <Compass className="w-8 h-8 text-primary animate-pulse" style={{ animationDuration: '2s' }} />
                           Where to Start — Mastering BizMap AI
                         </h2>
