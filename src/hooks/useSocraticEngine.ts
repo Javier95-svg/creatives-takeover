@@ -342,7 +342,7 @@ export const useSocraticEngine = (config: SocraticEngineConfig = {
 
   // Helper function to get question type for gap
   const getQuestionTypeForGap = (gapType: LogicGap['type']): SocraticQuestion['type'] => {
-    const gapToQuestionType = {
+    const gapToQuestionType: Record<LogicGap['type'], SocraticQuestion['type']> = {
       'missing_evidence': 'evidence_evaluation',
       'unclear_assumption': 'assumption_testing',
       'logical_fallacy': 'evidence_evaluation',
