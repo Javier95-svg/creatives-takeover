@@ -201,7 +201,7 @@ const Demo = () => {
       <div className="relative z-10">
         <Navigation />
         
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-24 pb-8">
           {/* Enhanced Header with Progress Story */}
           <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border border-primary/20 backdrop-blur-sm animate-fade-in">
             <div className="flex items-center justify-between flex-wrap gap-4">
