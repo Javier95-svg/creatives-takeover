@@ -20,7 +20,7 @@ const SubscriptionFeatures = () => {
     {
       icon: <MessageSquare className="w-10 h-10 text-primary" />,
       title: "AI Business Planning",
-      description: "Get personalized business insights with our BizMap AI Creative Operating System and strategic planning tools.",
+      description: "Get personalized business insights with our BizMap AI chatbot and strategic planning tools.",
       benefits: ["AI-powered business analysis", "Custom launch reports", "Strategic recommendations"],
       highlight: "Core Feature"
     },

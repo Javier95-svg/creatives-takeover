@@ -40,8 +40,6 @@ import AdminJobApplications from "./pages/AdminJobApplications";
 import AdminTools from "./pages/AdminTools";
 import ScrollToTop from "./components/ScrollToTop";
 import Profile from "./pages/Profile";
-import Demo from "./pages/Demo";
-import AdminGamification from "./pages/AdminGamification";
 
 const queryClient = new QueryClient();
 
@@ -90,8 +88,6 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/profile/:userId" element={<Profile />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="/admin/gamification" element={<AdminGamification />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -4,12 +4,6 @@ import PostCard, { Post } from "./PostCard";
 import { ChatbotReportCard } from "./ChatbotReportCard";
 import AdvancedFilters from "./AdvancedFilters";
 import CommunityInsights from "./CommunityInsights";
-import LeaderboardCard from "./LeaderboardCard";
-import DailyChallengeCard from "./DailyChallengeCard";
-import StreakNotificationBanner from "./StreakNotificationBanner";
-import CommunityPulseCard from "./CommunityPulseCard";
-import TrendingPostsCard from "./TrendingPostsCard";
-import CommunityMilestones from "./CommunityMilestones";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,12 +12,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useBadgeSystem } from "@/hooks/useBadgeSystem";
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { checkAndAwardBadges } = useBadgeSystem(user?.id);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -285,31 +277,6 @@ const CommunityFeed: React.FC = () => {
 
       toast.success('Post created successfully!');
 
-      // Check for new badges
-      if (user) {
-        setTimeout(() => checkAndAwardBadges(), 1000);
-      }
-
-      // Auto-complete daily challenge if applicable
-      if (data?.id) {
-        try {
-          const { data: challengeData } = await supabase.rpc('get_todays_challenge');
-          if (challengeData && challengeData.length > 0) {
-            const challenge = challengeData[0];
-            if (challenge.challenge_type === 'post') {
-              await supabase.rpc('complete_daily_challenge', {
-                p_user_id: user.id,
-                p_challenge_id: challenge.id,
-                p_proof_reference_id: data.id,
-                p_proof_reference_type: 'post'
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error auto-completing challenge:', error);
-        }
-      }
-
       // Behind-the-scenes AI moderation & insight generation
       setTimeout(async () => {
         try {
@@ -393,8 +360,6 @@ const CommunityFeed: React.FC = () => {
     <main className="container mx-auto px-4 py-8 space-y-6">
       <div className="grid lg:grid-cols-12 gap-6">
         <section className="lg:col-span-8 space-y-6">
-          {/* Streak Notification */}
-          <StreakNotificationBanner />
 
           {/* Post Composer */}
           <PostComposer onPublish={publish} requireAuth={true} />
@@ -459,11 +424,7 @@ const CommunityFeed: React.FC = () => {
 
         {/* Enhanced Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
-          <CommunityPulseCard />
-          <DailyChallengeCard />
-          <TrendingPostsCard />
-          <CommunityMilestones />
-          <LeaderboardCard />
+          {/* Community Insights */}
           <CommunityInsights />
           
           {/* Advanced Filters */}
