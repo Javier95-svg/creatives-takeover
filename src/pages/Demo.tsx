@@ -127,7 +127,7 @@ const Demo = () => {
                   {[
                     { number: "594M", label: "Entrepreneurs Worldwide", icon: "🌍" },
                     { number: "1 in 3", label: "Jobs Fully Automated by AI by 2030", icon: "🤖" },
-                    { number: "73%", label: "Solopreneurs and Creatives report lacking mentorship", icon: "💼" },
+                    { number: "73%", label: "Solopreneurs & Creatives report lacking mentorship", icon: "💼" },
                     { number: "100%", label: "Accessible to Everyone", icon: "✨" }
                   ].map((stat, index) => (
                     <div 
