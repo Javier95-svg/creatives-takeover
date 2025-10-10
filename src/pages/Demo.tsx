@@ -125,7 +125,7 @@ const Demo = () => {
                 {/* Industry Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-16">
                   {[
-                    { number: "665M", label: "Entrepreneurs Worldwide", icon: "🌍" },
+                    { number: "594M", label: "Entrepreneurs Worldwide", icon: "🌍" },
                     { number: "1 in 3", label: "Jobs Fully Automated by AI by 2030", icon: "🤖" },
                     { number: "73%", label: "Want to Be Their Own Boss", icon: "💼" },
                     { number: "100%", label: "Accessible to Everyone", icon: "✨" }
