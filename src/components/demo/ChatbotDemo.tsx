@@ -21,11 +21,14 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
   const [showFullConversation, setShowFullConversation] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   }, [messages, isTyping]);
 
@@ -119,7 +122,7 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
             </p>
           </div>
 
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[400px] pr-4" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.slice(0, showFullConversation ? undefined : 4).map((message, idx) => (
                 <div
@@ -155,8 +158,6 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
                   Show More Messages
                 </Button>
               )}
-
-              <div ref={scrollRef} />
             </div>
           </ScrollArea>
 
