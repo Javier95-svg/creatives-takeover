@@ -5,8 +5,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageSquare, ThumbsUp, Award, TrendingUp, Zap, Users, Target } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const CommunityDemo = () => {
+  const navigate = useNavigate();
   const [likedPosts, setLikedPosts] = useState<number[]>([]);
 
   const demoPosts = [
@@ -95,6 +97,29 @@ const CommunityDemo = () => {
     }
   };
 
+  const handleNewPost = () => {
+    toast.info("Sign up to create your first post!");
+    navigate("/login");
+  };
+
+  const handleCompleteChallenge = () => {
+    toast.success("Challenge completed! +50 XP earned! 🎉");
+  };
+
+  const handleReply = () => {
+    toast.info("Sign up to join the conversation!");
+    navigate("/login");
+  };
+
+  const handleComment = () => {
+    toast.info("Sign up to comment on posts!");
+    navigate("/login");
+  };
+
+  const handleSignUp = () => {
+    navigate("/login");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,7 +151,7 @@ const CommunityDemo = () => {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold">Community Feed</h3>
-            <Button>
+            <Button onClick={handleNewPost}>
               <MessageSquare className="w-4 h-4 mr-2" />
               New Post
             </Button>
@@ -185,12 +210,12 @@ const CommunityDemo = () => {
                       <ThumbsUp className={`w-4 h-4 mr-2 ${likedPosts.includes(post.id) ? 'fill-current' : ''}`} />
                       {post.likes + (likedPosts.includes(post.id) ? 1 : 0)}
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={handleComment}>
                       <MessageSquare className="w-4 h-4 mr-2" />
                       {post.comments}
                     </Button>
                   </div>
-                  <Button variant="outline" size="sm">Reply</Button>
+                  <Button variant="outline" size="sm" onClick={handleReply}>Reply</Button>
                 </div>
               </CardContent>
             </Card>
@@ -221,7 +246,7 @@ const CommunityDemo = () => {
                   {dailyChallenge.participants} participated
                 </span>
               </div>
-              <Button className="w-full" size="sm">
+              <Button className="w-full" size="sm" onClick={handleCompleteChallenge}>
                 Complete Challenge
               </Button>
             </CardContent>
@@ -291,7 +316,7 @@ const CommunityDemo = () => {
             <p className="text-muted-foreground mb-4">
               Connect with 10,000+ entrepreneurs building their dreams
             </p>
-            <Button size="lg">
+            <Button size="lg" onClick={handleSignUp}>
               <Users className="w-5 h-5 mr-2" />
               Sign Up Free
             </Button>
