@@ -40,9 +40,9 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       icon: TrendingUp,
       description: 'Stay ahead with curated articles on AI tools, growth strategies, and startup trends',
       features: [
+        'Curated funding opportunities',
         'Daily trending business articles',
-        'AI tools & productivity hacks',
-        'Growth & marketing strategies',
+        'AI tools & growth strategies',
         'Bookmark & track your reading'
       ],
       color: 'from-secondary/20 to-secondary/5'
