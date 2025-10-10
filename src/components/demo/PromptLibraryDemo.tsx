@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Bot, Copy, Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface PromptLibraryDemoProps {
   onNavigateToBizMap?: () => void;
 }
 
 const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -80,14 +82,15 @@ const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
   };
 
   const handleUseToBizMap = (prompt: string) => {
-    toast.success("Prompt loaded! Redirecting to BizMap AI...", {
+    // Store prompt in localStorage so Dream2Plan can pick it up
+    localStorage.setItem('bizmap_prompt', prompt);
+    // Also copy to clipboard as backup
+    navigator.clipboard.writeText(prompt);
+    // Navigate to Dream2Plan
+    navigate('/dream2plan');
+    toast.success("Opening BizMap AI with your prompt!", {
       icon: <Bot className="w-4 h-4" />
     });
-    setTimeout(() => {
-      if (onNavigateToBizMap) {
-        onNavigateToBizMap();
-      }
-    }, 1000);
   };
 
   return (
@@ -203,7 +206,7 @@ const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
             <p className="text-muted-foreground mb-4">
               Use any of these prompts in BizMap AI to get instant personalized guidance
             </p>
-            <Button size="lg" onClick={onNavigateToBizMap}>
+            <Button size="lg" onClick={() => navigate('/dream2plan')}>
               <Bot className="w-5 h-5 mr-2" />
               Try BizMap AI Demo
             </Button>
