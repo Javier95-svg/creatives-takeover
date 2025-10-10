@@ -3,17 +3,31 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DemoScenario } from "@/utils/demoDataSeeder";
-import { MessageSquare, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { MessageSquare, Sparkles, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface ChatbotDemoProps {
   scenario: DemoScenario;
 }
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
+  const [messages, setMessages] = useState<Message[]>(scenario.chatHistory);
   const [showFullConversation, setShowFullConversation] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]);
 
   const quickActions = [
     "Analyze my competition",
@@ -21,6 +35,26 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
     "Create go-to-market plan",
     "Generate launch timeline"
   ];
+
+  const quickActionResponses: Record<string, string> = {
+    "Analyze my competition": `Great question! Based on your ${scenario.industry || 'industry'}, here's a competitive analysis:\n\n🎯 **Main Competitors:**\n• Direct competitors offering similar solutions\n• Indirect competitors solving the problem differently\n• Emerging startups in your space\n\n💡 **Your Competitive Advantages:**\n• Unique value proposition\n• Better user experience\n• More affordable pricing\n• Faster implementation\n\nWould you like me to dive deeper into any specific competitor?`,
+    "Suggest pricing strategy": `Let me help you develop a pricing strategy for your business:\n\n💰 **Recommended Pricing Model:**\n• Freemium: Free basic tier + paid premium features\n• Starter: $29/month (individual users)\n• Professional: $99/month (small teams)\n• Enterprise: Custom pricing (large organizations)\n\n📊 **Pricing Psychology:**\n• Anchor with highest tier first\n• Offer annual discount (20% off)\n• Add 14-day free trial\n• Clear upgrade path\n\nShould we refine this based on your target market?`,
+    "Create go-to-market plan": `Excellent! Here's your go-to-market strategy:\n\n🚀 **Phase 1: Pre-Launch (Weeks 1-4)**\n• Build landing page & waitlist\n• Create social media presence\n• Reach out to early adopters\n\n📢 **Phase 2: Soft Launch (Weeks 5-8)**\n• Launch to beta users\n• Gather feedback\n• Iterate on product\n\n🎉 **Phase 3: Public Launch (Weeks 9-12)**\n• Product Hunt launch\n• Press releases\n• Influencer partnerships\n• Paid advertising campaigns\n\nReady to start with Phase 1?`,
+    "Generate launch timeline": `Here's your personalized launch timeline:\n\n📅 **Month 1: Foundation**\nWeek 1-2: MVP development\nWeek 3-4: Beta testing\n\n📅 **Month 2: Preparation**\nWeek 5-6: Marketing materials\nWeek 7-8: Early access program\n\n📅 **Month 3: Launch**\nWeek 9: Soft launch\nWeek 10-11: Gather feedback\nWeek 12: Public launch 🎉\n\n📅 **Month 4+: Growth**\nOngoing: Customer acquisition\nOngoing: Product improvements\n\nWould you like help breaking down any of these phases?`
+  };
+
+  const handleQuickAction = async (action: string) => {
+    setMessages(prev => [...prev, { role: 'user', content: action }]);
+    setShowFullConversation(true);
+    setIsTyping(true);
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const response = quickActionResponses[action] || "That's a great question! Let me help you with that. In the full version, I can provide detailed analysis and actionable insights tailored to your specific business needs.";
+    
+    setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    setIsTyping(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -87,7 +121,7 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
 
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-4">
-              {scenario.chatHistory.slice(0, showFullConversation ? undefined : 4).map((message, idx) => (
+              {messages.slice(0, showFullConversation ? undefined : 4).map((message, idx) => (
                 <div
                   key={idx}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -104,7 +138,15 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
                 </div>
               ))}
 
-              {!showFullConversation && scenario.chatHistory.length > 4 && (
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] p-4 rounded-lg bg-muted">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                </div>
+              )}
+
+              {!showFullConversation && messages.length > 4 && (
                 <Button
                   variant="outline"
                   className="w-full"
@@ -113,6 +155,8 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
                   Show More Messages
                 </Button>
               )}
+
+              <div ref={scrollRef} />
             </div>
           </ScrollArea>
 
@@ -126,6 +170,8 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
                   variant="outline"
                   size="sm"
                   className="justify-start text-sm"
+                  onClick={() => handleQuickAction(action)}
+                  disabled={isTyping}
                 >
                   {action}
                 </Button>
