@@ -223,7 +223,7 @@ const Demo = () => {
                     <p className="text-muted-foreground">
                       {currentService === 'bizmap' && 'Experience empathetic AI that guides you through every step of business planning'}
                       {currentService === 'prompts' && 'Jumpstart your planning with battle-tested prompts from successful founders'}
-                      {currentService === 'insighta' && 'Stay ahead with curated insights, trends, and funding opportunities'}
+                      {currentService === 'insighta' && 'Stay ahead with curated articles on AI tools, growth strategies, and startup trends'}
                       {currentService === 'community' && 'Connect with entrepreneurs who are building alongside you'}
                     </p>
                   </div>

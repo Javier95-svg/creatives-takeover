@@ -14,10 +14,10 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       icon: Bot,
       description: 'Your AI co-founder that guides you through a 7-step business planning wizard',
       features: [
-        'Empathetic AI conversations',
-        'Success scoring algorithm',
-        'Personalized launch reports',
-        'Sprint planning integration'
+        '7-step interactive business wizard',
+        'Real-time AI guidance & validation',
+        'Success probability scoring',
+        'Downloadable business roadmap'
       ],
       color: 'from-primary/20 to-primary/5'
     },
@@ -25,12 +25,12 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       id: 'prompts' as const,
       name: 'Prompt Library',
       icon: Lightbulb,
-      description: '30+ pre-built prompts for AI, E-commerce, SaaS, and creative businesses',
+      description: '30+ battle-tested prompts for AI, E-commerce, SaaS, and creative businesses',
       features: [
-        'Industry-specific templates',
-        'One-click BizMap AI integration',
-        'Category filtering',
-        'Copy & customize prompts'
+        '4 industry categories to explore',
+        'Copy prompts with one click',
+        'Direct BizMap AI integration',
+        'Customizable for your business'
       ],
       color: 'from-accent/20 to-accent/5'
     },
@@ -38,12 +38,12 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       id: 'insighta' as const,
       name: 'Insighta',
       icon: TrendingUp,
-      description: 'Curated business insights, AI tools, entrepreneurship tips, and funding opportunities',
+      description: 'Stay ahead with curated articles on AI tools, growth strategies, and startup trends',
       features: [
-        'AI-powered news aggregation',
-        'Personalized recommendations',
-        'Reading analytics',
-        'Bookmark your favorites'
+        'Daily trending business articles',
+        'AI tools & productivity hacks',
+        'Growth & marketing strategies',
+        'Bookmark & track your reading'
       ],
       color: 'from-secondary/20 to-secondary/5'
     },
@@ -51,12 +51,12 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       id: 'community' as const,
       name: 'Community',
       icon: Users,
-      description: 'Connect with fellow entrepreneurs, share wins, get feedback, and grow together',
+      description: 'Join 10,000+ entrepreneurs sharing progress, getting feedback, and growing together',
       features: [
-        'Reputation & badges system',
-        'Daily challenges',
-        'Peer feedback',
-        'Trending discussions'
+        'Share wins & get support',
+        'Daily challenges & rewards',
+        'Reputation badges & leveling',
+        'Connect with like-minded founders'
       ],
       color: 'from-chart-1/20 to-chart-1/5'
     }
