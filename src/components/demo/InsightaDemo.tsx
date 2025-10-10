@@ -17,7 +17,8 @@ const InsightaDemo = () => {
       readTime: 5,
       trending: true,
       image: "🤖",
-      tags: ["AI", "Business Planning", "Trends"]
+      tags: ["AI", "Business Planning", "Trends"],
+      slug: "ai-business-planning"
     },
     {
       id: 2,
@@ -27,7 +28,8 @@ const InsightaDemo = () => {
       readTime: 8,
       featured: true,
       image: "💰",
-      tags: ["Funding", "Grants", "Startups"]
+      tags: ["Funding", "Grants", "Startups"],
+      slug: "startup-validation"
     },
     {
       id: 3,
@@ -37,7 +39,8 @@ const InsightaDemo = () => {
       readTime: 6,
       trending: true,
       image: "📈",
-      tags: ["Marketing", "Growth", "Customer Acquisition"]
+      tags: ["Marketing", "Growth", "Customer Acquisition"],
+      slug: "growth-hacking-strategies"
     },
     {
       id: 4,
@@ -46,7 +49,8 @@ const InsightaDemo = () => {
       excerpt: "Step-by-step guide to building and launching your minimum viable product using no-code tools like Bubble, Webflow, and Airtable.",
       readTime: 10,
       image: "🛠️",
-      tags: ["No-Code", "MVP", "Product Development"]
+      tags: ["No-Code", "MVP", "Product Development"],
+      slug: "no-code-mvp-building"
     },
     {
       id: 5,
@@ -56,7 +60,8 @@ const InsightaDemo = () => {
       readTime: 7,
       featured: true,
       image: "💪",
-      tags: ["Case Study", "Solopreneur", "Success Stories"]
+      tags: ["Case Study", "Solopreneur", "Success Stories"],
+      slug: "ai-productivity-hacks"
     },
     {
       id: 6,
@@ -65,7 +70,25 @@ const InsightaDemo = () => {
       excerpt: "Before investing time and money, validate your business idea using this proven 20-point checklist used by top accelerators.",
       readTime: 4,
       image: "✅",
-      tags: ["Validation", "Strategy", "Planning"]
+      tags: ["Validation", "Strategy", "Planning"],
+      slug: "creative-marketing-2024"
+    }
+  ];
+
+  const fundingPrograms = [
+    {
+      id: 1,
+      name: "Small Business Innovation Research (SBIR)",
+      description: "Up to $1.7M in non-dilutive funding",
+      icon: "💰",
+      url: "https://www.sbir.gov/"
+    },
+    {
+      id: 2,
+      name: "Y Combinator Application Tips",
+      description: "Accelerator funding up to $500K",
+      icon: "🚀",
+      url: "https://www.ycombinator.com/apply"
     }
   ];
 
@@ -77,6 +100,14 @@ const InsightaDemo = () => {
       setBookmarkedArticles([...bookmarkedArticles, articleId]);
       toast.success("Added to bookmarks");
     }
+  };
+
+  const handleReadArticle = (slug: string) => {
+    window.open(`/news/${slug}`, '_blank');
+  };
+
+  const handleLearnMore = (url: string) => {
+    window.open(url, '_blank');
   };
 
   return (
@@ -116,26 +147,24 @@ const InsightaDemo = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
-              <div className="w-10 h-10 rounded bg-chart-2/20 flex items-center justify-center flex-shrink-0">
-                💰
+            {fundingPrograms.map((program) => (
+              <div key={program.id} className="flex items-start gap-3 p-3 bg-background rounded-lg">
+                <div className="w-10 h-10 rounded bg-chart-2/20 flex items-center justify-center flex-shrink-0">
+                  {program.icon}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">{program.name}</p>
+                  <p className="text-sm text-muted-foreground">{program.description}</p>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleLearnMore(program.url)}
+                >
+                  Learn More
+                </Button>
               </div>
-              <div className="flex-1">
-                <p className="font-semibold">Small Business Innovation Research (SBIR)</p>
-                <p className="text-sm text-muted-foreground">Up to $1.7M in non-dilutive funding</p>
-              </div>
-              <Button size="sm" variant="outline">Learn More</Button>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-background rounded-lg">
-              <div className="w-10 h-10 rounded bg-chart-2/20 flex items-center justify-center flex-shrink-0">
-                🚀
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold">Y Combinator Application Tips</p>
-                <p className="text-sm text-muted-foreground">Accelerator funding up to $500K</p>
-              </div>
-              <Button size="sm" variant="outline">Learn More</Button>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -205,7 +234,12 @@ const InsightaDemo = () => {
                         className={`w-4 h-4 ${bookmarkedArticles.includes(article.id) ? 'fill-current' : ''}`} 
                       />
                     </Button>
-                    <Button size="sm">Read Article</Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleReadArticle(article.slug)}
+                    >
+                      Read Article
+                    </Button>
                   </div>
                 </div>
               </CardContent>
