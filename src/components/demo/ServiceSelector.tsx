@@ -9,19 +9,6 @@ interface ServiceSelectorProps {
 const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
   const services = [
     {
-      id: 'bizmap' as const,
-      name: 'BizMap AI',
-      icon: Bot,
-      description: 'Your AI co-founder that guides you through a 7-step business planning wizard',
-      features: [
-        '7-step interactive business wizard',
-        'Real-time AI guidance & validation',
-        'Success probability scoring',
-        'Downloadable business roadmap'
-      ],
-      color: 'from-primary/20 to-primary/5'
-    },
-    {
       id: 'prompts' as const,
       name: 'Prompt Library',
       icon: Lightbulb,
@@ -35,17 +22,17 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       color: 'from-accent/20 to-accent/5'
     },
     {
-      id: 'insighta' as const,
-      name: 'Insighta',
-      icon: TrendingUp,
-      description: 'Your curated news hub for funding opportunities and the latest AI trends',
+      id: 'bizmap' as const,
+      name: 'BizMap AI',
+      icon: Bot,
+      description: 'Your AI co-founder that guides you through a 7-step business planning wizard',
       features: [
-        'Discover funding opportunities',
-        'Latest AI & startup news',
-        'Trending entrepreneurship articles',
-        'Bookmark & save for later'
+        '7-step interactive business wizard',
+        'Real-time AI guidance & validation',
+        'Success probability scoring',
+        'Downloadable business roadmap'
       ],
-      color: 'from-secondary/20 to-secondary/5'
+      color: 'from-primary/20 to-primary/5'
     },
     {
       id: 'community' as const,
@@ -59,6 +46,19 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
         'Connect with like-minded founders'
       ],
       color: 'from-chart-1/20 to-chart-1/5'
+    },
+    {
+      id: 'insighta' as const,
+      name: 'Insighta',
+      icon: TrendingUp,
+      description: 'Your curated news hub for funding opportunities and the latest AI trends',
+      features: [
+        'Discover funding opportunities',
+        'Latest AI & startup news',
+        'Trending entrepreneurship articles',
+        'Bookmark & save for later'
+      ],
+      color: 'from-secondary/20 to-secondary/5'
     }
   ];
 
@@ -144,32 +144,42 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       {/* Journey Visualization */}
       <div className="mt-20 text-center animate-fade-in">
         <div className="inline-flex items-center gap-4 px-8 py-4 rounded-full bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border border-primary/20">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary" />
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                <Lightbulb className="w-5 h-5 text-accent" />
+              </div>
+              <span className="text-sm font-medium">Research</span>
             </div>
-            <span className="text-sm font-medium">Plan</span>
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground" />
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-accent" />
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-sm font-medium">Plan</span>
             </div>
-            <span className="text-sm font-medium">Inspire</span>
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground" />
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-secondary" />
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-chart-1/20 flex items-center justify-center">
+                <Users className="w-5 h-5 text-chart-1" />
+              </div>
+              <span className="text-sm font-medium">Feedback</span>
             </div>
-            <span className="text-sm font-medium">Learn</span>
+            <span className="text-xs">💬</span>
           </div>
           <ArrowRight className="w-4 h-4 text-muted-foreground" />
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-chart-1/20 flex items-center justify-center">
-              <Users className="w-5 h-5 text-chart-1" />
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-secondary" />
+              </div>
+              <span className="text-sm font-medium">Execute</span>
             </div>
-            <span className="text-sm font-medium">Connect</span>
+            <span className="text-xs">🚀</span>
           </div>
         </div>
         <p className="text-sm text-muted-foreground mt-4">
