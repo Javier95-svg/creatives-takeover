@@ -128,7 +128,7 @@ const Demo = () => {
                     { number: "594M", label: "Entrepreneurs Worldwide", icon: "🌍" },
                     { number: "1 in 3", label: "Jobs Are Gonna Be Fully Automated with AI by 2030", icon: "🤖" },
                     { number: "73%", label: "Solopreneurs & Creatives report lacking mentorship", icon: "💼" },
-                    { number: "100%", label: "Accessible to Everyone", icon: "✨" }
+                    { number: "21%", label: "is the global startup ecosystem growing annually", icon: "📈" }
                   ].map((stat, index) => (
                     <div 
                       key={index} 
