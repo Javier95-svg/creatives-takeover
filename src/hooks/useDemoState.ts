@@ -2,43 +2,47 @@ import { useState, useCallback } from 'react';
 import { DemoScenario, getDemoScenario, getRandomScenario } from '@/utils/demoDataSeeder';
 
 interface DemoState {
+  currentService: 'overview' | 'bizmap' | 'prompts' | 'insighta' | 'community';
+  servicesExplored: string[];
   currentScenario: DemoScenario | null;
   isInDemoMode: boolean;
-  currentFeature: string;
   demoStartTime: Date | null;
-  featuresExplored: string[];
+  interactionCount: number;
 }
 
 export const useDemoState = () => {
   const [demoState, setDemoState] = useState<DemoState>({
+    currentService: 'overview',
+    servicesExplored: [],
     currentScenario: null,
     isInDemoMode: false,
-    currentFeature: 'overview',
     demoStartTime: null,
-    featuresExplored: []
+    interactionCount: 0
   });
 
-  const startDemo = useCallback((scenarioId?: string) => {
+  const startDemo = useCallback((service: 'bizmap' | 'prompts' | 'insighta' | 'community' = 'bizmap', scenarioId?: string) => {
     const scenario = scenarioId 
       ? getDemoScenario(scenarioId) || getRandomScenario()
       : getRandomScenario();
     
     setDemoState({
+      currentService: service,
+      servicesExplored: [service],
       currentScenario: scenario,
       isInDemoMode: true,
-      currentFeature: 'overview',
       demoStartTime: new Date(),
-      featuresExplored: ['overview']
+      interactionCount: 0
     });
   }, []);
 
   const resetDemo = useCallback(() => {
     setDemoState({
+      currentService: 'overview',
+      servicesExplored: [],
       currentScenario: null,
       isInDemoMode: false,
-      currentFeature: 'overview',
       demoStartTime: null,
-      featuresExplored: []
+      interactionCount: 0
     });
   }, []);
 
@@ -48,16 +52,17 @@ export const useDemoState = () => {
       setDemoState(prev => ({
         ...prev,
         currentScenario: scenario,
-        featuresExplored: ['overview']
+        servicesExplored: ['bizmap']
       }));
     }
   }, []);
 
-  const navigateToFeature = useCallback((feature: string) => {
+  const navigateToService = useCallback((service: 'overview' | 'bizmap' | 'prompts' | 'insighta' | 'community') => {
     setDemoState(prev => ({
       ...prev,
-      currentFeature: feature,
-      featuresExplored: [...new Set([...prev.featuresExplored, feature])]
+      currentService: service,
+      servicesExplored: [...new Set([...prev.servicesExplored, service])],
+      interactionCount: prev.interactionCount + 1
     }));
   }, []);
 
@@ -68,9 +73,10 @@ export const useDemoState = () => {
     
     return {
       timeSpent,
-      featuresExplored: demoState.featuresExplored.length,
+      servicesExplored: demoState.servicesExplored.length,
       currentScenario: demoState.currentScenario?.name,
-      completionRate: (demoState.featuresExplored.length / 7) * 100 // 7 total features
+      completionRate: (demoState.servicesExplored.length / 4) * 100, // 4 main services
+      interactionCount: demoState.interactionCount
     };
   }, [demoState]);
 
@@ -79,7 +85,7 @@ export const useDemoState = () => {
     startDemo,
     resetDemo,
     switchScenario,
-    navigateToFeature,
+    navigateToService,
     getDemoMetrics
   };
 };
