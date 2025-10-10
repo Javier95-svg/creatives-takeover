@@ -105,7 +105,7 @@ const Demo = () => {
                 
                 <p className="text-xl md:text-2xl text-muted-foreground mb-6 max-w-3xl mx-auto leading-relaxed">
                   From <span className="text-primary font-semibold">idea</span> to <span className="text-accent font-semibold">launch</span> in weeks, not months. 
-                  Experience the complete platform that&apos;s helped entrepreneurs raise <span className="text-secondary font-semibold">$50M+</span> in funding.
+                  An ecosystem that transforms raw thoughts into actionable roadmaps, designed for the <span className="text-secondary font-semibold">next wave of founders</span>.
                 </p>
                 
                 <div className="flex flex-wrap gap-6 justify-center mb-12">
@@ -122,13 +122,13 @@ const Demo = () => {
                   </Button>
                 </div>
 
-                {/* Social Proof Stats */}
+                {/* Industry Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-16">
                   {[
-                    { number: "10K+", label: "Entrepreneurs", icon: "👥" },
-                    { number: "$50M+", label: "Funding Raised", icon: "💰" },
-                    { number: "85%", label: "Success Rate", icon: "🎯" },
-                    { number: "4.9★", label: "User Rating", icon: "⭐" }
+                    { number: "375M", label: "Entrepreneurs Worldwide", icon: "🌍" },
+                    { number: "80%", label: "Jobs Automated by 2030", icon: "🤖" },
+                    { number: "73%", label: "Want to Be Their Own Boss", icon: "💼" },
+                    { number: "100%", label: "Accessible to Everyone", icon: "✨" }
                   ].map((stat, index) => (
                     <div 
                       key={index} 
