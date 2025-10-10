@@ -95,10 +95,14 @@ serve(async (req) => {
 
     // Call OpenAI API with streaming
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    console.log('🔑 OPENAI_API_KEY configured:', !!OPENAI_API_KEY);
+    
     if (!OPENAI_API_KEY) {
+      console.error('❌ OPENAI_API_KEY not configured');
       throw new Error('OPENAI_API_KEY not configured');
     }
 
+    console.log('🤖 Calling OpenAI API with model: gpt-4o-mini');
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -115,20 +119,31 @@ serve(async (req) => {
     });
 
     if (!aiResponse.ok) {
+      const errorBody = await aiResponse.text();
+      console.error('❌ OpenAI API error:', {
+        status: aiResponse.status,
+        statusText: aiResponse.statusText,
+        body: errorBody
+      });
+      
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: 'Payment required. Please add credits to your workspace.' }), {
-          status: 402,
+      if (aiResponse.status === 402 || aiResponse.status === 401) {
+        return new Response(JSON.stringify({ 
+          error: 'OpenAI API authentication failed. Please check your API key configuration.' 
+        }), {
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`AI API Error: ${aiResponse.status}`);
+      throw new Error(`OpenAI API Error: ${aiResponse.status} - ${errorBody}`);
     }
+
+    console.log('✅ OpenAI API response OK, starting stream...');
 
     // Stream the response back to the client
     const stream = new ReadableStream({

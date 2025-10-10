@@ -1321,7 +1321,17 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced message sending function with NLU, personalization, and chatAnalytics
   const sendMessage = useCallback(async (content: string, messageAttachments: File[] = []) => {
-    if (!content.trim() || conversationState.isProcessing) return;
+    console.log('🎬 sendMessage called:', { 
+      content: content.substring(0, 50), 
+      isProcessing: conversationState.isProcessing,
+      enableStreaming,
+      wizardModeEnabled: config.wizardMode?.enabled 
+    });
+    
+    if (!content.trim() || conversationState.isProcessing) {
+      console.log('❌ Blocked: content empty or already processing');
+      return;
+    }
 
     // Track user interaction
     trackUserInteraction({ 
@@ -1342,6 +1352,7 @@ What specific aspect of your business would you like to focus on first?`;
 
     // Handle wizard mode with AI-enhanced responses
     if (config.wizardMode?.enabled && config.wizardMode.steps) {
+      console.log('🧙 Wizard mode active, processing step:', wizardStep);
       const currentStepData = config.wizardMode.steps[wizardStep];
       if (currentStepData) {
         // Save the answer
@@ -1375,6 +1386,13 @@ What specific aspect of your business would you like to focus on first?`;
           setMessages(prev => [...prev, streamingMsg]);
           setIsTyping(false);
           setIsStreaming(true);
+          
+          console.log('📞 Calling streamChat function with:', {
+            sessionId,
+            historyLength: conversationHistory.length,
+            wizardStep,
+            chatMode
+          });
           
           // Stream AI response with full wizard context
           await streamChat(
