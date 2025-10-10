@@ -38,12 +38,12 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       id: 'insighta' as const,
       name: 'Insighta',
       icon: TrendingUp,
-      description: 'Stay ahead with curated articles on AI tools, growth strategies, and startup trends',
+      description: 'Your curated news hub for funding opportunities and the latest AI trends',
       features: [
-        'Curated funding opportunities',
-        'Daily trending business articles',
-        'AI tools & growth strategies',
-        'Bookmark & track your reading'
+        'Discover funding opportunities',
+        'Latest AI & startup news',
+        'Trending entrepreneurship articles',
+        'Bookmark & save for later'
       ],
       color: 'from-secondary/20 to-secondary/5'
     },
