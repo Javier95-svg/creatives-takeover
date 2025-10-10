@@ -120,14 +120,6 @@ const Demo = () => {
                     </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-accent to-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    onClick={() => navigate('/pricing')}
-                    className="text-lg px-8 py-6 h-auto border-2 hover:border-primary hover:bg-primary/5 transition-all duration-300"
-                  >
-                    View Pricing
-                  </Button>
                 </div>
 
                 {/* Social Proof Stats */}
