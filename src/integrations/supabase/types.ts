@@ -271,6 +271,42 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_definitions: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          rarity: string
+          requirement_data: Json | null
+          requirement_type: string
+          requirement_value: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          rarity?: string
+          requirement_data?: Json | null
+          requirement_type: string
+          requirement_value?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          rarity?: string
+          requirement_data?: Json | null
+          requirement_type?: string
+          requirement_value?: number | null
+        }
+        Relationships: []
+      }
       business_insights_cache: {
         Row: {
           business_stage: string
@@ -1083,6 +1119,48 @@ export type Database = {
           },
         ]
       }
+      community_milestones: {
+        Row: {
+          achieved: boolean | null
+          achieved_at: string | null
+          celebration_message: string | null
+          created_at: string
+          current_value: number | null
+          id: string
+          milestone_description: string | null
+          milestone_title: string
+          milestone_type: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          achieved?: boolean | null
+          achieved_at?: string | null
+          celebration_message?: string | null
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          milestone_description?: string | null
+          milestone_title: string
+          milestone_type: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          achieved?: boolean | null
+          achieved_at?: string | null
+          celebration_message?: string | null
+          created_at?: string
+          current_value?: number | null
+          id?: string
+          milestone_description?: string | null
+          milestone_title?: string
+          milestone_type?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           ai_insights: string[] | null
@@ -1096,8 +1174,10 @@ export type Database = {
           content: string
           created_at: string
           downvotes: number | null
+          featured_on_propel: boolean | null
           feedback_category: string[] | null
           feedback_requested: boolean | null
+          feedback_status: string | null
           id: string
           is_repost: boolean | null
           location: string | null
@@ -1124,8 +1204,10 @@ export type Database = {
           content: string
           created_at?: string
           downvotes?: number | null
+          featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
+          feedback_status?: string | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
@@ -1152,8 +1234,10 @@ export type Database = {
           content?: string
           created_at?: string
           downvotes?: number | null
+          featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
+          feedback_status?: string | null
           id?: string
           is_repost?: boolean | null
           location?: string | null
@@ -1177,6 +1261,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_pulse: {
+        Row: {
+          active_users: number | null
+          avg_engagement_score: number | null
+          challenges_completed: number | null
+          created_at: string
+          id: string
+          new_users: number | null
+          pulse_date: string
+          total_comments: number | null
+          total_posts: number | null
+          total_upvotes: number | null
+          trending_topics: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          active_users?: number | null
+          avg_engagement_score?: number | null
+          challenges_completed?: number | null
+          created_at?: string
+          id?: string
+          new_users?: number | null
+          pulse_date: string
+          total_comments?: number | null
+          total_posts?: number | null
+          total_upvotes?: number | null
+          trending_topics?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          active_users?: number | null
+          avg_engagement_score?: number | null
+          challenges_completed?: number | null
+          created_at?: string
+          id?: string
+          new_users?: number | null
+          pulse_date?: string
+          total_comments?: number | null
+          total_posts?: number | null
+          total_upvotes?: number | null
+          trending_topics?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       conversation_memory: {
         Row: {
@@ -1320,6 +1449,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_challenges: {
+        Row: {
+          challenge_date: string
+          challenge_description: string | null
+          challenge_title: string
+          challenge_type: string
+          completion_count: number | null
+          created_at: string | null
+          id: string
+          participants_count: number | null
+          reward_badge_id: string | null
+          reward_points: number | null
+        }
+        Insert: {
+          challenge_date: string
+          challenge_description?: string | null
+          challenge_title: string
+          challenge_type: string
+          completion_count?: number | null
+          created_at?: string | null
+          id?: string
+          participants_count?: number | null
+          reward_badge_id?: string | null
+          reward_points?: number | null
+        }
+        Update: {
+          challenge_date?: string
+          challenge_description?: string | null
+          challenge_title?: string
+          challenge_type?: string
+          completion_count?: number | null
+          created_at?: string | null
+          id?: string
+          participants_count?: number | null
+          reward_badge_id?: string | null
+          reward_points?: number | null
+        }
+        Relationships: []
       }
       daily_check_ins: {
         Row: {
@@ -1662,6 +1830,45 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      featured_content: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          display_order: number | null
+          expires_at: string
+          featured_at: string
+          featured_by: string | null
+          featured_reason: string | null
+          id: string
+          is_active: boolean | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          display_order?: number | null
+          expires_at?: string
+          featured_at?: string
+          featured_by?: string | null
+          featured_reason?: string | null
+          id?: string
+          is_active?: boolean | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          display_order?: number | null
+          expires_at?: string
+          featured_at?: string
+          featured_by?: string | null
+          featured_reason?: string | null
+          id?: string
+          is_active?: boolean | null
         }
         Relationships: []
       }
@@ -2290,6 +2497,47 @@ export type Database = {
           },
         ]
       }
+      post_feedback_ratings: {
+        Row: {
+          clarity_score: number | null
+          created_at: string
+          id: string
+          innovation_score: number | null
+          market_fit_score: number | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clarity_score?: number | null
+          created_at?: string
+          id?: string
+          innovation_score?: number | null
+          market_fit_score?: number | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clarity_score?: number | null
+          created_at?: string
+          id?: string
+          innovation_score?: number | null
+          market_fit_score?: number | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_feedback_ratings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_reposts: {
         Row: {
           created_at: string | null
@@ -2435,6 +2683,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reputation_transactions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          points: number
+          reference_id: string | null
+          reference_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          points: number
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          points?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reputation_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sprint_accountability: {
         Row: {
@@ -2861,6 +3147,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_title: string
+          achievement_type: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          progress: number | null
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_title: string
+          achievement_type: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          progress?: number | null
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_title?: string
+          achievement_type?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          progress?: number | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_activity_log: {
         Row: {
           activity_data: Json | null
@@ -2913,6 +3241,51 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_challenge_completions: {
+        Row: {
+          challenge_id: string | null
+          completed_at: string | null
+          id: string
+          points_awarded: number | null
+          proof_reference_id: string | null
+          proof_reference_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          proof_reference_id?: string | null
+          proof_reference_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          proof_reference_id?: string | null
+          proof_reference_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_challenge_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3084,6 +3457,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_journey_progress: {
+        Row: {
+          created_at: string
+          id: string
+          plan_it_completed: boolean | null
+          plan_it_completed_at: string | null
+          propel_applied: boolean | null
+          propel_applied_at: string | null
+          propel_viewed: boolean | null
+          propel_viewed_at: string | null
+          refine_it_feedback_received: boolean | null
+          refine_it_feedback_received_at: string | null
+          refine_it_shared: boolean | null
+          refine_it_shared_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_it_completed?: boolean | null
+          plan_it_completed_at?: string | null
+          propel_applied?: boolean | null
+          propel_applied_at?: string | null
+          propel_viewed?: boolean | null
+          propel_viewed_at?: string | null
+          refine_it_feedback_received?: boolean | null
+          refine_it_feedback_received_at?: string | null
+          refine_it_shared?: boolean | null
+          refine_it_shared_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_it_completed?: boolean | null
+          plan_it_completed_at?: string | null
+          propel_applied?: boolean | null
+          propel_applied_at?: string | null
+          propel_viewed?: boolean | null
+          propel_viewed_at?: string | null
+          refine_it_feedback_received?: boolean | null
+          refine_it_feedback_received_at?: string | null
+          refine_it_shared?: boolean | null
+          refine_it_shared_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           created_at: string
@@ -3118,6 +3542,50 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "collaboration_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reputation: {
+        Row: {
+          achievements: Json | null
+          badges: Json | null
+          created_at: string | null
+          level: number | null
+          level_name: string | null
+          next_level_threshold: number | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievements?: Json | null
+          badges?: Json | null
+          created_at?: string | null
+          level?: number | null
+          level_name?: string | null
+          next_level_threshold?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievements?: Json | null
+          badges?: Json | null
+          created_at?: string | null
+          level?: number | null
+          level_name?: string | null
+          next_level_threshold?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reputation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3321,6 +3789,17 @@ export type Database = {
       }
     }
     Views: {
+      admin_reputation_analytics: {
+        Row: {
+          action_type: string | null
+          active_users: number | null
+          avg_points_per_action: number | null
+          date: string | null
+          total_points_awarded: number | null
+          total_transactions: number | null
+        }
+        Relationships: []
+      }
       trending_market_topics: {
         Row: {
           avg_relevance: number | null
@@ -3334,8 +3813,34 @@ export type Database = {
       }
     }
     Functions: {
+      award_reputation_points: {
+        Args: {
+          p_action_type: string
+          p_points: number
+          p_reference_id?: string
+          p_reference_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       calculate_business_success_score: {
         Args: { answers: Json }
+        Returns: Json
+      }
+      calculate_trending_score: {
+        Args: { p_post_id: string; p_time_decay_hours?: number }
+        Returns: number
+      }
+      calculate_user_level: {
+        Args: { points: number }
+        Returns: {
+          level: number
+          level_name: string
+          next_threshold: number
+        }[]
+      }
+      check_and_award_badges: {
+        Args: { p_user_id: string }
         Returns: Json
       }
       cleanup_expired_ai_cache: {
@@ -3349,6 +3854,15 @@ export type Database = {
       cleanup_expired_insights: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      complete_daily_challenge: {
+        Args: {
+          p_challenge_id: string
+          p_proof_reference_id?: string
+          p_proof_reference_type?: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       get_fresh_market_insights: {
         Args: {
@@ -3390,9 +3904,25 @@ export type Database = {
           author_name: string
         }[]
       }
+      get_todays_challenge: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          challenge_description: string
+          challenge_title: string
+          challenge_type: string
+          completion_count: number
+          id: string
+          participants_count: number
+          reward_points: number
+        }[]
+      }
       grant_monthly_credits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      has_completed_todays_challenge: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -3400,6 +3930,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      refresh_admin_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       refresh_expired_trends: {
         Args: Record<PropertyKey, never>

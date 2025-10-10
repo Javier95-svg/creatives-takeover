@@ -23,6 +23,7 @@ import SignInModal from "./SignInModal";
 import { SocialButtons } from "@/components/social/SocialButtons";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import ReputationBadge from "./ReputationBadge";
 
 export interface Post {
   id: string;
@@ -263,6 +264,24 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
       setLocalComments(prev => prev + 1);
       loadComments();
       toast.success('Comment added!');
+      
+      // Auto-complete daily challenge if applicable (comment type)
+      try {
+        const { data: challengeData } = await supabase.rpc('get_todays_challenge');
+        if (challengeData && challengeData.length > 0) {
+          const challenge = challengeData[0];
+          if (challenge.challenge_type === 'comment') {
+            await supabase.rpc('complete_daily_challenge', {
+              p_user_id: user.id,
+              p_challenge_id: challenge.id,
+              p_proof_reference_id: post.id,
+              p_proof_reference_type: 'comment'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error auto-completing challenge:', error);
+      }
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
@@ -304,13 +323,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             </Avatar>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Link 
                   to={`/profile/${(post as any).user_id}`}
                   className="font-semibold text-foreground hover:text-primary transition-colors"
                 >
                   {post.author.name}
                 </Link>
+                {(post as any).user_id && (
+                  <ReputationBadge userId={(post as any).user_id} compact showPoints={false} />
+                )}
                 {isAuthenticated && user && (post as any).user_id !== user.id && (
                   <SocialButtons 
                     userId={(post as any).user_id} 
