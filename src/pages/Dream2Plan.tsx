@@ -1062,7 +1062,7 @@ Subject: "Quick question about [their pain point]"
                 BizMap AI
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Your global startup co-founder in chatbot form. Transform business ideas into <span className="gradient-text font-semibold">actionable Launch Reports</span>.
+                Your global startup co-founder in chatbot form, ready to turn vision into action.
               </p>
             </div>
 
