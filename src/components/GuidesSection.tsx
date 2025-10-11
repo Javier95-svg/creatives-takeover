@@ -57,7 +57,8 @@ const GuidesSection = () => {
       author: "Creative Team",
       rating: 4.9,
       featured: true,
-      tags: ["Design Basics", "Typography", "Color Theory"]
+      tags: ["Design Basics", "Typography", "Color Theory"],
+      downloadUrl: "https://www.canva.com/designschool/wp-content/uploads/sites/2/2019/03/beginners-guide-to-graphic-design.pdf"
     },
     {
       title: "Professional Brand Identity Creation",
@@ -69,7 +70,8 @@ const GuidesSection = () => {
       author: "Sarah Chen",
       rating: 4.8,
       featured: false,
-      tags: ["Branding", "Logo Design", "Style Guides"]
+      tags: ["Branding", "Logo Design", "Style Guides"],
+      downloadUrl: "https://99designs-blog.imgix.net/blog/wp-content/uploads/2017/03/attachment_68291010.pdf"
     },
     {
       title: "AI-Powered Creative Workflow Optimization",
@@ -81,7 +83,8 @@ const GuidesSection = () => {
       author: "Alex Rodriguez",
       rating: 4.9,
       featured: true,
-      tags: ["AI Tools", "Automation", "Productivity"]
+      tags: ["AI Tools", "Automation", "Productivity"],
+      downloadUrl: "https://www.adobe.com/content/dam/cc/en/creative-cloud/photography/discover/ai-in-photography/AI-in-Photography.pdf"
     },
     {
       title: "Design Team Management & Collaboration",
@@ -93,7 +96,8 @@ const GuidesSection = () => {
       author: "Maya Patel",
       rating: 4.7,
       featured: false,
-      tags: ["Team Management", "Collaboration", "Leadership"]
+      tags: ["Team Management", "Collaboration", "Leadership"],
+      downloadUrl: "https://www.invisionapp.com/design-better/design-maturity-model/"
     },
     {
       title: "Portfolio Creation for Creative Professionals",
@@ -105,7 +109,8 @@ const GuidesSection = () => {
       author: "Jordan Smith",
       rating: 4.8,
       featured: true,
-      tags: ["Portfolio", "Client Acquisition", "Presentation"]
+      tags: ["Portfolio", "Client Acquisition", "Presentation"],
+      downloadUrl: "https://www.behance.net/resources"
     },
     {
       title: "Creative Business & Freelancing Guide",
@@ -117,7 +122,8 @@ const GuidesSection = () => {
       author: "Emma Wilson",
       rating: 4.9,
       featured: false,
-      tags: ["Freelancing", "Business", "Client Relations"]
+      tags: ["Freelancing", "Business", "Client Relations"],
+      downloadUrl: "https://www.creativeboom.com/resources/how-to-become-a-freelance-creative/"
     }
   ];
 
@@ -227,9 +233,14 @@ const GuidesSection = () => {
                   
                   {/* Actions */}
                   <div className="flex space-x-3">
-                    <Button className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Free
+                    <Button 
+                      className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
+                      asChild
+                    >
+                      <a href={guide.downloadUrl} target="_blank" rel="noopener noreferrer">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Free
+                      </a>
                     </Button>
                     <Button variant="outline" size="icon">
                       <Bookmark className="w-4 h-4" />
