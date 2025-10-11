@@ -44,74 +44,74 @@ const TutorialsSection = () => {
 
   const featuredTutorials = [
     {
-      title: "Complete Guide to AI-Powered Design",
+      title: "AI Tools for Designers - Complete Guide",
       description: "Learn how to integrate AI tools into your creative workflow for faster, better results",
-      duration: "45 min",
-      students: "12,847",
+      duration: "12 min",
+      students: "2.1M",
       level: "Beginner",
-      thumbnail: "/placeholder.svg",
+      videoId: "mEsleV16qdo",
       category: "AI Tools",
-      instructor: "Sarah Chen",
+      instructor: "Flux Academy",
       rating: 4.9,
       isPopular: true
     },
     {
-      title: "Typography Mastery: From Basics to Advanced",
+      title: "Typography Tutorial - Design Better Type",
       description: "Master the art of typography with practical examples and real-world projects",
-      duration: "1h 20min",
-      students: "8,492",
+      duration: "15 min",
+      students: "1.4M",
       level: "Intermediate",
-      thumbnail: "/placeholder.svg",
+      videoId: "QrNi9FmdlxY",
       category: "Design Basics",
-      instructor: "Alex Rodriguez",
+      instructor: "Jesse Nyberg",
       rating: 4.8,
       isPopular: false
     },
     {
       title: "Color Theory for Digital Artists",
       description: "Understand color psychology and create harmonious color palettes that captivate",
-      duration: "38 min",
-      students: "15,203",
+      duration: "18 min",
+      students: "890K",
       level: "Beginner",
-      thumbnail: "/placeholder.svg",
+      videoId: "_2LLXnUdUIc",
       category: "Design Basics",
-      instructor: "Maya Patel",
+      instructor: "Satori Graphics",
       rating: 4.9,
       isPopular: true
     },
     {
-      title: "Advanced Photo Manipulation Techniques",
+      title: "Professional Photo Editing Techniques",
       description: "Professional photo editing and manipulation techniques used by industry experts",
-      duration: "2h 15min",
-      students: "6,758",
+      duration: "22 min",
+      students: "3.2M",
       level: "Advanced",
-      thumbnail: "/placeholder.svg",
+      videoId: "8eNC4eJjKbw",
       category: "Photography",
-      instructor: "Jordan Smith",
+      instructor: "Peter McKinnon",
       rating: 4.7,
       isPopular: false
     },
     {
-      title: "Creating Stunning Digital Illustrations",
+      title: "Digital Illustration Masterclass",
       description: "Step-by-step process to create professional digital illustrations from scratch",
-      duration: "1h 45min",
-      students: "9,234",
+      duration: "25 min",
+      students: "1.8M",
       level: "Intermediate",
-      thumbnail: "/placeholder.svg",
+      videoId: "ewMksAbgdBI",
       category: "Illustration",
-      instructor: "Emma Wilson",
+      instructor: "Art with Flo",
       rating: 4.8,
       isPopular: false
     },
     {
-      title: "Brand Identity Design Workshop",
+      title: "Brand Identity Design from Scratch",
       description: "Complete brand identity creation process with real client examples",
-      duration: "3h 30min",
-      students: "11,567",
+      duration: "30 min",
+      students: "2.5M",
       level: "Advanced",
-      thumbnail: "/placeholder.svg",
+      videoId: "l-S2Y3SF3mM",
       category: "Design Basics",
-      instructor: "David Chen",
+      instructor: "The Futur",
       rating: 4.9,
       isPopular: true
     }
@@ -179,12 +179,21 @@ const TutorialsSection = () => {
                 )}
                 
                 <CardHeader className="p-0">
-                  {/* Thumbnail */}
+                  {/* Video Embed */}
                   <div className="relative overflow-hidden rounded-t-lg">
-                    <div className="aspect-video bg-muted flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                      <Play className="w-12 h-12 text-primary" />
+                    <div className="aspect-video">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${tutorial.videoId}`}
+                        title={tutorial.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      />
                     </div>
-                    <div className="absolute top-4 right-4">
+                    <div className="absolute top-4 right-4 pointer-events-none">
                       <Badge variant="secondary" className="bg-black/80 text-white border-0">
                         {tutorial.duration}
                       </Badge>
@@ -220,9 +229,15 @@ const TutorialsSection = () => {
                   </div>
                   
                   {/* CTA */}
-                  <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                    <Play className="w-4 h-4 mr-2" />
-                    Watch Free
+                  <Button 
+                    variant="outline" 
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
+                    asChild
+                  >
+                    <a href={`https://www.youtube.com/watch?v=${tutorial.videoId}`} target="_blank" rel="noopener noreferrer">
+                      <Play className="w-4 h-4 mr-2" />
+                      Watch on YouTube
+                    </a>
                   </Button>
                 </CardContent>
               </Card>
