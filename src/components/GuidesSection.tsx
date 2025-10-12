@@ -58,7 +58,7 @@ const GuidesSection = () => {
       rating: 4.9,
       featured: true,
       tags: ["Design Basics", "Typography", "Color Theory"],
-      downloadUrl: "https://www.canva.com/designschool/wp-content/uploads/sites/2/2019/03/beginners-guide-to-graphic-design.pdf"
+      downloadUrl: "https://s3.amazonaws.com/libapps/accounts/55515/images/graphic-design-101.pdf"
     },
     {
       title: "Professional Brand Identity Creation",
@@ -71,7 +71,7 @@ const GuidesSection = () => {
       rating: 4.8,
       featured: false,
       tags: ["Branding", "Logo Design", "Style Guides"],
-      downloadUrl: "https://99designs-blog.imgix.net/blog/wp-content/uploads/2017/03/attachment_68291010.pdf"
+      downloadUrl: "https://www.designhill.com/design-blog/wp-content/uploads/2016/03/Brand-Guidelines.pdf"
     },
     {
       title: "AI-Powered Creative Workflow Optimization",
@@ -84,7 +84,7 @@ const GuidesSection = () => {
       rating: 4.9,
       featured: true,
       tags: ["AI Tools", "Automation", "Productivity"],
-      downloadUrl: "https://www.adobe.com/content/dam/cc/en/creative-cloud/photography/discover/ai-in-photography/AI-in-Photography.pdf"
+      downloadUrl: "https://www.mckinsey.com/~/media/mckinsey/business%20functions/mckinsey%20digital/our%20insights/the%20economic%20potential%20of%20generative%20ai%20the%20next%20productivity%20frontier/The-economic-potential-of-generative-AI-The-next-productivity-frontier-vF.pdf"
     },
     {
       title: "Design Team Management & Collaboration",
@@ -97,7 +97,7 @@ const GuidesSection = () => {
       rating: 4.7,
       featured: false,
       tags: ["Team Management", "Collaboration", "Leadership"],
-      downloadUrl: "https://www.invisionapp.com/design-better/design-maturity-model/"
+      downloadUrl: "https://www.indeed.com/career-advice/career-development/creative-team-structure"
     },
     {
       title: "Portfolio Creation for Creative Professionals",
@@ -110,7 +110,7 @@ const GuidesSection = () => {
       rating: 4.8,
       featured: true,
       tags: ["Portfolio", "Client Acquisition", "Presentation"],
-      downloadUrl: "https://www.behance.net/resources"
+      downloadUrl: "https://www.smashingmagazine.com/2013/06/workflow-design-develop-modern-portfolio-website/"
     },
     {
       title: "Creative Business & Freelancing Guide",
@@ -123,7 +123,7 @@ const GuidesSection = () => {
       rating: 4.9,
       featured: false,
       tags: ["Freelancing", "Business", "Client Relations"],
-      downloadUrl: "https://www.creativeboom.com/resources/how-to-become-a-freelance-creative/"
+      downloadUrl: "https://www.shopify.com/blog/how-to-start-a-creative-business"
     }
   ];
 
@@ -233,15 +233,19 @@ const GuidesSection = () => {
                   
                   {/* Actions */}
                   <div className="flex space-x-3">
-                    <Button 
-                      className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
-                      asChild
+                    <a 
+                      href={guide.downloadUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1"
                     >
-                      <a href={guide.downloadUrl} target="_blank" rel="noopener noreferrer">
+                      <Button 
+                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Download Free
-                      </a>
-                    </Button>
+                      </Button>
+                    </a>
                     <Button variant="outline" size="icon">
                       <Bookmark className="w-4 h-4" />
                     </Button>
