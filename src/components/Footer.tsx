@@ -110,6 +110,25 @@ const Footer = () => {
                 </a>
               </li>
             </ul>
+            
+            {/* Product Hunt Badge */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <a 
+                href="https://www.producthunt.com/products/creatives-takeover?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-creatives-takeover" 
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Featured on Product Hunt"
+              >
+                <img 
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1025583&theme=light&t=1760234587519" 
+                  alt="Creatives Takeover - AI Platform for Creators & Entrepreneurs | Product Hunt" 
+                  className="hover:opacity-80 transition-opacity" 
+                  style={{ width: '250px', height: '54px' }} 
+                  width="250" 
+                  height="54" 
+                />
+              </a>
+            </div>
           </nav>
         </div>
 
