@@ -37,7 +37,7 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
     <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
       {/* Animated Background with Multiple Layers */}
       <div 
-        className="absolute inset-0 bg-cover bg-center animate-pulse-glow"
+        className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
@@ -46,17 +46,17 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 animate-slide-up takeover-title creatives-font">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 takeover-title creatives-font">
             <span className="takeover-gradient">Insighta</span>
           </h1>
           
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.1s' }}>
+          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-4">
             Discover funding opportunities and market insights.
           </p>
 
           {/* Value Proposition */}
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 animate-slide-up px-2" style={{ animationDelay: '0.3s' }}>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 px-2">
             <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
               <Sparkles className="w-3 sm:w-4 h-3 sm:h-4 text-primary" />
               <span className="text-xs sm:text-sm font-medium">AI-Powered</span>
@@ -72,7 +72,7 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
           </div>
 
           {/* Description */}
-          <div className="max-w-3xl mx-auto animate-slide-up px-4" style={{ animationDelay: '0.3s' }}>
+          <div className="max-w-3xl mx-auto px-4">
             <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed text-left">
               {displayedText}
               {isTyping && <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />}

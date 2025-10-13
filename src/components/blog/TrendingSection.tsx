@@ -192,7 +192,7 @@ const TrendingSection = ({
       </svg>
 
       <div className="container mx-auto px-4 relative z-10 max-w-7xl">
-        <div className="text-center mb-16 animate-slide-up">
+        <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 mb-3">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold gradient-text">
