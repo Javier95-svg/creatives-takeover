@@ -33,11 +33,6 @@ const FundingOpportunitiesSection = () => {
       {/* Animated Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
       
-      {/* Floating Elements */}
-      <div className="absolute top-20 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" />
-      <div className="absolute top-40 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-20 right-10 w-10 h-10 bg-gradient-to-r from-primary/12 to-secondary/12 rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '2s' }} />
-      
       {/* Decorative Wave */}
       <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
         <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#fundingWaveGradient)" />
