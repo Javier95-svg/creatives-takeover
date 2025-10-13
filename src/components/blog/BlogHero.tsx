@@ -42,12 +42,6 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
       <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-transparent" />
-      
-      {/* Simplified Floating Elements - Subtle animations */}
-      <div className="absolute top-20 left-10 w-4 h-4 bg-primary/40 rounded-full animate-float opacity-60" />
-      <div className="absolute top-40 right-20 w-6 h-6 bg-secondary/30 rounded-full animate-spiral opacity-50" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/3 right-10 w-8 h-8 bg-gradient-to-r from-primary/15 to-secondary/15 rounded-full animate-orbit opacity-40 blur-sm" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-24 right-1/3 w-10 h-10 bg-gradient-to-r from-primary/8 to-transparent rounded-full animate-diagonal-float opacity-25 blur-md" style={{ animationDelay: '3s' }} />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">

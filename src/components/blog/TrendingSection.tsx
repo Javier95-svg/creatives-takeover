@@ -92,11 +92,6 @@ const TrendingSection = ({
         {/* Unified Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
         
-        {/* Subtle Floating Elements */}
-        <div className="absolute top-40 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" />
-        <div className="absolute top-60 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-40 right-10 w-10 h-10 bg-gradient-to-r from-primary/12 to-secondary/12 rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '2s' }} />
-        
         {/* Decorative Wave Bridge */}
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
         <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
@@ -148,10 +143,6 @@ const TrendingSection = ({
         {/* Unified Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
         
-        {/* Subtle Floating Elements */}
-        <div className="absolute top-40 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" />
-        <div className="absolute top-60 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1s' }} />
-        
         {/* Decorative Wave Bridge */}
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
         <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
@@ -186,12 +177,6 @@ const TrendingSection = ({
     >
       {/* Unified Background with Gradient Blend */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
-      
-      {/* Subtle Floating Elements - Matching Hero Style */}
-      <div className="absolute top-40 right-1/4 w-6 h-6 bg-primary/30 rounded-full animate-float opacity-50" style={{ animationDelay: '0.5s' }} />
-      <div className="absolute top-60 left-10 w-8 h-8 bg-secondary/25 rounded-full animate-spiral opacity-40 blur-sm" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute bottom-40 right-10 w-10 h-10 bg-gradient-to-r from-primary/12 to-secondary/12 rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '2.5s' }} />
-      <div className="absolute top-1/2 left-1/3 w-12 h-12 bg-gradient-to-l from-accent/8 to-transparent rounded-full animate-diagonal-float opacity-25 blur-lg" style={{ animationDelay: '3.5s' }} />
       
       {/* Decorative Wave Bridge */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
