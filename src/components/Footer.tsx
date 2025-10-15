@@ -48,33 +48,36 @@ const Footer = () => {
 
           <nav aria-labelledby="footer-social">
             <h2 id="footer-social" className="text-sm font-semibold tracking-wide text-foreground">Follow</h2>
-            <ul className="mt-3 flex flex-wrap gap-4">
-              <li>
+            <ul className="mt-3 flex flex-wrap items-center gap-4">
+              <li className="flex items-center">
                 <a
                   href="https://www.linkedin.com/company/creatives-takeover"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
+                  className="flex items-center justify-center"
                 >
                   <Linkedin className="h-5 w-5 text-blue-600 hover:text-blue-500 transition-colors" />
                 </a>
               </li>
-              <li>
+              <li className="flex items-center">
                 <a
                   href="https://www.youtube.com/@CreativesTakeover"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="YouTube"
+                  className="flex items-center justify-center"
                 >
                   <Youtube className="h-5 w-5 text-red-600 hover:text-red-500 transition-colors" />
                 </a>
               </li>
-              <li>
+              <li className="flex items-center">
                 <a
                   href="https://www.instagram.com/creativestakeover.official/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
+                  className="flex items-center justify-center"
                 >
                   <Instagram className="h-5 w-5 text-pink-500 hover:text-pink-400 transition-colors" />
                 </a>
