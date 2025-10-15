@@ -51,6 +51,17 @@ const Footer = () => {
             <ul className="mt-3 flex flex-wrap items-center gap-4">
               <li className="flex items-center">
                 <a
+                  href="https://www.instagram.com/creativestakeover.official/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="flex items-center justify-center"
+                >
+                  <Instagram className="h-5 w-5 text-pink-500 hover:text-pink-400 transition-colors" />
+                </a>
+              </li>
+              <li className="flex items-center">
+                <a
                   href="https://www.linkedin.com/company/creatives-takeover"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -71,17 +82,6 @@ const Footer = () => {
                   <Youtube className="h-5 w-5 text-red-600 hover:text-red-500 transition-colors" />
                 </a>
               </li>
-              <li className="flex items-center">
-                <a
-                  href="https://www.instagram.com/creativestakeover.official/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="flex items-center justify-center"
-                >
-                  <Instagram className="h-5 w-5 text-pink-500 hover:text-pink-400 transition-colors" />
-                </a>
-              </li>
               <li>
                 <a
                   href="https://x.com/Creatives_Rule"
@@ -96,20 +96,6 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://discord.gg/kcsxMzGw"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Discord"
-                >
-                  <img 
-                    src="/lovable-uploads/discord-logo.png" 
-                    alt="Discord" 
-                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
-                  />
-                </a>
-              </li>
-              <li>
-                <a
                   href="https://www.reddit.com/r/Creatives_Takeover/"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -118,6 +104,20 @@ const Footer = () => {
                   <img 
                     src="/lovable-uploads/reddit-logo.png" 
                     alt="Reddit" 
+                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
+                  />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://discord.gg/kcsxMzGw"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Discord"
+                >
+                  <img 
+                    src="/lovable-uploads/discord-logo.png" 
+                    alt="Discord" 
                     className="h-5 w-5 hover:opacity-80 transition-opacity" 
                   />
                 </a>
