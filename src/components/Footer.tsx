@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Linkedin, Instagram, Twitter } from "lucide-react";
+import { Mail, Linkedin, Instagram, Twitter, Youtube } from "lucide-react";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -57,6 +57,16 @@ const Footer = () => {
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="h-5 w-5 text-blue-600 hover:text-blue-500 transition-colors" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.youtube.com/@CreativesTakeover"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                >
+                  <Youtube className="h-5 w-5 text-red-600 hover:text-red-500 transition-colors" />
                 </a>
               </li>
               <li>
