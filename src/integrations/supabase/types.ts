@@ -4194,6 +4194,10 @@ export type Database = {
         Args: { "": unknown[] }
         Returns: number
       }
+      trigger_memory_summarization: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_market_data_freshness: {
         Args: Record<PropertyKey, never>
         Returns: undefined
