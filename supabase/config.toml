@@ -68,6 +68,3 @@ verify_jwt = false
 
 [functions.commitment-manager]
 verify_jwt = true
-
-[functions.bizmap-cofounder-chat]
-verify_jwt = true

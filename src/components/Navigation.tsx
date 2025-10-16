@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Briefcase } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,17 +91,6 @@ const Navigation = () => {
                   <Link to="/messages">
                     <MessageCircle className="w-4 h-4" />
                     Messages
-                  </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="flex items-center gap-2"
-                >
-                  <Link to="/projects">
-                    <Briefcase className="w-4 h-4" />
-                    My Projects
                   </Link>
                 </Button>
                 <Button
