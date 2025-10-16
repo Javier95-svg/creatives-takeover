@@ -1,5 +1,11 @@
 project_id = "rcjlaybjnozqbsoxzboa"
 
+[functions.embed-text]
+verify_jwt = false
+
+[functions.memory-manager]
+verify_jwt = false
+
 [functions.share-chatbot-report]
 verify_jwt = true
 

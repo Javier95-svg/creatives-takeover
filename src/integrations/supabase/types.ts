@@ -2648,6 +2648,163 @@ export type Database = {
         }
         Relationships: []
       }
+      project_artifacts: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          project_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          project_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          project_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_artifacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_memory: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string | null
+          embedding: string | null
+          id: string
+          is_archived: boolean | null
+          kind: string
+          metadata: Json | null
+          project_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_archived?: boolean | null
+          kind: string
+          metadata?: Json | null
+          project_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_archived?: boolean | null
+          kind?: string
+          metadata?: Json | null
+          project_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_memory_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_memory_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_messages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          tokens_used: number | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          project_id: string
+          role: string
+          tokens_used?: number | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          tokens_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          idea_summary: string | null
+          last_run_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idea_summary?: string | null
+          last_run_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idea_summary?: string | null
+          last_run_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       report_templates: {
         Row: {
           created_at: string
@@ -3813,6 +3970,10 @@ export type Database = {
       }
     }
     Functions: {
+      archive_old_memories: {
+        Args: { days_old?: number }
+        Returns: number
+      }
       award_reputation_points: {
         Args: {
           p_action_type: string
@@ -3822,6 +3983,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
       }
       calculate_business_success_score: {
         Args: { answers: Json }
@@ -3863,6 +4028,16 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      get_conversations_for_summarization: {
+        Args: { days_old?: number }
+        Returns: {
+          conversation_id: string
+          message_count: number
+          newest_message: string
+          oldest_message: string
+          project_id: string
+        }[]
       }
       get_fresh_market_insights: {
         Args: {
@@ -3920,6 +4095,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
       has_completed_todays_challenge: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -3931,6 +4122,42 @@ export type Database = {
         }
         Returns: boolean
       }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: unknown
+      }
       refresh_admin_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3939,6 +4166,34 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      search_similar_memories: {
+        Args: {
+          memory_kind?: string
+          query_embedding: string
+          target_project_id: string
+          top_k?: number
+        }
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
       update_market_data_freshness: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3946,6 +4201,30 @@ export type Database = {
       update_user_subscription_tier: {
         Args: { is_subscribed?: boolean; new_tier: string; user_email: string }
         Returns: undefined
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {

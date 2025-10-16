@@ -85,8 +85,46 @@ serve(async (req) => {
         if (error) console.error('Background: Error saving user message:', error);
       });
 
-    // Build system prompt (simplified - no market data)
-    const systemPrompt = buildSystemPrompt(businessContext, [], wizardMode, currentStep);
+    // ===== MEMORY RETRIEVAL: Get relevant context from project memory =====
+    let memoryContext = '';
+    const chatSession = await supabase
+      .from('chat_sessions')
+      .select('id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (chatSession?.data?.id) {
+      try {
+        const memoryResponse = await fetch(`${supabaseUrl}/functions/v1/memory-manager?action=retrieve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({
+            projectId: chatSession.data.id,
+            query: message,
+            topK: 8,
+          }),
+        });
+
+        if (memoryResponse.ok) {
+          const { contextText, count } = await memoryResponse.json();
+          if (count > 0) {
+            memoryContext = `\n\n📚 RELEVANT CONTEXT FROM PREVIOUS CONVERSATIONS:\n${contextText}\n\nUse this context to provide continuity and personalized advice based on the user's history.`;
+            console.log(`[CHATBOT-STREAMING] Retrieved ${count} relevant memories`);
+          }
+        }
+      } catch (error) {
+        console.error('[CHATBOT-STREAMING] Memory retrieval error:', error);
+        // Continue without memory context - don't block the conversation
+      }
+    }
+
+    // Build system prompt with memory context
+    const systemPrompt = buildSystemPrompt(businessContext, [], wizardMode, currentStep) + memoryContext;
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
@@ -237,6 +275,42 @@ serve(async (req) => {
                 })
                 .eq('id', conversation.id)
             ]);
+
+            // ===== MEMORY STORAGE: Store assistant response as short-term memory =====
+            if (chatSession?.data?.id && fullMessage.length > 50) {
+              try {
+                // Extract key paragraphs (responses longer than 200 chars)
+                const paragraphs = fullMessage
+                  .split('\n')
+                  .filter(p => p.trim().length > 200)
+                  .slice(0, 3); // Store up to 3 key paragraphs
+
+                if (paragraphs.length > 0) {
+                  await fetch(`${supabaseUrl}/functions/v1/memory-manager?action=store`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${supabaseKey}`,
+                    },
+                    body: JSON.stringify({
+                      projectId: chatSession.data.id,
+                      conversationId: conversation.id,
+                      content: paragraphs.join('\n\n'),
+                      kind: 'short_term',
+                      metadata: {
+                        messageLength: fullMessage.length,
+                        stage,
+                        businessContext: updatedContext,
+                      },
+                    }),
+                  });
+                  console.log('[CHATBOT-STREAMING] Stored assistant response in memory');
+                }
+              } catch (error) {
+                console.error('[CHATBOT-STREAMING] Memory storage error:', error);
+                // Continue - don't fail the conversation if memory storage fails
+              }
+            }
           }, 0);
 
           // Send completion metadata (simplified)
