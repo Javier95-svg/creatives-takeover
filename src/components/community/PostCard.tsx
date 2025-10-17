@@ -137,7 +137,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           *,
           profiles:user_id (
             full_name,
-            avatar_url
+            avatar_url,
+            username
           )
         `)
         .eq('post_id', post.id)
@@ -486,9 +487,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     </Avatar>
                       <div className="flex-1">
                         <div className="bg-muted rounded-2xl px-4 py-2">
-                          <div className="font-medium text-sm mb-1">
+                          <Link 
+                            to={`/profile/${comment.profiles?.username || 'user'}`}
+                            className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
+                          >
                             {comment.profiles?.full_name || 'Anonymous'}
-                          </div>
+                          </Link>
                           <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                               {comment.content}

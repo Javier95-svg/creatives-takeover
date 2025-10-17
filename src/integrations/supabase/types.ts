@@ -2576,6 +2576,7 @@ export type Database = {
           created_at: string
           creative_niche: string | null
           credit_balance: number
+          facebook_url: string | null
           followers_count: number
           following_count: number
           friends_count: number
@@ -2589,10 +2590,13 @@ export type Database = {
           onboarding_completed: boolean | null
           preferred_dashboard_view: string | null
           subscription_tier: string
+          tiktok_url: string | null
           twitter_url: string | null
           updated_at: string
           user_preferences: Json | null
+          username: string | null
           website_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           ai_personality?: string | null
@@ -2602,6 +2606,7 @@ export type Database = {
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
+          facebook_url?: string | null
           followers_count?: number
           following_count?: number
           friends_count?: number
@@ -2615,10 +2620,13 @@ export type Database = {
           onboarding_completed?: boolean | null
           preferred_dashboard_view?: string | null
           subscription_tier?: string
+          tiktok_url?: string | null
           twitter_url?: string | null
           updated_at?: string
           user_preferences?: Json | null
+          username?: string | null
           website_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           ai_personality?: string | null
@@ -2628,6 +2636,7 @@ export type Database = {
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
+          facebook_url?: string | null
           followers_count?: number
           following_count?: number
           friends_count?: number
@@ -2641,10 +2650,13 @@ export type Database = {
           onboarding_completed?: boolean | null
           preferred_dashboard_view?: string | null
           subscription_tier?: string
+          tiktok_url?: string | null
           twitter_url?: string | null
           updated_at?: string
           user_preferences?: Json | null
+          username?: string | null
           website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }

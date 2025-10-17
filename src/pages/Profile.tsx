@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, Users, MessageCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -17,10 +17,16 @@ import { toast } from "sonner";
 
 interface Profile {
   id: string;
+  username: string | null;
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
   website_url: string | null;
+  twitter_url: string | null;
+  linkedin_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
   created_at: string;
   followers_count: number;
   following_count: number;
@@ -40,35 +46,41 @@ interface Post {
 }
 
 const Profile = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { username } = useParams<{ username: string }>();
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const isOwnProfile = currentUser?.id === userId;
+  const isOwnProfile = currentUser?.id === profile?.id;
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!userId) return;
+      if (!username) return;
 
       try {
         setLoading(true);
 
-        // Load profile
+        // Load profile by username
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', userId)
-          .single();
+          .eq('username', username)
+          .maybeSingle();
 
         if (profileError) throw profileError;
+        if (!profileData) {
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+        
         setProfile(profileData);
 
         // Load user's posts
         const { data: postsData, error: postsError } = await supabase
           .from('community_posts')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', profileData.id)
           .order('created_at', { ascending: false })
           .limit(10);
 
@@ -84,7 +96,7 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [userId]);
+  }, [username, currentUser?.id]);
 
   if (loading) {
     return (
@@ -192,9 +204,9 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      {!isOwnProfile && (
+                      {!isOwnProfile && profile?.id && (
                         <SocialButtons 
-                          userId={userId!} 
+                          userId={profile.id} 
                           userName={profile.full_name || undefined}
                           showAccountabilityPartner={true}
                         />
@@ -204,6 +216,60 @@ const Profile = () => {
                     {profile.bio && (
                       <p className="text-muted-foreground mb-4">{profile.bio}</p>
                     )}
+
+                    {/* Social Media Icons */}
+                    <div className="flex gap-3 mb-4">
+                      {profile.twitter_url && (
+                        <a 
+                          href={profile.twitter_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Twitter className="h-5 w-5" />
+                        </a>
+                      )}
+                      {profile.linkedin_url && (
+                        <a 
+                          href={profile.linkedin_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Linkedin className="h-5 w-5" />
+                        </a>
+                      )}
+                      {profile.instagram_url && (
+                        <a 
+                          href={profile.instagram_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Instagram className="h-5 w-5" />
+                        </a>
+                      )}
+                      {profile.facebook_url && (
+                        <a 
+                          href={profile.facebook_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Facebook className="h-5 w-5" />
+                        </a>
+                      )}
+                      {profile.youtube_url && (
+                        <a 
+                          href={profile.youtube_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Youtube className="h-5 w-5" />
+                        </a>
+                      )}
+                    </div>
 
                     {profile.website_url && (
                       <a 
