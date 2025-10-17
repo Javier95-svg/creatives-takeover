@@ -4,26 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Image as ImageIcon, Send, X, Hash } from "lucide-react";
+import { Image as ImageIcon, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
-import LocationSearchInput from "./LocationSearchInput";
 import { useNavigate } from "react-router-dom";
 
 export type ComposerPayload = {
   title: string;
   content: string;
-  tags: string[];
   image?: string; // data URL preview for now
-  location?: string;
-  locationData?: {
-    address: string;
-    coordinates?: {
-      lng: number;
-      lat: number;
-    };
-  };
 };
 
 interface PostComposerProps {
@@ -43,38 +33,17 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const navigate = useNavigate();
   const [title, setTitle] = useState(reportData?.title || "");
   const [content, setContent] = useState(reportData?.content || "");
-  const [tagsInput, setTagsInput] = useState(reportData?.tags?.join(', ') || "");
   const [imagePreview, setImagePreview] = useState<string | undefined>();
-  const [location, setLocation] = useState("");
-  const [locationData, setLocationData] = useState<{ address: string; coordinates?: { lng: number; lat: number; } } | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const isAIReport = !!reportData?.reportType;
 
-  const tags = useMemo(
-    () =>
-      tagsInput
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .slice(0, 5),
-    [tagsInput]
-  );
-
   const reset = () => {
     setTitle("");
     setContent("");
-    setTagsInput("");
     setImagePreview(undefined);
-    setLocation("");
-    setLocationData(undefined);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleLocationChange = (locationText: string, data?: { address: string; coordinates?: { lng: number; lat: number; } }) => {
-    setLocation(locationText);
-    setLocationData(data);
   };
 
   const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,10 +82,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     onPublish({ 
       title: title.trim(), 
       content: content.trim(), 
-      tags, 
-      image: imagePreview,
-      location: location.trim() || undefined,
-      locationData: locationData
+      image: imagePreview
     });
     toast.success("Your story has been posted!");
     reset();
@@ -173,33 +139,6 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
               rows={6}
               disabled={requireAuth && !isAuthenticated}
             />
-
-            <div className="flex items-center gap-2">
-              <Hash className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="Add up to 5 tags (comma separated): marketing, funding, saas"
-                aria-label="Tags"
-                disabled={requireAuth && !isAuthenticated}
-              />
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((t) => (
-                  <Badge key={t} variant="secondary">#{t}</Badge>
-                ))}
-              </div>
-            )}
-
-            <div>
-              <LocationSearchInput
-                value={location}
-                onChange={handleLocationChange}
-                disabled={requireAuth && !isAuthenticated}
-                placeholder="📍 Search for a location or use GPS"
-              />
-            </div>
 
             {imagePreview && (
               <div className="relative">
