@@ -65,15 +65,9 @@ const Profile = () => {
           .from('profiles')
           .select('*')
           .eq('username', username)
-          .maybeSingle();
+          .single();
 
         if (profileError) throw profileError;
-        if (!profileData) {
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-        
         setProfile(profileData);
 
         // Load user's posts
@@ -96,7 +90,7 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [username, currentUser?.id]);
+  }, [username]);
 
   if (loading) {
     return (
@@ -204,7 +198,7 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      {!isOwnProfile && profile?.id && (
+                      {!isOwnProfile && profile.id && (
                         <SocialButtons 
                           userId={profile.id} 
                           userName={profile.full_name || undefined}
@@ -217,59 +211,66 @@ const Profile = () => {
                       <p className="text-muted-foreground mb-4">{profile.bio}</p>
                     )}
 
-                    {/* Social Media Icons */}
-                    <div className="flex gap-3 mb-4">
-                      {profile.twitter_url && (
-                        <a 
-                          href={profile.twitter_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <Twitter className="h-5 w-5" />
-                        </a>
-                      )}
-                      {profile.linkedin_url && (
-                        <a 
-                          href={profile.linkedin_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <Linkedin className="h-5 w-5" />
-                        </a>
-                      )}
-                      {profile.instagram_url && (
-                        <a 
-                          href={profile.instagram_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <Instagram className="h-5 w-5" />
-                        </a>
-                      )}
-                      {profile.facebook_url && (
-                        <a 
-                          href={profile.facebook_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <Facebook className="h-5 w-5" />
-                        </a>
-                      )}
-                      {profile.youtube_url && (
-                        <a 
-                          href={profile.youtube_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <Youtube className="h-5 w-5" />
-                        </a>
-                      )}
-                    </div>
+                    {/* Social Media Links */}
+                    {(profile.twitter_url || profile.linkedin_url || profile.instagram_url || profile.facebook_url || profile.youtube_url) && (
+                      <div className="flex gap-3 mb-4">
+                        {profile.twitter_url && (
+                          <a 
+                            href={profile.twitter_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="Twitter"
+                          >
+                            <Twitter className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.linkedin_url && (
+                          <a 
+                            href={profile.linkedin_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="LinkedIn"
+                          >
+                            <Linkedin className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.instagram_url && (
+                          <a 
+                            href={profile.instagram_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="Instagram"
+                          >
+                            <Instagram className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.facebook_url && (
+                          <a 
+                            href={profile.facebook_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="Facebook"
+                          >
+                            <Facebook className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.youtube_url && (
+                          <a 
+                            href={profile.youtube_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="YouTube"
+                          >
+                            <Youtube className="h-5 w-5" />
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     {profile.website_url && (
                       <a 
