@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Github, Globe, Camera, Users, UserCheck, MessageSquare } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -37,6 +37,8 @@ const Account = () => {
   const [twitterUrl, setTwitterUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
 
@@ -48,6 +50,8 @@ const Account = () => {
     twitterUrl: "",
     linkedinUrl: "",
     instagramUrl: "",
+    facebookUrl: "",
+    youtubeUrl: "",
     githubUrl: "",
     websiteUrl: "",
   });
@@ -76,6 +80,8 @@ const Account = () => {
             twitterUrl: data.twitter_url || "",
             linkedinUrl: data.linkedin_url || "",
             instagramUrl: data.instagram_url || "",
+            facebookUrl: data.facebook_url || "",
+            youtubeUrl: data.youtube_url || "",
             githubUrl: data.github_url || "",
             websiteUrl: data.website_url || "",
           };
@@ -86,6 +92,8 @@ const Account = () => {
           setTwitterUrl(profileData.twitterUrl);
           setLinkedinUrl(profileData.linkedinUrl);
           setInstagramUrl(profileData.instagramUrl);
+          setFacebookUrl(profileData.facebookUrl);
+          setYoutubeUrl(profileData.youtubeUrl);
           setGithubUrl(profileData.githubUrl);
           setWebsiteUrl(profileData.websiteUrl);
           setInitialValues(profileData);
@@ -107,6 +115,8 @@ const Account = () => {
       twitterUrl !== initialValues.twitterUrl ||
       linkedinUrl !== initialValues.linkedinUrl ||
       instagramUrl !== initialValues.instagramUrl ||
+      facebookUrl !== initialValues.facebookUrl ||
+      youtubeUrl !== initialValues.youtubeUrl ||
       githubUrl !== initialValues.githubUrl ||
       websiteUrl !== initialValues.websiteUrl
     );
@@ -126,7 +136,7 @@ const Account = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [fullName, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, githubUrl, websiteUrl, initialValues]);
+  }, [fullName, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, facebookUrl, youtubeUrl, githubUrl, websiteUrl, initialValues]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -203,6 +213,8 @@ const Account = () => {
           twitter_url: twitterUrl,
           linkedin_url: linkedinUrl,
           instagram_url: instagramUrl,
+          facebook_url: facebookUrl,
+          youtube_url: youtubeUrl,
           github_url: githubUrl,
           website_url: websiteUrl,
         });
@@ -217,6 +229,8 @@ const Account = () => {
         twitterUrl,
         linkedinUrl,
         instagramUrl,
+        facebookUrl,
+        youtubeUrl,
         githubUrl,
         websiteUrl,
       });
@@ -416,6 +430,34 @@ const Account = () => {
                       value={instagramUrl}
                       onChange={(e) => setInstagramUrl(e.target.value)}
                       placeholder="https://instagram.com/username"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="facebook" className="flex items-center gap-2">
+                      <Facebook className="w-4 h-4" />
+                      Facebook
+                    </Label>
+                    <Input
+                      id="facebook"
+                      type="url"
+                      value={facebookUrl}
+                      onChange={(e) => setFacebookUrl(e.target.value)}
+                      placeholder="https://facebook.com/username"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="youtube" className="flex items-center gap-2">
+                      <Youtube className="w-4 h-4" />
+                      YouTube
+                    </Label>
+                    <Input
+                      id="youtube"
+                      type="url"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                      placeholder="https://youtube.com/@username"
                     />
                   </div>
                   

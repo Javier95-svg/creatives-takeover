@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -27,6 +27,7 @@ interface Profile {
   instagram_url: string | null;
   facebook_url: string | null;
   youtube_url: string | null;
+  github_url: string | null;
   created_at: string;
   followers_count: number;
   following_count: number;
@@ -212,7 +213,7 @@ const Profile = () => {
                     )}
 
                     {/* Social Media Links */}
-                    {(profile.twitter_url || profile.linkedin_url || profile.instagram_url || profile.facebook_url || profile.youtube_url) && (
+                    {(profile.twitter_url || profile.linkedin_url || profile.instagram_url || profile.facebook_url || profile.youtube_url || profile.github_url) && (
                       <div className="flex gap-3 mb-4">
                         {profile.twitter_url && (
                           <a 
@@ -267,6 +268,17 @@ const Profile = () => {
                             aria-label="YouTube"
                           >
                             <Youtube className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.github_url && (
+                          <a 
+                            href={profile.github_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="GitHub"
+                          >
+                            <Github className="h-5 w-5" />
                           </a>
                         )}
                       </div>
