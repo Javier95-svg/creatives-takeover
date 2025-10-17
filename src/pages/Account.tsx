@@ -190,7 +190,7 @@ const Account = () => {
                   Profile Picture
                 </CardTitle>
                 <CardDescription>
-                  Upload a profile picture or provide an image URL.
+                  Upload your profile picture (PNG or JPEG)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -202,7 +202,7 @@ const Account = () => {
                        user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
                     <Button
                       type="button"
                       variant="outline"
@@ -224,21 +224,14 @@ const Account = () => {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/png, image/jpeg, image/jpg"
                       onChange={handleFileUpload}
                       className="hidden"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Supported: PNG, JPEG (Max 5MB)
+                    </p>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="avatar-url">Or provide image URL</Label>
-                  <Input
-                    id="avatar-url"
-                    type="url"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
-                  />
                 </div>
               </CardContent>
             </Card>
