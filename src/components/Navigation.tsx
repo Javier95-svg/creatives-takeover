@@ -106,23 +106,21 @@ const Navigation = () => {
                 <SubscriptionStatus variant="inline" />
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   asChild
-                  className="flex items-center gap-2 relative"
+                  className="relative"
                 >
                   <Link to="/messages">
                     <MessageCircle className="w-4 h-4" />
-                    Messages
                   </Link>
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => setShowFriendRequests(true)}
-                  className="flex items-center gap-2 relative"
+                  className="relative"
                 >
                   <UserPlus className="w-4 h-4" />
-                  Requests
                   {pendingFriendRequests.length > 0 && (
                     <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
                       {pendingFriendRequests.length}
