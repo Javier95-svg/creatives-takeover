@@ -11,15 +11,37 @@ import { useHoverPopup } from "@/hooks/useHoverPopup";
 import { useSocial } from "@/hooks/useSocial";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
   const { user, signOut, loading, isAuthenticated } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
   
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
+
+  // Fetch user avatar
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+      
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
+      }
+    };
+
+    fetchAvatar();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -107,23 +129,14 @@ const Navigation = () => {
                     </Badge>
                   )}
                 </Button>
-                <div className="flex items-center space-x-2 text-sm">
-                  <User className="w-4 h-4" />
-                  <span className="text-muted-foreground">
-                    {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
-                  </span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  asChild
-                  className="flex items-center gap-2"
-                >
-                  <Link to="/account">
-                    <Settings className="w-4 h-4" />
-                    Account
-                  </Link>
-                </Button>
+                <Link to="/account" className="cursor-pointer">
+                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-primary transition-all">
+                    <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 
