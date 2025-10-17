@@ -15,12 +15,15 @@ import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { useSocial } from "@/hooks/useSocial";
+import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
 
 const Account = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [friendRequestsOpen, setFriendRequestsOpen] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { pendingFriendRequests } = useSocial();
@@ -75,16 +78,27 @@ const Account = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
+    // Create a temporary URL for the crop modal
+    const tempUrl = URL.createObjectURL(file);
+    setTempImageUrl(tempUrl);
+    setCropModalOpen(true);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!user) return;
+
     setUploadLoading(true);
+    setCropModalOpen(false);
+
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
+        .upload(fileName, croppedBlob, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: 'image/jpeg'
         });
 
       if (uploadError) throw uploadError;
@@ -94,9 +108,15 @@ const Account = () => {
         .getPublicUrl(fileName);
 
       setAvatarUrl(data.publicUrl);
-      toast.success("Avatar uploaded successfully!");
+      toast.success("Profile picture updated successfully!");
+      
+      // Clean up temp URL
+      if (tempImageUrl) {
+        URL.revokeObjectURL(tempImageUrl);
+        setTempImageUrl("");
+      }
     } catch (error: any) {
-      toast.error("Failed to upload avatar: " + error.message);
+      toast.error("Failed to upload profile picture: " + error.message);
     } finally {
       setUploadLoading(false);
     }
@@ -479,6 +499,18 @@ const Account = () => {
         <FriendRequestsModal 
           open={friendRequestsOpen} 
           onOpenChange={setFriendRequestsOpen} 
+        />
+        <ProfilePictureCropModal
+          open={cropModalOpen}
+          onClose={() => {
+            setCropModalOpen(false);
+            if (tempImageUrl) {
+              URL.revokeObjectURL(tempImageUrl);
+              setTempImageUrl("");
+            }
+          }}
+          imageUrl={tempImageUrl}
+          onCropComplete={handleCropComplete}
         />
         <Footer />
       </div>
