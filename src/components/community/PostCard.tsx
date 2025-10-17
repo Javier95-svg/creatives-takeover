@@ -484,13 +484,17 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                         {comment.profiles?.full_name?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <div className="bg-muted rounded-2xl px-4 py-2">
-                        <div className="font-medium text-sm mb-1">
-                          {comment.profiles?.full_name || 'Anonymous'}
+                      <div className="flex-1">
+                        <div className="bg-muted rounded-2xl px-4 py-2">
+                          <div className="font-medium text-sm mb-1">
+                            {comment.profiles?.full_name || 'Anonymous'}
+                          </div>
+                          <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {comment.content}
+                            </ReactMarkdown>
+                          </div>
                         </div>
-                        <div className="text-sm">{comment.content}</div>
-                      </div>
                       <div className="flex items-center gap-4 mt-1 px-2">
                         <span className="text-xs text-muted-foreground">
                           {timeAgo(comment.created_at)}
