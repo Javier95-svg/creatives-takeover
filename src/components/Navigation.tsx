@@ -75,7 +75,7 @@ const Navigation = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-evenly flex-1 px-8 lg:px-16">
+          <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16">
             {navItems.map((item) => (
               <Link
                 key={item.name}
