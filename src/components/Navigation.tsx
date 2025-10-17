@@ -75,12 +75,12 @@ const Navigation = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-center space-x-8 flex-1">
+          <div className="hidden md:flex items-center justify-evenly flex-1 mx-8">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-muted-foreground hover:text-foreground transition-colors animated-underline ${
+                className={`text-muted-foreground hover:text-foreground transition-colors animated-underline whitespace-nowrap ${
                   item.name === 'BizMap AI' ? 'relative' : ''
                 }`}
                 onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
