@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Heart, 
   MessageCircle, 
@@ -11,7 +18,8 @@ import {
   Repeat2, 
   MapPin, 
   MoreHorizontal,
-  Send
+  Send,
+  MoreVertical
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -76,6 +84,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [localLikes, setLocalLikes] = useState(post.votes);
   const [localReposts, setLocalReposts] = useState(post.repostCount || 0);
   const [localComments, setLocalComments] = useState(post.commentsCount);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
 
   const timeAgo = (dateString: string) => {
     const now = new Date();
@@ -291,6 +301,39 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     }
   };
 
+  const handleEditComment = (commentId: string, currentContent: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentContent(currentContent);
+  };
+
+  const handleSaveComment = async (commentId: string) => {
+    if (!editingCommentContent.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .update({ content: editingCommentContent.trim() })
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      setComments(comments.map(c => 
+        c.id === commentId ? { ...c, content: editingCommentContent.trim() } : c
+      ));
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+      toast.success('Comment updated!');
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      toast.error('Failed to update comment');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingCommentContent("");
+  };
+
   const handleSignIn = () => {
     navigate('/login');
   };
@@ -487,31 +530,71 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                         {comment.profiles?.full_name?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                      <div className="flex-1">
-                        <div className="bg-muted rounded-2xl px-4 py-2">
-                          <Link 
-                            to={`/profile/${comment.profiles?.username || comment.user_id}`}
-                            className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
-                          >
-                            {comment.profiles?.full_name || 'Anonymous'}
-                          </Link>
-                          <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {comment.content}
-                            </ReactMarkdown>
+                    <div className="flex-1">
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editingCommentContent}
+                            onChange={(e) => setEditingCommentContent(e.target.value)}
+                            className="min-h-[80px]"
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleSaveComment(comment.id)}>
+                              Save
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
                           </div>
                         </div>
-                      <div className="flex items-center gap-4 mt-1 px-2">
-                        <span className="text-xs text-muted-foreground">
-                          {timeAgo(comment.created_at)}
-                        </span>
-                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
-                          Like
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
-                          Reply
-                        </Button>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="bg-muted rounded-2xl px-4 py-2 relative group">
+                            <div className="flex items-start justify-between">
+                              <Link 
+                                to={`/profile/${comment.profiles?.username || comment.user_id}`}
+                                className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
+                              >
+                                {comment.profiles?.full_name || 'Anonymous'}
+                              </Link>
+                              {user?.id === comment.user_id && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <MoreVertical className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="bg-popover">
+                                    <DropdownMenuItem onClick={() => handleEditComment(comment.id, comment.content)}>
+                                      Edit
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
+                            <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {comment.content}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 px-2">
+                            <span className="text-xs text-muted-foreground">
+                              {timeAgo(comment.created_at)}
+                            </span>
+                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
+                              Like
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto p-0">
+                              Reply
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
