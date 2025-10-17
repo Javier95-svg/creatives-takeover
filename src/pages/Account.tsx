@@ -40,6 +40,18 @@ const Account = () => {
   const [githubUrl, setGithubUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
 
+  // Track initial values for unsaved changes detection
+  const [initialValues, setInitialValues] = useState({
+    fullName: "",
+    bio: "",
+    avatarUrl: "",
+    twitterUrl: "",
+    linkedinUrl: "",
+    instagramUrl: "",
+    githubUrl: "",
+    websiteUrl: "",
+  });
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
@@ -57,14 +69,26 @@ const Account = () => {
         }
         
         if (data) {
-          setFullName(data.full_name || "");
-          setAvatarUrl(data.avatar_url || "");
-          setBio(data.bio || "");
-          setTwitterUrl(data.twitter_url || "");
-          setLinkedinUrl(data.linkedin_url || "");
-          setInstagramUrl(data.instagram_url || "");
-          setGithubUrl(data.github_url || "");
-          setWebsiteUrl(data.website_url || "");
+          const profileData = {
+            fullName: data.full_name || "",
+            bio: data.bio || "",
+            avatarUrl: data.avatar_url || "",
+            twitterUrl: data.twitter_url || "",
+            linkedinUrl: data.linkedin_url || "",
+            instagramUrl: data.instagram_url || "",
+            githubUrl: data.github_url || "",
+            websiteUrl: data.website_url || "",
+          };
+          
+          setFullName(profileData.fullName);
+          setAvatarUrl(profileData.avatarUrl);
+          setBio(profileData.bio);
+          setTwitterUrl(profileData.twitterUrl);
+          setLinkedinUrl(profileData.linkedinUrl);
+          setInstagramUrl(profileData.instagramUrl);
+          setGithubUrl(profileData.githubUrl);
+          setWebsiteUrl(profileData.websiteUrl);
+          setInitialValues(profileData);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -73,6 +97,36 @@ const Account = () => {
 
     fetchProfile();
   }, [user]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    return (
+      fullName !== initialValues.fullName ||
+      bio !== initialValues.bio ||
+      avatarUrl !== initialValues.avatarUrl ||
+      twitterUrl !== initialValues.twitterUrl ||
+      linkedinUrl !== initialValues.linkedinUrl ||
+      instagramUrl !== initialValues.instagramUrl ||
+      githubUrl !== initialValues.githubUrl ||
+      websiteUrl !== initialValues.websiteUrl
+    );
+  };
+
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to be set
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [fullName, bio, avatarUrl, twitterUrl, linkedinUrl, instagramUrl, githubUrl, websiteUrl, initialValues]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -154,6 +208,18 @@ const Account = () => {
         });
 
       if (profileError) throw profileError;
+
+      // Update initial values after successful save
+      setInitialValues({
+        fullName,
+        bio,
+        avatarUrl,
+        twitterUrl,
+        linkedinUrl,
+        instagramUrl,
+        githubUrl,
+        websiteUrl,
+      });
 
       toast.success("Profile updated successfully!");
     } catch (error: any) {
