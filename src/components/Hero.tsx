@@ -9,35 +9,63 @@ const Hero = () => {
   
   return (
     <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20 px-4 sm:px-6">
-      {/* Sophisticated Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-indigo-950/20 to-slate-900/40" />
+      {/* Deep Tech Gradient Base */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/40 via-blue-950/30 to-slate-900/50" />
       
-      {/* Subtle Mesh Grid Pattern */}
-      <div className="absolute inset-0 opacity-[0.03]">
+      {/* Circuit Board Pattern */}
+      <div className="absolute inset-0 opacity-[0.08]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px)
           `,
-          backgroundSize: '80px 80px'
+          backgroundSize: '100px 100px, 100px 100px, 20px 20px, 20px 20px',
+          backgroundPosition: '0 0, 0 0, 0 0, 0 0'
         }} />
       </div>
-      
-      {/* Refined Geometric Gradients */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-radial from-primary/30 via-primary/10 to-transparent blur-3xl animate-drift" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-radial from-secondary/25 via-secondary/8 to-transparent blur-3xl animate-drift" style={{ animationDelay: '3s', animationDirection: 'reverse' }} />
-        <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-gradient-radial from-accent/20 via-accent/5 to-transparent blur-2xl animate-float" style={{ animationDelay: '5s' }} />
+
+      {/* Atomic Orbital Rings */}
+      <div className="absolute top-1/2 left-1/4 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+        <div className="absolute inset-0 rounded-full border border-primary/20 animate-spin" style={{ animationDuration: '20s' }} />
+        <div className="absolute inset-4 rounded-full border border-secondary/15 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+        <div className="absolute inset-8 rounded-full border border-accent/10 animate-spin" style={{ animationDuration: '25s' }} />
+        <div className="absolute top-1/2 left-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 bg-primary/60 rounded-full animate-pulse" />
       </div>
+
+      <div className="absolute top-1/3 right-1/5 w-48 h-48 -translate-x-1/2 -translate-y-1/2">
+        <div className="absolute inset-0 rounded-full border border-secondary/15 animate-spin" style={{ animationDuration: '18s' }} />
+        <div className="absolute inset-3 rounded-full border border-primary/12 animate-spin" style={{ animationDuration: '12s', animationDirection: 'reverse' }} />
+        <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 bg-secondary/50 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      {/* Orbiting Particles */}
+      <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-primary/70 rounded-full animate-orbit" style={{ animationDuration: '20s' }} />
+      <div className="absolute top-1/2 left-1/4 w-1.5 h-1.5 bg-secondary/60 rounded-full animate-orbit" style={{ animationDuration: '15s', animationDelay: '3s' }} />
+      <div className="absolute top-1/3 right-1/5 w-1.5 h-1.5 bg-accent/60 rounded-full animate-orbit" style={{ animationDuration: '18s', animationDelay: '2s' }} />
+
+      {/* Connecting Node Network */}
+      <div className="absolute top-1/4 left-1/6 w-1.5 h-1.5 bg-primary/40 rounded-full" />
+      <div className="absolute top-1/3 left-1/5 w-1.5 h-1.5 bg-primary/40 rounded-full" />
+      <div className="absolute top-2/5 left-1/4 w-1.5 h-1.5 bg-primary/40 rounded-full" />
+      <div className="absolute bottom-1/3 right-1/4 w-1.5 h-1.5 bg-secondary/35 rounded-full" />
+      <div className="absolute bottom-1/4 right-1/5 w-1.5 h-1.5 bg-secondary/35 rounded-full" />
       
-      {/* Elegant Floating Elements */}
-      <div className="absolute top-32 right-1/4 w-2 h-2 bg-primary/40 rounded-full animate-float opacity-60 blur-[1px]" style={{ animationDuration: '8s' }} />
-      <div className="absolute bottom-1/3 left-1/5 w-2 h-2 bg-secondary/30 rounded-full animate-drift opacity-50 blur-[1px]" style={{ animationDuration: '10s', animationDelay: '2s' }} />
-      <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-accent/35 rounded-full animate-float opacity-40 blur-[1px]" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+      {/* Tech Connection Lines */}
+      <svg className="absolute inset-0 w-full h-full opacity-20" style={{ pointerEvents: 'none' }}>
+        <line x1="16.67%" y1="25%" x2="20%" y2="33.33%" stroke="hsl(var(--primary))" strokeWidth="1" opacity="0.4" />
+        <line x1="20%" y1="33.33%" x2="25%" y2="40%" stroke="hsl(var(--primary))" strokeWidth="1" opacity="0.4" />
+        <line x1="75%" y1="66.67%" x2="80%" y2="75%" stroke="hsl(var(--secondary))" strokeWidth="1" opacity="0.3" />
+      </svg>
+
+      {/* Robotic Geometric Accents */}
+      <div className="absolute top-20 right-1/4 w-16 h-16 border border-primary/10 rotate-45 animate-pulse" style={{ animationDuration: '4s' }} />
+      <div className="absolute bottom-32 left-1/5 w-12 h-12 border border-secondary/8 rotate-12 animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
       
-      {/* Subtle Depth Lines */}
-      <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
-      <div className="absolute bottom-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-secondary/8 to-transparent" />
+      {/* Glowing Tech Aura */}
+      <div className="absolute top-1/4 right-1/3 w-96 h-96 bg-gradient-radial from-primary/15 via-primary/5 to-transparent blur-3xl animate-drift" style={{ animationDuration: '15s' }} />
+      <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-gradient-radial from-secondary/12 via-secondary/4 to-transparent blur-3xl animate-drift" style={{ animationDuration: '18s', animationDelay: '5s', animationDirection: 'reverse' }} />
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
