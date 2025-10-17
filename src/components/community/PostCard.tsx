@@ -568,8 +568,11 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                                       <MoreVertical className="h-3 w-3" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="bg-popover">
-                                    <DropdownMenuItem onClick={() => handleEditComment(comment.id, comment.content)}>
+                                  <DropdownMenuContent align="end" className="z-50 bg-popover border shadow-md">
+                                    <DropdownMenuItem 
+                                      onClick={() => handleEditComment(comment.id, comment.content)}
+                                      className="cursor-pointer"
+                                    >
                                       Edit
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
