@@ -327,18 +327,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                {post.author.username ? (
-                  <Link 
-                    to={`/profile/${post.author.username}`}
-                    className="font-semibold text-foreground hover:text-primary transition-colors"
-                  >
-                    {post.author.name}
-                  </Link>
-                ) : (
-                  <span className="font-semibold text-foreground">
-                    {post.author.name}
-                  </span>
-                )}
+                <Link 
+                  to={`/profile/${post.author.username || post.user_id}`}
+                  className="font-semibold text-foreground hover:text-primary transition-colors"
+                >
+                  {post.author.name}
+                </Link>
                 {post.user_id && (
                   <ReputationBadge userId={post.user_id} compact showPoints={false} />
                 )}
@@ -495,18 +489,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     </Avatar>
                       <div className="flex-1">
                         <div className="bg-muted rounded-2xl px-4 py-2">
-                          {comment.profiles?.username ? (
-                            <Link 
-                              to={`/profile/${comment.profiles.username}`}
-                              className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
-                            >
-                              {comment.profiles?.full_name || 'Anonymous'}
-                            </Link>
-                          ) : (
-                            <span className="font-medium text-sm mb-1 inline-block">
-                              {comment.profiles?.full_name || 'Anonymous'}
-                            </span>
-                          )}
+                          <Link 
+                            to={`/profile/${comment.profiles?.username || comment.user_id}`}
+                            className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
+                          >
+                            {comment.profiles?.full_name || 'Anonymous'}
+                          </Link>
                           <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                               {comment.content}
