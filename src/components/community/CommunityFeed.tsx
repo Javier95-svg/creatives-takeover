@@ -64,8 +64,10 @@ const CommunityFeed: React.FC = () => {
         });
         return {
           postId: post.id,
+          userId: post.user_id,
           authorName: authorData?.[0]?.author_name || 'Anonymous',
-          authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`
+          authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
+          authorUsername: authorData?.[0]?.author_username
         };
       });
 
@@ -85,8 +87,10 @@ const CommunityFeed: React.FC = () => {
           createdAt: post.created_at,
           author: {
             name: authorInfo?.authorName || 'Anonymous',
-            avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`
+            avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
+            username: authorInfo?.authorUsername
           },
+          user_id: authorInfo?.userId,
           votes: (post.upvotes || 0) - (post.downvotes || 0),
           commentsCount: post.comment_count || 0,
           repostCount: post.repost_count || 0,

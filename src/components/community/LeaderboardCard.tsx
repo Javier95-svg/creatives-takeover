@@ -62,7 +62,7 @@ const LeaderboardCard = () => {
             {leaderboard.map((user: any, index) => (
               <Link
                 key={user.user_id}
-                to={`/profile/${user.user_id}`}
+                to={user.profiles?.username ? `/profile/${user.profiles.username}` : '#'}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors"
               >
                 <div className="w-8 flex items-center justify-center">

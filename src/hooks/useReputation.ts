@@ -207,7 +207,8 @@ export const useLeaderboard = (limit: number = 10) => {
             *,
             profiles!user_reputation_user_id_fkey (
               full_name,
-              avatar_url
+              avatar_url,
+              username
             )
           `)
           .order('total_points', { ascending: false })

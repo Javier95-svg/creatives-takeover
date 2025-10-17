@@ -4089,6 +4089,7 @@ export type Database = {
         Returns: {
           author_avatar: string
           author_name: string
+          author_username: string
         }[]
       }
       get_todays_challenge: {

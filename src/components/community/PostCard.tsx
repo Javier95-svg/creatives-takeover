@@ -32,7 +32,9 @@ export interface Post {
   author: {
     name: string;
     avatar?: string;
+    username?: string;
   };
+  user_id?: string;
   tags: string[];
   location?: string;
   createdAt: string;
@@ -325,18 +327,24 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <Link 
-                  to={`/profile/${(post as any).user_id}`}
-                  className="font-semibold text-foreground hover:text-primary transition-colors"
-                >
-                  {post.author.name}
-                </Link>
-                {(post as any).user_id && (
-                  <ReputationBadge userId={(post as any).user_id} compact showPoints={false} />
+                {post.author.username ? (
+                  <Link 
+                    to={`/profile/${post.author.username}`}
+                    className="font-semibold text-foreground hover:text-primary transition-colors"
+                  >
+                    {post.author.name}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-foreground">
+                    {post.author.name}
+                  </span>
                 )}
-                {isAuthenticated && user && (post as any).user_id !== user.id && (
+                {post.user_id && (
+                  <ReputationBadge userId={post.user_id} compact showPoints={false} />
+                )}
+                {isAuthenticated && user && post.user_id !== user.id && post.user_id && (
                   <SocialButtons 
-                    userId={(post as any).user_id} 
+                    userId={post.user_id} 
                     userName={post.author.name}
                     compact={true}
                   />
