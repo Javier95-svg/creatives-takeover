@@ -9,34 +9,35 @@ const Hero = () => {
   
   return (
     <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20 px-4 sm:px-6">
-      {/* Creative Wallpaper Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-blue-900/10 to-purple-900/20" />
+      {/* Sophisticated Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-indigo-950/20 to-slate-900/40" />
       
-      {/* Geometric Pattern Overlay */}
-      <div className="absolute inset-0 opacity-10">
+      {/* Subtle Mesh Grid Pattern */}
+      <div className="absolute inset-0 opacity-[0.03]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 60% 80%, rgba(119, 198, 255, 0.3) 0%, transparent 50%)
-          `
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: '80px 80px'
         }} />
       </div>
       
-      {/* Dynamic Floating Creative Elements */}
-      <div className="absolute top-20 left-10 w-6 h-6 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full animate-float opacity-60" />
-      <div className="absolute top-40 right-20 w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full animate-spiral opacity-40" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-40 left-20 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-60 left-1/3 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-diagonal-float opacity-70" style={{ animationDelay: '3s' }} />
-      <div className="absolute bottom-60 right-1/3 w-7 h-7 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full animate-figure-eight opacity-30" style={{ animationDelay: '4s' }} />
+      {/* Refined Geometric Gradients */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-radial from-primary/30 via-primary/10 to-transparent blur-3xl animate-drift" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-radial from-secondary/25 via-secondary/8 to-transparent blur-3xl animate-drift" style={{ animationDelay: '3s', animationDirection: 'reverse' }} />
+        <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-gradient-radial from-accent/20 via-accent/5 to-transparent blur-2xl animate-float" style={{ animationDelay: '5s' }} />
+      </div>
       
-      {/* Creative Brush Strokes */}
-      <div className="absolute top-32 right-1/4 w-32 h-2 bg-gradient-to-r from-transparent via-primary/20 to-transparent rounded-full rotate-12 animate-pulse" />
-      <div className="absolute bottom-32 left-1/4 w-24 h-1 bg-gradient-to-r from-transparent via-secondary/30 to-transparent rounded-full -rotate-12 animate-pulse" style={{ animationDelay: '2s' }} />
+      {/* Elegant Floating Elements */}
+      <div className="absolute top-32 right-1/4 w-2 h-2 bg-primary/40 rounded-full animate-float opacity-60 blur-[1px]" style={{ animationDuration: '8s' }} />
+      <div className="absolute bottom-1/3 left-1/5 w-2 h-2 bg-secondary/30 rounded-full animate-drift opacity-50 blur-[1px]" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+      <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-accent/35 rounded-full animate-float opacity-40 blur-[1px]" style={{ animationDuration: '12s', animationDelay: '4s' }} />
       
-      {/* Glowing Orbs */}
-      <div className="absolute top-1/4 right-1/6 w-20 h-20 bg-gradient-to-r from-primary/10 to-transparent rounded-full blur-xl animate-orbit opacity-40" style={{ animationDelay: '5s' }} />
-      <div className="absolute bottom-1/4 left-1/6 w-16 h-16 bg-gradient-to-l from-secondary/15 to-transparent rounded-full blur-lg animate-spiral opacity-30" style={{ animationDelay: '6s' }} />
+      {/* Subtle Depth Lines */}
+      <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
+      <div className="absolute bottom-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-secondary/8 to-transparent" />
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
