@@ -10,6 +10,7 @@ import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import { useHoverPopup } from "@/hooks/useHoverPopup";
 import { useSocial } from "@/hooks/useSocial";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
+import { NotificationBell } from "@/components/community/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,6 +115,7 @@ const Navigation = () => {
                     <MessageCircle className="w-4 h-4" />
                   </Link>
                 </Button>
+                <NotificationBell />
                 <Button
                   variant="ghost"
                   size="icon"

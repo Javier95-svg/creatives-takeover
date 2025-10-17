@@ -1161,6 +1161,50 @@ export type Database = {
         }
         Relationships: []
       }
+      community_notifications: {
+        Row: {
+          actor_id: string
+          comment_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          notification_type: string
+          post_id: string | null
+          read: boolean
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notification_type: string
+          post_id?: string | null
+          read?: boolean
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notification_type?: string
+          post_id?: string | null
+          read?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_posts: {
         Row: {
           ai_insights: string[] | null
@@ -4041,6 +4085,17 @@ export type Database = {
         }
         Returns: Json
       }
+      create_community_notification: {
+        Args: {
+          p_actor_id: string
+          p_comment_id?: string
+          p_metadata?: Json
+          p_notification_type: string
+          p_post_id?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       get_conversations_for_summarization: {
         Args: { days_old?: number }
         Returns: {
@@ -4082,6 +4137,14 @@ export type Database = {
           industry: string
           recent_insights: number
           top_sources: string[]
+        }[]
+      }
+      get_notification_actor_info: {
+        Args: { actor_user_id: string }
+        Returns: {
+          actor_avatar: string
+          actor_name: string
+          actor_username: string
         }[]
       }
       get_post_author_info: {
