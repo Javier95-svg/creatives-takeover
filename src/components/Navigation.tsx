@@ -108,17 +108,6 @@ const Navigation = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  asChild
-                  className="relative"
-                >
-                  <Link to="/messages">
-                    <MessageCircle className="w-4 h-4" />
-                  </Link>
-                </Button>
-                <NotificationBell />
-                <Button
-                  variant="ghost"
-                  size="icon"
                   onClick={() => setShowFriendRequests(true)}
                   className="relative"
                 >
@@ -129,6 +118,17 @@ const Navigation = () => {
                     </Badge>
                   )}
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className="relative"
+                >
+                  <Link to="/messages">
+                    <MessageCircle className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <NotificationBell />
                 <Link to="/account" className="cursor-pointer">
                   <Avatar className="h-8 w-8 hover:ring-2 hover:ring-primary transition-all">
                     <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
