@@ -1590,6 +1590,42 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_priorities: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          priority_date: string
+          priority_order: number
+          priority_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          priority_date?: string
+          priority_order?: number
+          priority_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          priority_date?: string
+          priority_order?: number
+          priority_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_reminders: {
         Row: {
           created_at: string

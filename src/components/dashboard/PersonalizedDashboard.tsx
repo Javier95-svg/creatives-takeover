@@ -23,6 +23,7 @@ import { ProgressTimeline } from './ProgressTimeline';
 import { QuickWinButton } from './QuickWinButton';
 import { RecentWins } from './RecentWins';
 import { TaskCalendar } from './TaskCalendar';
+import { DailyPriorities } from './DailyPriorities';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -291,6 +292,9 @@ export const PersonalizedDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Daily Priorities */}
+            <DailyPriorities />
           </div>
 
           {/* Right Column - Sidebar Widgets */}
