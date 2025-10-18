@@ -30,7 +30,7 @@ const HomeFAQ = () => {
     },
     {
       question: "What kind of community can I expect on the platform?",
-      answer: "A Reddit-style feed where 15,000+ creative founders share wins, challenges, and real advice—no corporate fakeness. Features include accountability partnership matching (get paired with someone in your niche), daily challenges with reputation points and badges, monthly Demo Days to showcase your progress, commitment tracking with gentle nudges if you miss check-ins, direct messaging, friend requests, and a culture of 'collaboration over competition.' We celebrate others' wins because we know there's room for everyone to succeed."
+      answer: "A Reddit-style feed where founders share wins, challenges, and real advice—no corporate fakeness. Features include accountability partnership matching (get paired with someone in your niche), daily challenges with reputation points and badges, monthly Demo Days to showcase your progress, commitment tracking with gentle nudges if you miss check-ins, direct messaging, friend requests, and a culture of 'collaboration over competition.' We celebrate others' wins because we know there's room for everyone to succeed."
     },
     {
       question: "Are my plans and data private and secure?",
