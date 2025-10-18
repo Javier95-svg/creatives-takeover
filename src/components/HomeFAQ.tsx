@@ -52,168 +52,190 @@ const HomeFAQ = () => {
 
   return (
     <section className="relative py-24 overflow-hidden bg-gradient-to-b from-background via-primary/5 to-background">
-      {/* Enhanced Tech Background Effects */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Tech Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.08]">
+      {/* Modern Geometric Animated Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        {/* Subtle Mesh Grid */}
+        <div className="absolute inset-0 opacity-[0.06]">
           <div className="absolute inset-0" style={{
             backgroundImage: `
-              linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
-              linear-gradient(0deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
-              linear-gradient(45deg, hsl(var(--accent) / 0.2) 1px, transparent 1px)
+              radial-gradient(circle at 2px 2px, hsl(var(--primary) / 0.15) 1px, transparent 1px)
             `,
-            backgroundSize: '80px 80px, 80px 80px, 40px 40px'
+            backgroundSize: '48px 48px'
           }} />
         </div>
 
-        {/* Floating Hexagons */}
-        <div className="absolute top-20 left-[10%]">
-          {[...Array(4)].map((_, i) => (
-            <div key={`hex-tl-${i}`} className="absolute w-16 h-16" style={{ 
-              clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-              border: '1px solid',
-              borderColor: `hsl(var(--primary) / ${0.25 - i * 0.06})`,
-              transform: `scale(${1 + i * 0.2}) rotate(${i * 20}deg)`,
-              animation: `spin ${15 - i * 2}s linear infinite ${i % 2 === 0 ? 'normal' : 'reverse'}`
+        {/* Animated Gradient Orbs */}
+        <div className="absolute top-20 left-[15%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-20 right-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-secondary/15 via-primary/8 to-transparent blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-r from-accent/12 to-transparent blur-2xl" style={{ animation: 'spin 20s linear infinite' }} />
+
+        {/* Floating Geometric Shapes */}
+        <div className="absolute top-[15%] left-[8%]">
+          <div className="relative w-32 h-32">
+            <div className="absolute inset-0 border-2 border-primary/20 rounded-lg" style={{ 
+              animation: 'spin 15s linear infinite',
+              transformOrigin: 'center'
             }} />
-          ))}
-        </div>
-
-        <div className="absolute top-40 right-[15%]">
-          {[...Array(3)].map((_, i) => (
-            <div key={`hex-tr-${i}`} className="absolute w-20 h-20" style={{ 
-              clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-              border: '1px solid',
-              borderColor: `hsl(var(--accent) / ${0.2 - i * 0.05})`,
-              transform: `scale(${1 + i * 0.25}) rotate(${-i * 15}deg)`,
-              animation: `spin ${18 - i * 3}s linear infinite reverse`
+            <div className="absolute inset-4 border-2 border-accent/15 rounded-lg" style={{ 
+              animation: 'spin 12s linear infinite reverse',
+              transformOrigin: 'center'
             }} />
-          ))}
-        </div>
-
-        <div className="absolute bottom-32 left-[20%]">
-          {[...Array(3)].map((_, i) => (
-            <div key={`hex-bl-${i}`} className="absolute w-14 h-14" style={{ 
-              clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-              border: '1px solid',
-              borderColor: `hsl(var(--secondary) / ${0.22 - i * 0.06})`,
-              transform: `scale(${1 + i * 0.3}) rotate(${i * 25}deg)`,
-              animation: `spin ${16 - i * 2}s linear infinite`
+            <div className="absolute inset-8 border-2 border-secondary/12 rounded-lg" style={{ 
+              animation: 'spin 18s linear infinite',
+              transformOrigin: 'center'
             }} />
-          ))}
+          </div>
         </div>
 
-        {/* Circuit Path Animations */}
-        <div className="absolute top-1/4 left-16">
-          {[...Array(3)].map((_, i) => (
-            <div key={`circuit-l-${i}`} className="absolute" style={{
-              width: `${60 + i * 20}px`,
-              height: `${60 + i * 20}px`,
-              border: '1px solid',
-              borderColor: `hsl(var(--primary) / ${0.15 - i * 0.03})`,
-              borderRadius: '4px',
-              animation: `scale-in ${4 + i}s ease-in-out infinite alternate`,
-              animationDelay: `${i * 0.8}s`,
-              transform: `rotate(${i * 15}deg)`
+        <div className="absolute top-[60%] right-[12%]">
+          <div className="relative w-28 h-28">
+            <div className="absolute inset-0 rounded-full border-2 border-primary/15" style={{ 
+              animation: 'scale-in 6s ease-in-out infinite alternate'
             }} />
-          ))}
-        </div>
-
-        <div className="absolute top-1/3 right-20">
-          {[...Array(3)].map((_, i) => (
-            <div key={`circuit-r-${i}`} className="absolute" style={{
-              width: `${50 + i * 15}px`,
-              height: `${50 + i * 15}px`,
-              border: '1px solid',
-              borderColor: `hsl(var(--accent) / ${0.18 - i * 0.04})`,
-              borderRadius: '50%',
-              animation: `pulse ${3 + i}s ease-in-out infinite`,
-              animationDelay: `${i * 0.6}s`
+            <div className="absolute inset-3 rounded-full border-2 border-accent/12" style={{ 
+              animation: 'scale-in 8s ease-in-out infinite alternate',
+              animationDelay: '1s'
             }} />
-          ))}
+            <div className="absolute inset-6 rounded-full border-2 border-secondary/10" style={{ 
+              animation: 'scale-in 7s ease-in-out infinite alternate',
+              animationDelay: '2s'
+            }} />
+          </div>
         </div>
 
-        {/* Traveling Energy Orbs */}
-        <div className="absolute bottom-1/3 left-[15%] w-32 h-32">
-          <div className="absolute w-2 h-2 bg-primary/60 rounded-full" style={{
-            animation: 'orbit 8s linear infinite'
-          }} />
-          <div className="absolute w-1.5 h-1.5 bg-secondary/50 rounded-full" style={{
-            animation: 'orbit 10s linear infinite reverse',
-            animationDelay: '2s'
-          }} />
+        <div className="absolute bottom-[25%] left-[18%]">
+          <div className="relative w-24 h-24" style={{ animation: 'float 12s ease-in-out infinite' }}>
+            <div className="absolute inset-0" style={{
+              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--accent) / 0.08))',
+              animation: 'spin 20s linear infinite'
+            }} />
+          </div>
         </div>
 
-        <div className="absolute top-1/2 right-[20%] w-40 h-40">
-          <div className="absolute w-2 h-2 bg-accent/60 rounded-full" style={{
-            animation: 'orbit 12s linear infinite'
-          }} />
-          <div className="absolute w-1.5 h-1.5 bg-primary/50 rounded-full" style={{
-            animation: 'orbit 9s linear infinite reverse',
-            animationDelay: '3s'
-          }} />
-        </div>
-
-        {/* Scanning Lines */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-slide-down" style={{ animationDuration: '10s' }} />
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-accent/25 to-transparent animate-slide-down" style={{ animationDuration: '14s', animationDelay: '4s' }} />
-        </div>
-
-        {/* Tech Nodes */}
-        {[
-          { top: '15%', left: '12%' },
-          { top: '25%', right: '18%' },
-          { top: '45%', left: '8%' },
-          { top: '65%', right: '25%' },
-          { bottom: '20%', left: '30%' },
-          { bottom: '35%', right: '15%' }
-        ].map((pos, i) => (
-          <div key={`node-${i}`} className="absolute w-1.5 h-1.5 bg-primary/50 rounded-full" style={{
-            ...pos,
-            animation: `pulse 2.5s ease-in-out infinite`,
-            animationDelay: `${i * 0.6}s`
-          }} />
-        ))}
-
-        {/* Connection Lines */}
-        <svg className="absolute inset-0 w-full h-full opacity-10" style={{ pointerEvents: 'none' }}>
+        {/* Animated Connection Lines Network */}
+        <svg className="absolute inset-0 w-full h-full opacity-20" style={{ pointerEvents: 'none' }}>
           <defs>
-            <linearGradient id="faqLineGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="faqGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
-              <stop offset="50%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.5 }} />
+              <stop offset="50%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.6 }} />
               <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
             </linearGradient>
-            <linearGradient id="faqLineGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="faqGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0 }} />
-              <stop offset="50%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0.4 }} />
+              <stop offset="50%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0.5 }} />
               <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0 }} />
             </linearGradient>
           </defs>
-          <line x1="12%" y1="15%" x2="18%" y2="25%" stroke="url(#faqLineGrad1)" strokeWidth="1.5" />
-          <line x1="30%" y1="80%" x2="15%" y2="65%" stroke="url(#faqLineGrad2)" strokeWidth="1.5" />
-          <line x1="82%" y1="25%" x2="75%" y2="65%" stroke="url(#faqLineGrad1)" strokeWidth="1.5" />
+          
+          {/* Animated paths */}
+          <path d="M 10% 20% Q 30% 40%, 50% 35%" stroke="url(#faqGrad1)" strokeWidth="2" fill="none">
+            <animate attributeName="d" 
+              values="M 10% 20% Q 30% 40%, 50% 35%; M 10% 25% Q 35% 38%, 50% 40%; M 10% 20% Q 30% 40%, 50% 35%"
+              dur="15s" repeatCount="indefinite" />
+          </path>
+          <path d="M 90% 30% Q 70% 50%, 50% 45%" stroke="url(#faqGrad2)" strokeWidth="2" fill="none">
+            <animate attributeName="d" 
+              values="M 90% 30% Q 70% 50%, 50% 45%; M 90% 35% Q 65% 48%, 50% 50%; M 90% 30% Q 70% 50%, 50% 45%"
+              dur="18s" repeatCount="indefinite" />
+          </path>
+          <path d="M 20% 80% Q 40% 60%, 60% 65%" stroke="url(#faqGrad1)" strokeWidth="2" fill="none">
+            <animate attributeName="d" 
+              values="M 20% 80% Q 40% 60%, 60% 65%; M 20% 75% Q 45% 58%, 60% 70%; M 20% 80% Q 40% 60%, 60% 65%"
+              dur="20s" repeatCount="indefinite" />
+          </path>
+          <path d="M 80% 70% Q 60% 60%, 50% 55%" stroke="url(#faqGrad2)" strokeWidth="2" fill="none">
+            <animate attributeName="d" 
+              values="M 80% 70% Q 60% 60%, 50% 55%; M 80% 75% Q 55% 58%, 50% 60%; M 80% 70% Q 60% 60%, 50% 55%"
+              dur="16s" repeatCount="indefinite" />
+          </path>
         </svg>
 
-        {/* Rotating Angular Frames */}
-        <div className="absolute top-1/4 right-1/4">
-          <div className="relative w-24 h-24">
-            <div className="absolute inset-0 border-l-2 border-t-2 border-primary/15" style={{ animation: 'scale-in 4s ease-in-out infinite alternate' }} />
-            <div className="absolute inset-2 border-r-2 border-b-2 border-accent/12" style={{ animation: 'scale-in 5s ease-in-out infinite alternate', animationDelay: '1s' }} />
+        {/* Pulsing Node Points */}
+        {[
+          { top: '18%', left: '12%', delay: '0s' },
+          { top: '28%', right: '15%', delay: '1s' },
+          { top: '45%', left: '20%', delay: '2s' },
+          { top: '55%', right: '22%', delay: '1.5s' },
+          { bottom: '25%', left: '25%', delay: '0.5s' },
+          { bottom: '35%', right: '18%', delay: '2.5s' },
+          { top: '38%', left: '8%', delay: '1.8s' },
+          { top: '72%', right: '12%', delay: '0.8s' }
+        ].map((pos, i) => (
+          <div key={`node-${i}`} className="absolute" style={pos}>
+            <div className="relative w-3 h-3">
+              <div className="absolute inset-0 bg-primary/40 rounded-full" style={{
+                animation: 'pulse 3s ease-in-out infinite',
+                animationDelay: pos.delay
+              }} />
+              <div className="absolute inset-0 bg-primary/60 rounded-full animate-ping" style={{
+                animationDelay: pos.delay,
+                animationDuration: '3s'
+              }} />
+            </div>
           </div>
+        ))}
+
+        {/* Flowing Particles */}
+        <div className="absolute inset-0">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={`particle-${i}`}
+              className="absolute w-1 h-1 bg-accent/50 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `float ${8 + Math.random() * 6}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+                opacity: 0.3 + Math.random() * 0.3
+              }}
+            />
+          ))}
         </div>
 
-        <div className="absolute bottom-1/3 left-1/4 rotate-45">
-          <div className="relative w-20 h-20">
-            <div className="absolute inset-0 border-2 border-secondary/12" style={{ animation: 'scale-in 4.5s ease-in-out infinite alternate' }} />
-            <div className="absolute inset-3 border border-primary/10" style={{ animation: 'scale-in 5.5s ease-in-out infinite alternate', animationDelay: '1.5s' }} />
-          </div>
+        {/* Diagonal Light Streaks */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/25 to-transparent" style={{
+          animation: 'slide-in-right 12s ease-in-out infinite',
+          transformOrigin: 'left'
+        }} />
+        <div className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-l from-transparent via-accent/20 to-transparent" style={{
+          animation: 'slide-in-right 15s ease-in-out infinite',
+          animationDelay: '4s',
+          transformOrigin: 'right'
+        }} />
+
+        {/* Corner Accent Frames */}
+        <div className="absolute top-12 left-12 w-20 h-20">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary/40 to-transparent" />
+          <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-primary/40 to-transparent" />
+        </div>
+        <div className="absolute top-12 right-12 w-20 h-20">
+          <div className="absolute top-0 right-0 w-full h-0.5 bg-gradient-to-l from-accent/40 to-transparent" />
+          <div className="absolute top-0 right-0 w-0.5 h-full bg-gradient-to-b from-accent/40 to-transparent" />
+        </div>
+        <div className="absolute bottom-12 left-12 w-20 h-20">
+          <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-secondary/40 to-transparent" />
+          <div className="absolute bottom-0 left-0 w-0.5 h-full bg-gradient-to-t from-secondary/40 to-transparent" />
+        </div>
+        <div className="absolute bottom-12 right-12 w-20 h-20">
+          <div className="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-l from-primary/40 to-transparent" />
+          <div className="absolute bottom-0 right-0 w-0.5 h-full bg-gradient-to-t from-primary/40 to-transparent" />
         </div>
 
-        {/* Ambient Glows */}
-        <div className="absolute top-1/4 right-1/5 w-[400px] h-[400px] bg-gradient-radial from-primary/8 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '18s' }} />
-        <div className="absolute bottom-1/3 left-1/6 w-[450px] h-[450px] bg-gradient-radial from-accent/6 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '22s', animationDelay: '4s', animationDirection: 'reverse' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-gradient-radial from-secondary/5 via-transparent to-transparent blur-2xl animate-float" style={{ animationDuration: '16s', animationDelay: '2s' }} />
+        {/* Morphing Blob Shapes */}
+        <div className="absolute top-1/4 right-1/4 w-32 h-32 opacity-20">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent blur-2xl" style={{
+            borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%',
+            animation: 'morph 10s ease-in-out infinite'
+          }} />
+        </div>
+        <div className="absolute bottom-1/3 left-1/3 w-40 h-40 opacity-15">
+          <div className="absolute inset-0 bg-gradient-to-tr from-accent to-secondary blur-2xl" style={{
+            borderRadius: '70% 30% 30% 70% / 70% 70% 30% 30%',
+            animation: 'morph 12s ease-in-out infinite',
+            animationDelay: '2s'
+          }} />
+        </div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
