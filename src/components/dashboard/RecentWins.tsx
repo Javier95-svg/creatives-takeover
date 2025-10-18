@@ -93,7 +93,7 @@ export const RecentWins = ({ refreshTrigger }: RecentWinsProps) => {
   }
 
   return (
-    <Card>
+    <Card className="backdrop-blur-sm bg-card/95">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="w-5 h-5 text-primary" />

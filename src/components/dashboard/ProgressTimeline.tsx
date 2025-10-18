@@ -121,7 +121,7 @@ export const ProgressTimeline = () => {
   }
 
   return (
-    <Card>
+    <Card className="backdrop-blur-sm bg-card/95">
       <CardHeader>
         <CardTitle>📅 Your Progress This Week</CardTitle>
       </CardHeader>

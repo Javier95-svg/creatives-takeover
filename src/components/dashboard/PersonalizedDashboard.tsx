@@ -123,8 +123,45 @@ export const PersonalizedDashboard = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Tech Background Base */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/30 via-blue-950/20 to-slate-900/40" />
+      
+      {/* Circuit Grid Pattern */}
+      <div className="absolute inset-0 opacity-[0.08]">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px)
+          `,
+          backgroundSize: '100px 100px, 100px 100px, 25px 25px, 25px 25px'
+        }} />
+      </div>
+
+      {/* Subtle Hexagon Accent - Top Right */}
+      <div className="absolute top-20 right-20 opacity-20">
+        <div className="w-32 h-32" style={{ 
+          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+          border: '1px solid',
+          borderColor: 'hsl(var(--primary) / 0.4)',
+          animation: 'spin 30s linear infinite'
+        }} />
+      </div>
+
+      {/* Subtle Hexagon Accent - Bottom Left */}
+      <div className="absolute bottom-20 left-20 opacity-15">
+        <div className="w-24 h-24" style={{ 
+          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+          border: '1px solid',
+          borderColor: 'hsl(var(--secondary) / 0.3)',
+          animation: 'spin 25s linear infinite reverse'
+        }} />
+      </div>
+
+      {/* Main Content Container */}
+      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
         {/* Daily Goal Modal */}
         <DailyGoalModal 
           open={showDailyGoal}
@@ -143,7 +180,7 @@ export const PersonalizedDashboard = () => {
         {/* Welcome Header - More Prominent */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-3xl blur-3xl" />
-          <Card className="relative border-primary/20 shadow-lg">
+          <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
             <CardContent className="p-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-2">
@@ -178,7 +215,7 @@ export const PersonalizedDashboard = () => {
             <ProgressTimeline />
             
             {/* Quick Actions - Simplified */}
-            <Card>
+            <Card className="backdrop-blur-sm bg-card/95">
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                   <Rocket className="h-5 w-5 text-primary" />
@@ -214,7 +251,7 @@ export const PersonalizedDashboard = () => {
             <RecentWins refreshTrigger={winsRefreshTrigger} />
             
             {/* Compact Stats */}
-            <Card>
+            <Card className="backdrop-blur-sm bg-card/95">
               <CardContent className="p-6 space-y-4">
                 <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Your Stats</h3>
                 
