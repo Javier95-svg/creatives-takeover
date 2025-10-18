@@ -77,7 +77,7 @@ const HomeFAQ = () => {
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
-            Frequently Asked Questions
+            FAQ
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Everything you need to know about Creatives Takeover, the all-in-one platform that uses AI, automation, and community support to help you plan, build, and grow your business from idea to execution.
