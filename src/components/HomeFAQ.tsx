@@ -103,27 +103,55 @@ const HomeFAQ = () => {
           ))}
         </div>
 
-        {/* Data Stream Particles */}
-        <div className="absolute top-1/3 left-8">
-          {[...Array(6)].map((_, i) => (
-            <div key={`particle-l-${i}`} className="absolute w-1 h-1 bg-primary/40 rounded-full" style={{
-              animation: `diagonal-float ${5 + i}s linear infinite`,
-              animationDelay: `${i * 0.7}s`,
-              left: `${i * 12}px`,
-              top: `${i * -18}px`
+        {/* Circuit Path Animations */}
+        <div className="absolute top-1/4 left-16">
+          {[...Array(3)].map((_, i) => (
+            <div key={`circuit-l-${i}`} className="absolute" style={{
+              width: `${60 + i * 20}px`,
+              height: `${60 + i * 20}px`,
+              border: '1px solid',
+              borderColor: `hsl(var(--primary) / ${0.15 - i * 0.03})`,
+              borderRadius: '4px',
+              animation: `scale-in ${4 + i}s ease-in-out infinite alternate`,
+              animationDelay: `${i * 0.8}s`,
+              transform: `rotate(${i * 15}deg)`
             }} />
           ))}
         </div>
 
-        <div className="absolute bottom-1/4 right-12">
-          {[...Array(6)].map((_, i) => (
-            <div key={`particle-r-${i}`} className="absolute w-1 h-1 bg-accent/40 rounded-full" style={{
-              animation: `zigzag ${6 + i}s linear infinite`,
-              animationDelay: `${i * 0.9}s`,
-              right: `${i * 15}px`,
-              bottom: `${i * -12}px`
+        <div className="absolute top-1/3 right-20">
+          {[...Array(3)].map((_, i) => (
+            <div key={`circuit-r-${i}`} className="absolute" style={{
+              width: `${50 + i * 15}px`,
+              height: `${50 + i * 15}px`,
+              border: '1px solid',
+              borderColor: `hsl(var(--accent) / ${0.18 - i * 0.04})`,
+              borderRadius: '50%',
+              animation: `pulse ${3 + i}s ease-in-out infinite`,
+              animationDelay: `${i * 0.6}s`
             }} />
           ))}
+        </div>
+
+        {/* Traveling Energy Orbs */}
+        <div className="absolute bottom-1/3 left-[15%] w-32 h-32">
+          <div className="absolute w-2 h-2 bg-primary/60 rounded-full" style={{
+            animation: 'orbit 8s linear infinite'
+          }} />
+          <div className="absolute w-1.5 h-1.5 bg-secondary/50 rounded-full" style={{
+            animation: 'orbit 10s linear infinite reverse',
+            animationDelay: '2s'
+          }} />
+        </div>
+
+        <div className="absolute top-1/2 right-[20%] w-40 h-40">
+          <div className="absolute w-2 h-2 bg-accent/60 rounded-full" style={{
+            animation: 'orbit 12s linear infinite'
+          }} />
+          <div className="absolute w-1.5 h-1.5 bg-primary/50 rounded-full" style={{
+            animation: 'orbit 9s linear infinite reverse',
+            animationDelay: '3s'
+          }} />
         </div>
 
         {/* Scanning Lines */}
