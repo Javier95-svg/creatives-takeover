@@ -1626,6 +1626,42 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          priority: string | null
+          task_date: string
+          task_text: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          priority?: string | null
+          task_date: string
+          task_text: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          priority?: string | null
+          task_date?: string
+          task_text?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_wins: {
         Row: {
           created_at: string | null

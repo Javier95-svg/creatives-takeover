@@ -22,6 +22,7 @@ import { QuickWinZone } from './QuickWinZone';
 import { ProgressTimeline } from './ProgressTimeline';
 import { QuickWinButton } from './QuickWinButton';
 import { RecentWins } from './RecentWins';
+import { TaskCalendar } from './TaskCalendar';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -294,6 +295,9 @@ export const PersonalizedDashboard = () => {
 
           {/* Right Column - Sidebar Widgets */}
           <div className="space-y-6">
+            {/* Task Calendar */}
+            <TaskCalendar />
+            
             {/* Recent Wins */}
             <RecentWins refreshTrigger={winsRefreshTrigger} />
             
