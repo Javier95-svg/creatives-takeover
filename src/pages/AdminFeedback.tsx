@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,21 +19,45 @@ const COLORS = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe'];
 export default function AdminFeedback() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { data: responses, isLoading } = useFeedbackData();
   const { data: stats } = useFeedbackStats();
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
+    async function checkAdminRole() {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (!data || error) {
+        setIsAdmin(false);
+        navigate("/");
+      } else {
+        setIsAdmin(true);
+      }
     }
+
+    checkAdminRole();
   }, [user, navigate]);
 
-  if (isLoading) {
+  if (isLoading || isAdmin === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Loading feedback data...</p>
+        <p>Loading...</p>
       </div>
     );
+  }
+
+  if (!isAdmin) {
+    return null;
   }
 
   const ratingDistribution = [1, 2, 3, 4, 5].map(rating => ({
