@@ -56,47 +56,9 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
   const totalSteps = 6;
   const { user } = useAuth();
 
-  // Calculate credit bonus based on responses
+  // Fixed credit bonus for survey completion
   const calculateCreditBonus = (): number => {
-    let bonus = 2; // Base bonus for completion
-    
-    // Email bonus (+3 credits)
-    if (formData.email && formData.email.trim() !== '') {
-      bonus += 3;
-    }
-    
-    // Serious entrepreneur role (+1 credit)
-    const seriousRoles = ['entrepreneur', 'solopreneur', 'small_business', 'corporate'];
-    if (formData.userRole && seriousRoles.includes(formData.userRole)) {
-      bonus += 1;
-    }
-    
-    // Positive UX rating (+1 credit for 4-5 stars)
-    if (formData.websiteUxRating && formData.websiteUxRating >= 4) {
-      bonus += 1;
-    }
-    
-    // High feature interest (+1 credit for 3+ features)
-    if (formData.selectedFeatures && formData.selectedFeatures.length >= 3) {
-      bonus += 1;
-    }
-    
-    // Price-aligned perception (+2 credits)
-    if (formData.pricingPerception === 'fair' || formData.pricingPerception === 'great_value') {
-      bonus += 2;
-    }
-    
-    // Pricing feedback provided (+1 credit)
-    if (formData.suggestedPrice && formData.suggestedPrice > 0) {
-      bonus += 1;
-    }
-    
-    // Detailed suggestion (+1 credit for >20 chars)
-    if (formData.improvementSuggestion && formData.improvementSuggestion.length > 20) {
-      bonus += 1;
-    }
-    
-    return Math.min(bonus, 12); // Cap at 12 credits
+    return 5; // 5 free credits for completing the survey
   };
 
   const handleNext = () => {
