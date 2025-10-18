@@ -269,7 +269,7 @@ const HomeFAQ = () => {
                 Visit our LinkedIn
               </a>
               <a
-                href="mailto:support@creativestakeover.com"
+                href="mailto:admin@creatives-takeover.com"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
               >
                 <Mail className="w-5 h-5" />
