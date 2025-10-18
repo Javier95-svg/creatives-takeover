@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Star, Coins, Sparkles } from 'lucide-react';
+import { Heart, Star, Coins, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -462,7 +462,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
       <DialogContent className="w-[95vw] max-w-sm sm:max-w-md mx-auto">
         <DialogHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-gradient-to-r from-primary to-primary-glow rounded-full flex items-center justify-center mb-2">
-            <Gift className="w-6 h-6 text-white" />
+            <Heart className="w-6 h-6 text-white" />
           </div>
           <DialogTitle className="text-xl text-center">Help Us To Improve</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -535,7 +535,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
                   </>
                 ) : (
                   <>
-                    <Gift className="w-4 h-4 mr-2" />
+                    <Heart className="w-4 h-4 mr-2" />
                     Get {calculateCreditBonus()} Credits
                   </>
                 )}
