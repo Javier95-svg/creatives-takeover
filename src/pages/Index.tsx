@@ -5,21 +5,15 @@ import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import HowItWorks from "@/components/HowItWorks";
 import SocialProof from "@/components/SocialProof";
 import FinalCTA from "@/components/FinalCTA";
-import { ExitIntentModal } from "@/components/ExitIntentModal";
-import { ScrollTriggeredCTA } from "@/components/ScrollTriggeredCTA";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
-import { useExitIntent } from "@/hooks/useExitIntent";
 
 const Index = () => {
-  const { showExitIntent, closeExitIntent } = useExitIntent();
   
-  // Clear popup session storage on fresh page load to ensure popups can appear
+  // Clear popup session storage on fresh page load to ensure quiz popup can appear
   useEffect(() => {
-    sessionStorage.removeItem('exit-intent-seen');
-    sessionStorage.removeItem('scroll-cta-dismissed');  
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
 
@@ -44,11 +38,7 @@ const Index = () => {
       </main>
       <Footer />
       
-      {/* Conversion Optimization Components - Less Invasive */}
-      <ExitIntentModal isOpen={showExitIntent} onClose={closeExitIntent} />
-      <ScrollTriggeredCTA />
-      
-      {/* Minimal Campaign Popup - Faster for testing */}
+      {/* Enhanced Quiz Popup - Only popup to avoid overwhelming visitors */}
       <CreditCampaignPopup trigger="time" delay={5000} />
       
       {/* AI Creative Operating System */}
