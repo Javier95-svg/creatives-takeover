@@ -466,7 +466,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
           </div>
           <DialogTitle className="text-xl text-center">Help Us To Improve</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Complete this quick {totalSteps}-question survey and 5 extra credits at no cost.
+            Complete this quick {totalSteps}-question survey and get 5 extra credits at no cost.
           </p>
           
           {/* Credit Bonus Display */}
