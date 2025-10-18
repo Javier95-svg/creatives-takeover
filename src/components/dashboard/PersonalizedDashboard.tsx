@@ -24,6 +24,8 @@ import { QuickWinButton } from './QuickWinButton';
 import { RecentWins } from './RecentWins';
 import { TaskCalendar } from './TaskCalendar';
 import { DailyPriorities } from './DailyPriorities';
+import { AIRecommendationsWidget } from './AIRecommendationsWidget';
+import { WeekProgressWidget } from './WeekProgressWidget';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -261,6 +263,10 @@ export const PersonalizedDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Progress Timeline (Featured) */}
           <div className="lg:col-span-2 space-y-6">
+            {/* BizMap Week Progress */}
+            <WeekProgressWidget />
+            
+            {/* Daily Check-ins Timeline */}
             <ProgressTimeline />
             
             {/* Quick Actions - Simplified */}
@@ -299,6 +305,9 @@ export const PersonalizedDashboard = () => {
 
           {/* Right Column - Sidebar Widgets */}
           <div className="space-y-6">
+            {/* BizMap AI Recommendations */}
+            <AIRecommendationsWidget />
+            
             {/* Task Calendar */}
             <TaskCalendar />
             
