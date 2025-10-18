@@ -477,7 +477,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
                 Bonus: {calculateCreditBonus()} Free Credits
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground text-center">
               Credits will be added to your account when you sign up!
             </p>
           </div>
