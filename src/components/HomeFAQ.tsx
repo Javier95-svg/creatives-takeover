@@ -42,7 +42,7 @@ const HomeFAQ = () => {
     },
     {
       question: "Who is behind Creatives Takeover and why should I trust the service?",
-      answer: "Creatives Takeover Ltd is a UK-registered company dedicated exclusively to helping creators and entrepreneurs succeed. We regularly publish updates, educational content and real-founder stories to maintain transparency and build our community reputation. For more info, we suggest to visit our LinkedIn page: https://www.linkedin.com/company/creatives-takeover/"
+      answer: "Creatives Takeover Ltd is a UK-registered company dedicated exclusively to helping creators and entrepreneurs succeed. We regularly publish updates, educational content and real-founder stories to maintain transparency and build our community reputation. For more info, we suggest to visit our social media accounts (check footer section)."
     },
     {
       question: "How much does it cost and what happens next?",
