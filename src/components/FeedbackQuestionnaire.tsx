@@ -464,7 +464,7 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
           <div className="mx-auto w-12 h-12 bg-gradient-to-r from-primary to-primary-glow rounded-full flex items-center justify-center mb-2">
             <Gift className="w-6 h-6 text-white" />
           </div>
-          <DialogTitle className="text-xl">Get Your FREE Business Report!</DialogTitle>
+          <DialogTitle className="text-xl text-center">Get Your FREE Business Report!</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Complete this quick {totalSteps}-question survey and receive your comprehensive business report at no cost.
           </p>
