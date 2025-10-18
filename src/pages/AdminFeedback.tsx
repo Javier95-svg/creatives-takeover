@@ -26,10 +26,13 @@ export default function AdminFeedback() {
   useEffect(() => {
     async function checkAdminRole() {
       if (!user) {
+        console.log("No user, redirecting to login");
         navigate("/login");
         return;
       }
 
+      console.log("Checking admin role for user:", user.id);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -37,10 +40,15 @@ export default function AdminFeedback() {
         .eq('role', 'admin')
         .maybeSingle();
 
+      console.log("Admin check result:", { data, error });
+
       if (!data || error) {
+        console.log("Admin check failed, redirecting to home");
+        if (error) console.error("Error details:", error);
         setIsAdmin(false);
         navigate("/");
       } else {
+        console.log("User is admin");
         setIsAdmin(true);
       }
     }
