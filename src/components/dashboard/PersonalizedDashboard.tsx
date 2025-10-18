@@ -300,32 +300,6 @@ export const PersonalizedDashboard = () => {
             
             {/* Recent Wins */}
             <RecentWins refreshTrigger={winsRefreshTrigger} />
-            
-            {/* Compact Stats */}
-            <Card className="backdrop-blur-sm bg-card/95">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Your Stats</h3>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                    <span className="text-sm font-medium">Business Health</span>
-                    <Badge variant="secondary" className="text-base font-bold">
-                      {profile?.business_stage === 'idea' && '25%'}
-                      {profile?.business_stage === 'planning' && '50%'}
-                      {profile?.business_stage === 'building' && '75%'}
-                      {profile?.business_stage === 'launched' && '100%'}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                    <span className="text-sm font-medium">Check-ins</span>
-                    <Badge variant="secondary" className="text-base font-bold">
-                      {stats.currentStreak || 0}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
