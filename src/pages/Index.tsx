@@ -4,7 +4,7 @@ import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import HowItWorks from "@/components/HowItWorks";
 import SocialProof from "@/components/SocialProof";
-import FinalCTA from "@/components/FinalCTA";
+import HomeFAQ from "@/components/HomeFAQ";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import { Helmet } from "react-helmet-async";
@@ -34,7 +34,7 @@ const Index = () => {
         <EntrepreneurProblems />
         <HowItWorks />
         <SocialProof />
-        <FinalCTA />
+        <HomeFAQ />
       </main>
       <Footer />
       
