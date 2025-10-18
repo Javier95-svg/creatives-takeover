@@ -19,6 +19,9 @@ import { BusinessHealthScore } from './BusinessHealthScore';
 import { MomentumMeter } from './MomentumMeter';
 import { EnhancedStreakVisualization } from './EnhancedStreakVisualization';
 import { QuickWinZone } from './QuickWinZone';
+import { ProgressTimeline } from './ProgressTimeline';
+import { QuickWinButton } from './QuickWinButton';
+import { RecentWins } from './RecentWins';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -29,8 +32,11 @@ export const PersonalizedDashboard = () => {
   } = usePersonalizedDashboard();
 
   const [showDailyGoal, setShowDailyGoal] = useState(false);
+  const [modalMode, setModalMode] = useState<'morning' | 'evening'>('morning');
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [winsRefreshTrigger, setWinsRefreshTrigger] = useState(0);
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -38,6 +44,7 @@ export const PersonalizedDashboard = () => {
       if (!user) return;
 
       const today = new Date().toISOString().split('T')[0];
+      const currentHour = new Date().getHours();
       
       const { data: todayCheckIn } = await supabase
         .from('daily_check_ins')
@@ -47,32 +54,45 @@ export const PersonalizedDashboard = () => {
         .maybeSingle();
 
       setHasCheckedInToday(!!todayCheckIn);
+      
+      if (todayCheckIn) {
+        setTodaysCheckInId(todayCheckIn.id);
+        
+        // Calculate streak
+        const { data: recentCheckIns } = await supabase
+          .from('daily_check_ins')
+          .select('check_in_date')
+          .eq('user_id', user.id)
+          .order('check_in_date', { ascending: false })
+          .limit(30);
 
-      // Calculate streak
-      const { data: recentCheckIns } = await supabase
-        .from('daily_check_ins')
-        .select('check_in_date, streak_count')
-        .eq('user_id', user.id)
-        .order('check_in_date', { ascending: false })
-        .limit(1);
-
-      if (recentCheckIns && recentCheckIns.length > 0) {
-        const lastCheckIn = recentCheckIns[0];
-        const lastDate = new Date(lastCheckIn.check_in_date);
-        const todayDate = new Date(today);
-        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        // If checked in yesterday, continue streak, otherwise start from 0
-        if (diffDays === 1 || (diffDays === 0 && lastCheckIn.check_in_date === today)) {
-          setCurrentStreak(lastCheckIn.streak_count || 0);
-        } else {
-          setCurrentStreak(0);
+        if (recentCheckIns) {
+          let streak = 0;
+          const dates = recentCheckIns.map(c => c.check_in_date).sort().reverse();
+          
+          for (let i = 0; i < dates.length; i++) {
+            const currentDate = new Date(dates[i]);
+            const expectedDate = new Date();
+            expectedDate.setDate(expectedDate.getDate() - i);
+            
+            if (currentDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+          
+          setCurrentStreak(streak);
         }
-      }
 
-      // Show modal if haven't checked in today
-      if (!todayCheckIn) {
+        // Show evening reflection if after 6 PM and haven't reflected yet
+        if (currentHour >= 18 && todayCheckIn.goal_achieved === null) {
+          setModalMode('evening');
+          setShowDailyGoal(true);
+        }
+      } else {
+        // Show morning goal modal if haven't checked in
+        setModalMode('morning');
         setShowDailyGoal(true);
       }
     };
@@ -109,9 +129,13 @@ export const PersonalizedDashboard = () => {
         open={showDailyGoal}
         onOpenChange={setShowDailyGoal}
         currentStreak={currentStreak}
+        mode={modalMode}
+        todaysCheckInId={todaysCheckInId || undefined}
         onCheckInComplete={() => {
           setHasCheckedInToday(true);
-          setCurrentStreak(prev => prev + 1);
+          if (modalMode === 'morning') {
+            setCurrentStreak(prev => prev + 1);
+          }
         }}
       />
       {/* Welcome Header */}
@@ -142,6 +166,16 @@ export const PersonalizedDashboard = () => {
         <BusinessHealthScore userId={user.id} />
         <MomentumMeter userId={user.id} stats={stats} />
         <EnhancedStreakVisualization userId={user.id} currentStreak={stats.currentStreak} />
+      </div>
+
+      {/* Progress Timeline and Recent Wins */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ProgressTimeline />
+        </div>
+        <div>
+          <RecentWins refreshTrigger={winsRefreshTrigger} />
+        </div>
       </div>
 
       {/* Quick Win Zone */}
@@ -198,6 +232,9 @@ export const PersonalizedDashboard = () => {
           </div>
         </Card>
       )}
+
+      {/* Floating Quick Win Button */}
+      <QuickWinButton onWinAdded={() => setWinsRefreshTrigger(prev => prev + 1)} />
     </div>
   );
 };

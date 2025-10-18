@@ -1540,14 +1540,17 @@ export type Database = {
           completed_tasks: string[] | null
           created_at: string
           energy_level: number | null
+          goal_achieved: boolean | null
           id: string
           mood_rating: number | null
           photo_url: string | null
           progress_summary: string
+          reflection_note: string | null
           sprint_id: string
           streak_count: number | null
           updated_at: string
           user_id: string
+          what_went_well: string | null
         }
         Insert: {
           blockers?: string | null
@@ -1555,14 +1558,17 @@ export type Database = {
           completed_tasks?: string[] | null
           created_at?: string
           energy_level?: number | null
+          goal_achieved?: boolean | null
           id?: string
           mood_rating?: number | null
           photo_url?: string | null
           progress_summary: string
+          reflection_note?: string | null
           sprint_id: string
           streak_count?: number | null
           updated_at?: string
           user_id: string
+          what_went_well?: string | null
         }
         Update: {
           blockers?: string | null
@@ -1570,14 +1576,17 @@ export type Database = {
           completed_tasks?: string[] | null
           created_at?: string
           energy_level?: number | null
+          goal_achieved?: boolean | null
           id?: string
           mood_rating?: number | null
           photo_url?: string | null
           progress_summary?: string
+          reflection_note?: string | null
           sprint_id?: string
           streak_count?: number | null
           updated_at?: string
           user_id?: string
+          what_went_well?: string | null
         }
         Relationships: []
       }
@@ -1614,6 +1623,27 @@ export type Database = {
           sent_at?: string | null
           sprint_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      daily_wins: {
+        Row: {
+          created_at: string | null
+          id: string
+          user_id: string
+          win_text: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user_id: string
+          win_text: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          win_text?: string
         }
         Relationships: []
       }
