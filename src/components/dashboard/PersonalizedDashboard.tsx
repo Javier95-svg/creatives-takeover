@@ -140,25 +140,72 @@ export const PersonalizedDashboard = () => {
         }} />
       </div>
 
-      {/* Subtle Hexagon Accent - Top Right */}
+      {/* Animated Hexagons - Top Right */}
       <div className="absolute top-20 right-20 opacity-20">
-        <div className="w-32 h-32" style={{ 
-          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-          border: '1px solid',
-          borderColor: 'hsl(var(--primary) / 0.4)',
-          animation: 'spin 30s linear infinite'
-        }} />
+        {[...Array(2)].map((_, i) => (
+          <div key={`hex-top-${i}`} className="absolute w-32 h-32" style={{ 
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            border: '1px solid',
+            borderColor: `hsl(var(--primary) / ${0.4 - i * 0.15})`,
+            transform: `scale(${1 + i * 0.3})`,
+            animation: `spin ${30 - i * 5}s linear infinite ${i % 2 === 0 ? 'normal' : 'reverse'}`
+          }} />
+        ))}
       </div>
 
-      {/* Subtle Hexagon Accent - Bottom Left */}
+      {/* Animated Hexagons - Bottom Left */}
       <div className="absolute bottom-20 left-20 opacity-15">
-        <div className="w-24 h-24" style={{ 
-          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-          border: '1px solid',
-          borderColor: 'hsl(var(--secondary) / 0.3)',
-          animation: 'spin 25s linear infinite reverse'
-        }} />
+        {[...Array(2)].map((_, i) => (
+          <div key={`hex-bottom-${i}`} className="absolute w-24 h-24" style={{ 
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            border: '1px solid',
+            borderColor: `hsl(var(--secondary) / ${0.3 - i * 0.1})`,
+            transform: `scale(${1 + i * 0.25})`,
+            animation: `spin ${25 - i * 4}s linear infinite reverse`
+          }} />
+        ))}
       </div>
+
+      {/* Scanning Lines Animation */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
+             style={{ animation: 'slideDown 10s ease-in-out infinite' }} />
+        <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary/20 to-transparent" 
+             style={{ animation: 'slideRight 12s ease-in-out infinite', animationDelay: '2s' }} />
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute top-1/2 left-10 pointer-events-none">
+        {[...Array(4)].map((_, i) => (
+          <div key={`particle-left-${i}`} 
+               className="absolute w-1 h-1 bg-primary/40 rounded-full"
+               style={{
+                 animation: `float ${8 + i * 2}s ease-in-out infinite`,
+                 animationDelay: `${i * 1.5}s`,
+                 left: `${i * 20}px`,
+                 top: `${i * -30}px`
+               }} />
+        ))}
+      </div>
+
+      <div className="absolute bottom-1/3 right-10 pointer-events-none">
+        {[...Array(3)].map((_, i) => (
+          <div key={`particle-right-${i}`} 
+               className="absolute w-1 h-1 bg-secondary/30 rounded-full"
+               style={{
+                 animation: `float ${7 + i * 1.5}s ease-in-out infinite`,
+                 animationDelay: `${i * 1.2}s`,
+                 right: `${i * 25}px`,
+                 bottom: `${i * -25}px`
+               }} />
+        ))}
+      </div>
+
+      {/* Pulsing Glow Orbs */}
+      <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse opacity-30" 
+           style={{ animationDuration: '4s' }} />
+      <div className="absolute bottom-1/4 right-1/3 w-48 h-48 bg-secondary/10 rounded-full blur-3xl animate-pulse opacity-20" 
+           style={{ animationDuration: '5s', animationDelay: '2s' }} />
 
       {/* Main Content Container */}
       <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
