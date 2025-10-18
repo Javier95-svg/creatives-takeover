@@ -191,10 +191,10 @@ export const PersonalizedDashboard = () => {
                       <span className="text-sm font-medium">Plan</span>
                     </Button>
                   </Link>
-                  <Link to="/sprints" className="group">
+                  <Link to="/community" className="group">
                     <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
                       <Target className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium">Commit</span>
+                      <span className="text-sm font-medium">Share</span>
                     </Button>
                   </Link>
                   <Link to="/blog" className="group">
