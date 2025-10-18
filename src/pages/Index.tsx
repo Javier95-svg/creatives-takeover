@@ -39,7 +39,7 @@ const Index = () => {
       <Footer />
       
       {/* Enhanced Quiz Popup - Only popup to avoid overwhelming visitors */}
-      <CreditCampaignPopup trigger="time" delay={5000} />
+      <CreditCampaignPopup trigger="time" delay={10000} />
       
       {/* AI Creative Operating System */}
       <ChatbotWidget />
