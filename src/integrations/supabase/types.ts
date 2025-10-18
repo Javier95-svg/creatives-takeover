@@ -3546,49 +3546,58 @@ export type Database = {
       }
       user_feedback: {
         Row: {
-          acquisition_source: string | null
-          additional_comments: string | null
-          business_challenge: string | null
           completed_at: string
-          conversion_status: string | null
           created_at: string
+          credit_bonus_earned: number
           email: string | null
-          feature_request: string | null
+          feature_other: string | null
           id: string
-          nps_score: number | null
+          improvement_suggestion: string | null
+          pricing_perception: string
+          role_other: string | null
+          selected_features: string[]
           session_id: string | null
+          suggested_currency: string | null
+          suggested_price: number | null
           user_id: string | null
-          ux_rating: number | null
+          user_role: string
+          website_ux_rating: number
         }
         Insert: {
-          acquisition_source?: string | null
-          additional_comments?: string | null
-          business_challenge?: string | null
           completed_at?: string
-          conversion_status?: string | null
           created_at?: string
+          credit_bonus_earned?: number
           email?: string | null
-          feature_request?: string | null
+          feature_other?: string | null
           id?: string
-          nps_score?: number | null
+          improvement_suggestion?: string | null
+          pricing_perception: string
+          role_other?: string | null
+          selected_features?: string[]
           session_id?: string | null
+          suggested_currency?: string | null
+          suggested_price?: number | null
           user_id?: string | null
-          ux_rating?: number | null
+          user_role: string
+          website_ux_rating: number
         }
         Update: {
-          acquisition_source?: string | null
-          additional_comments?: string | null
-          business_challenge?: string | null
           completed_at?: string
-          conversion_status?: string | null
           created_at?: string
+          credit_bonus_earned?: number
           email?: string | null
-          feature_request?: string | null
+          feature_other?: string | null
           id?: string
-          nps_score?: number | null
+          improvement_suggestion?: string | null
+          pricing_perception?: string
+          role_other?: string | null
+          selected_features?: string[]
           session_id?: string | null
+          suggested_currency?: string | null
+          suggested_price?: number | null
           user_id?: string | null
-          ux_rating?: number | null
+          user_role?: string
+          website_ux_rating?: number
         }
         Relationships: []
       }

@@ -28,7 +28,7 @@ export const useFeedbackModal = (questionsCompleted: boolean) => {
     setShowFeedback(false);
   };
 
-  const completeFeedback = (feedbackData?: any) => {
+  const completeFeedback = (feedbackData?: { creditBonus?: number }) => {
     setShowFeedback(false);
     setFeedbackCompleted(true);
     // Remember that user has completed feedback for this session

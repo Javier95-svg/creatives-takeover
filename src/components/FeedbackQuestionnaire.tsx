@@ -5,67 +5,108 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Star, MessageCircle, Coins } from 'lucide-react';
+import { Gift, Star, Coins, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCredits } from '@/hooks/useCredits';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface FeedbackQuestionnaireProps {
   open: boolean;
   onClose: () => void;
-  onComplete: (feedbackData: FeedbackData) => void;
+  onComplete: (feedbackData: EnhancedFeedbackData) => void;
   sessionId?: string;
 }
 
-interface FeedbackData {
+interface EnhancedFeedbackData {
+  userRole: string;
+  roleOther?: string;
+  websiteUxRating: number;
+  selectedFeatures: string[];
+  featureOther?: string;
+  pricingPerception: string;
+  suggestedPrice?: number;
+  suggestedCurrency?: string;
+  improvementSuggestion?: string;
   email?: string;
-  acquisitionSource: string;
-  uxRating: number;
-  featureRequest: string;
-  npsScore: number;
-  businessChallenge: string;
-  additionalComments?: string;
   creditBonus?: number;
 }
 
+const FEATURE_OPTIONS = [
+  { id: 'bizmap', label: '🗺️ BizMap (7-question business validation)', icon: '🗺️' },
+  { id: 'insighta', label: '📊 Insighta (AI market research & competitor analysis)', icon: '📊' },
+  { id: 'community', label: '👥 Community Hub (connect with entrepreneurs)', icon: '👥' },
+  { id: 'sprint', label: '📈 Sprint Planner (task management & accountability)', icon: '📈' },
+  { id: 'financial', label: '💰 Financial Projections & Valuation', icon: '💰' },
+  { id: 'coaching', label: '🎯 Personalized AI Coaching', icon: '🎯' },
+  { id: 'resources', label: '📚 Resources & Templates Library', icon: '📚' },
+];
+
 export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: FeedbackQuestionnaireProps) => {
-  const [formData, setFormData] = useState<Partial<FeedbackData>>({});
+  const [formData, setFormData] = useState<Partial<EnhancedFeedbackData>>({
+    selectedFeatures: [],
+    suggestedCurrency: 'USD'
+  });
+  const [showFeatureOther, setShowFeatureOther] = useState(false);
+  const [showRoleOther, setShowRoleOther] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const totalSteps = 5;
-  const { addCredits } = useCredits();
+  const totalSteps = 6;
+  const { user } = useAuth();
 
   // Calculate credit bonus based on responses
   const calculateCreditBonus = (): number => {
     let bonus = 2; // Base bonus for completion
     
-    // Email bonus
+    // Email bonus (+3 credits)
     if (formData.email && formData.email.trim() !== '') {
       bonus += 3;
     }
     
-    // High NPS bonus
-    if (formData.npsScore && formData.npsScore >= 9) {
+    // Serious entrepreneur role (+1 credit)
+    const seriousRoles = ['entrepreneur', 'solopreneur', 'small_business', 'corporate'];
+    if (formData.userRole && seriousRoles.includes(formData.userRole)) {
       bonus += 1;
     }
     
-    // Detailed feature request bonus
-    if (formData.featureRequest && formData.featureRequest.length > 20) {
+    // Positive UX rating (+1 credit for 4-5 stars)
+    if (formData.websiteUxRating && formData.websiteUxRating >= 4) {
       bonus += 1;
     }
     
-    // Referral source bonus
-    if (formData.acquisitionSource === 'referral') {
+    // High feature interest (+1 credit for 3+ features)
+    if (formData.selectedFeatures && formData.selectedFeatures.length >= 3) {
+      bonus += 1;
+    }
+    
+    // Price-aligned perception (+2 credits)
+    if (formData.pricingPerception === 'fair' || formData.pricingPerception === 'great_value') {
       bonus += 2;
     }
     
-    return bonus;
+    // Pricing feedback provided (+1 credit)
+    if (formData.suggestedPrice && formData.suggestedPrice > 0) {
+      bonus += 1;
+    }
+    
+    // Detailed suggestion (+1 credit for >20 chars)
+    if (formData.improvementSuggestion && formData.improvementSuggestion.length > 20) {
+      bonus += 1;
+    }
+    
+    return Math.min(bonus, 12); // Cap at 12 credits
   };
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+      // Skip Q5 if pricing perception doesn't require it
+      if (currentStep === 4 && !shouldShowQ5()) {
+        setCurrentStep(6); // Jump to Q6
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -86,14 +127,19 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
       const { error } = await supabase
         .from('user_feedback')
         .insert({
+          user_id: user?.id || null,
           session_id: sessionId,
+          user_role: formData.userRole,
+          role_other: formData.roleOther,
+          website_ux_rating: formData.websiteUxRating,
+          selected_features: formData.selectedFeatures,
+          feature_other: formData.featureOther,
+          pricing_perception: formData.pricingPerception,
+          suggested_price: formData.suggestedPrice,
+          suggested_currency: formData.suggestedCurrency,
+          improvement_suggestion: formData.improvementSuggestion,
           email: formData.email,
-          acquisition_source: formData.acquisitionSource,
-          ux_rating: formData.uxRating,
-          feature_request: formData.featureRequest,
-          nps_score: formData.npsScore,
-          business_challenge: formData.businessChallenge,
-          additional_comments: formData.additionalComments
+          credit_bonus_earned: creditBonus
         });
 
       if (error) throw error;
@@ -101,10 +147,12 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
       // Store credit bonus in session for non-authenticated users
       sessionStorage.setItem('feedback-credit-bonus', creditBonus.toString());
       
-      const feedbackData = { ...formData, creditBonus } as FeedbackData;
+      const feedbackData = { ...formData, creditBonus } as EnhancedFeedbackData;
       
       // Show success message with credit info
-      toast.success(`Feedback submitted! You've earned ${creditBonus} free credits that will be added when you sign up!`);
+      toast.success(`Feedback submitted! You've earned ${creditBonus} free credits that will be added when you sign up!`, {
+        duration: 5000
+      });
       
       onComplete(feedbackData);
     } catch (error) {
@@ -116,158 +164,336 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
   };
 
   const isFormValid = () => {
-    return formData.acquisitionSource && 
-           formData.uxRating && 
-           formData.featureRequest && 
-           formData.npsScore !== undefined && 
-           formData.businessChallenge;
+    return formData.userRole && 
+           formData.websiteUxRating && 
+           formData.selectedFeatures && 
+           formData.selectedFeatures.length > 0 &&
+           formData.pricingPerception;
+  };
+
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 1:
+        return !!formData.userRole;
+      case 2:
+        return !!formData.websiteUxRating;
+      case 3:
+        return formData.selectedFeatures && formData.selectedFeatures.length > 0;
+      case 4:
+        return !!formData.pricingPerception;
+      case 5:
+        // Q5 is conditional - if shown, price must be provided
+        if (formData.pricingPerception === 'too_expensive' || formData.pricingPerception === 'great_value') {
+          return formData.suggestedPrice && formData.suggestedPrice > 0;
+        }
+        return true; // Skip this step if not applicable
+      case 6:
+        return true; // Q6 is optional
+      default:
+        return false;
+    }
+  };
+
+  const toggleFeature = (featureId: string) => {
+    const current = formData.selectedFeatures || [];
+    if (current.includes(featureId)) {
+      setFormData({
+        ...formData,
+        selectedFeatures: current.filter(f => f !== featureId)
+      });
+    } else {
+      if (current.length < 3) {
+        setFormData({
+          ...formData,
+          selectedFeatures: [...current, featureId]
+        });
+      } else {
+        toast.info('You can select up to 3 features');
+      }
+    }
+  };
+
+  const shouldShowQ5 = () => {
+    return formData.pricingPerception === 'too_expensive' || formData.pricingPerception === 'great_value';
   };
 
   const renderStep = () => {
     switch (currentStep) {
+      // Q1: Role & Experience Level
       case 1:
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="acquisition">What brought you to BizMap AI today?</Label>
+              <Label className="text-base font-semibold">What is your current role / experience level?</Label>
               <RadioGroup 
-                value={formData.acquisitionSource} 
-                onValueChange={(value) => setFormData({...formData, acquisitionSource: value})}
-                className="mt-2"
+                value={formData.userRole} 
+                onValueChange={(value) => {
+                  setFormData({...formData, userRole: value});
+                  setShowRoleOther(value === 'other');
+                }}
+                className="mt-3 space-y-2"
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="google" id="google" />
-                  <Label htmlFor="google">Google Search</Label>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <RadioGroupItem value="entrepreneur" id="entrepreneur" />
+                  <Label htmlFor="entrepreneur" className="cursor-pointer flex-1">🚀 Aspiring Entrepreneur / First-time Founder</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="social" id="social" />
-                  <Label htmlFor="social">Social Media</Label>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <RadioGroupItem value="solopreneur" id="solopreneur" />
+                  <Label htmlFor="solopreneur" className="cursor-pointer flex-1">💼 Solopreneur / Freelancer</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="referral" id="referral" />
-                  <Label htmlFor="referral">Friend Referral</Label>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <RadioGroupItem value="small_business" id="small_business" />
+                  <Label htmlFor="small_business" className="cursor-pointer flex-1">🏢 Small Business Owner (2-10 employees)</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="content" id="content" />
-                  <Label htmlFor="content">Blog/Content</Label>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <RadioGroupItem value="student" id="student" />
+                  <Label htmlFor="student" className="cursor-pointer flex-1">🎓 Student / Exploring Ideas</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other">Other</Label>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <RadioGroupItem value="corporate" id="corporate" />
+                  <Label htmlFor="corporate" className="cursor-pointer flex-1">🏭 Corporate / In-house Innovation</Label>
+                </div>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <RadioGroupItem value="other" id="role-other" />
+                  <Label htmlFor="role-other" className="cursor-pointer flex-1">✨ Other</Label>
                 </div>
               </RadioGroup>
+              {showRoleOther && (
+                <Input
+                  placeholder="Please specify..."
+                  value={formData.roleOther || ''}
+                  onChange={(e) => setFormData({...formData, roleOther: e.target.value})}
+                  className="mt-2"
+                />
+              )}
             </div>
           </div>
         );
 
+      // Q2: Website UX Rating (5-star)
       case 2:
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="ux-rating">How clear and easy were our 7 questions?</Label>
-              <RadioGroup 
-                value={formData.uxRating?.toString()} 
-                onValueChange={(value) => setFormData({...formData, uxRating: parseInt(value)})}
-                className="mt-2 flex space-x-4"
-              >
-                {[1, 2, 3, 4, 5].map((rating) => (
-                  <div key={rating} className="flex flex-col items-center space-y-1">
-                    <RadioGroupItem value={rating.toString()} id={`rating-${rating}`} />
-                    <Label htmlFor={`rating-${rating}`} className="text-xs">
-                      {rating === 1 ? 'Confusing' : rating === 5 ? 'Very Clear' : rating}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="feature">What feature would make BizMap AI more valuable to you?</Label>
-              <Textarea
-                id="feature"
-                placeholder="e.g., Financial projections, Market analysis, Competitor research..."
-                value={formData.featureRequest || ''}
-                onChange={(e) => setFormData({...formData, featureRequest: e.target.value})}
-                className="mt-2"
-                rows={3}
-              />
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="nps">How likely are you to recommend BizMap AI? (0-10)</Label>
-              <RadioGroup 
-                value={formData.npsScore?.toString()} 
-                 onValueChange={(value) => setFormData({...formData, npsScore: parseInt(value)})}
-                className="mt-2 grid grid-cols-6 sm:grid-cols-11 gap-1 sm:gap-2"
-              >
-                {Array.from({length: 11}, (_, i) => (
-                  <div key={i} className="flex flex-col items-center space-y-1">
-                    <RadioGroupItem value={i.toString()} id={`nps-${i}`} />
-                    <Label htmlFor={`nps-${i}`} className="text-xs">{i}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>Not likely</span>
-                <span>Very likely</span>
+              <Label className="text-base font-semibold">How did you find our website usability / design / navigation?</Label>
+              <div className="mt-4 flex flex-col items-center space-y-4">
+                <div className="flex space-x-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      type="button"
+                      onClick={() => setFormData({...formData, websiteUxRating: rating})}
+                      className="transition-all hover:scale-110"
+                    >
+                      <Star 
+                        className={`w-10 h-10 ${
+                          formData.websiteUxRating && rating <= formData.websiteUxRating 
+                            ? 'fill-primary text-primary' 
+                            : 'text-muted-foreground'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between w-full text-xs text-muted-foreground px-2">
+                  <span>Very hard to use</span>
+                  <span>Very easy to use</span>
+                </div>
               </div>
             </div>
           </div>
         );
 
-      case 5:
+      // Q3: Feature Selection (multi-select)
+      case 3:
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="challenge">What's your biggest business challenge right now?</Label>
-              <Textarea
-                id="challenge"
-                placeholder="e.g., Finding customers, Raising funds, Building a team, Validating my idea..."
-                value={formData.businessChallenge || ''}
-                onChange={(e) => setFormData({...formData, businessChallenge: e.target.value})}
-                className="mt-2"
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email (optional - for follow-up resources)</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={formData.email || ''}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label htmlFor="comments">Any additional thoughts?</Label>
-              <Textarea
-                id="comments"
-                placeholder="Optional feedback..."
-                value={formData.additionalComments || ''}
-                onChange={(e) => setFormData({...formData, additionalComments: e.target.value})}
-                className="mt-2"
-                rows={2}
-              />
+              <Label className="text-base font-semibold">Which features do you find most useful or important?</Label>
+              <p className="text-sm text-muted-foreground mt-1">Select up to 3 features</p>
+              <div className="mt-3 space-y-2">
+                {FEATURE_OPTIONS.map((feature) => (
+                  <div key={feature.id} className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                    <Checkbox
+                      id={feature.id}
+                      checked={formData.selectedFeatures?.includes(feature.id)}
+                      onCheckedChange={() => toggleFeature(feature.id)}
+                    />
+                    <Label htmlFor={feature.id} className="cursor-pointer flex-1 font-normal">
+                      {feature.label}
+                    </Label>
+                  </div>
+                ))}
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent">
+                  <Checkbox
+                    id="feature-other"
+                    checked={showFeatureOther}
+                    onCheckedChange={(checked) => {
+                      setShowFeatureOther(!!checked);
+                      if (!checked) {
+                        setFormData({...formData, featureOther: undefined});
+                      }
+                    }}
+                  />
+                  <Label htmlFor="feature-other" className="cursor-pointer flex-1 font-normal">
+                    🔄 Other
+                  </Label>
+                </div>
+                {showFeatureOther && (
+                  <Input
+                    placeholder="Please specify..."
+                    value={formData.featureOther || ''}
+                    onChange={(e) => setFormData({...formData, featureOther: e.target.value})}
+                    className="ml-8"
+                  />
+                )}
+              </div>
+              <Badge variant="secondary" className="mt-2">
+                {formData.selectedFeatures?.length || 0} / 3 selected
+              </Badge>
             </div>
           </div>
         );
+
+      // Q4: Pricing Perception
+      case 4:
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-semibold">What do you think of our pricing or what you might expect to pay for access?</Label>
+              <RadioGroup 
+                value={formData.pricingPerception} 
+                onValueChange={(value) => setFormData({...formData, pricingPerception: value})}
+                className="mt-3 space-y-2"
+              >
+                <div className="flex items-center space-x-3 p-3 rounded border hover:border-primary hover:bg-accent">
+                  <RadioGroupItem value="too_expensive" id="too_expensive" />
+                  <div className="flex-1">
+                    <Label htmlFor="too_expensive" className="cursor-pointer font-semibold">💸 Too Expensive</Label>
+                    <p className="text-xs text-muted-foreground">I'd need to see more value first</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded border hover:border-primary hover:bg-accent">
+                  <RadioGroupItem value="fair" id="fair" />
+                  <div className="flex-1">
+                    <Label htmlFor="fair" className="cursor-pointer font-semibold">✅ Fair & Affordable</Label>
+                    <p className="text-xs text-muted-foreground">This seems reasonable for what's offered</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded border hover:border-primary hover:bg-accent">
+                  <RadioGroupItem value="great_value" id="great_value" />
+                  <div className="flex-1">
+                    <Label htmlFor="great_value" className="cursor-pointer font-semibold">🎁 Great Value</Label>
+                    <p className="text-xs text-muted-foreground">This is cheaper than I expected</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded border hover:border-primary hover:bg-accent">
+                  <RadioGroupItem value="need_more_info" id="need_more_info" />
+                  <div className="flex-1">
+                    <Label htmlFor="need_more_info" className="cursor-pointer font-semibold">🤔 Need More Info</Label>
+                    <p className="text-xs text-muted-foreground">I want to try before deciding</p>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+        );
+
+      // Q5: Expected Fair Price (conditional)
+      case 5:
+        if (!shouldShowQ5()) {
+          // Skip to Q6
+          return renderStep6();
+        }
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-semibold">What would you consider a fair monthly price for premium access?</Label>
+              <p className="text-sm text-muted-foreground mt-1">Most plans range from $9-$99/month</p>
+              <div className="mt-3 flex space-x-2">
+                <Select
+                  value={formData.suggestedCurrency}
+                  onValueChange={(value) => setFormData({...formData, suggestedCurrency: value})}
+                >
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CAD">CAD</SelectItem>
+                    <SelectItem value="AUD">AUD</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex-1 relative">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="500"
+                    placeholder="0"
+                    value={formData.suggestedPrice || ''}
+                    onChange={(e) => setFormData({...formData, suggestedPrice: parseFloat(e.target.value)})}
+                    className="pl-8"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    {formData.suggestedCurrency === 'EUR' ? '€' : 
+                     formData.suggestedCurrency === 'GBP' ? '£' : 
+                     formData.suggestedCurrency === 'CAD' ? 'C$' :
+                     formData.suggestedCurrency === 'AUD' ? 'A$' : '$'}
+                  </span>
+                </div>
+                <span className="flex items-center text-muted-foreground">/month</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      // Q6: Improvement Suggestion (optional)
+      case 6:
+        return renderStep6();
 
       default:
         return null;
     }
   };
+
+  const renderStep6 = () => (
+    <div className="space-y-4">
+      <div>
+        <Label className="text-base font-semibold">If you could improve ONE thing about BizMap AI, what would it be?</Label>
+        <Badge variant="outline" className="ml-2">Optional</Badge>
+        <Textarea
+          placeholder="e.g., More industry-specific templates, Video tutorials, Integration with tools, Mobile app..."
+          value={formData.improvementSuggestion || ''}
+          onChange={(e) => setFormData({...formData, improvementSuggestion: e.target.value})}
+          className="mt-2"
+          rows={3}
+          maxLength={200}
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          {formData.improvementSuggestion?.length || 0} / 200 characters
+        </p>
+      </div>
+      <div>
+        <Label htmlFor="email" className="text-base">Email (optional - for personalized recommendations)</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="your@email.com"
+          value={formData.email || ''}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          className="mt-2"
+        />
+        {formData.email && (
+          <p className="text-xs text-primary mt-1 flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            +3 bonus credits for providing email
+          </p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -329,10 +555,10 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
             {currentStep < totalSteps ? (
               <Button 
                 onClick={handleNext} 
-                disabled={!formData[Object.keys(formData)[currentStep - 1] as keyof FeedbackData]}
+                disabled={!isStepValid()}
                 className="flex-1"
               >
-                Next
+                {currentStep === 4 && shouldShowQ5() ? 'Next' : currentStep === 4 ? 'Skip to Final' : 'Next'}
               </Button>
             ) : (
               <Button 
@@ -342,13 +568,13 @@ export const FeedbackQuestionnaire = ({ open, onClose, onComplete, sessionId }: 
               >
                 {isSubmitting ? (
                   <>
-                    <MessageCircle className="w-4 h-4 mr-2 animate-spin" />
+                    <Coins className="w-4 h-4 mr-2 animate-spin" />
                     Submitting...
                   </>
                 ) : (
                   <>
-                    <Star className="w-4 h-4 mr-2" />
-                    Get FREE Report
+                    <Gift className="w-4 h-4 mr-2" />
+                    Get {calculateCreditBonus()} Credits
                   </>
                 )}
               </Button>
