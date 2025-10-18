@@ -80,7 +80,7 @@ const HomeFAQ = () => {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about Creatives Takeover and how we help you turn ideas into profitable businesses.
+            Everything you need to know about Creatives Takeover.
           </p>
         </div>
 
