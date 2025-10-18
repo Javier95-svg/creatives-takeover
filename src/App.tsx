@@ -42,6 +42,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Profile from "./pages/Profile";
 import Demo from "./pages/Demo";
 import AdminGamification from "./pages/AdminGamification";
+import AdminFeedback from "./pages/AdminFeedback";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/admin/gamification" element={<AdminGamification />} />
+            <Route path="/admin/feedback" element={<AdminFeedback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
