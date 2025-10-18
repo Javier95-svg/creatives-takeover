@@ -10,43 +10,43 @@ const HomeFAQ = () => {
   const faqs = [
     {
       question: "What is Creatives Takeover?",
-      answer: "Creatives Takeover is a platform that combines AI-driven business planning, a rich prompt library, funding and incubator discovery, and a peer founder community so that creators, freelancers, indie hackers and entrepreneurs can go from idea to action all in one place."
+      answer: "Creatives Takeover is your AI co-founder for turning ideas into revenue in 30 days. We combine BizMap AI (conversational business planning that feels like talking to a mentor, not filling corporate templates), sprint-based accountability (daily check-ins, matched accountability partners, and real-time progress tracking), and a 15,000+ member community built on collaboration over competition. From scattered thoughts to your first dollar—we guide you through the actual journey, not just theory."
     },
     {
       question: "How does BizMap AI help me build a business plan?",
-      answer: "BizMap AI walks you through your idea by generating a detailed structure including problem definition, solution outline, target market, competitor landscape, go-to-market strategy and key financials. You then refine, iterate and personalise the plan using interactive prompts, turning your concept into a viable roadmap."
+      answer: "BizMap AI is a 7-step conversational wizard that generates your business plan in 3 minutes: Overview → Market → Problem → Solution → Channels → Pricing → Goals. Unlike corporate jargon-filled templates, it feels like chatting with a co-founder who asks the right questions. You get a success score showing viability, automatic sprint integration to turn strategy into action, and professional PDF export. It's designed for creative minds who think in conversations, not spreadsheets."
     },
     {
       question: "I don't have a clear business idea yet. Can this platform still help me?",
-      answer: "Yes. Our Prompt Library gives you ready-to-use templates and inspiration to discover niches, generate new ideas or refine existing ones. Whether you're at the beginning or already have a draft, you'll gain clarity and direction."
+      answer: "Perfect place to start! Use our Prompt Library with hundreds of idea-sparking templates, Creative Entrepreneur Templates for specific niches (freelancers, creators, service businesses, product startups), and the BizMap chatbot to explore fuzzy concepts through natural conversation. You can even start with voice notes or scattered thoughts—the AI organizes them into coherent directions. Plus, browse community stories from other founders to see real journeys that might inspire your path."
     },
     {
       question: "Is Creatives Takeover only for tech startups?",
-      answer: "No. While the tools are sophisticated, they are designed for makers, freelancers, creators and early founders in any field. Whether you're launching a service business, a product, software or a creative project, you'll find applicable support."
+      answer: "Not even close. We're built for creative-first intelligence, not corporate playbooks. Whether you're a freelance designer, indie game developer, service consultant, Etsy seller, content creator, coach, or any creative professional—our language and tools reflect your reality. We speak creativity, not VC-speak. If you're building something with passion (not just chasing unicorn status), you're in the right place."
     },
     {
       question: "How can I discover funding or accelerators that fit my project?",
-      answer: "In our Insighta tab you can explore an up-to-date directory of funding programmes, incubators and accelerators. The listings are tailored by business stage and focus, you can bookmark opportunities and receive notification reminders of upcoming deadlines."
+      answer: "Insighta provides AI-powered market intelligence with real-time updates on funding opportunities, accelerators, grants, and competitions. Filter by business stage, focus area, and deadline. Bookmark programs you like, get deadline reminders, and see peer recommendations from the community. The database refreshes automatically so you never miss emerging opportunities. It's like having a research assistant scanning the funding landscape 24/7."
     },
     {
       question: "What kind of community can I expect on the platform?",
-      answer: "You'll find a friendly, engaged peer-to-peer community. Members share their entrepreneurial journey, post updates with text and images, ask for feedback, celebrate milestones and connect via profiles, messages and friend invites. It is designed for collaboration rather than competition."
+      answer: "A Reddit-style feed where 15,000+ creative founders share wins, challenges, and real advice—no corporate fakeness. Features include accountability partnership matching (get paired with someone in your niche), daily challenges with reputation points and badges, monthly Demo Days to showcase your progress, commitment tracking with gentle nudges if you miss check-ins, direct messaging, friend requests, and a culture of 'collaboration over competition.' We celebrate others' wins because we know there's room for everyone to succeed."
     },
     {
       question: "Are my plans and data private and secure?",
-      answer: "Yes. Your workspace, drafts and planning data are private unless you choose to share them. You control what you post in the community. We collect only essential account information, adhere to industry-standard security practices and clearly display our privacy and terms policies."
+      answer: "Absolutely. We use Supabase-powered security with Row Level Security (RLS) policies ensuring your data is encrypted and isolated. You control exactly what gets shared to the community—your workspace is private by default. Share reports anonymously if you want feedback without revealing identity. All plans can be kept completely private or selectively shared. We comply with UK data protection standards and never sell your data. Your ideas are yours."
     },
     {
       question: "Can I export or share the business plan created with BizMap AI?",
-      answer: "Yes. Once you've refined your plan you can download or share it in a format suitable for pitching to mentors, investors or collaborators. The goal is to make what you build here practical beyond the platform."
+      answer: "Yes! Export as a professionally-formatted PDF for investors or partners, share to the community feed as a post (with or without your name attached), integrate directly into sprint planning to turn strategy into tasks, create public 'shared reports' to gather feedback, or use in monthly Demo Day presentations. You own your work and can distribute it however you choose—from pitch decks to portfolio pieces."
     },
     {
       question: "Who is behind Creatives Takeover and why should I trust the service?",
-      answer: "Creatives Takeover Ltd is a UK-registered company dedicated exclusively to helping creators and entrepreneurs succeed. We regularly publish updates, educational content and real-founder stories to maintain transparency and build our community reputation. For more info, we suggest to visit our social media accounts (check footer section)."
+      answer: "Creatives Takeover is a UK-registered company founded by passionate entrepreneurs who understand the challenges of building something from scratch. We're committed to transparency, innovation, and supporting the creative economy. Check our blog for real founder stories and educational resources, follow our active LinkedIn for company updates, and join our Discord to see the thriving community firsthand. We're building in public and genuinely invested in your success."
     },
     {
       question: "How much does it cost and what happens next?",
-      answer: "You can sign up and begin exploring the platform for free. As your planning and growth needs evolve, premium features may become available. Pricing is clearly communicated, and you decide when to upgrade. We believe you should first experience value before committing."
+      answer: "New users get 5 free credits to test the platform. Credits are used for Launch Reports (BizMap AI business plans), sprint task generation, and premium AI features. Free forever: templates, community access, basic planning, browsing Insighta, and networking. Subscribers get monthly credit resets and can earn bonus credits by participating in feedback surveys. Check our transparent pricing page for exact costs—no hidden fees. Start free today, upgrade when you see the value."
     }
   ];
 
