@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -123,118 +123,127 @@ export const PersonalizedDashboard = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      {/* Daily Goal Modal */}
-      <DailyGoalModal 
-        open={showDailyGoal}
-        onOpenChange={setShowDailyGoal}
-        currentStreak={currentStreak}
-        mode={modalMode}
-        todaysCheckInId={todaysCheckInId || undefined}
-        onCheckInComplete={() => {
-          setHasCheckedInToday(true);
-          if (modalMode === 'morning') {
-            setCurrentStreak(prev => prev + 1);
-          }
-        }}
-      />
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background rounded-2xl p-8">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">
-              {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              {profile?.creative_niche 
-                ? `Let's make progress on your ${profile.creative_niche} journey`
-                : "Let's build something amazing today"
-              }
-            </p>
-          </div>
-          {stats.currentStreak > 0 && (
-            <div className="flex items-center gap-2 bg-orange-500/10 px-4 py-2 rounded-full">
-              <Flame className="h-5 w-5 text-orange-500" />
-              <span className="font-bold text-orange-500">{stats.currentStreak} day streak</span>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
+        {/* Daily Goal Modal */}
+        <DailyGoalModal 
+          open={showDailyGoal}
+          onOpenChange={setShowDailyGoal}
+          currentStreak={currentStreak}
+          mode={modalMode}
+          todaysCheckInId={todaysCheckInId || undefined}
+          onCheckInComplete={() => {
+            setHasCheckedInToday(true);
+            if (modalMode === 'morning') {
+              setCurrentStreak(prev => prev + 1);
+            }
+          }}
+        />
 
-      {/* Enhanced Feature Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <BusinessHealthScore userId={user.id} />
-        <MomentumMeter userId={user.id} stats={stats} />
-        <EnhancedStreakVisualization userId={user.id} currentStreak={stats.currentStreak} />
-      </div>
-
-      {/* Progress Timeline and Recent Wins */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <ProgressTimeline />
-        </div>
-        <div>
-          <RecentWins refreshTrigger={winsRefreshTrigger} />
-        </div>
-      </div>
-
-      {/* Quick Win Zone */}
-      <QuickWinZone />
-
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/dream2plan">
-            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-              <Sparkles className="h-6 w-6" />
-              <span>Start Planning</span>
-            </Button>
-          </Link>
-          <Link to="/sprints">
-            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-              <Rocket className="h-6 w-6" />
-              <span>Make a Commitment</span>
-            </Button>
-          </Link>
-          <Link to="/blog">
-            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-              <Target className="h-6 w-6" />
-              <span>Stay Informed</span>
-            </Button>
-          </Link>
-        </div>
-      </Card>
-
-      {/* Progress Overview */}
-      {profile?.business_stage && (
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-6">Your Journey Progress</h2>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Business Development</span>
-                <span className="text-sm text-muted-foreground">
-                  {profile.business_stage === 'idea' && '25%'}
-                  {profile.business_stage === 'planning' && '50%'}
-                  {profile.business_stage === 'building' && '75%'}
-                  {profile.business_stage === 'launched' && '100%'}
-                </span>
+        {/* Welcome Header - More Prominent */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-3xl blur-3xl" />
+          <Card className="relative border-primary/20 shadow-lg">
+            <CardContent className="p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                    {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
+                  </h1>
+                  <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
+                    {profile?.creative_niche 
+                      ? `Let's make progress on your ${profile.creative_niche} journey`
+                      : "Track your progress, celebrate wins, and stay consistent"
+                    }
+                  </p>
+                </div>
+                {stats.currentStreak > 0 && (
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-6 py-3 rounded-full border border-orange-500/20 shadow-sm">
+                    <Flame className="h-6 w-6 text-orange-500" />
+                    <div className="flex flex-col">
+                      <span className="text-2xl font-bold text-orange-500">{stats.currentStreak}</span>
+                      <span className="text-xs text-orange-500/80">day streak</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <Progress 
-                value={
-                  profile.business_stage === 'idea' ? 25 :
-                  profile.business_stage === 'planning' ? 50 :
-                  profile.business_stage === 'building' ? 75 : 100
-                } 
-              />
-            </div>
-          </div>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Floating Quick Win Button */}
-      <QuickWinButton onWinAdded={() => setWinsRefreshTrigger(prev => prev + 1)} />
+        {/* Main Content Grid - Better Hierarchy */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Progress Timeline (Featured) */}
+          <div className="lg:col-span-2 space-y-6">
+            <ProgressTimeline />
+            
+            {/* Quick Actions - Simplified */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Rocket className="h-5 w-5 text-primary" />
+                  Quick Actions
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Link to="/dream2plan" className="group">
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Plan</span>
+                    </Button>
+                  </Link>
+                  <Link to="/sprints" className="group">
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <Target className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Commit</span>
+                    </Button>
+                  </Link>
+                  <Link to="/blog" className="group">
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Learn</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Sidebar Widgets */}
+          <div className="space-y-6">
+            {/* Recent Wins */}
+            <RecentWins refreshTrigger={winsRefreshTrigger} />
+            
+            {/* Compact Stats */}
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Your Stats</h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                    <span className="text-sm font-medium">Business Health</span>
+                    <Badge variant="secondary" className="text-base font-bold">
+                      {profile?.business_stage === 'idea' && '25%'}
+                      {profile?.business_stage === 'planning' && '50%'}
+                      {profile?.business_stage === 'building' && '75%'}
+                      {profile?.business_stage === 'launched' && '100%'}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                    <span className="text-sm font-medium">Check-ins</span>
+                    <Badge variant="secondary" className="text-base font-bold">
+                      {stats.currentStreak || 0}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Floating Quick Win Button */}
+        <QuickWinButton onWinAdded={() => setWinsRefreshTrigger(prev => prev + 1)} />
+      </div>
     </div>
   );
 };

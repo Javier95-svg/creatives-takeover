@@ -93,10 +93,10 @@ export const QuickWinButton = ({ onWinAdded }: QuickWinButtonProps) => {
       <Button
         onClick={() => setOpen(true)}
         size="lg"
-        className="fixed bottom-6 right-6 h-14 px-6 shadow-lg hover:shadow-xl transition-all z-50 rounded-full"
+        className="fixed bottom-6 right-6 h-16 px-6 shadow-2xl hover:shadow-xl hover:scale-105 transition-all z-50 rounded-full bg-gradient-to-r from-primary to-primary/80"
       >
         <Sparkles className="w-5 h-5 mr-2" />
-        Add a Win
+        <span className="font-semibold">Add a Win</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

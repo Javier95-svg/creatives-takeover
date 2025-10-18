@@ -99,17 +99,21 @@ export const ProgressTimeline = () => {
 
   if (checkIns.length === 0) {
     return (
-      <Card>
+      <Card className="border-dashed border-2">
         <CardHeader>
           <CardTitle>📅 Your Progress This Week</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <Circle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground">Start your journey today!</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Set your first daily goal to begin tracking your progress.
-            </p>
+          <div className="text-center py-12 space-y-4">
+            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <Circle className="w-8 h-8 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">Ready to start your journey?</p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Set your first daily goal to begin tracking your progress. Each day you check in builds your momentum!
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

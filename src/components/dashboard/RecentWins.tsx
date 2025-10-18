@@ -68,22 +68,24 @@ export const RecentWins = ({ refreshTrigger }: RecentWinsProps) => {
 
   if (wins.length === 0) {
     return (
-      <Card>
+      <Card className="border-dashed border-2">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="w-5 h-5 text-primary" />
             Recent Wins
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6">
-            <Sparkles className="w-10 h-10 mx-auto mb-2 text-muted-foreground opacity-50" />
-            <p className="text-sm text-muted-foreground">
-              No wins captured yet
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Click "Add a Win" to start celebrating!
-            </p>
+          <div className="text-center py-8 space-y-3">
+            <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Celebrate your victories!</p>
+              <p className="text-xs text-muted-foreground">
+                Click "Add a Win" below to start
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -93,17 +95,17 @@ export const RecentWins = ({ refreshTrigger }: RecentWinsProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="w-5 h-5 text-primary" />
           Recent Wins
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {wins.map((win) => (
             <li
               key={win.id}
-              className="flex items-start gap-2 p-3 rounded-lg bg-accent/30 hover:bg-accent/50 transition-colors"
+              className="flex items-start gap-2 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 transition-colors border border-primary/10"
             >
               <span className="text-lg mt-0.5">🎉</span>
               <div className="flex-1 min-w-0">
