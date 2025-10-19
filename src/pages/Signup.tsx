@@ -31,12 +31,27 @@ const Signup = () => {
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
 
+  // Get conversion source from URL
+  const [conversionSource] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      source: params.get('source') || 'direct',
+      returnUrl: params.get('return') || '/'
+    };
+  });
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/');
+      // Check if user has saved progress from BizMap
+      const savedProgress = localStorage.getItem('bizmap_progress');
+      if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
+        navigate(conversionSource.returnUrl);
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, conversionSource.returnUrl]);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -115,8 +130,26 @@ const Signup = () => {
       if (error) {
         toast.error(error.message || "Failed to create account. Please try again.");
       } else {
-        toast.success("Account created successfully! Please check your email to verify your account.");
-        // Note: User will be redirected automatically after email verification
+        // Track conversion source
+        if (conversionSource.source !== 'direct') {
+          console.log('User signed up from:', conversionSource.source);
+          // Could send this to analytics here
+        }
+        
+        toast.success("Account created successfully! Redirecting...");
+        
+        // Check for saved BizMap progress
+        const savedProgress = localStorage.getItem('bizmap_progress');
+        if (savedProgress && conversionSource.returnUrl.includes('dream2plan')) {
+          toast.success("Restoring your business plan...");
+          setTimeout(() => {
+            navigate(conversionSource.returnUrl);
+          }, 1500);
+        } else {
+          setTimeout(() => {
+            navigate(conversionSource.returnUrl);
+          }, 1500);
+        }
       }
     } catch (error) {
       toast.error("An unexpected error occurred.");

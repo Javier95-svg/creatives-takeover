@@ -325,6 +325,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
   const [sectionCompletionFeedback, setSectionCompletionFeedback] = useState<Record<string, number>>({});
   
+  // Conversion tracking
+  const [conversionPromptShown, setConversionPromptShown] = useState(false);
+  const [conversionPromptDismissed, setConversionPromptDismissed] = useState(false);
+  const [wizardStepWhenPrompted, setWizardStepWhenPrompted] = useState<number | null>(null);
+  
   const location = useLocation();
   const navigate = useNavigate();
   const sessionStartTime = useRef(Date.now());
@@ -1918,6 +1923,25 @@ What specific aspect of your business would you like to focus on first?`;
         confidence: 1.0
       };
       setMessages(prev => [...prev, switchMessage]);
+    }, []),
+    
+    // Conversion tracking
+    conversionPromptShown,
+    conversionPromptDismissed,
+    wizardStepWhenPrompted,
+    trackConversionEvent: useCallback((event: 'shown' | 'dismissed' | 'converted', step: number) => {
+      if (event === 'shown') {
+        setConversionPromptShown(true);
+        setWizardStepWhenPrompted(step);
+      } else if (event === 'dismissed') {
+        setConversionPromptDismissed(true);
+      }
+      
+      // Track in analytics
+      trackUserInteraction({
+        type: 'quick_action_clicked',
+        data: { conversionEvent: event, step }
+      });
     }, []),
     switchToWizard: useCallback(() => {
       setChatMode('wizard');

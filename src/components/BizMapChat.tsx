@@ -7,6 +7,8 @@ import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
+import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
+import { useNavigate } from "react-router-dom";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -127,6 +129,12 @@ export const BizMapChat = ({
   const [shareData, setShareData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Conversion prompt state
+  const [showInlineBanner, setShowInlineBanner] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showCompletionGate, setShowCompletionGate] = useState(false);
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
@@ -137,7 +145,10 @@ export const BizMapChat = ({
     isStreaming, 
     sendMessage,
     chatMode,
-    switchToFreeform
+    switchToFreeform,
+    conversionPromptShown,
+    conversionPromptDismissed,
+    trackConversionEvent
   } = useChatbot({
     enableNLU: true,
     enableDynamicFAQ: false,
@@ -193,6 +204,55 @@ export const BizMapChat = ({
     }
   }, [switchToFreeform, onChatModeReady]);
 
+  // Conversion prompt logic
+  useEffect(() => {
+    if (user) {
+      // User is authenticated, don't show prompts
+      setShowInlineBanner(false);
+      setShowModal(false);
+      setShowCompletionGate(false);
+      return;
+    }
+
+    // Step 5: Show inline banner (soft nudge)
+    if (currentStep === 4 && !conversionPromptShown && chatMode === 'wizard') {
+      setShowInlineBanner(true);
+      trackConversionEvent('shown', 5);
+    }
+
+    // Step 7-8: Show modal if banner was dismissed
+    if ((currentStep === 6 || currentStep === 7) && conversionPromptDismissed && !showModal && chatMode === 'wizard') {
+      setShowModal(true);
+      trackConversionEvent('shown', currentStep + 1);
+    }
+
+    // Final step: Show completion gate
+    if (currentStep >= wizardSteps.length - 1 && chatMode === 'wizard' && !user) {
+      setShowCompletionGate(true);
+      trackConversionEvent('shown', currentStep + 1);
+    }
+  }, [currentStep, user, conversionPromptShown, conversionPromptDismissed, chatMode, wizardSteps.length, trackConversionEvent]);
+
+  // Handle conversion actions
+  const handleSignUpClick = () => {
+    // Save current progress to localStorage for non-authenticated users
+    const progress = {
+      step: currentStep,
+      answers,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('bizmap_progress', JSON.stringify(progress));
+    
+    trackConversionEvent('converted', currentStep + 1);
+    navigate(`/signup?source=bizmap-step-${currentStep + 1}&return=/dream2plan`);
+  };
+
+  const handleDismiss = () => {
+    setShowInlineBanner(false);
+    setShowModal(false);
+    trackConversionEvent('dismissed', currentStep + 1);
+  };
+
   const handleSend = () => {
     if (message.trim() && !isTyping && !isStreaming) {
       console.log('💬 Sending message:', message);
@@ -219,6 +279,32 @@ export const BizMapChat = ({
 
   return (
     <div className="flex flex-col h-full">
+      {/* Conversion Prompts */}
+      <WizardConversionPrompt
+        step={currentStep}
+        triggerStep={4}
+        variant="inline-banner"
+        show={showInlineBanner}
+        onDismiss={handleDismiss}
+        onSignUp={handleSignUpClick}
+      />
+      <WizardConversionPrompt
+        step={currentStep}
+        triggerStep={6}
+        variant="modal"
+        show={showModal}
+        onDismiss={handleDismiss}
+        onSignUp={handleSignUpClick}
+      />
+      <WizardConversionPrompt
+        step={currentStep}
+        triggerStep={wizardSteps.length - 1}
+        variant="completion-gate"
+        show={showCompletionGate}
+        onDismiss={() => {}}
+        onSignUp={handleSignUpClick}
+      />
+      
       {/* Progress Bar with Mode Indicator */}
       <div className="p-4 border-b bg-muted/30">
         <div className="flex items-center justify-between mb-2">

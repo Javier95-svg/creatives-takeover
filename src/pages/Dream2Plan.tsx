@@ -280,6 +280,31 @@ const BizMapAI = () => {
     }
   }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
+  // Restore saved progress for new users
+  useEffect(() => {
+    if (user) {
+      const savedProgress = localStorage.getItem('bizmap_progress');
+      if (savedProgress) {
+        try {
+          const progress = JSON.parse(savedProgress);
+          const timeSinceProgress = Date.now() - progress.timestamp;
+          
+          // Only restore if progress is less than 24 hours old
+          if (timeSinceProgress < 24 * 60 * 60 * 1000) {
+            setCurrentStep(progress.step);
+            setUserAnswers(progress.answers);
+            toast.success("Welcome back! Your progress has been restored.");
+          }
+          
+          // Clear the saved progress
+          localStorage.removeItem('bizmap_progress');
+        } catch (e) {
+          console.error('Failed to restore progress:', e);
+        }
+      }
+    }
+  }, [user]);
+
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
     const savedPrompt = localStorage.getItem('bizmap_prompt');
