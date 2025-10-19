@@ -142,6 +142,23 @@ const Footer = () => {
                 />
               </a>
             </div>
+
+            {/* SaaSHub Badge */}
+            <div className="mt-4">
+              <a 
+                href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
+                target='_blank'
+                rel="noopener noreferrer"
+                aria-label="Approved on SaaSHub"
+              >
+                <img 
+                  src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1" 
+                  alt="Creatives Takeover badge" 
+                  className="hover:opacity-80 transition-opacity"
+                  style={{ maxWidth: '150px' }}
+                />
+              </a>
+            </div>
           </nav>
         </div>
 
