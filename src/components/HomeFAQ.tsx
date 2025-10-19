@@ -278,18 +278,9 @@ const HomeFAQ = () => {
               Still have questions?
             </h3>
             <p className="text-muted-foreground mb-6">
-              We're here to help you succeed. Reach out to us directly or connect with us on LinkedIn.
+              We're here to help you succeed. Reach out to us directly.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a
-                href="https://www.linkedin.com/company/creatives-takeover/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-primary/50"
-              >
-                <ExternalLink className="w-5 h-5" />
-                Visit our LinkedIn
-              </a>
+            <div className="flex justify-center items-center">
               <a
                 href="mailto:admin@creatives-takeover.com"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
