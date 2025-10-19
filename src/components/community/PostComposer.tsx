@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Image as ImageIcon, Send, X } from "lucide-react";
+import { Image as ImageIcon, Send, X, Link } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
@@ -188,6 +188,10 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
                 >
                   <ImageIcon className="mr-2 h-4 w-4" /> Add image
                 </Button>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Link className="h-3 w-3" />
+                  <span>URLs supported in text</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button 
