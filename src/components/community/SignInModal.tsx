@@ -7,23 +7,56 @@ interface SignInModalProps {
   onClose: () => void;
   onSignIn: () => void;
   onSignUp: () => void;
+  triggerAction?: 'like' | 'comment' | 'repost' | 'post' | null;
 }
 
-const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSignUp }) => {
+const SignInModal: React.FC<SignInModalProps> = ({ open, onClose, onSignIn, onSignUp, triggerAction }) => {
+  const getActionMessage = () => {
+    switch (triggerAction) {
+      case 'like':
+        return {
+          title: '❤️ Love This Content?',
+          description: 'Sign up to like posts, support fellow entrepreneurs, and build your reputation in the community.'
+        };
+      case 'comment':
+        return {
+          title: '💬 Have Something to Share?',
+          description: 'Join the conversation! Sign up to comment, get feedback, and connect with entrepreneurs worldwide.'
+        };
+      case 'repost':
+        return {
+          title: '🔄 Want to Share This?',
+          description: 'Sign up to repost content, grow your network, and showcase your entrepreneurial interests.'
+        };
+      case 'post':
+        return {
+          title: '✍️ Ready to Share Your Story?',
+          description: 'Sign up to post your journey, get AI insights, and connect with a supportive community of entrepreneurs.'
+        };
+      default:
+        return {
+          title: '🚀 Join Our Community',
+          description: 'Connect with fellow entrepreneurs and grow your business together in our supportive community.'
+        };
+    }
+  };
+
+  const message = getActionMessage();
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-sm sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold text-center">
-              🚀 Join Our Community
+              {message.title}
             </DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
           <DialogDescription className="text-base text-center">
-            Connect with fellow entrepreneurs and grow your business together in our supportive community.
+            {message.description}
           </DialogDescription>
         </DialogHeader>
         

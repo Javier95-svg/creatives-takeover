@@ -48,6 +48,11 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
   const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (requireAuth && !isAuthenticated) {
+      // Track conversion trigger
+      sessionStorage.setItem('conversion_source', JSON.stringify({
+        type: 'community_post',
+        timestamp: Date.now()
+      }));
       setShowSignInModal(true);
       return;
     }
@@ -67,6 +72,11 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     e.preventDefault();
     
     if (requireAuth && !isAuthenticated) {
+      // Track conversion trigger
+      sessionStorage.setItem('conversion_source', JSON.stringify({
+        type: 'community_post',
+        timestamp: Date.now()
+      }));
       setShowSignInModal(true);
       return;
     }
@@ -90,12 +100,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
   const handleSignIn = () => {
     setShowSignInModal(false);
-    navigate('/auth');
+    navigate('/login?source=community-post&return=/community');
   };
 
   const handleSignUp = () => {
     setShowSignInModal(false);
-    navigate('/auth');
+    navigate('/signup?source=community-post&return=/community');
   };
 
   return (
@@ -206,6 +216,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
         onClose={() => setShowSignInModal(false)}
         onSignIn={handleSignIn}
         onSignUp={handleSignUp}
+        triggerAction="post"
       />
     </>
   );

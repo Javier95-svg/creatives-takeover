@@ -79,6 +79,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [isReposted, setIsReposted] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [signInTriggerAction, setSignInTriggerAction] = useState<'like' | 'comment' | 'repost' | null>(null);
   const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState<any[]>([]);
   const [localLikes, setLocalLikes] = useState(post.votes);
@@ -165,7 +166,14 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const handleLike = async () => {
     if (!isAuthenticated || !user) {
+      setSignInTriggerAction('like');
       setShowSignInModal(true);
+      // Track conversion trigger
+      sessionStorage.setItem('conversion_source', JSON.stringify({
+        type: 'community_like',
+        post_id: post.id,
+        timestamp: Date.now()
+      }));
       return;
     }
 
@@ -201,7 +209,14 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const handleRepost = async () => {
     if (!isAuthenticated || !user) {
+      setSignInTriggerAction('repost');
       setShowSignInModal(true);
+      // Track conversion trigger
+      sessionStorage.setItem('conversion_source', JSON.stringify({
+        type: 'community_repost',
+        post_id: post.id,
+        timestamp: Date.now()
+      }));
       return;
     }
 
@@ -256,7 +271,14 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const handleAddComment = async () => {
     if (!isAuthenticated || !user) {
+      setSignInTriggerAction('comment');
       setShowSignInModal(true);
+      // Track conversion trigger
+      sessionStorage.setItem('conversion_source', JSON.stringify({
+        type: 'community_comment',
+        post_id: post.id,
+        timestamp: Date.now()
+      }));
       return;
     }
 
@@ -335,11 +357,13 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   };
 
   const handleSignIn = () => {
-    navigate('/login');
+    const source = signInTriggerAction ? `community-${signInTriggerAction}` : 'community';
+    navigate(`/login?source=${source}&return=/community`);
   };
 
   const handleSignUp = () => {
-    navigate('/signup');
+    const source = signInTriggerAction ? `community-${signInTriggerAction}` : 'community';
+    navigate(`/signup?source=${source}&return=/community`);
   };
 
   const displayLocation = (location: string | null | undefined) => {
@@ -615,9 +639,13 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
       
       <SignInModal
         open={showSignInModal}
-        onClose={() => setShowSignInModal(false)}
+        onClose={() => {
+          setShowSignInModal(false);
+          setSignInTriggerAction(null);
+        }}
         onSignIn={handleSignIn}
         onSignUp={handleSignUp}
+        triggerAction={signInTriggerAction}
       />
     </>
   );
