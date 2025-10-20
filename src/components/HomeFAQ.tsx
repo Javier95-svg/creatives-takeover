@@ -280,13 +280,22 @@ const HomeFAQ = () => {
             <p className="text-muted-foreground mb-6">
               We're here to help you succeed. Reach out to us directly.
             </p>
-            <div className="flex justify-center items-center">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <a
                 href="mailto:admin@creatives-takeover.com"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
               >
                 <Mail className="w-5 h-5" />
                 Email Us
+              </a>
+              <a
+                href="https://t.me/creativestakeover"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
+              >
+                <ExternalLink className="w-5 h-5" />
+                Join Our Telegram
               </a>
             </div>
           </div>
