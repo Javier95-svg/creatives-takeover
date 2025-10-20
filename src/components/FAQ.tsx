@@ -62,12 +62,22 @@ const FAQ = () => {
           <p className="text-muted-foreground mb-4">
             Still have questions?
           </p>
-          <a 
-            href="mailto:support@creativestakeover.com" 
-            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
-          >
-            Contact our support team →
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a 
+              href="mailto:admin@creatives-takeover.com" 
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              Email Us →
+            </a>
+            <a 
+              href="https://t.me/creativestakeover" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              Join Our Telegram →
+            </a>
+          </div>
         </div>
       </div>
     </section>
