@@ -349,8 +349,15 @@ const SearchableFAQ = () => {
                 Ask Our Community
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-              Contact Support
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
+              <a href="mailto:admin@creatives-takeover.com">
+                Email Us
+              </a>
+            </Button>
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
+              <a href="https://t.me/creativestakeover" target="_blank" rel="noopener noreferrer">
+                Join Our Telegram
+              </a>
             </Button>
           </div>
         </div>
