@@ -9,8 +9,11 @@ import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
+import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const Index = () => {
+  // Track homepage analytics
+  usePageAnalytics('/', 'Home - Creatives Takeover');
   
   // Clear popup session storage on fresh page load to ensure quiz popup can appear
   useEffect(() => {

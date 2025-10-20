@@ -8,8 +8,11 @@ import {
   CheckCircle,
   Zap
 } from "lucide-react";
+import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const FinalCTA = () => {
+  const { trackClick } = usePageAnalytics();
+  
   return (
     <section className="py-20 lg:py-32 relative overflow-hidden">
       {/* Final CTA Cosmic Wallpaper */}
@@ -76,13 +79,24 @@ const FinalCTA = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <Button size="lg" className="text-lg px-12 py-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90" asChild>
+            <Button 
+              size="lg" 
+              className="text-lg px-12 py-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90" 
+              onClick={() => trackClick('Start My 30-Day Launch', 'Final CTA')}
+              asChild
+            >
               <Link to="/dream2plan">
                 Start My 30-Day Launch
                 <ArrowRight className="ml-3 h-6 w-6" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-12 py-8 border-2 hover:bg-primary/10" asChild>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="text-lg px-12 py-8 border-2 hover:bg-primary/10" 
+              onClick={() => trackClick('Join 15K+ Creatives', 'Final CTA')}
+              asChild
+            >
               <Link to="/community">
                 Join 15K+ Creatives
               </Link>

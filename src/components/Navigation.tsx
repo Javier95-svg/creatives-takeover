@@ -14,6 +14,7 @@ import { NotificationBell } from "@/components/community/NotificationBell";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +22,7 @@ const Navigation = () => {
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const { user, signOut, loading, isAuthenticated } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
+  const { trackClick } = usePageAnalytics();
   
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
@@ -81,6 +83,7 @@ const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={() => trackClick(item.name, 'Navigation')}
                 className={`text-muted-foreground hover:text-foreground transition-colors animated-underline whitespace-nowrap ${
                   item.name === 'BizMap AI' ? 'relative' : ''
                 }`}
