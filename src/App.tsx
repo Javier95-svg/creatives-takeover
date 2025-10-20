@@ -43,6 +43,7 @@ import Profile from "./pages/Profile";
 import Demo from "./pages/Demo";
 import AdminGamification from "./pages/AdminGamification";
 import AdminFeedback from "./pages/AdminFeedback";
+import AdminAnalytics from "./pages/AdminAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/demo" element={<Demo />} />
             <Route path="/admin/gamification" element={<AdminGamification />} />
             <Route path="/admin/feedback" element={<AdminFeedback />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
