@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -354,6 +354,12 @@ const Login = () => {
                   </svg>
                   Continue with Google
                 </Button>
+              </div>
+
+              {/* Security Badge */}
+              <div className="flex items-center justify-center gap-2 pt-2 pb-2 text-xs text-muted-foreground">
+                <Shield className="w-3.5 h-3.5 text-primary/70" />
+                <span>Secure authentication powered by Supabase</span>
               </div>
             </form>
           </CardContent>
