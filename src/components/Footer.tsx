@@ -16,6 +16,24 @@ const Footer = () => {
               London, WC2H 9JQ<br />
               United Kingdom
             </address>
+            
+            {/* Techbase Directory Badge */}
+            <div className="mt-4">
+              <a 
+                href="https://techbasedirectory.com/product/creatives-takeover?utm_source=featured_embed" 
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Featured on Techbase Directory"
+              >
+                <img 
+                  src="https://techbasedirectory.com/api/featured-embed" 
+                  alt="Creatives Takeover | Techbasedirectory.com" 
+                  className="hover:opacity-80 transition-opacity"
+                  width="200" 
+                  height="60"
+                />
+              </a>
+            </div>
           </section>
 
           <section aria-labelledby="footer-contact">
@@ -197,24 +215,6 @@ const Footer = () => {
                   alt="Creatives Takeover badge" 
                   className="hover:opacity-80 transition-opacity"
                   style={{ maxWidth: '150px' }}
-                />
-              </a>
-            </div>
-
-            {/* Techbase Directory Badge */}
-            <div className="mt-4">
-              <a 
-                href="https://techbasedirectory.com/product/creatives-takeover?utm_source=featured_embed" 
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Featured on Techbase Directory"
-              >
-                <img 
-                  src="https://techbasedirectory.com/api/featured-embed" 
-                  alt="Creatives Takeover | Techbasedirectory.com" 
-                  className="hover:opacity-80 transition-opacity"
-                  width="200" 
-                  height="60"
                 />
               </a>
             </div>
