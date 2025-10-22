@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Quote, CheckCircle2 } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const SocialProof = () => {
   const testimonials = [
@@ -120,14 +120,6 @@ const SocialProof = () => {
               </div>
               
               <CardContent className="p-8">
-                {/* Verified Badge */}
-                <div className="mb-4">
-                  <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Verified Launch
-                  </Badge>
-                </div>
-                
                 {/* Rating Stars */}
                 <div className="flex mb-4">
                   {[...Array(5)].map((_, i) => (

@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import heroImage from "@/assets/hero-bg-animated.jpg";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
-import LiveActivityTicker from "./LiveActivityTicker";
-import TrustBadges from "./TrustBadges";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
@@ -152,21 +151,28 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
-            <span className="animated-gradient">Turn Your Creative Idea Into a $5K/Month Business in 30 Days</span>
+            <span className="animated-gradient">The Digital Partner for Building From Zero</span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.2s' }}>
-            Join 2,847 creatives who launched profitable businesses this year. No MBA required, no investors needed.
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.2s' }}>
+            From scattered ideas to a structured plan, validated offer, and profitable launch in 30 days
           </p>
           
-          {/* Trust Badges */}
-          <div className="mb-8 animate-slide-up px-4" style={{ animationDelay: '0.3s' }}>
-            <TrustBadges />
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-8 sm:mb-10 text-xs sm:text-sm text-muted-foreground px-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span>Launch before perfection</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span>No investors needed</span>
+            </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col gap-4 justify-center items-center mb-8 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
             <Button 
               size="lg" 
               className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto" 
@@ -181,24 +187,23 @@ const Hero = () => {
               </Link>
             </Button>
             
-            {isAuthenticated ? (
-              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Already have an account? Go to Dashboard →
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
+              aria-label="Go to Dashboard"
+              onClick={() => trackClick('Go to Dashboard', 'Hero')}
+              asChild
+            >
+              <Link to="/dashboard">
+                <LayoutDashboard className="mr-2 w-4 sm:w-5 h-4 sm:h-5" />
+                <span>Go to Dashboard</span>
               </Link>
-            ) : (
-              <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Already have an account? Sign in →
-              </Link>
-            )}
-          </div>
-
-          {/* Live Activity Ticker */}
-          <div className="mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.5s' }}>
-            <LiveActivityTicker />
+            </Button>
           </div>
 
           {/* Key Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.7s' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.6s' }}>
             <div className="glass-card btn-magnetic p-4 sm:p-6">
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
