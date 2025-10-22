@@ -187,6 +187,22 @@ const Footer = () => {
               </a>
             </div>
 
+            {/* Peerpush Badge */}
+            <div className="mt-4">
+              <a 
+                href="https://peerpush.net/p/creatives-takeover" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Featured on Peerpush"
+              >
+                <img 
+                  src="https://peerpush.net/p/creatives-takeover/badge" 
+                  alt="Creatives Takeover badge" 
+                  className="hover:opacity-80 transition-opacity h-[60px]"
+                />
+              </a>
+            </div>
+
             {/* SaaSHub Badge */}
             <div className="mt-4">
               <a 
@@ -200,22 +216,6 @@ const Footer = () => {
                   alt="Creatives Takeover badge" 
                   className="hover:opacity-80 transition-opacity"
                   style={{ maxWidth: '150px' }}
-                />
-              </a>
-            </div>
-
-            {/* Peerpush Badge */}
-            <div className="mt-4">
-              <a 
-                href="https://peerpush.net/p/creatives-takeover" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Featured on Peerpush"
-              >
-                <img 
-                  src="https://peerpush.net/p/creatives-takeover/badge" 
-                  alt="Creatives Takeover badge" 
-                  className="hover:opacity-80 transition-opacity h-[60px]"
                 />
               </a>
             </div>
