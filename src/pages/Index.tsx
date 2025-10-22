@@ -1,12 +1,8 @@
 import { useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
-import CaseStudyCarousel from "@/components/CaseStudyCarousel";
-import WhatYouGet from "@/components/WhatYouGet";
-import PickYourPath from "@/components/PickYourPath";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import HowItWorks from "@/components/HowItWorks";
-import ComparisonTable from "@/components/ComparisonTable";
 import SocialProof from "@/components/SocialProof";
 import HomeFAQ from "@/components/HomeFAQ";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
@@ -38,12 +34,8 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
-        <CaseStudyCarousel />
-        <WhatYouGet />
-        <PickYourPath />
         <EntrepreneurProblems />
         <HowItWorks />
-        <ComparisonTable />
         <SocialProof />
         <HomeFAQ />
       </main>
