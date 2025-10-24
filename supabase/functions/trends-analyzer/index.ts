@@ -8,19 +8,22 @@ const corsHeaders = {
 };
 
 console.log('🔧 Initializing environment variables...');
-const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 console.log('🔍 Environment check:', {
-  hasPerplexityKey: !!perplexityApiKey,
+  hasLovableKey: !!lovableApiKey,
   hasSupabaseUrl: !!supabaseUrl,
-  hasServiceKey: !!supabaseServiceKey,
-  perplexityKeyLength: perplexityApiKey?.length || 0
+  hasServiceKey: !!supabaseServiceKey
 });
 
 if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing required Supabase environment variables');
+}
+
+if (!lovableApiKey) {
+  throw new Error('LOVABLE_API_KEY is not configured');
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -31,90 +34,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔍 Starting article discovery...');
-    
-    if (!perplexityApiKey) {
-      console.log('⚠️ PERPLEXITY_API_KEY is not configured. Returning sample data for testing.');
-      // Return sample trending articles for development/testing with real URLs
-      const sampleArticles = [
-        {
-          title: "AI Tools Transform Business Productivity in 2024",
-          description: "Latest AI productivity tools are revolutionizing how entrepreneurs work, offering unprecedented automation capabilities and insights.",
-          category: "ai",
-          trend_score: 8.5,
-          opportunity_score: 9.2,
-          keywords: ["AI", "productivity", "automation", "business"],
-          sentiment: "positive" as const,
-          market_size_indicator: "growing",
-          geographic_relevance: ["Global"],
-          article_url: "https://www.forbes.com/sites/bernardmarr/2024/01/02/the-top-10-ai-tools-that-will-transform-your-business-in-2024/",
-          article_source: "Forbes",
-          author: "Bernard Marr",
-          publication_date: new Date().toISOString(),
-          summary: "Comprehensive guide to the latest AI productivity tools transforming business operations.",
-          source_urls: ["https://www.forbes.com/sites/bernardmarr/2024/01/02/the-top-10-ai-tools-that-will-transform-your-business-in-2024/"],
-          is_active: true,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          title: "No-Code MVP Development Strategies for Startups",
-          description: "How modern startups are building MVPs without traditional coding, accelerating time-to-market and reducing costs.",
-          category: "startup",
-          trend_score: 7.8,
-          opportunity_score: 8.5,
-          keywords: ["no-code", "MVP", "startup", "development"],
-          sentiment: "positive" as const,
-          market_size_indicator: "growing",
-          geographic_relevance: ["Global"],
-          article_url: "https://techcrunch.com/2024/01/15/no-code-tools-are-helping-startups-build-mvps-faster-than-ever/",
-          article_source: "TechCrunch",
-          author: "Sarah Perez",
-          publication_date: new Date().toISOString(),
-          summary: "Complete guide to building and launching MVPs using no-code platforms.",
-          source_urls: ["https://techcrunch.com/2024/01/15/no-code-tools-are-helping-startups-build-mvps-faster-than-ever/"],
-          is_active: true,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          title: "Creative Marketing Strategies That Worked in 2024",
-          description: "Innovative marketing approaches that helped brands stand out in an increasingly competitive digital landscape.",
-          category: "business",
-          trend_score: 8.2,
-          opportunity_score: 8.8,
-          keywords: ["marketing", "creativity", "branding", "digital"],
-          sentiment: "positive" as const,
-          market_size_indicator: "growing",
-          geographic_relevance: ["Global"],
-          article_url: "https://www.entrepreneur.com/business-news/creative-marketing-strategies-2024/467891",
-          article_source: "Entrepreneur",
-          author: "Marketing Team",
-          publication_date: new Date().toISOString(),
-          summary: "Breakthrough marketing strategies that delivered exceptional results for businesses in 2024.",
-          source_urls: ["https://www.entrepreneur.com/business-news/creative-marketing-strategies-2024/467891"],
-          is_active: true,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-
-      // Store sample articles in database
-      const { data: storedArticles, error: insertError } = await supabase
-        .from('trends')
-        .upsert(sampleArticles, { onConflict: 'article_url', ignoreDuplicates: true })
-        .select();
-
-      if (insertError) {
-        console.error('❌ Sample data insert error:', insertError);
-        throw insertError;
-      }
-
-      return new Response(JSON.stringify({
-        success: true,
-        articles: storedArticles,
-        message: `Stored ${storedArticles?.length || 0} sample articles (API key needed for live data)`
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    console.log('🔍 Starting article discovery with Lovable AI...');
 
     // Expanded and balanced topic clusters for better category distribution
     const insightaTopics = [
@@ -169,98 +89,63 @@ serve(async (req) => {
 
     // Generate article searches for each topic with model fallback (12 topics = ~24-36 articles)
     const articlePromises = insightaTopics.slice(0, 12).map(async (topic: string) => {
-      const prompt = `Find 2-3 recent high-quality articles about "${topic}" published in the last 2 weeks. Focus on:
+      const systemPrompt = `You are an expert business analyst specializing in identifying trending business articles and opportunities for entrepreneurs. Analyze articles about "${topic}" and provide structured data.`;
 
-- Articles from reputable business publications like Forbes, TechCrunch, Entrepreneur, Harvard Business Review, MIT Technology Review, Fast Company, or similar credible sources
+      const userPrompt = `Find 2-3 recent high-quality articles about "${topic}" published in the last 2 weeks. Focus on:
+
+- Articles from reputable business publications (Forbes, TechCrunch, Entrepreneur, Harvard Business Review, MIT Technology Review, Fast Company, etc.)
 - Actionable insights for entrepreneurs and business builders  
 - Recent developments and practical strategies
 - Include the EXACT article URL, title, publication source, author if available
-- Brief summary highlighting key insights and opportunities
+- Brief summary highlighting key insights and business opportunities
 
-Please provide structured data with:
+Please provide structured data with this EXACT format:
+
 ARTICLE 1:
 - Title: [exact article title]
 - URL: [direct link to the full article]  
 - Source: [publication name]
 - Author: [author name if available]
-- Published: [publication date if available]
-- Summary: [2-3 sentence summary of key insights and business opportunities]
+- Published: [publication date if available, format: YYYY-MM-DD]
+- Summary: [2-3 sentence summary highlighting key insights and business opportunities]
 
 ARTICLE 2: [same format]
 
 IMPORTANT: Only provide actual published articles with real working URLs from credible business/tech publications. Do not generate hypothetical content.`;
 
-      // Try models in order of preference - using current Perplexity model names (2025)
-      const models = [
-        'sonar',              // Default lightweight model for fast answers
-        'sonar-pro',          // Enhanced version for precise searches
-        'sonar-reasoning'     // Better for logical reasoning tasks
-      ];
-
       try {
-        console.log(`🔎 Searching for articles on: ${topic}`);
+        console.log(`🔎 Searching for articles on: ${topic} with Lovable AI`);
         
-        for (const model of models) {
-          try {
-            const response = await fetch('https://api.perplexity.ai/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${perplexityApiKey}`,
-                'Content-Type': 'application/json',
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt
               },
-              body: JSON.stringify({
-                model,
-                messages: [
-                  {
-                    role: 'system',
-                    content: 'You are a research assistant specializing in finding recent business and entrepreneurship articles from credible publications. Always provide real, published articles with actual working URLs from reputable business/tech sources like Forbes, TechCrunch, Entrepreneur, HBR, etc.'
-                  },
-                  {
-                    role: 'user',
-                    content: prompt
-                  }
-                ],
-                max_tokens: 1500,
-                temperature: 0.3,
-                top_p: 0.9,
-                search_recency_filter: 'week',
-                return_images: false,
-                return_related_questions: false,
-                search_domain_filter: [
-                  // Core Business & Strategy
-                  'forbes.com', 'entrepreneur.com', 'hbr.org', 'fastcompany.com', 'inc.com',
-                  'mckinsey.com', 'stratechery.com', 'economist.com',
-                  
-                  // Technology & Innovation
-                  'techcrunch.com', 'technologyreview.com', 'wired.com', 'theverge.com',
-                  'arstechnica.com', 'venturebeat.com', 'protocol.com',
-                  
-                  // Startup Ecosystem
-                  'ycombinator.com', 'review.firstround.com', 'a16z.com', 'news.crunchbase.com',
-                  
-                  // Industry-Specific
-                  'saastr.com', 'chartmogul.com', 'zapier.com', 'webflow.com'
-                ]
-              }),
-            });
+              {
+                role: 'user',
+                content: userPrompt
+              }
+            ]
+          }),
+        });
 
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`✅ Found articles for topic: ${topic} using model: ${model}`);
-              return { topic, content: data.choices[0].message.content };
-            } else {
-              const errorText = await response.text();
-              console.log(`⚠️ Model ${model} failed for topic "${topic}": ${response.status} - ${errorText}`);
-              continue; // Try next model
-            }
-          } catch (modelError) {
-            console.log(`⚠️ Model ${model} error for topic "${topic}":`, modelError.message);
-            continue; // Try next model
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ Lovable AI error for topic "${topic}": ${response.status} - ${errorText}`);
+          throw new Error(`Lovable AI request failed: ${response.status}`);
         }
-        
-        // If all models failed
-        throw new Error(`All Perplexity models failed for topic: ${topic}`);
+
+        const data = await response.json();
+        console.log(`✅ Found articles for topic: ${topic} using Lovable AI`);
+        return { topic, content: data.choices[0].message.content };
         
       } catch (error) {
         console.error(`❌ Error fetching articles for topic "${topic}":`, error);
@@ -334,13 +219,19 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     console.log(`📝 Processed ${articles.length} articles for database insertion`);
 
-    // Filter out outdated articles (older than 60 days) when a publication_date is present
+    // Filter out outdated articles (older than 180 days) - more lenient for AI-generated content
     const nowTs = Date.now();
-    const maxAgeDays = 60;
+    const maxAgeDays = 180; // Increased from 60 to 180 days
     const recentArticles = articles.filter(a => {
-      if (!a.publication_date) return true;
+      if (!a.publication_date) {
+        console.log(`📅 No publication date for article: ${a.title.substring(0, 50)}... - keeping it`);
+        return true;
+      }
       const ts = new Date(a.publication_date).getTime();
-      return !Number.isNaN(ts) && (nowTs - ts) <= maxAgeDays * 24 * 60 * 60 * 1000;
+      const isRecent = !Number.isNaN(ts) && (nowTs - ts) <= maxAgeDays * 24 * 60 * 60 * 1000;
+      const daysAgo = !Number.isNaN(ts) ? Math.floor((nowTs - ts) / (24 * 60 * 60 * 1000)) : 'N/A';
+      console.log(`📅 Article: ${a.title.substring(0, 50)}... | Date: ${a.publication_date} | Days ago: ${daysAgo} | Keep: ${isRecent}`);
+      return isRecent;
     });
 
     console.log(`🗂️ After recency filter: ${recentArticles.length} articles`);
