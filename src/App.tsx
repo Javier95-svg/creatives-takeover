@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { UserProvider } from "@/contexts/UserContext";
+import { ProgressProvider } from "@/contexts/ProgressContext";
 import MobileOptimization from "@/components/MobileOptimization";
 import Index from "./pages/Index";
 import CreativesTakeover from "./pages/CreativesTakeover";
@@ -50,13 +52,15 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <MobileOptimization />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
+      <UserProvider>
+        <ProgressProvider>
+          <TooltipProvider>
+            <MobileOptimization />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/creatives-takeover" element={<CreativesTakeover />} />
             <Route path="/software" element={<Software />} />
@@ -100,7 +104,9 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+          </TooltipProvider>
+        </ProgressProvider>
+      </UserProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
