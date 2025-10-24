@@ -132,6 +132,10 @@ export const WizardConversionPrompt = ({
     );
   }
 
+  // REMOVED: Completion Gate (was blocking users from seeing their report)
+  // Now users see their report immediately, with optional signup CTA in ReportDisplay component
+  
+  /*
   // Completion Gate (Final step - blocking)
   if (variant === 'completion-gate') {
     return (
@@ -183,6 +187,7 @@ export const WizardConversionPrompt = ({
       </Dialog>
     );
   }
+  */
 
   return null;
 };

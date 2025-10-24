@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { useNavigate } from "react-router-dom";
+import { useChatBotStore } from "@/store/chatBotStore";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -130,11 +131,11 @@ export const BizMapChat = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { addStepResponse } = useChatBotStore();
   
   // Conversion prompt state
   const [showInlineBanner, setShowInlineBanner] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showCompletionGate, setShowCompletionGate] = useState(false);
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
@@ -160,7 +161,15 @@ export const BizMapChat = ({
       currentStep,
       steps: wizardSteps,
       answers,
-      onStepComplete,
+      onStepComplete: (step, answer) => {
+        // Track in Zustand store (convert 0-indexed to 1-indexed)
+        addStepResponse(step + 1, {
+          [wizardSteps[step].key]: answer
+        });
+        
+        // Call parent handler
+        onStepComplete(step, answer);
+      },
       onWizardComplete
     }
   });
@@ -210,7 +219,6 @@ export const BizMapChat = ({
       // User is authenticated, don't show prompts
       setShowInlineBanner(false);
       setShowModal(false);
-      setShowCompletionGate(false);
       return;
     }
 
@@ -223,12 +231,6 @@ export const BizMapChat = ({
     // Step 7-8: Show modal if banner was dismissed
     if ((currentStep === 6 || currentStep === 7) && conversionPromptDismissed && !showModal && chatMode === 'wizard') {
       setShowModal(true);
-      trackConversionEvent('shown', currentStep + 1);
-    }
-
-    // Final step: Show completion gate
-    if (currentStep >= wizardSteps.length - 1 && chatMode === 'wizard' && !user) {
-      setShowCompletionGate(true);
       trackConversionEvent('shown', currentStep + 1);
     }
   }, [currentStep, user, conversionPromptShown, conversionPromptDismissed, chatMode, wizardSteps.length, trackConversionEvent]);
@@ -294,14 +296,6 @@ export const BizMapChat = ({
         variant="modal"
         show={showModal}
         onDismiss={handleDismiss}
-        onSignUp={handleSignUpClick}
-      />
-      <WizardConversionPrompt
-        step={currentStep}
-        triggerStep={wizardSteps.length - 1}
-        variant="completion-gate"
-        show={showCompletionGate}
-        onDismiss={() => {}}
         onSignUp={handleSignUpClick}
       />
       

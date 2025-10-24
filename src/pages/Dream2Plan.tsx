@@ -31,6 +31,8 @@ import { ArrowLeft, Zap } from "lucide-react";
 import PDFGenerator from "@/components/PDFGenerator";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import { BizMapChat } from "@/components/BizMapChat";
+import { useChatBotStore } from "@/store/chatBotStore";
+import { ReportDisplay } from "@/components/ReportDisplay";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -49,6 +51,7 @@ const BizMapAI = () => {
   const [launchReport, setLaunchReport] = useState("");
   const [successScore, setSuccessScore] = useState<any>(null);
   const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
+  const [showReport, setShowReport] = useState(false);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -62,6 +65,7 @@ const BizMapAI = () => {
   const { user, isAuthenticated } = useAuth();
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
   const { sprints, currentSprint, setCurrentSprint } = useSprints();
+  const { generateReport } = useChatBotStore();
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
   
@@ -1138,7 +1142,15 @@ Subject: "Quick question about [their pain point]"
                           }));
                         }}
                         onWizardComplete={(finalAnswers) => {
+                          // Save answers to parent state
                           setUserAnswers(prev => ({ ...prev, ...finalAnswers }));
+                          
+                          // Generate report from Zustand store
+                          const report = generateReport();
+                          setLaunchReport(report);
+                          setShowReport(true);
+                          
+                          // Still call backend for success score (existing functionality)
                           generateLaunchReport(finalAnswers);
                         }}
                         currentStep={currentStep}
@@ -1150,6 +1162,22 @@ Subject: "Quick question about [their pain point]"
                     </div>
                   </div>
                 </div>
+
+                {/* Business Report Display */}
+                {showReport && launchReport && (
+                  <div className="mb-8">
+                    <ReportDisplay 
+                      report={launchReport}
+                      onDownloadPDF={() => {
+                        // Trigger existing PDF generator
+                        const pdfButton = document.querySelector('[data-pdf-download]') as HTMLButtonElement;
+                        if (pdfButton) {
+                          pdfButton.click();
+                        }
+                      }}
+                    />
+                  </div>
+                )}
              
                 {/* Full Width Sections */}
                 {/* Interactive Progress Visualization - Synchronized with chatbot */}
