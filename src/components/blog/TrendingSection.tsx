@@ -61,8 +61,8 @@ const TrendingSection = ({
         return true;
       });
   
-  // Show maximum of 12 articles after filtering
-  const displayedTrends = categoryFilteredTrends.slice(0, 12);
+  // Show maximum of 48 articles after filtering (4 rows of 12)
+  const displayedTrends = categoryFilteredTrends.slice(0, 48);
 
   const handleRefresh = async () => {
     try {
@@ -266,7 +266,7 @@ const TrendingSection = ({
           </div>
         )}
 
-        {categoryFilteredTrends.length > 12 && (
+        {categoryFilteredTrends.length > 48 && (
           <div className="text-center mt-8">
             <p className="text-muted-foreground text-sm">
               Showing {displayedTrends.length} of {categoryFilteredTrends.length} opportunities

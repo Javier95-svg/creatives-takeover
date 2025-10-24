@@ -165,10 +165,10 @@ serve(async (req) => {
       'side hustle to full-time business transition'
     ];
 
-    console.log('📰 Searching for articles on topics:', insightaTopics.slice(0, 4));
+    console.log('📰 Searching for articles on topics:', insightaTopics.slice(0, 12));
 
-    // Generate article searches for each topic with model fallback
-    const articlePromises = insightaTopics.slice(0, 4).map(async (topic: string) => {
+    // Generate article searches for each topic with model fallback (12 topics = ~24-36 articles)
+    const articlePromises = insightaTopics.slice(0, 12).map(async (topic: string) => {
       const prompt = `Find 2-3 recent high-quality articles about "${topic}" published in the last 2 weeks. Focus on:
 
 - Articles from reputable business publications like Forbes, TechCrunch, Entrepreneur, Harvard Business Review, MIT Technology Review, Fast Company, or similar credible sources
