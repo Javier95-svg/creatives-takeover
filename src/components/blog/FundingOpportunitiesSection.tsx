@@ -30,36 +30,47 @@ const FundingOpportunitiesSection = () => {
 
   return (
     <section className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/20">
-      {/* Funding Wallpaper - Hexagon Pattern */}
+      {/* Funding Wallpaper - Topographic Contour Lines */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Hexagonal pattern */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{
-          backgroundImage: `radial-gradient(circle, hsl(var(--accent)) 1px, transparent 1px)`,
-          backgroundSize: '30px 30px'
-        }} />
+        {/* Contour lines - layered */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="contours" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+              <path d="M 20,100 Q 60,80 100,100 T 180,100" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" />
+              <path d="M 30,120 Q 70,100 110,120 T 190,120" stroke="hsl(var(--primary))" strokeWidth="0.8" fill="none" />
+              <path d="M 15,80 Q 55,60 95,80 T 175,80" stroke="hsl(var(--accent))" strokeWidth="0.6" fill="none" />
+              <path d="M 40,140 Q 80,120 120,140 T 200,140" stroke="hsl(var(--secondary))" strokeWidth="0.5" fill="none" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#contours)" />
+        </svg>
         
-        {/* Circular gradient rings */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full border border-primary/5 blur-sm" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full border border-accent/5 blur-sm" />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 rounded-full border border-secondary/5" />
+        {/* Geometric corner accents */}
+        <div className="absolute top-0 left-0 w-64 h-64 opacity-[0.04]">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="0" x2="256" y2="0" stroke="hsl(var(--primary))" strokeWidth="1" />
+            <line x1="0" y1="0" x2="0" y2="256" stroke="hsl(var(--primary))" strokeWidth="1" />
+            <line x1="0" y1="50" x2="206" y2="50" stroke="hsl(var(--accent))" strokeWidth="0.5" />
+            <line x1="50" y1="0" x2="50" y2="206" stroke="hsl(var(--accent))" strokeWidth="0.5" />
+          </svg>
+        </div>
         
-        {/* Diagonal waves */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `repeating-linear-gradient(
-            -45deg,
-            hsl(var(--accent)),
-            hsl(var(--accent)) 1px,
-            transparent 1px,
-            transparent 30px
-          )`
-        }} />
+        <div className="absolute bottom-0 right-0 w-64 h-64 opacity-[0.04] rotate-180">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="0" x2="256" y2="0" stroke="hsl(var(--secondary))" strokeWidth="1" />
+            <line x1="0" y1="0" x2="0" y2="256" stroke="hsl(var(--secondary))" strokeWidth="1" />
+            <line x1="0" y1="50" x2="206" y2="50" stroke="hsl(var(--primary))" strokeWidth="0.5" />
+            <line x1="50" y1="0" x2="50" y2="206" stroke="hsl(var(--primary))" strokeWidth="0.5" />
+          </svg>
+        </div>
         
-        {/* Radial gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tl from-accent/8 via-transparent to-primary/8" />
+        {/* Radial gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/6 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-tl from-primary/6 via-transparent to-transparent" />
         
-        {/* Spotlight effects */}
-        <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-accent/8 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-primary/8 to-transparent blur-3xl" />
+        {/* Soft glow effects */}
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
         
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
       </div>
