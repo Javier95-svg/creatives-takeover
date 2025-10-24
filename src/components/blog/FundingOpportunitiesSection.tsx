@@ -30,27 +30,38 @@ const FundingOpportunitiesSection = () => {
 
   return (
     <section className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/20">
-      {/* Animated Background Wallpaper - unique pattern for funding */}
+      {/* Funding Wallpaper - Hexagon Pattern */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Base gradient layer */}
+        {/* Hexagonal pattern */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: `radial-gradient(circle, hsl(var(--accent)) 1px, transparent 1px)`,
+          backgroundSize: '30px 30px'
+        }} />
+        
+        {/* Circular gradient rings */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full border border-primary/5 blur-sm" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full border border-accent/5 blur-sm" />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 rounded-full border border-secondary/5" />
+        
+        {/* Diagonal waves */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `repeating-linear-gradient(
+            -45deg,
+            hsl(var(--accent)),
+            hsl(var(--accent)) 1px,
+            transparent 1px,
+            transparent 30px
+          )`
+        }} />
+        
+        {/* Radial gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-tl from-accent/8 via-transparent to-primary/8" />
+        
+        {/* Spotlight effects */}
+        <div className="absolute top-0 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-accent/8 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-primary/8 to-transparent blur-3xl" />
+        
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
-        
-        {/* Animated floating elements - distinct from trends section */}
-        <div className="absolute top-24 right-[12%] w-4 h-4 bg-accent/50 rounded-full animate-spiral opacity-65" />
-        <div className="absolute top-40 left-[18%] w-6 h-6 bg-primary/45 rounded-full animate-figure-eight opacity-55" style={{ animationDelay: '0.8s' }} />
-        <div className="absolute bottom-32 right-[22%] w-3 h-3 bg-secondary/60 rounded-full animate-float opacity-70" style={{ animationDelay: '1.6s' }} />
-        <div className="absolute top-1/2 left-[28%] w-5 h-5 bg-accent/35 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.4s' }} />
-        <div className="absolute bottom-1/2 right-[35%] w-7 h-7 bg-gradient-to-br from-secondary/25 to-primary/25 rounded-full animate-diagonal-float opacity-45 blur-sm" style={{ animationDelay: '3.2s' }} />
-        <div className="absolute top-56 right-[45%] w-4 h-4 bg-primary/55 rounded-full animate-zigzag opacity-60" style={{ animationDelay: '4s' }} />
-        <div className="absolute bottom-56 left-[40%] w-2 h-2 bg-accent/65 rounded-full animate-float-reverse opacity-75" style={{ animationDelay: '4.8s' }} />
-        <div className="absolute top-72 left-[50%] w-9 h-9 bg-gradient-to-r from-primary/18 to-transparent rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '5.6s' }} />
-        
-        {/* Extra gradient orbs for funding theme */}
-        <div className="absolute bottom-72 right-[28%] w-3 h-3 bg-secondary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '6.4s' }} />
-        <div className="absolute top-96 right-[15%] w-5 h-5 bg-primary/40 rounded-full animate-spiral opacity-55" style={{ animationDelay: '7.2s' }} />
-        <div className="absolute bottom-96 left-[32%] w-6 h-6 bg-gradient-to-tl from-accent/20 to-secondary/20 rounded-full animate-figure-eight opacity-40 blur-sm" style={{ animationDelay: '8s' }} />
-        <div className="absolute top-[30%] left-[8%] w-4 h-4 bg-primary/48 rounded-full animate-zigzag opacity-58" style={{ animationDelay: '8.8s' }} />
       </div>
       
       {/* Decorative Wave */}
