@@ -277,7 +277,7 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
                 className="flex-1 text-xs h-8"
               >
                 <Lightbulb className="h-3 w-3 mr-1" />
-                {isArticle ? 'Visit Program' : 'Create Business Plan'}
+                {isArticle ? 'Read Full Article' : 'Create Business Plan'}
                 <ArrowRight className="h-3 w-3 ml-1" />
               </Button>
             ) : (
