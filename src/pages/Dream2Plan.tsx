@@ -1180,7 +1180,15 @@ Subject: "Quick question about [their pain point]"
                 )}
              
                 {/* Full Width Sections */}
-                {/* Progress indicator removed - chat has built-in progress bar in header */}
+                {/* 7-Step Progress Timeline - Non-blocking visual tracker */}
+                <div className="animate-fade-in mb-8">
+                  <InteractiveProgress
+                    currentStep={currentStep}
+                    totalSteps={wizardSteps.length}
+                    stepTitles={wizardSteps.map(step => step.title)}
+                    isComplete={!!launchReport}
+                  />
+                </div>
 
                 {/* Where to Start Guide Section */}
                 <div className="mt-12 sm:mt-16 animate-fade-in" style={{ animationDelay: '0.4s' }}>
