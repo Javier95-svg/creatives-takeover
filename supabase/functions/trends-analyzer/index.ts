@@ -8,12 +8,12 @@ const corsHeaders = {
 };
 
 console.log('🔧 Initializing environment variables...');
-const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 console.log('🔍 Environment check:', {
-  hasLovableKey: !!lovableApiKey,
+  hasPerplexityKey: !!perplexityApiKey,
   hasSupabaseUrl: !!supabaseUrl,
   hasServiceKey: !!supabaseServiceKey
 });
@@ -22,8 +22,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing required Supabase environment variables');
 }
 
-if (!lovableApiKey) {
-  throw new Error('LOVABLE_API_KEY is not configured');
+if (!perplexityApiKey) {
+  throw new Error('PERPLEXITY_API_KEY is not configured');
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -34,7 +34,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔍 Starting article discovery with Lovable AI...');
+    console.log('🔍 Starting article discovery with Perplexity AI...');
 
     // Expanded and balanced topic clusters for better category distribution
     const insightaTopics = [
@@ -114,16 +114,16 @@ ARTICLE 2: [same format]
 IMPORTANT: Only provide actual published articles with real working URLs from credible business/tech publications. Do not generate hypothetical content.`;
 
       try {
-        console.log(`🔎 Searching for articles on: ${topic} with Lovable AI`);
+        console.log(`🔎 Searching for articles on: ${topic} with Perplexity AI`);
         
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const response = await fetch('https://api.perplexity.ai/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
+            'Authorization': `Bearer ${perplexityApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'llama-3.1-sonar-large-128k-online',
             messages: [
               {
                 role: 'system',
@@ -133,18 +133,20 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
                 role: 'user',
                 content: userPrompt
               }
-            ]
+            ],
+            temperature: 0.2,
+            max_tokens: 2000,
           }),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`❌ Lovable AI error for topic "${topic}": ${response.status} - ${errorText}`);
-          throw new Error(`Lovable AI request failed: ${response.status}`);
+          console.error(`❌ Perplexity AI error for topic "${topic}": ${response.status} - ${errorText}`);
+          throw new Error(`Perplexity AI request failed: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log(`✅ Found articles for topic: ${topic} using Lovable AI`);
+        console.log(`✅ Found articles for topic: ${topic} using Perplexity AI`);
         return { topic, content: data.choices[0].message.content };
         
       } catch (error) {
@@ -219,9 +221,9 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     console.log(`📝 Processed ${articles.length} articles for database insertion`);
 
-    // Filter out outdated articles (older than 180 days) - more lenient for AI-generated content
+    // Filter out outdated articles (older than 60 days)
     const nowTs = Date.now();
-    const maxAgeDays = 180; // Increased from 60 to 180 days
+    const maxAgeDays = 60;
     const recentArticles = articles.filter(a => {
       if (!a.publication_date) {
         console.log(`📅 No publication date for article: ${a.title.substring(0, 50)}... - keeping it`);
