@@ -4179,10 +4179,7 @@ export type Database = {
       }
     }
     Functions: {
-      archive_old_memories: {
-        Args: { days_old?: number }
-        Returns: number
-      }
+      archive_old_memories: { Args: { days_old?: number }; Returns: number }
       award_reputation_points: {
         Args: {
           p_action_type: string
@@ -4192,10 +4189,6 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
-      }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
       }
       calculate_business_success_score: {
         Args: { answers: Json }
@@ -4213,22 +4206,10 @@ export type Database = {
           next_threshold: number
         }[]
       }
-      check_and_award_badges: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      cleanup_expired_ai_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_analytics_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_insights: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_and_award_badges: { Args: { p_user_id: string }; Returns: Json }
+      cleanup_expired_ai_cache: { Args: never; Returns: undefined }
+      cleanup_expired_analytics_cache: { Args: never; Returns: undefined }
+      cleanup_expired_insights: { Args: never; Returns: undefined }
       complete_daily_challenge: {
         Args: {
           p_challenge_id: string
@@ -4309,7 +4290,7 @@ export type Database = {
         }[]
       }
       get_todays_challenge: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           challenge_description: string
           challenge_title: string
@@ -4320,26 +4301,7 @@ export type Database = {
           reward_points: number
         }[]
       }
-      grant_monthly_credits: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
+      grant_monthly_credits: { Args: never; Returns: undefined }
       has_completed_todays_challenge: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -4351,50 +4313,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: unknown
-      }
-      refresh_admin_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      refresh_expired_trends: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      refresh_admin_analytics: { Args: never; Returns: undefined }
+      refresh_expired_trends: { Args: never; Returns: undefined }
       search_similar_memories: {
         Args: {
           memory_kind?: string
@@ -4411,53 +4331,11 @@ export type Database = {
           similarity: number
         }[]
       }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      trigger_memory_summarization: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_market_data_freshness: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      trigger_memory_summarization: { Args: never; Returns: undefined }
+      update_market_data_freshness: { Args: never; Returns: undefined }
       update_user_subscription_tier: {
         Args: { is_subscribed?: boolean; new_tier: string; user_email: string }
         Returns: undefined
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
     }
     Enums: {
