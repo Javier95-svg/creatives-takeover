@@ -30,11 +30,31 @@ const FundingOpportunitiesSection = () => {
 
   return (
     <section className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/20">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+      {/* Animated Background Wallpaper - unique pattern for funding */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Base gradient layer */}
+        <div className="absolute inset-0 bg-gradient-to-tl from-accent/8 via-transparent to-primary/8" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+        
+        {/* Animated floating elements - distinct from trends section */}
+        <div className="absolute top-24 right-[12%] w-4 h-4 bg-accent/50 rounded-full animate-spiral opacity-65" />
+        <div className="absolute top-40 left-[18%] w-6 h-6 bg-primary/45 rounded-full animate-figure-eight opacity-55" style={{ animationDelay: '0.8s' }} />
+        <div className="absolute bottom-32 right-[22%] w-3 h-3 bg-secondary/60 rounded-full animate-float opacity-70" style={{ animationDelay: '1.6s' }} />
+        <div className="absolute top-1/2 left-[28%] w-5 h-5 bg-accent/35 rounded-full animate-orbit opacity-50" style={{ animationDelay: '2.4s' }} />
+        <div className="absolute bottom-1/2 right-[35%] w-7 h-7 bg-gradient-to-br from-secondary/25 to-primary/25 rounded-full animate-diagonal-float opacity-45 blur-sm" style={{ animationDelay: '3.2s' }} />
+        <div className="absolute top-56 right-[45%] w-4 h-4 bg-primary/55 rounded-full animate-zigzag opacity-60" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-56 left-[40%] w-2 h-2 bg-accent/65 rounded-full animate-float-reverse opacity-75" style={{ animationDelay: '4.8s' }} />
+        <div className="absolute top-72 left-[50%] w-9 h-9 bg-gradient-to-r from-primary/18 to-transparent rounded-full animate-orbit opacity-35 blur-md" style={{ animationDelay: '5.6s' }} />
+        
+        {/* Extra gradient orbs for funding theme */}
+        <div className="absolute bottom-72 right-[28%] w-3 h-3 bg-secondary/50 rounded-full animate-drift opacity-70" style={{ animationDelay: '6.4s' }} />
+        <div className="absolute top-96 right-[15%] w-5 h-5 bg-primary/40 rounded-full animate-spiral opacity-55" style={{ animationDelay: '7.2s' }} />
+        <div className="absolute bottom-96 left-[32%] w-6 h-6 bg-gradient-to-tl from-accent/20 to-secondary/20 rounded-full animate-figure-eight opacity-40 blur-sm" style={{ animationDelay: '8s' }} />
+        <div className="absolute top-[30%] left-[8%] w-4 h-4 bg-primary/48 rounded-full animate-zigzag opacity-58" style={{ animationDelay: '8.8s' }} />
+      </div>
       
       {/* Decorative Wave */}
-      <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
+      <svg className="absolute top-0 left-0 w-full h-24 opacity-20 z-10" preserveAspectRatio="none" viewBox="0 0 1200 120">
         <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#fundingWaveGradient)" />
         <defs>
           <linearGradient id="fundingWaveGradient" x1="0%" y1="0%" x2="100%" y2="0%">

@@ -175,12 +175,32 @@ const TrendingSection = ({
       data-section="opportunities"
       className="py-20 relative overflow-hidden -mt-32 pt-40"
     >
-      {/* Unified Background with Gradient Blend */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+      {/* Animated Background Wallpaper */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Base gradient layer */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+        
+        {/* Animated floating elements - unique pattern for trends */}
+        <div className="absolute top-20 left-[10%] w-3 h-3 bg-primary/60 rounded-full animate-float opacity-70" />
+        <div className="absolute top-32 right-[15%] w-5 h-5 bg-secondary/50 rounded-full animate-spiral opacity-60" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-40 left-[25%] w-4 h-4 bg-accent/40 rounded-full animate-zigzag opacity-50" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/3 right-[20%] w-6 h-6 bg-primary/40 rounded-full animate-diagonal-float opacity-60" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-1/3 left-[15%] w-3 h-3 bg-secondary/60 rounded-full animate-orbit opacity-55" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-2/3 right-[30%] w-7 h-7 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full animate-figure-eight opacity-45 blur-sm" style={{ animationDelay: '2.5s' }} />
+        <div className="absolute bottom-1/4 left-[35%] w-2 h-2 bg-primary/70 rounded-full animate-drift opacity-80" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/4 left-[45%] w-8 h-8 bg-gradient-to-l from-secondary/15 to-transparent rounded-full animate-spiral opacity-30 blur-md" style={{ animationDelay: '5s' }} />
+        
+        {/* Additional particles for depth */}
+        <div className="absolute top-48 right-[40%] w-2 h-2 bg-accent/50 rounded-full animate-float-reverse opacity-70" style={{ animationDelay: '3.5s' }} />
+        <div className="absolute bottom-60 right-[25%] w-4 h-4 bg-primary/45 rounded-full animate-zigzag opacity-65" style={{ animationDelay: '6s' }} />
+        <div className="absolute top-80 left-[20%] w-5 h-5 bg-secondary/35 rounded-full animate-orbit opacity-50" style={{ animationDelay: '4.5s' }} />
+        <div className="absolute bottom-80 right-[35%] w-6 h-6 bg-gradient-to-br from-primary/25 to-secondary/25 rounded-full animate-diagonal-float opacity-40 blur-sm" style={{ animationDelay: '7s' }} />
+      </div>
       
       {/* Decorative Wave Bridge */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none" />
-      <svg className="absolute top-0 left-0 w-full h-24 opacity-20" preserveAspectRatio="none" viewBox="0 0 1200 120">
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/0 via-background/40 to-background/80 pointer-events-none z-10" />
+      <svg className="absolute top-0 left-0 w-full h-24 opacity-20 z-10" preserveAspectRatio="none" viewBox="0 0 1200 120">
         <path d="M0,50 C300,20 600,80 900,50 C1050,35 1150,60 1200,50 L1200,0 L0,0 Z" fill="url(#waveGradient)" />
         <defs>
           <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
