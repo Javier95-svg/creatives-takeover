@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Sparkles, TrendingUp, Lightbulb, DollarSign, Zap, Grid3x3 } from "lucide-react";
+import { Sparkles, TrendingUp, DollarSign, Grid3x3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const categories = [
   { id: "all", label: "All", icon: Grid3x3 },
   { id: "ai-tech", label: "AI & Tech", icon: Sparkles },
   { id: "business", label: "Business", icon: TrendingUp },
-  { id: "marketing", label: "Marketing", icon: Lightbulb },
   { id: "funding", label: "Funding", icon: DollarSign },
-  { id: "productivity", label: "Productivity", icon: Zap },
 ];
 
 interface CategoryTabsProps {

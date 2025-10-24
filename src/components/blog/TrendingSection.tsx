@@ -73,9 +73,7 @@ const TrendingSection = ({
         
         if (selectedCategory === "ai-tech") return allTerms.some(t => t.includes("ai") || t.includes("tech") || t.includes("software") || t.includes("automation"));
         if (selectedCategory === "business") return allTerms.some(t => t.includes("business") || t.includes("startup") || t.includes("entrepreneur") || t.includes("market"));
-        if (selectedCategory === "marketing") return allTerms.some(t => t.includes("marketing") || t.includes("social") || t.includes("brand") || t.includes("advertising"));
         if (selectedCategory === "funding") return allTerms.some(t => t.includes("funding") || t.includes("investment") || t.includes("venture") || t.includes("capital"));
-        if (selectedCategory === "productivity") return allTerms.some(t => t.includes("productivity") || t.includes("efficiency") || t.includes("workflow") || t.includes("tool"));
         return true;
       });
   
