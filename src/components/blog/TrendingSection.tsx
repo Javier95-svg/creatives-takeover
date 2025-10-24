@@ -7,6 +7,7 @@ import SearchFilters from "./SearchFilters";
 import CategoryTabs from "./CategoryTabs";
 import { useTrends } from "@/hooks/useTrends";
 import { useSearch } from "@/hooks/useSearch";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import opportunitiesImage from "@/assets/opportunities-bg.jpg";
 
 interface TrendingSectionProps {
@@ -14,6 +15,23 @@ interface TrendingSectionProps {
   selectedCategory?: string;
   onCategoryChange?: (category: string) => void;
 }
+
+const AnimatedTrendCard = ({ trend, index }: { trend: any; index: number }) => {
+  const { ref, isVisible } = useScrollAnimation(index * 50);
+  
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ${
+        isVisible 
+          ? 'opacity-100 translate-y-0' 
+          : 'opacity-0 translate-y-8'
+      }`}
+    >
+      <TrendCard trend={trend} />
+    </div>
+  );
+};
 
 const TrendingSection = ({ 
   searchTerm, 
@@ -253,10 +271,11 @@ const TrendingSection = ({
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {displayedTrends.map((trend) => (
-            <TrendCard 
+          {displayedTrends.map((trend, index) => (
+            <AnimatedTrendCard 
               key={trend.id} 
               trend={trend}
+              index={index}
             />
           ))}
         </div>
