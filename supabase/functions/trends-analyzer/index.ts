@@ -190,13 +190,11 @@ ARTICLE 2: [same format]
 
 IMPORTANT: Only provide actual published articles with real working URLs from credible business/tech publications. Do not generate hypothetical content.`;
 
-      // Try models in order of preference - using current Perplexity model names
+      // Try models in order of preference - using current Perplexity model names (2025)
       const models = [
-        'sonar',
-        'sonar-small-online',
-        'sonar-medium-online',
-        'sonar-large-online',
-        'llama-3.1-sonar-small-128k-online' // fallback to old naming
+        'sonar',              // Default lightweight model for fast answers
+        'sonar-pro',          // Enhanced version for precise searches
+        'sonar-reasoning'     // Better for logical reasoning tasks
       ];
 
       try {

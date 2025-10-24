@@ -56,7 +56,7 @@ export const useTrends = () => {
         .gt('expires_at', new Date().toISOString())
         .order('opportunity_score', { ascending: false })
         .order('trend_score', { ascending: false })
-        .limit(20);
+        .limit(60);
 
       console.log('📊 Fetch trends result:', { data, error: fetchError, count: data?.length });
 
