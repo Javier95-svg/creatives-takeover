@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { RefreshCw, Rss, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
+import { RefreshCw, Rss, TrendingUp, AlertCircle, CheckCircle2, Database, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 export const ArticleGenerator = () => {
   const [isGeneratingRSS, setIsGeneratingRSS] = useState(false);
   const [isGeneratingTrends, setIsGeneratingTrends] = useState(false);
   const [rssResult, setRssResult] = useState<any>(null);
   const [trendsResult, setTrendsResult] = useState<any>(null);
+  const [articleCount, setArticleCount] = useState<number>(0);
+  const [loadingCount, setLoadingCount] = useState(true);
+  const [autoRunning, setAutoRunning] = useState(false);
+  const [autoRunProgress, setAutoRunProgress] = useState(0);
 
   const triggerRSSFetcher = async () => {
     try {
@@ -55,13 +61,98 @@ export const ArticleGenerator = () => {
     }
   };
 
+  const fetchArticleCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('trends')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .gt('expires_at', new Date().toISOString());
+
+      if (error) throw error;
+      setArticleCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching article count:', error);
+    } finally {
+      setLoadingCount(false);
+    }
+  };
+
   const triggerBoth = async () => {
     await triggerRSSFetcher();
     await triggerTrendsAnalyzer();
+    await fetchArticleCount();
   };
+
+  const autoGenerateArticles = async () => {
+    try {
+      setAutoRunning(true);
+      setAutoRunProgress(0);
+      toast.info("Starting automatic article generation (4 cycles)...");
+
+      for (let i = 1; i <= 4; i++) {
+        toast.info(`Cycle ${i}/4: Fetching articles...`);
+        
+        // Run RSS fetcher
+        await triggerRSSFetcher();
+        setAutoRunProgress((i - 0.5) * 25);
+        
+        // Wait 2 seconds between fetches
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Run trends analyzer
+        await triggerTrendsAnalyzer();
+        setAutoRunProgress(i * 25);
+        
+        // Wait 3 seconds before next cycle
+        if (i < 4) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+
+      await fetchArticleCount();
+      toast.success("Auto-generation complete! Check article count.");
+    } catch (error) {
+      console.error('Auto-generation error:', error);
+      toast.error("Auto-generation encountered an error");
+    } finally {
+      setAutoRunning(false);
+      setAutoRunProgress(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchArticleCount();
+    const interval = setInterval(fetchArticleCount, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="space-y-6">
+      {/* Article Count Status */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              Active Articles in Database
+            </div>
+            <Badge variant={articleCount >= 40 ? "default" : "secondary"} className="text-lg px-4 py-1">
+              {loadingCount ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                `${articleCount} / 60`
+              )}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            {articleCount >= 40 
+              ? "✅ Good! Database has sufficient articles" 
+              : `⚠️ Need ${40 - articleCount} more articles to reach target (40+)`}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -73,7 +164,21 @@ export const ArticleGenerator = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          {/* Auto-run section */}
+          {autoRunning && (
+            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 animate-pulse text-primary" />
+                  Auto-generating articles...
+                </span>
+                <span className="font-semibold">{autoRunProgress}%</span>
+              </div>
+              <Progress value={autoRunProgress} className="h-2" />
+            </div>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-4">
             <Button 
               onClick={triggerRSSFetcher} 
               disabled={isGeneratingRSS}
@@ -96,13 +201,25 @@ export const ArticleGenerator = () => {
 
             <Button 
               onClick={triggerBoth}
-              disabled={isGeneratingRSS || isGeneratingTrends}
+              disabled={isGeneratingRSS || isGeneratingTrends || autoRunning}
               variant="default"
               className="h-24 flex flex-col gap-2"
             >
               <CheckCircle2 className="h-6 w-6" />
               <span>Run Both</span>
               {(isGeneratingRSS || isGeneratingTrends) && <RefreshCw className="h-4 w-4 animate-spin" />}
+            </Button>
+
+            <Button 
+              onClick={autoGenerateArticles}
+              disabled={isGeneratingRSS || isGeneratingTrends || autoRunning}
+              variant="secondary"
+              className="h-24 flex flex-col gap-2 bg-gradient-to-br from-primary to-primary-glow text-primary-foreground hover:opacity-90"
+            >
+              <Zap className="h-6 w-6" />
+              <span>Auto Generate</span>
+              <span className="text-xs">(4 cycles)</span>
+              {autoRunning && <RefreshCw className="h-4 w-4 animate-spin" />}
             </Button>
           </div>
 
