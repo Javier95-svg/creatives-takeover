@@ -29,51 +29,32 @@ const FundingOpportunitiesSection = () => {
 
 
   return (
-    <section className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/20">
-      {/* Funding Wallpaper - Money Flow Animation */}
+    <section className="py-20 px-4 relative overflow-hidden">
+      {/* Funding Wallpaper - Similar to Hero Style */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Animated dollar signs floating */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-10 left-10 text-6xl opacity-[0.03] animate-bounce" style={{animationDelay: '0s', animationDuration: '3s'}}>💰</div>
-          <div className="absolute top-32 right-20 text-5xl opacity-[0.04] animate-bounce" style={{animationDelay: '0.5s', animationDuration: '3.5s'}}>💵</div>
-          <div className="absolute bottom-40 left-1/4 text-7xl opacity-[0.03] animate-bounce" style={{animationDelay: '1s', animationDuration: '4s'}}>💸</div>
-          <div className="absolute top-1/3 right-1/3 text-6xl opacity-[0.04] animate-bounce" style={{animationDelay: '1.5s', animationDuration: '3.2s'}}>💴</div>
-          <div className="absolute bottom-20 right-10 text-5xl opacity-[0.03] animate-bounce" style={{animationDelay: '2s', animationDuration: '3.8s'}}>💶</div>
-          <div className="absolute top-1/2 left-10 text-6xl opacity-[0.04] animate-bounce" style={{animationDelay: '0.8s', animationDuration: '3.3s'}}>💷</div>
-        </div>
+        {/* Base gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/8 via-primary/5 to-secondary/8" />
         
-        {/* Circular money flow pattern */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="moneyCircles" x="0" y="0" width="150" height="150" patternUnits="userSpaceOnUse">
-              <circle cx="75" cy="75" r="40" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" opacity="0.6" />
-              <circle cx="75" cy="75" r="25" stroke="hsl(var(--accent))" strokeWidth="0.8" fill="none" opacity="0.4" />
-              <path d="M 75,35 L 75,115 M 35,75 L 115,75" stroke="hsl(var(--secondary))" strokeWidth="0.5" opacity="0.3" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#moneyCircles)" />
-        </svg>
+        {/* Animated overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
         
-        {/* Graph lines suggesting growth */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="growthLines" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-              <polyline points="0,150 50,120 100,100 150,70 200,40" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" />
-              <polyline points="0,180 50,160 100,140 150,120 200,100" stroke="hsl(var(--accent))" strokeWidth="1.5" fill="none" opacity="0.6" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#growthLines)" />
-        </svg>
+        {/* Smooth transition overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
         
-        {/* Radial gradient overlays with green tint for money */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-primary/6 via-transparent to-transparent" />
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `repeating-linear-gradient(
+            45deg,
+            hsl(var(--primary)),
+            hsl(var(--primary)) 2px,
+            transparent 2px,
+            transparent 20px
+          )`
+        }} />
         
-        {/* Pulsing glow effects */}
-        <div className="absolute top-1/4 right-1/3 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse" style={{animationDuration: '4s'}} />
-        <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{animationDuration: '5s', animationDelay: '1s'}} />
-        
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+        {/* Corner accent glows */}
+        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-gradient-to-br from-green-500/5 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-primary/5 to-transparent blur-3xl" />
       </div>
       
       {/* Decorative Wave */}
