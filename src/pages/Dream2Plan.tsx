@@ -33,6 +33,8 @@ import ChatbotWidget from "@/components/ChatbotWidget";
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { ReportDisplay } from "@/components/ReportDisplay";
+import { ExampleConversations } from "@/components/bizmap/ExampleConversations";
+import { BookOpen } from "lucide-react";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -68,6 +70,7 @@ const BizMapAI = () => {
   const { generateReport } = useChatBotStore();
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
+  const [showExamplesModal, setShowExamplesModal] = useState(false);
   
   // Sprint Planner handlers
   const handleSprintCreated = (sprintId: string) => {
@@ -1185,6 +1188,24 @@ Subject: "Quick question about [their pain point]"
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}
                   <div className="flex-1 min-w-0">
+                    {/* Example Conversations Button - Show before user starts */}
+                    {currentStep === 0 && Object.values(userAnswers).every(v => !v) && (
+                      <div className="mb-4 animate-fade-in">
+                        <Button
+                          onClick={() => setShowExamplesModal(true)}
+                          variant="outline"
+                          className="w-full sm:w-auto flex items-center gap-2 min-h-[44px] hover:bg-primary/5 hover:border-primary/50 transition-all duration-300"
+                          size="lg"
+                        >
+                          <BookOpen className="w-5 h-5" />
+                          📚 See Examples
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Need inspiration? Check out complete business examples
+                        </p>
+                      </div>
+                    )}
+                    
                     <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[500px] sm:h-[600px] lg:h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
@@ -1216,6 +1237,18 @@ Subject: "Quick question about [their pain point]"
                     </div>
                   </div>
                 </div>
+
+                {/* Example Conversations Modal */}
+                <ExampleConversations
+                  open={showExamplesModal}
+                  onOpenChange={setShowExamplesModal}
+                  onSelectTemplate={(template) => {
+                    // Store the prompt in localStorage for BizMapChat to pick up
+                    localStorage.setItem('bizmap_example_prompt', template.promptMessage);
+                    // Trigger a page refresh or force BizMapChat to reload
+                    window.location.reload();
+                  }}
+                />
 
                 {/* Business Report Display */}
                 {showReport && launchReport && (

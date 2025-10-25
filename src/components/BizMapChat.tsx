@@ -188,10 +188,16 @@ export const BizMapChat = ({
     scrollToBottom();
   }, [messages, streamingMessage]);
 
-  // Load prompt from Prompt Library
+  // Load prompt from Prompt Library or Example Template
   useEffect(() => {
     const savedPrompt = localStorage.getItem('bizmap_prompt');
-    if (savedPrompt) {
+    const savedExamplePrompt = localStorage.getItem('bizmap_example_prompt');
+    
+    if (savedExamplePrompt) {
+      console.log('📥 Loading example template prompt');
+      setMessage(savedExamplePrompt);
+      localStorage.removeItem('bizmap_example_prompt');
+    } else if (savedPrompt) {
       console.log('📥 Loading prompt from Prompt Library into input field');
       setMessage(savedPrompt);
       localStorage.removeItem('bizmap_prompt');
