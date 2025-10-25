@@ -166,52 +166,6 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
         />
       </div>
 
-      {/* Attached Files List */}
-      {attachedFiles.length > 0 && (
-        <div className="space-y-2">
-          {attachedFiles.map((attachedFile) => (
-            <div
-              key={attachedFile.id}
-              className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border"
-            >
-              {/* Preview or Icon */}
-              {attachedFile.preview ? (
-                <img
-                  src={attachedFile.preview}
-                  alt={attachedFile.file.name}
-                  className="w-10 h-10 object-cover rounded"
-                />
-              ) : (
-                <div className="w-10 h-10 flex items-center justify-center bg-background rounded border border-border">
-                  {getFileIcon(attachedFile.file)}
-                </div>
-              )}
-
-              {/* File Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {attachedFile.file.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {(attachedFile.file.size / 1024).toFixed(1)} KB
-                </p>
-              </div>
-
-              {/* Remove Button */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeFile(attachedFile.id)}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Error State */}
       {attachedFiles.length >= maxFiles && (
         <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-500">

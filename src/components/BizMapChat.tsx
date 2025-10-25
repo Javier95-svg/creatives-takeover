@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
@@ -461,6 +461,17 @@ export const BizMapChat = ({
                   <span className="text-muted-foreground">
                     {(file.size / 1024).toFixed(1)} KB
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newFiles = attachedFiles.filter((_, i) => i !== index);
+                      setAttachedFiles(newFiles);
+                    }}
+                    className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
                 </div>
               ))}
             </div>
