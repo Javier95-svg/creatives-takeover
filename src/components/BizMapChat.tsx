@@ -11,6 +11,8 @@ import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { QuickReplyButtons, getQuickReplySuggestions } from "./chatbot/QuickReplyButtons";
 import { AutoSaveIndicator } from "./chatbot/AutoSaveIndicator";
 import { ContinueProgressDialog } from "./chatbot/ContinueProgressDialog";
+import { TypingIndicator } from "./chatbot/TypingIndicator";
+import { OnboardingTour } from "./chatbot/OnboardingTour";
 import { useNavigate } from "react-router-dom";
 import { useChatBotStore } from "@/store/chatBotStore";
 
@@ -154,6 +156,9 @@ export const BizMapChat = ({
   // Quick Win 1: Step completion percentage
   const [stepInteractions, setStepInteractions] = useState<Record<number, number>>({});
   const EXPECTED_INTERACTIONS_PER_STEP = 3; // Estimate: question + clarifications
+  
+  // Quick Win 7: Typing indicator state
+  const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
@@ -212,7 +217,15 @@ export const BizMapChat = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingMessage]);
+  }, [messages, streamingMessage, showTypingIndicator]);
+  
+  // Quick Win 7: Hide typing indicator when messages appear
+  useEffect(() => {
+    if (isTyping || isStreaming || messages.length > 0) {
+      // Small delay to make transition smooth
+      setTimeout(() => setShowTypingIndicator(false), 200);
+    }
+  }, [isTyping, isStreaming, messages]);
   
   // Quick Win 2: Check for saved progress on mount
   useEffect(() => {
@@ -367,6 +380,9 @@ export const BizMapChat = ({
     if (message.trim() && !isTyping && !isStreaming) {
       console.log('💬 Sending message:', message);
       
+      // Quick Win 7: Show typing indicator immediately
+      setShowTypingIndicator(true);
+      
       // Quick Win 1: Track interaction for step completion
       setStepInteractions(prev => ({
         ...prev,
@@ -388,6 +404,9 @@ export const BizMapChat = ({
     // Auto-send the suggestion
     setTimeout(() => {
       if (suggestion.trim() && !isTyping && !isStreaming) {
+        // Quick Win 7: Show typing indicator
+        setShowTypingIndicator(true);
+        
         setStepInteractions(prev => ({
           ...prev,
           [currentStep]: (prev[currentStep] || 0) + 1
@@ -429,7 +448,10 @@ export const BizMapChat = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" id="bizmap-chat">
+      {/* Quick Win 8: Onboarding Tour */}
+      <OnboardingTour />
+      
       {/* Quick Win 2: Continue Progress Dialog */}
       <ContinueProgressDialog
         open={showContinueDialog}
@@ -459,7 +481,7 @@ export const BizMapChat = ({
       />
       
       {/* Progress Bar with Mode Indicator */}
-      <div className="p-4 border-b bg-muted/30">
+      <div className="p-4 border-b bg-muted/30 progress-tracker">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -490,7 +512,7 @@ export const BizMapChat = ({
           </div>
         )}
         {/* Quick Win 2: Auto-save indicator */}
-        <div className="mt-2">
+        <div className="mt-2 auto-save-indicator">
           <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
         </div>
       </div>
@@ -519,16 +541,18 @@ export const BizMapChat = ({
               
               {/* Quick Win 3: Quick reply buttons for bot messages */}
               {msg.isBot && index === messages.length - 1 && showQuickReplies && chatMode === 'wizard' && (
-                <QuickReplyButtons
-                  suggestions={getQuickReplySuggestions(
-                    wizardSteps[currentStep]?.key || 'default',
-                    currentStep,
-                    message
-                  )}
-                  onSelect={handleQuickReply}
-                  currentStep={currentStep}
-                  questionKey={wizardSteps[currentStep]?.key}
-                />
+                <div className="quick-reply-section">
+                  <QuickReplyButtons
+                    suggestions={getQuickReplySuggestions(
+                      wizardSteps[currentStep]?.key || 'default',
+                      currentStep,
+                      message
+                    )}
+                    onSelect={handleQuickReply}
+                    currentStep={currentStep}
+                    questionKey={wizardSteps[currentStep]?.key}
+                  />
+                </div>
               )}
               
               {msg.quickActions && msg.quickActions.length > 0 && (
@@ -571,6 +595,11 @@ export const BizMapChat = ({
           </div>
         ))}
 
+        {/* Quick Win 7: Enhanced typing indicator */}
+        {showTypingIndicator && !isStreaming && !streamingMessage && (
+          <TypingIndicator />
+        )}
+
         {/* Streaming message */}
         {isStreaming && streamingMessage && (
           <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
@@ -586,8 +615,8 @@ export const BizMapChat = ({
           </div>
         )}
 
-        {/* Typing indicator */}
-        {isTyping && !isStreaming && (
+        {/* Legacy typing indicator (fallback) */}
+        {isTyping && !isStreaming && !showTypingIndicator && (
           <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
             <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-pulse" />
