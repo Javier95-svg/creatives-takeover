@@ -127,7 +127,7 @@ const TrendingSection = ({
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
               <h2 className="text-4xl md:text-5xl font-bold gradient-text">Insighta Newspaper</h2>
             </div>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mt-8">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               {isGenerating ? 'AI is discovering new business opportunities...' : 'Your daily digest of AI-curated market insights, funding opportunities, and emerging trends, delivered fresh to power your entrepreneurial growth.'}
             </p>
           </div>
@@ -244,7 +244,7 @@ const TrendingSection = ({
               {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Insighta Newspaper'}
             </h2>
           </div>
-          <p className="text-muted-foreground text-lg md:text-xl mt-8">
+          <p className="text-muted-foreground text-lg md:text-xl">
             {hasActiveFilters 
               ? 'Filtered business opportunities matching your criteria'
               : 'Your daily digest of AI-curated market insights, funding opportunities, and emerging trends, delivered fresh to power your entrepreneurial growth.'
