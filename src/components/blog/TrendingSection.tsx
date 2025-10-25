@@ -125,10 +125,10 @@ const TrendingSection = ({
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 mb-3">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-              <h2 className="text-4xl md:text-5xl font-bold gradient-text">Latest Trends</h2>
+              <h2 className="text-4xl md:text-5xl font-bold gradient-text">Insighta Newspaper</h2>
             </div>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              {isGenerating ? 'AI is discovering new business opportunities...' : 'AI-powered insights updated daily'}
+              {isGenerating ? 'AI is discovering new business opportunities...' : 'Your daily digest of AI-curated market intelligence, funding opportunities, and emerging trends—delivered fresh to fuel your entrepreneurial journey.'}
             </p>
           </div>
             
@@ -173,7 +173,7 @@ const TrendingSection = ({
         </svg>
         
         <div className="container mx-auto px-4 text-center relative z-10 max-w-7xl">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Latest Trends</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Insighta Newspaper</h2>
           <p className="text-muted-foreground mb-6">
             Unable to load trends at the moment. Please try again.
           </p>
@@ -241,13 +241,13 @@ const TrendingSection = ({
           <div className="inline-flex items-center gap-2 mb-3">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold gradient-text">
-              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Latest Trends'}
+              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Insighta Newspaper'}
             </h2>
           </div>
           <p className="text-muted-foreground text-lg md:text-xl">
             {hasActiveFilters 
               ? 'Filtered business opportunities matching your criteria'
-              : 'AI-powered insights updated daily'
+              : 'Your daily digest of AI-curated market intelligence, funding opportunities, and emerging trends—delivered fresh to fuel your entrepreneurial journey.'
             }
           </p>
         </div>
