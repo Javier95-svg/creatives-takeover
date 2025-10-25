@@ -12,14 +12,14 @@ const Resources = () => {
   return (
     <>
       <Helmet>
-        <title>Creative Resources | Free Tutorials, Guides & Downloads | Creatives Takeover</title>
+        <title>Free Resources for Creative Entrepreneurs & Solopreneurs | AI Tools & Guides</title>
         <meta 
           name="description" 
-          content="Access free creative resources including tutorials, design guides, templates, and downloads. Learn creative skills with our comprehensive resource library." 
+          content="Access free resources for creative entrepreneurs and solopreneurs: AI business tools, tutorials, templates, and guides. Learn creative business skills with our comprehensive resource library." 
         />
-        <meta name="keywords" content="creative resources, free tutorials, design guides, creative downloads, design templates, creative learning resources, free design assets" />
-        <meta property="og:title" content="Free Creative Resources | Tutorials, Guides & Downloads" />
-        <meta property="og:description" content="Discover our comprehensive library of free creative resources, tutorials, and guides to enhance your creative skills." />
+        <meta name="keywords" content="solopreneur resources, creative entrepreneur tools, AI tools for solopreneurs, creative business resources, free business templates, creative entrepreneur guides, solopreneur tutorials" />
+        <meta property="og:title" content="Free Resources for Creative Entrepreneurs | AI Tools & Guides" />
+        <meta property="og:description" content="Comprehensive library of free resources for creative entrepreneurs and solopreneurs—AI tools, templates, and business guides." />
         <link rel="canonical" href="/resources" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">

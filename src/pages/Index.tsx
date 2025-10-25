@@ -35,9 +35,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="AI Co-Founder for Creative Businesses | Creatives Takeover"
-        description="The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days. Join 15,000+ creatives building real businesses with sprint-based planning."
-        keywords="AI co-founder, creative business, creative entrepreneur, launch in 30 days, creative business planning, accountability partners, business for creatives"
+        title="AI Co-Founder for Creative Entrepreneurs | Business Planning Tool for Solopreneurs"
+        description="The creative entrepreneur's AI co-founder for solopreneurs. Go from scattered ideas to profitable business launch in 30 days. Join 15,000+ creative entrepreneurs building real businesses with AI-powered planning."
+        keywords="AI co-founder, creative entrepreneur, solopreneur, business planning tool, AI business planning, creative business launch, 30-day launch, solopreneur tools, creative business planning"
         url="/"
         image="/lovable-uploads/new-favicon.png"
         structuredData={structuredData}

@@ -1131,9 +1131,9 @@ Subject: "Quick question about [their pain point]"
   return (
     <div className="relative min-h-screen">
       <SEO
-        title="AI Business Planning Tool | Free Business Plan Generator"
-        description="Turn your business ideas into comprehensive launch reports with our AI-powered 7-step wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps—free."
-        keywords="AI business plan generator, free business planning tool, startup planning, business ideas, entrepreneurship, launch report, business plan wizard"
+        title="AI Business Plan Generator for Creatives | Launch in 30 Days"
+        description="AI-powered business planning for creative entrepreneurs. Turn your ideas into comprehensive launch reports with creative business validation, AI business coach guidance, and personalized go-to-market strategies—free."
+        keywords="AI business plan generator, creative business planning, business planning for creatives, AI business coach, creative business validation, solopreneur business plan, 30-day launch, creative entrepreneur tools"
         url="/dream2plan"
         structuredData={structuredData}
       />
