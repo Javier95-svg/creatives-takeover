@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { ArticleRefreshTrigger } from "@/components/admin/ArticleRefreshTrigger";
 import { ArticleGenerator } from "@/components/admin/ArticleGenerator";
 import ScrollToTop from "@/components/ScrollToTop";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +31,7 @@ const AdminTools = () => {
           .select('role')
           .eq('user_id', user.id)
           .eq('role', 'admin')
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error checking admin status:', error);
@@ -104,7 +103,6 @@ const AdminTools = () => {
           </div>
 
           <ArticleGenerator />
-          <ArticleRefreshTrigger />
         </div>
       </main>
 
