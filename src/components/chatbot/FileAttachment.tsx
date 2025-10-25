@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Paperclip, X, FileText, Image as ImageIcon, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface FileAttachmentProps {
   onFileSelect: (files: File[]) => void;
+  currentFiles?: File[];
   maxFiles?: number;
   maxSizeMB?: number;
   acceptedTypes?: string[];
@@ -19,6 +20,7 @@ interface AttachedFile {
 
 export const FileAttachment: React.FC<FileAttachmentProps> = ({
   onFileSelect,
+  currentFiles = [],
   maxFiles = 5,
   maxSizeMB = 10,
   acceptedTypes = ["image/*", "application/pdf", "text/*", ".doc", ".docx"],
@@ -28,6 +30,13 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync internal state with parent's currentFiles
+  React.useEffect(() => {
+    if (currentFiles.length === 0 && attachedFiles.length > 0) {
+      setAttachedFiles([]);
+    }
+  }, [currentFiles.length]);
 
   const validateFile = (file: File): string | null => {
     const sizeMB = file.size / (1024 * 1024);

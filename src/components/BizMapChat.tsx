@@ -514,7 +514,8 @@ export const BizMapChat = ({
             className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
           />
           <FileAttachment 
-            onFileSelect={setAttachedFiles} 
+            onFileSelect={setAttachedFiles}
+            currentFiles={attachedFiles}
             maxFiles={5}
             maxSizeMB={10}
             acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
