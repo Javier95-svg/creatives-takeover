@@ -8,11 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
-import { QuickReplyButtons, getQuickReplySuggestions } from "./chatbot/QuickReplyButtons";
-import { AutoSaveIndicator } from "./chatbot/AutoSaveIndicator";
-import { ContinueProgressDialog } from "./chatbot/ContinueProgressDialog";
-import { TypingIndicator } from "./chatbot/TypingIndicator";
-import { OnboardingTour } from "./chatbot/OnboardingTour";
 import { useNavigate } from "react-router-dom";
 import { useChatBotStore } from "@/store/chatBotStore";
 
@@ -141,24 +136,6 @@ export const BizMapChat = ({
   // Conversion prompt state
   const [showInlineBanner, setShowInlineBanner] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  
-  // Quick Win 2: Auto-save state
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [showContinueDialog, setShowContinueDialog] = useState(false);
-  const [savedProgress, setSavedProgress] = useState<any>(null);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  // Quick Win 3: Quick reply state
-  const [showQuickReplies, setShowQuickReplies] = useState(true);
-  const [lastMessageLength, setLastMessageLength] = useState(0);
-  
-  // Quick Win 1: Step completion percentage
-  const [stepInteractions, setStepInteractions] = useState<Record<number, number>>({});
-  const EXPECTED_INTERACTIONS_PER_STEP = 3; // Estimate: question + clarifications
-  
-  // Quick Win 7: Typing indicator state
-  const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
@@ -198,14 +175,6 @@ export const BizMapChat = ({
   });
 
   const progress = (currentStep / wizardSteps.length) * 100;
-  
-  // Quick Win 1: Calculate step completion percentage
-  const calculateStepCompletion = () => {
-    const interactions = stepInteractions[currentStep] || 0;
-    return Math.min((interactions / EXPECTED_INTERACTIONS_PER_STEP) * 100, 100);
-  };
-  
-  const stepCompletion = calculateStepCompletion();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ 
@@ -217,97 +186,7 @@ export const BizMapChat = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingMessage, showTypingIndicator]);
-  
-  // Quick Win 7: Hide typing indicator when messages appear
-  useEffect(() => {
-    if (isTyping || isStreaming || messages.length > 0) {
-      // Small delay to make transition smooth
-      setTimeout(() => setShowTypingIndicator(false), 200);
-    }
-  }, [isTyping, isStreaming, messages]);
-  
-  // Quick Win 2: Check for saved progress on mount
-  useEffect(() => {
-    const checkSavedProgress = () => {
-      try {
-        const saved = localStorage.getItem('bizmap_autosave');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          const savedDate = new Date(parsed.timestamp);
-          const hoursSince = (Date.now() - savedDate.getTime()) / (1000 * 60 * 60);
-          
-          // Only show continue dialog if saved within last 7 days
-          if (hoursSince < 168) {
-            setSavedProgress(parsed);
-            setShowContinueDialog(true);
-          } else {
-            // Clear old data
-            localStorage.removeItem('bizmap_autosave');
-          }
-        }
-      } catch (error) {
-        console.error('Error loading saved progress:', error);
-        localStorage.removeItem('bizmap_autosave');
-      }
-    };
-    
-    checkSavedProgress();
-  }, []);
-  
-  // Quick Win 2: Auto-save every 30 seconds
-  useEffect(() => {
-    const autoSave = () => {
-      if (messages.length === 0) return;
-      
-      setIsSaving(true);
-      try {
-        const dataToSave = {
-          currentStep,
-          answers,
-          messages: messages.map(m => ({
-            content: m.content,
-            isBot: m.isBot,
-            timestamp: m.timestamp
-          })),
-          stepInteractions,
-          timestamp: Date.now()
-        };
-        
-        localStorage.setItem('bizmap_autosave', JSON.stringify(dataToSave));
-        setLastSaved(new Date());
-      } catch (error) {
-        console.error('Auto-save error:', error);
-      } finally {
-        setTimeout(() => setIsSaving(false), 500);
-      }
-    };
-    
-    // Initial save
-    if (messages.length > 0) {
-      autoSave();
-    }
-    
-    // Set up interval
-    autoSaveTimerRef.current = setInterval(autoSave, 30000);
-    
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
-      }
-    };
-  }, [messages, currentStep, answers, stepInteractions]);
-  
-  // Quick Win 3: Track message input for quick replies
-  useEffect(() => {
-    setLastMessageLength(message.length);
-    // Hide quick replies when user starts typing substantial content
-    if (message.length > 20) {
-      setShowQuickReplies(false);
-    } else if (message.length === 0) {
-      setShowQuickReplies(true);
-    }
-  }, [message]);
+  }, [messages, streamingMessage]);
 
   // Load prompt from Prompt Library
   useEffect(() => {
@@ -379,58 +258,11 @@ export const BizMapChat = ({
   const handleSend = () => {
     if (message.trim() && !isTyping && !isStreaming) {
       console.log('💬 Sending message:', message);
-      
-      // Quick Win 7: Show typing indicator immediately
-      setShowTypingIndicator(true);
-      
-      // Quick Win 1: Track interaction for step completion
-      setStepInteractions(prev => ({
-        ...prev,
-        [currentStep]: (prev[currentStep] || 0) + 1
-      }));
-      
       sendMessage(message);
       setMessage("");
-      setShowQuickReplies(true); // Reset for next message
     } else {
       console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), isTyping, isStreaming });
     }
-  };
-  
-  // Quick Win 3: Handle quick reply selection
-  const handleQuickReply = (suggestion: string) => {
-    setMessage(suggestion);
-    setShowQuickReplies(false);
-    // Auto-send the suggestion
-    setTimeout(() => {
-      if (suggestion.trim() && !isTyping && !isStreaming) {
-        // Quick Win 7: Show typing indicator
-        setShowTypingIndicator(true);
-        
-        setStepInteractions(prev => ({
-          ...prev,
-          [currentStep]: (prev[currentStep] || 0) + 1
-        }));
-        sendMessage(suggestion);
-        setMessage("");
-        setShowQuickReplies(true);
-      }
-    }, 100);
-  };
-  
-  // Quick Win 2: Handle continue/start fresh
-  const handleContinueProgress = () => {
-    if (savedProgress) {
-      // Restore messages, answers, etc. would need to be handled by parent
-      setStepInteractions(savedProgress.stepInteractions || {});
-      setShowContinueDialog(false);
-    }
-  };
-  
-  const handleStartFresh = () => {
-    localStorage.removeItem('bizmap_autosave');
-    setSavedProgress(null);
-    setShowContinueDialog(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -448,20 +280,7 @@ export const BizMapChat = ({
   };
 
   return (
-    <div className="flex flex-col h-full" id="bizmap-chat">
-      {/* Quick Win 8: Onboarding Tour */}
-      <OnboardingTour />
-      
-      {/* Quick Win 2: Continue Progress Dialog */}
-      <ContinueProgressDialog
-        open={showContinueDialog}
-        onContinue={handleContinueProgress}
-        onStartFresh={handleStartFresh}
-        savedDate={savedProgress ? new Date(savedProgress.timestamp) : null}
-        currentStep={savedProgress?.currentStep || 0}
-        totalSteps={wizardSteps.length}
-      />
-      
+    <div className="flex flex-col h-full">
       {/* Conversion Prompts */}
       <WizardConversionPrompt
         step={currentStep}
@@ -481,21 +300,13 @@ export const BizMapChat = ({
       />
       
       {/* Progress Bar with Mode Indicator */}
-      <div className="p-4 border-b bg-muted/30 progress-tracker">
+      <div className="p-4 border-b bg-muted/30">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">
-                {chatMode === 'wizard' ? `Step ${currentStep + 1} of ${wizardSteps.length}` : 'Ask Me Anything'}
-              </span>
-              {/* Quick Win 1: Step completion percentage */}
-              {chatMode === 'wizard' && (
-                <span className="text-xs text-muted-foreground">
-                  {Math.round(stepCompletion)}% complete in this step
-                </span>
-              )}
-            </div>
+            <span className="text-sm font-medium">
+              {chatMode === 'wizard' ? `Step ${currentStep + 1} of ${wizardSteps.length}` : 'Ask Me Anything'}
+            </span>
             {celebrationMode && (
               <span className="text-lg animate-bounce">🎉</span>
             )}
@@ -504,17 +315,7 @@ export const BizMapChat = ({
             {chatMode === 'freeform' ? '✨ Freeform' : '🧙 Wizard'}
           </Badge>
         </div>
-        {chatMode === 'wizard' && (
-          <div className="space-y-1">
-            <Progress value={progress} className="h-2" />
-            {/* Quick Win 1: Current step progress */}
-            <Progress value={stepCompletion} className="h-1 opacity-60" />
-          </div>
-        )}
-        {/* Quick Win 2: Auto-save indicator */}
-        <div className="mt-2 auto-save-indicator">
-          <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
-        </div>
+        {chatMode === 'wizard' && <Progress value={progress} className="h-2" />}
       </div>
 
       {/* Messages Area */}
@@ -538,23 +339,6 @@ export const BizMapChat = ({
               }`}
             >
               <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              
-              {/* Quick Win 3: Quick reply buttons for bot messages */}
-              {msg.isBot && index === messages.length - 1 && showQuickReplies && chatMode === 'wizard' && (
-                <div className="quick-reply-section">
-                  <QuickReplyButtons
-                    suggestions={getQuickReplySuggestions(
-                      wizardSteps[currentStep]?.key || 'default',
-                      currentStep,
-                      message
-                    )}
-                    onSelect={handleQuickReply}
-                    currentStep={currentStep}
-                    questionKey={wizardSteps[currentStep]?.key}
-                  />
-                </div>
-              )}
-              
               {msg.quickActions && msg.quickActions.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border/30">
                   {msg.quickActions.map((action, idx) => (
@@ -595,11 +379,6 @@ export const BizMapChat = ({
           </div>
         ))}
 
-        {/* Quick Win 7: Enhanced typing indicator */}
-        {showTypingIndicator && !isStreaming && !streamingMessage && (
-          <TypingIndicator />
-        )}
-
         {/* Streaming message */}
         {isStreaming && streamingMessage && (
           <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
@@ -615,8 +394,8 @@ export const BizMapChat = ({
           </div>
         )}
 
-        {/* Legacy typing indicator (fallback) */}
-        {isTyping && !isStreaming && !showTypingIndicator && (
+        {/* Typing indicator */}
+        {isTyping && !isStreaming && (
           <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
             <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-pulse" />
@@ -641,18 +420,6 @@ export const BizMapChat = ({
             <Sparkles className="h-3 w-3 text-primary" />
             I remember your business context and journey
           </p>
-        )}
-        
-        {/* Quick Win 5 notification: Move sign-in to step 5 */}
-        {!user && currentStep === 4 && chatMode === 'wizard' && (
-          <div className="mb-3 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-            <p className="text-xs text-foreground flex items-center gap-2">
-              <Sparkles className="h-3 w-3 text-primary" />
-              <span>
-                <strong>Sign in after this step</strong> to save your progress across all devices and unlock premium features
-              </span>
-            </p>
-          </div>
         )}
         
         {/* Share to Community Button - Shows when there are messages */}
