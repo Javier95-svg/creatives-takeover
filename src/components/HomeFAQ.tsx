@@ -53,7 +53,7 @@ const HomeFAQ = () => {
   ];
 
   return (
-    <section className="relative py-24 overflow-hidden bg-gradient-to-b from-background via-primary/5 to-background">
+    <section className="relative py-16 sm:py-20 lg:py-24 overflow-hidden bg-gradient-to-b from-background via-primary/5 to-background">
       {/* Modern Geometric Animated Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         {/* Subtle Mesh Grid */}
@@ -240,31 +240,31 @@ const HomeFAQ = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
             FAQ
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to know about Creatives Takeover, the all-in-one platform that uses AI, automation, and community support to help you plan, build, and grow your business from idea to execution.
           </p>
         </div>
 
         {/* FAQ Accordion */}
-        <div className="max-w-4xl mx-auto">
-          <div className="backdrop-blur-sm bg-card/50 rounded-2xl border border-border/50 p-8 shadow-2xl animate-scale-in">
-            <Accordion type="single" collapsible className="space-y-4">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="backdrop-blur-sm bg-card/50 rounded-2xl border border-border/50 p-4 sm:p-6 lg:p-8 shadow-2xl animate-scale-in">
+            <Accordion type="single" collapsible className="space-y-3 sm:space-y-4">
               {faqs.map((faq, index) => (
                 <AccordionItem 
                   key={index} 
                   value={`item-${index}`}
-                  className="border border-border/50 rounded-lg px-6 bg-background/50 hover:bg-background/80 transition-all duration-300 hover:shadow-lg hover:border-primary/30"
+                  className="border border-border/50 rounded-lg px-4 sm:px-6 bg-background/50 hover:bg-background/80 transition-all duration-300 hover:shadow-lg hover:border-primary/30"
                 >
-                  <AccordionTrigger className="text-left text-base md:text-lg font-semibold hover:text-primary transition-colors">
+                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold hover:text-primary transition-colors py-4">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground leading-relaxed pt-2">
+                  <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-2">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -274,12 +274,12 @@ const HomeFAQ = () => {
         </div>
 
         {/* Trust-Building Footer */}
-        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          <div className="backdrop-blur-sm bg-card/30 border border-border/50 rounded-xl p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="mt-12 sm:mt-16 text-center animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+          <div className="backdrop-blur-sm bg-card/30 border border-border/50 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Still have questions?
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
               We're here to help you succeed. Reach out to us directly.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">

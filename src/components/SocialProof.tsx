@@ -91,23 +91,23 @@ const SocialProof = () => {
         <div className="w-2 h-18 bg-yellow-400/50 animate-pulse" style={{ animationDelay: '0.9s' }} />
       </div>
       
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 mb-6">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
             Success Stories
           </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
             Real Results from <span className="gradient-text">Real Entrepreneurs</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             Don't just take our word for it. Here's what creative entrepreneurs are saying 
             about their experience with our platform.
           </p>
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16 px-4">
           {testimonials.map((testimonial, index) => (
             <Card 
               key={index} 
@@ -119,9 +119,9 @@ const SocialProof = () => {
                 <Quote className="w-8 h-8" />
               </div>
               
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
                 {/* Rating Stars */}
-                <div className="flex mb-4">
+                <div className="flex mb-3 sm:mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star 
                       key={i} 
@@ -131,33 +131,33 @@ const SocialProof = () => {
                 </div>
                 
                 {/* Quote */}
-                <blockquote className="text-muted-foreground mb-6 italic leading-relaxed">
+                <blockquote className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 italic leading-relaxed">
                   "{testimonial.quote}"
                 </blockquote>
                 
                 {/* Author Info */}
-                <div className="flex items-center gap-4 mb-4">
-                  <Avatar className="w-12 h-12">
+                <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                  <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
                     <AvatarImage src="" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs sm:text-sm">
                       {testimonial.avatar}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold text-foreground">{testimonial.author}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                    <p className="text-sm sm:text-base font-semibold text-foreground">{testimonial.author}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{testimonial.role}</p>
                     <p className="text-xs text-primary font-medium">{testimonial.company}</p>
                   </div>
                 </div>
                 
                 {/* Success Metrics */}
-                <div className="flex justify-between pt-4 border-t border-border/50">
+                <div className="flex justify-between pt-3 sm:pt-4 border-t border-border/50">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-green-600">{testimonial.revenue}</div>
+                    <div className="text-base sm:text-lg font-bold text-green-600">{testimonial.revenue}</div>
                     <div className="text-xs text-muted-foreground">Revenue</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-primary">{testimonial.timeframe}</div>
+                    <div className="text-base sm:text-lg font-bold text-primary">{testimonial.timeframe}</div>
                     <div className="text-xs text-muted-foreground">Time to Launch</div>
                   </div>
                 </div>
@@ -167,18 +167,18 @@ const SocialProof = () => {
         </div>
 
         {/* Featured In */}
-        <div className="text-center animate-fade-in">
-          <p className="text-muted-foreground mb-8">As featured in and supported by</p>
-          <div className="flex flex-wrap justify-center items-center gap-8">
+        <div className="text-center animate-fade-in px-4">
+          <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">As featured in and supported by</p>
+          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8">
             {companies.map((company, index) => (
               <div 
                 key={index}
-                className="flex items-center gap-3 p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors group"
+                className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors group"
               >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs sm:text-sm group-hover:bg-primary/20 transition-colors">
                   {company.logo}
                 </div>
-                <span className="font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                <span className="text-sm sm:text-base font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                   {company.name}
                 </span>
               </div>
