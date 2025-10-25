@@ -1,6 +1,7 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { ArticleRefreshTrigger } from "@/components/admin/ArticleRefreshTrigger";
+import { ArticleGenerator } from "@/components/admin/ArticleGenerator";
 import ScrollToTop from "@/components/ScrollToTop";
 
 const AdminTools = () => {
@@ -20,6 +21,7 @@ const AdminTools = () => {
             </p>
           </div>
 
+          <ArticleGenerator />
           <ArticleRefreshTrigger />
         </div>
       </main>

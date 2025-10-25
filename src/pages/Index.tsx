@@ -1,22 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import HowItWorks from "@/components/HowItWorks";
-import SocialProof from "@/components/SocialProof";
-import HomeFAQ from "@/components/HomeFAQ";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import ChatbotWidget from "@/components/ChatbotWidget";
 import { Helmet } from "react-helmet-async";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
+// Lazy load below-the-fold components for better performance
+const HowItWorks = lazy(() => import("@/components/HowItWorks"));
+const SocialProof = lazy(() => import("@/components/SocialProof"));
+const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
+
 const Index = () => {
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
   
-  // Clear popup session storage on fresh page load to ensure quiz popup can appear
+  // Manage session storage in useEffect with proper cleanup
   useEffect(() => {
+    // Clear popup session storage on fresh page load
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
 
@@ -35,9 +38,19 @@ const Index = () => {
       <main>
         <Hero />
         <EntrepreneurProblems />
-        <HowItWorks />
-        <SocialProof />
-        <HomeFAQ />
+        
+        {/* Lazy-loaded below-the-fold components with loading fallback */}
+        <Suspense fallback={<div className="h-screen animate-pulse bg-muted/20" />}>
+          <HowItWorks />
+        </Suspense>
+        
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+          <SocialProof />
+        </Suspense>
+        
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+          <HomeFAQ />
+        </Suspense>
       </main>
       <Footer />
       
