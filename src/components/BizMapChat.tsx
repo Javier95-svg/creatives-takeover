@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2 } from "lucide-react";
+import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,6 +126,7 @@ export const BizMapChat = ({
   onChatModeReady
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [celebrationMode, setCelebrationMode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
@@ -262,12 +264,18 @@ export const BizMapChat = ({
   };
 
   const handleSend = () => {
-    if (message.trim() && !isTyping && !isStreaming) {
-      console.log('💬 Sending message:', message);
-      sendMessage(message);
+    if ((message.trim() || attachedFiles.length > 0) && !isTyping && !isStreaming) {
+      console.log('💬 Sending message:', { message, filesCount: attachedFiles.length });
+      sendMessage(message, attachedFiles);
       setMessage("");
+      setAttachedFiles([]);
     } else {
-      console.log('⚠️ Cannot send message:', { hasMessage: !!message.trim(), isTyping, isStreaming });
+      console.log('⚠️ Cannot send message:', { 
+        hasMessage: !!message.trim(), 
+        hasFiles: attachedFiles.length > 0,
+        isTyping, 
+        isStreaming 
+      });
     }
   };
 
@@ -460,6 +468,16 @@ export const BizMapChat = ({
           </div>
         )}
 
+        {/* File Attachment Section */}
+        <div className="mb-3">
+          <FileAttachment 
+            onFileSelect={setAttachedFiles} 
+            maxFiles={5}
+            maxSizeMB={10}
+            acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
+          />
+        </div>
+
         <div className="flex gap-2 sm:gap-3">
           <Input
             value={message}
@@ -471,7 +489,7 @@ export const BizMapChat = ({
           />
           <Button 
             onClick={handleSend}
-            disabled={!message.trim() || isTyping || isStreaming}
+            disabled={(!message.trim() && attachedFiles.length === 0) || isTyping || isStreaming}
             size="icon"
             className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
