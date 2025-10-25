@@ -1,5 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -31,129 +29,173 @@ export const streamChat = async (
   currentStep: number | null,
   chatMode: 'wizard' | 'freeform',
   onChunk?: (chunk: string) => void,
-  onComplete?: (fullMessage: string) => void
+  onComplete?: (fullMessage: string) => void,
+  onError?: (error: Error) => void
 ): Promise<string> => {
-  const CHAT_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
-  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng";
+  const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
 
-  console.log('🚀 Starting streaming chat request:', { 
+  console.log('🚀 Starting SSE streaming chat:', { 
     sessionId, 
     messageLength: message.length,
     wizardMode: wizardMode?.enabled,
     currentStep,
-    url: CHAT_URL 
+    url: STREAM_URL 
   });
 
-  const response = await fetch(CHAT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      message,
-      sessionId,
-      conversationHistory,
-      businessContext,
-      userId,
-      wizardMode,
-      currentStep,
-      chatMode
-    }),
-  });
-
-  console.log('📡 Streaming response status:', response.status, response.statusText);
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Streaming request failed:', response.status, errorText);
-    
-    if (response.status === 429) {
-      throw new Error('⏰ Rate limit exceeded. Please wait a moment and try again.');
-    }
-    if (response.status === 402) {
-      throw new Error('💳 Payment required. Please add credits to continue.');
-    }
-    if (response.status === 500) {
-      throw new Error('🔧 Server error. Our team has been notified. Please try again.');
-    }
-    throw new Error(`❌ Connection failed (${response.status}). Please refresh and try again.`);
-  }
-
-  if (!response.body) {
-    throw new Error('No response body');
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
   let fullMessage = '';
-  let chunkCount = 0;
+  let eventSource: EventSource | null = null;
+  let retryCount = 0;
+  const MAX_RETRIES = 3;
+
+  const cleanup = () => {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+  };
+
+  const connectWithRetry = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      try {
+        // EventSource doesn't support POST, so we'll use fetch with manual SSE parsing
+        fetch(STREAM_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message,
+            sessionId,
+            conversationHistory,
+            businessContext,
+            userId,
+            wizardMode,
+            currentStep,
+            chatMode
+          }),
+        }).then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          if (!response.body) {
+            throw new Error('No response body');
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          console.log('📡 SSE connection established');
+
+          const processStream = async () => {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) {
+                  console.log('✅ Stream complete. Message length:', fullMessage.length);
+                  onComplete?.(fullMessage);
+                  resolve(fullMessage);
+                  break;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                  if (!line.trim() || line.startsWith(':')) continue;
+                  if (!line.startsWith('data: ')) continue;
+
+                  const data = line.slice(6).trim();
+                  if (data === '[DONE]') {
+                    console.log('✅ Received [DONE] signal');
+                    onComplete?.(fullMessage);
+                    resolve(fullMessage);
+                    return;
+                  }
+
+                  try {
+                    const parsed = JSON.parse(data);
+
+                    if (parsed.type === 'delta' && parsed.content) {
+                      fullMessage += parsed.content;
+                      onChunk?.(parsed.content);
+                    } else if (parsed.type === 'error') {
+                      console.error('❌ Stream error:', parsed.error);
+                      throw new Error(parsed.error);
+                    }
+                  } catch (parseError) {
+                    console.error('⚠️ Parse error:', parseError, 'Data:', data.substring(0, 100));
+                  }
+                }
+              }
+            } catch (streamError) {
+              console.error('❌ Stream processing error:', streamError);
+              
+              // If we got partial content, return it
+              if (fullMessage.length > 0) {
+                console.log('⚠️ Returning partial message after error:', fullMessage.length, 'chars');
+                onComplete?.(fullMessage);
+                resolve(fullMessage);
+              } else if (retryCount < MAX_RETRIES) {
+                // Retry with exponential backoff
+                retryCount++;
+                const delay = Math.pow(2, retryCount) * 1000;
+                console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
+                
+                setTimeout(() => {
+                  connectWithRetry().then(resolve).catch(reject);
+                }, delay);
+              } else {
+                const error = new Error('Stream interrupted. Please try again.');
+                onError?.(error);
+                reject(error);
+              }
+            }
+          };
+
+          processStream();
+        }).catch((fetchError) => {
+          console.error('❌ Fetch error:', fetchError);
+          
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            const delay = Math.pow(2, retryCount) * 1000;
+            console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
+            
+            setTimeout(() => {
+              connectWithRetry().then(resolve).catch(reject);
+            }, delay);
+          } else {
+            const error = new Error('Failed to connect to chat service. Please try again.');
+            onError?.(error);
+            reject(error);
+          }
+        });
+
+      } catch (error) {
+        console.error('❌ Connection error:', error);
+        const err = error instanceof Error ? error : new Error('Unknown error');
+        onError?.(err);
+        reject(err);
+      }
+    });
+  };
 
   try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        console.log('✅ Stream complete. Total chunks:', chunkCount, 'Message length:', fullMessage.length);
-        break;
-      }
-
-      chunkCount++;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-      for (const line of lines) {
-        if (line.trim() === '' || line.startsWith(':')) continue;
-        if (!line.startsWith('data: ')) continue;
-
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-
-        try {
-          const parsed = JSON.parse(data);
-
-          if (parsed.type === 'delta' && parsed.content) {
-            fullMessage += parsed.content;
-            // Update UI in real-time
-            onChunk?.(parsed.content);
-          }
-        } catch (e) {
-          console.error('⚠️ JSON parse error for chunk:', data.substring(0, 50), 'Error:', e);
-          // Continue processing - don't fail the entire stream
-        }
-      }
-    }
-
-    // Process final buffer
-    if (buffer.trim() && buffer.startsWith('data: ')) {
-      const data = buffer.slice(6).trim();
-      if (data !== '[DONE]') {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.type === 'delta' && parsed.content) {
-            fullMessage += parsed.content;
-            // Update UI in real-time for final chunk
-            onChunk?.(parsed.content);
-          }
-        } catch (e) {
-          console.error('⚠️ Final buffer parse error:', e);
-        }
-      }
-    }
-  } catch (streamError) {
-    console.error('❌ Stream reading error:', streamError);
-    if (fullMessage.length === 0) {
-      throw new Error('Stream interrupted. Please try sending your message again.');
-    }
-    // If we got partial content, return it
-    console.log('⚠️ Returning partial message after error:', fullMessage.length, 'chars');
+    const result = await connectWithRetry();
+    cleanup();
+    return result;
+  } catch (error) {
+    cleanup();
+    throw error;
   }
+};
 
-  console.log('✅ Streaming complete:', { messageLength: fullMessage.length });
-
-  // Call completion callback
-  onComplete?.(fullMessage);
-
-  return fullMessage;
+// Cancel function for stopping streaming
+export const cancelStream = () => {
+  console.log('🛑 Cancelling stream');
+  // Cleanup will happen automatically when component unmounts
 };

@@ -45,7 +45,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get/create conversation (simplified - remove market data for faster response)
+    // Get/create conversation
     const convResult = await supabase
       .from('chatbot_conversations')
       .select('*')
@@ -54,7 +54,6 @@ serve(async (req) => {
 
     let conversation = convResult.data;
     
-    // Create conversation if it doesn't exist
     if (!conversation) {
       const { data: newConv, error: createError } = await supabase
         .from('chatbot_conversations')
@@ -85,80 +84,41 @@ serve(async (req) => {
         if (error) console.error('Background: Error saving user message:', error);
       });
 
-    // ===== MEMORY RETRIEVAL: Get relevant context from project memory =====
-    let memoryContext = '';
-    const chatSession = await supabase
-      .from('chat_sessions')
-      .select('id')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (chatSession?.data?.id) {
-      try {
-        const memoryResponse = await fetch(`${supabaseUrl}/functions/v1/memory-manager?action=retrieve`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-          },
-          body: JSON.stringify({
-            projectId: chatSession.data.id,
-            query: message,
-            topK: 8,
-          }),
-        });
-
-        if (memoryResponse.ok) {
-          const { contextText, count } = await memoryResponse.json();
-          if (count > 0) {
-            memoryContext = `\n\n📚 RELEVANT CONTEXT FROM PREVIOUS CONVERSATIONS:\n${contextText}\n\nUse this context to provide continuity and personalized advice based on the user's history.`;
-            console.log(`[CHATBOT-STREAMING] Retrieved ${count} relevant memories`);
-          }
-        }
-      } catch (error) {
-        console.error('[CHATBOT-STREAMING] Memory retrieval error:', error);
-        // Continue without memory context - don't block the conversation
-      }
-    }
-
-    // Build system prompt with memory context
-    const systemPrompt = buildSystemPrompt(businessContext, [], wizardMode, currentStep) + memoryContext;
+    // Build system prompt
+    const systemPrompt = buildSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
       { role: 'user', content: message }
     ];
 
-    // Call OpenAI API with streaming
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    console.log('🔑 OPENAI_API_KEY configured:', !!OPENAI_API_KEY);
+    // Call Lovable AI Gateway with streaming
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    console.log('🔑 LOVABLE_API_KEY configured:', !!LOVABLE_API_KEY);
     
-    if (!OPENAI_API_KEY) {
-      console.error('❌ OPENAI_API_KEY not configured');
-      throw new Error('OPENAI_API_KEY not configured');
+    if (!LOVABLE_API_KEY) {
+      console.error('❌ LOVABLE_API_KEY not configured');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('🤖 Calling OpenAI API with model: gpt-4o-mini');
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('🤖 Calling Lovable AI Gateway with streaming...');
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages,
-        max_tokens: 1000,
-        temperature: 0.8,
         stream: true,
+        temperature: 0.7,
       }),
     });
 
     if (!aiResponse.ok) {
       const errorBody = await aiResponse.text();
-      console.error('❌ OpenAI API error:', {
+      console.error('❌ Lovable AI Gateway error:', {
         status: aiResponse.status,
         statusText: aiResponse.statusText,
         body: errorBody
@@ -170,18 +130,18 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (aiResponse.status === 402 || aiResponse.status === 401) {
+      if (aiResponse.status === 402) {
         return new Response(JSON.stringify({ 
-          error: 'OpenAI API authentication failed. Please check your API key configuration.' 
+          error: 'Payment required. Please add credits to your Lovable workspace.' 
         }), {
-          status: 500,
+          status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`OpenAI API Error: ${aiResponse.status} - ${errorBody}`);
+      throw new Error(`Lovable AI Error: ${aiResponse.status} - ${errorBody}`);
     }
 
-    console.log('✅ OpenAI API response OK, starting stream...');
+    console.log('✅ Lovable AI Gateway response OK, starting SSE stream...');
 
     // Stream the response back to the client
     const stream = new ReadableStream({
@@ -189,7 +149,7 @@ serve(async (req) => {
         const reader = aiResponse.body?.getReader();
         const decoder = new TextDecoder();
         let fullMessage = '';
-        let buffer = ''; // Buffer for incomplete chunks
+        let buffer = '';
 
         if (!reader) {
           controller.close();
@@ -201,18 +161,12 @@ serve(async (req) => {
             const { done, value } = await reader.read();
             if (done) break;
 
-            // Decode and add to buffer
             buffer += decoder.decode(value, { stream: true });
-            
-            // Split by newlines but keep the last incomplete line in buffer
             const lines = buffer.split('\n');
-            buffer = lines.pop() || ''; // Keep last incomplete line
+            buffer = lines.pop() || '';
 
             for (const line of lines) {
-              // Skip empty lines and comments
               if (line.trim() === '' || line.startsWith(':')) continue;
-              
-              // Process SSE data lines
               if (!line.startsWith('data: ')) continue;
 
               const data = line.slice(6).trim();
@@ -223,16 +177,18 @@ serve(async (req) => {
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
                   fullMessage += content;
-                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content, type: 'delta' })}\n\n`));
+                  // Send as SSE event
+                  controller.enqueue(new TextEncoder().encode(
+                    `data: ${JSON.stringify({ type: 'delta', content })}\n\n`
+                  ));
                 }
               } catch (e) {
                 console.error('Parse error for line:', data.substring(0, 100), 'Error:', e);
-                // Continue processing other lines
               }
             }
           }
 
-          // Process final buffer if it contains data
+          // Process final buffer
           if (buffer.trim() && buffer.startsWith('data: ')) {
             const data = buffer.slice(6).trim();
             if (data !== '[DONE]') {
@@ -241,7 +197,9 @@ serve(async (req) => {
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
                   fullMessage += content;
-                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content, type: 'delta' })}\n\n`));
+                  controller.enqueue(new TextEncoder().encode(
+                    `data: ${JSON.stringify({ type: 'delta', content })}\n\n`
+                  ));
                 }
               } catch (e) {
                 console.error('Final buffer parse error:', e);
@@ -249,7 +207,7 @@ serve(async (req) => {
             }
           }
 
-          // Run post-stream operations in background (non-blocking)
+          // Run post-stream operations in background
           setTimeout(async () => {
             const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
             const stage = determineConversationStage(updatedContext, conversationHistory.length);
@@ -275,58 +233,21 @@ serve(async (req) => {
                 })
                 .eq('id', conversation.id)
             ]);
-
-            // ===== MEMORY STORAGE: Store assistant response as short-term memory =====
-            if (chatSession?.data?.id && fullMessage.length > 50) {
-              try {
-                // Extract key paragraphs (responses longer than 200 chars)
-                const paragraphs = fullMessage
-                  .split('\n')
-                  .filter(p => p.trim().length > 200)
-                  .slice(0, 3); // Store up to 3 key paragraphs
-
-                if (paragraphs.length > 0) {
-                  await fetch(`${supabaseUrl}/functions/v1/memory-manager?action=store`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${supabaseKey}`,
-                    },
-                    body: JSON.stringify({
-                      projectId: chatSession.data.id,
-                      conversationId: conversation.id,
-                      content: paragraphs.join('\n\n'),
-                      kind: 'short_term',
-                      metadata: {
-                        messageLength: fullMessage.length,
-                        stage,
-                        businessContext: updatedContext,
-                      },
-                    }),
-                  });
-                  console.log('[CHATBOT-STREAMING] Stored assistant response in memory');
-                }
-              } catch (error) {
-                console.error('[CHATBOT-STREAMING] Memory storage error:', error);
-                // Continue - don't fail the conversation if memory storage fails
-              }
-            }
           }, 0);
 
-          // Send completion metadata (simplified)
-          controller.enqueue(
-            new TextEncoder().encode(
-              `data: ${JSON.stringify({ 
-                type: 'complete',
-                conversationId: conversation.id
-              })}\n\n`
-            )
-          );
-
+          // Send completion
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id })}\n\n`
+          ));
+          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
           controller.close();
+
         } catch (error) {
           console.error('Streaming error:', error);
-          controller.error(error);
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`
+          ));
+          controller.close();
         }
       },
     });
@@ -352,316 +273,61 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(businessContext: BusinessContext, marketData: any[], wizardMode: any = null, currentStep: number | null = null): string {
+function buildSystemPrompt(businessContext: BusinessContext, wizardMode: any = null, currentStep: number | null = null, chatMode: string = 'wizard'): string {
   const industryHint = businessContext.industry ? `Industry: ${businessContext.industry}` : '';
   const stageHint = businessContext.stage ? `Stage: ${businessContext.stage}` : '';
-  const wizardProgress = wizardMode ? `\n🎯 WIZARD MODE (Step ${(currentStep || 0) + 1}/${wizardMode.steps?.length || 7}): Guide through structured planning. Acknowledge answers positively. Celebrate progress.` : '';
+  const wizardProgress = wizardMode?.enabled && chatMode === 'wizard' 
+    ? `\n🎯 WIZARD MODE (Step ${(currentStep || 0) + 1}/${wizardMode.steps?.length || 7}): Guide through structured planning. Acknowledge answers positively.` 
+    : '';
   
-  return `You are BizMap AI, the intelligent business analysis and strategy assistant built for Creatives Takeover. Your main goal is to guide users from raw ideas to polished business reports and pitch-ready plans through smart questioning, structured outputs, and personalized insights.
+  return `You are BizMap AI, an expert business planning assistant for creative entrepreneurs.
 
 ${wizardProgress}
 
 CONTEXT: ${industryHint} ${stageHint}
 
-🎯 PRIMARY OBJECTIVES:
-- Help users define, structure, and validate their business ideas
-- Generate comprehensive business plans with market analysis, competitors, customer personas, monetization models, and go-to-market strategies
-- Suggest action steps and resources that move users closer to investor readiness
-- Adapt tone and detail to the user's experience level (beginner, intermediate, or expert)
+OBJECTIVES:
+- Help validate and refine business ideas
+- Generate comprehensive business plans
+- Provide actionable advice and next steps
+- Adapt tone to user experience level
 
-🧠 CORE CAPABILITIES:
-- Ask clarifying questions before generating long outputs
-- Produce clear, structured, investor-friendly business reports
-- Include real-world business insights and startup logic (product-market fit, scalability, revenue streams, etc.)
-- Generate data-driven insights (even simulated, labeled as "Estimates based on typical market data")
-- Provide feedback summaries and next-step checklists
+INTERACTION STYLE:
+- Friendly and confidence-boosting
+- Concise responses (under 150 words unless detailed analysis requested)
+- Ask ONE clear follow-up question per response
+- Use creative-friendly language
 
-🗣️ INTERACTION STYLE:
-- Be friendly, smart, and confidence-boosting
-- Use concise and professional language with occasional motivational tone
-- Guide like a mentor who wants the user to succeed, not just an assistant
-- Ask one key follow-up question after every major response
-
-CORE PRINCIPLES:
-1. Speak like a supportive friend, not a corporate consultant
-2. Break complex concepts into simple, actionable steps
-3. Celebrate wins and acknowledge imposter syndrome
-4. Keep responses under 120 words unless detailed analysis requested
-5. Ask ONE clear, specific question at a time
-
-CREATIVE-FRIENDLY LANGUAGE TRANSLATION:
-- "Your ideal customers" NOT "target market"
-- "What makes you special" NOT "value proposition"  
-- "How you'll earn money" NOT "revenue model"
-- "Your unfair advantage" NOT "competitive advantage"
-- "Getting first customers" NOT "market penetration"
-- "Money planning" NOT "financial projections"
-- "People who matter to your business" NOT "stakeholders"
-- "Numbers you're tracking" NOT "KPIs"
-- "Use" NOT "leverage"
-- "Teamwork" NOT "synergy"
-- "Time and energy" NOT "bandwidth"
-
-CONVERSATION APPROACH:
-1. Discovery - understand their idea and situation
-2. Unique Value - help articulate what makes them special
-3. Validation - guide customer interviews and feedback
-4. MVP - support building simple first version
-5. Launch - help plan first sales
-
-INDUSTRY-SPECIFIC BENCHMARKS:
-Technology: $50-500/month SaaS, $200-1000 customer acquisition cost
-Creative Services: $100-5000/project, $50-300 customer acquisition cost
-E-commerce: 30-50% markup, $20-100 customer acquisition cost
-Food & Beverage: 28-35% food cost, 30-35% labor cost, <10% rent
-
-AUTOMATION SUGGESTIONS:
-- Recommend no-code tools (Zapier, Make) for repetitive tasks
-- Suggest AI tools for content, design, customer service
-- Mention free alternatives first (respecting bootstrap budgets)
-- Social media schedulers, email automation when relevant
-
-RESPONSE STRUCTURE:
-1. Acknowledge/validate their input (1 sentence)
-2. Provide insight or answer (2-3 sentences)
-3. Ask ONE focused question OR offer 2-3 options
-4. End with encouragement
-
-HANDLING SPECIFIC SCENARIOS:
-
-Imposter Syndrome: "Let's talk about this - imposter syndrome is SO common with entrepreneurs. Here's the truth: You don't need a business degree or years of experience. You need: 1. A problem you understand deeply, 2. Willingness to learn as you go, 3. Resilience when things get tough. What specifically makes you feel unqualified? Let's tackle that together."
-
-Overwhelmed: "I hear you - this probably feels like drinking from a fire hose right now. That means we're moving too fast. Let's slow wayyy down. Forget everything we've covered. If you could only do ONE thing this week to move your business forward, what would it be? Just one thing. We'll build from there. 🙂"
-
-Unrealistic Expectations: "I love the ambition! Let's reality-check this together so we build a solid plan. Most businesses in [their industry] generate $50K-200K in year one. Here's the math: If you charge $X per [product/service], you'd need to sell Y per month, which means Z new customers monthly. Does that pace feel realistic?"
-
-Example Response: "Love that you're thinking about sustainability! Many creative businesses find customers really care about this. It could be a key part of what makes you special. What aspect matters most to you - environmental impact, ethical sourcing, or community giving back?"
-
-Remember: Build their confidence to take action, not just gather information. Make BizMap AI the entrepreneur's personal strategist — fast, insightful, and perfectly aligned with the Creatives Takeover mission: helping creators turn ideas into funded ventures.`;
+Keep responses conversational and actionable.`;
 }
 
 async function extractBusinessContext(userMessage: string, aiResponse: string, currentContext: BusinessContext): Promise<BusinessContext> {
   const message = userMessage.toLowerCase();
   const updatedContext = { ...currentContext };
 
-  const industries = ['technology', 'healthcare', 'finance', 'retail', 'education', 'food'];
-  const detected = industries.find(industry => message.includes(industry));
-  if (detected) updatedContext.industry = detected;
+  // Simple keyword-based extraction
+  if (message.includes('tech') || message.includes('software') || message.includes('app')) {
+    updatedContext.industry = 'technology';
+  } else if (message.includes('health') || message.includes('wellness')) {
+    updatedContext.industry = 'healthcare';
+  } else if (message.includes('retail') || message.includes('store')) {
+    updatedContext.industry = 'retail';
+  } else if (message.includes('food') || message.includes('restaurant')) {
+    updatedContext.industry = 'food';
+  }
 
-  if (message.includes('idea')) updatedContext.stage = 'idea';
-  else if (message.includes('plan')) updatedContext.stage = 'planning';
-  else if (message.includes('launch')) updatedContext.stage = 'launch';
+  if (message.includes('startup') || message.includes('new business')) {
+    updatedContext.businessType = 'startup';
+    updatedContext.stage = 'idea';
+  }
 
   return updatedContext;
 }
 
 function determineConversationStage(context: BusinessContext, messageCount: number): string {
-  if (messageCount <= 2) return 'discovery';
-  if (context.industry && context.stage) return 'validation';
-  if (context.goals?.length) return 'planning';
-  return 'execution';
-}
-
-function detectSentiment(message: string): string {
-  const lower = message.toLowerCase();
-  if (lower.match(/overwhelm|too much|confused|stuck|lost|don't know|hard|difficult|unsure/)) return 'overwhelmed';
-  if (lower.match(/excited|ready|let's go|can't wait|awesome|love|great|amazing/)) return 'excited';
-  if (lower.match(/not sure|maybe|unclear|hesitant|worried|nervous/)) return 'confused';
-  return 'neutral';
-}
-
-function detectConversationTopic(aiResponse: string, userMessage: string): {
-  mainTopic: string;
-  subtopics: string[];
-  questionAsked: boolean;
-  actionSuggested: boolean;
-} {
-  const combined = `${aiResponse} ${userMessage}`.toLowerCase();
-  
-  // Simplified pre-compiled patterns for faster matching
-  const topicPatterns = [
-    { name: 'validation', regex: /validat|test|feedback|mvp|prototype/i },
-    { name: 'pricing', regex: /pric|charge|revenue|monetiz|subscription/i },
-    { name: 'customers', regex: /customer|audience|target|buyer|ideal/i },
-    { name: 'marketing', regex: /market|promot|advertis|reach|social|seo/i },
-    { name: 'problem', regex: /problem|pain|frustrat|struggle|challenge/i },
-    { name: 'solution', regex: /solution|product|service|offer|build/i },
-    { name: 'goals', regex: /goal|timeline|milestone|launch|roadmap/i }
-  ];
-
-  const detected = topicPatterns.filter(t => t.regex.test(combined));
-
-  return {
-    mainTopic: detected[0]?.name || 'general',
-    subtopics: detected.slice(1, 3).map(t => t.name),
-    questionAsked: /\?/.test(aiResponse),
-    actionSuggested: /(try|consider|start|next|would you|let)/i.test(aiResponse)
-  };
-}
-
-// Pre-computed topic CTAs for fast lookup with enhanced engagement
-const topicCTAs: Record<string, string[]> = {
-  validation: [
-    "Show me validation methods 🧪",
-    "Help me get feedback 💬",
-    "Give me MVP steps 🚀",
-    "Test my idea for $0 💡"
-  ],
-  pricing: [
-    "Show me pricing examples 💰",
-    "Help calculate costs 🧮",
-    "Compare pricing models 📊",
-    "Find my sweet spot 🎯"
-  ],
-  customers: [
-    "Identify my ideal customers 👥",
-    "Customer research tips 🔍",
-    "Create customer avatar 📝",
-    "Find them online 🌐"
-  ],
-  marketing: [
-    "Marketing channels that work 📢",
-    "Low-budget ideas 💡",
-    "Create marketing plan 📋",
-    "Start with one platform 🚀"
-  ],
-  problem: [
-    "Articulate problem better 💬",
-    "Validate the problem 🧪",
-    "Research pain points 🔍",
-    "Make it crystal clear ✨"
-  ],
-  solution: [
-    "Describe solution clearly 💡",
-    "What makes it unique 💎",
-    "Position vs alternatives ⚖️",
-    "Build my elevator pitch 🎤"
-  ],
-  goals: [
-    "Set realistic goals 🎯",
-    "Create 90-day plan 🗓️",
-    "Prioritize next steps ✅",
-    "Break it down 📝"
-  ],
-  general: [
-    "Get clarity 💡",
-    "Focus on first step 🎯",
-    "Show me examples 📋",
-    "Start simple 🧘"
-  ],
-  overwhelmed: [
-    "Let's simplify this 🧘",
-    "Skip for now ⏭️",
-    "Focus on one thing 🎯",
-    "Take a break ☕"
-  ],
-  confidence: [
-    "Build my confidence 💪",
-    "Learn the basics 📚",
-    "Find a mentor 🤝",
-    "Start small 🌱"
-  ],
-  budget: [
-    "Bootstrap plan 💰",
-    "Free options first 🆓",
-    "Comfortable start 💸",
-    "Find funding 💳"
-  ]
-};
-
-function generateQuickActions(
-  stage: string, 
-  context: BusinessContext, 
-  userMessage: string, 
-  aiResponse: string
-): string[] {
-  const sentiment = detectSentiment(userMessage);
-  const topic = detectConversationTopic(aiResponse, userMessage);
-  
-  // Enhanced sentiment-based responses
-  if (sentiment === 'overwhelmed') {
-    return [
-      "Let's simplify this 🧘",
-      "Skip for now ⏭️",
-      "Focus on one thing 🎯",
-      "Take a break ☕"
-    ];
-  }
-  
-  if (sentiment === 'excited') {
-    const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
-    return [
-      ...topicOptions.slice(0, 2),
-      "Capture momentum 🚀",
-      "What's next? ⚡"
-    ];
-  }
-  
-  if (sentiment === 'confused') {
-    return [
-      "Get clarity 💡",
-      "Show me examples 📋",
-      "Start simple 🧘",
-      "Ask a friend 🤝"
-    ];
-  }
-  
-  // Industry-specific quick actions
-  if (context.industry) {
-    const industryActions = {
-      technology: ["Build MVP 🚀", "Find co-founder 👥", "Get funding 💰", "Validate idea 🧪"],
-      healthcare: ["Research regulations 📋", "Find partners 🤝", "Get certified ✅", "Test with users 🧪"],
-      retail: ["Create online store 🛒", "Find suppliers 📦", "Test products 🧪", "Build brand 🎨"],
-      food: ["Test recipes 👨‍🍳", "Find location 📍", "Get permits 📋", "Create menu 📝"],
-      education: ["Create curriculum 📚", "Find students 👥", "Build platform 💻", "Get certified ✅"],
-      finance: ["Research regulations 📋", "Build security 🔒", "Find partners 🤝", "Test with users 🧪"],
-      creative: ["Build portfolio 🎨", "Find clients 👥", "Set prices 💰", "Create website 🌐"]
-    };
-    
-    const industrySpecific = industryActions[context.industry as keyof typeof industryActions];
-    if (industrySpecific) {
-      return industrySpecific;
-    }
-  }
-  
-  // Stage-specific actions
-  if (stage === 'discovery') {
-    return [
-      "Define my idea 💡",
-      "Research the market 🔍",
-      "Find my customers 👥",
-      "Test the problem 🧪"
-    ];
-  }
-  
-  if (stage === 'validation') {
-    return [
-      "Get customer feedback 💬",
-      "Build a prototype 🚀",
-      "Test pricing 💰",
-      "Find early adopters 👥"
-    ];
-  }
-  
-  if (stage === 'planning') {
-    return [
-      "Create business plan 📋",
-      "Set up finances 💰",
-      "Plan marketing 📢",
-      "Build operations ⚙️"
-    ];
-  }
-  
-  if (stage === 'execution') {
-    return [
-      "Launch MVP 🚀",
-      "Get first customers 👥",
-      "Scale marketing 📈",
-      "Optimize operations ⚡"
-    ];
-  }
-  
-  // Default topic-based actions
-  const topicOptions = topicCTAs[topic.mainTopic] || topicCTAs.general;
-  return topicOptions.slice(0, 3);
+  if (messageCount < 3) return 'discovery';
+  if (context.industry && !context.stage) return 'exploration';
+  if (context.stage === 'idea') return 'validation';
+  if (context.stage === 'planning') return 'development';
+  return 'ongoing';
 }

@@ -371,6 +371,15 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   // Streaming state
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const streamingAbortRef = useRef(false);
+  
+  // Cancel streaming function
+  const cancelStreaming = useCallback(() => {
+    console.log('🛑 Canceling stream');
+    streamingAbortRef.current = true;
+    setIsStreaming(false);
+    setStreamingMessage('');
+  }, []);
 
   // Dynamic FAQ and advanced analytics to be implemented per IMPLEMENTATION_PLAN.md
   // These features are planned for future implementation
@@ -1834,6 +1843,7 @@ What specific aspect of your business would you like to focus on first?`;
     // Streaming properties
     streamingMessage,
     isStreaming,
+    cancelStreaming,
     
     // Attachments
     attachments,

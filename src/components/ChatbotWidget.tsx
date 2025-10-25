@@ -7,6 +7,8 @@ import { useChatbot } from '@/hooks/useChatbot';
 import TypingMessage from '@/components/TypingMessage';
 import { ReasoningAnalysis } from '@/types/socratic';
 import SocraticReasoningPanel from './SocraticReasoningPanel';
+import { StreamingMessage } from './chatbot/StreamingMessage';
+import { XCircle } from 'lucide-react';
 
 const ChatbotWidget = () => {
   const {
@@ -19,6 +21,7 @@ const ChatbotWidget = () => {
     setIsOpen,
     streamingMessage,
     isStreaming,
+    cancelStreaming,
     businessContext,
     socraticEngine,
     socraticContext,
@@ -266,27 +269,18 @@ const ChatbotWidget = () => {
                 {messages.map((message, index) => (
                   <div key={message.id}>
                     {message.isBot ? (
-                      message.id === 'streaming' ? (
-                        // Streaming message - show real-time content
-                        <div className="flex gap-3">
-                          <div className={`${config.avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0`}>
-                            <MessageCircle className={config.avatarIconSize} />
-                          </div>
-                          <div className={`max-w-[85%] bg-muted ${config.messagePadding} rounded-lg rounded-bl-none ${config.messageTextSize} whitespace-pre-wrap`}>
-                            {streamingMessage || '...'}
-                            {isStreaming && (
-                              <span className="inline-block w-2 h-4 ml-1 bg-foreground/60 animate-pulse" />
-                            )}
-                          </div>
+                      <div className="flex gap-3">
+                        <div className={`${config.avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0`}>
+                          <MessageCircle className={config.avatarIconSize} />
                         </div>
-                      ) : (
-                        // Regular bot message with typing animation
-                        <TypingMessage
-                          content={message.content}
-                          speed={index === messages.length - 1 && !isStreaming ? 30 : 0}
-                          deviceType={deviceType}
-                        />
-                      )
+                        <div className={`max-w-[85%] bg-muted ${config.messagePadding} rounded-lg rounded-bl-none ${config.messageTextSize}`}>
+                          <StreamingMessage 
+                            content={message.content}
+                            isComplete={true}
+                            isBot={true}
+                          />
+                        </div>
+                      </div>
                     ) : (
                       <div className="flex justify-end">
                         <div className={`max-w-[85%] bg-primary text-primary-foreground ${config.messagePadding} rounded-lg rounded-br-none ${config.messageTextSize}`}>
@@ -320,6 +314,21 @@ const ChatbotWidget = () => {
                   </div>
                 ))}
                 
+                {isStreaming && streamingMessage && (
+                  <div className="flex gap-3 animate-in fade-in duration-300">
+                    <div className={`${config.avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0`}>
+                      <MessageCircle className={config.avatarIconSize} />
+                    </div>
+                    <div className={`max-w-[85%] bg-muted ${config.messagePadding} rounded-lg rounded-bl-none ${config.messageTextSize}`}>
+                      <StreamingMessage 
+                        content={streamingMessage}
+                        isComplete={false}
+                        isBot={true}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {isTyping && !isStreaming && (
                   <div className="flex gap-3">
                     <div className={`${config.avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0`}>
@@ -341,6 +350,17 @@ const ChatbotWidget = () => {
 
             {/* Input */}
             <div className={`${config.inputPadding} border-t border-border flex-shrink-0`}>
+              {isStreaming && (
+                <div className="mb-2 flex items-center justify-center">
+                  <button
+                    onClick={cancelStreaming}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-full transition-colors duration-200"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    Stop generating
+                  </button>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
@@ -348,11 +368,12 @@ const ChatbotWidget = () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything..."
-                  className={`flex-1 ${config.inputTextSize} ${deviceType === 'mobile' ? 'h-12' : ''}`}
+                  disabled={isStreaming}
+                  className={`flex-1 ${config.inputTextSize} ${deviceType === 'mobile' ? 'h-12' : ''} disabled:opacity-50`}
                 />
                 <Button
                   onClick={handleSend}
-                  disabled={!inputValue.trim()}
+                  disabled={!inputValue.trim() || isStreaming}
                   size="sm"
                   className={deviceType === 'mobile' ? 'px-4 h-12' : deviceType === 'tablet' ? 'px-4 h-10' : 'px-3'}
                 >
