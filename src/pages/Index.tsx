@@ -41,6 +41,9 @@ const Index = () => {
         url="/"
         image="/lovable-uploads/new-favicon.png"
         structuredData={structuredData}
+        // TODO: Add your Google Search Console verification code here
+        // Get it from: https://search.google.com/search-console
+        // googleSiteVerification="paste-your-verification-code-here"
       />
       <Navigation />
       <main>

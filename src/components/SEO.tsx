@@ -13,6 +13,7 @@ interface SEOProps {
   canonical?: string;
   noindex?: boolean;
   structuredData?: object | object[];
+  googleSiteVerification?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ const SEO = ({
   canonical,
   noindex = false,
   structuredData,
+  googleSiteVerification,
 }: SEOProps) => {
   const baseUrl = 'https://creatives-takeover.com';
   const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
@@ -54,6 +56,7 @@ const SEO = ({
       {keywords && <meta name="keywords" content={keywords} />}
       {author && <meta name="author" content={author} />}
       {noindex && <meta name="robots" content="noindex,nofollow" />}
+      {googleSiteVerification && <meta name="google-site-verification" content={googleSiteVerification} />}
       
       {/* Canonical URL */}
       <link rel="canonical" href={canonicalUrl} />
