@@ -30,31 +30,43 @@ const FundingOpportunitiesSection = () => {
 
   return (
     <section className="py-20 px-4 relative overflow-hidden">
-      {/* Funding Wallpaper - Similar to Hero Style */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Base gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/8 via-primary/5 to-secondary/8" />
+      {/* Funding Wallpaper - Geometric Money Pattern */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-background via-background/95 to-background">
+        {/* Hexagonal grid pattern */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="hexagons" x="0" y="0" width="100" height="87" patternUnits="userSpaceOnUse">
+              <path d="M50,0 L93.3,25 L93.3,62 L50,87 L6.7,62 L6.7,25 Z" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" />
+              <circle cx="50" cy="43.5" r="3" fill="hsl(var(--primary))" opacity="0.3" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hexagons)" />
+        </svg>
         
-        {/* Animated overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
+        {/* Floating dollar symbols with different sizes */}
+        <div className="absolute top-20 left-[15%] text-5xl opacity-[0.025] animate-pulse" style={{animationDuration: '3s'}}>$</div>
+        <div className="absolute top-[30%] right-[20%] text-7xl opacity-[0.03] animate-pulse" style={{animationDuration: '4s', animationDelay: '0.5s'}}>$</div>
+        <div className="absolute bottom-[25%] left-[25%] text-6xl opacity-[0.025] animate-pulse" style={{animationDuration: '3.5s', animationDelay: '1s'}}>$</div>
+        <div className="absolute top-[60%] right-[15%] text-5xl opacity-[0.03] animate-pulse" style={{animationDuration: '4.5s', animationDelay: '1.5s'}}>$</div>
+        <div className="absolute bottom-[40%] left-[10%] text-8xl opacity-[0.02] animate-pulse" style={{animationDuration: '5s', animationDelay: '2s'}}>$</div>
         
-        {/* Smooth transition overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
+        {/* Diagonal lines creating depth */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="diagonals" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="80" y2="80" stroke="hsl(var(--primary))" strokeWidth="1" />
+              <line x1="40" y1="0" x2="80" y2="40" stroke="hsl(var(--secondary))" strokeWidth="0.5" />
+              <line x1="0" y1="40" x2="40" y2="80" stroke="hsl(var(--secondary))" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#diagonals)" />
+        </svg>
         
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `repeating-linear-gradient(
-            45deg,
-            hsl(var(--primary)),
-            hsl(var(--primary)) 2px,
-            transparent 2px,
-            transparent 20px
-          )`
-        }} />
-        
-        {/* Corner accent glows */}
-        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-gradient-to-br from-green-500/5 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-primary/5 to-transparent blur-3xl" />
+        {/* Circular ripple effects */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full border border-primary/5 blur-sm" />
+        <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full border border-primary/3 blur-md" />
+        <div className="absolute bottom-1/3 right-1/3 w-72 h-72 rounded-full border border-secondary/4 blur-sm" />
+        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 rounded-full border border-secondary/2 blur-md" />
       </div>
       
       {/* Decorative Wave */}
