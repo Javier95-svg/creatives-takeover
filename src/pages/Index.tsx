@@ -4,7 +4,7 @@ import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import ChatbotWidget from "@/components/ChatbotWidget";
-import { Helmet } from "react-helmet-async";
+import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
@@ -23,17 +23,25 @@ const Index = () => {
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
 
+  // Structured data for homepage
+  const structuredData = [
+    createOrganizationSchema(),
+    createWebSiteSchema(),
+    createBreadcrumbSchema([
+      { name: 'Home', url: '/' }
+    ])
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>Creatives Takeover - Your AI Co-Founder for Creative Businesses | Launch in 30 Days</title>
-        <meta name="description" content="The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days. Join 15,000+ creatives building real businesses with sprint-based planning, accountability partners, and creative-first intelligence." />
-        <meta name="keywords" content="creative business, AI co-founder, creative entrepreneur, launch in 30 days, creative business planning, accountability partners, creative startup, business for creatives" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
-        <meta name="theme-color" content="hsl(195 100% 50%)" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      </Helmet>
+      <SEO
+        title="AI Co-Founder for Creative Businesses | Creatives Takeover"
+        description="The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days. Join 15,000+ creatives building real businesses with sprint-based planning."
+        keywords="AI co-founder, creative business, creative entrepreneur, launch in 30 days, creative business planning, accountability partners, business for creatives"
+        url="/"
+        image="/lovable-uploads/new-favicon.png"
+        structuredData={structuredData}
+      />
       <Navigation />
       <main>
         <Hero />

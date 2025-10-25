@@ -1,14 +1,31 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Disallow admin and auth pages
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /account
+Disallow: /profile
+Disallow: /messages
+Disallow: /dashboard
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Allow all public pages
+Allow: /
+Allow: /dream2plan
+Allow: /pricing
+Allow: /services
+Allow: /news
+Allow: /community
+Allow: /resources
+Allow: /about
+Allow: /faq
+Allow: /contact
+
+# Crawl-delay for bots
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://creatives-takeover.com/sitemap.xml

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import CreativesTakeoverHeader from './CreativesTakeoverHeader';
-import { Helmet } from 'react-helmet-async';
+import SEO from './SEO';
 
 interface CreativesTakeoverLayoutProps {
   children: ReactNode;
@@ -15,14 +15,11 @@ const CreativesTakeoverLayout = ({
 }: CreativesTakeoverLayoutProps) => {
   return (
     <>
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:type" content="website" />
-      </Helmet>
+      <SEO
+        title={title}
+        description={description}
+        url="/creatives-takeover"
+      />
 
       <div className="min-h-screen bg-background">
         <CreativesTakeoverHeader />

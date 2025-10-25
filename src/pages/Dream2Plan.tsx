@@ -8,7 +8,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
 import InteractiveProgress from "@/components/InteractiveProgress";
-import { Helmet } from "react-helmet-async";
+import SEO, { createSoftwareSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -1064,13 +1064,67 @@ Subject: "Quick question about [their pain point]"
     }
   };
 
+  // Structured data for Dream2Plan
+  const structuredData = [
+    createSoftwareSchema(),
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to Create a Business Plan with AI",
+      "description": "Step-by-step guide to creating a comprehensive business plan using AI",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Business Overview",
+          "text": "Describe your business idea and what you're planning to create or offer"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Target Market",
+          "text": "Identify your ideal customers and who would benefit from your product or service"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Problem Definition",
+          "text": "Define the specific problem or pain point your business solves"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Your Solution",
+          "text": "Explain your solution and what makes it unique"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Marketing Channels",
+          "text": "Plan how you'll reach and attract your first customers"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Pricing & Costs",
+          "text": "Determine your pricing strategy and key business costs"
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Goals & Timeline",
+          "text": "Set achievable goals and timeline for your business launch"
+        }
+      ]
+    },
+    createBreadcrumbSchema([
+      { name: 'Home', url: '/' },
+      { name: 'Dream2Plan', url: '/dream2plan' }
+    ])
+  ];
+
   return (
     <div className="relative min-h-screen">
-      <Helmet>
-        <title>BizMap AI - Turn Business Ideas Into Launch Reports | AI Business Planning</title>
-        <meta name="description" content="Transform your business ideas into comprehensive Launch Reports with our 7-step AI wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps." />
-        <meta name="keywords" content="business plan, AI business planning, startup planning, business ideas, entrepreneurship, BizMap AI, launch report" />
-      </Helmet>
+      <SEO
+        title="AI Business Planning Tool | Free Business Plan Generator"
+        description="Turn your business ideas into comprehensive launch reports with our AI-powered 7-step wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps—free."
+        keywords="AI business plan generator, free business planning tool, startup planning, business ideas, entrepreneurship, launch report, business plan wizard"
+        url="/dream2plan"
+        structuredData={structuredData}
+      />
       
       {/* Enhanced Animated Background */}
       <AnimatedBackground />

@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
@@ -50,13 +50,38 @@ const Blog = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Structured data for blog page
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "Creatives Takeover Insighta Blog",
+      "description": "Expert insights on creative business trends, AI opportunities, and entrepreneurship strategies",
+      "url": "https://creatives-takeover.com/news",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Creatives Takeover",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://creatives-takeover.com/lovable-uploads/new-favicon.png"
+        }
+      }
+    },
+    createBreadcrumbSchema([
+      { name: 'Home', url: '/' },
+      { name: 'News', url: '/news' }
+    ])
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>News - Creatives Takeover | Business Tips & AI Insights</title>
-        <meta name="description" content="Discover expert insights on business planning, AI tools, entrepreneurship, and creative strategies. Stay updated with the latest trends in business innovation." />
-        <meta name="keywords" content="business news, entrepreneurship tips, AI business tools, startup advice, creative business strategies" />
-      </Helmet>
+      <SEO
+        title="Creative Business Trends & Opportunities | Insighta Blog"
+        description="Discover AI-powered insights on creative business trends, funding opportunities, and entrepreneurship strategies. Stay ahead with daily curated content for creative entrepreneurs."
+        keywords="creative business trends, AI opportunities, entrepreneurship news, startup funding, business insights, creative entrepreneur"
+        url="/news"
+        structuredData={structuredData}
+      />
       <Navigation />
       
       {/* Sticky Navigation - shows after scrolling past hero */}
