@@ -1183,7 +1183,6 @@ Subject: "Quick question about [their pain point]"
                     onSessionSelect={handleSessionSelect}
                     onNewChat={handleNewChat}
                     onTabChange={(tab) => setActiveTab(tab)}
-                    className="hidden lg:flex"
                   />
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}
