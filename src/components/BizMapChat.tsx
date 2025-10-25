@@ -438,7 +438,7 @@ export const BizMapChat = ({
         
         {/* Share to Community Button - Shows when there are messages */}
         {messages.length > 0 && (
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-3">
             <Button
               variant="outline"
               size="sm"
@@ -465,14 +465,6 @@ export const BizMapChat = ({
               <Share2 className="h-4 w-4" />
               Share to Community for Feedback
             </Button>
-            
-            <FileAttachment 
-              onFileSelect={setAttachedFiles} 
-              maxFiles={5}
-              maxSizeMB={10}
-              acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
-              iconOnly
-            />
           </div>
         )}
 
@@ -504,6 +496,13 @@ export const BizMapChat = ({
             placeholder={chatMode === 'freeform' ? "Ask me anything about your business..." : getCurrentPlaceholder()}
             disabled={isTyping || isStreaming}
             className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
+          />
+          <FileAttachment 
+            onFileSelect={setAttachedFiles} 
+            maxFiles={5}
+            maxSizeMB={10}
+            acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
+            iconOnly
           />
           <Button 
             onClick={handleSend}
