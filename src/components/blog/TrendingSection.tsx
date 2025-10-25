@@ -123,7 +123,7 @@ const TrendingSection = ({
         
         <div className="container mx-auto px-4 relative z-10 max-w-7xl">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 mb-6">
+            <div className="inline-flex items-center gap-2 mb-10">
               <Sparkles className="h-6 w-6 text-primary animate-pulse" />
               <h2 className="text-4xl md:text-5xl font-bold gradient-text">Insighta Newspaper</h2>
             </div>
@@ -238,7 +238,7 @@ const TrendingSection = ({
 
       <div className="container mx-auto px-4 relative z-10 max-w-7xl">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 mb-6">
+          <div className="inline-flex items-center gap-2 mb-10">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold gradient-text">
               {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Insighta Newspaper'}
