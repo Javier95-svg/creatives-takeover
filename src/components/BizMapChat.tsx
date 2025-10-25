@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X, FileText, Image as ImageIcon } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
@@ -451,29 +451,55 @@ export const BizMapChat = ({
         {attachedFiles.length > 0 && (
           <div className="mb-3">
             <div className="space-y-2">
-              {attachedFiles.map((file, index) => (
-                <div
-                  key={`${file.name}-${index}`}
-                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border text-xs"
-                >
-                  <Paperclip className="w-3 h-3 text-muted-foreground" />
-                  <span className="flex-1 truncate">{file.name}</span>
-                  <span className="text-muted-foreground">
-                    {(file.size / 1024).toFixed(1)} KB
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newFiles = attachedFiles.filter((_, i) => i !== index);
-                      setAttachedFiles(newFiles);
-                    }}
-                    className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+              {attachedFiles.map((file, index) => {
+                const isImage = file.type.startsWith('image/');
+                const isPDF = file.type === 'application/pdf';
+                const previewUrl = isImage ? URL.createObjectURL(file) : null;
+                
+                return (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border border-border text-xs"
                   >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
+                    {/* Thumbnail */}
+                    <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-background border border-border flex items-center justify-center">
+                      {isImage && previewUrl ? (
+                        <img 
+                          src={previewUrl} 
+                          alt={file.name}
+                          className="w-full h-full object-cover"
+                          onLoad={() => URL.revokeObjectURL(previewUrl)}
+                        />
+                      ) : isPDF ? (
+                        <FileText className="w-6 h-6 text-red-500" />
+                      ) : (
+                        <FileText className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    
+                    {/* File Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{file.name}</p>
+                      <p className="text-muted-foreground">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                    
+                    {/* Remove Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newFiles = attachedFiles.filter((_, i) => i !== index);
+                        setAttachedFiles(newFiles);
+                      }}
+                      className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
