@@ -19,6 +19,28 @@ interface WizardMode {
   answers: Record<string, string>;
 }
 
+interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  base64: string;
+}
+
+// Helper function to convert File to base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the data URL prefix (e.g., "data:image/png;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export const streamChat = async (
   message: string,
   sessionId: string,
@@ -28,6 +50,7 @@ export const streamChat = async (
   wizardMode: WizardMode | null,
   currentStep: number | null,
   chatMode: 'wizard' | 'freeform',
+  files?: File[],
   onChunk?: (chunk: string) => void,
   onComplete?: (fullMessage: string) => void,
   onError?: (error: Error) => void
@@ -39,8 +62,29 @@ export const streamChat = async (
     messageLength: message.length,
     wizardMode: wizardMode?.enabled,
     currentStep,
+    filesCount: files?.length || 0,
     url: STREAM_URL 
   });
+
+  // Convert files to base64 if provided
+  let attachments: FileAttachment[] = [];
+  if (files && files.length > 0) {
+    console.log('📎 Converting files to base64...');
+    try {
+      attachments = await Promise.all(
+        files.map(async (file) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          base64: await fileToBase64(file)
+        }))
+      );
+      console.log('✅ Files converted:', attachments.length);
+    } catch (error) {
+      console.error('❌ Error converting files:', error);
+      throw new Error('Failed to process file attachments');
+    }
+  }
 
   let fullMessage = '';
   let eventSource: EventSource | null = null;
@@ -71,7 +115,8 @@ export const streamChat = async (
             userId,
             wizardMode,
             currentStep,
-            chatMode
+            chatMode,
+            attachments
           }),
         }).then(async (response) => {
           if (!response.ok) {
@@ -109,6 +154,7 @@ export const streamChat = async (
                   if (!line.startsWith('data: ')) continue;
 
                   const data = line.slice(6).trim();
+                  
                   if (data === '[DONE]') {
                     console.log('✅ Received [DONE] signal');
                     onComplete?.(fullMessage);
@@ -118,7 +164,6 @@ export const streamChat = async (
 
                   try {
                     const parsed = JSON.parse(data);
-
                     if (parsed.type === 'delta' && parsed.content) {
                       fullMessage += parsed.content;
                       onChunk?.(parsed.content);
@@ -174,7 +219,6 @@ export const streamChat = async (
             reject(error);
           }
         });
-
       } catch (error) {
         console.error('❌ Connection error:', error);
         const err = error instanceof Error ? error : new Error('Unknown error');
