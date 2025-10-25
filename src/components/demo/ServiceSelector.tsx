@@ -53,7 +53,7 @@ const ServiceSelector = ({ onSelectService }: ServiceSelectorProps) => {
       icon: TrendingUp,
       description: 'Your curated news hub for funding opportunities and the latest AI trends',
       features: [
-        'Discover funding opportunities',
+        'Funding Opportunities',
         'Latest AI & startup news',
         'Trending entrepreneurship articles',
         'Bookmark & save for later'

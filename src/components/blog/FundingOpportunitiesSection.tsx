@@ -30,47 +30,48 @@ const FundingOpportunitiesSection = () => {
 
   return (
     <section className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/20">
-      {/* Funding Wallpaper - Topographic Contour Lines */}
+      {/* Funding Wallpaper - Money Flow Animation */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Contour lines - layered */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+        {/* Animated dollar signs floating */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-10 left-10 text-6xl opacity-[0.03] animate-bounce" style={{animationDelay: '0s', animationDuration: '3s'}}>💰</div>
+          <div className="absolute top-32 right-20 text-5xl opacity-[0.04] animate-bounce" style={{animationDelay: '0.5s', animationDuration: '3.5s'}}>💵</div>
+          <div className="absolute bottom-40 left-1/4 text-7xl opacity-[0.03] animate-bounce" style={{animationDelay: '1s', animationDuration: '4s'}}>💸</div>
+          <div className="absolute top-1/3 right-1/3 text-6xl opacity-[0.04] animate-bounce" style={{animationDelay: '1.5s', animationDuration: '3.2s'}}>💴</div>
+          <div className="absolute bottom-20 right-10 text-5xl opacity-[0.03] animate-bounce" style={{animationDelay: '2s', animationDuration: '3.8s'}}>💶</div>
+          <div className="absolute top-1/2 left-10 text-6xl opacity-[0.04] animate-bounce" style={{animationDelay: '0.8s', animationDuration: '3.3s'}}>💷</div>
+        </div>
+        
+        {/* Circular money flow pattern */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="contours" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-              <path d="M 20,100 Q 60,80 100,100 T 180,100" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" />
-              <path d="M 30,120 Q 70,100 110,120 T 190,120" stroke="hsl(var(--primary))" strokeWidth="0.8" fill="none" />
-              <path d="M 15,80 Q 55,60 95,80 T 175,80" stroke="hsl(var(--accent))" strokeWidth="0.6" fill="none" />
-              <path d="M 40,140 Q 80,120 120,140 T 200,140" stroke="hsl(var(--secondary))" strokeWidth="0.5" fill="none" />
+            <pattern id="moneyCircles" x="0" y="0" width="150" height="150" patternUnits="userSpaceOnUse">
+              <circle cx="75" cy="75" r="40" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" opacity="0.6" />
+              <circle cx="75" cy="75" r="25" stroke="hsl(var(--accent))" strokeWidth="0.8" fill="none" opacity="0.4" />
+              <path d="M 75,35 L 75,115 M 35,75 L 115,75" stroke="hsl(var(--secondary))" strokeWidth="0.5" opacity="0.3" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#contours)" />
+          <rect width="100%" height="100%" fill="url(#moneyCircles)" />
         </svg>
         
-        {/* Geometric corner accents */}
-        <div className="absolute top-0 left-0 w-64 h-64 opacity-[0.04]">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <line x1="0" y1="0" x2="256" y2="0" stroke="hsl(var(--primary))" strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2="256" stroke="hsl(var(--primary))" strokeWidth="1" />
-            <line x1="0" y1="50" x2="206" y2="50" stroke="hsl(var(--accent))" strokeWidth="0.5" />
-            <line x1="50" y1="0" x2="50" y2="206" stroke="hsl(var(--accent))" strokeWidth="0.5" />
-          </svg>
-        </div>
+        {/* Graph lines suggesting growth */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="growthLines" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+              <polyline points="0,150 50,120 100,100 150,70 200,40" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" />
+              <polyline points="0,180 50,160 100,140 150,120 200,100" stroke="hsl(var(--accent))" strokeWidth="1.5" fill="none" opacity="0.6" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#growthLines)" />
+        </svg>
         
-        <div className="absolute bottom-0 right-0 w-64 h-64 opacity-[0.04] rotate-180">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <line x1="0" y1="0" x2="256" y2="0" stroke="hsl(var(--secondary))" strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2="256" stroke="hsl(var(--secondary))" strokeWidth="1" />
-            <line x1="0" y1="50" x2="206" y2="50" stroke="hsl(var(--primary))" strokeWidth="0.5" />
-            <line x1="50" y1="0" x2="50" y2="206" stroke="hsl(var(--primary))" strokeWidth="0.5" />
-          </svg>
-        </div>
-        
-        {/* Radial gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/6 via-transparent to-transparent" />
+        {/* Radial gradient overlays with green tint for money */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-tl from-primary/6 via-transparent to-transparent" />
         
-        {/* Soft glow effects */}
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        {/* Pulsing glow effects */}
+        <div className="absolute top-1/4 right-1/3 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse" style={{animationDuration: '4s'}} />
+        <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{animationDuration: '5s', animationDelay: '1s'}} />
         
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
       </div>
@@ -92,8 +93,9 @@ const FundingOpportunitiesSection = () => {
           <div className="inline-flex items-center gap-2 mb-6">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Discover Funding Opportunities
+              Funding Opportunities
             </h2>
+            <span className="text-4xl md:text-5xl animate-bounce">💰</span>
           </div>
           <p className="text-muted-foreground text-lg mt-4">
             Investment contests, accelerator programs, and funding opportunities for your refined business plan
