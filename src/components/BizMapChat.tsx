@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
@@ -134,6 +134,17 @@ export const BizMapChat = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addStepResponse } = useChatBotStore();
+  
+  // Listen for examples modal event
+  useEffect(() => {
+    const handleOpenExamples = () => {
+      // Trigger parent's examples modal
+      const event = new CustomEvent('triggerExamplesModal');
+      window.dispatchEvent(event);
+    };
+    window.addEventListener('openExamplesModal', handleOpenExamples);
+    return () => window.removeEventListener('openExamplesModal', handleOpenExamples);
+  }, []);
   
   // Conversion prompt state
   const [showInlineBanner, setShowInlineBanner] = useState(false);
@@ -486,9 +497,9 @@ export const BizMapChat = ({
           </Button>
         </div>
 
-        {/* Share to Community Button - Shows when there are messages */}
+        {/* Share to Community and Examples Buttons - Shows when there are messages */}
         {messages.length > 0 && (
-          <div className="mt-3">
+          <div className="mt-3 flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -510,10 +521,22 @@ export const BizMapChat = ({
                 });
                 setShowShareDialog(true);
               }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2"
             >
               <Share2 className="h-4 w-4" />
               Share to Community
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Trigger the examples modal in the parent component
+                window.dispatchEvent(new CustomEvent('openExamplesModal'));
+              }}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              See Examples
             </Button>
           </div>
         )}

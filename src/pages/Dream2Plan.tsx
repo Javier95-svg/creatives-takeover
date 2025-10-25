@@ -359,6 +359,15 @@ const BizMapAI = () => {
     }
   }, []);
 
+  // Listen for examples modal trigger from BizMapChat
+  useEffect(() => {
+    const handleTriggerExamples = () => {
+      setShowExamplesModal(true);
+    };
+    window.addEventListener('triggerExamplesModal', handleTriggerExamples);
+    return () => window.removeEventListener('triggerExamplesModal', handleTriggerExamples);
+  }, []);
+
   // Helper: compute and store success score
   const computeAndStoreSuccessScore = async (answers: any) => {
     try {
@@ -1187,24 +1196,6 @@ Subject: "Quick question about [their pain point]"
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}
                   <div className="flex-1 min-w-0">
-                    {/* Example Conversations Button - Show before user starts */}
-                    {currentStep === 0 && Object.values(userAnswers).every(v => !v) && (
-                      <div className="mb-4 animate-fade-in">
-                        <Button
-                          onClick={() => setShowExamplesModal(true)}
-                          variant="outline"
-                          className="w-full sm:w-auto flex items-center gap-2 min-h-[44px] hover:bg-primary/5 hover:border-primary/50 transition-all duration-300"
-                          size="lg"
-                        >
-                          <BookOpen className="w-5 h-5" />
-                          📚 See Examples
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Need inspiration? Check out complete business examples
-                        </p>
-                      </div>
-                    )}
-                    
                     <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-xl h-[500px] sm:h-[600px] lg:h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
