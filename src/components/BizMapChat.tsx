@@ -436,38 +436,6 @@ export const BizMapChat = ({
           </p>
         )}
         
-        {/* Share to Community Button - Shows when there are messages */}
-        {messages.length > 0 && (
-          <div className="mb-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
-                const context: any = typeof lastBotMessage?.businessContext === 'object' ? lastBotMessage.businessContext : {};
-                const extractedContent = extractKeyContent(messages, context);
-                
-                setShareData({
-                  conversationId: user?.id,
-                  reportData: {
-                    ...context,
-                    extractedContent
-                  },
-                  defaultTitle: context?.industry 
-                    ? `${context.industry} Business Plan - Seeking Feedback`
-                    : 'Business Plan - Seeking Community Feedback',
-                  defaultContent: extractedContent.summary,
-                });
-                setShowShareDialog(true);
-              }}
-              className="flex items-center gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              Share to Community for Feedback
-            </Button>
-          </div>
-        )}
-
         {/* Attached Files Display */}
         {attachedFiles.length > 0 && (
           <div className="mb-3">
@@ -517,6 +485,38 @@ export const BizMapChat = ({
             )}
           </Button>
         </div>
+
+        {/* Share to Community Button - Shows when there are messages */}
+        {messages.length > 0 && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
+                const context: any = typeof lastBotMessage?.businessContext === 'object' ? lastBotMessage.businessContext : {};
+                const extractedContent = extractKeyContent(messages, context);
+                
+                setShareData({
+                  conversationId: user?.id,
+                  reportData: {
+                    ...context,
+                    extractedContent
+                  },
+                  defaultTitle: context?.industry 
+                    ? `${context.industry} Business Plan`
+                    : 'Business Plan',
+                  defaultContent: extractedContent.summary,
+                });
+                setShowShareDialog(true);
+              }}
+              className="w-full sm:w-auto flex items-center justify-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share to Community
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Share to Community Dialog */}
