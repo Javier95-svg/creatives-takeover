@@ -156,17 +156,11 @@ const Pricing = () => {
         <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/50 rounded-full animate-spiral opacity-70" style={{ animationDelay: '14s' }} />
       <div className="container mx-auto px-4 relative z-20">
         <div className="text-center mb-16 animate-fade-in">
-          <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
-            Start Free • Upgrade Anytime
-          </Badge>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
-            Start free and upgrade when you're ready to scale
-          </p>
-          <p className="text-sm text-muted-foreground">
-            No credit card required for free plan • Cancel anytime
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Unlock your creative potential with flexible plans designed for every level of ambition
           </p>
         </div>
 
@@ -178,7 +172,6 @@ const Pricing = () => {
             const description = getDescription(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'professional';
-            const isFree = tier.tier_name === 'free';
 
             return (
               <div
@@ -186,22 +179,18 @@ const Pricing = () => {
                 className={`relative glass-card p-4 sm:p-5 lg:p-6 transition-all duration-500 animate-fade-in hover:scale-[1.02] sm:hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
                   isCurrentPlan
                     ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
-                    : isFree
-                    ? 'border-2 border-primary/50 bg-primary/5 shadow-[0_0_30px_hsl(var(--primary)/0.15)]'
                     : isPopular 
                     ? 'border-2 border-primary/30 sm:scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
                     : 'border border-border/50'
                 }`}
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
-                {/* Current Plan, Free, or Popular Badge */}
-                {(isCurrentPlan || isPopular || isFree) && (
+                {/* Current Plan or Popular Badge */}
+                {(isCurrentPlan || isPopular) && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <Badge className={`px-4 py-1 text-sm font-medium flex items-center gap-1 ${
                       isCurrentPlan
                         ? 'bg-green-600 text-white'
-                        : isFree
-                        ? 'bg-primary text-primary-foreground animate-pulse'
                         : 'bg-primary text-primary-foreground'
                     }`}>
                       {isCurrentPlan ? (
@@ -209,15 +198,10 @@ const Pricing = () => {
                           <Crown className="w-3 h-3 fill-current" />
                           Your Plan
                         </>
-                      ) : isFree ? (
-                        <>
-                          <Star className="w-3 h-3 fill-current" />
-                          Free Forever
-                        </>
                       ) : (
                         <>
                           <Star className="w-3 h-3 fill-current" />
-                          Best Value
+                          Most Popular
                         </>
                       )}
                     </Badge>

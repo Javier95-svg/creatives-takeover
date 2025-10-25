@@ -159,46 +159,29 @@ const Hero = () => {
             From scattered ideas to a structured plan, validated offer, and profitable launch in 30 days
           </p>
           
-          {/* Social Proof Banner */}
-          <div className="flex justify-center mb-6 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/30">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-secondary border-2 border-background" />
-                ))}
-              </div>
-              <span className="text-sm font-medium">Join 15,000+ Creatives Building Real Businesses</span>
-            </div>
-          </div>
-          
           {/* Trust Indicators */}
           <div className="flex flex-wrap items-center justify-center gap-4 mb-8 sm:mb-10 text-xs sm:text-sm text-muted-foreground px-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Free Forever Plan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>No Credit Card Required</span>
+              <span>Launch before perfection</span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Get Started in 60 Seconds</span>
+              <span>No investors needed</span>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-3 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.4s' }}>
             <Button 
               size="lg" 
               className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto" 
-              aria-label="Start Free - No Credit Card Required" 
-              onClick={() => trackClick('Start Free CTA', 'Hero')}
+              aria-label="Create My Plan" 
+              onClick={() => trackClick('Create My Plan', 'Hero')}
               asChild
             >
-              <Link to="/signup">
-                <Sparkles className="mr-2 w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
-                <span className="relative z-10">Start Free - No Credit Card</span>
+              <Link to="/dream2plan">
+                <span className="relative z-10">Create My Plan</span>
                 <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
@@ -208,21 +191,16 @@ const Hero = () => {
               size="lg" 
               variant="outline" 
               className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
-              aria-label="Try Demo"
-              onClick={() => trackClick('Try Demo', 'Hero')}
+              aria-label="Go to Dashboard"
+              onClick={() => trackClick('Go to Dashboard', 'Hero')}
               asChild
             >
-              <Link to="/demo">
+              <Link to="/dashboard">
                 <LayoutDashboard className="mr-2 w-4 sm:w-5 h-4 sm:h-5" />
-                <span>Try Demo First</span>
+                <span>Go to Dashboard</span>
               </Link>
             </Button>
           </div>
-          
-          {/* Urgency Message */}
-          <p className="text-xs sm:text-sm text-muted-foreground mb-12 sm:mb-16 animate-slide-up" style={{ animationDelay: '0.45s' }}>
-            ✨ Get started in 60 seconds • No credit card required • Cancel anytime
-          </p>
 
           {/* Key Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 animate-slide-up px-4" style={{ animationDelay: '0.6s' }}>
