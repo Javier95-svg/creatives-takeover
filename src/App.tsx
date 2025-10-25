@@ -13,6 +13,7 @@ import CreativesTakeover from "./pages/CreativesTakeover";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import PricingPage from "./pages/PricingPage";
+import FreePlan from "./pages/FreePlan";
 import CommunityPage from "./pages/CommunityPage";
 import Resources from "./pages/Resources";
 import FAQPage from "./pages/FAQPage";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/free-plan" element={<FreePlan />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/messages" element={<Messages />} />

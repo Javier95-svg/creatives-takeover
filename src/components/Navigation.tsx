@@ -63,7 +63,8 @@ const Navigation = () => {
     { name: "Community", href: "/community" },
     { name: "Careers", href: "/careers" },
     { name: "About Us", href: "/about" },
-    { name: "Pricing", href: "/pricing" }
+    { name: "Pricing", href: "/pricing" },
+    { name: "Start Free", href: "/free-plan", highlight: true }
   ];
 
   return (
@@ -84,7 +85,11 @@ const Navigation = () => {
                 key={item.name}
                 to={item.href}
                 onClick={() => trackClick(item.name, 'Navigation')}
-                className={`text-muted-foreground hover:text-foreground transition-colors animated-underline whitespace-nowrap ${
+                className={`transition-colors animated-underline whitespace-nowrap ${
+                  item.highlight 
+                    ? 'px-4 py-2 rounded-lg bg-primary/20 text-primary font-semibold hover:bg-primary/30 border border-primary/30' 
+                    : 'text-muted-foreground hover:text-foreground'
+                } ${
                   item.name === 'BizMap AI' ? 'relative' : ''
                 }`}
                 onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
@@ -183,7 +188,11 @@ const Navigation = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="block px-4 py-4 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] touch-manipulation flex items-center"
+                  className={`block px-4 py-4 transition-colors min-h-[44px] touch-manipulation flex items-center ${
+                    item.highlight
+                      ? 'bg-primary/20 text-primary font-semibold rounded-lg border border-primary/30'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}

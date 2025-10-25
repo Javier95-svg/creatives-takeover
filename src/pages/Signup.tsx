@@ -222,17 +222,19 @@ const Signup = () => {
             />
             Creatives Takeover
           </Link>
-          <h1 className="text-3xl font-bold mt-4 mb-2">Join us</h1>
+          <h1 className="text-3xl font-bold mt-4 mb-2">Start Free in 60 Seconds</h1>
           <p className="text-muted-foreground">
-            Start turning your creative ideas into reality
+            No credit card required • Free forever plan available
           </p>
         </div>
 
         {/* Signup Form */}
         <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
           <CardHeader className="space-y-1 pb-4">
-            <h2 className="text-xl font-semibold text-center">Create your account</h2>
-            <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
+            <h2 className="text-xl font-semibold text-center">Create your free account</h2>
+            <p className="text-sm text-muted-foreground text-center">
+              Join 15,000+ creatives • No credit card required
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
@@ -413,8 +415,15 @@ const Signup = () => {
                     <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  Continue with Google
+                  Sign up with Google
                 </Button>
+              </div>
+              
+              {/* No Credit Card Message */}
+              <div className="text-center pt-2">
+                <p className="text-xs text-muted-foreground">
+                  🎉 No credit card required • Start free forever
+                </p>
               </div>
 
               {/* Security Badge */}
