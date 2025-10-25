@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles, Compass, MessageSquare, Package, RefreshCw, Brain, ArrowRight, TrendingUp } from "lucide-react";
+import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles, Compass, MessageSquare, Package, RefreshCw, Brain, ArrowRight, TrendingUp, Download } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import TypingMessage from "@/components/TypingMessage";
@@ -33,6 +33,10 @@ import ChatbotWidget from "@/components/ChatbotWidget";
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { ReportDisplay } from "@/components/ReportDisplay";
+import { ExampleConversations } from "@/components/chatbot/ExampleConversations";
+import { ProgressTracker } from "@/components/chatbot/ProgressTracker";
+import { JumpToStepDialog } from "@/components/chatbot/JumpToStepDialog";
+import { generateBusinessPlanPDF } from "@/utils/pdfGenerator";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -52,6 +56,12 @@ const BizMapAI = () => {
   const [successScore, setSuccessScore] = useState<any>(null);
   const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
   const [showReport, setShowReport] = useState(false);
+  
+  // Quick Win 6: Jump to step state
+  const [showJumpDialog, setShowJumpDialog] = useState(false);
+  const [targetJumpStep, setTargetJumpStep] = useState<number>(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -246,11 +256,102 @@ const BizMapAI = () => {
     const sessionId = await createNewSession();
     if (sessionId) {
       resetChat();
+      setCompletedSteps([]); // Reset completed steps
     } else if (!user) {
       // For non-authenticated users, just reset the chat
       resetChat();
       setCurrentSessionId(null);
+      setCompletedSteps([]);
     }
+  };
+  
+  // Quick Win 4: Handle template selection
+  const handleTemplateSelect = (answers: Record<string, string>, businessName: string) => {
+    const mappedAnswers = {
+      overview: answers.overview || answers.businessIdea || "",
+      market: answers.market || answers.targetMarket || "",
+      problem: answers.problem || "",
+      solution: answers.solution || "",
+      channels: answers.channels || "",
+      pricing: answers.pricing || "",
+      goals: answers.goals || ""
+    };
+    
+    setUserAnswers(mappedAnswers);
+    setCurrentStep(wizardSteps.length); // Move to end
+    setCompletedSteps(wizardSteps.map((_, i) => i)); // Mark all as completed
+    
+    toast.success(`${businessName} template loaded! Review and customize as needed.`);
+    
+    // Reconstruct messages for template
+    const templateMessages = [
+      {
+        type: "assistant",
+        content: wizardSteps[0].question
+      }
+    ];
+    
+    wizardSteps.forEach((step, index) => {
+      if (index > 0 && wizardSteps[index - 1].transition) {
+        templateMessages.push({
+          type: "assistant",
+          content: wizardSteps[index - 1].transition + "\n\n" + step.question
+        });
+      }
+      templateMessages.push({
+        type: "user",
+        content: mappedAnswers[step.key as keyof typeof mappedAnswers] || ""
+      });
+    });
+    
+    setMessages(templateMessages);
+  };
+  
+  // Quick Win 5: Generate PDF
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      
+      const businessName = userAnswers.overview?.split(' ').slice(0, 3).join(' ') || 'My Business';
+      const pdfData = {
+        businessName,
+        answers: userAnswers,
+        currentStep,
+        completedAt: new Date()
+      };
+      
+      await generateBusinessPlanPDF(pdfData);
+      
+      toast.success('Business plan PDF downloaded successfully!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+  
+  // Quick Win 6: Handle step jump
+  const handleStepClick = (step: number) => {
+    if (completedSteps.includes(step)) {
+      setTargetJumpStep(step);
+      setShowJumpDialog(true);
+    }
+  };
+  
+  const handleConfirmJump = () => {
+    setCurrentStep(targetJumpStep);
+    setShowJumpDialog(false);
+    
+    // Scroll to chat
+    setTimeout(() => {
+      const chatElement = document.getElementById('bizmap-chat');
+      if (chatElement) {
+        chatElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+    
+    toast.info(`Jumped to Step ${targetJumpStep + 1}. You can now modify your previous answer.`);
   };
 
   // Auto-save session progress
@@ -1147,7 +1248,58 @@ Subject: "Quick question about [their pain point]"
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
                 Your global startup co-founder in chatbot form, <span className="gradient-text font-semibold">ready to turn vision into action.</span>
               </p>
+              
+              {/* Quick Win 4: Example Conversations Button */}
+              {currentStep === 0 && !launchReport && (
+                <div className="mt-6 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                  <ExampleConversations onSelectTemplate={handleTemplateSelect} />
+                </div>
+              )}
+              
+              {/* Quick Win 5: PDF Download Button (shown when wizard complete) */}
+              {currentStep >= wizardSteps.length && launchReport && (
+                <div className="mt-6 animate-fade-in">
+                  <Button
+                    onClick={handleDownloadPDF}
+                    disabled={isGeneratingPDF}
+                    size="lg"
+                    className="gap-2 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    {isGeneratingPDF ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Generating your business plan PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        📄 Download Business Plan
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
+            
+            {/* Quick Win 6: Progress Tracker with Jump-to-Step */}
+            {currentStep > 0 && (
+              <div className="mb-6 sm:mb-8 animate-fade-in">
+                <ProgressTracker
+                  currentStep={currentStep}
+                  totalSteps={wizardSteps.length}
+                  completedSteps={completedSteps}
+                  onStepClick={handleStepClick}
+                />
+              </div>
+            )}
+            
+            {/* Quick Win 6: Jump to Step Dialog */}
+            <JumpToStepDialog
+              open={showJumpDialog}
+              targetStep={targetJumpStep}
+              onConfirm={handleConfirmJump}
+              onCancel={() => setShowJumpDialog(false)}
+            />
 
             {/* Enhanced Tab Navigation */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -1189,11 +1341,18 @@ Subject: "Quick question about [their pain point]"
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
-                          setCurrentStep(step + 1);
+                          const currentKey = wizardSteps[step].key as keyof typeof userAnswers;
                           setUserAnswers(prev => ({
                             ...prev,
-                            [wizardSteps[step].key]: answer
+                            [currentKey]: answer
                           }));
+                          
+                          // Mark step as completed for jump navigation
+                          if (!completedSteps.includes(step)) {
+                            setCompletedSteps(prev => [...prev, step]);
+                          }
+                          
+                          setCurrentStep(step + 1);
                         }}
                         onWizardComplete={(finalAnswers) => {
                           // Save answers to parent state
