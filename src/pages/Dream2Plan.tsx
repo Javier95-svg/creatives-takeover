@@ -1177,7 +1177,7 @@ Subject: "Quick question about [their pain point]"
 
               <TabsContent value="bizmap">
                 {/* Chat Interface Container */}
-                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mb-6 sm:mb-8">
+                <div className="flex flex-row gap-4 lg:gap-6 mb-6 sm:mb-8">
                   {/* Chat Sidebar */}
                   <ChatSidebar 
                     onSessionSelect={handleSessionSelect}
