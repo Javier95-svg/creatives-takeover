@@ -1423,6 +1423,7 @@ What specific aspect of your business would you like to focus on first?`;
             },
             wizardStep,
             chatMode,
+            messageAttachments,
             (chunk) => setStreamingMessage(prev => prev + chunk),
             (fullMessage) => {
               // Replace streaming message with final message
@@ -1496,6 +1497,7 @@ What specific aspect of your business would you like to focus on first?`;
           config.wizardMode,
           config.wizardMode?.currentStep || wizardStep,
           chatMode,
+          messageAttachments,
           (chunk) => setStreamingMessage(prev => prev + chunk),
           (fullMessage) => {
             // Replace streaming message with final message
