@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
@@ -438,7 +438,7 @@ export const BizMapChat = ({
         
         {/* Share to Community Button - Shows when there are messages */}
         {messages.length > 0 && (
-          <div className="mb-3">
+          <div className="mb-3 flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -460,23 +460,41 @@ export const BizMapChat = ({
                 });
                 setShowShareDialog(true);
               }}
-              className="w-full sm:w-auto flex items-center gap-2"
+              className="flex items-center gap-2"
             >
               <Share2 className="h-4 w-4" />
               Share to Community for Feedback
             </Button>
+            
+            <FileAttachment 
+              onFileSelect={setAttachedFiles} 
+              maxFiles={5}
+              maxSizeMB={10}
+              acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
+              iconOnly
+            />
           </div>
         )}
 
-        {/* File Attachment Section */}
-        <div className="mb-3">
-          <FileAttachment 
-            onFileSelect={setAttachedFiles} 
-            maxFiles={5}
-            maxSizeMB={10}
-            acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
-          />
-        </div>
+        {/* Attached Files Display */}
+        {attachedFiles.length > 0 && (
+          <div className="mb-3">
+            <div className="space-y-2">
+              {attachedFiles.map((file, index) => (
+                <div
+                  key={`${file.name}-${index}`}
+                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border text-xs"
+                >
+                  <Paperclip className="w-3 h-3 text-muted-foreground" />
+                  <span className="flex-1 truncate">{file.name}</span>
+                  <span className="text-muted-foreground">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 sm:gap-3">
           <Input

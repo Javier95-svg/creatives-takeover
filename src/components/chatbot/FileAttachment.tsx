@@ -8,6 +8,7 @@ interface FileAttachmentProps {
   maxFiles?: number;
   maxSizeMB?: number;
   acceptedTypes?: string[];
+  iconOnly?: boolean;
 }
 
 interface AttachedFile {
@@ -21,6 +22,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   maxFiles = 5,
   maxSizeMB = 10,
   acceptedTypes = ["image/*", "application/pdf", "text/*", ".doc", ".docx"],
+  iconOnly = false,
 }) => {
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -136,19 +138,22 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
         <Button
           type="button"
           variant="ghost"
-          size="sm"
+          size={iconOnly ? "icon" : "sm"}
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || attachedFiles.length >= maxFiles}
           className="text-muted-foreground hover:text-foreground"
+          title={`Attach files (${attachedFiles.length}/${maxFiles})`}
         >
           {isUploading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Paperclip className="w-4 h-4" />
           )}
-          <span className="ml-1 text-xs">
-            Attach Files ({attachedFiles.length}/{maxFiles})
-          </span>
+          {!iconOnly && (
+            <span className="ml-1 text-xs">
+              Attach Files ({attachedFiles.length}/{maxFiles})
+            </span>
+          )}
         </Button>
 
         <input
@@ -160,37 +165,6 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
           className="hidden"
         />
       </div>
-
-      {/* Drag & Drop Zone */}
-      {attachedFiles.length === 0 && (
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/25 hover:border-muted-foreground/50"
-          }`}
-        >
-          <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-            <Paperclip className="w-6 h-6" />
-            <p>
-              <span className="font-medium">Drag & drop</span> or{" "}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-primary hover:underline font-medium"
-              >
-                browse files
-              </button>
-            </p>
-            <p className="text-xs">
-              Max {maxFiles} files, {maxSizeMB}MB each
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Attached Files List */}
       {attachedFiles.length > 0 && (
