@@ -151,12 +151,12 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
-            <span className="animated-gradient">AI Co-Founder for Creative Entrepreneurs</span>
+            <span className="animated-gradient">The Digital Partner for Building From Zero</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed animate-slide-up px-4" style={{ animationDelay: '0.2s' }}>
-            The business planning tool for solopreneurs. From scattered ideas to validated offer and profitable launch in 30 days.
+            From scattered ideas to a structured plan, validated offer, and profitable launch in 30 days
           </p>
           
           {/* Trust Indicators */}

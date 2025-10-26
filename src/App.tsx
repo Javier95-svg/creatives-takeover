@@ -46,6 +46,7 @@ import Demo from "./pages/Demo";
 import AdminGamification from "./pages/AdminGamification";
 import AdminFeedback from "./pages/AdminFeedback";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import Portal from "./pages/Portal";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/community" element={<CommunityPage />} />
+            <Route path="/portal" element={<Portal />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/prompt-library" element={<PromptLibrary />} />

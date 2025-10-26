@@ -76,9 +76,9 @@ const Blog = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Creative Business Trends & AI Opportunities for Entrepreneurs | Insighta"
-        description="AI-powered insights on creative business trends, funding opportunities, and entrepreneurship strategies for solopreneurs. Stay ahead with daily curated content, AI tools analysis, and business opportunities."
-        keywords="creative business trends, AI opportunities for entrepreneurs, solopreneur insights, creative entrepreneurship, AI business tools, startup funding, business insights, creative entrepreneur trends"
+        title="Creative Business Trends & Opportunities | Insighta Blog"
+        description="Discover AI-powered insights on creative business trends, funding opportunities, and entrepreneurship strategies. Stay ahead with daily curated content for creative entrepreneurs."
+        keywords="creative business trends, AI opportunities, entrepreneurship news, startup funding, business insights, creative entrepreneur"
         url="/news"
         structuredData={structuredData}
       />

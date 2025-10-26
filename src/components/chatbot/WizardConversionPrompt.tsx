@@ -25,17 +25,17 @@ export const WizardConversionPrompt = ({
 
   if (!show || step !== triggerStep) return null;
 
-  // Inline Banner (Softer nudge after value demonstration)
+  // Inline Banner (Step 5 - soft nudge)
   if (variant === 'inline-banner') {
     return (
       <Alert className="mb-4 border-primary/50 bg-gradient-to-r from-primary/10 to-primary/5 animate-fade-in">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
-            <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+            <Save className="h-5 w-5 text-primary mt-0.5" />
             <div className="space-y-1 flex-1">
-              <h4 className="font-semibold text-sm">💡 Love what you're creating?</h4>
+              <h4 className="font-semibold text-sm">Save your progress & unlock more features</h4>
               <AlertDescription className="text-xs text-muted-foreground">
-                Sign in to save your progress and unlock your full business roadmap with AI-powered insights
+                Create a free account to save your business plan, access AI insights, and get personalized recommendations
               </AlertDescription>
               <div className="flex gap-2 mt-2">
                 <Button 
@@ -43,8 +43,8 @@ export const WizardConversionPrompt = ({
                   onClick={onSignUp}
                   className="h-8 text-xs"
                 >
-                  <Save className="h-3 w-3 mr-1" />
-                  Save My Progress
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Sign Up Free
                 </Button>
                 <Button 
                   size="sm" 
@@ -52,7 +52,7 @@ export const WizardConversionPrompt = ({
                   onClick={onDismiss}
                   className="h-8 text-xs"
                 >
-                  Continue Exploring
+                  Continue Without Account
                 </Button>
               </div>
             </div>
@@ -70,20 +70,20 @@ export const WizardConversionPrompt = ({
     );
   }
 
-  // Modal (Friendlier push after continued engagement)
+  // Modal (Step 7-8 - stronger push)
   if (variant === 'modal') {
     return (
       <Dialog open={show} onOpenChange={(open) => !open && onDismiss()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-primary" />
+              <TrendingUp className="h-6 w-6 text-primary" />
             </div>
             <DialogTitle className="text-center text-xl">
-              Your business plan is taking shape! 🚀
+              You're making great progress! 🎉
             </DialogTitle>
             <DialogDescription className="text-center">
-              Sign in to save your progress and unlock your full business roadmap:
+              Create a free account to unlock premium features and save your work:
             </DialogDescription>
           </DialogHeader>
           
@@ -116,15 +116,15 @@ export const WizardConversionPrompt = ({
               onClick={onSignUp}
               className="w-full"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Sign In & Save My Progress
+              <Sparkles className="h-4 w-4 mr-2" />
+              Sign Up Free - 30 Seconds
             </Button>
             <Button 
               variant="outline"
               onClick={onDismiss}
               className="w-full"
             >
-              I'll Finish First
+              Maybe Later
             </Button>
           </DialogFooter>
         </DialogContent>

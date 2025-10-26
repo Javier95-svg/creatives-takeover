@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, Send, Loader2, Sparkles, Share2, BookOpen, X, FileText, Info, Bot, User } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X, FileText, Image as ImageIcon } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
+import { Badge } from "@/components/ui/badge";
 import { useChatbot } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
+import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { useNavigate } from "react-router-dom";
@@ -235,7 +232,7 @@ export const BizMapChat = ({
     }
   }, [switchToFreeform, onChatModeReady]);
 
-  // Conversion prompt logic - softer approach: show after meaningful engagement
+  // Conversion prompt logic
   useEffect(() => {
     if (user) {
       // User is authenticated, don't show prompts
@@ -244,32 +241,18 @@ export const BizMapChat = ({
       return;
     }
 
-    const messageCount = messages.length;
-    const hasValueDemonstration = currentStep >= 3 || messageCount >= 5;
-
-    // Only show prompts after user has received value (3+ wizard steps OR 5+ messages)
-    if (!hasValueDemonstration) {
-      return;
-    }
-
-    // Soft nudge: Show inline banner after value demonstration
-    if (currentStep === 3 && !conversionPromptShown && chatMode === 'wizard') {
+    // Step 5: Show inline banner (soft nudge)
+    if (currentStep === 4 && !conversionPromptShown && chatMode === 'wizard') {
       setShowInlineBanner(true);
-      trackConversionEvent('shown', 4);
+      trackConversionEvent('shown', 5);
     }
 
-    // Stronger nudge: Show modal if banner was dismissed and user continues
-    if (currentStep >= 5 && conversionPromptDismissed && !showModal && chatMode === 'wizard') {
+    // Step 7-8: Show modal if banner was dismissed
+    if ((currentStep === 6 || currentStep === 7) && conversionPromptDismissed && !showModal && chatMode === 'wizard') {
       setShowModal(true);
       trackConversionEvent('shown', currentStep + 1);
     }
-    
-    // Freeform mode: show after 5+ meaningful exchanges
-    if (chatMode === 'freeform' && messageCount >= 10 && !conversionPromptShown) {
-      setShowInlineBanner(true);
-      trackConversionEvent('shown', 10);
-    }
-  }, [currentStep, messages.length, user, conversionPromptShown, conversionPromptDismissed, chatMode, wizardSteps.length, trackConversionEvent]);
+  }, [currentStep, user, conversionPromptShown, conversionPromptDismissed, chatMode, wizardSteps.length, trackConversionEvent]);
 
   // Handle conversion actions
   const handleSignUpClick = () => {
@@ -322,25 +305,24 @@ export const BizMapChat = ({
   };
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-col h-full">
-        {/* Conversion Prompts */}
-        <WizardConversionPrompt
-          step={currentStep}
-          triggerStep={3}
-          variant="inline-banner"
-          show={showInlineBanner}
-          onDismiss={handleDismiss}
-          onSignUp={handleSignUpClick}
-        />
-        <WizardConversionPrompt
-          step={currentStep}
-          triggerStep={5}
-          variant="modal"
-          show={showModal}
-          onDismiss={handleDismiss}
-          onSignUp={handleSignUpClick}
-        />
+    <div className="flex flex-col h-full">
+      {/* Conversion Prompts */}
+      <WizardConversionPrompt
+        step={currentStep}
+        triggerStep={4}
+        variant="inline-banner"
+        show={showInlineBanner}
+        onDismiss={handleDismiss}
+        onSignUp={handleSignUpClick}
+      />
+      <WizardConversionPrompt
+        step={currentStep}
+        triggerStep={6}
+        variant="modal"
+        show={showModal}
+        onDismiss={handleDismiss}
+        onSignUp={handleSignUpClick}
+      />
       
       {/* Progress Bar with Mode Indicator */}
       <div className="p-4 border-b bg-muted/30">
@@ -352,21 +334,6 @@ export const BizMapChat = ({
             </span>
             {celebrationMode && (
               <span className="text-lg animate-bounce">🎉</span>
-            )}
-            {chatMode === 'wizard' && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-5 w-5">
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="text-xs font-medium mb-1">Your 30-Day Launch Journey</p>
-                  <p className="text-xs text-muted-foreground">
-                    Each step brings you closer to your first customer. We'll guide you from idea validation to market launch with daily actions.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
             )}
           </div>
           <Badge variant={chatMode === 'freeform' ? 'default' : 'secondary'} className="text-xs">
@@ -625,7 +592,6 @@ export const BizMapChat = ({
           defaultContent={shareData.defaultContent}
         />
       )}
-      </div>
-    </TooltipProvider>
+    </div>
   );
 };

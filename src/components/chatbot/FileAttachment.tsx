@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Paperclip, X, FileText, Image as ImageIcon, Loader2, AlertCircle, Undo2 } from "lucide-react";
+import { Paperclip, X, FileText, Image as ImageIcon, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 interface FileAttachmentProps {
@@ -30,8 +29,6 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [recentlyRemoved, setRecentlyRemoved] = useState<AttachedFile | null>(null);
-  const [undoTimeoutId, setUndoTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync internal state with parent's currentFiles
@@ -116,52 +113,10 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   };
 
   const removeFile = (id: string) => {
-    const fileToRemove = attachedFiles.find((f) => f.id === id);
-    if (!fileToRemove) return;
-
     const newFiles = attachedFiles.filter((f) => f.id !== id);
     setAttachedFiles(newFiles);
     onFileSelect(newFiles.map((f) => f.file));
-    
-    // Store removed file for undo
-    setRecentlyRemoved(fileToRemove);
-    
-    // Clear any existing timeout
-    if (undoTimeoutId) {
-      clearTimeout(undoTimeoutId);
-    }
-    
-    // Show undo toast with custom action
-    toast("File removed", {
-      description: fileToRemove.file.name,
-      action: {
-        label: "Undo",
-        onClick: () => handleUndo(fileToRemove),
-      },
-      duration: 5000,
-    });
-    
-    // Auto-clear recently removed after 5 seconds
-    const timeoutId = setTimeout(() => {
-      setRecentlyRemoved(null);
-    }, 5000);
-    setUndoTimeoutId(timeoutId);
-  };
-
-  const handleUndo = (file: AttachedFile) => {
-    if (!file) return;
-    
-    const newFiles = [...attachedFiles, file];
-    setAttachedFiles(newFiles);
-    onFileSelect(newFiles.map((f) => f.file));
-    setRecentlyRemoved(null);
-    
-    if (undoTimeoutId) {
-      clearTimeout(undoTimeoutId);
-      setUndoTimeoutId(null);
-    }
-    
-    toast.success("File restored");
+    toast.success("File removed");
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -186,57 +141,47 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
   };
 
   return (
-    <TooltipProvider>
-      <div className="space-y-2">
-        {/* Attach Button */}
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size={iconOnly ? "icon" : "sm"}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading || attachedFiles.length >= maxFiles}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {isUploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Paperclip className="w-4 h-4" />
-                )}
-                {!iconOnly && (
-                  <span className="ml-1 text-xs">
-                    Attach Files ({attachedFiles.length}/{maxFiles})
-                  </span>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs">
-              <p className="text-xs">
-                Upload files to help BizMap AI analyze your business needs. Supported: images, PDFs, docs, spreadsheets
-              </p>
-            </TooltipContent>
-          </Tooltip>
+    <div className="space-y-2">
+      {/* Attach Button */}
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size={iconOnly ? "icon" : "sm"}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading || attachedFiles.length >= maxFiles}
+          className="text-muted-foreground hover:text-foreground"
+          title={`Attach files (${attachedFiles.length}/${maxFiles})`}
+        >
+          {isUploading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Paperclip className="w-4 h-4" />
+          )}
+          {!iconOnly && (
+            <span className="ml-1 text-xs">
+              Attach Files ({attachedFiles.length}/{maxFiles})
+            </span>
+          )}
+        </Button>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept={acceptedTypes.join(",")}
-            onChange={(e) => handleFiles(e.target.files)}
-            className="hidden"
-          />
-        </div>
-
-        {/* Error State */}
-        {attachedFiles.length >= maxFiles && (
-          <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-500">
-            <AlertCircle className="w-4 h-4" />
-            <span>Maximum file limit reached</span>
-          </div>
-        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={acceptedTypes.join(",")}
+          onChange={(e) => handleFiles(e.target.files)}
+          className="hidden"
+        />
       </div>
-    </TooltipProvider>
+
+      {/* Error State */}
+      {attachedFiles.length >= maxFiles && (
+        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-500">
+          <AlertCircle className="w-4 h-4" />
+          <span>Maximum file limit reached</span>
+        </div>
+      )}
+    </div>
   );
 };
