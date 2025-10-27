@@ -20,7 +20,8 @@ export interface ChatMessage {
   timestamp: Date;
   quickActions?: Array<{
     text: string;
-    action: string;
+    id?: string;
+    action?: string;
     href?: string;
   }>;
   // Extended properties for business planning

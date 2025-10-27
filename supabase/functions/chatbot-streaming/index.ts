@@ -357,41 +357,105 @@ function determineConversationStage(context: BusinessContext, messageCount: numb
   return 'ongoing';
 }
 
-function generateQuickActions(stage: string, chatMode: string, userMessage: string): string[] {
+function generateQuickActions(stage: string, chatMode: string, userMessage: string): Array<{text: string, id: string}> {
   const lowerMessage = userMessage.toLowerCase();
   
-  // Tour guide mode - platform exploration
+  // Tour guide mode - platform exploration with context awareness
   if (chatMode === 'tour-guide') {
-    if (lowerMessage.includes('what is') || lowerMessage.includes('creatives takeover')) {
-      return ["How does BizMap AI work?", "What is Insighta?", "Show me pricing"];
+    // Context-aware responses based on what user is asking about
+    if (lowerMessage.includes('what is') || lowerMessage.includes('tell me about') || lowerMessage.includes('explain')) {
+      if (lowerMessage.includes('bizmap')) {
+        return [
+          { text: "Try BizMap AI", id: "navigate_bizmap" },
+          { text: "What is Insighta?", id: "ask_insighta" },
+          { text: "Show pricing", id: "navigate_pricing" }
+        ];
+      }
+      if (lowerMessage.includes('insighta')) {
+        return [
+          { text: "Try Insighta", id: "navigate_insighta" },
+          { text: "What is BizMap AI?", id: "ask_bizmap" },
+          { text: "View pricing", id: "navigate_pricing" }
+        ];
+      }
+      return [
+        { text: "What is BizMap AI?", id: "ask_bizmap" },
+        { text: "What is Insighta?", id: "ask_insighta" },
+        { text: "View pricing", id: "navigate_pricing" }
+      ];
     }
-    if (lowerMessage.includes('bizmap') || lowerMessage.includes('business plan')) {
-      return ["Try BizMap AI now", "What is Insighta?", "How much does it cost?"];
+    
+    if (lowerMessage.includes('pricing') || lowerMessage.includes('cost') || lowerMessage.includes('price') || lowerMessage.includes('how much')) {
+      return [
+        { text: "Try BizMap AI free", id: "navigate_bizmap" },
+        { text: "Try Insighta free", id: "navigate_insighta" },
+        { text: "View all plans", id: "navigate_pricing" }
+      ];
     }
-    if (lowerMessage.includes('insighta') || lowerMessage.includes('market')) {
-      return ["Try Insighta now", "What is BizMap AI?", "Show me pricing"];
+    
+    if (lowerMessage.includes('start') || lowerMessage.includes('begin') || lowerMessage.includes('get started') || lowerMessage.includes('how do i')) {
+      return [
+        { text: "Launch BizMap AI", id: "navigate_bizmap" },
+        { text: "Explore Insighta", id: "navigate_insighta" },
+        { text: "Join community", id: "navigate_community" }
+      ];
     }
-    if (lowerMessage.includes('pricing') || lowerMessage.includes('cost') || lowerMessage.includes('price')) {
-      return ["Try BizMap AI", "Try Insighta", "Create free account"];
+    
+    if (lowerMessage.includes('feature') || lowerMessage.includes('do') || lowerMessage.includes('help')) {
+      return [
+        { text: "BizMap AI features", id: "ask_bizmap_features" },
+        { text: "Insighta features", id: "ask_insighta_features" },
+        { text: "Community tools", id: "ask_community" }
+      ];
     }
-    if (lowerMessage.includes('start') || lowerMessage.includes('begin')) {
-      return ["Try BizMap AI wizard", "Explore Insighta", "Join community"];
+    
+    if (lowerMessage.includes('business') || lowerMessage.includes('plan') || lowerMessage.includes('idea')) {
+      return [
+        { text: "Start with BizMap AI", id: "navigate_bizmap" },
+        { text: "Get market insights", id: "navigate_insighta" },
+        { text: "See success stories", id: "ask_testimonials" }
+      ];
     }
-    // Default tour guide suggestions
-    return ["How does BizMap AI work?", "What is Insighta?", "Show me pricing", "Where do I start?"];
+    
+    // Default contextual suggestions
+    return [
+      { text: "Try BizMap AI", id: "navigate_bizmap" },
+      { text: "Try Insighta", id: "navigate_insighta" },
+      { text: "View pricing", id: "navigate_pricing" }
+    ];
   }
   
   // Business planning mode suggestions
   switch (stage) {
     case 'discovery':
-      return ["Tell me about BizMap AI", "How can you help?", "I have a business idea"];
+      return [
+        { text: "Tell me about BizMap AI", id: "ask_bizmap" },
+        { text: "How can you help?", id: "ask_help" },
+        { text: "I have a business idea", id: "start_planning" }
+      ];
     case 'exploration':
-      return ["Validate my idea", "Research my market", "Create business plan"];
+      return [
+        { text: "Validate my idea", id: "validate_idea" },
+        { text: "Research my market", id: "research_market" },
+        { text: "Create business plan", id: "create_plan" }
+      ];
     case 'validation':
-      return ["Who are my competitors?", "What's my market size?", "Next steps?"];
+      return [
+        { text: "Who are my competitors?", id: "analyze_competitors" },
+        { text: "What's my market size?", id: "market_size" },
+        { text: "Next steps?", id: "next_steps" }
+      ];
     case 'development':
-      return ["Financial projections", "Marketing strategy", "Launch timeline"];
+      return [
+        { text: "Financial projections", id: "financials" },
+        { text: "Marketing strategy", id: "marketing" },
+        { text: "Launch timeline", id: "timeline" }
+      ];
     default:
-      return ["Get business advice", "Explore features", "Ask a question"];
+      return [
+        { text: "Get business advice", id: "advice" },
+        { text: "Explore features", id: "features" },
+        { text: "Ask a question", id: "question" }
+      ];
   }
 }

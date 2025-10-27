@@ -172,11 +172,28 @@ const ChatbotWidget = () => {
     sendMessage(`Let's test this assumption: "${assumption.text}". How do you validate this ${assumption.type} assumption?`);
   };
 
-  // Enhanced quick action handler with Socratic reasoning
-  const handleEnhancedQuickAction = (action: string, href?: string) => {
+  // Enhanced quick action handler with Socratic reasoning and navigation
+  const handleEnhancedQuickAction = (actionText: string, actionId?: string) => {
+    // Handle navigation actions
+    if (actionId === 'navigate_bizmap') {
+      window.location.href = '/bizmap-ai';
+      return;
+    }
+    if (actionId === 'navigate_insighta') {
+      window.location.href = '/insighta';
+      return;
+    }
+    if (actionId === 'navigate_pricing') {
+      window.location.href = '/pricing';
+      return;
+    }
+    if (actionId === 'navigate_community') {
+      window.location.href = '/community';
+      return;
+    }
+    
     // Handle Socratic reasoning actions
-    if (action === 'explore_logic_gaps' || action === 'test_assumptions' || action === 'strengthen_reasoning' || action === 'view_reasoning_analysis') {
-      // Analyze the last user message for reasoning
+    if (actionId === 'explore_logic_gaps' || actionId === 'test_assumptions' || actionId === 'strengthen_reasoning' || actionId === 'view_reasoning_analysis') {
       const lastUserMessage = messages.filter(m => !m.isBot).pop();
       if (lastUserMessage && socraticEngine) {
         const analysis = socraticEngine.analyzeReasoning(lastUserMessage.content);
@@ -186,15 +203,8 @@ const ChatbotWidget = () => {
       return;
     }
     
-    // Handle Socratic questions
-    if (action === 'socratic_question') {
-      // This would be handled by the specific question content
-      return;
-    }
-    
-    // For tour-guide and conversational mode: send the action text as a message
-    // This makes the conversation flow naturally
-    sendMessage(action);
+    // For all other actions: send the display text as a message
+    sendMessage(actionText);
   };
 
   const handleSend = () => {
@@ -298,7 +308,7 @@ const ChatbotWidget = () => {
                             key={actionIndex}
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEnhancedQuickAction(action.action, action.href)}
+                            onClick={() => handleEnhancedQuickAction(action.text, action.id || action.action)}
                             className={`hover:bg-primary/10 ${
                               deviceType === 'mobile' 
                                 ? 'text-sm h-10 px-4 min-h-[44px]' 
