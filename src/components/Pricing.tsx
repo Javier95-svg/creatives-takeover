@@ -72,8 +72,8 @@ const Pricing = () => {
 
   const handleSubscribe = async (tierName: string) => {
     if (!user) {
-      // Redirect to external login page
-      window.location.href = "https://creatives-takeover.com/login";
+      // Redirect to auth page
+      window.location.href = "/auth";
       return;
     }
     

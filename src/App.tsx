@@ -18,6 +18,7 @@ import Terms from "./pages/Terms";
 import Signup from "./pages/Signup";
 import BizMapAI from "./pages/Dream2Plan";
 import Login from "./pages/Login";
+import Auth from "./pages/Auth";
 import PromptLibrary from "./pages/PromptLibrary";
 import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/bizmap-ai" element={<BizMapAI />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
