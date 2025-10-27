@@ -1131,7 +1131,7 @@ Subject: "Quick question about [their pain point]"
   return (
     <div className="relative min-h-screen">
       <SEO
-        title="AI Business Planning Tool | Free Business Plan Generator"
+        title="Creatives Takeover"
         description="Turn your business ideas into comprehensive launch reports with our AI-powered 7-step wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps—free."
         keywords="AI business plan generator, free business planning tool, startup planning, business ideas, entrepreneurship, launch report, business plan wizard"
         url="/bizmap-ai"

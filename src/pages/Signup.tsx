@@ -204,7 +204,7 @@ const Signup = () => {
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4">
       <Helmet>
-        <title>Sign Up - Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 

@@ -23,7 +23,7 @@ const Phase4CollaborationDemo = () => {
   return (
     <>
       <Helmet>
-        <title>Phase 4 Collaboration Demo - Advanced Real-Time Features</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Experience Phase 4 collaboration with video calls, enhanced presence, activity feeds, and real-time notifications." />
       </Helmet>
       

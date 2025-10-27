@@ -6,7 +6,7 @@ const Contact = () => {
   return (
     <>
       <Helmet>
-        <title>Contact | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Contact Creatives Takeover. We're here to help with product questions, partnerships, and support." />
         <link rel="canonical" href="/contact" />
       </Helmet>

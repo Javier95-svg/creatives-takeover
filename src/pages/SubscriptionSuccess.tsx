@@ -52,7 +52,7 @@ export default function SubscriptionSuccess() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Helmet>
-        <title>Subscription Successful | BizMap AI</title>
+        <title>Creatives Takeover</title>
         <meta 
           name="description" 
           content="Your BizMap AI subscription is now active. Start using your monthly credits to generate launch reports and assets." 

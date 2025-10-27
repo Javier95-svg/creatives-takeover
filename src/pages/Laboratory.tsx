@@ -9,7 +9,7 @@ const Laboratory = () => {
   return (
     <>
       <Helmet>
-        <title>Laboratory | Real-Time Market Research Hub</title>
+        <title>Creatives Takeover</title>
         <meta
           name="description"
           content="Market research hub with real-time trends, competitive analysis, and demand insights to evaluate business ideas with confidence."

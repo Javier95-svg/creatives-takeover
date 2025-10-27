@@ -99,7 +99,7 @@ const AuthCallback = () => {
   return (
     <>
       <Helmet>
-        <title>Authenticating - BizMap AI</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Completing authentication process" />
       </Helmet>
 

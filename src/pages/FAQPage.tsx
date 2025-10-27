@@ -40,7 +40,7 @@ const FAQPage = () => {
   return (
     <>
       <SEO
-        title="FAQ | Frequently Asked Questions | Creatives Takeover"
+        title="Creatives Takeover"
         description="Find answers to frequently asked questions about our creative subscription service, pricing, community, and resources. Get help with your creative platform questions."
         keywords="FAQ, frequently asked questions, creative subscription help, platform support, pricing questions, community support"
         url="/faq"

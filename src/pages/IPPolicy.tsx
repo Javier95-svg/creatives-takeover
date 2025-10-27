@@ -6,7 +6,7 @@ const IPPolicy = () => {
   return (
     <>
       <Helmet>
-        <title>IP Policy | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Learn about our Intellectual Property Policy, including content ownership and usage guidelines." />
         <link rel="canonical" href="/ip-policy" />
       </Helmet>

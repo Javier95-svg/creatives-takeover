@@ -80,7 +80,7 @@ const AdminAnalytics = () => {
   return (
     <>
       <Helmet>
-        <title>Analytics Dashboard - Creatives Takeover</title>
+        <title>Creatives Takeover</title>
       </Helmet>
       <Navigation />
       <div className="min-h-screen bg-background pt-20 pb-12">

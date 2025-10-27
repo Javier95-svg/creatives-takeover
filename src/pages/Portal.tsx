@@ -42,7 +42,7 @@ const Portal = () => {
     return (
       <>
         <SEO 
-          title="Portal - Access Denied"
+          title="Creatives Takeover"
           description="You don't have permission to access this area."
         />
         <Navigation />
@@ -72,8 +72,8 @@ const Portal = () => {
 
   return (
     <>
-      <SEO 
-        title="Portal - Admin Articles"
+        <SEO 
+          title="Creatives Takeover"
         description="Create and manage articles in the admin portal."
       />
       <Navigation />

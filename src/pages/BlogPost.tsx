@@ -91,7 +91,7 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{post.title} - Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content={post.excerpt} />
         <meta name="keywords" content={post.tags?.join(', ')} />
         

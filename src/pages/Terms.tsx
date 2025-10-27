@@ -7,7 +7,7 @@ const Terms = () => {
   return (
     <>
       <Helmet>
-        <title>Terms of Service | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Review the Creatives Takeover Terms of Service governing your use of the platform." />
         <link rel="canonical" href="/terms" />
       </Helmet>

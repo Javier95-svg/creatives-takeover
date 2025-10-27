@@ -7,7 +7,7 @@ const Accountability = () => {
   return (
     <>
       <Helmet>
-        <title>Accountability Partners - Startblocks</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Find accountability partners, track progress together, and stay motivated on your entrepreneurial journey with Startblocks." />
         <meta name="keywords" content="accountability partners, progress tracking, motivation, entrepreneurship, goal achievement" />
       </Helmet>

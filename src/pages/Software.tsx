@@ -6,7 +6,7 @@ const Software = () => {
   return (
     <>
       <Helmet>
-        <title>Software | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Explore Creatives Takeover software—templates, AI ops, and marketplace to launch and scale your projects." />
         <link rel="canonical" href="/software" />
       </Helmet>

@@ -84,7 +84,7 @@ export default function AdminFeedback() {
   return (
     <>
       <Helmet>
-        <title>Feedback Dashboard - Admin | BizMap AI</title>
+        <title>Creatives Takeover</title>
       </Helmet>
       <Navigation />
       

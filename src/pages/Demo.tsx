@@ -71,7 +71,7 @@ const Demo = () => {
     return (
       <div className="min-h-screen bg-background overflow-hidden">
         <Helmet>
-          <title>Interactive Demo - Experience BizMap AI Platform</title>
+          <title>Creatives Takeover</title>
           <meta name="description" content="Try BizMap AI services for free: AI business planning, prompt library, curated insights, and entrepreneur community. No signup required." />
         </Helmet>
         
@@ -190,7 +190,7 @@ const Demo = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <Helmet>
-        <title>{`${currentService === 'bizmap' ? 'BizMap AI' : currentService === 'prompts' ? 'Prompt Library' : currentService === 'insighta' ? 'Insighta' : 'Community'} Demo`}</title>
+        <title>Creatives Takeover</title>
       </Helmet>
       
       {/* Ambient Background */}

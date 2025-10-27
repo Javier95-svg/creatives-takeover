@@ -38,7 +38,7 @@ const CollaborationDemo = () => {
   return (
     <>
       <Helmet>
-        <title>Real-Time Collaboration Demo - Startblocks</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Experience real-time collaboration features for business planning and sprint management with Startblocks." />
         <meta name="keywords" content="collaboration, real-time, business planning, sprint management, teamwork" />
       </Helmet>

@@ -211,7 +211,7 @@ export default function AdminJobApplications() {
   return (
     <>
       <Helmet>
-        <title>Admin - Job Applications | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">

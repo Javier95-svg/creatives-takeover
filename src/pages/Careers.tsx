@@ -68,7 +68,7 @@ const Careers = () => {
   return (
     <>
       <Helmet>
-        <title>Careers | Join Our Team | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta 
           name="description" 
           content="Join Creatives Takeover and help shape the future of creative entrepreneurship. Explore open positions for Full Stack Developer, Growth Marketer, and Sales Development Representative." 

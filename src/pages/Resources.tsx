@@ -12,7 +12,7 @@ const Resources = () => {
   return (
     <>
       <Helmet>
-        <title>Creative Resources | Free Tutorials, Guides & Downloads | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta 
           name="description" 
           content="Access free creative resources including tutorials, design guides, templates, and downloads. Learn creative skills with our comprehensive resource library." 

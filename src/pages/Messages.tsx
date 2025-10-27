@@ -16,7 +16,7 @@ const Messages = () => {
     return (
       <>
         <Helmet>
-          <title>Messages | Creatives Takeover</title>
+          <title>Creatives Takeover</title>
           <meta name="description" content="Direct messaging for entrepreneurs and creators" />
         </Helmet>
         <div className="relative min-h-screen overflow-hidden">
@@ -45,7 +45,7 @@ const Messages = () => {
   return (
     <>
       <Helmet>
-        <title>Messages | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Direct messaging for entrepreneurs and creators" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">

@@ -51,7 +51,7 @@ const AdminGamification = () => {
   return (
     <>
       <Helmet>
-        <title>Gamification Analytics | Admin Dashboard</title>
+        <title>Creatives Takeover</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       

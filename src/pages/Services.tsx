@@ -10,7 +10,7 @@ const Services = () => {
   return (
     <>
       <Helmet>
-        <title>Creative Subscription Services | Unlimited Design Platform | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta 
           name="description" 
           content="Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives." 

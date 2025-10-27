@@ -10,7 +10,7 @@ const CommunityPage = () => {
   return (
     <>
       <Helmet>
-        <title>Entrepreneur Stories Community | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta 
           name="description" 
           content="Reddit-style community to share entrepreneurial journeys: wins, failures, and lessons. Post stories, discuss, and learn together." 

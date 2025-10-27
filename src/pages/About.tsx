@@ -12,7 +12,7 @@ const About = () => {
   return (
     <>
       <Helmet>
-        <title>About Creatives Takeover - Empowering Creators & Solopreneurs</title>
+        <title>Creatives Takeover</title>
         <meta 
           name="description" 
           content="Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions. See how we work and what we do." 

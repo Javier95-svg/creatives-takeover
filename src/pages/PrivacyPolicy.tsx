@@ -7,7 +7,7 @@ const PrivacyPolicy = () => {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Read the Creatives Takeover Privacy Policy to understand how we collect and use your data." />
         <link rel="canonical" href="/privacy-policy" />
       </Helmet>

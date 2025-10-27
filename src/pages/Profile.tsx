@@ -97,7 +97,7 @@ const Profile = () => {
     return (
       <>
         <Helmet>
-          <title>Loading Profile | Creatives Takeover</title>
+          <title>Creatives Takeover</title>
         </Helmet>
         <div className="relative min-h-screen overflow-hidden">
           <AnimatedBackground />
@@ -122,7 +122,7 @@ const Profile = () => {
     return (
       <>
         <Helmet>
-          <title>Profile Not Found | Creatives Takeover</title>
+          <title>Creatives Takeover</title>
         </Helmet>
         <div className="relative min-h-screen overflow-hidden">
           <AnimatedBackground />
@@ -149,7 +149,7 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>{profile.full_name || 'User'} | Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content={`View ${profile.full_name || 'user'}'s profile and posts`} />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">

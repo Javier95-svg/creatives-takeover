@@ -164,7 +164,7 @@ const Login = () => {
     <div className="relative min-h-dvh overflow-hidden flex items-center justify-center p-4 safe-area-inset"
          style={{ minHeight: 'max(100vh, 100dvh)' }}>
       <Helmet>
-        <title>Sign In - Creatives Takeover</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Sign in to your Creatives Takeover account to access AI-powered creative planning tools." />
       </Helmet>
 

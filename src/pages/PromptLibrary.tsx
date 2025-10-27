@@ -529,7 +529,7 @@ const PromptLibrary = () => {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Helmet>
-        <title>Prompt Library - Ready-to-Use Business Ideas | BizMap AI</title>
+        <title>Creatives Takeover</title>
         <meta name="description" content="Discover curated business idea prompts for BizMap AI. Get inspired with proven business concepts across e-commerce, SaaS, consulting, and more." />
       </Helmet>
       
