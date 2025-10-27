@@ -129,8 +129,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages,
-        max_tokens: 800,
-        temperature: 0.7,
+        max_tokens: 150, // Reduced for shorter responses
+        temperature: 0.8, // Slightly higher for more natural, conversational tone
       }),
     });
 
@@ -274,7 +274,7 @@ function buildSystemPrompt(businessContext: any, marketData: any[], chatMode: st
 PLATFORM OVERVIEW:
 Creatives Takeover is an AI-powered platform that helps creative entrepreneurs go from scattered ideas to profitable launch in 30 days. It combines:
 - BizMap AI: Interactive business planning wizard and AI co-founder
-- Insighta: Market intelligence, trends, and funding opportunities
+- Insighta: Market intelligence, trends, and funding opportunities  
 - Sprint-based execution: Turn plans into action with accountability
 - Community support: Connect with fellow creative entrepreneurs
 
@@ -300,7 +300,8 @@ YOUR ROLE:
 - Answer questions about platform features, pricing, and how to get started
 - Guide visitors to the right tools based on their needs
 - Be enthusiastic and helpful, like a friendly tour guide
-- Keep responses concise (under 150 words)
+- **CRITICAL: Keep ALL responses under 3 sentences and 60 words maximum**
+- **Be ultra-concise and direct - get straight to the point**
 - Suggest specific features or pages when relevant
 
 COMMON QUESTIONS TO BE READY FOR:
@@ -312,7 +313,7 @@ COMMON QUESTIONS TO BE READY FOR:
 - "How can this help my business?" → Ask about their goals and recommend features
 - "Where do I start?" → Guide them to BizMap AI or Insighta based on needs
 
-Always be welcoming, clear, and action-oriented. End with a question or suggested next step.`;
+Always be welcoming, clear, and action-oriented. Keep responses SHORT and PUNCHY.`;
   }
 
   if (chatMode === 'freeform') {
@@ -346,9 +347,9 @@ YOUR ROLE AS AI CO-PILOT:
 
 CONVERSATION STYLE:
 - Be conversational and supportive, like a trusted business partner
-- Keep responses focused (150-200 words) but thorough
+- **Keep responses ultra-brief: 2-3 sentences, 50 words max**
 - Reference specific details from their journey to show you're paying attention
-- Provide practical next steps or specific recommendations
+- Provide ONE practical next step per response
 - Don't repeat basic info they've already told you
 - Be honest about challenges while maintaining optimism
 
@@ -375,11 +376,11 @@ YOUR ROLE:
 - Be conversational, encouraging, but realistic about challenges
 
 RESPONSE GUIDELINES:
-- Keep responses focused and under 150 words
+- **Keep responses extremely brief: 2-3 sentences, max 50 words**
 - Ask ONE specific follow-up question per response
 - Include practical, actionable advice
 - Reference their previous answers to show continuity
-- Use business terminology appropriately but avoid jargon
+- Use simple language, avoid jargon
 - Be optimistic but realistic about challenges
 
 CONVERSATION STAGES:

@@ -713,24 +713,16 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     // Home page - Tour Guide mode
     if (path === '/') {
       setChatMode('tour-guide');
-      content = `👋 Welcome to Creatives Takeover! I'm your friendly tour guide here to help you explore our platform.
+      content = `👋 Hey! I'm your guide to Creatives Takeover. We help creative entrepreneurs turn ideas into launched businesses in 30 days.
 
-🚀 **What We Offer:**
-• **BizMap AI** - Turn ideas into actionable business plans in 30 days
-• **Insighta** - Market intelligence, trends, and funding opportunities  
-• **Sprint Planning** - Execute with accountability and track progress
-• **Community** - Connect with fellow creative entrepreneurs
-
-I'm here to answer any questions about our features, pricing, or how to get started.
-
-What would you like to know about?`;
+What would you like to know?`;
 
       quickActions = [
-        { text: '🤔 What is Creatives Takeover?', action: 'what_is_platform' },
+        { text: '🤔 What is this platform?', action: 'what_is_platform' },
         { text: '🤖 How does BizMap AI work?', action: 'how_bizmap_works' },
         { text: '📊 What is Insighta?', action: 'what_is_insighta' },
-        { text: '💰 How much does it cost?', action: 'pricing_info' },
-        { text: '🚀 Where do I start?', action: 'getting_started' }
+        { text: '💰 Pricing?', action: 'pricing_info' },
+        { text: '🚀 Where to start?', action: 'getting_started' }
       ];
     } else if (path.includes('/bizmap-ai')) {
       content = `🚀 Welcome to Dream2Plan! I'm your AI Business Planning Assistant, here to help you transform your business dreams into actionable plans.

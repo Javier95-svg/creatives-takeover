@@ -21,13 +21,13 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
     setShowCursor(!isComplete);
   }, [content, isComplete]);
 
-  // Cursor blink animation
+  // Cursor blink animation - faster for more responsive feel
   useEffect(() => {
     if (!showCursor) return;
 
     const interval = setInterval(() => {
       setShowCursor(prev => !prev);
-    }, 530); // Blink every 530ms
+    }, 400); // Faster blink for snappier feel
 
     return () => clearInterval(interval);
   }, [showCursor, isComplete]);
@@ -41,7 +41,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
   }
 
   return (
-    <div className="space-y-2 animate-in fade-in duration-300">
+    <div className="space-y-2 animate-in fade-in duration-200">
       <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 prose-headings:my-3">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {displayContent}
@@ -49,7 +49,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
       </div>
       {!isComplete && (
         <span 
-          className={`inline-block w-2 h-4 bg-primary ml-1 transition-opacity duration-100 ${
+          className={`inline-block w-2 h-4 bg-primary ml-1 transition-opacity duration-75 ${
             showCursor ? 'opacity-100' : 'opacity-0'
           }`}
           aria-label="Typing cursor"
