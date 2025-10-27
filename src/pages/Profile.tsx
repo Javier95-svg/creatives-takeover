@@ -93,6 +93,39 @@ const Profile = () => {
     loadProfile();
   }, [username]);
 
+  // Real-time listener for profile updates
+  useEffect(() => {
+    if (!profile) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profile.id}`
+        },
+        (payload) => {
+          if (payload.new && typeof payload.new === 'object') {
+            const newData = payload.new as any;
+            setProfile(prev => prev ? {
+              ...prev,
+              followers_count: newData.followers_count || 0,
+              following_count: newData.following_count || 0,
+              friends_count: newData.friends_count || 0
+            } : null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
+
   if (loading) {
     return (
       <>

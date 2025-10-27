@@ -33,6 +33,12 @@ const Account = () => {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   
+  // Social counts state
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [postsCount, setPostsCount] = useState(0);
+  
   // Social links state
   const [twitterUrl, setTwitterUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
@@ -97,6 +103,21 @@ const Account = () => {
           setGithubUrl(profileData.githubUrl);
           setWebsiteUrl(profileData.websiteUrl);
           setInitialValues(profileData);
+          
+          // Set social counts
+          setFollowersCount(data.followers_count || 0);
+          setFollowingCount(data.following_count || 0);
+          setFriendsCount(data.friends_count || 0);
+        }
+        
+        // Fetch posts count
+        const { count, error: postsError } = await supabase
+          .from('community_posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+          
+        if (!postsError && count !== null) {
+          setPostsCount(count);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -104,6 +125,36 @@ const Account = () => {
     };
 
     fetchProfile();
+  }, [user]);
+
+  // Real-time listener for profile updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        (payload) => {
+          if (payload.new && typeof payload.new === 'object') {
+            const newData = payload.new as any;
+            setFollowersCount(newData.followers_count || 0);
+            setFollowingCount(newData.following_count || 0);
+            setFriendsCount(newData.friends_count || 0);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Check if there are unsaved changes
@@ -527,16 +578,19 @@ const Account = () => {
               <div className="flex flex-wrap items-center gap-6">
                 <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
                   <Users className="h-4 w-4" />
-                  {/* Add followers count from profile data when available */}
-                  0 Followers
+                  {followersCount} Followers
                 </Badge>
                 <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
                   <UserCheck className="h-4 w-4" />
-                  0 Following
+                  {followingCount} Following
                 </Badge>
                 <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
                   <MessageSquare className="h-4 w-4" />
-                  0 Friends
+                  {friendsCount} Friends
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
+                  <MessageSquare className="h-4 w-4" />
+                  {postsCount} Posts
                 </Badge>
               </div>
               
