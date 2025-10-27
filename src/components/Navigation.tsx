@@ -61,7 +61,6 @@ const Navigation = () => {
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Insighta", href: "/news" },
     { name: "Community", href: "/community" },
-    { name: "Portal", href: "/portal" },
     { name: "Careers", href: "/careers" },
     { name: "About Us", href: "/about" },
     { name: "Pricing", href: "/pricing" }
