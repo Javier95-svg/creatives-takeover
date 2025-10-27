@@ -23,6 +23,7 @@ import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
 import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/insighta" element={<Blog />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/profile/:username" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
