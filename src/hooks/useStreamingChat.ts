@@ -49,7 +49,7 @@ export const streamChat = async (
   userId: string | null,
   wizardMode: WizardMode | null,
   currentStep: number | null,
-  chatMode: 'wizard' | 'freeform',
+  chatMode: 'wizard' | 'freeform' | 'tour-guide',
   files?: File[],
   onChunk?: (chunk: string) => void,
   onComplete?: (fullMessage: string) => void,

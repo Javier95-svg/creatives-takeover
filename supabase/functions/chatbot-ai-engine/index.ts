@@ -20,6 +20,7 @@ interface BusinessContext {
   budget?: string;
   goals?: string[];
   challenges?: string[];
+  chatMode?: string;
 }
 
 serve(async (req) => {
@@ -34,7 +35,7 @@ serve(async (req) => {
       conversationHistory = [], 
       businessContext = {},
       userId = null,
-      chatMode = 'wizard' // 'wizard' or 'freeform'
+      chatMode = 'tour-guide' // 'tour-guide', 'wizard', or 'freeform'
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -160,6 +161,7 @@ serve(async (req) => {
       });
 
     // Update conversation context and stage
+    const updatedContext = { ...updatedContext, chatMode };
     const stage = determineConversationStage(updatedContext, conversationHistory.length);
     await supabase
       .from('chatbot_conversations')
@@ -264,6 +266,54 @@ function buildSystemPrompt(businessContext: any, marketData: any[], chatMode: st
   const marketInsights = marketData?.map(d => 
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity detected'}`
   ).join('\n') || '';
+
+  if (chatMode === 'tour-guide') {
+    // Tour Guide mode - help visitors understand the platform
+    return `You are BizMap Assistant, a friendly tour guide helping first-time visitors explore the Creatives Takeover platform.
+
+PLATFORM OVERVIEW:
+Creatives Takeover is an AI-powered platform that helps creative entrepreneurs go from scattered ideas to profitable launch in 30 days. It combines:
+- BizMap AI: Interactive business planning wizard and AI co-founder
+- Insighta: Market intelligence, trends, and funding opportunities
+- Sprint-based execution: Turn plans into action with accountability
+- Community support: Connect with fellow creative entrepreneurs
+
+KEY FEATURES:
+1. **BizMap AI** (/bizmap-ai): Step-by-step business planning wizard that creates personalized launch reports
+2. **Insighta** (/insighta): Real-time market intelligence, trends analysis, and funding opportunities
+3. **Dashboard**: Track progress, set goals, and manage your entrepreneurial journey
+4. **Community**: Share insights, get feedback, and find accountability partners
+5. **Resources**: Templates, guides, and tools for creative businesses
+
+PRICING:
+- Free tier: Access to basic features and limited credits
+- Pro subscription: Unlimited access to all features, priority support
+- Credits system: Pay-as-you-go for AI-powered features
+
+GETTING STARTED:
+1. Try BizMap AI wizard (no signup required for first steps)
+2. Explore Insighta for market trends in your industry
+3. Create an account to save progress and access full features
+4. Join the community to connect with other entrepreneurs
+
+YOUR ROLE:
+- Answer questions about platform features, pricing, and how to get started
+- Guide visitors to the right tools based on their needs
+- Be enthusiastic and helpful, like a friendly tour guide
+- Keep responses concise (under 150 words)
+- Suggest specific features or pages when relevant
+
+COMMON QUESTIONS TO BE READY FOR:
+- "What is Creatives Takeover?" → Explain the platform's mission and core features
+- "How much does it cost?" → Explain pricing tiers and credits system
+- "How does BizMap AI work?" → Describe the wizard and personalized planning
+- "What is Insighta?" → Explain market intelligence and trend analysis
+- "Do I need to sign up?" → Explain free trial and signup benefits
+- "How can this help my business?" → Ask about their goals and recommend features
+- "Where do I start?" → Guide them to BizMap AI or Insighta based on needs
+
+Always be welcoming, clear, and action-oriented. End with a question or suggested next step.`;
+  }
 
   if (chatMode === 'freeform') {
     // Freeform "Ask Me Anything" mode - context-aware co-pilot
@@ -371,6 +421,9 @@ async function extractBusinessContext(userMessage: string, aiResponse: string, c
 }
 
 function determineConversationStage(context: BusinessContext, messageCount: number): string {
+  // Keep tour-guide stage for platform questions
+  if (context.chatMode === 'tour-guide') return 'tour-guide';
+  
   if (messageCount <= 2) return 'discovery';
   if (context.industry && context.stage) return 'validation';
   if (context.goals?.length && context.industry) return 'planning';
@@ -378,6 +431,17 @@ function determineConversationStage(context: BusinessContext, messageCount: numb
 }
 
 function generateQuickActions(stage: string, context: BusinessContext): string[] {
+  // Tour guide mode quick actions
+  if (stage === 'tour-guide') {
+    return [
+      'What is Creatives Takeover?',
+      'How does BizMap AI work?',
+      'What is Insighta?',
+      'How much does it cost?',
+      'Where do I start?'
+    ];
+  }
+  
   switch (stage) {
     case 'discovery':
       return ['Tell me about your business idea', 'What industry interests you?', 'What problem are you solving?'];
