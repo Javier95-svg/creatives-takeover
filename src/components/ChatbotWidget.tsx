@@ -235,7 +235,7 @@ const ChatbotWidget = () => {
               <MessageCircle className={`${config.avatarIconSize} text-primary`} />
             </div>
             <div>
-              <h3 className={`font-semibold ${deviceType === 'mobile' ? 'text-base' : 'text-sm'}`}>BizMap Assistant</h3>
+              <h3 className={`font-semibold ${deviceType === 'mobile' ? 'text-base' : 'text-sm'}`}>Creatives Takeover Assistant</h3>
               <p className={`text-muted-foreground ${deviceType === 'mobile' ? 'text-sm' : 'text-xs'}`}>AI-powered help</p>
             </div>
           </div>

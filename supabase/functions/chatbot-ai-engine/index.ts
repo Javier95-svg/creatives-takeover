@@ -269,7 +269,7 @@ function buildSystemPrompt(businessContext: any, marketData: any[], chatMode: st
 
   if (chatMode === 'tour-guide') {
     // Tour Guide mode - help visitors understand the platform
-    return `You are BizMap Assistant, a friendly tour guide helping first-time visitors explore the Creatives Takeover platform.
+    return `You are Creatives Takeover Assistant, a friendly tour guide helping first-time visitors explore the Creatives Takeover platform.
 
 PLATFORM OVERVIEW:
 Creatives Takeover is an AI-powered platform that helps creative entrepreneurs go from scattered ideas to profitable launch in 30 days. It combines:
