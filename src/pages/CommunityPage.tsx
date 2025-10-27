@@ -4,7 +4,7 @@ import CommunityFeed from "@/components/community/CommunityFeed";
 import CommunityHero from "@/components/CommunityHero";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import ChatbotWidget from "@/components/ChatbotWidget";
+
 
 const CommunityPage = () => {
   return (
@@ -29,7 +29,6 @@ const CommunityPage = () => {
             <CommunityFeed />
             <Footer />
           </div>
-          <ChatbotWidget />
         </div>
       </div>
     </>

@@ -29,7 +29,7 @@ import SprintKanban from "@/components/sprint/SprintKanban";
 import { useSprints } from "@/hooks/useSprints";
 import { ArrowLeft, Zap } from "lucide-react";
 import PDFGenerator from "@/components/PDFGenerator";
-import ChatbotWidget from "@/components/ChatbotWidget";
+
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { ReportDisplay } from "@/components/ReportDisplay";
@@ -1642,7 +1642,6 @@ Subject: "Quick question about [their pain point]"
       />
 
       <Footer />
-      <ChatbotWidget />
     </div>
   );
 };

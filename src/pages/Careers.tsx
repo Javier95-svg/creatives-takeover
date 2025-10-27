@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import ChatbotWidget from "@/components/ChatbotWidget";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -248,7 +248,6 @@ const Careers = () => {
           </section>
 
           <Footer />
-          <ChatbotWidget />
         </div>
       </div>
 

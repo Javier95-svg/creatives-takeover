@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
-import ChatbotWidget from "@/components/ChatbotWidget";
+
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
@@ -68,8 +68,6 @@ const Index = () => {
       {/* Enhanced Quiz Popup - Only popup to avoid overwhelming visitors */}
       <CreditCampaignPopup trigger="time" delay={20000} />
       
-      {/* AI Creative Operating System */}
-      <ChatbotWidget />
     </div>
   );
 };

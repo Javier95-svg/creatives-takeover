@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import ChatbotWidget from "@/components/ChatbotWidget";
+
 
 const PricingPage = () => {
   // Structured data for pricing tiers
@@ -46,7 +46,6 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
-          <ChatbotWidget />
         </div>
         <Footer />
       </div>
