@@ -1618,6 +1618,8 @@ What specific aspect of your business would you like to focus on first?`;
       handleError(error as Error, true);
     } finally {
       setIsTyping(false);
+      setIsStreaming(false);
+      dispatch({ type: 'SET_PROCESSING', payload: false });
     }
   }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messages]);
 
