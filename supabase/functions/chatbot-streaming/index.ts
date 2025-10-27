@@ -363,35 +363,35 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
   // Tour guide mode - platform exploration
   if (chatMode === 'tour-guide') {
     if (lowerMessage.includes('what is') || lowerMessage.includes('creatives takeover')) {
-      return ['How does BizMap AI work?', 'What is Insighta?', 'Show me pricing'];
+      return ["How does BizMap AI work?", "What is Insighta?", "Show me pricing"];
     }
     if (lowerMessage.includes('bizmap') || lowerMessage.includes('business plan')) {
-      return ['Try BizMap AI now', 'What is Insighta?', 'How much does it cost?'];
+      return ["Try BizMap AI now", "What is Insighta?", "How much does it cost?"];
     }
     if (lowerMessage.includes('insighta') || lowerMessage.includes('market')) {
-      return ['Try Insighta now', 'What is BizMap AI?', 'Show me pricing'];
+      return ["Try Insighta now", "What is BizMap AI?", "Show me pricing"];
     }
     if (lowerMessage.includes('pricing') || lowerMessage.includes('cost') || lowerMessage.includes('price')) {
-      return ['Try BizMap AI', 'Try Insighta', 'Create free account'];
+      return ["Try BizMap AI", "Try Insighta", "Create free account"];
     }
     if (lowerMessage.includes('start') || lowerMessage.includes('begin')) {
-      return ['Try BizMap AI wizard', 'Explore Insighta', 'Join community'];
+      return ["Try BizMap AI wizard", "Explore Insighta", "Join community"];
     }
     // Default tour guide suggestions
-    return ['How does BizMap AI work?', 'What is Insighta?', 'Show me pricing', 'Where do I start?'];
+    return ["How does BizMap AI work?", "What is Insighta?", "Show me pricing", "Where do I start?"];
   }
   
   // Business planning mode suggestions
   switch (stage) {
     case 'discovery':
-      return ['Tell me about BizMap AI', 'How can you help?', 'I have a business idea'];
+      return ["Tell me about BizMap AI", "How can you help?", "I have a business idea"];
     case 'exploration':
-      return ['Validate my idea', 'Research my market', 'Create business plan'];
+      return ["Validate my idea", "Research my market", "Create business plan"];
     case 'validation':
-      return ['Who are my competitors?', 'What's my market size?', 'Next steps?'];
+      return ["Who are my competitors?", "What's my market size?", "Next steps?"];
     case 'development':
-      return ['Financial projections', 'Marketing strategy', 'Launch timeline'];
+      return ["Financial projections", "Marketing strategy", "Launch timeline"];
     default:
-      return ['Get business advice', 'Explore features', 'Ask a question'];
+      return ["Get business advice", "Explore features", "Ask a question"];
   }
 }
