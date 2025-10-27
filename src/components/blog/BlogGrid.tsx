@@ -3,16 +3,27 @@ import BlogCard from "./BlogCard";
 import { useArticles } from "@/hooks/useArticles";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import ArticleEditor from "./ArticleEditor";
 import { MigrationButton } from "./MigrationButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const BlogGrid = () => {
-  const { articles, loading, refetch } = useArticles();
+  const { articles, loading, refetch, deleteArticle } = useArticles();
   const { user } = useAuth();
   const [showEditor, setShowEditor] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
+  const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
 
   // Combine database articles with static blog posts for now
   const allPosts = [
@@ -62,6 +73,23 @@ const BlogGrid = () => {
     // Refresh will happen automatically through the hook
   };
 
+  const handleDeleteClick = (articleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingArticleId(articleId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deletingArticleId) {
+      await deleteArticle(deletingArticleId);
+      setDeletingArticleId(null);
+      refetch();
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeletingArticleId(null);
+  };
+
   if (loading) {
     return (
       <section className="pt-0 pb-16">
@@ -95,14 +123,24 @@ const BlogGrid = () => {
                 className={`animate-fade-in-up [animation-delay:${index * 0.1}s]`}
               />
               {user && articles.find(a => a.id === post.id) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditArticle(post)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity glass"
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditArticle(post)}
+                    className="glass"
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => handleDeleteClick(post.id, e)}
+                    className="glass hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
               )}
             </div>
           ))}
@@ -125,6 +163,23 @@ const BlogGrid = () => {
           onSave={handleSaveEditor}
         />
       )}
+
+      <AlertDialog open={!!deletingArticleId} onOpenChange={() => setDeletingArticleId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Article</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this article? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 };
