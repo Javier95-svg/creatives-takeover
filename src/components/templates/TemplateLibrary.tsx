@@ -244,7 +244,7 @@ const TemplateLibrary = () => {
   const useTemplate = (template: BusinessTemplate) => {
     // Store template data in localStorage for Dream2Plan page
     localStorage.setItem('bizmap_template', JSON.stringify(template));
-    navigate('/dream2plan');
+    navigate('/bizmap-ai');
     toast.success(`${template.title} template loaded! Starting with pre-filled answers.`);
   };
 
@@ -454,7 +454,7 @@ const TemplateLibrary = () => {
             Start with our AI-powered business planning wizard that adapts to any industry or business model.
           </p>
           <Button asChild size="lg">
-            <a href="/dream2plan">
+            <a href="/bizmap-ai">
               <Zap className="w-4 h-4 mr-2" />
               Start Custom Business Plan
             </a>

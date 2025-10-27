@@ -513,7 +513,7 @@ const PromptLibrary = () => {
     // Also copy to clipboard as backup
     navigator.clipboard.writeText(prompt);
     // Open Dream2Plan in new tab
-    window.open('/dream2plan', '_blank');
+    window.open('/bizmap-ai', '_blank');
     toast.success("Opening BizMap AI with your prompt!");
   };
 
@@ -665,7 +665,7 @@ const PromptLibrary = () => {
                   Take any of these prompts to BizMap AI and get a comprehensive business plan in minutes.
                 </p>
                 <Button asChild size="lg" className="w-full sm:w-auto">
-                  <a href="/dream2plan">Start with BizMap AI</a>
+                  <a href="/bizmap-ai">Start with BizMap AI</a>
                 </Button>
               </CardContent>
             </Card>

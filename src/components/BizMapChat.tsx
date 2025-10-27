@@ -265,7 +265,7 @@ export const BizMapChat = ({
     localStorage.setItem('bizmap_progress', JSON.stringify(progress));
     
     trackConversionEvent('converted', currentStep + 1);
-    navigate(`/signup?source=bizmap-step-${currentStep + 1}&return=/dream2plan`);
+    navigate(`/signup?source=bizmap-step-${currentStep + 1}&return=/bizmap-ai`);
   };
 
   const handleDismiss = () => {

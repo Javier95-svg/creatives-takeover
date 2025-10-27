@@ -95,7 +95,7 @@ const CampaignPromotion = () => {
           {/* CTA Button */}
           <div className="animate-slide-up" style={{ animationDelay: '0.5s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-4 text-lg btn-magnetic relative overflow-hidden group" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 <span className="relative z-10">Claim Your FREE Report + Credits</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />

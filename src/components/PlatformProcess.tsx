@@ -19,7 +19,7 @@ const PlatformProcess = () => {
       title: "AI-Powered Planning",
       description: "Start with our BizMap AI Creative Operating System to analyze your business idea and create a comprehensive strategy.",
       features: ["Business idea validation", "Market analysis", "Strategic recommendations"],
-      link: "/dream2plan"
+      link: "/bizmap-ai"
     },
     {
       number: "02", 
@@ -141,7 +141,7 @@ const PlatformProcess = () => {
             </div>
 
             <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 Start Planning Your Business
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

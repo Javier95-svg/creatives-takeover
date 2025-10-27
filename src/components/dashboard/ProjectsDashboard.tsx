@@ -116,7 +116,7 @@ const ProjectsDashboard = () => {
           </p>
         </div>
         <Button asChild size="lg" className="gap-2">
-          <Link to="/dream2plan">
+          <Link to="/bizmap-ai">
             <Plus className="w-4 h-4" />
             New Business Plan
           </Link>
@@ -237,7 +237,7 @@ const ProjectsDashboard = () => {
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Button asChild variant="outline" size="sm" className="flex-1">
-                  <Link to={`/dream2plan?session=${session.id}`}>
+                  <Link to={`/bizmap-ai?session=${session.id}`}>
                     <Edit className="w-3 h-3 mr-1" />
                     Continue
                   </Link>
@@ -278,7 +278,7 @@ const ProjectsDashboard = () => {
             }
           </p>
           <Button asChild size="lg">
-            <Link to="/dream2plan">
+            <Link to="/bizmap-ai">
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Project
             </Link>

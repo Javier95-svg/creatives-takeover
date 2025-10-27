@@ -180,7 +180,7 @@ const HowItWorks = () => {
             </div>
 
             <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 Try It With My Idea
                 <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
               </Link>

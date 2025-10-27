@@ -87,7 +87,7 @@ const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
     // Also copy to clipboard as backup
     navigator.clipboard.writeText(prompt);
     // Navigate to Dream2Plan
-    navigate('/dream2plan');
+    navigate('/bizmap-ai');
     toast.success("Opening BizMap AI with your prompt!", {
       icon: <Bot className="w-4 h-4" />
     });
@@ -206,7 +206,7 @@ const PromptLibraryDemo = ({ onNavigateToBizMap }: PromptLibraryDemoProps) => {
             <p className="text-muted-foreground mb-4">
               Use any of these prompts in BizMap AI to get instant personalized guidance
             </p>
-            <Button size="lg" onClick={() => navigate('/dream2plan')}>
+            <Button size="lg" onClick={() => navigate('/bizmap-ai')}>
               <Bot className="w-5 h-5 mr-2" />
               Try BizMap AI Demo
             </Button>

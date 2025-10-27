@@ -215,7 +215,7 @@ const ChatbotDemo = ({ scenario }: ChatbotDemoProps) => {
 
       {/* CTA */}
       <div className="text-center">
-        <Button size="lg" onClick={() => navigate('/dream2plan')}>
+        <Button size="lg" onClick={() => navigate('/bizmap-ai')}>
           Try the Full Chatbot Experience
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>

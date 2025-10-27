@@ -1124,7 +1124,7 @@ Subject: "Quick question about [their pain point]"
     },
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'Dream2Plan', url: '/dream2plan' }
+      { name: 'BizMap AI', url: '/bizmap-ai' }
     ])
   ];
 
@@ -1134,7 +1134,7 @@ Subject: "Quick question about [their pain point]"
         title="AI Business Planning Tool | Free Business Plan Generator"
         description="Turn your business ideas into comprehensive launch reports with our AI-powered 7-step wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps—free."
         keywords="AI business plan generator, free business planning tool, startup planning, business ideas, entrepreneurship, launch report, business plan wizard"
-        url="/dream2plan"
+        url="/bizmap-ai"
         structuredData={structuredData}
       />
       

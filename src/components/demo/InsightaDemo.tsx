@@ -103,7 +103,7 @@ const InsightaDemo = () => {
   };
 
   const handleReadArticle = (slug: string) => {
-    window.open(`/news/${slug}`, '_blank');
+    window.open(`/insighta/${slug}`, '_blank');
   };
 
   const handleLearnMore = (url: string) => {

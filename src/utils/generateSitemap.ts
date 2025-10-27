@@ -15,12 +15,12 @@ const routes: SitemapEntry[] = [
   { path: '/', priority: 1.0, changefreq: 'daily' },
   
   // Main Product Pages - Very High Priority
-  { path: '/dream2plan', priority: 0.9, changefreq: 'weekly' },
+  { path: '/bizmap-ai', priority: 0.9, changefreq: 'weekly' },
   { path: '/pricing', priority: 0.9, changefreq: 'weekly' },
   { path: '/services', priority: 0.9, changefreq: 'weekly' },
   
   // Community & Content - High Priority
-  { path: '/news', priority: 0.8, changefreq: 'daily' },
+  { path: '/insighta', priority: 0.8, changefreq: 'daily' },
   { path: '/community', priority: 0.8, changefreq: 'daily' },
   { path: '/resources', priority: 0.8, changefreq: 'weekly' },
   

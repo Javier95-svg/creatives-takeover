@@ -117,7 +117,7 @@ export const createWebSiteSchema = () => ({
   "url": "https://creatives-takeover.com",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://creatives-takeover.com/news?search={search_term_string}",
+    "target": "https://creatives-takeover.com/insighta?search={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 });

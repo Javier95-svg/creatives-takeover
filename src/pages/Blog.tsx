@@ -57,7 +57,7 @@ const Blog = () => {
       "@type": "Blog",
       "name": "Creatives Takeover Insighta Blog",
       "description": "Expert insights on creative business trends, AI opportunities, and entrepreneurship strategies",
-      "url": "https://creatives-takeover.com/news",
+      "url": "https://creatives-takeover.com/insighta",
       "publisher": {
         "@type": "Organization",
         "name": "Creatives Takeover",
@@ -69,7 +69,7 @@ const Blog = () => {
     },
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
-      { name: 'News', url: '/news' }
+      { name: 'News', url: '/insighta' }
     ])
   ];
 
@@ -79,7 +79,7 @@ const Blog = () => {
         title="Creative Business Trends & Opportunities | Insighta Blog"
         description="Discover AI-powered insights on creative business trends, funding opportunities, and entrepreneurship strategies. Stay ahead with daily curated content for creative entrepreneurs."
         keywords="creative business trends, AI opportunities, entrepreneurship news, startup funding, business insights, creative entrepreneur"
-        url="/news"
+        url="/insighta"
         structuredData={structuredData}
       />
       <Navigation />

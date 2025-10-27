@@ -21,7 +21,7 @@ export const ReportDisplay = ({ report, onDownloadPDF }: ReportDisplayProps) => 
       step: 7,
       timestamp: Date.now()
     }));
-    navigate('/signup?source=bizmap-report&return=/dream2plan');
+    navigate('/signup?source=bizmap-report&return=/bizmap-ai');
   };
 
   return (

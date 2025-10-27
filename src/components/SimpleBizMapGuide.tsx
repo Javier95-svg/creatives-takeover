@@ -94,7 +94,7 @@ const SimpleBizMapGuide = () => {
             className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground hover-scale shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-glow" 
             asChild
           >
-            <a href="/dream2plan" className="relative overflow-hidden">
+            <a href="/bizmap-ai" className="relative overflow-hidden">
               <span className="relative z-10 flex items-center gap-2">
                 Try BizMap AI Now
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

@@ -59,7 +59,7 @@ const BlogPost = () => {
   }
 
   if (!post) {
-    return <Navigate to="/news" replace />;
+    return <Navigate to="/insighta" replace />;
   }
 
   const sharePost = () => {
@@ -121,7 +121,7 @@ const BlogPost = () => {
           {/* Back Button */}
           <div className="mb-8">
             <Button variant="ghost" asChild className="hover-lift">
-              <Link to="/news" className="flex items-center gap-2">
+              <Link to="/insighta" className="flex items-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Blog
               </Link>

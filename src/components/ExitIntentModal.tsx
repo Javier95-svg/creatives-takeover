@@ -86,7 +86,7 @@ export const ExitIntentModal = ({ isOpen, onClose }: ExitIntentModalProps) => {
             {/* Enhanced CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <Button size="lg" className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group" asChild>
-                <Link to="/dream2plan" onClick={onClose}>
+                <Link to="/bizmap-ai" onClick={onClose}>
                   <span className="relative z-10 font-semibold">Get FREE Report + Credits</span>
                   <ArrowRight className="ml-2 w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                   <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

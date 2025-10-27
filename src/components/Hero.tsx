@@ -180,7 +180,7 @@ const Hero = () => {
               onClick={() => trackClick('Create My Plan', 'Hero')}
               asChild
             >
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 <span className="relative z-10">Create My Plan</span>
                 <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />

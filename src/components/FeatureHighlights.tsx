@@ -139,7 +139,7 @@ const FeatureHighlights = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 Start Creating Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

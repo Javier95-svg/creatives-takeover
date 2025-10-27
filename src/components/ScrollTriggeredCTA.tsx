@@ -69,14 +69,14 @@ export const ScrollTriggeredCTA = () => {
           {/* Enhanced CTA Buttons */}
           <div className="flex gap-3">
             <Button size="sm" className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 <span className="relative z-10 font-semibold">Claim Credits</span>
                 <ArrowRight className="ml-1 w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                 <div className="absolute inset-0 bg-gradient-to-r from-secondary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </Link>
             </Button>
             <Button size="sm" variant="outline" className="flex-1 border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/10 shadow-md transition-all duration-300" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 <span className="font-semibold">Preview</span>
               </Link>
             </Button>

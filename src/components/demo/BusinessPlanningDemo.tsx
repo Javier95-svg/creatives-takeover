@@ -188,7 +188,7 @@ const BusinessPlanningDemo = ({ scenario }: BusinessPlanningDemoProps) => {
 
       {/* Action Buttons */}
       <div className="flex gap-4">
-        <Button size="lg" className="flex-1" onClick={() => navigate('/dream2plan')}>
+        <Button size="lg" className="flex-1" onClick={() => navigate('/bizmap-ai')}>
           Create Your Business Plan
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>

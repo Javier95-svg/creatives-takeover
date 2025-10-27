@@ -57,9 +57,9 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "BizMap AI", href: "/dream2plan" },
+    { name: "BizMap AI", href: "/bizmap-ai" },
     { name: "Prompt Library", href: "/prompt-library" },
-    { name: "Insighta", href: "/news" },
+    { name: "Insighta", href: "/insighta" },
     { name: "Community", href: "/community" },
     { name: "Careers", href: "/careers" },
     { name: "About Us", href: "/about" },

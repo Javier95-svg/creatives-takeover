@@ -271,7 +271,7 @@ export const PersonalizedDashboard = () => {
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Link to="/dream2plan" className="group">
+                  <Link to="/bizmap-ai" className="group">
                     <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
                       <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
                       <span className="text-sm font-medium">Plan</span>

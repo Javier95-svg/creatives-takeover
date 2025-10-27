@@ -46,11 +46,11 @@ const App = () => (
             <Route path="/prompt-library" element={<PromptLibrary />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
-            <Route path="/dream2plan" element={<BizMapAI />} />
+            <Route path="/bizmap-ai" element={<BizMapAI />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/news" element={<Blog />} />
+            <Route path="/insighta" element={<Blog />} />
             <Route path="/demo" element={<Demo />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -25,7 +25,7 @@ export const QuickWinZone = () => {
       timeEstimate: '10 min',
       creditCost: 1,
       action: 'Start Assessment',
-      actionLink: '/dream2plan',
+      actionLink: '/bizmap-ai',
       icon: CheckCircle,
       category: 'learn'
     },
@@ -45,7 +45,7 @@ export const QuickWinZone = () => {
       description: 'Stay updated with latest business trends',
       timeEstimate: '5 min',
       action: 'View Insights',
-      actionLink: '/news',
+      actionLink: '/insighta',
       icon: Zap,
       category: 'learn'
     },

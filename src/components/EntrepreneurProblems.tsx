@@ -167,7 +167,7 @@ const EntrepreneurProblems = () => {
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 w-full sm:w-auto" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 Get AI Business Support
                 <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
               </Link>

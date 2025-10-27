@@ -42,7 +42,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.GENERAL,
     priority: 9,
     quickActions: [
-      { text: 'Start Planning', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/dream2plan', priority: 1 },
+      { text: 'Start Planning', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
     metadata: {
@@ -82,7 +82,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.PROCESS,
     priority: 8,
     quickActions: [
-      { text: 'Try It Now', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/dream2plan', priority: 1 },
+      { text: 'Try It Now', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'Learn More', action: 'scroll', type: QuickActionType.SCROLL, href: '#how-we-work', priority: 2 }
     ],
     followUpQuestions: ['What AI technology do you use?', 'How much does it cost?'],
@@ -183,7 +183,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.TECHNOLOGY,
     priority: 5,
     quickActions: [
-      { text: 'See AI in Action', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/dream2plan', priority: 1 },
+      { text: 'See AI in Action', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'Learn About Features', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
     followUpQuestions: ['How does the business planning work?', 'What is BizMap AI?'],
@@ -205,7 +205,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.PROCESS,
     priority: 8,
     quickActions: [
-      { text: 'Start Business Plan', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/dream2plan', priority: 1 },
+      { text: 'Start Business Plan', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'View Template', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
     metadata: {
@@ -225,7 +225,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.FEATURES,
     priority: 7,
     quickActions: [
-      { text: 'Start Market Research', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/dream2plan', priority: 1 },
+      { text: 'Start Market Research', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'View Sample Analysis', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
     metadata: {
@@ -245,7 +245,7 @@ export const chatbotFAQ: FAQItem[] = [
     category: FAQCategory.FEATURES,
     priority: 8,
     quickActions: [
-      { text: 'Create Financial Model', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/dream2plan', priority: 1 },
+      { text: 'Create Financial Model', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/bizmap-ai', priority: 1 },
       { text: 'Learn More', action: 'navigate', type: QuickActionType.NAVIGATE, href: '/services', priority: 2 }
     ],
     metadata: {
@@ -302,7 +302,7 @@ export const getContextualFAQ = (currentPath: string): FAQItem[] => {
   const contextualMap: Record<string, string[]> = {
     '/': ['what-is-bizmap', 'how-it-works', 'free-trial'],
     '/pricing': ['pricing', 'free-trial', 'support'],
-    '/dream2plan': ['how-it-works', 'ai-technology', 'business-plan-sections', 'market-research-tools'],
+    '/bizmap-ai': ['how-it-works', 'ai-technology', 'business-plan-sections', 'market-research-tools'],
     '/community': ['community', 'accountability', 'support'],
     '/services': ['what-is-bizmap', 'accountability', 'ai-technology', 'integration-options'],
     '/contact': ['support', 'pricing', 'free-trial'],

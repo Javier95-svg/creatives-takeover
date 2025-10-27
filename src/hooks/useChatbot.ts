@@ -711,7 +711,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     let quickActions: ChatMessage['quickActions'] = [];
 
     // Contextual welcome based on current page
-    if (path.includes('/dream2plan')) {
+    if (path.includes('/bizmap-ai')) {
       content = `🚀 Welcome to Dream2Plan! I'm your AI Business Planning Assistant, here to help you transform your business dreams into actionable plans.
 
 I can guide you through:

@@ -106,7 +106,7 @@ const RelatedArticles = ({
             className="glass hover-lift group cursor-pointer relative overflow-hidden"
           >
             <Link 
-              to={item.type === 'article' ? `/news/${item.id}` : '#'}
+              to={item.type === 'article' ? `/insighta/${item.id}` : '#'}
               onClick={item.type === 'trend' ? (e) => e.preventDefault() : undefined}
               className="block"
             >

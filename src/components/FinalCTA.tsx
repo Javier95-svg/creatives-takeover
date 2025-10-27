@@ -85,7 +85,7 @@ const FinalCTA = () => {
               onClick={() => trackClick('Start My 30-Day Launch', 'Final CTA')}
               asChild
             >
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 Start My 30-Day Launch
                 <ArrowRight className="ml-3 h-6 w-6" />
               </Link>

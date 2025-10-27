@@ -135,7 +135,7 @@ export default function SubscriptionSuccess() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button asChild>
-                      <Link to="/dream2plan">
+                      <Link to="/bizmap-ai">
                         Start Using BizMap AI
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
@@ -163,7 +163,7 @@ export default function SubscriptionSuccess() {
                       Use BizMap AI to create a comprehensive business plan with market analysis and validation steps.
                     </p>
                     <Button size="sm" variant="outline" asChild>
-                      <Link to="/dream2plan">Start Now</Link>
+                      <Link to="/bizmap-ai">Start Now</Link>
                     </Button>
                   </div>
                   <div className="space-y-2">

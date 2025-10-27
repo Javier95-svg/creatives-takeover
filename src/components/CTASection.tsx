@@ -45,7 +45,7 @@ const CTASection = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <Button size="lg" className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg btn-magnetic" asChild>
-              <Link to="/dream2plan">
+              <Link to="/bizmap-ai">
                 Generate My Launch Strategy
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>

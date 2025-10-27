@@ -88,7 +88,7 @@ const TrendCard = ({ trend, onClick, showRelated = false }: TrendCardProps) => {
       window.open(trend.article_url, '_blank', 'noopener,noreferrer');
     } else {
       // Navigate to Dream2Plan with pre-filled context from this trend
-      navigate('/dream2plan', { 
+      navigate('/bizmap-ai', { 
         state: { 
           trendContext: {
             title: trend.title,
