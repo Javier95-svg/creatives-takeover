@@ -52,7 +52,7 @@ export const streamChat = async (
   chatMode: 'wizard' | 'freeform' | 'tour-guide',
   files?: File[],
   onChunk?: (chunk: string) => void,
-  onComplete?: (fullMessage: string, quickActions?: string[]) => void,
+  onComplete?: (fullMessage: string, quickActions?: Array<{text: string, id: string}>) => void,
   onError?: (error: Error) => void
 ): Promise<string> => {
   const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;

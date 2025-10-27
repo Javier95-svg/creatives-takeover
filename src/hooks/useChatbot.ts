@@ -1447,7 +1447,7 @@ What specific aspect of your business would you like to focus on first?`;
                       ...msg, 
                       id: generateId(), 
                       content: fullMessage,
-                      quickActions: quickActions?.map(text => ({ text, action: text }))
+                      quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text }))
                     }
                   : msg
               ));
@@ -1526,7 +1526,7 @@ What specific aspect of your business would you like to focus on first?`;
                     ...msg, 
                     id: generateId(), 
                     content: fullMessage,
-                    quickActions: quickActions?.map(text => ({ text, action: text }))
+                    quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text }))
                   }
                 : msg
             ));
