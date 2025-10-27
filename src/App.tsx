@@ -25,6 +25,7 @@ import Blog from "./pages/Blog";
 import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
+import Account from "./pages/Account";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/insighta" element={<Blog />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/profile/:username" element={<Profile />} />
