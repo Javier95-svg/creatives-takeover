@@ -72,8 +72,8 @@ const Pricing = () => {
 
   const handleSubscribe = async (tierName: string) => {
     if (!user) {
-      // Redirect to auth
-      window.location.href = "/auth";
+      // Redirect to login
+      window.location.href = "/login";
       return;
     }
     
