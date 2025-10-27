@@ -9,7 +9,7 @@ const AnimatedBackground = () => {
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/10 to-background/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/80" />
       
       {/* Enhanced Animated Floating Elements with Diverse Movement Patterns */}
       <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-80 hover:opacity-100 transition-opacity duration-300" />
