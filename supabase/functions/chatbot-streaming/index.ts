@@ -34,7 +34,8 @@ serve(async (req) => {
       userId = null,
       wizardMode = null,
       currentStep = null,
-      chatMode = 'wizard'
+      chatMode = 'wizard',
+      attachments = []
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -86,11 +87,14 @@ serve(async (req) => {
 
     // Build system prompt
     const systemPrompt = buildSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
-    const messages: ChatMessage[] = [
+    let messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
       { role: 'user', content: message }
     ];
+
+    // Process file attachments if present
+    messages = await processAttachments(messages, attachments);
 
     // Call Lovable AI Gateway with streaming
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -112,7 +116,7 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages,
         stream: true,
-        temperature: 0.7,
+        temperature: 0.3, // Lower for more focused business advice
       }),
     });
 
@@ -299,61 +303,231 @@ Platform: Creatives Takeover helps creative entrepreneurs launch in 30 days.
 Answer questions about features, pricing, getting started. Be friendly but BRIEF.`;
   }
 
-  const industryHint = businessContext.industry ? `Industry: ${businessContext.industry}` : '';
-  const stageHint = businessContext.stage ? `Stage: ${businessContext.stage}` : '';
-  const wizardProgress = wizardMode?.enabled && chatMode === 'wizard' 
-    ? `\n🎯 WIZARD MODE (Step ${(currentStep || 0) + 1}/${wizardMode.steps?.length || 7}): Guide through structured planning. Acknowledge answers positively.` 
+  const { industry, businessType, stage, location, budget, goals = [] } = businessContext;
+  
+  // Build contextual insights
+  const contextInsights = [];
+  if (industry) contextInsights.push(`Industry: ${industry}`);
+  if (businessType) contextInsights.push(`Type: ${businessType}`);
+  if (stage) contextInsights.push(`Stage: ${stage}`);
+  if (location) contextInsights.push(`Location: ${location}`);
+  if (budget) contextInsights.push(`Budget: ${budget}`);
+  if (goals.length > 0) contextInsights.push(`Goals: ${goals.join(', ')}`);
+  
+  const contextString = contextInsights.length > 0 
+    ? `\n\n📊 BUSINESS CONTEXT:\n${contextInsights.join('\n')}` 
     : '';
   
-  return `You are BizMap AI, an expert business planning assistant for creative entrepreneurs.
+  // Wizard mode specific guidance
+  if (wizardMode?.enabled && chatMode === 'wizard') {
+    const currentStepNum = (currentStep || 0) + 1;
+    const totalSteps = wizardMode.steps?.length || 7;
+    const currentStepInfo = wizardMode.steps?.[currentStep || 0];
+    
+    return `You are BizMap AI - an expert business strategist and mentor specializing in creative entrepreneurs.
 
-${wizardProgress}
+🎯 WIZARD MODE: Step ${currentStepNum}/${totalSteps}
+Current Question: "${currentStepInfo?.question || 'Business planning question'}"
 
-CONTEXT: ${industryHint} ${stageHint}
+YOUR ROLE:
+You're guiding the user through structured business planning. This is step ${currentStepNum} of ${totalSteps}.
+${contextString}
 
-OBJECTIVES:
-- Help validate and refine business ideas
-- Generate comprehensive business plans
-- Provide actionable advice and next steps
-- Adapt tone to user experience level
+RESPONSE PROTOCOL:
+1. **Acknowledge their answer positively** - Build confidence
+2. **Extract key insights** - Show you understand deeply
+3. **Ask clarifying follow-up** if needed (1 focused question)
+4. **Keep it conversational** - 2-3 sentences max, under 60 words
+5. **Be encouraging** - They're building something amazing
 
-INTERACTION STYLE:
-- Friendly and confidence-boosting
-- **CRITICAL: Keep responses under 3 sentences, max 50 words**
-- Ask ONE clear follow-up question per response
-- Use creative-friendly language
+BUSINESS EXPERTISE:
+- Market validation and competitive analysis
+- Financial modeling and projections  
+- Go-to-market strategies
+- Creative business monetization
+- Lean startup methodology
+- Product-market fit validation
 
-Keep responses conversational and actionable.`;
+Think like a seasoned entrepreneur who's launched multiple successful creative businesses. Be practical, actionable, and inspiring.`;
+  }
+  
+  // Freeform mode - advanced AI co-founder
+  return `You are BizMap AI - an expert business strategist, advisor, and AI co-founder for creative entrepreneurs.
+
+🧠 ADVANCED REASONING MODE: You can think deeply about complex business problems.
+${contextString}
+
+YOUR EXPERTISE:
+• Business Model Design - Canvas, Lean, Value Proposition
+• Market Analysis - TAM/SAM/SOM, Competitive Intelligence, Customer Segmentation
+• Financial Planning - Revenue Models, Unit Economics, Burn Rate, Runway
+• Go-to-Market Strategy - Positioning, Messaging, Channel Strategy, Growth Hacking
+• Product Strategy - MVP Definition, Feature Prioritization, Product-Market Fit
+• Creative Industries - Design, Media, Content, SaaS, Marketplaces
+
+REASONING FRAMEWORK:
+When answering complex questions, use this approach:
+1. **Understand** - Clarify the core business challenge
+2. **Analyze** - Break down key factors and dependencies
+3. **Synthesize** - Provide actionable recommendations
+4. **Validate** - Suggest how to test assumptions
+
+RESPONSE STYLE:
+• Be conversational but insightful (2-4 sentences, 80 words max)
+• Ask strategic follow-up questions when needed
+• Provide specific, actionable advice
+• Reference best practices from successful businesses
+• Build confidence while being realistic
+
+CRITICAL RULES:
+- If they ask about competitors, market size, or trends → Acknowledge you'd need real-time data, suggest research approaches
+- If they share detailed plans → Provide strategic feedback on assumptions and risks
+- If they're stuck → Help break down the problem into smaller, manageable steps
+- Always be encouraging yet practical
+
+You're not just answering questions - you're their strategic partner in building a successful business.`;
+}
+
+async function processAttachments(messages: ChatMessage[], attachments: any[]): Promise<ChatMessage[]> {
+  if (!attachments || attachments.length === 0) {
+    return messages;
+  }
+
+  // Add attachment context to the last user message
+  const lastMessage = messages[messages.length - 1];
+  if (lastMessage.role !== 'user') return messages;
+
+  let attachmentContext = '\n\n📎 Attachments:';
+  
+  for (const attachment of attachments) {
+    if (attachment.type.startsWith('image/')) {
+      attachmentContext += `\n- Image: ${attachment.name} (analyze for business-relevant content like logos, mockups, diagrams)`;
+    } else if (attachment.type === 'application/pdf') {
+      attachmentContext += `\n- PDF Document: ${attachment.name} (business plan, financial projections, or research)`;
+    } else if (attachment.type.includes('text')) {
+      attachmentContext += `\n- Text Document: ${attachment.name}`;
+    } else {
+      attachmentContext += `\n- File: ${attachment.name}`;
+    }
+  }
+
+  // Enhance the last message with attachment context
+  const enhancedMessages = [...messages];
+  enhancedMessages[enhancedMessages.length - 1] = {
+    ...lastMessage,
+    content: lastMessage.content + attachmentContext
+  };
+
+  return enhancedMessages;
 }
 
 async function extractBusinessContext(userMessage: string, aiResponse: string, currentContext: BusinessContext): Promise<BusinessContext> {
   const message = userMessage.toLowerCase();
+  const response = aiResponse.toLowerCase();
+  const combined = `${message} ${response}`;
   const updatedContext = { ...currentContext };
 
-  // Simple keyword-based extraction
-  if (message.includes('tech') || message.includes('software') || message.includes('app')) {
-    updatedContext.industry = 'technology';
-  } else if (message.includes('health') || message.includes('wellness')) {
-    updatedContext.industry = 'healthcare';
-  } else if (message.includes('retail') || message.includes('store')) {
-    updatedContext.industry = 'retail';
-  } else if (message.includes('food') || message.includes('restaurant')) {
-    updatedContext.industry = 'food';
+  // Enhanced industry detection with more keywords
+  const industryPatterns = {
+    'technology': ['tech', 'software', 'app', 'saas', 'platform', 'digital', 'ai', 'ml', 'web', 'mobile', 'cloud'],
+    'healthcare': ['health', 'wellness', 'medical', 'fitness', 'therapy', 'mental health', 'telemedicine'],
+    'retail': ['retail', 'store', 'shop', 'ecommerce', 'e-commerce', 'boutique', 'merchandise'],
+    'food': ['food', 'restaurant', 'cafe', 'catering', 'bakery', 'kitchen', 'culinary', 'dining'],
+    'creative': ['design', 'art', 'creative', 'agency', 'branding', 'marketing', 'content', 'media'],
+    'education': ['education', 'learning', 'training', 'course', 'teaching', 'tutoring', 'academy'],
+    'consulting': ['consulting', 'advisory', 'consulting', 'strategy', 'coaching', 'professional services'],
+    'entertainment': ['entertainment', 'music', 'gaming', 'events', 'production', 'streaming']
+  };
+
+  for (const [industry, keywords] of Object.entries(industryPatterns)) {
+    if (keywords.some(keyword => combined.includes(keyword))) {
+      updatedContext.industry = industry;
+      break;
+    }
   }
 
-  if (message.includes('startup') || message.includes('new business')) {
+  // Enhanced stage detection
+  const stagePatterns = {
+    'idea': ['idea', 'thinking about', 'planning to start', 'considering', 'want to create'],
+    'planning': ['plan', 'planning', 'research', 'validate', 'building plan'],
+    'launch': ['launch', 'launching', 'ready to launch', 'about to start', 'going live'],
+    'growth': ['growing', 'scale', 'expand', 'increase', 'more customers']
+  };
+
+  for (const [stage, keywords] of Object.entries(stagePatterns)) {
+    if (keywords.some(keyword => combined.includes(keyword))) {
+      updatedContext.stage = stage as any;
+      break;
+    }
+  }
+
+  // Business type detection
+  if (message.includes('startup') || message.includes('new business') || message.includes('starting')) {
     updatedContext.businessType = 'startup';
-    updatedContext.stage = 'idea';
+  } else if (message.includes('existing') || message.includes('already have') || message.includes('current business')) {
+    updatedContext.businessType = 'existing';
+  }
+
+  // Budget detection
+  const budgetPatterns = {
+    'under $1k': ['bootstrap', 'minimal', 'low budget', 'under 1000', 'no money', 'tight budget'],
+    '$1k-$10k': ['small budget', '5000', '10000', 'few thousand'],
+    '$10k-$50k': ['moderate', '25000', '50000', 'decent budget'],
+    '$50k+': ['well funded', '100000', 'significant', 'large budget']
+  };
+
+  for (const [budgetRange, keywords] of Object.entries(budgetPatterns)) {
+    if (keywords.some(keyword => combined.includes(keyword))) {
+      updatedContext.budget = budgetRange;
+      break;
+    }
+  }
+
+  // Goals extraction
+  const goalKeywords = {
+    'revenue': ['revenue', 'profit', 'money', 'income', 'earnings'],
+    'customers': ['customers', 'users', 'clients', 'audience'],
+    'impact': ['impact', 'change', 'help people', 'make difference'],
+    'freedom': ['freedom', 'independence', 'own boss', 'flexible']
+  };
+
+  const detectedGoals = [];
+  for (const [goal, keywords] of Object.entries(goalKeywords)) {
+    if (keywords.some(keyword => combined.includes(keyword))) {
+      detectedGoals.push(goal);
+    }
+  }
+  
+  if (detectedGoals.length > 0) {
+    updatedContext.goals = [...new Set([...(updatedContext.goals || []), ...detectedGoals])];
   }
 
   return updatedContext;
 }
 
 function determineConversationStage(context: BusinessContext, messageCount: number): string {
-  if (messageCount < 3) return 'discovery';
-  if (context.industry && !context.stage) return 'exploration';
-  if (context.stage === 'idea') return 'validation';
-  if (context.stage === 'planning') return 'development';
+  // Enhanced stage determination based on context richness
+  const { industry, businessType, stage, budget, goals = [] } = context;
+  
+  // Early discovery phase
+  if (messageCount < 2) return 'discovery';
+  
+  // Has basic info but no clear direction
+  if (messageCount < 5 && !industry) return 'exploration';
+  
+  // Has industry/idea but needs validation
+  if (industry && (!stage || stage === 'idea')) return 'validation';
+  
+  // In planning phase
+  if (stage === 'planning' || (industry && businessType && !budget)) return 'planning';
+  
+  // Ready to execute
+  if (stage === 'launch' || (budget && goals.length > 0)) return 'execution';
+  
+  // Established conversation with context
+  if (messageCount > 10 && industry) return 'refinement';
+  
+  // Default ongoing
   return 'ongoing';
 }
 
