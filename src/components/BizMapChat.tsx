@@ -364,37 +364,6 @@ export const BizMapChat = ({
               }`}
             >
               <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              {msg.quickActions && msg.quickActions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border/30">
-                  {msg.quickActions.map((action, idx) => (
-                    <Button
-                      key={idx}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (action.text === '📤 Share for Community Feedback') {
-                          const context: any = typeof msg.businessContext === 'object' ? msg.businessContext : {};
-                          setShareData({
-                            conversationId: user?.id,
-                            reportData: context,
-                            defaultTitle: context?.industry 
-                              ? `${context.industry} Business Plan Feedback`
-                              : 'Business Plan Feedback Request',
-                            defaultContent: msg.content.substring(0, 500),
-                          });
-                          setShowShareDialog(true);
-                        } else {
-                          sendMessage(action.text);
-                        }
-                      }}
-                      className="text-xs sm:text-sm hover:scale-105 transition-transform duration-200 bg-background/50 hover:bg-background"
-                    >
-                      {action.text === '📤 Share for Community Feedback' && <Share2 className="h-3 w-3 mr-1" />}
-                      {action.text}
-                    </Button>
-                  ))}
-                </div>
-              )}
             </div>
             {!msg.isBot && (
               <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20">
