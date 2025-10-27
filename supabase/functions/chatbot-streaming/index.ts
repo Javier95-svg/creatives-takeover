@@ -211,6 +211,9 @@ serve(async (req) => {
           setTimeout(async () => {
             const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
             const stage = determineConversationStage(updatedContext, conversationHistory.length);
+            
+            // Generate quick action suggestions based on stage and context
+            const quickActions = generateQuickActions(stage, chatMode, message);
 
             await Promise.all([
               supabase
@@ -221,7 +224,8 @@ serve(async (req) => {
                   content: fullMessage,
                   metadata: { 
                     timestamp: new Date().toISOString(),
-                    streaming: true
+                    streaming: true,
+                    quickActions
                   }
                 }),
               supabase
@@ -235,9 +239,16 @@ serve(async (req) => {
             ]);
           }, 0);
 
-          // Send completion
+          // Send completion with quick actions
+          const stage = determineConversationStage(businessContext, conversationHistory.length);
+          const quickActions = generateQuickActions(stage, chatMode, message);
+          
           controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id })}\n\n`
+            `data: ${JSON.stringify({ 
+              type: 'complete', 
+              conversationId: conversation.id,
+              quickActions 
+            })}\n\n`
           ));
           controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
           controller.close();
@@ -274,6 +285,20 @@ serve(async (req) => {
 });
 
 function buildSystemPrompt(businessContext: BusinessContext, wizardMode: any = null, currentStep: number | null = null, chatMode: string = 'wizard'): string {
+  // Tour guide mode - ultra concise platform help
+  if (chatMode === 'tour-guide') {
+    return `You are Creatives Takeover Assistant. Help visitors explore the platform.
+
+**CRITICAL: Keep ALL responses under 2 sentences and 40 words maximum. Be ultra-direct.**
+
+Platform: Creatives Takeover helps creative entrepreneurs launch in 30 days.
+- BizMap AI: Business planning wizard  
+- Insighta: Market trends & funding
+- Community & accountability tools
+
+Answer questions about features, pricing, getting started. Be friendly but BRIEF.`;
+  }
+
   const industryHint = businessContext.industry ? `Industry: ${businessContext.industry}` : '';
   const stageHint = businessContext.stage ? `Stage: ${businessContext.stage}` : '';
   const wizardProgress = wizardMode?.enabled && chatMode === 'wizard' 
@@ -294,7 +319,7 @@ OBJECTIVES:
 
 INTERACTION STYLE:
 - Friendly and confidence-boosting
-- Concise responses (under 150 words unless detailed analysis requested)
+- **CRITICAL: Keep responses under 3 sentences, max 50 words**
 - Ask ONE clear follow-up question per response
 - Use creative-friendly language
 
@@ -330,4 +355,43 @@ function determineConversationStage(context: BusinessContext, messageCount: numb
   if (context.stage === 'idea') return 'validation';
   if (context.stage === 'planning') return 'development';
   return 'ongoing';
+}
+
+function generateQuickActions(stage: string, chatMode: string, userMessage: string): string[] {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Tour guide mode - platform exploration
+  if (chatMode === 'tour-guide') {
+    if (lowerMessage.includes('what is') || lowerMessage.includes('creatives takeover')) {
+      return ['How does BizMap AI work?', 'What is Insighta?', 'Show me pricing'];
+    }
+    if (lowerMessage.includes('bizmap') || lowerMessage.includes('business plan')) {
+      return ['Try BizMap AI now', 'What is Insighta?', 'How much does it cost?'];
+    }
+    if (lowerMessage.includes('insighta') || lowerMessage.includes('market')) {
+      return ['Try Insighta now', 'What is BizMap AI?', 'Show me pricing'];
+    }
+    if (lowerMessage.includes('pricing') || lowerMessage.includes('cost') || lowerMessage.includes('price')) {
+      return ['Try BizMap AI', 'Try Insighta', 'Create free account'];
+    }
+    if (lowerMessage.includes('start') || lowerMessage.includes('begin')) {
+      return ['Try BizMap AI wizard', 'Explore Insighta', 'Join community'];
+    }
+    // Default tour guide suggestions
+    return ['How does BizMap AI work?', 'What is Insighta?', 'Show me pricing', 'Where do I start?'];
+  }
+  
+  // Business planning mode suggestions
+  switch (stage) {
+    case 'discovery':
+      return ['Tell me about BizMap AI', 'How can you help?', 'I have a business idea'];
+    case 'exploration':
+      return ['Validate my idea', 'Research my market', 'Create business plan'];
+    case 'validation':
+      return ['Who are my competitors?', 'What's my market size?', 'Next steps?'];
+    case 'development':
+      return ['Financial projections', 'Marketing strategy', 'Launch timeline'];
+    default:
+      return ['Get business advice', 'Explore features', 'Ask a question'];
+  }
 }

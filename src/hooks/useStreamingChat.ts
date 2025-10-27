@@ -52,7 +52,7 @@ export const streamChat = async (
   chatMode: 'wizard' | 'freeform' | 'tour-guide',
   files?: File[],
   onChunk?: (chunk: string) => void,
-  onComplete?: (fullMessage: string) => void,
+  onComplete?: (fullMessage: string, quickActions?: string[]) => void,
   onError?: (error: Error) => void
 ): Promise<string> => {
   const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
@@ -167,6 +167,13 @@ export const streamChat = async (
                     if (parsed.type === 'delta' && parsed.content) {
                       fullMessage += parsed.content;
                       onChunk?.(parsed.content);
+                    } else if (parsed.type === 'complete') {
+                      console.log('✅ Stream complete with quick actions');
+                      if (parsed.quickActions) {
+                        onComplete?.(fullMessage, parsed.quickActions);
+                      } else {
+                        onComplete?.(fullMessage);
+                      }
                     } else if (parsed.type === 'error') {
                       console.error('❌ Stream error:', parsed.error);
                       throw new Error(parsed.error);

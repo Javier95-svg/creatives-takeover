@@ -1438,11 +1438,16 @@ What specific aspect of your business would you like to focus on first?`;
             chatMode,
             messageAttachments,
             (chunk) => setStreamingMessage(prev => prev + chunk),
-            (fullMessage) => {
-              // Replace streaming message with final message
+            (fullMessage, quickActions) => {
+              // Replace streaming message with final message and add quick actions
               setMessages(prev => prev.map(msg => 
                 msg.id === 'streaming' 
-                  ? { ...msg, id: generateId(), content: fullMessage }
+                  ? { 
+                      ...msg, 
+                      id: generateId(), 
+                      content: fullMessage,
+                      quickActions: quickActions?.map(text => ({ text, action: text }))
+                    }
                   : msg
               ));
               setStreamingMessage('');
@@ -1512,11 +1517,16 @@ What specific aspect of your business would you like to focus on first?`;
           chatMode,
           messageAttachments,
           (chunk) => setStreamingMessage(prev => prev + chunk),
-          (fullMessage) => {
-            // Replace streaming message with final message
+          (fullMessage, quickActions) => {
+            // Replace streaming message with final message and add quick actions
             setMessages(prev => prev.map(msg => 
               msg.id === 'streaming' 
-                ? { ...msg, id: generateId(), content: fullMessage }
+                ? { 
+                    ...msg, 
+                    id: generateId(), 
+                    content: fullMessage,
+                    quickActions: quickActions?.map(text => ({ text, action: text }))
+                  }
                 : msg
             ));
             setStreamingMessage('');

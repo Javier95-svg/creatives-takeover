@@ -192,8 +192,9 @@ const ChatbotWidget = () => {
       return;
     }
     
-    // Fallback to default handler
-    handleQuickAction(action, href);
+    // For tour-guide and conversational mode: send the action text as a message
+    // This makes the conversation flow naturally
+    sendMessage(action);
   };
 
   const handleSend = () => {
@@ -350,17 +351,6 @@ const ChatbotWidget = () => {
 
             {/* Input */}
             <div className={`${config.inputPadding} border-t border-border flex-shrink-0`}>
-              {isStreaming && (
-                <div className="mb-2 flex items-center justify-center">
-                  <button
-                    onClick={cancelStreaming}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-full transition-colors duration-200"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />
-                    Stop generating
-                  </button>
-                </div>
-              )}
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
