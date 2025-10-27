@@ -25,6 +25,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
   const startTime = useRef(Date.now());
   const scrollDepths = useRef(new Set<number>());
   const exitIntentTracked = useRef(false);
+  const pageViewTracked = useRef(false);
 
   // Track analytics event
   const trackEvent = useCallback(async (event: PageAnalyticsEvent) => {
@@ -45,10 +46,13 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
     }
   }, [user, pagePath, pageTitle]);
 
-  // Track page view on mount
+  // Track page view on mount (only once)
   useEffect(() => {
-    trackEvent({ event_type: 'page_view' });
-  }, [trackEvent]);
+    if (!pageViewTracked.current) {
+      pageViewTracked.current = true;
+      trackEvent({ event_type: 'page_view' });
+    }
+  }, []);
 
   // Track scroll depth
   useEffect(() => {

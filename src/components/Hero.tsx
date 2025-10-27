@@ -3,11 +3,9 @@ import { ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-bg-animated.jpg";
-import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
-  const { trackClick } = usePageAnalytics();
   
   return (
     <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20 px-4 sm:px-6">
@@ -177,7 +175,6 @@ const Hero = () => {
               size="lg" 
               className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto" 
               aria-label="Create My Plan" 
-              onClick={() => trackClick('Create My Plan', 'Hero')}
               asChild
             >
               <Link to="/bizmap-ai">
@@ -192,7 +189,6 @@ const Hero = () => {
               variant="outline" 
               className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
               aria-label="Go to Dashboard"
-              onClick={() => trackClick('Go to Dashboard', 'Hero')}
               asChild
             >
               <Link to="/dashboard">
