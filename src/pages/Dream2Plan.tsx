@@ -1141,11 +1141,6 @@ Subject: "Quick question about [their pain point]"
       {/* Enhanced Animated Background */}
       <AnimatedBackground />
       
-      {/* Enhanced Background decorations */}
-      <div className="fixed top-20 left-10 w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/10 rounded-full blur-3xl animate-float" />
-      <div className="fixed bottom-20 right-10 w-24 h-24 bg-gradient-to-tl from-secondary/20 to-accent/10 rounded-full blur-2xl animate-spiral" style={{ animationDelay: '1s' }} />
-      <div className="fixed top-1/2 right-20 w-16 h-16 bg-gradient-to-r from-accent/15 to-primary/10 rounded-full blur-xl animate-diagonal-float" />
-      <div className="fixed top-1/3 left-1/4 w-20 h-20 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-full blur-2xl animate-orbit opacity-60" />
       
       <div className="relative z-10">
         <Navigation />
@@ -1196,7 +1191,7 @@ Subject: "Quick question about [their pain point]"
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}
                   <div className="flex-1 min-w-0">
-                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-md h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-sm h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
