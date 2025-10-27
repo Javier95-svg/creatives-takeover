@@ -1196,7 +1196,7 @@ Subject: "Quick question about [their pain point]"
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}
                   <div className="flex-1 min-w-0">
-                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-lg h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-md h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
