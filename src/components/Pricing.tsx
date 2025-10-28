@@ -201,7 +201,7 @@ const Pricing = () => {
                       ) : (
                         <>
                           <Star className="w-3 h-3 fill-current" />
-                          Most Popular
+                          Suggested
                         </>
                       )}
                     </Badge>
