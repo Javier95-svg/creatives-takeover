@@ -204,8 +204,8 @@ const PricingComparison = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="sticky left-0 z-10 bg-background text-left p-6 font-semibold min-w-[240px] border-r border-border">
-                      Features
+                    <th className="sticky left-0 z-10 bg-background text-center p-6 font-semibold min-w-[240px] border-r border-border">
+                      Plans
                     </th>
                     {plans.map((plan) => (
                       <th
