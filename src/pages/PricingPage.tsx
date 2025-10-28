@@ -7,9 +7,6 @@ import TrustIndicators from "@/components/TrustIndicators";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import PricingComparison from "@/components/PricingComparison";
 import PricingFAQ from "@/components/PricingFAQ";
-import Testimonials from "@/components/Testimonials";
-import StillNotSure from "@/components/StillNotSure";
-import PricingCTA from "@/components/PricingCTA";
 
 
 const PricingPage = () => {
@@ -57,11 +54,8 @@ const PricingPage = () => {
           <SubscriptionFeatures />
           <PricingComparison />
           <PricingFAQ />
-          <Testimonials />
-          <StillNotSure />
-          <PricingCTA />
+          <Footer />
         </div>
-        <Footer />
       </div>
     </>
   );
