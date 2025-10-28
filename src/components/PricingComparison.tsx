@@ -1,130 +1,150 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 const PricingComparison = () => {
-  const features = [{
-    category: "AI-Powered Tools",
-    items: [{
-      feature: "AI Design Assistant",
-      starter: "Basic",
-      plus: "Advanced",
-      family: "Advanced"
-    }, {
-      feature: "Smart Templates",
-      starter: "50",
-      plus: "500+",
-      family: "500+"
-    }, {
-      feature: "AI Content Generation",
-      starter: false,
-      plus: true,
-      family: true
-    }, {
-      feature: "Auto Background Removal",
-      starter: "10/month",
-      plus: "Unlimited",
-      family: "Unlimited"
-    }, {
-      feature: "AI Analytics & Insights",
-      starter: false,
-      plus: true,
-      family: true
-    }]
-  }, {
-    category: "Creative Resources",
-    items: [{
-      feature: "Template Library Access",
-      starter: "1,000+",
-      plus: "10,000+",
-      family: "10,000+"
-    }, {
-      feature: "Stock Photos & Images",
-      starter: "100/month",
-      plus: "Unlimited",
-      family: "Unlimited"
-    }, {
-      feature: "Premium Fonts",
-      starter: "50",
-      plus: "500+",
-      family: "500+"
-    }, {
-      feature: "Design Assets",
-      starter: "Basic",
-      plus: "Premium",
-      family: "Premium"
-    }, {
-      feature: "Video Templates",
-      starter: false,
-      plus: true,
-      family: true
-    }]
-  }, {
-    category: "Collaboration & Sharing",
-    items: [{
-      feature: "Team Members",
-      starter: "1",
-      plus: "3",
-      family: "6"
-    }, {
-      feature: "Cloud Storage",
-      starter: "10GB",
-      plus: "100GB",
-      family: "500GB"
-    }, {
-      feature: "Real-time Collaboration",
-      starter: false,
-      plus: true,
-      family: true
-    }, {
-      feature: "Project Sharing",
-      starter: "Basic",
-      plus: "Advanced",
-      family: "Advanced"
-    }, {
-      feature: "Version History",
-      starter: "7 days",
-      plus: "30 days",
-      family: "Unlimited"
-    }]
-  }, {
-    category: "Support & Community",
-    items: [{
-      feature: "Community Access",
-      starter: true,
-      plus: true,
-      family: true
-    }, {
-      feature: "Email Support",
-      starter: true,
-      plus: true,
-      family: true
-    }, {
-      feature: "Priority Support",
-      starter: false,
-      plus: true,
-      family: true
-    }, {
-      feature: "1-on-1 Consultations",
-      starter: false,
-      plus: false,
-      family: true
-    }, {
-      feature: "Advanced Tutorials",
-      starter: "Basic",
-      plus: "All Access",
-      family: "All Access"
-    }]
-  }];
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const features = [
+    {
+      category: "BizMap AI Conversations",
+      items: [
+        { feature: "Monthly AI Conversations", free: "5/month", creator: "50/month", professional: "150/month", enterprise: "500/month" }
+      ]
+    },
+    {
+      category: "Community Access",
+      items: [
+        { feature: "Community Features", free: "Basic (read & post)", creator: "Full features", professional: "AI-enhanced insights", enterprise: "All features + unlimited" },
+        { feature: "Posting & Commenting", free: true, creator: true, professional: true, enterprise: true },
+        { feature: "Voting & Trending", free: false, creator: true, professional: true, enterprise: true },
+        { feature: "AI Post Insights", free: false, creator: false, professional: true, enterprise: true }
+      ]
+    },
+    {
+      category: "Prompt Library",
+      items: [
+        { feature: "Access Level", free: "View only", creator: "Copy/export", professional: "Copy/export", enterprise: "Copy/export" },
+        { feature: "Custom Prompts", free: false, creator: true, professional: true, enterprise: true }
+      ]
+    },
+    {
+      category: "Sprint Planning & Kanban",
+      items: [
+        { feature: "Active Sprints", free: "1 sprint", creator: "Unlimited", professional: "Unlimited", enterprise: "Unlimited" },
+        { feature: "Kanban Boards", free: false, creator: true, professional: true, enterprise: true },
+        { feature: "Task Management", free: "Basic", creator: "Advanced", professional: "Advanced", enterprise: "Advanced" }
+      ]
+    },
+    {
+      category: "Market Intelligence",
+      items: [
+        { feature: "Market Widget", free: false, creator: true, professional: true, enterprise: true },
+        { feature: "Trend Analysis", free: false, creator: false, professional: false, enterprise: true },
+        { feature: "Advanced Analytics", free: false, creator: false, professional: false, enterprise: true }
+      ]
+    },
+    {
+      category: "Business Reports",
+      items: [
+        { feature: "Custom Reports", free: false, creator: false, professional: true, enterprise: true },
+        { feature: "AI Analysis Reports", free: false, creator: false, professional: false, enterprise: true },
+        { feature: "Export Capabilities", free: false, creator: false, professional: true, enterprise: true }
+      ]
+    },
+    {
+      category: "Collaboration Tools",
+      items: [
+        { feature: "Text Chat", free: false, creator: true, professional: true, enterprise: true },
+        { feature: "File Sharing", free: false, creator: true, professional: true, enterprise: true },
+        { feature: "Whiteboarding", free: false, creator: false, professional: true, enterprise: true },
+        { feature: "Polls & Voting", free: false, creator: false, professional: true, enterprise: true },
+        { feature: "Video Calls", free: false, creator: false, professional: true, enterprise: true },
+        { feature: "Unlimited Participants", free: false, creator: false, professional: false, enterprise: true }
+      ]
+    },
+    {
+      category: "Analytics & Tracking",
+      items: [
+        { feature: "Success Score Analytics", free: false, creator: false, professional: true, enterprise: true },
+        { feature: "Progress Tracking", free: "Basic", creator: "Advanced", professional: "Advanced", enterprise: "Advanced" }
+      ]
+    },
+    {
+      category: "Integrations & API",
+      items: [
+        { feature: "API Access", free: false, creator: false, professional: false, enterprise: true },
+        { feature: "Custom Integrations", free: false, creator: false, professional: false, enterprise: true }
+      ]
+    },
+    {
+      category: "Support",
+      items: [
+        { feature: "Support Level", free: "Email", creator: "Priority email", professional: "Priority + community", enterprise: "Dedicated manager" },
+        { feature: "Response Time", free: "48 hours", creator: "24 hours", professional: "12 hours", enterprise: "4 hours" }
+      ]
+    },
+    {
+      category: "Additional Features",
+      items: [
+        { feature: "Custom Templates", free: false, creator: false, professional: false, enterprise: true },
+        { feature: "Priority Feature Requests", free: false, creator: false, professional: false, enterprise: true },
+        { feature: "Onboarding & Training", free: false, creator: false, professional: false, enterprise: true }
+      ]
+    }
+  ];
+
+  const plans = [
+    { name: "Free", price: "$0", period: "/month", isPopular: false },
+    { name: "Creator", price: "$9.99", period: "/month", isPopular: false },
+    { name: "Professional", price: "$19.99", period: "/month", isPopular: true },
+    { name: "Enterprise", price: "$29.99", period: "/month", isPopular: false }
+  ];
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  useEffect(() => {
+    handleScroll();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      window.addEventListener('resize', handleScroll);
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleScroll);
+      };
+    }
+  }, []);
   const renderFeatureValue = (value: any) => {
     if (typeof value === 'boolean') {
-      return value ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <X className="w-5 h-5 text-muted-foreground mx-auto" />;
+      return value ? (
+        <Check className="w-5 h-5 text-primary mx-auto" />
+      ) : (
+        <X className="w-5 h-5 text-muted-foreground/40 mx-auto" />
+      );
     }
-    return <span className="text-sm font-medium">{value}</span>;
+    return <span className="text-sm font-medium text-center block">{value}</span>;
   };
-  return <section className="py-20 lg:py-32 bg-muted/30">
+
+  const handleMobileNavigation = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && currentMobileIndex > 0) {
+      setCurrentMobileIndex(currentMobileIndex - 1);
+    } else if (direction === 'next' && currentMobileIndex < plans.length - 1) {
+      setCurrentMobileIndex(currentMobileIndex + 1);
+    }
+  };
+  return (
+    <section className="py-20 lg:py-32 bg-muted/30">
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
@@ -134,85 +154,163 @@ const PricingComparison = () => {
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
             Compare Our Packages
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
             See exactly what's included in each pricing plan. 
             Choose the perfect tier for your entrepreneurial platform needs.
           </p>
+          <p className="text-sm text-muted-foreground hidden lg:block">
+            Scroll horizontally to see all features →
+          </p>
         </div>
 
-        {/* Mobile-friendly comparison */}
-        <div className="lg:hidden space-y-8 mb-16">
-          {["Starter", "Plus", "Family"].map(plan => <Card key={plan} className="glass border-border">
-              <CardHeader>
-                <CardTitle className="text-center text-2xl gradient-text">
-                  {plan}
-                  {plan === "Plus" && <Badge className="ml-2 bg-primary text-white">Most Popular</Badge>}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {features.map(category => <div key={category.category}>
-                    <h4 className="font-semibold text-lg mb-4 text-primary">{category.category}</h4>
-                    <div className="space-y-3">
-                      {category.items.map(item => <div key={item.feature} className="flex justify-between items-center">
-                          <span className="text-sm">{item.feature}</span>
-                          <div className="text-right">
-                            {renderFeatureValue(item[plan.toLowerCase() as keyof typeof item])}
+        {/* Mobile-friendly comparison with navigation */}
+        <div className="lg:hidden space-y-6 mb-16">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => handleMobileNavigation('prev')}
+              disabled={currentMobileIndex === 0}
+              className="p-2 rounded-lg border border-border disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="text-sm text-muted-foreground">
+              {currentMobileIndex + 1} of {plans.length}
+            </div>
+            <button
+              onClick={() => handleMobileNavigation('next')}
+              disabled={currentMobileIndex === plans.length - 1}
+              className="p-2 rounded-lg border border-border disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          <Card className="glass border-border">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl gradient-text">
+                {plans[currentMobileIndex].name}
+                {plans[currentMobileIndex].isPopular && (
+                  <Badge className="ml-2 bg-primary text-white">Most Popular</Badge>
+                )}
+              </CardTitle>
+              <div className="text-center text-3xl font-bold mt-2">
+                {plans[currentMobileIndex].price}
+                <span className="text-sm text-muted-foreground">{plans[currentMobileIndex].period}</span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {features.map(category => (
+                <div key={category.category}>
+                  <h4 className="font-semibold text-lg mb-4 text-primary">{category.category}</h4>
+                  <div className="space-y-3">
+                    {category.items.map(item => {
+                      const planKey = plans[currentMobileIndex].name.toLowerCase() as 'free' | 'creator' | 'professional' | 'enterprise';
+                      return (
+                        <div key={item.feature} className="flex justify-between items-center gap-4">
+                          <span className="text-sm flex-1">{item.feature}</span>
+                          <div className="text-right flex-shrink-0">
+                            {renderFeatureValue(item[planKey])}
                           </div>
-                        </div>)}
-                    </div>
-                  </div>)}
-              </CardContent>
-            </Card>)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Mobile dots indicator */}
+          <div className="flex justify-center gap-2">
+            {plans.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentMobileIndex(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === currentMobileIndex ? 'bg-primary w-6' : 'bg-muted-foreground/30'
+                }`}
+                aria-label={`Go to plan ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Desktop comparison table */}
-        <div className="hidden lg:block">
+        {/* Desktop comparison table with horizontal scroll */}
+        <div className="hidden lg:block relative">
+          {/* Scroll indicators */}
+          {canScrollLeft && (
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none z-20" />
+          )}
+          {canScrollRight && (
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none z-20" />
+          )}
+
           <Card className="glass border-border overflow-hidden">
-            <div className="overflow-x-auto">
+            <div 
+              ref={scrollContainerRef}
+              className="overflow-x-auto scroll-smooth"
+            >
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left p-6 font-semibold">Features</th>
-                    <th className="text-center p-6 font-semibold text-lg">
-                      Starter
-                      <div className="text-sm font-normal text-muted-foreground mt-1">$9.99/month</div>
+                    <th className="sticky left-0 z-10 bg-background text-left p-6 font-semibold min-w-[240px] border-r border-border">
+                      Features
                     </th>
-                    <th className="text-center p-6 font-semibold text-lg bg-primary/5 relative">
-                      Plus
-                      <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs">
-                        Most Popular
-                      </Badge>
-                      <div className="text-sm font-normal text-muted-foreground mt-1">$19.99/month</div>
-                    </th>
-                    <th className="text-center p-6 font-semibold text-lg">
-                      Family
-                      <div className="text-sm font-normal text-muted-foreground mt-1">$29.99/month</div>
-                    </th>
+                    {plans.map((plan) => (
+                      <th
+                        key={plan.name}
+                        className={`text-center p-6 font-semibold text-lg min-w-[180px] relative ${
+                          plan.isPopular ? 'bg-primary/5' : ''
+                        }`}
+                      >
+                        {plan.isPopular && (
+                          <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs">
+                            Most Popular
+                          </Badge>
+                        )}
+                        {plan.name}
+                        <div className="text-2xl font-bold mt-2">
+                          {plan.price}
+                          <span className="text-sm font-normal text-muted-foreground">{plan.period}</span>
+                        </div>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {features.map(category => <React.Fragment key={category.category}>
+                  {features.map(category => (
+                    <React.Fragment key={category.category}>
                       <tr>
-                        <td colSpan={4} className="p-4 bg-muted/50">
+                        <td 
+                          colSpan={5} 
+                          className="p-4 bg-muted/50 sticky left-0 z-10"
+                        >
                           <h4 className="font-semibold text-primary">{category.category}</h4>
                         </td>
                       </tr>
-                      {category.items.map((item, index) => <tr key={item.feature} className={index % 2 === 0 ? "bg-background" : "bg-muted/20"}>
-                          <td className="p-4 font-medium">{item.feature}</td>
-                          <td className="p-4 text-center">{renderFeatureValue(item.starter)}</td>
-                          <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.plus)}</td>
-                          <td className="p-4 text-center">{renderFeatureValue(item.family)}</td>
-                        </tr>)}
-                    </React.Fragment>)}
+                      {category.items.map((item, index) => (
+                        <tr 
+                          key={item.feature} 
+                          className={index % 2 === 0 ? "bg-background" : "bg-muted/20"}
+                        >
+                          <td className="sticky left-0 z-10 bg-inherit p-4 font-medium border-r border-border">
+                            {item.feature}
+                          </td>
+                          <td className="p-4 text-center">{renderFeatureValue(item.free)}</td>
+                          <td className="p-4 text-center">{renderFeatureValue(item.creator)}</td>
+                          <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional)}</td>
+                          <td className="p-4 text-center">{renderFeatureValue(item.enterprise)}</td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
                 </tbody>
               </table>
             </div>
           </Card>
         </div>
-
-        {/* CTA Section */}
-        
       </div>
-    </section>;
+    </section>
+  );
 };
 export default PricingComparison;
