@@ -51,9 +51,9 @@ const PricingComparison = () => {
 
   const plans = [
     { name: "Free", price: "$0", period: "/month", isPopular: false },
-    { name: "Creator", price: "$9.99", period: "/month", isPopular: false },
-    { name: "Professional", price: "$19.99", period: "/month", isPopular: false },
-    { name: "Enterprise", price: "$29.99", period: "/month", isPopular: false }
+    { name: "Creator", price: "$19.99", period: "/month", isPopular: false },
+    { name: "Professional", price: "$39.99", period: "/month", isPopular: false },
+    { name: "Enterprise", price: "$59.99", period: "/month", isPopular: false }
   ];
 
   const handleScroll = () => {
