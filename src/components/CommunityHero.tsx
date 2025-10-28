@@ -11,7 +11,7 @@ const CommunityHero = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <MessageCircle className="h-4 sm:h-5 w-4 sm:w-5 text-primary" />
             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs sm:text-sm">
-              Join Our Growing Community
+              Tell Your Story. Grow with Us
             </Badge>
           </div>
           
