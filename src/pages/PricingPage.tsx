@@ -3,6 +3,13 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import TrustIndicators from "@/components/TrustIndicators";
+import SubscriptionFeatures from "@/components/SubscriptionFeatures";
+import PricingComparison from "@/components/PricingComparison";
+import PricingFAQ from "@/components/PricingFAQ";
+import Testimonials from "@/components/Testimonials";
+import StillNotSure from "@/components/StillNotSure";
+import PricingCTA from "@/components/PricingCTA";
 
 
 const PricingPage = () => {
@@ -46,6 +53,13 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
+          <TrustIndicators />
+          <SubscriptionFeatures />
+          <PricingComparison />
+          <PricingFAQ />
+          <Testimonials />
+          <StillNotSure />
+          <PricingCTA />
         </div>
         <Footer />
       </div>
