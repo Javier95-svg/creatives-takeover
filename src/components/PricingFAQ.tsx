@@ -43,9 +43,23 @@ const PricingFAQ = () => {
   ];
 
   return (
-    <section className="py-20 relative z-10">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+    <section className="py-20 relative overflow-hidden">
+      {/* Animated Wallpaper Background */}
+      <div className="absolute inset-0 z-0">
+        {/* Gradient Base */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+        
+        {/* Animated Floating Shapes */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Pricing FAQ
           </h2>
@@ -54,7 +68,7 @@ const PricingFAQ = () => {
           </p>
         </div>
 
-        <Card className="max-w-4xl mx-auto bg-background/60 backdrop-blur-sm border-border/50 p-8">
+        <Card className="max-w-4xl mx-auto bg-background/60 backdrop-blur-sm border-border/50 p-8 animate-fade-in shadow-xl">
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
