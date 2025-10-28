@@ -132,22 +132,6 @@ const Footer = () => {
                   />
                 </a>
               </li>
-              
-              {/* Discord */}
-              <li>
-                <a
-                  href="https://discord.gg/kcsxMzGw"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Discord"
-                >
-                  <img 
-                    src="/lovable-uploads/discord-logo.png" 
-                    alt="Discord" 
-                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
-                  />
-                </a>
-              </li>
             </ul>
             
             {/* Product Hunt Badge */}

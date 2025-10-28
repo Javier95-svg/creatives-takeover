@@ -30,18 +30,6 @@ const CommunityHero = () => {
                 Share Your Story
               </Button>
             </Link>
-            <a 
-              href="https://discord.gg/kcsxMzGw" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
-              <Button variant="outline" size="lg" className="border-primary/20 w-full sm:w-auto h-12 sm:h-auto touch-manipulation">
-                <Users className="h-4 sm:h-5 w-4 sm:w-5 mr-2" />
-                <span className="hidden sm:inline">Join Our Discord Group</span>
-                <span className="sm:hidden">Join Discord</span>
-              </Button>
-            </a>
           </div>
 
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
