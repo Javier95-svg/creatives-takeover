@@ -79,7 +79,7 @@ const SubscriptionFeatures = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Card 
               key={index} 
@@ -120,46 +120,6 @@ const SubscriptionFeatures = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Value Proposition */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-8 lg:p-12 text-center">
-          <h3 className="text-3xl font-bold mb-4 gradient-text">
-            Why Choose Our AI Solopreneur Platform?
-          </h3>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Save hundreds of hours and get the clarity you need to build a successful business 
-            with our comprehensive AI-powered platform.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">10x</div>
-              <div className="text-muted-foreground">Faster business planning</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-muted-foreground">AI conversations monthly</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <div className="text-muted-foreground">AI business advisor</div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/pricing">
-                Start Your Journey
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6" asChild>
-              <Link to="/pricing">
-                View Pricing Plans
-              </Link>
-            </Button>
-          </div>
         </div>
       </div>
     </section>
