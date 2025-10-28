@@ -132,11 +132,11 @@ const PricingComparison = () => {
             Feature Comparison
           </Badge>
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
-            Compare AI Solopreneur Plans
+            Compare Our Packages
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            See exactly what's included in each AI solopreneur pricing plan. 
-            Choose the perfect tier for your creative business needs.
+            See exactly what's included in each pricing plan. 
+            Choose the perfect tier for your entrepreneurial platform needs.
           </p>
         </div>
 

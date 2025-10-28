@@ -19,9 +19,9 @@ const SubscriptionFeatures = () => {
   const features = [
     {
       icon: <MessageSquare className="w-10 h-10 text-primary" />,
-      title: "AI Business Planning",
-      description: "Get personalized business insights with our BizMap AI Creative Operating System and strategic planning tools.",
-      benefits: ["AI-powered business analysis", "Custom launch reports", "Strategic recommendations"],
+      title: "Business Planning",
+      description: "Get personalized business insights with our BizMap Creative Operating System and strategic planning tools.",
+      benefits: ["Business analysis & insights", "Custom launch reports", "Strategic recommendations"],
       highlight: "Core Feature"
     },
     {
@@ -67,13 +67,13 @@ const SubscriptionFeatures = () => {
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6">
-            AI Solopreneur Platform Features
+            Platform Features
           </Badge>
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
             Everything You Need to Build Your Business
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our comprehensive platform combines AI-powered business planning, community collaboration, 
+            Our comprehensive platform combines business planning, community collaboration, 
             and market intelligence to accelerate your entrepreneurial journey.
           </p>
         </div>
