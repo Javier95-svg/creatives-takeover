@@ -1,147 +1,73 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Crown, Check, Sparkles, Zap, Users, TrendingUp, Shield, ArrowRight, Info } from "lucide-react";
+import { Star, Crown, Check } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 const Pricing = () => {
   const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
   const { user } = useAuth();
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
-  const [comparisonOpen, setComparisonOpen] = useState(false);
 
-  // Feature categories with icons
-  const getFeatureCategories = (tierName: string) => {
-    const categoryMap: Record<string, Array<{ category: string; icon: any; features: string[] }>> = {
+  // Define feature sets for each tier - based on actual implemented features
+  const getFeatures = (tierName: string) => {
+    const featureMap: Record<string, string[]> = {
       free: [
-        {
-          category: "AI Tools",
-          icon: Sparkles,
-          features: ["5 BizMap AI conversations/month", "Basic prompt library (view only)"]
-        },
-        {
-          category: "Community",
-          icon: Users,
-          features: ["Forum access (read & post)", "Connect with entrepreneurs"]
-        },
-        {
-          category: "Planning",
-          icon: TrendingUp,
-          features: ["Basic sprint planning (1 active)", "Task management basics"]
-        }
+        "5 BizMap AI conversations per month",
+        "Basic community forum access (read & post)",
+        "Access to prompt library (view only)",
+        "Basic sprint planning (1 active sprint)",
+        "Email support"
       ],
       creator: [
-        {
-          category: "AI Tools",
-          icon: Sparkles,
-          features: ["50 AI conversations/month", "Full prompt library access", "Market intelligence widget"]
-        },
-        {
-          category: "Community",
-          icon: Users,
-          features: ["Full community features", "Post, comment & vote", "Reputation system"]
-        },
-        {
-          category: "Planning",
-          icon: TrendingUp,
-          features: ["Unlimited sprint planning", "Kanban boards", "Basic collaboration tools"]
-        },
-        {
-          category: "Support",
-          icon: Shield,
-          features: ["Priority email support", "Response within 24h"]
-        }
+        "50 BizMap AI conversations per month",
+        "Full community features (posting, commenting, voting)",
+        "Prompt library with copy/export functionality", 
+        "Unlimited sprint planning & Kanban boards",
+        "Market intelligence widget access",
+        "Basic collaboration tools (text chat, file sharing)",
+        "Priority email support"
       ],
       professional: [
-        {
-          category: "AI Tools",
-          icon: Sparkles,
-          features: ["150 AI conversations/month", "AI-enhanced insights", "Custom report generation", "Advanced analytics"]
-        },
-        {
-          category: "Collaboration",
-          icon: Users,
-          features: ["Whiteboarding & polls", "Video calls", "File sharing", "Real-time sync"]
-        },
-        {
-          category: "Analytics",
-          icon: TrendingUp,
-          features: ["Success score tracking", "Trend analysis", "Export all reports", "Performance metrics"]
-        },
-        {
-          category: "Support",
-          icon: Shield,
-          features: ["Priority support", "Community access", "12h response time"]
-        }
+        "150 BizMap AI conversations per month",
+        "AI-enhanced community features (post insights, trending)",
+        "Custom business report generation",
+        "Advanced collaboration tools (whiteboarding, polls, video calls)",
+        "Success score analytics & tracking",
+        "Priority support + community access",
+        "Export capabilities for all reports"
       ],
       enterprise: [
-        {
-          category: "AI Tools",
-          icon: Sparkles,
-          features: ["500 AI conversations/month", "Custom AI analysis", "API access", "White-label options"]
-        },
-        {
-          category: "Team Features",
-          icon: Users,
-          features: ["Unlimited participants", "Advanced permissions", "Team analytics", "Custom templates"]
-        },
-        {
-          category: "Intelligence",
-          icon: TrendingUp,
-          features: ["Advanced market intel", "Competitive analysis", "Custom integrations", "Priority features"]
-        },
-        {
-          category: "Support",
-          icon: Shield,
-          features: ["Dedicated account manager", "24/7 priority support", "Custom onboarding", "SLA guarantee"]
-        }
+        "500 BizMap AI conversations per month",
+        "All collaboration features with unlimited participants",
+        "Advanced market intelligence & trend analysis",
+        "Custom AI business analysis reports",
+        "API access for integrations",
+        "Dedicated account manager",
+        "Custom business templates",
+        "Priority feature requests"
       ]
     };
-    return categoryMap[tierName] || [];
+    return featureMap[tierName] || [];
   };
 
   const getDescription = (tierName: string) => {
     const descriptions: Record<string, string> = {
-      free: "Perfect for testing the waters and exploring AI-powered business tools",
-      creator: "Everything you need to build and grow as a creative solopreneur",
-      professional: "Advanced tools and collaboration for scaling your business",
-      enterprise: "Enterprise-grade platform for teams that demand the best"
+      free: "Perfect for getting started with AI-powered business planning",
+      creator: "Ideal for solopreneurs who need regular AI insights and community access",
+      professional: "Best value for serious entrepreneurs with comprehensive collaboration features",
+      enterprise: "Perfect for teams and advanced users who need unlimited access and premium support"
     };
     return descriptions[tierName] || "";
   };
 
-  const getAnnualDiscount = (tierName: string) => {
-    return tierName !== 'free' ? 0.2 : 0; // 20% off annual
-  };
-
   const getTitleAndCTA = (tierName: string) => {
-    const details: Record<string, { title: string; cta: string; highlight?: string }> = {
-      free: { title: "Starter", cta: "Get Started Free", highlight: "No credit card required" },
-      creator: { title: "Creator", cta: "Start Creating", highlight: "Most popular for solopreneurs" },
-      professional: { title: "Professional", cta: "Go Pro", highlight: "Best value • Most popular" },
-      enterprise: { title: "Enterprise", cta: "Contact Sales", highlight: "Custom solutions" }
+    const details: Record<string, { title: string; cta: string }> = {
+      free: { title: "Get Started", cta: "Start Free" },
+      creator: { title: "Build & Create", cta: "Go Creator" },
+      professional: { title: "Scale & Collaborate", cta: "Go Professional" },
+      enterprise: { title: "Lead & Innovate", cta: "Go Enterprise" }
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
-  };
-
-  const calculatePrice = (priceCents: number, tierName: string) => {
-    if (tierName === 'free') return 0;
-    const monthlyPrice = priceCents / 100;
-    if (billingPeriod === 'annual') {
-      return monthlyPrice * (1 - getAnnualDiscount(tierName));
-    }
-    return monthlyPrice;
   };
 
   const handleSubscribe = async (tierName: string) => {
@@ -195,103 +121,86 @@ const Pricing = () => {
     <>
       {/* Pricing Section */}
       <section className="relative py-24 overflow-hidden" id="pricing-plans">
-        {/* Simplified Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/10" />
+        {/* Animated Background with Multiple Layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20 animate-fade-in" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
         
-        {/* Elegant Floating Elements - Reduced for Performance */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-secondary/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-accent/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '4s' }} />
+        {/* Enhanced Animated Floating Elements with Diverse Movement Patterns */}
+        <div className="absolute top-20 left-10 w-4 h-4 bg-primary rounded-full animate-float opacity-80 hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute top-40 right-20 w-6 h-6 bg-secondary rounded-full animate-spiral opacity-60" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-40 left-20 w-3 h-3 bg-accent rounded-full animate-zigzag opacity-70" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-60 left-1/3 w-2 h-2 bg-primary/50 rounded-full animate-diagonal-float" style={{ animationDelay: '3s' }} />
+        <div className="absolute bottom-60 right-1/3 w-5 h-5 bg-secondary/40 rounded-full animate-figure-eight" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/3 right-10 w-8 h-8 bg-gradient-to-r from-primary/30 to-secondary/30 rounded-full animate-orbit opacity-50" style={{ animationDelay: '5s' }} />
+        <div className="absolute bottom-1/3 left-10 w-6 h-6 bg-gradient-to-r from-accent/40 to-primary/40 rounded-full animate-float-reverse opacity-40" style={{ animationDelay: '6s' }} />
         
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-12 animate-fade-in">
-          <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Flexible Pricing for Every Stage
-          </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 gradient-text leading-tight">
-            Choose Your Growth Path
+        {/* Additional Dynamic Floating Elements with Varied Animations */}
+        <div className="absolute top-32 left-1/4 w-3 h-3 bg-primary/60 rounded-full animate-drift opacity-80" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-80 right-1/4 w-7 h-7 bg-secondary/30 rounded-full animate-spiral opacity-60" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute bottom-32 left-1/2 w-4 h-4 bg-accent/50 rounded-full animate-orbit opacity-70" style={{ animationDelay: '2.5s' }} />
+        <div className="absolute top-96 left-16 w-5 h-5 bg-primary/40 rounded-full animate-figure-eight opacity-50" style={{ animationDelay: '3.5s' }} />
+        <div className="absolute bottom-96 right-16 w-2 h-2 bg-secondary/60 rounded-full animate-zigzag opacity-80" style={{ animationDelay: '4.5s' }} />
+        <div className="absolute top-44 left-3/4 w-6 h-6 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full animate-diagonal-float opacity-40" style={{ animationDelay: '5.5s' }} />
+        <div className="absolute bottom-44 right-3/4 w-3 h-3 bg-gradient-to-tl from-secondary/40 to-primary/40 rounded-full animate-float-reverse opacity-60" style={{ animationDelay: '6.5s' }} />
+        
+        {/* Moving Gradient Orbs with Complex Paths */}
+        <div className="absolute top-24 right-1/3 w-12 h-12 bg-gradient-to-r from-primary/15 to-transparent rounded-full animate-orbit opacity-30 blur-sm" style={{ animationDelay: '7s' }} />
+        <div className="absolute bottom-24 left-1/3 w-16 h-16 bg-gradient-to-l from-secondary/10 to-transparent rounded-full animate-spiral opacity-25 blur-md" style={{ animationDelay: '8s' }} />
+        <div className="absolute top-1/2 left-8 w-10 h-10 bg-gradient-to-b from-accent/20 to-transparent rounded-full animate-figure-eight opacity-35 blur-sm" style={{ animationDelay: '9s' }} />
+        <div className="absolute top-1/2 right-8 w-14 h-14 bg-gradient-to-t from-primary/12 to-transparent rounded-full animate-diagonal-float opacity-30 blur-md" style={{ animationDelay: '10s' }} />
+        
+        {/* Additional Tiny Floating Particles */}
+        <div className="absolute top-16 left-1/2 w-1 h-1 bg-primary/70 rounded-full animate-drift opacity-90" style={{ animationDelay: '11s' }} />
+        <div className="absolute bottom-16 right-1/2 w-1 h-1 bg-secondary/80 rounded-full animate-zigzag opacity-85" style={{ animationDelay: '12s' }} />
+        <div className="absolute top-72 left-12 w-2 h-2 bg-accent/60 rounded-full animate-orbit opacity-75" style={{ animationDelay: '13s' }} />
+        <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/50 rounded-full animate-spiral opacity-70" style={{ animationDelay: '14s' }} />
+      <div className="container mx-auto px-4 relative z-20">
+        <div className="text-center mb-16 animate-fade-in">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
+            Choose Your Plan
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            From solo creators to growing teams — unlock AI-powered tools that scale with your ambition
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Unlock your creative potential with flexible plans designed for every level of ambition
           </p>
-          
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <Label htmlFor="billing-toggle" className={billingPeriod === 'monthly' ? 'font-semibold' : 'text-muted-foreground'}>
-              Monthly
-            </Label>
-            <Switch
-              id="billing-toggle"
-              checked={billingPeriod === 'annual'}
-              onCheckedChange={(checked) => setBillingPeriod(checked ? 'annual' : 'monthly')}
-            />
-            <Label htmlFor="billing-toggle" className={billingPeriod === 'annual' ? 'font-semibold' : 'text-muted-foreground'}>
-              Annual
-            </Label>
-            <Badge variant="default" className="bg-green-600 text-white ml-2">
-              Save 20%
-            </Badge>
-          </div>
-
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-primary" />
-              <span>Secure payments</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span>Join 10,000+ creators</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              <span>Cancel anytime</span>
-            </div>
-          </div>
         </div>
 
-        {/* Pricing Cards - 3-Tier Emphasis Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto mb-12">
-          {tiers.filter(t => ['creator', 'professional', 'enterprise'].includes(t.tier_name)).map((tier, index) => {
-            const { title, cta, highlight } = getTitleAndCTA(tier.tier_name);
-            const featureCategories = getFeatureCategories(tier.tier_name);
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto px-2 sm:px-0">
+          {tiers.map((tier, index) => {
+            const { title, cta } = getTitleAndCTA(tier.tier_name);
+            const features = getFeatures(tier.tier_name);
             const description = getDescription(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'professional';
-            const displayPrice = calculatePrice(tier.price_cents, tier.tier_name);
-            const annualSavings = billingPeriod === 'annual' && tier.tier_name !== 'free' 
-              ? (tier.price_cents / 100) * 12 * getAnnualDiscount(tier.tier_name)
-              : 0;
 
             return (
               <div
                 key={tier.tier_name}
-                className={`relative glass-card p-8 transition-all duration-500 animate-fade-in hover:-translate-y-2 flex flex-col ${
+                className={`relative glass-card p-4 sm:p-5 lg:p-6 transition-all duration-500 animate-fade-in hover:scale-[1.02] sm:hover:scale-105 hover:shadow-xl flex flex-col justify-between ${
                   isCurrentPlan
-                    ? 'border-2 border-green-500/50 shadow-2xl shadow-green-500/20'
+                    ? 'border-2 border-green-500/50 shadow-[0_0_40px_hsl(142,76%,36%,0.2)]'
                     : isPopular 
-                    ? 'border-2 border-primary lg:scale-110 shadow-2xl shadow-primary/20 z-10' 
-                    : 'border border-border/50 hover:border-primary/30 hover:shadow-xl'
+                    ? 'border-2 border-primary/30 sm:scale-105 shadow-[0_0_40px_hsl(var(--primary)/0.2)]' 
+                    : 'border border-border/50'
                 }`}
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={{ animationDelay: `${index * 0.2}s` }}
               >
-                {/* Status Badge */}
+                {/* Current Plan or Popular Badge */}
                 {(isCurrentPlan || isPopular) && (
-                  <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-20">
-                    <Badge className={`px-6 py-1.5 text-sm font-semibold flex items-center gap-2 shadow-lg ${
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className={`px-4 py-1 text-sm font-medium flex items-center gap-1 ${
                       isCurrentPlan
                         ? 'bg-green-600 text-white'
-                        : 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground'
+                        : 'bg-primary text-primary-foreground'
                     }`}>
                       {isCurrentPlan ? (
                         <>
-                          <Crown className="w-4 h-4 fill-current" />
-                          Current Plan
+                          <Crown className="w-3 h-3 fill-current" />
+                          Your Plan
                         </>
                       ) : (
                         <>
-                          <Star className="w-4 h-4 fill-current" />
+                          <Star className="w-3 h-3 fill-current" />
                           Most Popular
                         </>
                       )}
@@ -299,207 +208,54 @@ const Pricing = () => {
                   </div>
                 )}
 
-                {/* Header */}
-                <div className="text-center mb-8">
-                  <h3 className="text-3xl font-bold mb-2 capitalize">{title}</h3>
-                  <p className="text-sm text-muted-foreground mb-6">{description}</p>
-                  
-                  {/* Highlight Badge */}
-                  {highlight && (
-                    <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary text-xs">
-                      {highlight}
-                    </Badge>
-                  )}
+                <div className="text-center mb-6 sm:mb-8">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 capitalize">{tier.tier_name}</h3>
+                  <p className="text-base sm:text-lg font-semibold text-primary mb-1 sm:mb-2">{title}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{description}</p>
                 </div>
 
-                {/* Pricing */}
-                <div className="text-center mb-8 pb-8 border-b border-border/50">
-                  <div className="flex items-baseline justify-center gap-2 mb-2">
-                    <span className="text-2xl text-muted-foreground">$</span>
-                    <span className="text-6xl font-bold tracking-tight">
-                      {displayPrice.toFixed(0)}
+                <div className="text-center mb-4 sm:mb-6">
+                  <div className="flex items-baseline justify-center gap-1 sm:gap-2">
+                    <span className="text-3xl sm:text-4xl font-bold">
+                      ${(tier.price_cents / 100).toFixed(2)}
                     </span>
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm text-muted-foreground">.{(displayPrice % 1).toFixed(2).slice(2)}</span>
-                      <span className="text-sm text-muted-foreground">/month</span>
-                    </div>
+                    {tier.price_cents > 0 && (
+                      <span className="text-muted-foreground text-sm sm:text-base">/month</span>
+                    )}
                   </div>
-                  {annualSavings > 0 && (
-                    <div className="text-sm text-green-600 font-medium">
-                      Save ${annualSavings.toFixed(0)}/year
-                    </div>
-                  )}
-                  {billingPeriod === 'annual' && tier.price_cents > 0 && (
-                    <div className="text-xs text-muted-foreground mt-2">
-                      Billed ${(displayPrice * 12).toFixed(0)} annually
+                  {tier.monthly_credits > 0 && (
+                    <div className="text-xs sm:text-sm text-primary mt-2">
+                      {tier.monthly_credits} credits/month
                     </div>
                   )}
                 </div>
 
-                {/* Features by Category */}
-                <div className="mb-8 space-y-6 flex-grow">
-                  {featureCategories.map((category, catIndex) => (
-                    <div key={catIndex}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <category.icon className="w-4 h-4 text-primary" />
-                        <h4 className="text-sm font-semibold text-foreground">{category.category}</h4>
-                      </div>
-                      <div className="space-y-2 pl-6">
-                        {category.features.map((feature, featureIndex) => (
-                          <div key={featureIndex} className="flex items-start gap-2">
-                            <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                            <span className="text-sm text-muted-foreground">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
+                {/* Features List */}
+                <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-3 flex-grow">
+                  {features.map((feature, featureIndex) => (
+                    <div key={featureIndex} className="flex items-start gap-2 sm:gap-3">
+                      <Check className="w-3 sm:w-4 h-3 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* CTA Button */}
                 <Button
                   onClick={() => handleSubscribe(tier.tier_name)}
                   disabled={isCurrentPlan}
-                  size="lg"
-                  className={`w-full group transition-all duration-300 ${
+                  className={`w-full py-3 px-4 font-medium btn-magnetic hover-scale transition-all duration-300 min-h-[44px] text-sm sm:text-base touch-manipulation ${
                     isCurrentPlan
                       ? 'bg-green-600 text-white cursor-default'
                       : isPopular 
-                      ? 'bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl' 
-                      : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                      : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                   }`}
                 >
-                  {isCurrentPlan ? (
-                    <>
-                      <Crown className="w-4 h-4" />
-                      Current Plan
-                    </>
-                  ) : (
-                    <>
-                      {cta}
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
+                  {isCurrentPlan ? 'Current Plan' : cta}
                 </Button>
               </div>
             );
           })}
-        </div>
-
-        {/* Free Tier Callout */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <div className="glass-card p-6 border border-border/50 hover:border-primary/30 transition-all">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl font-bold mb-2">Start Free, Upgrade Anytime</h3>
-                <p className="text-muted-foreground">
-                  Get started with 5 AI conversations per month and access to our community — no credit card required
-                </p>
-              </div>
-              <Button 
-                onClick={() => handleSubscribe('free')} 
-                variant="outline"
-                size="lg"
-                className="flex-shrink-0"
-              >
-                Try for Free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Comparison Dialog Trigger */}
-        <div className="text-center">
-          <Dialog open={comparisonOpen} onOpenChange={setComparisonOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="lg" className="group">
-                <Info className="w-4 h-4 mr-2" />
-                Compare All Features
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">Detailed Feature Comparison</DialogTitle>
-                <DialogDescription>
-                  Compare all features across our pricing tiers to find the perfect fit
-                </DialogDescription>
-              </DialogHeader>
-              <div className="mt-6">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-4 font-semibold">Feature</th>
-                        {['Free', 'Creator', 'Professional', 'Enterprise'].map(tier => (
-                          <th key={tier} className="text-center py-4 font-semibold">{tier}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">AI Conversations</td>
-                        <td className="text-center py-4 text-muted-foreground">5/month</td>
-                        <td className="text-center py-4 text-muted-foreground">50/month</td>
-                        <td className="text-center py-4 text-muted-foreground">150/month</td>
-                        <td className="text-center py-4 text-muted-foreground">500/month</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">Community Access</td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">Sprint Planning</td>
-                        <td className="text-center py-4 text-muted-foreground">1 active</td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">Market Intelligence</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">Collaboration Tools</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4 text-muted-foreground">Basic</td>
-                        <td className="text-center py-4 text-muted-foreground">Advanced</td>
-                        <td className="text-center py-4 text-muted-foreground">Unlimited</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">Custom Reports</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">API Access</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4">—</td>
-                        <td className="text-center py-4"><Check className="w-4 h-4 text-primary mx-auto" /></td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-4 font-medium">Support</td>
-                        <td className="text-center py-4 text-muted-foreground">Email</td>
-                        <td className="text-center py-4 text-muted-foreground">Priority</td>
-                        <td className="text-center py-4 text-muted-foreground">Priority</td>
-                        <td className="text-center py-4 text-muted-foreground">24/7 + Manager</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
 
       </div>
