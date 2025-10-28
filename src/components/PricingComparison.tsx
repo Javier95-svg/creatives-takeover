@@ -17,83 +17,34 @@ const PricingComparison = () => {
       ]
     },
     {
-      category: "Community Access",
+      category: "Community Features",
       items: [
-        { feature: "Community Features", free: "Basic (read & post)", creator: "Full features", professional: "AI-enhanced insights", enterprise: "All features + unlimited" },
-        { feature: "Posting & Commenting", free: true, creator: true, professional: true, enterprise: true },
-        { feature: "Voting & Trending", free: false, creator: true, professional: true, enterprise: true },
-        { feature: "AI Post Insights", free: false, creator: false, professional: true, enterprise: true }
+        { feature: "Community Access", free: true, creator: true, professional: true, enterprise: true },
+        { feature: "Create Posts", free: true, creator: true, professional: true, enterprise: true },
+        { feature: "Comment & Engage", free: true, creator: true, professional: true, enterprise: true }
       ]
     },
     {
-      category: "Prompt Library",
+      category: "Sprint Planning",
       items: [
-        { feature: "Access Level", free: "View only", creator: "Copy/export", professional: "Copy/export", enterprise: "Copy/export" },
-        { feature: "Custom Prompts", free: false, creator: true, professional: true, enterprise: true }
+        { feature: "Sprint Planning Tools", free: "Basic", creator: "Full access", professional: "Full access", enterprise: "Full access" },
+        { feature: "Task Management", free: "Basic", creator: "Advanced", professional: "Advanced", enterprise: "Advanced" },
+        { feature: "Daily Check-ins", free: false, creator: true, professional: true, enterprise: true }
       ]
     },
     {
-      category: "Sprint Planning & Kanban",
+      category: "Business Tools",
       items: [
-        { feature: "Active Sprints", free: "1 sprint", creator: "Unlimited", professional: "Unlimited", enterprise: "Unlimited" },
-        { feature: "Kanban Boards", free: false, creator: true, professional: true, enterprise: true },
-        { feature: "Task Management", free: "Basic", creator: "Advanced", professional: "Advanced", enterprise: "Advanced" }
-      ]
-    },
-    {
-      category: "Market Intelligence",
-      items: [
-        { feature: "Market Widget", free: false, creator: true, professional: true, enterprise: true },
-        { feature: "Trend Analysis", free: false, creator: false, professional: false, enterprise: true },
-        { feature: "Advanced Analytics", free: false, creator: false, professional: false, enterprise: true }
-      ]
-    },
-    {
-      category: "Business Reports",
-      items: [
-        { feature: "Custom Reports", free: false, creator: false, professional: true, enterprise: true },
-        { feature: "AI Analysis Reports", free: false, creator: false, professional: false, enterprise: true },
-        { feature: "Export Capabilities", free: false, creator: false, professional: true, enterprise: true }
-      ]
-    },
-    {
-      category: "Collaboration Tools",
-      items: [
-        { feature: "Text Chat", free: false, creator: true, professional: true, enterprise: true },
-        { feature: "File Sharing", free: false, creator: true, professional: true, enterprise: true },
-        { feature: "Whiteboarding", free: false, creator: false, professional: true, enterprise: true },
-        { feature: "Polls & Voting", free: false, creator: false, professional: true, enterprise: true },
-        { feature: "Video Calls", free: false, creator: false, professional: true, enterprise: true },
-        { feature: "Unlimited Participants", free: false, creator: false, professional: false, enterprise: true }
-      ]
-    },
-    {
-      category: "Analytics & Tracking",
-      items: [
-        { feature: "Success Score Analytics", free: false, creator: false, professional: true, enterprise: true },
-        { feature: "Progress Tracking", free: "Basic", creator: "Advanced", professional: "Advanced", enterprise: "Advanced" }
-      ]
-    },
-    {
-      category: "Integrations & API",
-      items: [
-        { feature: "API Access", free: false, creator: false, professional: false, enterprise: true },
-        { feature: "Custom Integrations", free: false, creator: false, professional: false, enterprise: true }
+        { feature: "Market Intelligence Widget", free: false, creator: true, professional: true, enterprise: true },
+        { feature: "Business Report Generation", free: false, creator: false, professional: true, enterprise: true },
+        { feature: "PDF Export", free: false, creator: false, professional: true, enterprise: true }
       ]
     },
     {
       category: "Support",
       items: [
-        { feature: "Support Level", free: "Email", creator: "Priority email", professional: "Priority + community", enterprise: "Dedicated manager" },
-        { feature: "Response Time", free: "48 hours", creator: "24 hours", professional: "12 hours", enterprise: "4 hours" }
-      ]
-    },
-    {
-      category: "Additional Features",
-      items: [
-        { feature: "Custom Templates", free: false, creator: false, professional: false, enterprise: true },
-        { feature: "Priority Feature Requests", free: false, creator: false, professional: false, enterprise: true },
-        { feature: "Onboarding & Training", free: false, creator: false, professional: false, enterprise: true }
+        { feature: "Email Support", free: true, creator: true, professional: true, enterprise: true },
+        { feature: "Priority Support", free: false, creator: true, professional: true, enterprise: true }
       ]
     }
   ];
