@@ -1,13 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 const PricingComparison = () => {
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const features = [
     {
@@ -55,27 +51,6 @@ const PricingComparison = () => {
     { name: "Professional", price: "$39.99", period: "/month", isPopular: false },
     { name: "Enterprise", price: "$59.99", period: "/month", isPopular: false }
   ];
-
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
-    }
-  };
-
-  useEffect(() => {
-    handleScroll();
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      window.addEventListener('resize', handleScroll);
-      return () => {
-        container.removeEventListener('scroll', handleScroll);
-        window.removeEventListener('resize', handleScroll);
-      };
-    }
-  }, []);
   const renderFeatureValue = (value: any) => {
     if (typeof value === 'boolean') {
       return value ? (
@@ -105,12 +80,9 @@ const PricingComparison = () => {
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
             Compare Our Packages
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             See exactly what's included in each pricing plan. 
             Choose the perfect tier for your entrepreneurial platform needs.
-          </p>
-          <p className="text-sm text-muted-foreground hidden lg:block">
-            Scroll horizontally to see all features →
           </p>
         </div>
 
@@ -186,31 +158,21 @@ const PricingComparison = () => {
           </div>
         </div>
 
-        {/* Desktop comparison table with horizontal scroll */}
-        <div className="hidden lg:block relative">
-          {/* Scroll indicators */}
-          {canScrollLeft && (
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none z-20" />
-          )}
-          {canScrollRight && (
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none z-20" />
-          )}
-
-          <Card className="glass border-border overflow-hidden">
-            <div 
-              ref={scrollContainerRef}
-              className="overflow-x-auto scroll-smooth"
-            >
+        {/* Desktop comparison table with animations */}
+        <div className="hidden lg:block">
+          <Card className="glass border-border overflow-hidden animate-fade-in">
+            <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="sticky left-0 z-10 bg-background text-center p-6 font-semibold min-w-[240px] border-r border-border">
                       Plans
                     </th>
-                    {plans.map((plan) => (
+                    {plans.map((plan, index) => (
                       <th
                         key={plan.name}
-                        className={`text-center p-6 font-semibold text-lg min-w-[180px] relative ${
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                        className={`text-center p-6 font-semibold text-lg min-w-[180px] relative animate-fade-in ${
                           plan.isPopular ? 'bg-primary/5' : ''
                         }`}
                       >
@@ -229,9 +191,12 @@ const PricingComparison = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {features.map(category => (
+                  {features.map((category, catIndex) => (
                     <React.Fragment key={category.category}>
-                      <tr>
+                      <tr 
+                        style={{ animationDelay: `${(catIndex + 1) * 0.15}s` }}
+                        className="animate-fade-in"
+                      >
                         <td 
                           colSpan={5} 
                           className="p-4 bg-muted/50 sticky left-0 z-10 text-center"
@@ -241,8 +206,9 @@ const PricingComparison = () => {
                       </tr>
                       {category.items.map((item, index) => (
                         <tr 
-                          key={item.feature} 
-                          className={index % 2 === 0 ? "bg-background" : "bg-muted/20"}
+                          key={item.feature}
+                          style={{ animationDelay: `${(catIndex + 1) * 0.15 + (index + 1) * 0.05}s` }}
+                          className={`animate-fade-in ${index % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
                         >
                           <td className="sticky left-0 z-10 bg-inherit p-4 font-medium border-r border-border">
                             {item.feature}
