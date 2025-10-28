@@ -13,7 +13,7 @@ const PricingComparison = () => {
     {
       category: "BizMap AI Conversations",
       items: [
-        { feature: "Monthly AI Conversations", free: "5/month", creator: "50/month", professional: "150/month", enterprise: "500/month" }
+        { feature: "Monthly Credits", free: "5 Credits", creator: "50 Credits", professional: "150 Credits", enterprise: "500 Credits" }
       ]
     },
     {
@@ -234,7 +234,7 @@ const PricingComparison = () => {
                       <tr>
                         <td 
                           colSpan={5} 
-                          className="p-4 bg-muted/50 sticky left-0 z-10"
+                          className="p-4 bg-muted/50 sticky left-0 z-10 text-center"
                         >
                           <h4 className="font-semibold text-primary">{category.category}</h4>
                         </td>
