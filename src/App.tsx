@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import MobileOptimization from "@/components/MobileOptimization";
+import VersionUpdateBanner from "@/components/VersionUpdateBanner";
+import { useVersionCheck } from "@/hooks/useVersionCheck";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import PricingPage from "./pages/PricingPage";
@@ -30,16 +32,20 @@ import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <UserProvider>
-        <ProgressProvider>
-          <TooltipProvider>
-            <MobileOptimization />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+const App = () => {
+  const { hasUpdate, refreshApp } = useVersionCheck();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UserProvider>
+          <ProgressProvider>
+            <TooltipProvider>
+              {hasUpdate && <VersionUpdateBanner onRefresh={refreshApp} />}
+              <MobileOptimization />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
               <ScrollToTop />
               <Routes>
             <Route path="/" element={<Index />} />
@@ -62,13 +68,14 @@ const App = () => (
             <Route path="/profile/:username" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+              </Routes>
+            </BrowserRouter>
           </TooltipProvider>
         </ProgressProvider>
       </UserProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

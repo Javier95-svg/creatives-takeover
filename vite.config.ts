@@ -19,4 +19,16 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(Date.now().toString()),
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].[hash].${Date.now()}.js`,
+        chunkFileNames: `assets/[name].[hash].${Date.now()}.js`,
+        assetFileNames: `assets/[name].[hash].${Date.now()}.[ext]`,
+      },
+    },
+  },
 }));
