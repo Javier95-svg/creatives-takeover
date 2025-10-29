@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import ValuePropositionCards from "@/components/ValuePropositionCards";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 
@@ -36,8 +37,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <SEO
         title="Creatives Takeover"
-        description="The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days. Join 15,000+ creatives building real businesses with sprint-based planning."
-        keywords="AI co-founder, creative business, creative entrepreneur, launch in 30 days, creative business planning, accountability partners, business for creatives"
+        description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."
+        keywords="AI co-founder, creative business, creative entrepreneur, business planning, accountability partners, business for creatives, startup funding"
         url="/"
         image="/lovable-uploads/new-favicon.png"
         structuredData={structuredData}
@@ -48,6 +49,7 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
+        <ValuePropositionCards />
         <EntrepreneurProblems />
         
         {/* Lazy-loaded below-the-fold components with loading fallback */}
