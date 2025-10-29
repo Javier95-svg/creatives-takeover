@@ -6,13 +6,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
 
 const PricingFAQ = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [expandAll, setExpandAll] = useState(false);
   const [helpfulVotes, setHelpfulVotes] = useState<Record<number, 'up' | 'down' | null>>({});
   const faqs = [
@@ -58,11 +56,6 @@ const PricingFAQ = () => {
     }
   ];
 
-  const filteredFaqs = faqs.filter(faq => 
-    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const handleVote = (index: number, vote: 'up' | 'down') => {
     setHelpfulVotes(prev => ({
       ...prev,
@@ -89,25 +82,12 @@ const PricingFAQ = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Pricing FAQ
+            Frequently Asked Questions
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Everything you need to know about our pricing and plans
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-6">
+            Get clear, honest answers about pricing, billing, features, and our commitment to your success. 
+            No hidden fees, no surprises—just transparent information to help you make the right choice.
           </p>
-          
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Search FAQs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-6 text-base bg-background/60 backdrop-blur-sm border-border/50"
-              />
-            </div>
-          </div>
 
           {/* Expand All Button */}
           <Button
@@ -122,75 +102,68 @@ const PricingFAQ = () => {
         </div>
 
         <Card className="max-w-4xl mx-auto bg-background/60 backdrop-blur-sm border-border/50 p-8 animate-fade-in shadow-xl">
-          {filteredFaqs.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No FAQs found matching "{searchQuery}"
-            </p>
-          ) : (
-            <Accordion 
-              type="single" 
-              collapsible 
-              className="w-full"
-              value={expandAll ? filteredFaqs.map((_, i) => `item-${i}`).join(',') : undefined}
-            >
-              {filteredFaqs.map((faq, index) => {
-                const originalIndex = faqs.findIndex(f => f.question === faq.question);
-                const vote = helpfulVotes[originalIndex];
-                
-                return (
-                  <AccordionItem key={originalIndex} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left text-foreground hover:text-primary">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground space-y-4">
-                      <p>{faq.answer}</p>
-                      
-                      {/* Was this helpful */}
-                      <div className="flex items-center gap-4 pt-4 border-t border-border/50">
-                        <span className="text-sm text-muted-foreground">Was this helpful?</span>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleVote(originalIndex, 'up')}
-                            className={vote === 'up' ? 'text-green-600' : ''}
-                          >
-                            <ThumbsUp className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleVote(originalIndex, 'down')}
-                            className={vote === 'down' ? 'text-red-600' : ''}
-                          >
-                            <ThumbsDown className="w-4 h-4" />
-                          </Button>
+          <Accordion 
+            type="single" 
+            collapsible 
+            className="w-full"
+            value={expandAll ? faqs.map((_, i) => `item-${i}`).join(',') : undefined}
+          >
+            {faqs.map((faq, index) => {
+                const vote = helpfulVotes[index];
+              
+              return (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left text-foreground hover:text-primary">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground space-y-4">
+                    <p>{faq.answer}</p>
+                    
+                    {/* Was this helpful */}
+                    <div className="flex items-center gap-4 pt-4 border-t border-border/50">
+                      <span className="text-sm text-muted-foreground">Was this helpful?</span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVote(index, 'up')}
+                          className={vote === 'up' ? 'text-green-600' : ''}
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVote(index, 'down')}
+                          className={vote === 'down' ? 'text-red-600' : ''}
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Related Questions */}
+                    {faq.relatedQuestions && faq.relatedQuestions.length > 0 && (
+                      <div className="pt-4">
+                        <p className="text-sm font-medium text-foreground mb-2">Related questions:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {faq.relatedQuestions.map((relatedIndex) => (
+                            <Badge 
+                              key={relatedIndex}
+                              variant="secondary" 
+                              className="cursor-pointer hover:bg-primary/20"
+                            >
+                              {faqs[relatedIndex].question}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
-                      
-                      {/* Related Questions */}
-                      {faq.relatedQuestions && faq.relatedQuestions.length > 0 && (
-                        <div className="pt-4">
-                          <p className="text-sm font-medium text-foreground mb-2">Related questions:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {faq.relatedQuestions.map((relatedIndex) => (
-                              <Badge 
-                                key={relatedIndex}
-                                variant="secondary" 
-                                className="cursor-pointer hover:bg-primary/20"
-                              >
-                                {faqs[relatedIndex].question}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          )}
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         </Card>
       </div>
     </section>

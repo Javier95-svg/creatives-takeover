@@ -1,15 +1,12 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Crown, Check } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
-import BillingToggle from "./BillingToggle";
 
 const Pricing = () => {
   const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
   const { user } = useAuth();
-  const [isAnnual, setIsAnnual] = useState(false);
 
   // Define feature sets for each tier - based on actual implemented features
   const getFeatures = (tierName: string) => {
@@ -162,11 +159,9 @@ const Pricing = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Unlock your creative potential with flexible plans designed for every level of ambition
           </p>
-          
-          <BillingToggle onToggle={setIsAnnual} />
         </div>
 
         {/* Pricing Cards */}
@@ -221,25 +216,13 @@ const Pricing = () => {
 
                 <div className="text-center mb-4 sm:mb-6">
                   <div className="flex items-baseline justify-center gap-1 sm:gap-2">
-                    <span className="text-3xl sm:text-4xl font-bold transition-all duration-300">
-                      ${tier.price_cents === 0 
-                        ? "0" 
-                        : isAnnual 
-                          ? ((tier.price_cents / 100) * 12 * 0.8).toFixed(2)
-                          : (tier.price_cents / 100).toFixed(2)
-                      }
+                    <span className="text-3xl sm:text-4xl font-bold">
+                      ${(tier.price_cents / 100).toFixed(2)}
                     </span>
                     {tier.price_cents > 0 && (
-                      <span className="text-muted-foreground text-sm sm:text-base">
-                        /{isAnnual ? 'year' : 'month'}
-                      </span>
+                      <span className="text-muted-foreground text-sm sm:text-base">/month</span>
                     )}
                   </div>
-                  {isAnnual && tier.price_cents > 0 && (
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-xs mt-2">
-                      Save ${((tier.price_cents / 100) * 12 * 0.2).toFixed(2)}/year
-                    </Badge>
-                  )}
                   {tier.monthly_credits > 0 && (
                     <div className="text-xs sm:text-sm text-primary mt-2">
                       {tier.monthly_credits} credits/month
