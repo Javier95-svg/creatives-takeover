@@ -2552,6 +2552,57 @@ export type Database = {
         }
         Relationships: []
       }
+      page_feedback: {
+        Row: {
+          admin_notes: string | null
+          browser_info: Json | null
+          created_at: string
+          feedback_type: string
+          id: string
+          message: string
+          page_path: string
+          page_title: string | null
+          rating: number | null
+          resolved_at: string | null
+          screenshot_url: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          browser_info?: Json | null
+          created_at?: string
+          feedback_type: string
+          id?: string
+          message: string
+          page_path: string
+          page_title?: string | null
+          rating?: number | null
+          resolved_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          browser_info?: Json | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message?: string
+          page_path?: string
+          page_title?: string | null
+          rating?: number | null
+          resolved_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       personalized_recommendations: {
         Row: {
           action_url: string | null
