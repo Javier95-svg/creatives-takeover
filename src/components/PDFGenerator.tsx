@@ -50,9 +50,15 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
       }
 
       if (data?.success && data?.htmlContent) {
-        // Create a temporary div with the HTML content
+        // Sanitize HTML content before rendering
+        const sanitizedHTML = DOMPurify.sanitize(data.htmlContent, {
+          ALLOWED_TAGS: ['div', 'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+          ALLOWED_ATTR: ['class', 'style']
+        });
+        
+        // Create a temporary div with the sanitized HTML content
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = data.htmlContent;
+        tempDiv.innerHTML = sanitizedHTML;
         tempDiv.style.position = 'absolute';
         tempDiv.style.left = '-9999px';
         tempDiv.style.width = '210mm'; // A4 width

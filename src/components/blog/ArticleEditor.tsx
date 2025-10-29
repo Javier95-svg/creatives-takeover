@@ -218,7 +218,12 @@ const ArticleEditor = ({ article, onClose, onSave }: ArticleEditorProps) => {
                 {formData.image && (
                   <img src={formData.image} alt={formData.title} className="w-full rounded-lg" />
                 )}
-                <div dangerouslySetInnerHTML={{ __html: formData.content }} />
+                <div dangerouslySetInnerHTML={{ 
+                  __html: DOMPurify.sanitize(formData.content, {
+                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+                  }) 
+                }} />
               </div>
             )}
 
