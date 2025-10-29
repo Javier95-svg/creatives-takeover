@@ -37,7 +37,8 @@ const TrustIndicators = () => {
           {indicators.map((indicator, index) => (
             <Card 
               key={index}
-              className="bg-background/60 backdrop-blur-sm border-border/50 p-6 text-center hover:bg-background/80 transition-all duration-300"
+              className="bg-background/60 backdrop-blur-sm border-border/50 p-6 text-center hover:bg-background/80 transition-all duration-300 animate-fade-in hover-scale"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <indicator.icon className="h-8 w-8 mx-auto mb-3 text-primary" />
               <h3 className="font-semibold text-sm text-foreground mb-1">
