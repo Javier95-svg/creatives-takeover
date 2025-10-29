@@ -71,14 +71,20 @@ const Pricing = () => {
   };
 
   const handleSubscribe = async (tierName: string) => {
-    if (!user) {
-      // Redirect to auth page
-      window.location.href = "/auth";
+    // Handle free tier separately
+    if (tierName === 'free') {
+      if (!user) {
+        // Redirect to signup for free tier
+        window.location.href = "/signup";
+        return;
+      }
+      // Free tier - no checkout needed for logged-in users
       return;
     }
-    
-    if (tierName === 'free') {
-      // Free tier - no checkout needed
+
+    if (!user) {
+      // Redirect to auth page for paid tiers
+      window.location.href = "/auth";
       return;
     }
 
