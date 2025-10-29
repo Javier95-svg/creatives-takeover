@@ -186,7 +186,7 @@ const Pricing = () => {
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
                 {/* Current Plan or Popular Badge */}
-                {(isCurrentPlan || isPopular) && (
+                {((isCurrentPlan && user) || isPopular) && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <Badge className={`px-4 py-1 text-sm font-medium flex items-center gap-1 ${
                       isCurrentPlan
@@ -242,7 +242,7 @@ const Pricing = () => {
 
                 <Button
                   onClick={() => handleSubscribe(tier.tier_name)}
-                  disabled={isCurrentPlan}
+                  disabled={!!(isCurrentPlan && user)}
                   className={`w-full py-3 px-4 font-medium btn-magnetic hover-scale transition-all duration-300 min-h-[44px] text-sm sm:text-base touch-manipulation ${
                     isCurrentPlan
                       ? 'bg-green-600 text-white cursor-default'
@@ -251,7 +251,7 @@ const Pricing = () => {
                       : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                   }`}
                 >
-                  {isCurrentPlan ? 'Current Plan' : cta}
+                  {isCurrentPlan && user ? 'Current Plan' : !user && tier.tier_name === 'free' ? 'Try It Now' : cta}
                 </Button>
               </div>
             );
