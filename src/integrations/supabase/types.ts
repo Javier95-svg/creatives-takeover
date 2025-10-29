@@ -2560,14 +2560,17 @@ export type Database = {
           feedback_type: string
           id: string
           message: string
-          page_path: string
+          page_path: string | null
           page_title: string | null
           rating: number | null
           resolved_at: string | null
           screenshot_url: string | null
+          session_id: string | null
           status: string
           updated_at: string
+          user_agent: string | null
           user_id: string | null
+          was_helpful: boolean | null
         }
         Insert: {
           admin_notes?: string | null
@@ -2576,14 +2579,17 @@ export type Database = {
           feedback_type: string
           id?: string
           message: string
-          page_path: string
+          page_path?: string | null
           page_title?: string | null
           rating?: number | null
           resolved_at?: string | null
           screenshot_url?: string | null
+          session_id?: string | null
           status?: string
           updated_at?: string
+          user_agent?: string | null
           user_id?: string | null
+          was_helpful?: boolean | null
         }
         Update: {
           admin_notes?: string | null
@@ -2592,14 +2598,17 @@ export type Database = {
           feedback_type?: string
           id?: string
           message?: string
-          page_path?: string
+          page_path?: string | null
           page_title?: string | null
           rating?: number | null
           resolved_at?: string | null
           screenshot_url?: string | null
+          session_id?: string | null
           status?: string
           updated_at?: string
+          user_agent?: string | null
           user_id?: string | null
+          was_helpful?: boolean | null
         }
         Relationships: []
       }
