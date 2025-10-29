@@ -81,7 +81,7 @@ const PricingFAQ = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
+          <h2 className="text-4xl md:text-5xl font-bold mb-8 gradient-text">
             Pricing FAQ
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
