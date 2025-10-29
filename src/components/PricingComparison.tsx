@@ -86,7 +86,7 @@ const PricingComparison = () => {
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             See exactly what's included in each pricing plan. 
-            Choose the perfect tier for your entrepreneurial platform needs.
+            Choose the perfect tier for your entrepreneurial needs.
           </p>
         </div>
 
