@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Save, X, Eye, EyeOff } from 'lucide-react';
 import { Article, useArticles } from '@/hooks/useArticles';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 
 interface ArticleEditorProps {
   article?: Article;

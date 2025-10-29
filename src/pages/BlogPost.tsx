@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import DOMPurify from 'dompurify';
+
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
