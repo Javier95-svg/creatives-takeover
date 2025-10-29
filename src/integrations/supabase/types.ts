@@ -4231,6 +4231,10 @@ export type Database = {
     }
     Functions: {
       archive_old_memories: { Args: { days_old?: number }; Returns: number }
+      are_friends: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: boolean
+      }
       award_reputation_points: {
         Args: {
           p_action_type: string
@@ -4362,6 +4366,11 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_community_active: { Args: { profile_id: string }; Returns: boolean }
+      is_following: {
+        Args: { profile_id: string; viewer_id: string }
         Returns: boolean
       }
       refresh_admin_analytics: { Args: never; Returns: undefined }
