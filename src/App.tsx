@@ -21,6 +21,7 @@ import Signup from "./pages/Signup";
 import BizMapAI from "./pages/Dream2Plan";
 import Login from "./pages/Login";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import PromptLibrary from "./pages/PromptLibrary";
 import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
@@ -66,6 +67,7 @@ const App = () => {
             <Route path="/demo" element={<Demo />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
               </Routes>
