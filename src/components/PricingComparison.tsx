@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+
 const PricingComparison = () => {
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
+  const [highlightedRow, setHighlightedRow] = useState<string | null>(null);
 
   const features = [
     {
@@ -51,10 +53,12 @@ const PricingComparison = () => {
     { name: "Professional", price: "$39.99", period: "/month", isPopular: false },
     { name: "Enterprise", price: "$59.99", period: "/month", isPopular: false }
   ];
-  const renderFeatureValue = (value: any) => {
+  const renderFeatureValue = (value: any, animated: boolean = false) => {
     if (typeof value === 'boolean') {
       return value ? (
-        <Check className="w-5 h-5 text-primary mx-auto" />
+        <Check className={`w-5 h-5 text-primary mx-auto transition-all duration-300 ${
+          animated ? 'animate-scale-in' : ''
+        }`} />
       ) : (
         <X className="w-5 h-5 text-muted-foreground/40 mx-auto" />
       );
@@ -204,21 +208,31 @@ const PricingComparison = () => {
                           <h4 className="font-semibold text-primary">{category.category}</h4>
                         </td>
                       </tr>
-                      {category.items.map((item, index) => (
-                        <tr 
-                          key={item.feature}
-                          style={{ animationDelay: `${(catIndex + 1) * 0.15 + (index + 1) * 0.05}s` }}
-                          className={`animate-fade-in ${index % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
-                        >
-                          <td className="sticky left-0 z-10 bg-inherit p-4 font-medium border-r border-border">
-                            {item.feature}
-                          </td>
-                          <td className="p-4 text-center">{renderFeatureValue(item.free)}</td>
-                          <td className="p-4 text-center">{renderFeatureValue(item.creator)}</td>
-                          <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional)}</td>
-                          <td className="p-4 text-center">{renderFeatureValue(item.enterprise)}</td>
-                        </tr>
-                      ))}
+                      {category.items.map((item, index) => {
+                        const isHighlighted = highlightedRow === item.feature;
+                        return (
+                          <tr 
+                            key={item.feature}
+                            style={{ animationDelay: `${(catIndex + 1) * 0.15 + (index + 1) * 0.05}s` }}
+                            className={`animate-fade-in cursor-pointer transition-all duration-300 ${
+                              index % 2 === 0 ? "bg-background" : "bg-muted/20"
+                            } ${
+                              isHighlighted ? 'bg-primary/10 shadow-lg scale-[1.02]' : 'hover:bg-muted/40'
+                            }`}
+                            onClick={() => setHighlightedRow(isHighlighted ? null : item.feature)}
+                          >
+                            <td className={`sticky left-0 z-10 bg-inherit p-4 font-medium border-r border-border ${
+                              isHighlighted ? 'text-primary' : ''
+                            }`}>
+                              {item.feature}
+                            </td>
+                            <td className="p-4 text-center">{renderFeatureValue(item.free, isHighlighted)}</td>
+                            <td className="p-4 text-center">{renderFeatureValue(item.creator, isHighlighted)}</td>
+                            <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional, isHighlighted)}</td>
+                            <td className="p-4 text-center">{renderFeatureValue(item.enterprise, isHighlighted)}</td>
+                          </tr>
+                        );
+                      })}
                     </React.Fragment>
                   ))}
                 </tbody>
