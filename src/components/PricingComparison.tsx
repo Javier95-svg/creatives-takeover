@@ -81,7 +81,7 @@ const PricingComparison = () => {
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6">
             Feature Comparison
           </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-8 gradient-text">
             Compare Our Packages
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
