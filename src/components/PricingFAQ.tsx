@@ -81,24 +81,12 @@ const PricingFAQ = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Frequently Asked Questions
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
+            Pricing FAQ
           </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-6">
-            Get clear, honest answers about pricing, billing, features, and our commitment to your success. 
-            No hidden fees, no surprises—just transparent information to help you make the right choice.
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Get clear and honest answers about our pricing, billing, features, and commitment to your success. There are no hidden fees or unexpected costs. We provide straightforward, transparent information to help you make the right decision.
           </p>
-
-          {/* Expand All Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setExpandAll(!expandAll)}
-            className="gap-2"
-          >
-            {expandAll ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            {expandAll ? 'Collapse All' : 'Expand All'}
-          </Button>
         </div>
 
         <Card className="max-w-4xl mx-auto bg-background/60 backdrop-blur-sm border-border/50 p-8 animate-fade-in shadow-xl">
