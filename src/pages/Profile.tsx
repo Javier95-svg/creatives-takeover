@@ -9,10 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
+import BadgeShowcase from "@/components/community/BadgeShowcase";
+import { ContentGrid } from "@/components/profile/ContentGrid";
+import { ProfileStats } from "@/components/profile/ProfileStats";
+import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
 
 interface Profile {
@@ -52,7 +59,10 @@ const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
   const isOwnProfile = currentUser?.id === profile?.id;
+  
+  const { stats, badges, loading: statsLoading } = useProfileData(profile?.id || '');
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -216,14 +226,10 @@ const Profile = () => {
                         </h1>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           {profile.creative_niche && (
-                            <div className="flex items-center gap-1">
-                              <Badge variant="outline">{profile.creative_niche}</Badge>
-                            </div>
+                            <Badge variant="outline">{profile.creative_niche}</Badge>
                           )}
                           {profile.business_stage && (
-                            <div className="flex items-center gap-1">
-                              <Badge variant="outline">{profile.business_stage}</Badge>
-                            </div>
+                            <Badge variant="outline">{profile.business_stage}</Badge>
                           )}
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
@@ -232,13 +238,20 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      {!isOwnProfile && profile.id && (
-                        <SocialButtons 
-                          userId={profile.id} 
-                          userName={profile.full_name || undefined}
-                          showAccountabilityPartner={true}
-                        />
-                      )}
+                      <div className="flex gap-2">
+                        {isOwnProfile ? (
+                          <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
+                            <Settings className="h-4 w-4 mr-2" />
+                            Edit Profile
+                          </Button>
+                        ) : profile.id && (
+                          <SocialButtons 
+                            userId={profile.id} 
+                            userName={profile.full_name || undefined}
+                            showAccountabilityPartner={true}
+                          />
+                        )}
+                      </div>
                     </div>
 
                     {profile.bio && (
@@ -249,68 +262,32 @@ const Profile = () => {
                     {(profile.twitter_url || profile.linkedin_url || profile.instagram_url || profile.facebook_url || profile.youtube_url || profile.github_url) && (
                       <div className="flex gap-3 mb-4">
                         {profile.twitter_url && (
-                          <a 
-                            href={profile.twitter_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="Twitter"
-                          >
+                          <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Twitter className="h-5 w-5" />
                           </a>
                         )}
                         {profile.linkedin_url && (
-                          <a 
-                            href={profile.linkedin_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="LinkedIn"
-                          >
+                          <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Linkedin className="h-5 w-5" />
                           </a>
                         )}
                         {profile.instagram_url && (
-                          <a 
-                            href={profile.instagram_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="Instagram"
-                          >
+                          <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Instagram className="h-5 w-5" />
                           </a>
                         )}
                         {profile.facebook_url && (
-                          <a 
-                            href={profile.facebook_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="Facebook"
-                          >
+                          <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Facebook className="h-5 w-5" />
                           </a>
                         )}
                         {profile.youtube_url && (
-                          <a 
-                            href={profile.youtube_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="YouTube"
-                          >
+                          <a href={profile.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Youtube className="h-5 w-5" />
                           </a>
                         )}
                         {profile.github_url && (
-                          <a 
-                            href={profile.github_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="GitHub"
-                          >
+                          <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Github className="h-5 w-5" />
                           </a>
                         )}
@@ -318,12 +295,7 @@ const Profile = () => {
                     )}
 
                     {profile.website_url && (
-                      <a 
-                        href={profile.website_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline text-sm"
-                      >
+                      <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">
                         {profile.website_url}
                       </a>
                     )}
@@ -353,54 +325,57 @@ const Profile = () => {
                 </div>
               </Card>
 
-              {/* Posts */}
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Recent Posts
-                </h2>
+              {/* Tabbed Content */}
+              <Tabs defaultValue="posts" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="posts">Content</TabsTrigger>
+                  <TabsTrigger value="badges">Badges</TabsTrigger>
+                  <TabsTrigger value="stats">Statistics</TabsTrigger>
+                </TabsList>
 
-                {posts.length === 0 ? (
-                  <Card className="p-8 text-center">
-                    <p className="text-muted-foreground">No posts yet</p>
-                  </Card>
-                ) : (
-                  posts.map((post) => (
-                    <Card key={post.id} className="p-6 hover:shadow-lg transition-shadow">
-                      <Link to={`/community?post=${post.id}`}>
-                        <h3 className="text-lg font-semibold mb-2 hover:text-primary transition-colors">
-                          {post.title}
-                        </h3>
-                        <p className="text-muted-foreground mb-3 line-clamp-2">
-                          {post.content}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {post.upvotes} upvotes
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="h-4 w-4" />
-                            {post.comment_count} comments
-                          </div>
-                          <div>
-                            {new Date(post.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                        {post.tags && post.tags.length > 0 && (
-                          <div className="flex gap-2 mt-3">
-                            {post.tags.map((tag, idx) => (
-                              <Badge key={idx} variant="secondary">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </Link>
-                    </Card>
-                  ))
-                )}
-              </div>
+                <TabsContent value="posts" className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <MessageCircle className="h-5 w-5" />
+                      All Content
+                    </h2>
+                  </div>
+                  <ContentGrid 
+                    items={posts.map(p => ({ ...p, content_type: 'post' }))} 
+                    isOwnProfile={isOwnProfile}
+                    onEdit={(id) => console.log('Edit', id)}
+                    onDelete={(id) => console.log('Delete', id)}
+                  />
+                </TabsContent>
+
+                <TabsContent value="badges" className="space-y-4">
+                  <BadgeShowcase badges={badges} />
+                </TabsContent>
+
+                <TabsContent value="stats" className="space-y-4">
+                  {statsLoading ? (
+                    <div className="animate-pulse space-y-4">
+                      <div className="h-32 bg-muted rounded-lg" />
+                      <div className="h-32 bg-muted rounded-lg" />
+                    </div>
+                  ) : (
+                    <ProfileStats stats={{...stats, joinDate: profile.created_at}} />
+                  )}
+                </TabsContent>
+              </Tabs>
+
+              {/* Edit Profile Modal */}
+              {isOwnProfile && profile && (
+                <EditProfileModal
+                  open={showEditModal}
+                  onClose={() => setShowEditModal(false)}
+                  profile={profile}
+                  onSuccess={() => {
+                    setShowEditModal(false);
+                    window.location.reload();
+                  }}
+                />
+              )}
             </div>
           </main>
           <Footer />
