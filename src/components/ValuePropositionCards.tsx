@@ -35,18 +35,52 @@ const ValuePropositionCards = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
-      {/* Subtle background decoration */}
-      <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(white,transparent_85%)]" />
+    <section className="py-20 lg:py-32 bg-background relative overflow-hidden">
+      {/* Animated Blue Neon Wallpaper */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-background to-cyan-950/30" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+            linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
+      
+      {/* Animated Glow Orbs */}
+      <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      
+      {/* Neon Light Streaks */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent animate-pulse" style={{ animationDelay: '1.5s' }} />
+      
+      {/* Floating Light Lines */}
+      <div className="absolute top-1/4 left-1/5 w-32 h-1 bg-blue-500/40 animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="absolute bottom-1/3 right-1/5 w-24 h-1 bg-cyan-500/40 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.5)]" style={{ animationDelay: '1s' }} />
+      
+      {/* Scattered Plus Signs (representing solutions/additions) */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-32 left-32 text-blue-400 text-4xl font-bold">+</div>
+        <div className="absolute top-48 right-40 text-cyan-400 text-3xl font-bold">+</div>
+        <div className="absolute bottom-40 left-48 text-blue-500 text-5xl font-bold">+</div>
+        <div className="absolute bottom-56 right-32 text-cyan-500 text-2xl font-bold">+</div>
+        <div className="absolute top-1/2 left-1/3 text-blue-400 text-6xl font-bold">+</div>
+        <div className="absolute top-1/3 right-1/4 text-cyan-400 text-3xl font-bold">+</div>
+      </div>
+      
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
             Here's What You Get
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Everything you need to turn your creative idea into a real business
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
+            A complete ecosystem designed for creative entrepreneurs. From AI-powered business planning to community support and funding opportunities — everything you need to transform your creative vision into a profitable, sustainable business.
           </p>
         </div>
 
