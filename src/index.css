@@ -146,6 +146,13 @@ All colors MUST be HSL.
   }
 }
 
+/* Visible, consistent keyboard focus styles */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
+  border-radius: 8px;
+}
+
 @layer components {
   /* Glass morphism effect */
   .glass {

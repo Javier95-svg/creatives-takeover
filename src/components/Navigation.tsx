@@ -18,6 +18,7 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const { user, signOut, loading, isAuthenticated } = useAuth();
@@ -46,6 +47,14 @@ const Navigation = () => {
     fetchAvatar();
   }, [user]);
 
+  // Add subtle shadow and backdrop blur after scroll for professional feel
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -67,7 +76,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black border-0">
+    <nav className={`fixed top-0 left-0 right-0 z-50 border-0 transition-all ${scrolled ? 'backdrop-blur bg-background/80 shadow-sm' : 'bg-transparent'}`}>
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
         <div className="flex items-center h-16 border-0">
           {/* Logo */}
