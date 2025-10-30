@@ -8,19 +8,133 @@ const Hero = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-16 px-4 sm:px-6">
-      {/* Hero Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      />
+    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6">
+      {/* Deep Tech Gradient Base */}
+      <div className="absolute inset-0 bg-background" />
       
-      {/* Dark Overlay for better text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
-      
-      {/* Subtle animated gradient accents */}
-      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-gradient-radial from-primary/15 via-transparent to-transparent blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-      <div className="absolute bottom-0 left-1/4 w-[450px] h-[450px] bg-gradient-radial from-secondary/10 via-transparent to-transparent blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
+      {/* Multi-layer Circuit Grid */}
+      <div className="absolute inset-0 opacity-[0.12]">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, hsl(var(--primary) / 0.4) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--primary) / 0.4) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--secondary) / 0.25) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--secondary) / 0.25) 1px, transparent 1px),
+            linear-gradient(45deg, hsl(var(--accent) / 0.15) 1px, transparent 1px)
+          `,
+          backgroundSize: '120px 120px, 120px 120px, 30px 30px, 30px 30px, 60px 60px'
+        }} />
+      </div>
+
+      {/* Rotating Hexagon Arrays */}
+      <div className="absolute top-1/4 left-1/6">
+        {[...Array(3)].map((_, i) => (
+          <div key={`hex-left-${i}`} className="absolute w-24 h-24" style={{ 
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            border: '1px solid',
+            borderColor: `hsl(var(--primary) / ${0.3 - i * 0.1})`,
+            transform: `scale(${1 + i * 0.3}) rotate(${i * 15}deg)`,
+            animation: `spin ${20 - i * 3}s linear infinite ${i % 2 === 0 ? 'normal' : 'reverse'}`
+          }} />
+        ))}
+      </div>
+
+      <div className="absolute bottom-1/4 right-1/5">
+        {[...Array(3)].map((_, i) => (
+          <div key={`hex-right-${i}`} className="absolute w-20 h-20" style={{ 
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            border: '1px solid',
+            borderColor: `hsl(var(--secondary) / ${0.25 - i * 0.08})`,
+            transform: `scale(${1 + i * 0.25}) rotate(${-i * 12}deg)`,
+            animation: `spin ${18 - i * 2}s linear infinite ${i % 2 === 0 ? 'reverse' : 'normal'}`
+          }} />
+        ))}
+      </div>
+
+      {/* Morphing Triangle Constellation */}
+      <div className="absolute top-1/3 right-1/4 w-32 h-32">
+        <div className="absolute w-16 h-16 border-l border-t border-primary/30 animate-pulse" style={{ transformOrigin: 'top left', animation: 'pulse 3s ease-in-out infinite' }} />
+        <div className="absolute top-8 left-8 w-12 h-12 border-r border-b border-secondary/25 rotate-45 animate-pulse" style={{ animation: 'pulse 4s ease-in-out infinite', animationDelay: '1s' }} />
+        <div className="absolute top-4 left-4 w-20 h-20 border border-accent/20 rotate-12" style={{ animation: 'spin 15s linear infinite reverse' }} />
+      </div>
+
+      {/* Scanning Lines */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent animate-slide-down" style={{ animationDuration: '8s' }} />
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary/30 to-transparent animate-slide-down" style={{ animationDuration: '12s', animationDelay: '3s' }} />
+        <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-transparent via-accent/25 to-transparent animate-slide-right" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+      </div>
+
+      {/* Data Stream Particles */}
+      <div className="absolute top-1/2 left-10">
+        {[...Array(5)].map((_, i) => (
+          <div key={`particle-left-${i}`} className="absolute w-1 h-1 bg-primary/50" style={{
+            animation: `diagonal-float ${6 + i}s linear infinite`,
+            animationDelay: `${i * 0.8}s`,
+            left: `${i * 15}px`,
+            top: `${i * -20}px`
+          }} />
+        ))}
+      </div>
+
+      <div className="absolute bottom-1/3 right-10">
+        {[...Array(5)].map((_, i) => (
+          <div key={`particle-right-${i}`} className="absolute w-1 h-1 bg-secondary/45" style={{
+            animation: `zigzag ${7 + i}s linear infinite`,
+            animationDelay: `${i * 1}s`,
+            right: `${i * 20}px`,
+            bottom: `${i * -15}px`
+          }} />
+        ))}
+      </div>
+
+      <div className="absolute bottom-32 right-1/3">
+        <div className="relative w-24 h-24 rotate-45">
+          <div className="absolute inset-0 border-2 border-accent/15" style={{ animation: 'scale-in 3.5s ease-in-out infinite alternate' }} />
+          <div className="absolute inset-3 border border-primary/12" style={{ animation: 'scale-in 4.5s ease-in-out infinite alternate', animationDelay: '1s' }} />
+        </div>
+      </div>
+
+      {/* Tech Grid Nodes */}
+      {[
+        { top: '20%', left: '15%' },
+        { top: '30%', left: '25%' },
+        { top: '45%', left: '18%' },
+        { top: '60%', right: '20%' },
+        { top: '75%', right: '30%' },
+        { bottom: '25%', left: '40%' }
+      ].map((pos, i) => (
+        <div key={`node-${i}`} className="absolute w-1.5 h-1.5 bg-primary/40" style={{
+          ...pos,
+          animation: `pulse 2s ease-in-out infinite`,
+          animationDelay: `${i * 0.5}s`
+        }} />
+      ))}
+
+      {/* Connection Matrix */}
+      <svg className="absolute inset-0 w-full h-full opacity-15" style={{ pointerEvents: 'none' }}>
+        <defs>
+          <linearGradient id="lineGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
+            <stop offset="50%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.6 }} />
+            <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
+          </linearGradient>
+          <linearGradient id="lineGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: 'hsl(var(--secondary))', stopOpacity: 0 }} />
+            <stop offset="50%" style={{ stopColor: 'hsl(var(--secondary))', stopOpacity: 0.5 }} />
+            <stop offset="100%" style={{ stopColor: 'hsl(var(--secondary))', stopOpacity: 0 }} />
+          </linearGradient>
+        </defs>
+        <line x1="15%" y1="20%" x2="25%" y2="30%" stroke="url(#lineGrad1)" strokeWidth="1.5" />
+        <line x1="25%" y1="30%" x2="18%" y2="45%" stroke="url(#lineGrad1)" strokeWidth="1.5" />
+        <line x1="80%" y1="60%" x2="70%" y2="75%" stroke="url(#lineGrad2)" strokeWidth="1.5" />
+        <line x1="40%" y1="75%" x2="60%" y2="85%" stroke="url(#lineGrad2)" strokeWidth="1.5" />
+      </svg>
+
+      {/* Ambient Tech Glow */}
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-gradient-radial from-primary/10 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '20s' }} />
+      <div className="absolute bottom-0 left-1/4 w-[450px] h-[450px] bg-gradient-radial from-secondary/8 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '25s', animationDelay: '5s', animationDirection: 'reverse' }} />
+      <div className="absolute top-1/2 right-1/3 w-[350px] h-[350px] bg-gradient-radial from-accent/6 via-transparent to-transparent blur-2xl animate-float" style={{ animationDuration: '18s', animationDelay: '3s' }} />
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
