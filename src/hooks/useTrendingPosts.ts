@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 
 export interface TrendingPost {
   id: string;
@@ -19,13 +19,15 @@ export const useTrendingPosts = (limit: number = 10) => {
 
   const fetchTrendingPosts = async () => {
     try {
-      // Get recent posts
-      const { data: posts, error } = await supabase
-        .from('community_posts')
-        .select('*')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(100);
+      // Get recent posts with retry logic
+      const { data: posts, error } = await safe.select(async () =>
+        await safe.client
+          .from('community_posts')
+          .select('*')
+          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(100)
+      );
 
       if (error) throw error;
 
@@ -35,11 +37,12 @@ export const useTrendingPosts = (limit: number = 10) => {
         return;
       }
 
-      // Calculate trending scores
+      // Calculate trending scores with retry logic
       const postsWithScores = await Promise.all(
-        posts.map(async (post) => {
-          const { data: scoreData } = await supabase
-            .rpc('calculate_trending_score', { p_post_id: post.id });
+        posts.map(async (post: any) => {
+          const { data: scoreData } = await safe.rpc(async () =>
+            await safe.client.rpc('calculate_trending_score', { p_post_id: post.id })
+          );
           
           return {
             ...post,

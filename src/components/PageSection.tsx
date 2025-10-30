@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, ElementType } from "react";
 
 type PageSectionProps = {
   children: ReactNode;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
 };
 
 const PageSection = ({ children, className = "", as: Tag = "section" }: PageSectionProps) => {

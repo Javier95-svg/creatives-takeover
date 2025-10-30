@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 
 export const useAdminRole = () => {
   const { user } = useAuth();
@@ -16,15 +16,17 @@ export const useAdminRole = () => {
       }
 
       try {
-        // Check if user has admin role
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .single();
+        // Check if user has admin role with retry logic
+        const { data, error } = await safe.select(async () =>
+          await safe.client
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'admin')
+            .maybeSingle()
+        );
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+        if (error) {
           console.error('Error checking admin role:', error);
         }
 

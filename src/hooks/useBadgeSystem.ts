@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 import { useToast } from '@/hooks/use-toast';
 import { showAchievementToast } from '@/components/community/AchievementToast';
 
@@ -20,10 +20,12 @@ export const useBadgeSystem = (userId?: string) => {
 
   const fetchBadgeDefinitions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('badge_definitions')
-        .select('*')
-        .order('rarity');
+      const { data, error } = await safe.select(async () =>
+        await safe.client
+          .from('badge_definitions')
+          .select('*')
+          .order('rarity')
+      );
 
       if (error) throw error;
       setBadges((data || []) as BadgeDefinition[]);
@@ -38,9 +40,11 @@ export const useBadgeSystem = (userId?: string) => {
     if (!userId) return;
 
     try {
-      const { data, error } = await supabase.rpc('check_and_award_badges', {
-        p_user_id: userId
-      });
+      const { data, error } = await safe.rpc(async () =>
+        await safe.client.rpc('check_and_award_badges', {
+          p_user_id: userId
+        })
+      );
 
       if (error) throw error;
 
