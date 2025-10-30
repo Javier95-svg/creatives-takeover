@@ -8,8 +8,8 @@ const ValuePropositionCards = () => {
     {
       icon: Lightbulb,
       title: "BUILD",
-      subtitle: "BizMap AI",
-      description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
+      subtitle: "Your Business Plan",
+      description: "Transform your idea into an actionable business plan with market research and revenue strategies",
       cta: "Try BizMap AI",
       link: "/bizmap-ai",
       gradient: "from-primary/20 to-primary/5"
@@ -17,8 +17,8 @@ const ValuePropositionCards = () => {
     {
       icon: Users,
       title: "SHARE",
-      subtitle: "Community",
-      description: "Join creative entrepreneurs who get it. Share your journey, celebrate wins, get honest feedback, and find accountability partners who'll keep you moving forward.",
+      subtitle: "With Your Community",
+      description: "Connect with creative entrepreneurs, get feedback on your plans, and find accountability partners",
       cta: "Join Community",
       link: "/community",
       gradient: "from-secondary/20 to-secondary/5"
@@ -26,8 +26,8 @@ const ValuePropositionCards = () => {
     {
       icon: Rocket,
       title: "LAUNCH",
-      subtitle: "Insighta",
-      description: "Access exclusive funding opportunities and accelerator programs. Learn from founders who've secured investment and get the resources to scale your creative business.",
+      subtitle: "With Funding Support",
+      description: "Access accelerator opportunities, funding resources, and learn from successful founders",
       cta: "Explore Insighta",
       link: "/insighta",
       gradient: "from-accent/20 to-accent/5"
@@ -80,7 +80,7 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Creatives Takeover is an all-in-one platform for entrepreneurs and founders. Use AI tools to plan your business, connect with a like-minded individuals, and find funding opportunities. Everything is designed to support you throughout your journey to build a profitable and lasting venture.
+            A complete ecosystem designed for creative entrepreneurs. From AI-powered business planning to community support and funding opportunities. Everything you need to transform your creative vision into a profitable, sustainable business.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ const ValuePropositionCards = () => {
                 {/* Gradient background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
                 
-                <CardContent className="relative p-6 md:p-8 flex flex-col h-full items-center text-center">
+                <CardContent className="relative p-6 md:p-8 flex flex-col h-full">
                   {/* Icon */}
                   <div className="mb-4">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
