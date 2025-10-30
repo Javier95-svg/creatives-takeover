@@ -96,7 +96,7 @@ const ValuePropositionCards = () => {
                 {/* Gradient background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
                 
-                <CardContent className="relative p-6 md:p-8 flex flex-col h-full">
+                <CardContent className="relative p-6 md:p-8 flex flex-col h-full items-center text-center">
                   {/* Icon */}
                   <div className="mb-4">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
