@@ -1216,8 +1216,10 @@ export type Database = {
           ai_trending_angle: string | null
           comment_count: number | null
           content: string
+          content_type: string | null
           created_at: string
           downvotes: number | null
+          draft_data: Json | null
           featured_on_propel: boolean | null
           feedback_category: string[] | null
           feedback_requested: boolean | null
@@ -1225,8 +1227,10 @@ export type Database = {
           id: string
           is_repost: boolean | null
           location: string | null
+          media_urls: string[] | null
           original_post_id: string | null
           repost_count: number | null
+          rich_content: Json | null
           share_count: number | null
           source_data: Json | null
           source_type: string | null
@@ -1246,8 +1250,10 @@ export type Database = {
           ai_trending_angle?: string | null
           comment_count?: number | null
           content: string
+          content_type?: string | null
           created_at?: string
           downvotes?: number | null
+          draft_data?: Json | null
           featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
@@ -1255,8 +1261,10 @@ export type Database = {
           id?: string
           is_repost?: boolean | null
           location?: string | null
+          media_urls?: string[] | null
           original_post_id?: string | null
           repost_count?: number | null
+          rich_content?: Json | null
           share_count?: number | null
           source_data?: Json | null
           source_type?: string | null
@@ -1276,8 +1284,10 @@ export type Database = {
           ai_trending_angle?: string | null
           comment_count?: number | null
           content?: string
+          content_type?: string | null
           created_at?: string
           downvotes?: number | null
+          draft_data?: Json | null
           featured_on_propel?: boolean | null
           feedback_category?: string[] | null
           feedback_requested?: boolean | null
@@ -1285,8 +1295,10 @@ export type Database = {
           id?: string
           is_repost?: boolean | null
           location?: string | null
+          media_urls?: string[] | null
           original_post_id?: string | null
           repost_count?: number | null
+          rich_content?: Json | null
           share_count?: number | null
           source_data?: Json | null
           source_type?: string | null
@@ -2832,11 +2844,13 @@ export type Database = {
           github_url: string | null
           id: string
           instagram_url: string | null
+          last_activity_at: string | null
           last_credit_reset_at: string
           linkedin_url: string | null
           memory_preference: string | null
           onboarding_completed: boolean | null
           preferred_dashboard_view: string | null
+          profile_completion_percentage: number | null
           subscription_tier: string
           tiktok_url: string | null
           twitter_url: string | null
@@ -2862,11 +2876,13 @@ export type Database = {
           github_url?: string | null
           id: string
           instagram_url?: string | null
+          last_activity_at?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
           memory_preference?: string | null
           onboarding_completed?: boolean | null
           preferred_dashboard_view?: string | null
+          profile_completion_percentage?: number | null
           subscription_tier?: string
           tiktok_url?: string | null
           twitter_url?: string | null
@@ -2892,11 +2908,13 @@ export type Database = {
           github_url?: string | null
           id?: string
           instagram_url?: string | null
+          last_activity_at?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
           memory_preference?: string | null
           onboarding_completed?: boolean | null
           preferred_dashboard_view?: string | null
+          profile_completion_percentage?: number | null
           subscription_tier?: string
           tiktok_url?: string | null
           twitter_url?: string | null
@@ -3606,6 +3624,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_activity_log: {
         Row: {
           activity_data: Json | null
@@ -4257,6 +4307,10 @@ export type Database = {
       calculate_business_success_score: {
         Args: { answers: Json }
         Returns: Json
+      }
+      calculate_profile_completion: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       calculate_trending_score: {
         Args: { p_post_id: string; p_time_decay_hours?: number }

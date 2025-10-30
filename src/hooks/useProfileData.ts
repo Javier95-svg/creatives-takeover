@@ -21,7 +21,7 @@ export const useProfileData = (userId: string) => {
         // Fetch content counts by type
         const { data: posts, error: postsError } = await supabase
           .from('community_posts')
-          .select('content_type, upvotes, comment_count', { count: 'exact' })
+          .select('*')
           .eq('user_id', userId);
 
         if (postsError) throw postsError;
@@ -37,7 +37,7 @@ export const useProfileData = (userId: string) => {
 
         let totalEngagement = 0;
 
-        posts?.forEach((post) => {
+        posts?.forEach((post: any) => {
           const type = (post.content_type || 'post') as keyof typeof postsByType;
           if (type in postsByType) {
             postsByType[type]++;
