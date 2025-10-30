@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -19,6 +19,8 @@ import BadgeShowcase from "@/components/community/BadgeShowcase";
 import { ContentGrid } from "@/components/profile/ContentGrid";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import { PinnedPosts } from "@/components/profile/PinnedPosts";
+import { CreativeCollections } from "@/components/profile/CreativeCollections";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
 
@@ -27,7 +29,9 @@ interface Profile {
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  banner_url: string | null;
   bio: string | null;
+  bio_html: string | null;
   website_url: string | null;
   twitter_url: string | null;
   linkedin_url: string | null;
@@ -58,6 +62,8 @@ const Profile = () => {
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const isOwnProfile = currentUser?.id === profile?.id;
@@ -91,6 +97,20 @@ const Profile = () => {
 
         if (postsError) throw postsError;
         setPosts(postsData || []);
+
+        // Load pinned posts
+        const { data: pinnedData } = await supabase
+          .from('community_posts')
+          .select('*')
+          .eq('user_id', profileData.id)
+          .eq('is_pinned', true)
+          .order('created_at', { ascending: false })
+          .limit(4);
+        
+        setPinnedPosts(pinnedData || []);
+
+        // Load creative collections (mock data for now - can be implemented later)
+        setCollections([]);
 
       } catch (error: any) {
         console.error('Error loading profile:', error);
@@ -208,6 +228,34 @@ const Profile = () => {
                 </Link>
               </Button>
 
+              {/* Banner Section */}
+              <Card className="overflow-hidden mb-6">
+                <div className="relative h-48 bg-gradient-to-br from-primary/20 to-primary/5">
+                  {profile.banner_url ? (
+                    <img 
+                      src={profile.banner_url} 
+                      alt="Profile banner" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Camera className="h-12 w-12 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  {isOwnProfile && (
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      className="absolute bottom-4 right-4"
+                      onClick={() => setShowEditModal(true)}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Edit Banner
+                    </Button>
+                  )}
+                </div>
+              </Card>
+
               {/* Profile Header */}
               <Card className="p-6 mb-6">
                 <div className="flex flex-col md:flex-row gap-6">
@@ -254,8 +302,13 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {profile.bio && (
-                      <p className="text-muted-foreground mb-4">{profile.bio}</p>
+                    {(profile.bio_html || profile.bio) && (
+                      <div 
+                        className="text-muted-foreground mb-4 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ 
+                          __html: profile.bio_html || profile.bio || '' 
+                        }}
+                      />
                     )}
 
                     {/* Social Media Links */}
@@ -324,6 +377,12 @@ const Profile = () => {
                   </div>
                 </div>
               </Card>
+
+              {/* Pinned Posts */}
+              <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />
+
+              {/* Creative Collections */}
+              <CreativeCollections collections={collections} isOwnProfile={isOwnProfile} />
 
               {/* Tabbed Content */}
               <Tabs defaultValue="posts" className="space-y-6">

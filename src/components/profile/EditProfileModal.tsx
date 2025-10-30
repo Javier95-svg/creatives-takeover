@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload, Loader2, Bold, Italic, List, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
@@ -18,7 +19,9 @@ interface EditProfileModalProps {
     id: string;
     full_name: string | null;
     bio: string | null;
+    bio_html: string | null;
     avatar_url: string | null;
+    banner_url: string | null;
     creative_niche: string | null;
     business_stage: string | null;
     website_url: string | null;
@@ -34,6 +37,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
   const [formData, setFormData] = useState({
     full_name: profile.full_name || "",
     bio: profile.bio || "",
+    bio_html: profile.bio_html || "",
     creative_niche: profile.creative_niche || "",
     business_stage: profile.business_stage || "",
     website_url: profile.website_url || "",
@@ -42,7 +46,10 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     instagram_url: profile.instagram_url || "",
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
+  const [bannerFile, setBannerFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
+  const [bioMode, setBioMode] = useState<'plain' | 'rich'>('plain');
+  const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,6 +65,71 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Banner image must be less than 10MB");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const fileName = `${profile.id}-banner-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      await supabase
+        .from('profiles')
+        .update({ banner_url: publicUrl })
+        .eq('id', profile.id);
+
+      toast.success("Banner updated!");
+      onSuccess();
+    } catch (error: any) {
+      console.error('Error uploading banner:', error);
+      toast.error(error.message || "Failed to update banner");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const insertFormatting = (tag: string) => {
+    const textarea = bioTextareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = formData.bio.substring(start, end);
+    
+    let formattedText = '';
+    switch (tag) {
+      case 'bold':
+        formattedText = `<strong>${selectedText || 'bold text'}</strong>`;
+        break;
+      case 'italic':
+        formattedText = `<em>${selectedText || 'italic text'}</em>`;
+        break;
+      case 'list':
+        formattedText = `<ul><li>${selectedText || 'list item'}</li></ul>`;
+        break;
+      case 'link':
+        formattedText = `<a href="url">${selectedText || 'link text'}</a>`;
+        break;
+    }
+
+    const newBio = formData.bio.substring(0, start) + formattedText + formData.bio.substring(end);
+    setFormData({ ...formData, bio: newBio, bio_html: newBio });
   };
 
   const handleCropComplete = async (blob: Blob) => {
@@ -161,17 +233,78 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
 
               <div>
                 <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  placeholder="Tell us about yourself..."
-                  rows={4}
-                  maxLength={500}
-                />
+                <Tabs value={bioMode} onValueChange={(v) => setBioMode(v as 'plain' | 'rich')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-2">
+                    <TabsTrigger value="plain">Plain Text</TabsTrigger>
+                    <TabsTrigger value="rich">Rich Text</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="plain">
+                    <Textarea
+                      id="bio"
+                      ref={bioTextareaRef}
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value, bio_html: e.target.value })}
+                      placeholder="Tell us about yourself..."
+                      rows={4}
+                      maxLength={500}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="rich" className="space-y-2">
+                    <div className="flex gap-1 mb-2 flex-wrap">
+                      <Button type="button" variant="outline" size="sm" onClick={() => insertFormatting('bold')}>
+                        <Bold className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => insertFormatting('italic')}>
+                        <Italic className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => insertFormatting('list')}>
+                        <List className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => insertFormatting('link')}>
+                        <LinkIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      ref={bioTextareaRef}
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value, bio_html: e.target.value })}
+                      placeholder="Use HTML tags for formatting: <strong>bold</strong>, <em>italic</em>, <a href='url'>link</a>"
+                      rows={6}
+                      maxLength={1000}
+                      className="font-mono text-sm"
+                    />
+                    <div className="p-3 border rounded-md bg-muted/30">
+                      <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                      <div 
+                        className="prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: formData.bio_html || formData.bio }}
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formData.bio.length}/500 characters
+                  {formData.bio.length}/{bioMode === 'rich' ? '1000' : '500'} characters
                 </p>
+              </div>
+
+              <div>
+                <Label htmlFor="banner-upload">Banner Image</Label>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      id="banner-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerChange}
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Recommended: 1500x500px, Max 10MB
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
