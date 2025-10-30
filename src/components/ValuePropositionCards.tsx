@@ -80,7 +80,7 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            A complete ecosystem designed for creative entrepreneurs. From AI-powered business planning to community support and funding opportunities. Everything you need to transform your creative vision into a profitable, sustainable business.
+            Creatives Takeover is an all-in-one platform for creative entrepreneurs. Use AI tools to plan your business, connect with a like-minded community, and find funding opportunities. Everything is designed to help you build a profitable and lasting venture.
           </p>
         </div>
 
