@@ -67,7 +67,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[hsl(var(--background))] border-b border-[hsl(var(--background))]">
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12">
         <div className="flex items-center h-16">
           {/* Logo */}
@@ -177,7 +177,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden border-t border-border animate-slide-in-right">
+          <div className="md:hidden bg-[hsl(var(--background))] animate-slide-in-right">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navItems.map((item) => (
                 <Link
