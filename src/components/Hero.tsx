@@ -8,7 +8,7 @@ const Hero = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20 px-4 sm:px-6">
+    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-0 px-4 sm:px-6">
       {/* Deep Tech Gradient Base */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950/40 via-blue-950/30 to-slate-900/50" />
       
