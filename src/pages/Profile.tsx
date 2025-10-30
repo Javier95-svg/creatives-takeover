@@ -20,7 +20,6 @@ import { ContentGrid } from "@/components/profile/ContentGrid";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
-import { CreativeCollections } from "@/components/profile/CreativeCollections";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
 
@@ -63,7 +62,6 @@ const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
-  const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const isOwnProfile = currentUser?.id === profile?.id;
@@ -108,9 +106,6 @@ const Profile = () => {
           .limit(4);
         
         setPinnedPosts(pinnedData || []);
-
-        // Load creative collections (mock data for now - can be implemented later)
-        setCollections([]);
 
       } catch (error: any) {
         console.error('Error loading profile:', error);
@@ -380,9 +375,6 @@ const Profile = () => {
 
               {/* Pinned Posts */}
               <PinnedPosts posts={pinnedPosts} isOwnProfile={isOwnProfile} />
-
-              {/* Creative Collections */}
-              <CreativeCollections collections={collections} isOwnProfile={isOwnProfile} />
 
               {/* Tabbed Content */}
               <Tabs defaultValue="posts" className="space-y-6">
