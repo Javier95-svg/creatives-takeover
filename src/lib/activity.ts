@@ -1,0 +1,16 @@
+import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
+
+export async function trackActivity(event: string, properties: Record<string, any> = {}, userId?: string) {
+  try {
+    await safe.insert(() =>
+      supabase.from('activity_events').insert({ event, properties, user_id: userId })
+    );
+  } catch (e) {
+    // Non-blocking
+    // eslint-disable-next-line no-console
+    console.warn('trackActivity failed', e);
+  }
+}
+
+

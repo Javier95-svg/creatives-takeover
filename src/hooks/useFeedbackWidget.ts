@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 import { useToast } from '@/hooks/use-toast';
 
 export type FeedbackType = 'bug' | 'feature' | 'improvement' | 'other';
@@ -35,16 +36,18 @@ export const useFeedbackWidget = () => {
         referrer: document.referrer,
       };
 
-      const { error } = await supabase.from('page_feedback').insert({
-        user_id: userId,
-        page_path: window.location.pathname,
-        page_title: document.title,
-        feedback_type: data.feedbackType,
-        rating: data.rating,
-        message: data.message,
-        browser_info: browserInfo,
-        screenshot_url: data.screenshot,
-      });
+      const { error } = await safe.insert(() =>
+        supabase.from('page_feedback').insert({
+          user_id: userId,
+          page_path: window.location.pathname,
+          page_title: document.title,
+          feedback_type: data.feedbackType,
+          rating: data.rating,
+          message: data.message,
+          browser_info: browserInfo,
+          screenshot_url: data.screenshot,
+        })
+      );
 
       if (error) throw error;
 

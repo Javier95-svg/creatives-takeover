@@ -9,6 +9,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useCredits } from "@/hooks/useCredits";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
+import { trackActivity } from "@/lib/activity";
 
 export default function SubscriptionSuccess() {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,9 @@ export default function SubscriptionSuccess() {
         await refreshSubscription();
         await refreshBalance();
         toast.success('Subscription activated successfully!');
+        try {
+          await trackActivity('subscription:created', { tier });
+        } catch {}
       } catch (error) {
         console.error('Error verifying subscription:', error);
         toast.error('Please refresh the page to see updated subscription status');

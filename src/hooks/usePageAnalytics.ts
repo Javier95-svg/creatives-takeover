@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Generate a session ID for anonymous tracking
@@ -30,7 +31,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
   // Track analytics event
   const trackEvent = useCallback(async (event: PageAnalyticsEvent) => {
     try {
-      await supabase.from('page_analytics').insert({
+      await safe.insert(() => supabase.from('page_analytics').insert({
         user_id: user?.id || null,
         session_id: sessionId.current,
         page_path: event.page_path || pagePath || window.location.pathname,
@@ -40,7 +41,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
         referrer: document.referrer || null,
         user_agent: navigator.userAgent,
         time_spent: event.event_type === 'time_on_page' ? Math.floor((Date.now() - startTime.current) / 1000) : 0,
-      });
+      }));
     } catch (error) {
       console.error('Analytics tracking error:', error);
     }

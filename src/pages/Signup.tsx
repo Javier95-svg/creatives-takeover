@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { trackActivity } from "@/lib/activity";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -164,6 +165,10 @@ const Signup = () => {
           console.log('User signed up from:', conversionSource.source);
           // Could send this to analytics here
         }
+
+        try {
+          await trackActivity('user:signup', { source: conversionSource.source });
+        } catch {}
         
         toast.success("Account created successfully! Redirecting...");
         
@@ -223,6 +228,9 @@ const Signup = () => {
       
       // If we get here without error, the redirect should have happened
       console.log("OAuth initiated successfully");
+      try {
+        await trackActivity('user:signup_oauth', { provider: 'google' });
+      } catch {}
       
     } catch (err) {
       console.error("Caught error:", err);

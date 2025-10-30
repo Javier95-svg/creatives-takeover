@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Activity, MousePointerClick, Clock, Users, TrendingUp, Eye, LogOut } from "lucide-react";
 import { subDays, startOfDay, endOfDay } from "date-fns";
+import { safe } from "@/integrations/supabase/safe";
 import {
   useAnalyticsOverview,
   usePageViewsOverTime,
@@ -30,6 +31,7 @@ const AdminAnalytics = () => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [dateRange, setDateRange] = useState("7");
+  const [activityEvents, setActivityEvents] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -65,6 +67,19 @@ const AdminAnalytics = () => {
   const { data: scrollDepth } = useScrollDepthStats(startDate, endDate);
   const { data: realTimeActivity } = useRealTimeActivity();
   const { data: referrerStats } = useReferrerStats(startDate, endDate);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await safe.select(() =>
+        supabase
+          .from('activity_events')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(200)
+      );
+      setActivityEvents(data || []);
+    })();
+  }, [dateRange]);
 
   if (!user || isAdmin === null || overviewLoading) {
     return (
@@ -162,6 +177,7 @@ const AdminAnalytics = () => {
               <TabsTrigger value="ctas">CTAs</TabsTrigger>
               <TabsTrigger value="engagement">Engagement</TabsTrigger>
               <TabsTrigger value="realtime">Real-Time</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -347,6 +363,34 @@ const AdminAnalytics = () => {
                         <span className="text-xs text-muted-foreground">
                           {new Date(event.created_at).toLocaleTimeString()}
                         </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Activity Tab */}
+            <TabsContent value="activity">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity Events</CardTitle>
+                  <CardDescription>Latest 200 tracked activities</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {activityEvents.map((e) => (
+                      <div key={e.id} className="rounded border p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium">{e.event}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</div>
+                        </div>
+                        {e.user_id && (
+                          <div className="text-xs text-muted-foreground mt-1">user: {e.user_id}</div>
+                        )}
+                        {e.properties && (
+                          <pre className="text-xs mt-2 overflow-x-auto">{JSON.stringify(e.properties, null, 2)}</pre>
+                        )}
                       </div>
                     ))}
                   </div>

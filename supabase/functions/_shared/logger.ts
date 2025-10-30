@@ -10,7 +10,13 @@ export function logWarn(message: string, context: LogContext = {}) {
 }
 
 export function logError(message: string, context: LogContext = {}) {
-  console.error(JSON.stringify({ level: 'error', message, ...context, timestamp: new Date().toISOString() }));
+  const payload = { level: 'error', message, ...context, timestamp: new Date().toISOString() };
+  console.error(JSON.stringify(payload));
+  // Optional external sink (e.g., Logflare/Generic webhook)
+  const webhook = (globalThis as any).Deno?.env.get('LOG_WEBHOOK_URL');
+  if (webhook) {
+    fetch(webhook, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+  }
 }
 
 export function withErrorBoundary<TArgs extends unknown[], TResult>(

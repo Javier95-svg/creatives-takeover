@@ -35,6 +35,7 @@ import { useChatBotStore } from "@/store/chatBotStore";
 import { ReportDisplay } from "@/components/ReportDisplay";
 import { ExampleConversations } from "@/components/bizmap/ExampleConversations";
 import { BookOpen } from "lucide-react";
+import { trackActivity } from "@/lib/activity";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -314,6 +315,14 @@ const BizMapAI = () => {
 
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
+    // Track first chatbot use (once per device)
+    try {
+      const key = 'ct_first_chatbot_use_tracked';
+      if (!localStorage.getItem(key)) {
+        trackActivity('chatbot:first_use', {});
+        localStorage.setItem(key, '1');
+      }
+    } catch {}
     const savedPrompt = localStorage.getItem('bizmap_prompt');
     const savedTemplate = localStorage.getItem('bizmap_template');
     

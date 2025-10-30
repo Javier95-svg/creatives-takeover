@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { withErrorBoundary, logInfo } from "../_shared/logger.ts";
+import { withIdempotency } from "../_shared/idempotency.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,12 +24,12 @@ interface PDFRequest {
   successScore?: any;
 }
 
-serve(async (req) => {
+serve(withErrorBoundary(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
+  return withIdempotency(req, 'generate-pdf-report', async () => {
     // Get authenticated user
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -52,6 +54,7 @@ serve(async (req) => {
     }
 
     const { reportContent, businessName, userAnswers, successScore }: PDFRequest = await req.json();
+    logInfo('pdf:request_received', { hasScore: Boolean(successScore) });
 
     // Generate enhanced PDF content with professional formatting
     const enhancedPDFContent = generateProfessionalPDFContent(reportContent, businessName, userAnswers, successScore);
@@ -176,17 +179,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Failed to generate PDF',
-      details: error.message 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-});
+  });
+}, { fn: 'generate-pdf-report' }));
 
 function generateProfessionalPDFContent(reportContent: string, businessName: string, userAnswers: any, successScore: any) {
   const currentDate = new Date().toLocaleDateString('en-US', { 

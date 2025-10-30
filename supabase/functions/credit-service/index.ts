@@ -1,4 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
+import { withIdempotency } from "../_shared/idempotency.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -210,12 +212,13 @@ export const CREDIT_COSTS = {
 } as const;
 
 // Edge function for credit management operations
-export default async function handler(req: Request) {
+export default withErrorBoundary(async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    logInfo('credit-service:start', { method: req.method });
     const { action, ...params } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -271,6 +274,7 @@ export default async function handler(req: Request) {
       }
 
       default:
+        logWarn('credit-service:unknown_action', { action });
         return new Response(JSON.stringify({ error: 'Unknown action' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -284,4 +288,4 @@ export default async function handler(req: Request) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-}
+}, { fn: 'credit-service' });

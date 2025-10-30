@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -44,11 +45,13 @@ export const useMessaging = () => {
 
     const loadConversations = async () => {
       try {
-        const { data, error } = await supabase
-          .from('conversations')
-          .select('*')
-          .contains('participants', [user.id])
-          .order('last_message_at', { ascending: false, nullsFirst: false });
+        const { data, error } = await safe.select(() =>
+          supabase
+            .from('conversations')
+            .select('*')
+            .contains('participants', [user.id])
+            .order('last_message_at', { ascending: false, nullsFirst: false })
+        );
 
         if (error) throw error;
         setConversations(data || []);
@@ -86,22 +89,26 @@ export const useMessaging = () => {
 
     const loadMessages = async () => {
       try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', activeConversationId)
-          .order('created_at', { ascending: true });
+        const { data, error } = await safe.select(() =>
+          supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', activeConversationId)
+            .order('created_at', { ascending: true })
+        );
 
         if (error) throw error;
 
         // Get sender profiles for all messages
         const messagesWithSenders = await Promise.all(
           (data || []).map(async (message) => {
-            const { data: senderData } = await supabase
-              .from('profiles')
-              .select('id, full_name, avatar_url')
-              .eq('id', message.sender_id)
-              .single();
+            const { data: senderData } = await safe.select(() =>
+              supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', message.sender_id)
+                .single()
+            );
             
             return {
               ...message,
@@ -185,14 +192,16 @@ export const useMessaging = () => {
       }
 
       // Create new conversation
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert({
-          participants: [user.id, participantId],
-          is_group: false
-        })
-        .select()
-        .single();
+      const { data, error } = await safe.insert(() =>
+        supabase
+          .from('conversations')
+          .insert({
+            participants: [user.id, participantId],
+            is_group: false
+          })
+          .select()
+          .single()
+      );
 
       if (error) throw error;
 
@@ -213,25 +222,29 @@ export const useMessaging = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content: content.trim(),
-          message_type: 'text',
-          reply_to_id: replyToId
-        })
-        .select()
-        .single();
+      const { data, error } = await safe.insert(() =>
+        supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: user.id,
+            content: content.trim(),
+            message_type: 'text',
+            reply_to_id: replyToId
+          })
+          .select()
+          .single()
+      );
 
       if (error) throw error;
 
       // Update conversation's last message timestamp
-      await supabase
-        .from('conversations')
-        .update({ last_message_at: new Date().toISOString() })
-        .eq('id', conversationId);
+      await safe.update(() =>
+        supabase
+          .from('conversations')
+          .update({ last_message_at: new Date().toISOString() })
+          .eq('id', conversationId)
+      );
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -245,12 +258,14 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('conversation_id', conversationId)
-        .neq('sender_id', user.id)
-        .eq('is_read', false);
+      const { error } = await safe.update(() =>
+        supabase
+          .from('messages')
+          .update({ is_read: true })
+          .eq('conversation_id', conversationId)
+          .neq('sender_id', user.id)
+          .eq('is_read', false)
+      );
 
       if (error) throw error;
     } catch (error) {
