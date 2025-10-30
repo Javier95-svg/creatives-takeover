@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp, Image } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -372,12 +372,6 @@ const Profile = () => {
                 </TabsContent>
 
                 <TabsContent value="pictures" className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                      <Image className="h-5 w-5" />
-                      Pictures
-                    </h2>
-                  </div>
                   <PicturesGallery userId={profile.id} isOwnProfile={isOwnProfile} />
                 </TabsContent>
 

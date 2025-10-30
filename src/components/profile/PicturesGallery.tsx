@@ -1,17 +1,14 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Photo {
   id: string;
-  user_id: string;
   image_url: string;
   caption: string | null;
   created_at: string;
@@ -28,7 +25,6 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
   const [uploading, setUploading] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [caption, setCaption] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,13 +54,13 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be less than 10MB");
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please select an image file");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
       return;
     }
 
@@ -82,27 +78,24 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
 
     try {
       setUploading(true);
-
-      // Upload to storage
-      const fileName = `${userId}/${Date.now()}-${selectedFile.name}`;
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, selectedFile, { upsert: false });
+        .upload(fileName, selectedFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      // Save to database
       const { error: dbError } = await supabase
         .from('user_photos')
         .insert({
           user_id: userId,
           image_url: publicUrl,
-          caption: caption || null,
         });
 
       if (dbError) throw dbError;
@@ -110,7 +103,6 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
       toast.success('Photo uploaded successfully!');
       setShowUploadDialog(false);
       setSelectedFile(null);
-      setCaption("");
       setPreviewUrl(null);
       loadPhotos();
     } catch (error: any) {
@@ -125,16 +117,12 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
     if (!confirm('Are you sure you want to delete this photo?')) return;
 
     try {
-      // Extract storage path from URL
-      const urlParts = imageUrl.split('/');
-      const fileName = urlParts.slice(-2).join('/');
+      // Extract filename from URL
+      const fileName = imageUrl.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('avatars').remove([fileName]);
+      }
 
-      // Delete from storage
-      await supabase.storage
-        .from('avatars')
-        .remove([fileName]);
-
-      // Delete from database
       const { error } = await supabase
         .from('user_photos')
         .delete()
@@ -152,60 +140,73 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="aspect-square bg-muted animate-pulse rounded-lg" />
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Pictures
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="aspect-square bg-muted rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <>
-      <div className="space-y-4">
-        {isOwnProfile && (
-          <div className="flex justify-end">
-            <Label htmlFor="photo-upload" className="cursor-pointer">
-              <Button type="button" size="sm" asChild>
-                <span className="flex items-center gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload Photo
-                </span>
-              </Button>
-            </Label>
-            <Input
-              id="photo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileSelect}
-            />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5" />
+              Pictures
+            </CardTitle>
+            {isOwnProfile && (
+              <div>
+                <Input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <Button size="sm" variant="outline" asChild>
+                  <label htmlFor="photo-upload" className="cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Photo
+                  </label>
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-
-        {photos.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground text-center">
-                {isOwnProfile ? "Upload your first photo" : "No photos yet"}
+        </CardHeader>
+        <CardContent>
+          {photos.length === 0 ? (
+            <div className="text-center py-12">
+              <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {isOwnProfile ? 'Upload your first photo' : 'No photos yet'}
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {photos.map((photo) => (
-              <Card key={photo.id} className="overflow-hidden group relative">
-                <div className="aspect-square relative">
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {photos.map((photo) => (
+                <div key={photo.id} className="relative group aspect-square">
                   <img
                     src={photo.image_url}
-                    alt={photo.caption || "Photo"}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    alt={photo.caption || 'User photo'}
+                    className="w-full h-full object-cover rounded-lg"
                   />
                   {isOwnProfile && (
                     <Button
-                      variant="destructive"
                       size="icon"
+                      variant="destructive"
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => handleDelete(photo.id, photo.image_url)}
                     >
@@ -213,60 +214,32 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
                     </Button>
                   )}
                 </div>
-                {photo.caption && (
-                  <CardContent className="p-3">
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {photo.caption}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Upload Photo</DialogTitle>
           </DialogHeader>
-          
-          <div className="space-y-4">
-            {previewUrl && (
-              <div className="aspect-square w-full max-w-xs mx-auto rounded-lg overflow-hidden border">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="caption">Caption (optional)</Label>
-              <Textarea
-                id="caption"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Add a caption to your photo..."
-                rows={3}
-                maxLength={200}
+          {previewUrl && (
+            <div className="aspect-square w-full max-w-sm mx-auto rounded-lg overflow-hidden bg-muted">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-full object-cover"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                {caption.length}/200 characters
-              </p>
             </div>
-          </div>
-
+          )}
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
                 setShowUploadDialog(false);
                 setSelectedFile(null);
-                setCaption("");
                 setPreviewUrl(null);
               }}
               disabled={uploading}
