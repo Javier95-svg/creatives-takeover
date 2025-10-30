@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Loader2, Edit2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,6 +27,8 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState<string>('');
+  const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState<string>('');
 
   useEffect(() => {
     loadPhotos();
@@ -114,6 +116,35 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleUpdateCaption = async (photoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_photos')
+        .update({ caption: editCaption.trim() || null })
+        .eq('id', photoId);
+
+      if (error) throw error;
+
+      toast.success('Caption updated');
+      setEditingPhotoId(null);
+      setEditCaption('');
+      loadPhotos();
+    } catch (error: any) {
+      console.error('Error updating caption:', error);
+      toast.error('Failed to update caption');
+    }
+  };
+
+  const startEditingCaption = (photoId: string, currentCaption: string | null) => {
+    setEditingPhotoId(photoId);
+    setEditCaption(currentCaption || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingPhotoId(null);
+    setEditCaption('');
   };
 
   const handleDelete = async (photoId: string, imageUrl: string) => {
@@ -218,10 +249,72 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
                       </Button>
                     )}
                   </div>
-                  {photo.caption && (
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                      {photo.caption}
-                    </p>
+                  {editingPhotoId === photo.id ? (
+                    <div className="mt-2 flex gap-2">
+                      <Input
+                        value={editCaption}
+                        onChange={(e) => setEditCaption(e.target.value)}
+                        placeholder="Add a caption..."
+                        maxLength={200}
+                        className="text-sm"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleUpdateCaption(photo.id);
+                          } else if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="shrink-0"
+                        onClick={() => handleUpdateCaption(photo.id)}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="shrink-0"
+                        onClick={cancelEditing}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="mt-2 group/caption">
+                      {photo.caption ? (
+                        <div className="flex items-start gap-2">
+                          <p className="text-sm text-muted-foreground line-clamp-2 flex-1">
+                            {photo.caption}
+                          </p>
+                          {isOwnProfile && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 shrink-0 opacity-0 group-hover/caption:opacity-100 transition-opacity"
+                              onClick={() => startEditingCaption(photo.id, photo.caption)}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        isOwnProfile && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 text-xs text-muted-foreground opacity-0 group-hover/caption:opacity-100 transition-opacity"
+                            onClick={() => startEditingCaption(photo.id, null)}
+                          >
+                            <Edit2 className="h-3 w-3 mr-1" />
+                            Add caption
+                          </Button>
+                        )
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
