@@ -265,13 +265,22 @@ const CommunityFeed: React.FC = () => {
   }, [posts, search, sort, selectedTag, postType, engagement]);
 
   const publish = async (payload: ComposerPayload) => {
+    console.log('🚀 PUBLISH FUNCTION CALLED', { payload, isAuthenticated, user: user?.id });
+    
     // Require authentication for posting
     if (!isAuthenticated || !user) {
+      console.error('❌ USER NOT AUTHENTICATED', { isAuthenticated, user });
       toast.error('Please sign in to post stories');
       return;
     }
 
     try {
+      console.log('📝 ATTEMPTING TO INSERT POST...', {
+        title: payload.title,
+        content: payload.content,
+        user_id: user.id
+      });
+
       const { data, error } = await supabase
         .from('community_posts')
         .insert({
@@ -282,12 +291,15 @@ const CommunityFeed: React.FC = () => {
         .select('*')
         .single();
 
+      console.log('📊 INSERT RESULT:', { data, error });
+
       if (error) {
-        console.error('Error creating post:', error);
-        toast.error('Failed to create post');
+        console.error('❌ Error creating post:', error);
+        toast.error(`Failed to create post: ${error.message}`);
         return;
       }
 
+      console.log('✅ POST CREATED SUCCESSFULLY!', data);
       toast.success('Post created successfully!');
 
       // Check for new badges

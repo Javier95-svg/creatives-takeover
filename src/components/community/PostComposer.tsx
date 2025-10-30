@@ -96,8 +96,10 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
   const handlePublish = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📤 POST COMPOSER: handlePublish called', { isAuthenticated, requireAuth });
     
     if (requireAuth && !isAuthenticated) {
+      console.log('🔒 AUTH REQUIRED, showing sign-in modal');
       // Track conversion trigger
       sessionStorage.setItem('conversion_source', JSON.stringify({
         type: 'community_post',
@@ -107,6 +109,8 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
       return;
     }
     
+    console.log('✅ VALIDATION CHECK', { titleLength: title.trim().length, contentLength: content.trim().length });
+    
     if (title.trim().length < 3) {
       toast.error("Title is too short.");
       return;
@@ -115,6 +119,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
       toast.error("Tell a bit more about your story.");
       return;
     }
+    
     const payload: ComposerPayload = { 
       title: title.trim(), 
       content: content.trim(),
@@ -125,8 +130,9 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     if (mediaType === 'video') payload.video = mediaPreview;
     if (mediaType === 'audio') payload.audio = mediaPreview;
 
+    console.log('📦 CALLING onPublish with payload:', payload);
     onPublish(payload);
-    toast.success("Your story has been posted!");
+    console.log('✅ onPublish callback completed');
     reset();
   };
 
