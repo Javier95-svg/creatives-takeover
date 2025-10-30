@@ -8,8 +8,8 @@ const ValuePropositionCards = () => {
     {
       icon: Lightbulb,
       title: "BUILD",
-      subtitle: "Your Business Plan",
-      description: "Transform your idea into an actionable business plan with market research and revenue strategies",
+      subtitle: "BizMap AI",
+      description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
       cta: "Try BizMap AI",
       link: "/bizmap-ai",
       gradient: "from-primary/20 to-primary/5"
@@ -17,8 +17,8 @@ const ValuePropositionCards = () => {
     {
       icon: Users,
       title: "SHARE",
-      subtitle: "With Your Community",
-      description: "Connect with creative entrepreneurs, get feedback on your plans, and find accountability partners",
+      subtitle: "Community",
+      description: "Join creative entrepreneurs who get it. Share your journey, celebrate wins, get honest feedback, and find accountability partners who'll keep you moving forward.",
       cta: "Join Community",
       link: "/community",
       gradient: "from-secondary/20 to-secondary/5"
@@ -26,8 +26,8 @@ const ValuePropositionCards = () => {
     {
       icon: Rocket,
       title: "LAUNCH",
-      subtitle: "With Funding Support",
-      description: "Access accelerator opportunities, funding resources, and learn from successful founders",
+      subtitle: "Insighta",
+      description: "Access exclusive funding opportunities and accelerator programs. Learn from founders who've secured investment and get the resources to scale your creative business.",
       cta: "Explore Insighta",
       link: "/insighta",
       gradient: "from-accent/20 to-accent/5"
