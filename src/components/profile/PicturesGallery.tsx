@@ -26,6 +26,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [caption, setCaption] = useState<string>('');
 
   useEffect(() => {
     loadPhotos();
@@ -96,6 +97,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
         .insert({
           user_id: userId,
           image_url: publicUrl,
+          caption: caption.trim() || null,
         });
 
       if (dbError) throw dbError;
@@ -104,6 +106,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
       setShowUploadDialog(false);
       setSelectedFile(null);
       setPreviewUrl(null);
+      setCaption('');
       loadPhotos();
     } catch (error: any) {
       console.error('Error uploading photo:', error);
@@ -197,21 +200,28 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {photos.map((photo) => (
-                <div key={photo.id} className="relative group aspect-square">
-                  <img
-                    src={photo.image_url}
-                    alt={photo.caption || 'User photo'}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  {isOwnProfile && (
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDelete(photo.id, photo.image_url)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                <div key={photo.id} className="relative group">
+                  <div className="aspect-square relative">
+                    <img
+                      src={photo.image_url}
+                      alt={photo.caption || 'User photo'}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    {isOwnProfile && (
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDelete(photo.id, photo.image_url)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {photo.caption && (
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                      {photo.caption}
+                    </p>
                   )}
                 </div>
               ))}
@@ -226,12 +236,26 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
             <DialogTitle>Upload Photo</DialogTitle>
           </DialogHeader>
           {previewUrl && (
-            <div className="aspect-square w-full max-w-sm mx-auto rounded-lg overflow-hidden bg-muted">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
+            <div className="space-y-4">
+              <div className="aspect-square w-full max-w-sm mx-auto rounded-lg overflow-hidden bg-muted">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="caption" className="text-sm font-medium">
+                  Caption (optional)
+                </label>
+                <Input
+                  id="caption"
+                  placeholder="Add a caption to your photo..."
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  maxLength={200}
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -241,6 +265,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
                 setShowUploadDialog(false);
                 setSelectedFile(null);
                 setPreviewUrl(null);
+                setCaption('');
               }}
               disabled={uploading}
             >
