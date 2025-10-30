@@ -71,14 +71,14 @@ const Navigation = () => {
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
         <div className="flex items-center h-16 border-0">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center border-0">
             <Link to="/" className="flex items-center">
               <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-12 w-auto animate-fade-in animate-glow hover:scale-110 transition-transform duration-300" />
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16">
+          <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -101,7 +101,7 @@ const Navigation = () => {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 !border-0">
             {loading ? (
               <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
             ) : user ? (
@@ -167,7 +167,7 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation"
+            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Close menu" : "Open menu"}
           >
@@ -177,7 +177,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden bg-black animate-slide-in-right">
+          <div className="md:hidden bg-black animate-slide-in-right !border-0">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navItems.map((item) => (
                 <Link
