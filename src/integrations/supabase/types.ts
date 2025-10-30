@@ -1225,6 +1225,7 @@ export type Database = {
           feedback_requested: boolean | null
           feedback_status: string | null
           id: string
+          is_pinned: boolean | null
           is_repost: boolean | null
           location: string | null
           media_urls: string[] | null
@@ -1259,6 +1260,7 @@ export type Database = {
           feedback_requested?: boolean | null
           feedback_status?: string | null
           id?: string
+          is_pinned?: boolean | null
           is_repost?: boolean | null
           location?: string | null
           media_urls?: string[] | null
@@ -1293,6 +1295,7 @@ export type Database = {
           feedback_requested?: boolean | null
           feedback_status?: string | null
           id?: string
+          is_pinned?: boolean | null
           is_repost?: boolean | null
           location?: string | null
           media_urls?: string[] | null
@@ -2831,7 +2834,9 @@ export type Database = {
         Row: {
           ai_personality: string | null
           avatar_url: string | null
+          banner_url: string | null
           bio: string | null
+          bio_html: string | null
           business_stage: string | null
           created_at: string
           creative_niche: string | null
@@ -2863,7 +2868,9 @@ export type Database = {
         Insert: {
           ai_personality?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
+          bio_html?: string | null
           business_stage?: string | null
           created_at?: string
           creative_niche?: string | null
@@ -2895,7 +2902,9 @@ export type Database = {
         Update: {
           ai_personality?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
+          bio_html?: string | null
           business_stage?: string | null
           created_at?: string
           creative_niche?: string | null

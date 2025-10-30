@@ -164,9 +164,21 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     setLoading(true);
 
     try {
+      const updateData: any = {
+        full_name: formData.full_name,
+        bio: formData.bio,
+        bio_html: formData.bio_html,
+        creative_niche: formData.creative_niche,
+        business_stage: formData.business_stage,
+        website_url: formData.website_url,
+        twitter_url: formData.twitter_url,
+        linkedin_url: formData.linkedin_url,
+        instagram_url: formData.instagram_url,
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update(formData)
+        .update(updateData)
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -318,18 +330,22 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                       <SelectValue placeholder="Select niche" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="visual-artist">Visual Artist</SelectItem>
                       <SelectItem value="designer">Designer</SelectItem>
-                      <SelectItem value="developer">Developer</SelectItem>
+                      <SelectItem value="musician">Musician</SelectItem>
                       <SelectItem value="writer">Writer</SelectItem>
-                      <SelectItem value="marketer">Marketer</SelectItem>
+                      <SelectItem value="filmmaker">Filmmaker</SelectItem>
+                      <SelectItem value="photographer">Photographer</SelectItem>
+                      <SelectItem value="developer">Developer</SelectItem>
                       <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
+                      <SelectItem value="content-creator">Content Creator</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="business_stage">Business Stage</Label>
+                  <Label htmlFor="business_stage">Project Stage</Label>
                   <Select 
                     value={formData.business_stage} 
                     onValueChange={(value) => setFormData({ ...formData, business_stage: value })}
@@ -338,11 +354,12 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                       <SelectValue placeholder="Select stage" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="idea">Idea</SelectItem>
-                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="exploring">Exploring</SelectItem>
+                      <SelectItem value="learning">Learning</SelectItem>
+                      <SelectItem value="creating">Creating</SelectItem>
                       <SelectItem value="building">Building</SelectItem>
                       <SelectItem value="launched">Launched</SelectItem>
-                      <SelectItem value="scaling">Scaling</SelectItem>
+                      <SelectItem value="growing">Growing</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

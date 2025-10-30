@@ -85,7 +85,7 @@ const Profile = () => {
           .single();
 
         if (profileError) throw profileError;
-        setProfile(profileData);
+        setProfile(profileData as Profile);
 
         // Load user's posts
         const { data: postsData, error: postsError } = await supabase
