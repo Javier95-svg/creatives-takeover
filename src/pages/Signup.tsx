@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield, Calendar } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -16,7 +16,8 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    dateOfBirth: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -25,7 +26,8 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    dateOfBirth: ""
   });
   
   const { signUp, user } = useAuth();
@@ -73,13 +75,28 @@ const Signup = () => {
     }
   };
 
+  // Calculate age from date of birth
+  const calculateAge = (dateOfBirth: string) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
   // Form validation
   const validateForm = () => {
     const newErrors = {
       fullName: "",
       email: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      dateOfBirth: ""
     };
 
     // Full name validation
@@ -94,6 +111,18 @@ const Signup = () => {
       newErrors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
+    }
+
+    // Date of birth validation
+    if (!formData.dateOfBirth) {
+      newErrors.dateOfBirth = "Date of birth is required";
+    } else {
+      const age = calculateAge(formData.dateOfBirth);
+      if (age < 18) {
+        newErrors.dateOfBirth = "You must be at least 18 years old to create an account";
+      } else if (age > 120) {
+        newErrors.dateOfBirth = "Please enter a valid date of birth";
+      }
     }
 
     // Password validation
@@ -111,7 +140,7 @@ const Signup = () => {
     }
 
     setErrors(newErrors);
-    return !newErrors.fullName && !newErrors.email && !newErrors.password && !newErrors.confirmPassword;
+    return !newErrors.fullName && !newErrors.email && !newErrors.password && !newErrors.confirmPassword && !newErrors.dateOfBirth;
   };
 
   // Handle form submission
@@ -125,7 +154,7 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.fullName);
+      const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.dateOfBirth);
       
       if (error) {
         toast.error(error.message || "Failed to create account. Please try again.");
@@ -288,6 +317,35 @@ const Signup = () => {
                 </div>
                 {errors.email && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Date of Birth Field */}
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth" className="text-sm font-medium">
+                  Date of birth
+                </Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                      errors.dateOfBirth ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                    }`}
+                    disabled={isLoading}
+                    autoComplete="bday"
+                  />
+                </div>
+                {!errors.dateOfBirth && formData.dateOfBirth && (
+                  <p className="text-xs text-muted-foreground">You must be at least 18 years old</p>
+                )}
+                {errors.dateOfBirth && (
+                  <p className="text-sm text-red-500 animate-fade-in">{errors.dateOfBirth}</p>
                 )}
               </div>
 
