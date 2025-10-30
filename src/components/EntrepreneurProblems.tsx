@@ -139,46 +139,6 @@ const EntrepreneurProblems = () => {
             </Card>
           ))}
         </div>
-
-        {/* Solution CTA */}
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-2xl p-6 sm:p-8 lg:p-12 text-center animate-fade-in mx-4">
-          <h3 className="text-2xl sm:text-3xl font-bold mb-4 gradient-text">
-            Ready to Automate Your Success?
-          </h3>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-            Stop struggling with manual processes and complex tools. Get AI-powered business planning 
-            that <strong className="text-foreground">actually works for creatives</strong>.
-          </p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium">Instant Business Analysis</span>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium">Community Support</span>
-            </div>
-            <div className="flex items-center justify-center gap-2 sm:col-span-2 lg:col-span-1">
-              <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium">Market Intelligence</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 w-full sm:w-auto" asChild>
-              <Link to="/bizmap-ai">
-                Get AI Business Support
-                <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-6 w-full sm:w-auto" asChild>
-              <Link to="/community">
-                Join Creative Community
-              </Link>
-            </Button>
-          </div>
-        </div>
       </div>
     </section>
   );
