@@ -88,6 +88,15 @@ const Hero = () => {
         ))}
       </div>
 
+      {/* Angular Robotic Framework */}
+      <div className="absolute top-20 left-1/3">
+        <div className="relative w-32 h-32">
+          <div className="absolute inset-0 border-l-2 border-t-2 border-primary/20" style={{ animation: 'scale-in 3s ease-in-out infinite alternate' }} />
+          <div className="absolute inset-2 border-r-2 border-b-2 border-secondary/15" style={{ animation: 'scale-in 4s ease-in-out infinite alternate', animationDelay: '0.5s' }} />
+          <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 bg-primary/60 animate-pulse" />
+        </div>
+      </div>
+
       <div className="absolute bottom-32 right-1/3">
         <div className="relative w-24 h-24 rotate-45">
           <div className="absolute inset-0 border-2 border-accent/15" style={{ animation: 'scale-in 3.5s ease-in-out infinite alternate' }} />
