@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp, Camera } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -222,34 +222,6 @@ const Profile = () => {
                   Back to Community
                 </Link>
               </Button>
-
-              {/* Banner Section */}
-              <Card className="overflow-hidden mb-6">
-                <div className="relative h-48 bg-gradient-to-br from-primary/20 to-primary/5">
-                  {profile.banner_url ? (
-                    <img 
-                      src={profile.banner_url} 
-                      alt="Profile banner" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Camera className="h-12 w-12 text-muted-foreground/30" />
-                    </div>
-                  )}
-                  {isOwnProfile && (
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      className="absolute bottom-4 right-4"
-                      onClick={() => setShowEditModal(true)}
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Edit Banner
-                    </Button>
-                  )}
-                </div>
-              </Card>
 
               {/* Profile Header */}
               <Card className="p-6 mb-6">

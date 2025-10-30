@@ -46,7 +46,6 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     instagram_url: profile.instagram_url || "",
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
-  const [bannerFile, setBannerFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
   const [bioMode, setBioMode] = useState<'plain' | 'rich'>('plain');
   const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -64,43 +63,6 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         setShowCropModal(true);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Banner image must be less than 10MB");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const fileName = `${profile.id}-banner-${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      await supabase
-        .from('profiles')
-        .update({ banner_url: publicUrl })
-        .eq('id', profile.id);
-
-      toast.success("Banner updated!");
-      onSuccess();
-    } catch (error: any) {
-      console.error('Error uploading banner:', error);
-      toast.error(error.message || "Failed to update banner");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -299,24 +261,6 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                 <p className="text-xs text-muted-foreground mt-1">
                   {formData.bio.length}/{bioMode === 'rich' ? '1000' : '500'} characters
                 </p>
-              </div>
-
-              <div>
-                <Label htmlFor="banner-upload">Banner Image</Label>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <Input
-                      id="banner-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerChange}
-                      disabled={loading}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Recommended: 1500x500px, Max 10MB
-                    </p>
-                  </div>
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
