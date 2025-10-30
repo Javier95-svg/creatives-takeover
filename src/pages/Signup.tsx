@@ -4,10 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield, Calendar as CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -21,7 +17,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    dateOfBirth: undefined as Date | undefined
+    dateOfBirth: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -80,12 +76,13 @@ const Signup = () => {
   };
 
   // Calculate age from date of birth
-  const calculateAge = (dateOfBirth: Date) => {
+  const calculateAge = (dateOfBirth: string) => {
+    const birthDate = new Date(dateOfBirth);
     const today = new Date();
-    let age = today.getFullYear() - dateOfBirth.getFullYear();
-    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
     
@@ -157,8 +154,7 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const dateOfBirthString = formData.dateOfBirth ? format(formData.dateOfBirth, 'yyyy-MM-dd') : undefined;
-      const { error } = await signUp(formData.email, formData.password, formData.fullName, dateOfBirthString);
+      const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.dateOfBirth);
       
       if (error) {
         toast.error(error.message || "Failed to create account. Please try again.");
@@ -408,54 +404,22 @@ const Signup = () => {
                 <Label htmlFor="dateOfBirth" className="text-sm font-medium">
                   Date of birth
                 </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full h-12 pl-10 justify-start text-left font-normal bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20",
-                        !formData.dateOfBirth && "text-muted-foreground",
-                        errors.dateOfBirth && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                      )}
-                      disabled={isLoading}
-                    >
-                      <CalendarIcon className="absolute left-3 w-4 h-4 text-muted-foreground" />
-                      {formData.dateOfBirth ? (
-                        format(formData.dateOfBirth, "PPP")
-                      ) : (
-                        <span>Select your date of birth</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.dateOfBirth}
-                      onSelect={(date) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          dateOfBirth: date
-                        }));
-                        if (errors.dateOfBirth) {
-                          setErrors(prev => ({
-                            ...prev,
-                            dateOfBirth: ""
-                          }));
-                        }
-                      }}
-                      disabled={(date) =>
-                        date > new Date(new Date().setFullYear(new Date().getFullYear() - 18)) || 
-                        date < new Date("1900-01-01")
-                      }
-                      defaultMonth={new Date()}
-                      initialFocus
-                      className="pointer-events-auto"
-                      captionLayout="dropdown-buttons"
-                      fromYear={1900}
-                      toYear={new Date().getFullYear() - 18}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <div className="relative">
+                  <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                      errors.dateOfBirth ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                    }`}
+                    disabled={isLoading}
+                    autoComplete="bday"
+                  />
+                </div>
                 {!errors.dateOfBirth && formData.dateOfBirth && (
                   <p className="text-xs text-muted-foreground">You must be at least 18 years old</p>
                 )}
