@@ -136,7 +136,7 @@ const Hero = () => {
       <div className="absolute bottom-0 left-1/4 w-[450px] h-[450px] bg-gradient-radial from-secondary/8 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '25s', animationDelay: '5s', animationDirection: 'reverse' }} />
       <div className="absolute top-1/2 right-1/3 w-[350px] h-[350px] bg-gradient-radial from-accent/6 via-transparent to-transparent blur-2xl animate-float" style={{ animationDuration: '18s', animationDelay: '3s' }} />
 
-      <div className="container mx-auto relative z-20">
+      <div className="container mx-auto relative z-20 pt-32">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-slide-up takeover-title creatives-font leading-tight">
