@@ -8,9 +8,9 @@ const Hero = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-20 px-4 sm:px-6">
+    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6">
       {/* Deep Tech Gradient Base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/40 via-blue-950/30 to-slate-900/50" />
+      <div className="absolute inset-0 bg-background" />
       
       {/* Multi-layer Circuit Grid */}
       <div className="absolute inset-0 opacity-[0.12]">
@@ -86,15 +86,6 @@ const Hero = () => {
             bottom: `${i * -15}px`
           }} />
         ))}
-      </div>
-
-      {/* Angular Robotic Framework */}
-      <div className="absolute top-20 left-1/3">
-        <div className="relative w-32 h-32">
-          <div className="absolute inset-0 border-l-2 border-t-2 border-primary/20" style={{ animation: 'scale-in 3s ease-in-out infinite alternate' }} />
-          <div className="absolute inset-2 border-r-2 border-b-2 border-secondary/15" style={{ animation: 'scale-in 4s ease-in-out infinite alternate', animationDelay: '0.5s' }} />
-          <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 bg-primary/60 animate-pulse" />
-        </div>
       </div>
 
       <div className="absolute bottom-32 right-1/3">
