@@ -146,11 +146,16 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             {isAIReport && <Badge variant="secondary" className="text-xs">🤖 AI-Generated Report</Badge>}
-            {isAIReport ? 'Share AI Business Report' : 'Share your creative work'}
+            {isAIReport ? 'Share AI Business Report' : (
+              requireAuth && !isAuthenticated ? (
+                <span className="text-[#00d4ff] drop-shadow-[0_0_8px_rgba(0,212,255,0.6)]">
+                  Share Your Thoughts
+                </span>
+              ) : (
+                'Share your creative work'
+              )
+            )}
           </CardTitle>
-          {requireAuth && !isAuthenticated && (
-            <p className="text-sm text-muted-foreground">Sign in to share with the community</p>
-          )}
           {isAIReport && (
             <p className="text-sm text-muted-foreground">
               Share your BizMap AI analysis with the community for feedback and suggestions
@@ -158,7 +163,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
           )}
           {!isAIReport && (
             <p className="text-sm text-muted-foreground">
-              Share your projects, progress, challenges, or insights with fellow creatives
+              Share your projects, progress, challenges, or insights with {requireAuth && !isAuthenticated ? 'your peers' : 'fellow creatives'}
             </p>
           )}
         </CardHeader>
