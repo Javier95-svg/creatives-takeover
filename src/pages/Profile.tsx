@@ -11,15 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
-import BadgeShowcase from "@/components/community/BadgeShowcase";
 import { ContentGrid } from "@/components/profile/ContentGrid";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { PinnedPosts } from "@/components/profile/PinnedPosts";
+import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
 
@@ -66,7 +66,7 @@ const Profile = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const isOwnProfile = currentUser?.id === profile?.id;
   
-  const { stats, badges, loading: statsLoading } = useProfileData(profile?.id || '');
+  const { stats, loading: statsLoading } = useProfileData(profile?.id || '');
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -352,7 +352,7 @@ const Profile = () => {
               <Tabs defaultValue="posts" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="posts">Content</TabsTrigger>
-                  <TabsTrigger value="badges">Badges</TabsTrigger>
+                  <TabsTrigger value="pictures">Pictures</TabsTrigger>
                   <TabsTrigger value="stats">Statistics</TabsTrigger>
                 </TabsList>
 
@@ -371,8 +371,14 @@ const Profile = () => {
                   />
                 </TabsContent>
 
-                <TabsContent value="badges" className="space-y-4">
-                  <BadgeShowcase badges={badges} />
+                <TabsContent value="pictures" className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <Image className="h-5 w-5" />
+                      Pictures
+                    </h2>
+                  </div>
+                  <PicturesGallery userId={profile.id} isOwnProfile={isOwnProfile} />
                 </TabsContent>
 
                 <TabsContent value="stats" className="space-y-4">

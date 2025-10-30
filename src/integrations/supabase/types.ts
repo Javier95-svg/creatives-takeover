@@ -3993,6 +3993,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           created_at: string
