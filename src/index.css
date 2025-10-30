@@ -172,6 +172,9 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    display: inline-block;
+    line-height: 1.3;
+    padding-bottom: 0.15em;
   }
   
   /* Dark Silver Gradient Text Effects */
