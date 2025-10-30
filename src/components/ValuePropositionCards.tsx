@@ -80,7 +80,7 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            A complete ecosystem designed for creative entrepreneurs. From AI-powered business planning to community support and funding opportunities — everything you need to transform your creative vision into a profitable, sustainable business.
+            A complete ecosystem designed for creative entrepreneurs. From AI-powered business planning to community support and funding opportunities. Everything you need to transform your creative vision into a profitable, sustainable business.
           </p>
         </div>
 
