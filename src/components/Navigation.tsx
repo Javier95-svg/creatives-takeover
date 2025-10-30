@@ -67,7 +67,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background backdrop-blur-sm border-b border-border shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12">
         <div className="flex items-center h-16">
           {/* Logo */}
