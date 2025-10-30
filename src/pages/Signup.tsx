@@ -447,6 +447,7 @@ const Signup = () => {
                         date > new Date(new Date().setFullYear(new Date().getFullYear() - 18)) || 
                         date < new Date("1900-01-01")
                       }
+                      defaultMonth={new Date()}
                       initialFocus
                       className="pointer-events-auto"
                       captionLayout="dropdown-buttons"
