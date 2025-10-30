@@ -8,7 +8,7 @@ const Hero = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6">
+    <section id="overview" className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-16 px-4 sm:px-6">
       {/* Hero Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
