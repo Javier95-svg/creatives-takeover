@@ -31,6 +31,7 @@ import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
 import Account from "./pages/Account";
 import Messages from "./pages/Messages";
+import CreativesTakeover from "./pages/CreativesTakeover";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,7 @@ const App = () => {
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/profile/:username" element={<Profile />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/creatives-takeover" element={<CreativesTakeover />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
