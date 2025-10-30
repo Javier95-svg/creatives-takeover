@@ -165,21 +165,33 @@ const CommunityFeed: React.FC = () => {
   }, []);
 
   const allTags = useMemo(() => {
-    // Curated entrepreneurship and startup tags
-    const entrepreneurshipTags = [
-      'startup', 'saas', 'bootstrapped', 'mvp', 'validation', 'fundraising',
-      'revenue', 'mrr', 'product-market-fit', 'pivot', 'scaling', 'growth-hacking',
-      'lean-startup', 'customer-development', 'pricing', 'business-model',
-      'networking', 'mentorship', 'failure', 'lessons', 'milestone',
-      'side-hustle', 'full-time', 'remote', 'productivity', 'innovation',
-      'disruption', 'market-research', 'competition', 'strategy', 'leadership'
+    // Diverse creative field tags
+    const creativeTags = [
+      // Visual Arts & Design
+      'design', 'illustration', 'painting', 'photography', 'sculpture', 'digital-art',
+      'graphic-design', 'ui-ux', 'animation', 'concept-art', '3d-modeling', 'branding',
+      // Music & Audio
+      'music', 'songwriting', 'production', 'mixing', 'sound-design', 'composition',
+      'indie-music', 'electronic', 'acoustic', 'beats', 'vocals', 'recording',
+      // Writing & Content
+      'writing', 'poetry', 'fiction', 'non-fiction', 'screenwriting', 'blogging',
+      'copywriting', 'storytelling', 'journalism', 'publishing', 'editing',
+      // Film & Video
+      'film', 'video', 'cinematography', 'directing', 'editing', 'documentary',
+      'short-film', 'music-video', 'vfx', 'color-grading', 'storyboard',
+      // Fashion & Style
+      'fashion', 'styling', 'textile-design', 'sustainable-fashion', 'streetwear',
+      // Entrepreneurship & Business
+      'startup', 'freelance', 'portfolio', 'collaboration', 'commission', 'showcase',
+      'work-in-progress', 'feedback', 'milestone', 'learning', 'tutorial', 'process',
+      'challenge', 'inspiration', 'behind-the-scenes', 'creative-block', 'breakthrough'
     ];
 
     // Count which curated tags actually appear in posts
     const counts = new Map<string, number>();
     posts.forEach((p) => 
       p.tags.forEach((t) => {
-        if (entrepreneurshipTags.includes(t)) {
+        if (creativeTags.includes(t)) {
           counts.set(t, (counts.get(t) || 0) + 1);
         }
       })
@@ -187,9 +199,9 @@ const CommunityFeed: React.FC = () => {
 
     // Return curated tags sorted by frequency, with unused ones at the end
     const usedTags = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([t]) => t);
-    const unusedTags = entrepreneurshipTags.filter(t => !counts.has(t));
+    const unusedTags = creativeTags.filter(t => !counts.has(t));
     
-    return [...usedTags, ...unusedTags].slice(0, 20); // Limit to top 20 tags
+    return [...usedTags, ...unusedTags].slice(0, 30); // Limit to top 30 tags
   }, [posts]);
 
   const filtered = useMemo(() => {

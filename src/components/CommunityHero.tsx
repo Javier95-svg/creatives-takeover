@@ -11,23 +11,23 @@ const CommunityHero = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <MessageCircle className="h-4 sm:h-5 w-4 sm:w-5 text-primary" />
             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs sm:text-sm">
-              Tell Your Story. Grow with Us.
+              Create. Share. Inspire.
             </Badge>
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-br from-foreground to-primary bg-clip-text text-transparent px-2">
-            Ask for Feedback
+            Creatives Community
           </h1>
           
           <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
-            Connect with fellow entrepreneurs, share your experiences, and learn from real stories that inspire success.
+            A vibrant space for artists, designers, musicians, writers, filmmakers, and all creatives to share work, get feedback, and grow together.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 px-4">
             <Link to="/login" className="w-full sm:w-auto">
               <Button size="lg" className="group w-full sm:w-auto h-12 sm:h-auto touch-manipulation">
                 <Heart className="h-4 sm:h-5 w-4 sm:w-5 mr-2 group-hover:animate-pulse" />
-                Share Your Story
+                Share Your Work
               </Button>
             </Link>
           </div>

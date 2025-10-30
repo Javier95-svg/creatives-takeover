@@ -10,14 +10,14 @@ const CommunityPage = () => {
   return (
     <>
       <Helmet>
-        <title>Creatives Takeover</title>
+        <title>Creatives Community | Share Your Work & Get Feedback</title>
         <meta 
           name="description" 
-          content="Reddit-style community to share entrepreneurial journeys: wins, failures, and lessons. Post stories, discuss, and learn together." 
+          content="Join our vibrant community of artists, designers, musicians, writers, and filmmakers. Share your creative work, get feedback, and connect with fellow creatives." 
         />
-        <meta name="keywords" content="entrepreneur stories, startup lessons, founder community, reddit-style forum, share your journey" />
-        <meta property="og:title" content="Entrepreneur Stories Community" />
-        <meta property="og:description" content="Share your journey. Learn from others. A Reddit-style hub for entrepreneurs." />
+        <meta name="keywords" content="creative community, artist community, designer network, musician collaboration, writer community, filmmaker forum, art feedback, creative showcase" />
+        <meta property="og:title" content="Creatives Community | Share & Connect" />
+        <meta property="og:description" content="A space for all creatives to share work, get feedback, and grow together." />
         <link rel="canonical" href="/community" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
