@@ -76,10 +76,12 @@ const SubscriptionFeatures = () => {
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6">
-            Platform Features
-          </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
+          <div className="mb-6">
+            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+              Platform Features
+            </Badge>
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-bold mb-6 pb-2 gradient-text">
             Everything You Need to Build Your Business
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
