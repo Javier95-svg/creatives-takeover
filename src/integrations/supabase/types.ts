@@ -2841,6 +2841,7 @@ export type Database = {
           created_at: string
           creative_niche: string | null
           credit_balance: number
+          date_of_birth: string | null
           facebook_url: string | null
           followers_count: number
           following_count: number
@@ -2875,6 +2876,7 @@ export type Database = {
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
+          date_of_birth?: string | null
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
@@ -2909,6 +2911,7 @@ export type Database = {
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
+          date_of_birth?: string | null
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
