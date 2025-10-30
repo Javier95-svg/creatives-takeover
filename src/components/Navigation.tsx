@@ -67,9 +67,9 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black">
-      <div className="max-w-[1600px] mx-auto px-6 lg:px-12">
-        <div className="flex items-center h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black border-0">
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
+        <div className="flex items-center h-16 border-0">
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
