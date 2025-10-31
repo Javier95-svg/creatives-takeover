@@ -1,29 +1,18 @@
 import { useEffect, useState } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Sparkles, 
-  Target, 
-  Flame,
-  Rocket
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Flame } from 'lucide-react';
 import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { BusinessHealthScore } from './BusinessHealthScore';
-import { MomentumMeter } from './MomentumMeter';
-import { EnhancedStreakVisualization } from './EnhancedStreakVisualization';
-import { QuickWinZone } from './QuickWinZone';
-import { ProgressTimeline } from './ProgressTimeline';
 import { QuickWinButton } from './QuickWinButton';
 import { RecentWins } from './RecentWins';
+import { AlertsSection } from './AlertsSection';
+import { HeroKPI } from './HeroKPI';
+import { RevenueHub } from './RevenueHub';
+import { QuickActionsPanel } from './QuickActionsPanel';
+import { ProgressTimeline } from './ProgressTimeline';
 import { TaskCalendar } from './TaskCalendar';
-import { DailyPriorities } from './DailyPriorities';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -210,7 +199,7 @@ export const PersonalizedDashboard = () => {
            style={{ animationDuration: '5s', animationDelay: '2s' }} />
 
       {/* Main Content Container */}
-      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
+      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-6">
         {/* Daily Goal Modal */}
         <DailyGoalModal 
           open={showDailyGoal}
@@ -226,17 +215,17 @@ export const PersonalizedDashboard = () => {
           }}
         />
 
-        {/* Welcome Header - More Prominent */}
+        {/* Welcome Header */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-3xl blur-3xl" />
           <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
-            <CardContent className="p-8">
+            <CardContent className="p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                <div className="space-y-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                     {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
                   </h1>
-                  <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
+                  <p className="text-sm sm:text-base text-muted-foreground">
                     {profile?.creative_niche 
                       ? `Let's make progress on your ${profile.creative_niche} journey`
                       : "Track your progress, celebrate wins, and stay consistent"
@@ -244,10 +233,10 @@ export const PersonalizedDashboard = () => {
                   </p>
                 </div>
                 {stats.currentStreak > 0 && (
-                  <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-6 py-3 rounded-full border border-orange-500/20 shadow-sm">
-                    <Flame className="h-6 w-6 text-orange-500" />
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
+                    <Flame className="h-5 w-5 text-orange-500" />
                     <div className="flex flex-col">
-                      <span className="text-2xl font-bold text-orange-500">{stats.currentStreak}</span>
+                      <span className="text-xl font-bold text-orange-500">{stats.currentStreak}</span>
                       <span className="text-xs text-orange-500/80">day streak</span>
                     </div>
                   </div>
@@ -257,47 +246,27 @@ export const PersonalizedDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content Grid - Better Hierarchy */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Progress Timeline (Featured) */}
-          <div className="lg:col-span-2 space-y-6">
-            <ProgressTimeline />
-            
-            {/* Quick Actions - Simplified */}
-            <Card className="backdrop-blur-sm bg-card/95">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Rocket className="h-5 w-5 text-primary" />
-                  Quick Actions
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Link to="/bizmap-ai" className="group">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
-                      <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium">Plan</span>
-                    </Button>
-                  </Link>
-                  <Link to="/community" className="group">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
-                      <Target className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium">Share</span>
-                    </Button>
-                  </Link>
-                  <Link to="/blog" className="group">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
-                      <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium">Learn</span>
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Alerts Section */}
+        <AlertsSection />
 
-            {/* Daily Priorities */}
-            <DailyPriorities />
+        {/* Hero KPI Section */}
+        <HeroKPI />
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Primary Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Revenue Hub */}
+            <RevenueHub />
+            
+            {/* Quick Actions Panel */}
+            <QuickActionsPanel />
+
+            {/* Progress Timeline */}
+            <ProgressTimeline />
           </div>
 
-          {/* Right Column - Sidebar Widgets */}
+          {/* Right Column - Sidebar */}
           <div className="space-y-6">
             {/* Task Calendar */}
             <TaskCalendar />

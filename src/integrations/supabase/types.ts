@@ -337,6 +337,56 @@ export type Database = {
         }
         Relationships: []
       }
+      business_metrics: {
+        Row: {
+          active_users: number | null
+          created_at: string | null
+          customers_count: number | null
+          expenses: number | null
+          hours_worked: number | null
+          id: string
+          metadata: Json | null
+          metric_date: string
+          revenue: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active_users?: number | null
+          created_at?: string | null
+          customers_count?: number | null
+          expenses?: number | null
+          hours_worked?: number | null
+          id?: string
+          metadata?: Json | null
+          metric_date: string
+          revenue?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active_users?: number | null
+          created_at?: string | null
+          customers_count?: number | null
+          expenses?: number | null
+          hours_worked?: number | null
+          id?: string
+          metadata?: Json | null
+          metric_date?: string
+          revenue?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_success_scores: {
         Row: {
           action_recommendations: string[] | null
@@ -1734,6 +1784,48 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_alerts: {
+        Row: {
+          action_label: string | null
+          action_link: string | null
+          alert_type: string
+          created_at: string | null
+          dismissed_at: string | null
+          id: string
+          is_dismissed: boolean | null
+          message: string
+          priority: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          action_label?: string | null
+          action_link?: string | null
+          alert_type: string
+          created_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          is_dismissed?: boolean | null
+          message: string
+          priority?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          action_label?: string | null
+          action_link?: string | null
+          alert_type?: string
+          created_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          is_dismissed?: boolean | null
+          message?: string
+          priority?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dashboard_widgets: {
         Row: {
           created_at: string | null
@@ -2260,6 +2352,51 @@ export type Database = {
           responsibilities?: string[]
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      kpi_goals: {
+        Row: {
+          created_at: string | null
+          current_value: number | null
+          goal_name: string
+          goal_type: string
+          id: string
+          is_active: boolean | null
+          period: string | null
+          target_value: number
+          trend_percentage: number | null
+          unit: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number | null
+          goal_name: string
+          goal_type: string
+          id?: string
+          is_active?: boolean | null
+          period?: string | null
+          target_value: number
+          trend_percentage?: number | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number | null
+          goal_name?: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          period?: string | null
+          target_value?: number
+          trend_percentage?: number | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -3169,6 +3306,51 @@ export type Database = {
           },
         ]
       }
+      revenue_metrics: {
+        Row: {
+          active_customers: number | null
+          churn_rate: number | null
+          churned_customers: number | null
+          conversion_rate: number | null
+          created_at: string | null
+          id: string
+          metric_date: string
+          mrr: number | null
+          new_customers: number | null
+          total_revenue: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active_customers?: number | null
+          churn_rate?: number | null
+          churned_customers?: number | null
+          conversion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          mrr?: number | null
+          new_customers?: number | null
+          total_revenue?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active_customers?: number | null
+          churn_rate?: number | null
+          churned_customers?: number | null
+          conversion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          mrr?: number | null
+          new_customers?: number | null
+          total_revenue?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sprint_accountability: {
         Row: {
           accountability_partner_id: string | null
@@ -3426,6 +3608,45 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_connections: {
+        Row: {
+          access_token: string | null
+          connected_at: string | null
+          created_at: string | null
+          id: string
+          is_connected: boolean | null
+          last_sync_at: string | null
+          refresh_token: string | null
+          stripe_account_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          stripe_account_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          stripe_account_id?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
