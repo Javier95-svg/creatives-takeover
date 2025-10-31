@@ -337,56 +337,6 @@ export type Database = {
         }
         Relationships: []
       }
-      business_metrics: {
-        Row: {
-          active_users: number | null
-          created_at: string | null
-          customers_count: number | null
-          expenses: number | null
-          hours_worked: number | null
-          id: string
-          metadata: Json | null
-          metric_date: string
-          revenue: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          active_users?: number | null
-          created_at?: string | null
-          customers_count?: number | null
-          expenses?: number | null
-          hours_worked?: number | null
-          id?: string
-          metadata?: Json | null
-          metric_date: string
-          revenue?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          active_users?: number | null
-          created_at?: string | null
-          customers_count?: number | null
-          expenses?: number | null
-          hours_worked?: number | null
-          id?: string
-          metadata?: Json | null
-          metric_date?: string
-          revenue?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_metrics_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       business_success_scores: {
         Row: {
           action_recommendations: string[] | null

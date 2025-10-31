@@ -23,17 +23,11 @@ interface CheckIn {
   goal_achieved: boolean | null;
 }
 
-interface Sprint {
-  end_date: string;
-  status: string;
-}
-
 export const TaskCalendar = () => {
   const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
-  const [sprints, setSprints] = useState<Sprint[]>([]);
   const [selectedDateTasks, setSelectedDateTasks] = useState<Task[]>([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -57,7 +51,7 @@ export const TaskCalendar = () => {
     if (!user) return;
 
     try {
-      const [tasksRes, checkInsRes, sprintsRes] = await Promise.all([
+      const [tasksRes, checkInsRes] = await Promise.all([
         supabase
           .from('daily_tasks')
           .select('*')
@@ -66,21 +60,14 @@ export const TaskCalendar = () => {
         supabase
           .from('daily_check_ins')
           .select('check_in_date, goal_achieved')
-          .eq('user_id', user.id),
-        supabase
-          .from('sprints')
-          .select('end_date, status')
           .eq('user_id', user.id)
-          .in('status', ['active', 'pending'])
       ]);
 
       if (tasksRes.error) throw tasksRes.error;
       if (checkInsRes.error) throw checkInsRes.error;
-      if (sprintsRes.error) throw sprintsRes.error;
 
       setTasks(tasksRes.data || []);
       setCheckIns(checkInsRes.data || []);
-      setSprints(sprintsRes.data || []);
     } catch (error) {
       console.error('Error fetching calendar data:', error);
     } finally {
@@ -138,13 +125,11 @@ export const TaskCalendar = () => {
             className={cn("rounded-md border pointer-events-auto")}
             modifiers={{
               hasCheckIn: (day) => checkIns.some(c => isSameDay(new Date(c.check_in_date), day)),
-              hasTasks: (day) => tasks.some(t => isSameDay(new Date(t.task_date), day)),
-              hasSprintDeadline: (day) => sprints.some(s => isSameDay(new Date(s.end_date), day))
+              hasTasks: (day) => tasks.some(t => isSameDay(new Date(t.task_date), day))
             }}
             modifiersClassNames={{
               hasCheckIn: "font-bold text-primary",
-              hasTasks: "ring-1 ring-orange-500/50",
-              hasSprintDeadline: "ring-2 ring-purple-500/50 bg-purple-500/10"
+              hasTasks: "ring-1 ring-orange-500/50"
             }}
           />
 
@@ -214,12 +199,12 @@ export const TaskCalendar = () => {
               <span>Check-in</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-orange-500" />
-              <span>Tasks</span>
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>Completed</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
-              <span>Sprint Deadline</span>
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <span>Pending</span>
             </div>
           </div>
         </CardContent>

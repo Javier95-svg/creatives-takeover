@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -8,20 +8,22 @@ import {
   Sparkles, 
   Target, 
   Flame,
-  TrendingUp,
-  CheckCircle,
-  Calendar,
-  MessageSquare,
-  BarChart3,
-  Zap
+  Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DailyGoalModal } from './DailyGoalModal';
-import { TaskCalendar } from './TaskCalendar';
-import { UnifiedTimeline } from './UnifiedTimeline';
-import { BusinessMetrics } from './BusinessMetrics';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { BusinessHealthScore } from './BusinessHealthScore';
+import { MomentumMeter } from './MomentumMeter';
+import { EnhancedStreakVisualization } from './EnhancedStreakVisualization';
+import { QuickWinZone } from './QuickWinZone';
+import { ProgressTimeline } from './ProgressTimeline';
+import { QuickWinButton } from './QuickWinButton';
+import { RecentWins } from './RecentWins';
+import { TaskCalendar } from './TaskCalendar';
+import { DailyPriorities } from './DailyPriorities';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -36,6 +38,7 @@ export const PersonalizedDashboard = () => {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [winsRefreshTrigger, setWinsRefreshTrigger] = useState(0);
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -122,8 +125,92 @@ export const PersonalizedDashboard = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Tech Background Base */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/30 via-blue-950/20 to-slate-900/40" />
+      
+      {/* Circuit Grid Pattern */}
+      <div className="absolute inset-0 opacity-[0.08]">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px)
+          `,
+          backgroundSize: '100px 100px, 100px 100px, 25px 25px, 25px 25px'
+        }} />
+      </div>
+
+      {/* Animated Hexagons - Top Right */}
+      <div className="absolute top-20 right-20 opacity-20">
+        {[...Array(2)].map((_, i) => (
+          <div key={`hex-top-${i}`} className="absolute w-32 h-32" style={{ 
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            border: '1px solid',
+            borderColor: `hsl(var(--primary) / ${0.4 - i * 0.15})`,
+            transform: `scale(${1 + i * 0.3})`,
+            animation: `spin ${30 - i * 5}s linear infinite ${i % 2 === 0 ? 'normal' : 'reverse'}`
+          }} />
+        ))}
+      </div>
+
+      {/* Animated Hexagons - Bottom Left */}
+      <div className="absolute bottom-20 left-20 opacity-15">
+        {[...Array(2)].map((_, i) => (
+          <div key={`hex-bottom-${i}`} className="absolute w-24 h-24" style={{ 
+            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+            border: '1px solid',
+            borderColor: `hsl(var(--secondary) / ${0.3 - i * 0.1})`,
+            transform: `scale(${1 + i * 0.25})`,
+            animation: `spin ${25 - i * 4}s linear infinite reverse`
+          }} />
+        ))}
+      </div>
+
+      {/* Scanning Lines Animation */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
+             style={{ animation: 'slideDown 10s ease-in-out infinite' }} />
+        <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary/20 to-transparent" 
+             style={{ animation: 'slideRight 12s ease-in-out infinite', animationDelay: '2s' }} />
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute top-1/2 left-10 pointer-events-none">
+        {[...Array(4)].map((_, i) => (
+          <div key={`particle-left-${i}`} 
+               className="absolute w-1 h-1 bg-primary/40 rounded-full"
+               style={{
+                 animation: `float ${8 + i * 2}s ease-in-out infinite`,
+                 animationDelay: `${i * 1.5}s`,
+                 left: `${i * 20}px`,
+                 top: `${i * -30}px`
+               }} />
+        ))}
+      </div>
+
+      <div className="absolute bottom-1/3 right-10 pointer-events-none">
+        {[...Array(3)].map((_, i) => (
+          <div key={`particle-right-${i}`} 
+               className="absolute w-1 h-1 bg-secondary/30 rounded-full"
+               style={{
+                 animation: `float ${7 + i * 1.5}s ease-in-out infinite`,
+                 animationDelay: `${i * 1.2}s`,
+                 right: `${i * 25}px`,
+                 bottom: `${i * -25}px`
+               }} />
+        ))}
+      </div>
+
+      {/* Pulsing Glow Orbs */}
+      <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse opacity-30" 
+           style={{ animationDuration: '4s' }} />
+      <div className="absolute bottom-1/4 right-1/3 w-48 h-48 bg-secondary/10 rounded-full blur-3xl animate-pulse opacity-20" 
+           style={{ animationDuration: '5s', animationDelay: '2s' }} />
+
+      {/* Main Content Container */}
+      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-8">
         {/* Daily Goal Modal */}
         <DailyGoalModal 
           open={showDailyGoal}
@@ -139,217 +226,89 @@ export const PersonalizedDashboard = () => {
           }}
         />
 
-        {/* Welcome Header */}
-        <Card className="border-primary/20 shadow-lg">
-          <CardContent className="p-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                  {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
-                </h1>
-                <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
-                  {profile?.creative_niche 
-                    ? `Let's make progress on your ${profile.creative_niche} journey`
-                    : "Track your progress, celebrate wins, and stay consistent"
-                  }
-                </p>
-              </div>
-              {stats.currentStreak > 0 && (
-                <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-6 py-3 rounded-full border border-orange-500/20 shadow-sm">
-                  <Flame className="h-6 w-6 text-orange-500" />
-                  <div className="flex flex-col">
-                    <span className="text-2xl font-bold text-orange-500">{stats.currentStreak}</span>
-                    <span className="text-xs text-orange-500/80">day streak</span>
-                  </div>
+        {/* Welcome Header - More Prominent */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-3xl blur-3xl" />
+          <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
+            <CardContent className="p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                    {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
+                  </h1>
+                  <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
+                    {profile?.creative_niche 
+                      ? `Let's make progress on your ${profile.creative_niche} journey`
+                      : "Track your progress, celebrate wins, and stay consistent"
+                    }
+                  </p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Main Content Grid: Two Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Stats & Actions */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="border-primary/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Sprints</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.activeSprints}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Current projects in progress
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-primary/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed Sessions</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.completedSessions}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Total sessions completed
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-primary/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Daily Check-ins</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalCheckIns}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Total days checked in
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-primary/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-                  <Flame className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.currentStreak}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.currentStreak === 0 ? 'Check in today!' : 'Keep it going!'}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Dream2Plan Chat
-              </CardTitle>
-              <CardDescription>
-                Brainstorm and plan your next project
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/dream2plan">
-                <Button className="w-full">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Start Planning
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Sprint Planning
-              </CardTitle>
-              <CardDescription>
-                Create and manage your project sprints
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/accountability">
-                <Button className="w-full" variant="secondary">
-                  <Zap className="h-4 w-4 mr-2" />
-                  View Sprints
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Community
-              </CardTitle>
-              <CardDescription>
-                Connect with other creators
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to="/community">
-                <Button className="w-full" variant="outline">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Explore Community
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Check-in Prompt */}
-        {!hasCheckedInToday && (
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Daily Check-in</h3>
-                  <p className="text-sm text-muted-foreground">Set your goal for today and maintain your streak</p>
-                </div>
-                <Button onClick={() => setShowDailyGoal(true)}>
-                  Check In Now
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-          </div>
-
-          {/* Right Column: Calendar & Timeline */}
-          <div className="lg:col-span-1 space-y-6">
-            <TaskCalendar />
-            <UnifiedTimeline />
-          </div>
-        </div>
-
-        {/* Business Metrics Section */}
-        <BusinessMetrics />
-
-        {/* Recommendations */}
-        {data.recommendations.length > 0 && (
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                Recommended for You
-              </CardTitle>
-              <CardDescription>
-                Personalized suggestions based on your activity
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {data.recommendations.map((rec) => (
-                <div key={rec.id} className="flex items-start justify-between p-4 border rounded-lg">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">{rec.title}</h4>
-                      <Badge variant="secondary">{rec.recommendation_type}</Badge>
+                {stats.currentStreak > 0 && (
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-6 py-3 rounded-full border border-orange-500/20 shadow-sm">
+                    <Flame className="h-6 w-6 text-orange-500" />
+                    <div className="flex flex-col">
+                      <span className="text-2xl font-bold text-orange-500">{stats.currentStreak}</span>
+                      <span className="text-xs text-orange-500/80">day streak</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{rec.description}</p>
-                    <p className="text-xs text-muted-foreground italic">{rec.reason}</p>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <Link to={rec.action_url}>
-                      <Button size="sm">Take Action</Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
             </CardContent>
           </Card>
-        )}
+        </div>
+
+        {/* Main Content Grid - Better Hierarchy */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Progress Timeline (Featured) */}
+          <div className="lg:col-span-2 space-y-6">
+            <ProgressTimeline />
+            
+            {/* Quick Actions - Simplified */}
+            <Card className="backdrop-blur-sm bg-card/95">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Rocket className="h-5 w-5 text-primary" />
+                  Quick Actions
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Link to="/bizmap-ai" className="group">
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Plan</span>
+                    </Button>
+                  </Link>
+                  <Link to="/community" className="group">
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <Target className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Share</span>
+                    </Button>
+                  </Link>
+                  <Link to="/blog" className="group">
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Learn</span>
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Daily Priorities */}
+            <DailyPriorities />
+          </div>
+
+          {/* Right Column - Sidebar Widgets */}
+          <div className="space-y-6">
+            {/* Task Calendar */}
+            <TaskCalendar />
+            
+            {/* Recent Wins */}
+            <RecentWins refreshTrigger={winsRefreshTrigger} />
+          </div>
+        </div>
+
+        {/* Floating Quick Win Button */}
+        <QuickWinButton onWinAdded={() => setWinsRefreshTrigger(prev => prev + 1)} />
       </div>
     </div>
   );
