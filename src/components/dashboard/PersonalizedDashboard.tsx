@@ -47,55 +47,101 @@ export const PersonalizedDashboard = () => {
   const [winsRefreshTrigger, setWinsRefreshTrigger] = useState(0);
 
   const [period, setPeriod] = useState<'30d' | '90d' | 'all'>('30d');
-  const { summary: money, items: moneyItems } = useMonetization({ period, contentType: 'all' });
-  const { summary: analytics, trends } = useEngagementAnalytics({ period, contentType: 'all' });
-  const chartData = trends.length ? trends : Array.from({ length: 12 }).map((_, i) => ({
-    date: `Day ${i + 1}`,
-    earnings: 0,
-    engagement: 0,
-  }));
+  const money = useMonetization({ period, contentType: 'all' });
+  const analytics = useEngagementAnalytics({ period, contentType: 'all' });
+  const chartData = analytics.trends.length > 0 
+    ? analytics.trends 
+    : Array.from({ length: 12 }).map((_, i) => ({
+        date: `Day ${i + 1}`,
+        earnings: 0,
+        engagement: 0,
+      }));
   const chartConfig = {
     earnings: { label: 'Earnings', color: 'hsl(var(--primary))' },
     engagement: { label: 'Engagement', color: 'hsl(var(--secondary))' },
   } as const;
 
+  const [stripeLoading, setStripeLoading] = useState(false);
+
   const handleConnectStripe = async () => {
+    if (!user) return;
+    setStripeLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('stripe-connect', {
+        body: { action: 'create_account_link' },
+        headers: { Authorization: `Bearer ${session.data.session.access_token}` }
       });
-      if (error || !data?.url) {
-        window.open('/pricing', '_blank');
-        return;
+      
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No URL received');
       }
-      window.open(data.url, '_blank');
-    } catch {
-      window.open('/pricing', '_blank');
+    } catch (e: any) {
+      console.error('Stripe Connect error:', e);
+      toast.error(e?.message || 'Failed to connect Stripe. Please try again.');
+    } finally {
+      setStripeLoading(false);
     }
   };
 
   const handleWithdraw = async () => {
+    if (!user) return;
+    const amount = money.summary.availableBalance;
+    if (amount <= 0) {
+      toast.error('No available balance to withdraw');
+      return;
+    }
+
+    setStripeLoading(true);
     try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) throw new Error('Not authenticated');
+
       const { data, error } = await supabase.functions.invoke('request-payout', {
-        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+        body: { amount_cents: Math.floor(amount * 100) },
+        headers: { Authorization: `Bearer ${session.data.session.access_token}` }
       });
+      
       if (error) throw error;
-      toast.success('Payout requested successfully');
+      toast.success('Payout requested successfully! Processing may take 2-5 business days.');
+      money.refresh?.();
     } catch (e: any) {
-      toast.info('Withdraw requires Stripe Connect. Redirecting to Account…');
-      window.open('/account', '_blank');
+      console.error('Payout error:', e);
+      if (e?.message?.includes('Stripe Connect')) {
+        toast.error('Please connect your Stripe account first');
+        handleConnectStripe();
+      } else {
+        toast.error(e?.message || 'Failed to request payout. Please try again.');
+      }
+    } finally {
+      setStripeLoading(false);
     }
   };
 
   const handleViewPayments = async () => {
+    if (!user) return;
     try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) throw new Error('Not authenticated');
+
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+        headers: { Authorization: `Bearer ${session.data.session.access_token}` }
       });
-      if (error || !data?.url) throw error;
+      
+      if (error || !data?.url) {
+        // Fallback to account page
+        window.location.href = '/account';
+        return;
+      }
       window.open(data.url, '_blank');
-    } catch {
-      window.open('/account', '_blank');
+    } catch (e: any) {
+      console.error('View payments error:', e);
+      window.location.href = '/account';
     }
   };
 
@@ -322,32 +368,53 @@ export const PersonalizedDashboard = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2"><DollarSign className="h-5 w-5" /> Monetization</CardTitle>
               <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={handleConnectStripe}>Connect Stripe</Button>
-                <Button size="sm" onClick={handleWithdraw}>Withdraw Earnings</Button>
+                <Button size="sm" variant="secondary" onClick={handleConnectStripe} disabled={stripeLoading}>
+                  {stripeLoading ? 'Loading...' : 'Connect Stripe'}
+                </Button>
+                <Button size="sm" onClick={handleWithdraw} disabled={stripeLoading || money.loading || money.summary.availableBalance <= 0}>
+                  {stripeLoading ? 'Processing...' : 'Withdraw Earnings'}
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Total This Month</div>
-                <div className="text-2xl font-bold">${money.totalEarningsThisMonth.toFixed(2)}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Tips Received</div>
-                <div className="text-2xl font-bold">${money.tipsReceived.toFixed(2)}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Paid Events/Content</div>
-                <div className="text-2xl font-bold">${money.paidContentEarnings.toFixed(2)}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Balance Available</div>
-                <div className="text-2xl font-bold">${money.availableBalance.toFixed(2)}</div>
-              </div>
-              <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 mt-1">
-                <Button size="sm" variant="outline" onClick={handleViewPayments}>View Payment History</Button>
-                <Button size="sm" variant="outline" onClick={() => window.open('/events/new?paid=true', '_blank')}>Host Paid Event</Button>
-                <Button size="sm" variant="outline" onClick={() => window.open('/content/new?premium=true', '_blank')}>Sell Premium Content</Button>
-              </div>
+            <CardContent>
+              {money.loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                </div>
+              ) : money.error ? (
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-destructive">{money.error}</p>
+                  <Button size="sm" variant="outline" className="mt-2" onClick={() => money.refresh?.()}>
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Total This Month</div>
+                      <div className="text-2xl font-bold">${money.summary.totalEarningsThisMonth.toFixed(2)}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Tips Received</div>
+                      <div className="text-2xl font-bold">${money.summary.tipsReceived.toFixed(2)}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Paid Events/Content</div>
+                      <div className="text-2xl font-bold">${money.summary.paidContentEarnings.toFixed(2)}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Balance Available</div>
+                      <div className="text-2xl font-bold">${money.summary.availableBalance.toFixed(2)}</div>
+                    </div>
+                  </div>
+                  <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 mt-4">
+                    <Button size="sm" variant="outline" onClick={handleViewPayments}>View Payment History</Button>
+                    <Button size="sm" variant="outline" onClick={() => window.open('/events/new?paid=true', '_blank')}>Host Paid Event</Button>
+                    <Button size="sm" variant="outline" onClick={() => window.open('/content/new?premium=true', '_blank')}>Sell Premium Content</Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -358,29 +425,48 @@ export const PersonalizedDashboard = () => {
                 <Button size="sm" variant="secondary" onClick={() => window.open('/analytics', '_blank')}>Open Dashboard</Button>
               </div>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Profile Views</div>
-                <div className="text-2xl font-bold">{analytics.profileViews}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Post Engagement</div>
-                <div className="text-2xl font-bold">{analytics.postEngagement}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Follower Growth</div>
-                <div className="text-2xl font-bold flex items-center gap-1"><TrendingUp className="h-5 w-5" />{analytics.followerGrowth}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="text-xs text-muted-foreground">Stories Shared</div>
-                <div className="text-2xl font-bold">{analytics.successStoriesShared}</div>
-              </div>
-              <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 mt-1">
-                {analytics.revenueMilestones.map((m) => (
-                  <Badge key={m} variant="secondary" className="flex items-center gap-1"><Star className="h-3 w-3" /> {m}</Badge>
-                ))}
-                <Badge variant="secondary" className="flex items-center gap-1"><Flame className="h-3 w-3" /> Streaks Live</Badge>
-              </div>
+            <CardContent>
+              {analytics.loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                </div>
+              ) : analytics.error ? (
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-destructive">{analytics.error}</p>
+                  <Button size="sm" variant="outline" className="mt-2" onClick={() => analytics.refresh?.()}>
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Profile Views</div>
+                      <div className="text-2xl font-bold">{analytics.summary.profileViews}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Post Engagement</div>
+                      <div className="text-2xl font-bold">{analytics.summary.postEngagement}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Follower Growth</div>
+                      <div className="text-2xl font-bold flex items-center gap-1"><TrendingUp className="h-5 w-5" />{analytics.summary.followerGrowth}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <div className="text-xs text-muted-foreground">Stories Shared</div>
+                      <div className="text-2xl font-bold">{analytics.summary.successStoriesShared}</div>
+                    </div>
+                  </div>
+                  <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 mt-4">
+                    {analytics.summary.revenueMilestones.length > 0 ? (
+                      analytics.summary.revenueMilestones.map((m) => (
+                        <Badge key={m} variant="secondary" className="flex items-center gap-1"><Star className="h-3 w-3" /> {m}</Badge>
+                      ))
+                    ) : null}
+                    <Badge variant="secondary" className="flex items-center gap-1"><Flame className="h-3 w-3" /> Streaks Live</Badge>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -418,23 +504,30 @@ export const PersonalizedDashboard = () => {
               <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5" /> Recent Tips & Sales</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {moneyItems.slice(0, 6).map((it) => (
-                <div key={it.id} className="flex items-center justify-between border rounded-md p-3">
-                  <div className="flex items-center gap-2">
-                    {it.type === 'tip' ? <Gift className="h-4 w-4" /> : it.type === 'payout' ? <Wallet className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
-                    <div className="text-sm">
-                      <div className="font-medium capitalize">{it.type}</div>
-                      <div className="text-xs text-muted-foreground">{new Date(it.created_at).toLocaleDateString()}</div>
+              {money.loading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+              ) : money.error ? (
+                <div className="text-sm text-destructive">{money.error}</div>
+              ) : money.items.length > 0 ? (
+                money.items.slice(0, 6).map((it) => (
+                  <div key={it.id} className="flex items-center justify-between border rounded-md p-3">
+                    <div className="flex items-center gap-2">
+                      {it.type === 'tip' ? <Gift className="h-4 w-4" /> : it.type === 'payout' ? <Wallet className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
+                      <div className="text-sm">
+                        <div className="font-medium capitalize">{it.type}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(it.created_at).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">${it.amount.toFixed(2)}</div>
+                      <Badge variant="outline" className="capitalize text-xs">{it.status}</Badge>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">${it.amount.toFixed(2)}</div>
-                    <Badge variant="outline" className="capitalize text-xs">{it.status}</Badge>
-                  </div>
-                </div>
-              ))}
-              {moneyItems.length === 0 && (
-                <div className="text-sm text-muted-foreground">No recent transactions</div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-4">No recent transactions</div>
               )}
             </CardContent>
           </Card>
