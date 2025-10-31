@@ -82,7 +82,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
     try {
       setUploading(true);
       const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const fileName = `${userId}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -151,10 +151,11 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
     if (!confirm('Are you sure you want to delete this photo?')) return;
 
     try {
-      // Extract filename from URL
-      const fileName = imageUrl.split('/').pop();
-      if (fileName) {
-        await supabase.storage.from('avatars').remove([fileName]);
+      // Extract full path from URL (includes userId folder)
+      const urlParts = imageUrl.split('/avatars/');
+      const filePath = urlParts[1] || imageUrl.split('/').pop();
+      if (filePath) {
+        await supabase.storage.from('avatars').remove([filePath]);
       }
 
       const { error } = await supabase
