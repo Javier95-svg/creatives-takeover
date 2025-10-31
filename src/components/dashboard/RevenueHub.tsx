@@ -4,9 +4,14 @@ import { DollarSign, TrendingUp, Users, CreditCard } from 'lucide-react';
 import { useRevenueMetrics } from '@/hooks/useRevenueMetrics';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export const RevenueHub = () => {
   const { latestMetrics, metrics, isLoading, isStripeConnected, getTrend } = useRevenueMetrics(30);
+
+  const handleConnectStripe = () => {
+    toast.info('Stripe integration coming soon! For now, you can manually enter revenue metrics.');
+  };
 
   if (isLoading) {
     return (
@@ -42,7 +47,7 @@ export const RevenueHub = () => {
           Revenue Hub
         </CardTitle>
         {!isStripeConnected && (
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleConnectStripe}>
             <CreditCard className="h-4 w-4" />
             Connect Stripe
           </Button>
