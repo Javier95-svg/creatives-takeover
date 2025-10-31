@@ -233,7 +233,7 @@ export const PersonalizedDashboard = () => {
                     {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
                   </h1>
                   <p className="text-sm sm:text-base text-muted-foreground max-w-3xl">
-                    Your command center for tracking KPIs, revenue metrics, quick actions, and progress—all the tools you need to grow your {profile?.creative_niche || 'entrepreneurial'} business.
+                    Your command center for tracking KPIs, revenue metrics, quick actions, and progress—all the tools you need to grow your venture and track your journey
                   </p>
                 </div>
                 {stats.currentStreak > 0 && (
