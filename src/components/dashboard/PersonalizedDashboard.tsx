@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -24,6 +24,12 @@ import { QuickWinButton } from './QuickWinButton';
 import { RecentWins } from './RecentWins';
 import { TaskCalendar } from './TaskCalendar';
 import { DailyPriorities } from './DailyPriorities';
+import { useMonetization } from '@/hooks/useMonetization';
+import { useEngagementAnalytics } from '@/hooks/useEngagementAnalytics';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { DollarSign, BarChart3, TrendingUp, Wallet, Star, Gift } from 'lucide-react';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -39,6 +45,59 @@ export const PersonalizedDashboard = () => {
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [winsRefreshTrigger, setWinsRefreshTrigger] = useState(0);
+
+  const [period, setPeriod] = useState<'30d' | '90d' | 'all'>('30d');
+  const { summary: money, items: moneyItems } = useMonetization({ period, contentType: 'all' });
+  const { summary: analytics, trends } = useEngagementAnalytics({ period, contentType: 'all' });
+  const chartData = trends.length ? trends : Array.from({ length: 12 }).map((_, i) => ({
+    date: `Day ${i + 1}`,
+    earnings: 0,
+    engagement: 0,
+  }));
+  const chartConfig = {
+    earnings: { label: 'Earnings', color: 'hsl(var(--primary))' },
+    engagement: { label: 'Engagement', color: 'hsl(var(--secondary))' },
+  } as const;
+
+  const handleConnectStripe = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+      });
+      if (error || !data?.url) {
+        window.open('/pricing', '_blank');
+        return;
+      }
+      window.open(data.url, '_blank');
+    } catch {
+      window.open('/pricing', '_blank');
+    }
+  };
+
+  const handleWithdraw = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('request-payout', {
+        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+      });
+      if (error) throw error;
+      toast.success('Payout requested successfully');
+    } catch (e: any) {
+      toast.info('Withdraw requires Stripe Connect. Redirecting to Account…');
+      window.open('/account', '_blank');
+    }
+  };
+
+  const handleViewPayments = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+      });
+      if (error || !data?.url) throw error;
+      window.open(data.url, '_blank');
+    } catch {
+      window.open('/account', '_blank');
+    }
+  };
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -257,6 +316,130 @@ export const PersonalizedDashboard = () => {
           </Card>
         </div>
 
+        {/* Monetization and Analytics Highlights */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2"><DollarSign className="h-5 w-5" /> Monetization</CardTitle>
+              <div className="flex gap-2">
+                <Button size="sm" variant="secondary" onClick={handleConnectStripe}>Connect Stripe</Button>
+                <Button size="sm" onClick={handleWithdraw}>Withdraw Earnings</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Total This Month</div>
+                <div className="text-2xl font-bold">${money.totalEarningsThisMonth.toFixed(2)}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Tips Received</div>
+                <div className="text-2xl font-bold">${money.tipsReceived.toFixed(2)}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Paid Events/Content</div>
+                <div className="text-2xl font-bold">${money.paidContentEarnings.toFixed(2)}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Balance Available</div>
+                <div className="text-2xl font-bold">${money.availableBalance.toFixed(2)}</div>
+              </div>
+              <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 mt-1">
+                <Button size="sm" variant="outline" onClick={handleViewPayments}>View Payment History</Button>
+                <Button size="sm" variant="outline" onClick={() => window.open('/events/new?paid=true', '_blank')}>Host Paid Event</Button>
+                <Button size="sm" variant="outline" onClick={() => window.open('/content/new?premium=true', '_blank')}>Sell Premium Content</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Analytics</CardTitle>
+              <div className="flex gap-2">
+                <Button size="sm" variant="secondary" onClick={() => window.open('/analytics', '_blank')}>Open Dashboard</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Profile Views</div>
+                <div className="text-2xl font-bold">{analytics.profileViews}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Post Engagement</div>
+                <div className="text-2xl font-bold">{analytics.postEngagement}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Follower Growth</div>
+                <div className="text-2xl font-bold flex items-center gap-1"><TrendingUp className="h-5 w-5" />{analytics.followerGrowth}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground">Stories Shared</div>
+                <div className="text-2xl font-bold">{analytics.successStoriesShared}</div>
+              </div>
+              <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 mt-1">
+                {analytics.revenueMilestones.map((m) => (
+                  <Badge key={m} variant="secondary" className="flex items-center gap-1"><Star className="h-3 w-3" /> {m}</Badge>
+                ))}
+                <Badge variant="secondary" className="flex items-center gap-1"><Flame className="h-3 w-3" /> Streaks Live</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Trends + Recent Transactions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Earnings & Engagement</CardTitle>
+                <Tabs value={period} onValueChange={(v) => setPeriod(v as any)}>
+                  <TabsList>
+                    <TabsTrigger value="30d">30d</TabsTrigger>
+                    <TabsTrigger value="90d">90d</TabsTrigger>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="w-full">
+                <LineChart data={chartData} margin={{ left: 12, right: 12, top: 12, bottom: 12 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" hide tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} width={40} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="earnings" stroke="var(--color-earnings)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="engagement" stroke="var(--color-engagement)" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5" /> Recent Tips & Sales</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {moneyItems.slice(0, 6).map((it) => (
+                <div key={it.id} className="flex items-center justify-between border rounded-md p-3">
+                  <div className="flex items-center gap-2">
+                    {it.type === 'tip' ? <Gift className="h-4 w-4" /> : it.type === 'payout' ? <Wallet className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
+                    <div className="text-sm">
+                      <div className="font-medium capitalize">{it.type}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(it.created_at).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">${it.amount.toFixed(2)}</div>
+                    <Badge variant="outline" className="capitalize text-xs">{it.status}</Badge>
+                  </div>
+                </div>
+              ))}
+              {moneyItems.length === 0 && (
+                <div className="text-sm text-muted-foreground">No recent transactions</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Main Content Grid - Better Hierarchy */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Progress Timeline (Featured) */}
@@ -309,6 +492,28 @@ export const PersonalizedDashboard = () => {
 
         {/* Floating Quick Win Button */}
         <QuickWinButton onWinAdded={() => setWinsRefreshTrigger(prev => prev + 1)} />
+
+        {/* Support / Docs Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>How to monetize your expertise</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">Step-by-step guide to tips, paid events, and premium content.</p>
+              <Button variant="outline" onClick={() => window.open('https://creatives-takeover.com/docs/monetize', '_blank')}>Read Guide</Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Understanding your dashboard analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">Learn how we calculate views, engagement, and milestones.</p>
+              <Button variant="outline" onClick={() => window.open('https://creatives-takeover.com/docs/analytics', '_blank')}>Learn More</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
