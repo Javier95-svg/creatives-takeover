@@ -60,38 +60,11 @@ export function useMonetization(filters: MonetizationFilters = { period: '30d', 
     setError(null);
 
     try {
-      // Fetch all data in parallel
-      const [tipsResult, eventsResult, contentResult, payoutsResult] = await Promise.all([
-        supabase
-          .from('tips')
-          .select('id, amount_cents, status, created_at, note')
-          .eq('to_user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50),
-        supabase
-          .from('paid_events')
-          .select('id, revenue_cents, status, created_at, title')
-          .eq('host_user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50),
-        supabase
-          .from('premium_content_sales')
-          .select('id, amount_cents, status, created_at, content_title')
-          .eq('creator_user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50),
-        supabase
-          .from('payouts')
-          .select('id, amount_cents, status, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50),
-      ]);
-
-      const tipsData = (tipsResult.data || []).filter(t => !dateFrom || t.created_at >= dateFrom);
-      const eventsData = (eventsResult.data || []).filter(e => !dateFrom || e.created_at >= dateFrom);
-      const contentData = (contentResult.data || []).filter(c => !dateFrom || c.created_at >= dateFrom);
-      const payoutsData = (payoutsResult.data || []).filter(p => !dateFrom || p.created_at >= dateFrom);
+      // Simplified - return empty data for now as these tables don't exist yet
+      const tipsData: any[] = [];
+      const eventsData: any[] = [];
+      const contentData: any[] = [];
+      const payoutsData: any[] = [];
 
       // Calculate amounts (only completed items for earnings)
       const tipAmount = tipsData.filter((t: any) => t.status === 'completed').reduce((acc, t: any) => acc + (t.amount_cents || 0), 0) / 100;

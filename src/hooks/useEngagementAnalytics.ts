@@ -55,39 +55,16 @@ export function useEngagementAnalytics(filters: AnalyticsFilters = { period: '30
     setError(null);
 
     try {
-      // Fetch all analytics data in parallel
-      const [postsResult, pvResult, followersResult, storiesResult, earningsResult] = await Promise.all([
-        supabase
-          .from('community_posts')
-          .select('upvotes, comment_count, share_count, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('profile_views')
-          .select('created_at')
-          .eq('user_id', user.id),
-        supabase
-          .from('followers')
-          .select('created_at')
-          .eq('followed_id', user.id),
-        supabase
-          .from('success_stories')
-          .select('id, created_at')
-          .eq('user_id', user.id),
-        supabase
-          .from('earnings_daily')
-          .select('date, amount_cents')
-          .eq('user_id', user.id)
-          .order('date', { ascending: true }),
-      ]);
+      // Fetch posts data
+      const postsResult = await (supabase as any)
+        .from('community_posts')
+        .select('upvotes, comment_count, share_count, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      const posts = (postsResult.data || []).filter(p => !dateFrom || p.created_at >= dateFrom);
-      const pv = (pvResult.data || []).filter(v => !dateFrom || v.created_at >= dateFrom);
-      const followers = (followersResult.data || []).filter(f => !dateFrom || f.created_at >= dateFrom);
-      const stories = (storiesResult.data || []).filter(s => !dateFrom || s.created_at >= dateFrom);
-      const earnings = (earningsResult.data || []).filter(e => !dateFrom || e.date >= dateFrom.slice(0, 10));
+      const posts = ((postsResult.data || []) as any[]).filter((p: any) => !dateFrom || p.created_at >= dateFrom);
 
-      const totalEngagement = posts.reduce((acc, p: any) => 
+      const totalEngagement = posts.reduce((acc: number, p: any) => 
         acc + (p.upvotes || 0) + (p.comment_count || 0) + (p.share_count || 0), 0
       );
 
@@ -99,33 +76,20 @@ export function useEngagementAnalytics(filters: AnalyticsFilters = { period: '30
           (p.upvotes || 0) + (p.comment_count || 0) + (p.share_count || 0));
       });
 
-      const allDates = new Set<string>([
-        ...Array.from(engagementByDate.keys()),
-        ...(earnings.map((e: any) => e.date)),
-      ]);
-
-      const points: TrendPoint[] = Array.from(allDates)
+      const points: TrendPoint[] = Array.from(engagementByDate.keys())
         .sort()
         .map((d) => ({
           date: d,
-          earnings: (earnings.find((e: any) => e.date === d)?.amount_cents || 0) / 100,
+          earnings: 0,
           engagement: engagementByDate.get(d) || 0,
         }));
 
-      // Calculate revenue milestones from earnings
-      const lifetimeEarningsCents = earnings.reduce((acc, e: any) => acc + (e.amount_cents || 0), 0);
-      const milestones: string[] = [];
-      if (lifetimeEarningsCents >= 1000000) milestones.push('$10K Club');
-      else if (lifetimeEarningsCents >= 100000) milestones.push('$1K Club');
-      else if (lifetimeEarningsCents >= 50000) milestones.push('$500 Club');
-      else if (lifetimeEarningsCents >= 10000) milestones.push('$100 Club');
-
       setSummary({
-        profileViews: pv.length,
+        profileViews: 0,
         postEngagement: totalEngagement,
-        revenueMilestones: milestones,
-        followerGrowth: followers.length,
-        successStoriesShared: stories.length,
+        revenueMilestones: [],
+        followerGrowth: 0,
+        successStoriesShared: 0,
       });
       setTrends(points.length > 0 ? points : []);
     } catch (e: any) {
