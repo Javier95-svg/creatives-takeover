@@ -1,15 +1,66 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DollarSign, TrendingUp, Users, CreditCard, AlertCircle } from 'lucide-react';
-import { useRevenueMetrics } from '@/hooks/useRevenueMetrics';
+import { DollarSign, TrendingUp, Users, Edit2, Badge } from 'lucide-react';
+import { useKPIGoals } from '@/hooks/useKPIGoals';
 import { toast } from 'sonner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState } from 'react';
 
 export const RevenueHub = () => {
-  const { latestMetrics, isLoading, isStripeConnected, isStripeConfigured, hasStripeAccount, getTrend } = useRevenueMetrics();
+  const { goals, isLoading, updateGoal, createGoal } = useKPIGoals();
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editValues, setEditValues] = useState({
+    current: 0,
+    target: 10000,
+  });
 
-  const handleConnectStripe = () => {
-    toast.info('To connect Stripe, please add your STRIPE_SECRET_KEY in the Supabase secrets configuration.');
+  // Get or create revenue goal
+  const revenueGoal = goals.find(g => g.goal_type === 'revenue') || {
+    id: 'temp',
+    goal_type: 'revenue' as const,
+    goal_name: 'Monthly Revenue',
+    current_value: 0,
+    target_value: 10000,
+    unit: '$',
+    trend_percentage: 0,
+    period: 'monthly' as const,
+    is_active: true,
+  };
+
+  const handleSaveRevenue = async () => {
+    if (revenueGoal.id === 'temp') {
+      // Create new goal
+      createGoal({
+        goal_type: 'revenue',
+        goal_name: 'Monthly Revenue',
+        current_value: editValues.current,
+        target_value: editValues.target,
+        unit: '$',
+        trend_percentage: 0,
+        period: 'monthly',
+        is_active: true,
+      });
+    } else {
+      // Update existing goal
+      updateGoal({
+        id: revenueGoal.id,
+        updates: {
+          current_value: editValues.current,
+          target_value: editValues.target,
+        },
+      });
+    }
+    setIsEditOpen(false);
+  };
+
+  const openEditDialog = () => {
+    setEditValues({
+      current: revenueGoal.current_value,
+      target: revenueGoal.target_value,
+    });
+    setIsEditOpen(true);
   };
 
   if (isLoading) {
@@ -27,7 +78,9 @@ export const RevenueHub = () => {
     );
   }
 
-  const mrrTrend = getTrend('mrr');
+  const progressPercentage = revenueGoal.target_value > 0 
+    ? Math.min((revenueGoal.current_value / revenueGoal.target_value) * 100, 100)
+    : 0;
 
   return (
     <Card className="backdrop-blur-sm bg-card/95">
@@ -36,70 +89,88 @@ export const RevenueHub = () => {
           <DollarSign className="h-5 w-5 text-primary" />
           Revenue Hub
         </CardTitle>
-        {!isStripeConnected && (
-          <Button variant="outline" size="sm" className="gap-2 h-8" onClick={handleConnectStripe}>
-            <CreditCard className="h-4 w-4" />
-            Connect Stripe
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+            Stripe: Coming Soon
+          </span>
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 h-8" onClick={openEditDialog}>
+                <Edit2 className="h-4 w-4" />
+                Edit Revenue
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Set Revenue Metrics</DialogTitle>
+                <DialogDescription>
+                  Manually set your current revenue and target for this month.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current">Current Monthly Revenue ($)</Label>
+                  <Input
+                    id="current"
+                    type="number"
+                    value={editValues.current}
+                    onChange={(e) => setEditValues(prev => ({ ...prev, current: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="target">Target Monthly Revenue ($)</Label>
+                  <Input
+                    id="target"
+                    type="number"
+                    value={editValues.target}
+                    onChange={(e) => setEditValues(prev => ({ ...prev, target: parseFloat(e.target.value) || 0 }))}
+                    placeholder="10000"
+                  />
+                </div>
+                <Button onClick={handleSaveRevenue} className="w-full">
+                  Save Changes
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {!isStripeConfigured && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              Connect your Stripe account to see real revenue metrics. Add STRIPE_SECRET_KEY to Supabase secrets.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {isStripeConfigured && !hasStripeAccount && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              No Stripe customer found for your email. Make sure you have a Stripe account.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <DollarSign className="h-4 w-4" />
-              <span>MRR</span>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Monthly Revenue Progress</span>
+              <span className="text-sm font-medium">{progressPercentage.toFixed(0)}%</span>
             </div>
-            <p className="text-2xl font-bold">
-              ${latestMetrics.mrr.toLocaleString()}
-            </p>
-            {mrrTrend !== 0 && (
-              <p className={`text-xs flex items-center gap-1 ${
-                mrrTrend > 0 ? 'text-green-500' : 'text-red-500'
-              }`}>
-                <TrendingUp className={`h-3 w-3 ${mrrTrend < 0 ? 'rotate-180' : ''}`} />
-                {Math.abs(mrrTrend).toFixed(1)}%
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <DollarSign className="h-4 w-4" />
+                <span>Current</span>
+              </div>
+              <p className="text-2xl font-bold">
+                ${revenueGoal.current_value.toLocaleString()}
               </p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>Churn Rate</span>
             </div>
-            <p className="text-2xl font-bold">
-              {latestMetrics.churn_rate.toFixed(1)}%
-            </p>
-          </div>
 
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
-              <span>Conversion</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span>Target</span>
+              </div>
+              <p className="text-2xl font-bold">
+                ${revenueGoal.target_value.toLocaleString()}
+              </p>
             </div>
-            <p className="text-2xl font-bold">
-              {latestMetrics.conversion_rate.toFixed(1)}%
-            </p>
           </div>
         </div>
       </CardContent>
