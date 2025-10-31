@@ -31,7 +31,7 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
   // Track analytics event
   const trackEvent = useCallback(async (event: PageAnalyticsEvent) => {
     try {
-      await safe.insert(() => supabase.from('page_analytics').insert({
+      await safe.insert(async () => await supabase.from('page_analytics').insert({
         user_id: user?.id || null,
         session_id: sessionId.current,
         page_path: event.page_path || pagePath || window.location.pathname,

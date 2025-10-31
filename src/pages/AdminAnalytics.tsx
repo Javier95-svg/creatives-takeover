@@ -70,14 +70,14 @@ const AdminAnalytics = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await safe.select(() =>
-        supabase
+      const { data } = await safe.select(async () =>
+        await (supabase as any)
           .from('activity_events')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(200)
       );
-      setActivityEvents(data || []);
+      setActivityEvents((data as any[]) || []);
     })();
   }, [dateRange]);
 

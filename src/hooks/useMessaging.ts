@@ -45,8 +45,8 @@ export const useMessaging = () => {
 
     const loadConversations = async () => {
       try {
-        const { data, error } = await safe.select(() =>
-          supabase
+        const { data, error } = await safe.select(async () =>
+          await supabase
             .from('conversations')
             .select('*')
             .contains('participants', [user.id])
@@ -89,8 +89,8 @@ export const useMessaging = () => {
 
     const loadMessages = async () => {
       try {
-        const { data, error } = await safe.select(() =>
-          supabase
+        const { data, error } = await safe.select(async () =>
+          await supabase
             .from('messages')
             .select('*')
             .eq('conversation_id', activeConversationId)
@@ -102,8 +102,8 @@ export const useMessaging = () => {
         // Get sender profiles for all messages
         const messagesWithSenders = await Promise.all(
           (data || []).map(async (message) => {
-            const { data: senderData } = await safe.select(() =>
-              supabase
+            const { data: senderData } = await safe.select(async () =>
+              await supabase
                 .from('profiles')
                 .select('id, full_name, avatar_url')
                 .eq('id', message.sender_id)
@@ -192,8 +192,8 @@ export const useMessaging = () => {
       }
 
       // Create new conversation
-      const { data, error } = await safe.insert(() =>
-        supabase
+      const { data, error } = await safe.insert(async () =>
+        await supabase
           .from('conversations')
           .insert({
             participants: [user.id, participantId],
@@ -222,8 +222,8 @@ export const useMessaging = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await safe.insert(() =>
-        supabase
+      const { data, error } = await safe.insert(async () =>
+        await supabase
           .from('messages')
           .insert({
             conversation_id: conversationId,
@@ -239,8 +239,8 @@ export const useMessaging = () => {
       if (error) throw error;
 
       // Update conversation's last message timestamp
-      await safe.update(() =>
-        supabase
+      await safe.update(async () =>
+        await supabase
           .from('conversations')
           .update({ last_message_at: new Date().toISOString() })
           .eq('id', conversationId)
@@ -258,8 +258,8 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
-      const { error } = await safe.update(() =>
-        supabase
+      const { error } = await safe.update(async () =>
+        await supabase
           .from('messages')
           .update({ is_read: true })
           .eq('conversation_id', conversationId)

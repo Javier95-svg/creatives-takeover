@@ -36,8 +36,8 @@ export const useFeedbackWidget = () => {
         referrer: document.referrer,
       };
 
-      const { error } = await safe.insert(() =>
-        supabase.from('page_feedback').insert({
+      const { error } = await safe.insert(async () =>
+        await supabase.from('page_feedback').insert({
           user_id: userId,
           page_path: window.location.pathname,
           page_title: document.title,
