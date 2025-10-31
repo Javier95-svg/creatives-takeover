@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TaskModal } from './TaskModal';
+import { DeadlineConfirmationDialog } from './DeadlineConfirmationDialog';
 
 interface Task {
   id: string;
@@ -110,6 +111,8 @@ export const TaskCalendar = () => {
 
   return (
     <>
+      {user && <DeadlineConfirmationDialog userId={user.id} />}
+      
       <Card className="backdrop-blur-sm bg-card/95">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { CalendarIcon, Loader2, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,27 +26,35 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
   const [taskText, setTaskText] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [taskDate, setTaskDate] = useState<Date | undefined>(selectedDate || new Date());
+  const [deadlineTime, setDeadlineTime] = useState('23:59');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!taskText.trim() || !taskDate || !user) return;
+    if (!taskText.trim() || !taskDate || !deadlineTime || !user) return;
 
     setIsSubmitting(true);
     try {
+      // Combine date and time into a single timestamp
+      const [hours, minutes] = deadlineTime.split(':').map(Number);
+      const deadlineDateTime = new Date(taskDate);
+      deadlineDateTime.setHours(hours, minutes, 0, 0);
+
       const { error } = await supabase
         .from('daily_tasks')
         .insert({
           user_id: user.id,
           task_text: taskText.trim(),
           priority,
-          task_date: format(taskDate, 'yyyy-MM-dd')
+          task_date: format(taskDate, 'yyyy-MM-dd'),
+          deadline_time: deadlineDateTime.toISOString()
         });
 
       if (error) throw error;
 
-      toast.success('Task added successfully!');
+      toast.success('Task added successfully! You\'ll receive reminders every 3 hours.');
       setTaskText('');
       setPriority('medium');
+      setDeadlineTime('23:59');
       onOpenChange(false);
       onTaskAdded?.();
     } catch (error: any) {
@@ -80,7 +89,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
           </div>
 
           <div className="space-y-2">
-            <Label>Task Date</Label>
+            <Label>Task Date *</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -104,6 +113,24 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="deadline-time">Deadline Time *</Label>
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="deadline-time"
+                type="time"
+                value={deadlineTime}
+                onChange={(e) => setDeadlineTime(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              You'll receive reminders every 3 hours until completion
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -144,7 +171,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!taskText.trim() || !taskDate || isSubmitting}
+              disabled={!taskText.trim() || !taskDate || !deadlineTime || isSubmitting}
             >
               {isSubmitting ? (
                 <>

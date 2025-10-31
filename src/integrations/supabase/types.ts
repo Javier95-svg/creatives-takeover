@@ -1731,8 +1731,11 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string | null
+          deadline_reached_popup_shown: boolean | null
+          deadline_time: string | null
           id: string
           is_completed: boolean | null
+          last_reminder_sent: string | null
           priority: string | null
           task_date: string
           task_text: string
@@ -1742,8 +1745,11 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string | null
+          deadline_reached_popup_shown?: boolean | null
+          deadline_time?: string | null
           id?: string
           is_completed?: boolean | null
+          last_reminder_sent?: string | null
           priority?: string | null
           task_date: string
           task_text: string
@@ -1753,8 +1759,11 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string | null
+          deadline_reached_popup_shown?: boolean | null
+          deadline_time?: string | null
           id?: string
           is_completed?: boolean | null
+          last_reminder_sent?: string | null
           priority?: string | null
           task_date?: string
           task_text?: string
