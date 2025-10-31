@@ -6,7 +6,6 @@ import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { QuickWinButton } from './QuickWinButton';
-import { RecentWins } from './RecentWins';
 import { AlertsSection } from './AlertsSection';
 import { HeroKPI } from './HeroKPI';
 import { RevenueHub } from './RevenueHub';
@@ -29,7 +28,6 @@ export const PersonalizedDashboard = () => {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
-  const [winsRefreshTrigger, setWinsRefreshTrigger] = useState(0);
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -274,14 +272,11 @@ export const PersonalizedDashboard = () => {
           <div className="space-y-6">
             {/* Task Calendar */}
             <TaskCalendar />
-            
-            {/* Recent Wins */}
-            <RecentWins refreshTrigger={winsRefreshTrigger} />
           </div>
         </div>
 
         {/* Floating Quick Win Button */}
-        <QuickWinButton onWinAdded={() => setWinsRefreshTrigger(prev => prev + 1)} />
+        <QuickWinButton onWinAdded={() => {}} />
       </div>
     </div>
   );
