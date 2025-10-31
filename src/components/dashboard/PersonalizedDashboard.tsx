@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DailyGoalModal } from './DailyGoalModal';
+import { TaskCalendar } from './TaskCalendar';
+import { UnifiedTimeline } from './UnifiedTimeline';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -164,63 +166,67 @@ export const PersonalizedDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Sprints</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeSprints}</div>
-              <p className="text-xs text-muted-foreground">
-                Current projects in progress
-              </p>
-            </CardContent>
-          </Card>
+        {/* Main Content Grid: Two Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Stats & Actions */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="border-primary/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Sprints</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.activeSprints}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Current projects in progress
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Sessions</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.completedSessions}</div>
-              <p className="text-xs text-muted-foreground">
-                Total sessions completed
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="border-primary/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Completed Sessions</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.completedSessions}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Total sessions completed
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Daily Check-ins</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCheckIns}</div>
-              <p className="text-xs text-muted-foreground">
-                Total days checked in
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="border-primary/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Daily Check-ins</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalCheckIns}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Total days checked in
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-              <Flame className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.currentStreak}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.currentStreak === 0 ? 'Check in today!' : 'Keep it going!'}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="border-primary/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+                  <Flame className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.currentStreak}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.currentStreak === 0 ? 'Check in today!' : 'Keep it going!'}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-primary/20 hover:border-primary/40 transition-colors">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -282,6 +288,31 @@ export const PersonalizedDashboard = () => {
           </Card>
         </div>
 
+        {/* Check-in Prompt */}
+        {!hasCheckedInToday && (
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Daily Check-in</h3>
+                  <p className="text-sm text-muted-foreground">Set your goal for today and maintain your streak</p>
+                </div>
+                <Button onClick={() => setShowDailyGoal(true)}>
+                  Check In Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+          </div>
+
+          {/* Right Column: Calendar & Timeline */}
+          <div className="lg:col-span-1 space-y-6">
+            <TaskCalendar />
+            <UnifiedTimeline />
+          </div>
+        </div>
+
         {/* Recommendations */}
         {data.recommendations.length > 0 && (
           <Card className="border-primary/20">
@@ -312,23 +343,6 @@ export const PersonalizedDashboard = () => {
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Check-in Prompt */}
-        {!hasCheckedInToday && (
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Daily Check-in</h3>
-                  <p className="text-sm text-muted-foreground">Set your goal for today and maintain your streak</p>
-                </div>
-                <Button onClick={() => setShowDailyGoal(true)}>
-                  Check In Now
-                </Button>
-              </div>
             </CardContent>
           </Card>
         )}
