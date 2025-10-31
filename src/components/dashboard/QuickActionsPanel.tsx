@@ -16,7 +16,7 @@ const actions = [
     title: 'Funding',
     description: 'Explore funding opportunities',
     icon: TrendingUp,
-    link: '/blog?category=funding',
+    link: '/insighta',
     color: 'from-green-500/20 to-green-500/5',
     iconColor: 'text-green-500',
   },
