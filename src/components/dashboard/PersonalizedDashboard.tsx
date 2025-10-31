@@ -13,9 +13,11 @@ import { RevenueHub } from './RevenueHub';
 import { QuickActionsPanel } from './QuickActionsPanel';
 import { ProgressTimeline } from './ProgressTimeline';
 import { TaskCalendar } from './TaskCalendar';
+import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
+  const { isInitializing, isInitialized } = useDashboardInitialization();
   const {
     data,
     loading,
@@ -92,7 +94,7 @@ export const PersonalizedDashboard = () => {
     trackActivity('dashboard_view');
   }, [user]);
 
-  if (loading) {
+  if (loading || isInitializing) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-6">
@@ -103,6 +105,11 @@ export const PersonalizedDashboard = () => {
             <div className="h-40 bg-muted rounded-lg" />
           </div>
         </div>
+        {isInitializing && (
+          <div className="text-center text-muted-foreground">
+            Setting up your dashboard...
+          </div>
+        )}
       </div>
     );
   }
