@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 import { DailyGoalModal } from './DailyGoalModal';
 import { TaskCalendar } from './TaskCalendar';
 import { UnifiedTimeline } from './UnifiedTimeline';
+import { BusinessMetrics } from './BusinessMetrics';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -312,6 +313,9 @@ export const PersonalizedDashboard = () => {
             <UnifiedTimeline />
           </div>
         </div>
+
+        {/* Business Metrics Section */}
+        <BusinessMetrics />
 
         {/* Recommendations */}
         {data.recommendations.length > 0 && (
