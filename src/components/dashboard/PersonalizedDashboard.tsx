@@ -225,11 +225,8 @@ export const PersonalizedDashboard = () => {
                   <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                     {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
                   </h1>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    {profile?.creative_niche 
-                      ? `Let's make progress on your ${profile.creative_niche} journey`
-                      : "Track your progress, celebrate wins, and stay consistent"
-                    }
+                  <p className="text-sm sm:text-base text-muted-foreground max-w-3xl">
+                    Welcome to your command center! Track your core business metrics with the <strong>Hero KPI gauge</strong>, monitor revenue through the <strong>Revenue Hub</strong> (MRR, churn, conversions), access <strong>Quick Actions</strong> to start projects or explore funding, view critical <strong>Alerts</strong>, follow your <strong>Progress Timeline</strong>, manage tasks with the <strong>Calendar</strong>, and celebrate wins to maintain momentum on your {profile?.creative_niche || 'entrepreneurial'} journey.
                   </p>
                 </div>
                 {stats.currentStreak > 0 && (
