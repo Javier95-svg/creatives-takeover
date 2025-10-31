@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SurveyData {
   userRole: string | null;
@@ -60,32 +61,97 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<UserContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load from localStorage on mount
+  // Load from database or localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setState(JSON.parse(stored));
-      } catch (error) {
-        console.error('Error loading user context:', error);
+    if (user) {
+      loadUserContextFromDatabase();
+    } else {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          setState(JSON.parse(stored));
+        } catch (error) {
+          console.error('Error loading user context:', error);
+        }
       }
-    }
-    setIsLoading(false);
-  }, []);
-
-  // Persist to localStorage on state change
-  useEffect(() => {
-    if (!isLoading && state.isInitialized) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-  }, [state, isLoading]);
-
-  // Clear data on logout
-  useEffect(() => {
-    if (!user && state.isInitialized) {
-      resetUserData();
+      setIsLoading(false);
     }
   }, [user]);
+
+  // Persist to localStorage and database on state change
+  useEffect(() => {
+    if (!isLoading && state.isInitialized && user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      saveUserContextToDatabase();
+    }
+  }, [state, isLoading, user]);
+
+  const loadUserContextFromDatabase = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_preferences')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.user_preferences && typeof profile.user_preferences === 'object') {
+        const prefs = profile.user_preferences as any;
+        if (prefs.surveyData || prefs.preferences) {
+          setState({
+            surveyData: prefs.surveyData || initialState.surveyData,
+            preferences: prefs.preferences || initialState.preferences,
+            lastUpdated: prefs.lastUpdated || null,
+            isInitialized: true,
+          });
+        } else {
+          // Fallback to localStorage
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            try {
+              setState(JSON.parse(stored));
+            } catch (error) {
+              console.error('Error loading user context:', error);
+            }
+          }
+        }
+      } else {
+        // No data in database, check localStorage
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            setState(JSON.parse(stored));
+          } catch (error) {
+            console.error('Error loading user context:', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user context from database:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveUserContextToDatabase = async () => {
+    if (!user || !state.isInitialized) return;
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({
+          user_preferences: {
+            surveyData: state.surveyData,
+            preferences: state.preferences,
+            lastUpdated: state.lastUpdated,
+          } as any
+        })
+        .eq('id', user.id);
+    } catch (error) {
+      console.error('Error saving user context to database:', error);
+    }
+  };
 
   const updateSurveyData = (data: Partial<SurveyData>) => {
     setState(prev => ({
@@ -109,7 +175,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     updatePreferences({ onboardingCompleted: true });
   };
 
-  const resetUserData = () => {
+  const resetUserData = async () => {
+    if (user) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ user_preferences: null })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error resetting user data in database:', error);
+      }
+    }
     setState(initialState);
     localStorage.removeItem(STORAGE_KEY);
   };

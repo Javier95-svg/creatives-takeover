@@ -88,32 +88,97 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<ProgressContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load from localStorage on mount
+  // Load from database or localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setState(JSON.parse(stored));
-      } catch (error) {
-        console.error('Error loading progress context:', error);
+    if (user) {
+      loadProgressFromDatabase();
+    } else {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          setState(JSON.parse(stored));
+        } catch (error) {
+          console.error('Error loading progress context:', error);
+        }
       }
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
+  }, [user]);
 
-  // Persist to localStorage on state change
+  // Persist to localStorage and database on state change
   useEffect(() => {
-    if (!isLoading && state.isInitialized) {
+    if (!isLoading && state.isInitialized && user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      saveProgressToDatabase();
+    } else if (!isLoading && state.isInitialized && !user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
-  }, [state, isLoading]);
+  }, [state, isLoading, user]);
 
-  // Sync with database for authenticated users
-  useEffect(() => {
-    if (user && !isLoading) {
-      syncWithDatabase();
+  const loadProgressFromDatabase = async () => {
+    if (!user) {
+      setIsLoading(false);
+      return;
     }
-  }, [user, isLoading]);
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_preferences')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.user_preferences && typeof profile.user_preferences === 'object' && 'progressState' in profile.user_preferences) {
+        const prefs = profile.user_preferences as any;
+        setState(prefs.progressState);
+      } else {
+        // No data in database, check localStorage
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            setState(JSON.parse(stored));
+          } catch (error) {
+            console.error('Error loading progress context:', error);
+          }
+        }
+      }
+      
+      // Always sync with database after loading
+      await syncWithDatabase();
+    } catch (error) {
+      console.error('Error loading progress from database:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveProgressToDatabase = async () => {
+    if (!user || !state.isInitialized) return;
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_preferences')
+        .eq('id', user.id)
+        .single();
+
+      const existingPrefs = profile?.user_preferences && typeof profile.user_preferences === 'object' 
+        ? profile.user_preferences as Record<string, any>
+        : {};
+      
+      const updatedPreferences = {
+        ...existingPrefs,
+        progressState: state,
+      };
+
+      await supabase
+        .from('profiles')
+        .update({ user_preferences: updatedPreferences as any })
+        .eq('id', user.id);
+    } catch (error) {
+      console.error('Error saving progress to database:', error);
+    }
+  };
 
   const advanceToPhase = (phase: PhaseType) => {
     setState(prev => ({
@@ -210,7 +275,32 @@ export const ProgressProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const resetProgress = () => {
+  const resetProgress = async () => {
+    if (user) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_preferences')
+          .eq('id', user.id)
+          .single();
+
+        const existingPrefs = profile?.user_preferences && typeof profile.user_preferences === 'object' 
+          ? profile.user_preferences as Record<string, any>
+          : {};
+        
+        const updatedPreferences = {
+          ...existingPrefs,
+          progressState: null,
+        };
+
+        await supabase
+          .from('profiles')
+          .update({ user_preferences: updatedPreferences as any })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error resetting progress in database:', error);
+      }
+    }
     setState(initialState);
     localStorage.removeItem(STORAGE_KEY);
   };
