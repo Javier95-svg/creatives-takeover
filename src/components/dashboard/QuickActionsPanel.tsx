@@ -29,10 +29,10 @@ const actions = [
     iconColor: 'text-purple-500',
   },
   {
-    title: 'Resources',
-    description: 'Learn and grow',
+    title: 'Brainstorm',
+    description: 'Get AI-powered prompts & ideas',
     icon: BookOpen,
-    link: '/resources',
+    link: '/prompt-library',
     color: 'from-orange-500/20 to-orange-500/5',
     iconColor: 'text-orange-500',
   },
