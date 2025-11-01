@@ -14,7 +14,8 @@ const weekMilestones = [
     week: 1,
     quarter: 'Q1',
     title: 'Business Concept',
-    description: 'Days 1-2: Problem & solution definition',
+    description: 'Days 1-2',
+    subtitle: 'Problem & solution definition',
     icon: Target,
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10',
@@ -24,7 +25,8 @@ const weekMilestones = [
     week: 1,
     quarter: 'Q2',
     title: 'Target Customer',
-    description: 'Days 3-4: Identify ideal first customers',
+    description: 'Days 3-4',
+    subtitle: 'Identify ideal first customers',
     icon: Users,
     color: 'text-cyan-500',
     bgColor: 'bg-cyan-500/10',
@@ -34,7 +36,8 @@ const weekMilestones = [
     week: 1,
     quarter: 'Q3',
     title: 'Validation Plan',
-    description: 'Days 5-7: Market validation & testing',
+    description: 'Days 5-7',
+    subtitle: 'Market validation & testing',
     icon: CheckCircle2,
     color: 'text-emerald-500',
     bgColor: 'bg-emerald-500/10',
@@ -44,7 +47,8 @@ const weekMilestones = [
     week: 2,
     quarter: 'Q4',
     title: 'Build MVP',
-    description: 'Days 8-14: Core product development',
+    description: 'Days 8-14',
+    subtitle: 'Core product development',
     icon: Rocket,
     color: 'text-purple-500',
     bgColor: 'bg-purple-500/10',
@@ -54,7 +58,8 @@ const weekMilestones = [
     week: 3,
     quarter: 'Q5',
     title: 'Launch Strategy',
-    description: 'Days 15-21: Go-to-market execution',
+    description: 'Days 15-21',
+    subtitle: 'Go-to-market execution',
     icon: Target,
     color: 'text-orange-500',
     bgColor: 'bg-orange-500/10',
@@ -64,7 +69,8 @@ const weekMilestones = [
     week: 4,
     quarter: 'Q6',
     title: 'Pricing Model',
-    description: 'Days 22-25: Revenue strategy',
+    description: 'Days 22-25',
+    subtitle: 'Revenue strategy',
     icon: DollarSign,
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/10',
@@ -74,7 +80,8 @@ const weekMilestones = [
     week: 4,
     quarter: 'Q7',
     title: 'First Customer',
-    description: 'Days 26-30: Achieve first revenue',
+    description: 'Days 26-30',
+    subtitle: 'Achieve first revenue',
     icon: DollarSign,
     color: 'text-green-500',
     bgColor: 'bg-green-500/10',
@@ -154,7 +161,7 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
 
                     {/* Content */}
                     <div className={cn('flex-1 pt-1', isCurrent && 'animate-pulse')}>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <h5 className="font-semibold">{milestone.title}</h5>
                         <Badge variant={isCompleted ? 'default' : 'outline'} className="text-xs">
                           {milestone.quarter}
@@ -165,7 +172,8 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{milestone.description}</p>
+                      <p className="text-xs text-muted-foreground font-medium mb-1">{milestone.description}</p>
+                      <p className="text-sm text-muted-foreground">{milestone.subtitle}</p>
                       
                       {/* Status */}
                       <div className="flex items-center gap-1.5 mt-2">
