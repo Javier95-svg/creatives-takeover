@@ -307,6 +307,81 @@ export type Database = {
         }
         Relationships: []
       }
+      bizmap_community_feedback: {
+        Row: {
+          common_concerns: string[] | null
+          community_post_id: string | null
+          community_score: number | null
+          created_at: string | null
+          feedback_requested_on: string[] | null
+          id: string
+          key_suggestions: string[] | null
+          roadmap_updates_triggered: boolean | null
+          sentiment_analysis: Json | null
+          session_id: string
+          total_comments: number | null
+          total_downvotes: number | null
+          total_upvotes: number | null
+          updated_at: string | null
+          user_id: string
+          validation_adjustments: Json | null
+          validation_score_delta: number | null
+        }
+        Insert: {
+          common_concerns?: string[] | null
+          community_post_id?: string | null
+          community_score?: number | null
+          created_at?: string | null
+          feedback_requested_on?: string[] | null
+          id?: string
+          key_suggestions?: string[] | null
+          roadmap_updates_triggered?: boolean | null
+          sentiment_analysis?: Json | null
+          session_id: string
+          total_comments?: number | null
+          total_downvotes?: number | null
+          total_upvotes?: number | null
+          updated_at?: string | null
+          user_id: string
+          validation_adjustments?: Json | null
+          validation_score_delta?: number | null
+        }
+        Update: {
+          common_concerns?: string[] | null
+          community_post_id?: string | null
+          community_score?: number | null
+          created_at?: string | null
+          feedback_requested_on?: string[] | null
+          id?: string
+          key_suggestions?: string[] | null
+          roadmap_updates_triggered?: boolean | null
+          sentiment_analysis?: Json | null
+          session_id?: string
+          total_comments?: number | null
+          total_downvotes?: number | null
+          total_upvotes?: number | null
+          updated_at?: string | null
+          user_id?: string
+          validation_adjustments?: Json | null
+          validation_score_delta?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bizmap_community_feedback_community_post_id_fkey"
+            columns: ["community_post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bizmap_community_feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_insights_cache: {
         Row: {
           business_stage: string
@@ -720,6 +795,123 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "chatbot_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cohort_checkins: {
+        Row: {
+          blockers: string[] | null
+          checkin_date: string
+          cohort_id: string
+          community_post_id: string | null
+          created_at: string | null
+          help_needed: string | null
+          id: string
+          next_week_goals: string[] | null
+          shared_publicly: boolean | null
+          user_id: string
+          week_number: number
+          wins: string[] | null
+        }
+        Insert: {
+          blockers?: string[] | null
+          checkin_date: string
+          cohort_id: string
+          community_post_id?: string | null
+          created_at?: string | null
+          help_needed?: string | null
+          id?: string
+          next_week_goals?: string[] | null
+          shared_publicly?: boolean | null
+          user_id: string
+          week_number: number
+          wins?: string[] | null
+        }
+        Update: {
+          blockers?: string[] | null
+          checkin_date?: string
+          cohort_id?: string
+          community_post_id?: string | null
+          created_at?: string | null
+          help_needed?: string | null
+          id?: string
+          next_week_goals?: string[] | null
+          shared_publicly?: boolean | null
+          user_id?: string
+          week_number?: number
+          wins?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_checkins_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "launch_cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_checkins_community_post_id_fkey"
+            columns: ["community_post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cohort_members: {
+        Row: {
+          attendance_rate: number | null
+          cohort_id: string
+          current_milestone: string | null
+          id: string
+          joined_at: string | null
+          milestones_completed: number | null
+          roadmap_id: string | null
+          status: string | null
+          total_checkins_expected: number | null
+          user_id: string
+          weekly_checkins_completed: number | null
+        }
+        Insert: {
+          attendance_rate?: number | null
+          cohort_id: string
+          current_milestone?: string | null
+          id?: string
+          joined_at?: string | null
+          milestones_completed?: number | null
+          roadmap_id?: string | null
+          status?: string | null
+          total_checkins_expected?: number | null
+          user_id: string
+          weekly_checkins_completed?: number | null
+        }
+        Update: {
+          attendance_rate?: number | null
+          cohort_id?: string
+          current_milestone?: string | null
+          id?: string
+          joined_at?: string | null
+          milestones_completed?: number | null
+          roadmap_id?: string | null
+          status?: string | null
+          total_checkins_expected?: number | null
+          user_id?: string
+          weekly_checkins_completed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_members_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "launch_cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_members_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "launch_roadmaps"
             referencedColumns: ["id"]
           },
         ]
@@ -2166,6 +2358,80 @@ export type Database = {
           },
         ]
       }
+      founder_analytics: {
+        Row: {
+          cohort_participation_rate: number | null
+          community_feedback_received: number | null
+          created_at: string | null
+          customer_count: number | null
+          id: string
+          milestones_reached: number | null
+          mrr_usd: number | null
+          period_end: string
+          period_start: string
+          period_type: string
+          recommendations: string[] | null
+          revenue_usd: number | null
+          risk_factors: Json | null
+          roadmap_id: string | null
+          success_indicators: Json | null
+          tasks_completed: number | null
+          user_id: string
+          validation_score_change: number | null
+          velocity_score: number | null
+        }
+        Insert: {
+          cohort_participation_rate?: number | null
+          community_feedback_received?: number | null
+          created_at?: string | null
+          customer_count?: number | null
+          id?: string
+          milestones_reached?: number | null
+          mrr_usd?: number | null
+          period_end: string
+          period_start: string
+          period_type: string
+          recommendations?: string[] | null
+          revenue_usd?: number | null
+          risk_factors?: Json | null
+          roadmap_id?: string | null
+          success_indicators?: Json | null
+          tasks_completed?: number | null
+          user_id: string
+          validation_score_change?: number | null
+          velocity_score?: number | null
+        }
+        Update: {
+          cohort_participation_rate?: number | null
+          community_feedback_received?: number | null
+          created_at?: string | null
+          customer_count?: number | null
+          id?: string
+          milestones_reached?: number | null
+          mrr_usd?: number | null
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          recommendations?: string[] | null
+          revenue_usd?: number | null
+          risk_factors?: Json | null
+          roadmap_id?: string | null
+          success_indicators?: Json | null
+          tasks_completed?: number | null
+          user_id?: string
+          validation_score_change?: number | null
+          velocity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_analytics_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "launch_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -2409,6 +2675,125 @@ export type Database = {
         }
         Relationships: []
       }
+      launch_cohorts: {
+        Row: {
+          cohort_name: string
+          cohort_number: number | null
+          cohort_type: string
+          created_at: string | null
+          demo_day_date: string | null
+          end_date: string
+          id: string
+          member_count: number | null
+          start_date: string
+          status: string | null
+          updated_at: string | null
+          weekly_checkin_day: string | null
+        }
+        Insert: {
+          cohort_name: string
+          cohort_number?: number | null
+          cohort_type: string
+          created_at?: string | null
+          demo_day_date?: string | null
+          end_date: string
+          id?: string
+          member_count?: number | null
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+          weekly_checkin_day?: string | null
+        }
+        Update: {
+          cohort_name?: string
+          cohort_number?: number | null
+          cohort_type?: string
+          created_at?: string | null
+          demo_day_date?: string | null
+          end_date?: string
+          id?: string
+          member_count?: number | null
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+          weekly_checkin_day?: string | null
+        }
+        Relationships: []
+      }
+      launch_roadmaps: {
+        Row: {
+          business_idea: string
+          completed_tasks: number | null
+          created_at: string | null
+          current_day: number | null
+          current_week: number | null
+          first_customer_date: string | null
+          id: string
+          progress_percentage: number | null
+          session_id: string | null
+          start_date: string
+          status: string | null
+          target_launch_date: string
+          total_tasks: number | null
+          updated_at: string | null
+          user_id: string
+          week1_validated: boolean | null
+          week2_mvp_built: boolean | null
+          week3_launched: boolean | null
+          week4_first_customer: boolean | null
+        }
+        Insert: {
+          business_idea: string
+          completed_tasks?: number | null
+          created_at?: string | null
+          current_day?: number | null
+          current_week?: number | null
+          first_customer_date?: string | null
+          id?: string
+          progress_percentage?: number | null
+          session_id?: string | null
+          start_date: string
+          status?: string | null
+          target_launch_date: string
+          total_tasks?: number | null
+          updated_at?: string | null
+          user_id: string
+          week1_validated?: boolean | null
+          week2_mvp_built?: boolean | null
+          week3_launched?: boolean | null
+          week4_first_customer?: boolean | null
+        }
+        Update: {
+          business_idea?: string
+          completed_tasks?: number | null
+          created_at?: string | null
+          current_day?: number | null
+          current_week?: number | null
+          first_customer_date?: string | null
+          id?: string
+          progress_percentage?: number | null
+          session_id?: string | null
+          start_date?: string
+          status?: string | null
+          target_launch_date?: string
+          total_tasks?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week1_validated?: boolean | null
+          week2_mvp_built?: boolean | null
+          week3_launched?: boolean | null
+          week4_first_customer?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_roadmaps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_comments: {
         Row: {
           content: string
@@ -2574,6 +2959,89 @@ export type Database = {
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "market_data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_validation_scores: {
+        Row: {
+          business_idea: string
+          competition_score: number | null
+          competitor_count: number | null
+          competitor_gaps: Json | null
+          confidence_level: string | null
+          created_at: string | null
+          data_sources: Json | null
+          demand_score: number | null
+          demand_trends: Json | null
+          differentiation_opportunities: string[] | null
+          estimated_market_size_usd: number | null
+          id: string
+          industry: string | null
+          market_size_score: number | null
+          overall_validation_score: number | null
+          search_volume_data: Json | null
+          session_id: string | null
+          target_market: string | null
+          top_competitors: Json | null
+          updated_at: string | null
+          user_id: string
+          validation_date: string | null
+        }
+        Insert: {
+          business_idea: string
+          competition_score?: number | null
+          competitor_count?: number | null
+          competitor_gaps?: Json | null
+          confidence_level?: string | null
+          created_at?: string | null
+          data_sources?: Json | null
+          demand_score?: number | null
+          demand_trends?: Json | null
+          differentiation_opportunities?: string[] | null
+          estimated_market_size_usd?: number | null
+          id?: string
+          industry?: string | null
+          market_size_score?: number | null
+          overall_validation_score?: number | null
+          search_volume_data?: Json | null
+          session_id?: string | null
+          target_market?: string | null
+          top_competitors?: Json | null
+          updated_at?: string | null
+          user_id: string
+          validation_date?: string | null
+        }
+        Update: {
+          business_idea?: string
+          competition_score?: number | null
+          competitor_count?: number | null
+          competitor_gaps?: Json | null
+          confidence_level?: string | null
+          created_at?: string | null
+          data_sources?: Json | null
+          demand_score?: number | null
+          demand_trends?: Json | null
+          differentiation_opportunities?: string[] | null
+          estimated_market_size_usd?: number | null
+          id?: string
+          industry?: string | null
+          market_size_score?: number | null
+          overall_validation_score?: number | null
+          search_volume_data?: Json | null
+          session_id?: string | null
+          target_market?: string | null
+          top_competitors?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          validation_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_validation_scores_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -3359,6 +3827,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      roadmap_tasks: {
+        Row: {
+          actual_hours: number | null
+          ai_generated: boolean | null
+          ai_reasoning: string | null
+          blocker_reason: string | null
+          completed_at: string | null
+          created_at: string | null
+          day_number: number
+          description: string | null
+          due_date: string
+          estimated_hours: number | null
+          id: string
+          is_blocked: boolean | null
+          priority: string | null
+          roadmap_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          actual_hours?: number | null
+          ai_generated?: boolean | null
+          ai_reasoning?: string | null
+          blocker_reason?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          day_number: number
+          description?: string | null
+          due_date: string
+          estimated_hours?: number | null
+          id?: string
+          is_blocked?: boolean | null
+          priority?: string | null
+          roadmap_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          actual_hours?: number | null
+          ai_generated?: boolean | null
+          ai_reasoning?: string | null
+          blocker_reason?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          day_number?: number
+          description?: string | null
+          due_date?: string
+          estimated_hours?: number | null
+          id?: string
+          is_blocked?: boolean | null
+          priority?: string | null
+          roadmap_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_tasks_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "launch_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sprint_accountability: {
         Row: {
