@@ -11,7 +11,6 @@ import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { useNavigate } from "react-router-dom";
 import { useChatBotStore } from "@/store/chatBotStore";
-import { CofounderOnboarding } from "./ai-cofounder/CofounderOnboarding";
 import { useCofounderPersonality } from "@/hooks/useCofounderPersonality";
 import { PersonalityIndicator } from "./ai-cofounder/PersonalityIndicator";
 
@@ -138,8 +137,7 @@ export const BizMapChat = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addStepResponse } = useChatBotStore();
-  const { preferences, isLoading: isLoadingPreferences } = useCofounderPersonality();
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { preferences } = useCofounderPersonality();
   
   // Listen for examples modal event
   useEffect(() => {
@@ -231,12 +229,6 @@ export const BizMapChat = ({
     }
   }, [currentStep]);
 
-  // Check if authenticated user needs onboarding
-  useEffect(() => {
-    if (!isLoadingPreferences && user && preferences && !preferences.onboardingCompleted) {
-      setShowOnboarding(true);
-    }
-  }, [isLoadingPreferences, user, preferences]);
 
   // Expose switchToFreeform to parent
   useEffect(() => {
@@ -319,13 +311,6 @@ export const BizMapChat = ({
 
   return (
     <>
-      <CofounderOnboarding 
-        open={showOnboarding} 
-        onComplete={() => {
-          setShowOnboarding(false);
-        }}
-      />
-      
       <div className="flex flex-col h-full relative">
         {/* Personality Indicator */}
         {user && preferences && preferences.onboardingCompleted && (
