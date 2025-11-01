@@ -12,17 +12,39 @@ interface LaunchRoadmapTimelineProps {
 const weekMilestones = [
   {
     week: 1,
-    title: 'Validate',
-    description: 'Market research & validation',
+    quarter: 'Q1',
+    title: 'Business Concept',
+    description: 'Days 1-2: Problem & solution definition',
     icon: Target,
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10',
     key: 'week1_validated' as keyof LaunchRoadmap,
   },
   {
+    week: 1,
+    quarter: 'Q2',
+    title: 'Target Customer',
+    description: 'Days 3-4: Identify ideal first customers',
+    icon: Users,
+    color: 'text-cyan-500',
+    bgColor: 'bg-cyan-500/10',
+    key: 'week1_validated' as keyof LaunchRoadmap,
+  },
+  {
+    week: 1,
+    quarter: 'Q3',
+    title: 'Validation Plan',
+    description: 'Days 5-7: Market validation & testing',
+    icon: CheckCircle2,
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10',
+    key: 'week1_validated' as keyof LaunchRoadmap,
+  },
+  {
     week: 2,
+    quarter: 'Q4',
     title: 'Build MVP',
-    description: 'Core product development',
+    description: 'Days 8-14: Core product development',
     icon: Rocket,
     color: 'text-purple-500',
     bgColor: 'bg-purple-500/10',
@@ -30,17 +52,29 @@ const weekMilestones = [
   },
   {
     week: 3,
-    title: 'Launch',
-    description: 'Go-to-market execution',
-    icon: Users,
+    quarter: 'Q5',
+    title: 'Launch Strategy',
+    description: 'Days 15-21: Go-to-market execution',
+    icon: Target,
     color: 'text-orange-500',
     bgColor: 'bg-orange-500/10',
     key: 'week3_launched' as keyof LaunchRoadmap,
   },
   {
     week: 4,
+    quarter: 'Q6',
+    title: 'Pricing Model',
+    description: 'Days 22-25: Revenue strategy',
+    icon: DollarSign,
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10',
+    key: 'week4_first_customer' as keyof LaunchRoadmap,
+  },
+  {
+    week: 4,
+    quarter: 'Q7',
     title: 'First Customer',
-    description: 'Revenue & growth',
+    description: 'Days 26-30: Achieve first revenue',
     icon: DollarSign,
     color: 'text-green-500',
     bgColor: 'bg-green-500/10',
@@ -81,9 +115,9 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
           </div>
         </div>
 
-        {/* Week Milestones */}
+        {/* Quarter Milestones */}
         <div className="space-y-4 pt-4">
-          <h4 className="font-semibold text-sm text-muted-foreground">Weekly Milestones</h4>
+          <h4 className="font-semibold text-sm text-muted-foreground">Launch Milestones (Q1-Q7)</h4>
           
           <div className="relative">
             {/* Timeline Line */}
@@ -98,7 +132,7 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
                 const StatusIcon = isCompleted ? CheckCircle2 : Circle;
 
                 return (
-                  <div key={milestone.week} className="relative flex items-start gap-4">
+                  <div key={milestone.quarter} className="relative flex items-start gap-4">
                     {/* Icon */}
                     <div
                       className={cn(
@@ -123,7 +157,7 @@ export const LaunchRoadmapTimeline = ({ roadmap }: LaunchRoadmapTimelineProps) =
                       <div className="flex items-center gap-2">
                         <h5 className="font-semibold">{milestone.title}</h5>
                         <Badge variant={isCompleted ? 'default' : 'outline'} className="text-xs">
-                          Week {milestone.week}
+                          {milestone.quarter}
                         </Badge>
                         {isCurrent && (
                           <Badge variant="secondary" className="text-xs">
