@@ -11,6 +11,9 @@ import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { useNavigate } from "react-router-dom";
 import { useChatBotStore } from "@/store/chatBotStore";
+import { CofounderOnboarding } from "./ai-cofounder/CofounderOnboarding";
+import { useCofounderPersonality } from "@/hooks/useCofounderPersonality";
+import { PersonalityIndicator } from "./ai-cofounder/PersonalityIndicator";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -134,6 +137,8 @@ export const BizMapChat = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addStepResponse } = useChatBotStore();
+  const { preferences, isLoading: isLoadingPreferences } = useCofounderPersonality();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   // Listen for examples modal event
   useEffect(() => {
@@ -225,6 +230,13 @@ export const BizMapChat = ({
     }
   }, [currentStep]);
 
+  // Check if authenticated user needs onboarding
+  useEffect(() => {
+    if (!isLoadingPreferences && user && preferences && !preferences.onboardingCompleted) {
+      setShowOnboarding(true);
+    }
+  }, [isLoadingPreferences, user, preferences]);
+
   // Expose switchToFreeform to parent
   useEffect(() => {
     if (onChatModeReady) {
@@ -305,27 +317,42 @@ export const BizMapChat = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Conversion Prompts */}
-      <WizardConversionPrompt
-        step={currentStep}
-        triggerStep={4}
-        variant="inline-banner"
-        show={showInlineBanner}
-        onDismiss={handleDismiss}
-        onSignUp={handleSignUpClick}
-      />
-      <WizardConversionPrompt
-        step={currentStep}
-        triggerStep={6}
-        variant="modal"
-        show={showModal}
-        onDismiss={handleDismiss}
-        onSignUp={handleSignUpClick}
+    <>
+      <CofounderOnboarding 
+        open={showOnboarding} 
+        onComplete={() => {
+          setShowOnboarding(false);
+        }}
       />
       
-      {/* Progress Bar with Mode Indicator */}
-      <div className="p-4 border-b bg-muted/30">
+      <div className="flex flex-col h-full relative">
+        {/* Personality Indicator */}
+        {user && preferences && preferences.onboardingCompleted && (
+          <div className="absolute top-4 right-4 z-10">
+            <PersonalityIndicator personality={preferences.aiPersonality} />
+          </div>
+        )}
+        
+        {/* Conversion Prompts */}
+        <WizardConversionPrompt
+          step={currentStep}
+          triggerStep={4}
+          variant="inline-banner"
+          show={showInlineBanner}
+          onDismiss={handleDismiss}
+          onSignUp={handleSignUpClick}
+        />
+        <WizardConversionPrompt
+          step={currentStep}
+          triggerStep={6}
+          variant="modal"
+          show={showModal}
+          onDismiss={handleDismiss}
+          onSignUp={handleSignUpClick}
+        />
+        
+        {/* Progress Bar with Mode Indicator */}
+        <div className="p-4 border-b bg-muted/30">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -548,19 +575,20 @@ export const BizMapChat = ({
           </div>
         )}
       </div>
-
-      {/* Share to Community Dialog */}
+      
+      {/* Share Dialog */}
       {showShareDialog && shareData && (
         <ShareToCommunityDialog
           open={showShareDialog}
           onOpenChange={setShowShareDialog}
           reportData={shareData.reportData}
-          reportType="business_plan"
+          reportType={shareData.reportType}
           conversationId={shareData.conversationId}
           defaultTitle={shareData.defaultTitle}
           defaultContent={shareData.defaultContent}
         />
       )}
     </div>
+    </>
   );
 };

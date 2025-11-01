@@ -531,9 +531,13 @@ export type Database = {
           created_at: string
           current_step: number
           id: string
+          importance_score: number | null
           is_completed: boolean
           is_pinned: boolean | null
+          journey_stage: string | null
           launch_report: string | null
+          milestones_achieved: Json | null
+          mood_sentiment: string | null
           title: string | null
           updated_at: string
           user_id: string
@@ -543,9 +547,13 @@ export type Database = {
           created_at?: string
           current_step?: number
           id?: string
+          importance_score?: number | null
           is_completed?: boolean
           is_pinned?: boolean | null
+          journey_stage?: string | null
           launch_report?: string | null
+          milestones_achieved?: Json | null
+          mood_sentiment?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -555,9 +563,13 @@ export type Database = {
           created_at?: string
           current_step?: number
           id?: string
+          importance_score?: number | null
           is_completed?: boolean
           is_pinned?: boolean | null
+          journey_stage?: string | null
           launch_report?: string | null
+          milestones_achieved?: Json | null
+          mood_sentiment?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
@@ -3455,6 +3467,7 @@ export type Database = {
           bio: string | null
           bio_html: string | null
           business_stage: string | null
+          cofounder_onboarding_completed: boolean | null
           created_at: string
           creative_niche: string | null
           credit_balance: number
@@ -3462,12 +3475,14 @@ export type Database = {
           facebook_url: string | null
           followers_count: number
           following_count: number
+          founder_journey_stage: string | null
           friends_count: number
           full_name: string | null
           github_url: string | null
           id: string
           instagram_url: string | null
           last_activity_at: string | null
+          last_checkin_date: string | null
           last_credit_reset_at: string
           linkedin_url: string | null
           memory_preference: string | null
@@ -3490,6 +3505,7 @@ export type Database = {
           bio?: string | null
           bio_html?: string | null
           business_stage?: string | null
+          cofounder_onboarding_completed?: boolean | null
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
@@ -3497,12 +3513,14 @@ export type Database = {
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
+          founder_journey_stage?: string | null
           friends_count?: number
           full_name?: string | null
           github_url?: string | null
           id: string
           instagram_url?: string | null
           last_activity_at?: string | null
+          last_checkin_date?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
           memory_preference?: string | null
@@ -3525,6 +3543,7 @@ export type Database = {
           bio?: string | null
           bio_html?: string | null
           business_stage?: string | null
+          cofounder_onboarding_completed?: boolean | null
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
@@ -3532,12 +3551,14 @@ export type Database = {
           facebook_url?: string | null
           followers_count?: number
           following_count?: number
+          founder_journey_stage?: string | null
           friends_count?: number
           full_name?: string | null
           github_url?: string | null
           id?: string
           instagram_url?: string | null
           last_activity_at?: string | null
+          last_checkin_date?: string | null
           last_credit_reset_at?: string
           linkedin_url?: string | null
           memory_preference?: string | null

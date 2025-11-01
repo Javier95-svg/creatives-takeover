@@ -200,7 +200,7 @@ serve(async (req) => {
 async function getUserProfile(supabase: any, userId: string) {
   const { data } = await supabase
     .from('profiles')
-    .select('full_name, business_stage')
+    .select('full_name, business_stage, ai_personality, memory_preference, founder_journey_stage')
     .eq('id', userId)
     .single();
   return data;
@@ -267,9 +267,23 @@ function buildSystemPrompt(businessContext: any, marketData: any[], chatMode: st
     `- ${d.industry}: ${d.data_payload?.summary || 'Market activity detected'}`
   ).join('\n') || '';
 
+  // Personality-specific tone adjustments
+  const personality = userProfile?.ai_personality || 'balanced';
+  const personalityTones = {
+    cheerleader: "🎉 PERSONALITY: You are enthusiastic, energizing, and celebrate every win! Use encouraging language and be their biggest supporter. Example: 'That's an amazing idea! Let's make this happen!'",
+    strategist: "🎯 PERSONALITY: You are analytical, direct, and pragmatic. Focus on data, actionable steps, and execution. Example: 'Let's break this down step by step. Here's what the data tells us...'",
+    therapist: "💙 PERSONALITY: You are empathetic, patient, and validating. Acknowledge emotions and provide supportive guidance. Example: 'I hear you. Starting a business is scary. Let's talk through what's worrying you...'",
+    balanced: "⚖️ PERSONALITY: You are warm but practical, encouraging but realistic. Balance support with strategy. Example: 'That's a solid start! Now let's think practically about next steps...'"
+  };
+  
+  const personalityContext = personalityTones[personality as keyof typeof personalityTones] || personalityTones.balanced;
+  const journeyStage = userProfile?.founder_journey_stage || 'ideation';
+
   if (chatMode === 'tour-guide') {
     // Tour Guide mode - help visitors understand the platform
     return `You are Creatives Takeover Assistant, a friendly tour guide helping first-time visitors explore the Creatives Takeover platform.
+
+${personalityContext}
 
 PLATFORM OVERVIEW:
 Creatives Takeover is an AI-powered platform that helps creative entrepreneurs go from scattered ideas to profitable launch in 30 days. It combines:
@@ -320,6 +334,10 @@ Always be welcoming, clear, and action-oriented. Keep responses SHORT and PUNCHY
     // Freeform "Ask Me Anything" mode - context-aware co-pilot
     return `You are BizMap AI, a personal AI business co-pilot who intimately knows this user's business and journey.
 
+${personalityContext}
+
+JOURNEY STAGE: ${journeyStage.toUpperCase()} - Tailor your advice to their current stage.
+
 USER PROFILE:
 - Name: ${userProfile?.full_name || 'Entrepreneur'}
 - Business: ${businessContext.businessIdea || 'New venture in planning'}
@@ -358,6 +376,10 @@ Always relate your advice back to THEIR specific business context and goals.`;
 
   // Wizard mode - guided discovery
   return `You are BizMap AI, an expert business planning assistant specialized in helping entrepreneurs validate, plan, and launch their business ideas.
+
+${personalityContext}
+
+JOURNEY STAGE: ${journeyStage.toUpperCase()} - Guide them through this stage with appropriate advice.
 
 CURRENT USER CONTEXT:
 ${businessContext.industry ? `Industry: ${businessContext.industry}` : ''}
