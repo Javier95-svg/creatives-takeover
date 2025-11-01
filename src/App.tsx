@@ -19,7 +19,8 @@ import Careers from "./pages/Careers";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import Signup from "./pages/Signup";
-import BizMapAI from "./pages/Dream2Plan";
+import Dream2Plan from "./pages/Dream2Plan";
+import FounderOS from "./pages/FounderOS";
 import Login from "./pages/Login";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -70,7 +71,8 @@ const App = () => {
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<Terms />} />
-                  <Route path="/bizmap-ai" element={<BizMapAI />} />
+                  <Route path="/bizmap-ai" element={<Dream2Plan />} />
+                  <Route path="/founder-os" element={<FounderOS />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
