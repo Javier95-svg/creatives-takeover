@@ -74,3 +74,12 @@ verify_jwt = false
 
 [functions.commitment-manager]
 verify_jwt = true
+
+[functions.market-validation-engine]
+verify_jwt = true
+
+[functions.roadmap-task-generator]
+verify_jwt = true
+
+[functions.community-feedback-analyzer]
+verify_jwt = true

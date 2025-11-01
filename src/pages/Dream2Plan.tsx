@@ -61,7 +61,7 @@ const BizMapAI = () => {
   const [messages, setMessages] = useState([
     {
       type: "assistant",
-      content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
+      content: "Hey there! 👋 I'm your AI co-founder, ready to help you validate your idea and launch in 30 days! \n\nLet's start by understanding your business concept. In a few sentences, what problem are you solving and for whom? Don't worry about making it perfect – just share what's on your mind!"
     }
   ]);
 
@@ -92,9 +92,9 @@ const BizMapAI = () => {
     {
       key: "overview",
       title: "Business Overview",
-      question: "Let's start with your business idea! 🚀 In a few sentences, what are you planning to create or offer? (Don't worry if it's not fully formed yet—that's what we're here for!)",
+      question: "Let's validate your idea and create a 30-day launch roadmap! 🚀 What problem are you solving and for whom? (This is the foundation of everything we'll build together)",
       placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
-      transition: "Love that! I can already see the potential. Now, let's talk about who would benefit most from this..."
+      transition: "Excellent! I can already see the potential. Now, let's dive deeper into your target market..."
     },
     {
       key: "market", 
@@ -1140,9 +1140,9 @@ Subject: "Quick question about [their pain point]"
   return (
     <div className="relative min-h-screen">
       <SEO
-        title="Creatives Takeover"
-        description="Turn your business ideas into comprehensive launch reports with our AI-powered 7-step wizard. Get personalized validation plans, go-to-market strategies, and 90-day roadmaps—free."
-        keywords="AI business plan generator, free business planning tool, startup planning, business ideas, entrepreneurship, launch report, business plan wizard"
+        title="BizMap AI - Founder Idea Validation + 30-Day Launch OS"
+        description="Validate your startup idea with AI-powered market analysis, get a 30-day launch roadmap, and join founder cohorts. Free market validation and personalized sprint planning."
+        keywords="AI idea validation, startup validation, 30-day launch, founder OS, MVP builder, startup roadmap, market validation AI"
         url="/bizmap-ai"
         structuredData={structuredData}
       />
@@ -1174,8 +1174,8 @@ Subject: "Quick question about [their pain point]"
                     className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm"
                   >
                     <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5" />
-                    <span className="hidden sm:inline">Business Planning</span>
-                    <span className="sm:hidden">Planning</span>
+                    <span className="hidden sm:inline">Idea Validation</span>
+                    <span className="sm:hidden">Validate</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sprint" 
@@ -1218,6 +1218,39 @@ Subject: "Quick question about [their pain point]"
                           const report = generateReport();
                           setLaunchReport(report);
                           setShowReport(true);
+                          
+                          // Trigger Founder OS integration (market validation + roadmap)
+                          if (user && currentSessionId) {
+                            toast.success('🚀 Launching Founder OS features...');
+                            // This will run in the background
+                            supabase.functions.invoke('market-validation-engine', {
+                              body: {
+                                business_idea: finalAnswers.overview || finalAnswers.solution,
+                                industry: 'General', // Can extract from answers
+                                target_market: finalAnswers.market,
+                                session_id: currentSessionId,
+                              },
+                            }).then(() => {
+                              return supabase.functions.invoke('roadmap-task-generator', {
+                                body: {
+                                  session_id: currentSessionId,
+                                  business_idea: finalAnswers.overview || finalAnswers.solution,
+                                  industry: 'General',
+                                  start_date: new Date().toISOString().split('T')[0],
+                                  user_experience_level: 'intermediate',
+                                },
+                              });
+                            }).then(() => {
+                              toast.success('✅ Founder OS Ready! Check out your roadmap.', {
+                                action: {
+                                  label: 'View',
+                                  onClick: () => window.open('/founder-os', '_blank'),
+                                },
+                              });
+                            }).catch(err => {
+                              console.error('Founder OS setup error:', err);
+                            });
+                          }
                           
                           // Still call backend for success score (existing functionality)
                           generateLaunchReport(finalAnswers);
@@ -1549,7 +1582,7 @@ Subject: "Quick question about [their pain point]"
                   </Button>
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold">Sprint Planning</h2>
-                    <p className="text-muted-foreground">Turn your business plan into actionable sprints</p>
+                    <p className="text-muted-foreground">Turn your validated idea into actionable 30-day sprints</p>
                   </div>
                 </div>
                 

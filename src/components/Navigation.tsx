@@ -67,6 +67,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "BizMap AI", href: "/bizmap-ai" },
+    { name: "Founder OS", href: "/founder-os" },
     { name: "Prompt Library", href: "/prompt-library" },
     { name: "Insighta", href: "/insighta" },
     { name: "Community", href: "/community" },
