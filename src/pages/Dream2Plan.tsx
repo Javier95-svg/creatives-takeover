@@ -1207,7 +1207,6 @@ Subject: "Quick question about [their pain point]"
                   <ChatSidebar 
                     onSessionSelect={handleSessionSelect}
                     onNewChat={handleNewChat}
-                    onTabChange={(tab) => setActiveTab(tab)}
                   />
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}

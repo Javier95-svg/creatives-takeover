@@ -12,6 +12,7 @@ export interface ChatSession {
   user_id: string;
   current_step: number;
   is_completed: boolean;
+  is_pinned?: boolean;
   answers: Record<string, string>;
   created_at: string;
   updated_at: string;
@@ -162,6 +163,40 @@ export const useChatSessions = () => {
     }
   };
 
+  const togglePinSession = async (sessionId: string) => {
+    if (!user) return;
+
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const newPinnedState = !session.is_pinned;
+
+    try {
+      const { error } = await supabase
+        .from('chat_sessions')
+        .update({ is_pinned: newPinnedState })
+        .eq('id', sessionId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error toggling pin:', error);
+        toast.error('Failed to update chat');
+        return;
+      }
+
+      setSessions(prev =>
+        prev.map(s =>
+          s.id === sessionId ? { ...s, is_pinned: newPinnedState } : s
+        )
+      );
+
+      toast.success(newPinnedState ? 'Chat pinned' : 'Chat unpinned');
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+      toast.error('Failed to update chat');
+    }
+  };
+
   const getSession = (sessionId: string): ChatSession | null => {
     return sessions.find(session => session.id === sessionId) || null;
   };
@@ -178,6 +213,7 @@ export const useChatSessions = () => {
     createNewSession,
     updateSession,
     deleteSession,
+    togglePinSession,
     getSession,
     loadSessions
   };

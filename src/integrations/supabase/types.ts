@@ -532,6 +532,7 @@ export type Database = {
           current_step: number
           id: string
           is_completed: boolean
+          is_pinned: boolean | null
           launch_report: string | null
           title: string | null
           updated_at: string
@@ -543,6 +544,7 @@ export type Database = {
           current_step?: number
           id?: string
           is_completed?: boolean
+          is_pinned?: boolean | null
           launch_report?: string | null
           title?: string | null
           updated_at?: string
@@ -554,6 +556,7 @@ export type Database = {
           current_step?: number
           id?: string
           is_completed?: boolean
+          is_pinned?: boolean | null
           launch_report?: string | null
           title?: string | null
           updated_at?: string

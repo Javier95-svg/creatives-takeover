@@ -1,23 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Plus, MessageSquare, Trash2, Calendar, CheckCircle, Circle, Search, ChevronLeft, ChevronRight,
-  Sparkles, BookOpen, Users, Target, Settings, LogOut, CreditCard, 
-  MoreVertical, Archive, Copy, Download, Share2, Edit, ChevronDown
-} from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Search, Edit, Pin, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { 
   AlertDialog,
@@ -28,43 +20,23 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useChatSessions, ChatSession } from '@/hooks/useChatSessions';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCredits } from '@/hooks/useCredits';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 interface ChatSidebarProps {
   onSessionSelect: (session: ChatSession | null) => void;
   onNewChat: () => void;
   className?: string;
-  onTabChange?: (tab: 'bizmap' | 'sprint') => void;
 }
 
-type SortOption = 'recent' | 'alphabetical' | 'completion';
-type GroupOption = 'date' | 'status' | 'none';
-
-export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange }: ChatSidebarProps) => {
+export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSidebarProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('recent');
-  const [groupBy, setGroupBy] = useState<GroupOption>('date');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const { 
     sessions, 
     loading, 
@@ -72,96 +44,26 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
     setCurrentSessionId, 
     createNewSession, 
     deleteSession,
-    updateSession
+    updateSession,
+    togglePinSession
   } = useChatSessions();
   const { user, signOut } = useAuth();
-  const { balance, monthlyQuota } = useCredits();
 
-  // Quick actions
-  const quickActions = [
-    { icon: Sparkles, label: 'Explore Prompts', onClick: () => navigate('/prompt-library') },
-    { icon: BookOpen, label: 'Resources', onClick: () => navigate('/resources') },
-    { icon: Users, label: 'Community', onClick: () => navigate('/community') },
-    { icon: Target, label: 'Sprint Planner', onClick: () => onTabChange?.('sprint') },
-  ];
-
-  // Filter and sort sessions
+  // Filter and sort sessions - pinned first, then by date
   const sortedSessions = useMemo(() => {
     let filtered = sessions.filter(session =>
       session.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Sort
-    switch (sortBy) {
-      case 'alphabetical':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'completion':
-        filtered.sort((a, b) => {
-          if (a.is_completed === b.is_completed) return 0;
-          return a.is_completed ? -1 : 1;
-        });
-        break;
-      case 'recent':
-      default:
-        filtered.sort((a, b) => 
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        );
-    }
-
-    return filtered;
-  }, [sessions, searchQuery, sortBy]);
-
-  // Group sessions by date
-  const groupedSessions = useMemo(() => {
-    if (groupBy === 'none') {
-      return { 'All Chats': sortedSessions };
-    }
-
-    if (groupBy === 'status') {
-      return {
-        'Completed': sortedSessions.filter(s => s.is_completed),
-        'In Progress': sortedSessions.filter(s => !s.is_completed),
-      };
-    }
-
-    // Group by date
-    const groups: Record<string, ChatSession[]> = {
-      'Today': [],
-      'Yesterday': [],
-      'Last 7 Days': [],
-      'Last 30 Days': [],
-      'Older': [],
-    };
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    sortedSessions.forEach(session => {
-      const date = new Date(session.updated_at);
-      const diffTime = now.getTime() - date.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (date >= today) {
-        groups['Today'].push(session);
-      } else if (date >= yesterday) {
-        groups['Yesterday'].push(session);
-      } else if (diffDays <= 7) {
-        groups['Last 7 Days'].push(session);
-      } else if (diffDays <= 30) {
-        groups['Last 30 Days'].push(session);
-      } else {
-        groups['Older'].push(session);
-      }
+    // Sort: pinned first, then by date
+    filtered.sort((a, b) => {
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
     });
 
-    // Remove empty groups
-    return Object.fromEntries(
-      Object.entries(groups).filter(([, sessions]) => sessions.length > 0)
-    );
-  }, [sortedSessions, groupBy]);
+    return filtered;
+  }, [sessions, searchQuery]);
 
   const handleNewChat = async () => {
     const sessionId = await createNewSession();
@@ -176,50 +78,35 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
     onSessionSelect(session);
   };
 
-  const handleDeleteSession = async (sessionId: string, e?: React.MouseEvent) => {
+  const handleRenameSession = async (sessionId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    await deleteSession(sessionId);
-  };
-
-  const handleRenameSession = async (sessionId: string) => {
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
     
-    const newTitle = prompt('Enter new title:', session.title);
+    const newTitle = prompt('Rename chat:', session.title);
     if (newTitle && newTitle !== session.title) {
       await updateSession(sessionId, { title: newTitle });
       toast.success('Chat renamed');
     }
   };
 
-  const handleDuplicateSession = async (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    const newTitle = `${session.title} (Copy)`;
-    const newSessionId = await createNewSession(newTitle);
-    if (newSessionId) {
-      await updateSession(newSessionId, { 
-        answers: session.answers,
-        current_step: session.current_step 
-      });
-      toast.success('Chat duplicated');
-    }
+  const handlePinSession = async (sessionId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    await togglePinSession(sessionId);
   };
 
-  const handleExportSession = (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    const data = JSON.stringify(session, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${session.title.replace(/[^a-z0-9]/gi, '_')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Chat exported');
+  const handleDeleteClick = (sessionId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSessionToDelete(sessionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (sessionToDelete) {
+      await deleteSession(sessionToDelete);
+      setDeleteDialogOpen(false);
+      setSessionToDelete(null);
+    }
   };
 
   const handleSignOut = async () => {
@@ -230,500 +117,196 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, onTabChange
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffTime = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return 'Today';
-    if (diffDays === 2) return 'Yesterday';
-    if (diffDays <= 7) return `${diffDays - 1} days ago`;
-    return date.toLocaleDateString();
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-
-  const getProgressBadge = (session: ChatSession) => {
-    if (session.is_completed) {
-      return <Badge variant="default" className="text-xs">Completed</Badge>;
-    }
-    return <Badge variant="secondary" className="text-xs">Step {session.current_step}/7</Badge>;
-  };
-
-  const sidebarWidth = isCollapsed ? 56 : 320;
 
   if (!user) {
     return (
-      <TooltipProvider>
-        <div 
-          className={cn(
-            "glass-card-silver h-[700px] flex flex-col hover-lift relative overflow-hidden",
-            className
-          )}
-          style={{
-            width: `${sidebarWidth}px`,
-            transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        >
-          {/* Toggle button on right edge */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0 bg-background border border-border shadow-lg hover:scale-110 transition-transform"
-                aria-expanded={!isCollapsed}
-              >
-                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            </TooltipContent>
-          </Tooltip>
-
-          <div className="p-4 border-b border-border/50 space-y-3">
-            {!isCollapsed && (
-              <h2 className="font-semibold text-sm px-1">Chats</h2>
-            )}
-          
-          {!isCollapsed && (
-            <div 
-              className="space-y-3"
-              style={{
-                animation: 'fadeIn 0.3s ease-out 0.1s both',
-              }}
-            >
-              {/* Quick Actions Menu - Available for everyone */}
-              <div className="grid grid-cols-2 gap-2">
-                {quickActions.map((action) => (
-                  <Button
-                    key={action.label}
-                    variant="outline"
-                    size="sm"
-                    onClick={action.onClick}
-                    className="justify-start gap-2 text-xs h-9 hover:bg-primary/10 hover:text-primary transition-colors"
-                  >
-                    <action.icon className="w-3.5 h-3.5" />
-                    <span className="truncate">{action.label}</span>
-                  </Button>
-                ))}
-              </div>
-
-              {/* Sign in CTA with gradient */}
-              <Button
-                onClick={() => navigate('/login')}
-                className="w-full justify-start gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-                size="lg"
-              >
-                <CreditCard className="w-4 h-4" />
-                Sign In to Save Chats
-              </Button>
-            </div>
-          )}
+      <div className={cn("w-64 h-full border-r border-border bg-background flex flex-col", className)}>
+        <div className="p-4 border-b border-border">
+          <Button
+            onClick={() => navigate('/login')}
+            className="w-full"
+            size="lg"
+          >
+            Sign In
+          </Button>
         </div>
-
-        {!isCollapsed && (
-          <div className="flex-1 flex items-center justify-center p-6">
-            <div className="glass-card-silver p-6 rounded-xl text-center">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-primary/50" />
-              <p className="text-sm font-medium mb-2">Ready to get started?</p>
-              <p className="text-xs text-muted-foreground mb-4">
-                Sign in to save your conversations and track your progress
-              </p>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={() => navigate('/prompt-library')}
-                  className="h-auto p-0 text-primary"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Or explore our prompt library
-                </Button>
-              </div>
-            </div>
+        <div className="flex-1 flex items-center justify-center p-6 text-center">
+          <div>
+            <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Sign in to save your chat history
+            </p>
           </div>
-        )}
-
-        {/* Collapsed state */}
-        {isCollapsed && (
-          <div className="p-2 space-y-2">
-            {quickActions.slice(0, 4).map((action) => (
-              <Tooltip key={action.label}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={action.onClick}
-                    className="w-full aspect-square p-0 hover:bg-primary/10"
-                  >
-                    <action.icon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {action.label}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
-      </TooltipProvider>
     );
   }
 
   return (
-    <TooltipProvider>
-      <div 
-        className={cn(
-          "glass-card-silver h-[700px] flex flex-col hover-lift relative overflow-hidden",
-          className
-        )}
-        style={{
-          width: `${sidebarWidth}px`,
-          transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      >
-        {/* Toggle button on right edge */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0 bg-background border border-border shadow-lg hover:scale-110 transition-transform"
-              aria-expanded={!isCollapsed}
-            >
-              {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          </TooltipContent>
-        </Tooltip>
+    <div className={cn("w-64 h-full border-r border-border bg-background flex flex-col", className)}>
+      {/* Header - New Chat */}
+      <div className="p-3 border-b border-border">
+        <Button
+          onClick={handleNewChat}
+          className="w-full justify-start gap-2"
+          variant="outline"
+        >
+          <Plus className="w-4 h-4" />
+          New Chat
+        </Button>
+      </div>
 
-        {/* Header */}
-        <div className="p-4 border-b border-border/50 space-y-3">
-          {!isCollapsed && (
-            <h2 className="font-semibold text-sm px-1">Chats</h2>
-          )}
-        
-        {!isCollapsed && (
-          <div 
-            className="space-y-3"
-            style={{
-              animation: 'fadeIn 0.3s ease-out 0.1s both',
-            }}
-          >
-            {/* Quick Actions Menu */}
-            <div className="grid grid-cols-2 gap-2">
-              {quickActions.map((action) => (
-                <Button
-                  key={action.label}
-                  variant="outline"
-                  size="sm"
-                  onClick={action.onClick}
-                  className="justify-start gap-2 text-xs h-9 hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  <action.icon className="w-3.5 h-3.5" />
-                  <span className="truncate">{action.label}</span>
-                </Button>
-              ))}
-            </div>
-
-            <Button
-              onClick={handleNewChat}
-              className="w-full justify-start gap-2 bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-              size="lg"
-            >
-              <Plus className="w-4 h-4" />
-              New Chat
-            </Button>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search chats..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            {/* Filter and Sort Controls */}
-            <div className="flex gap-2">
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Recent</SelectItem>
-                  <SelectItem value="alphabetical">A-Z</SelectItem>
-                  <SelectItem value="completion">Completion</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupOption)}>
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="Group by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Date</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
-                  <SelectItem value="none">None</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
+      {/* Search */}
+      <div className="p-3 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search chats..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
       </div>
 
       {/* Chat List */}
-      {!isCollapsed && (
-        <ScrollArea className="flex-1">
-          <div className="p-2">
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-16 bg-muted/50 rounded animate-pulse" />
-                ))}
-              </div>
-            ) : sortedSessions.length === 0 ? (
-              <div className="text-center py-8 px-4">
-                <div className="glass-card-silver p-6 rounded-xl">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-primary/50" />
-                  <p className="text-sm font-medium mb-2">
-                    {searchQuery ? 'No chats found' : 'Ready to start?'}
-                  </p>
-                  {!searchQuery && (
-                    <div className="space-y-2 text-xs text-muted-foreground">
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={() => navigate('/prompt-library')}
-                        className="h-auto p-0 text-primary"
-                      >
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        Explore Prompts
-                      </Button>
-                      <p>or start a new chat above</p>
-                    </div>
+      <ScrollArea className="flex-1">
+        <div className="p-2">
+          {loading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-14 bg-muted/30 rounded animate-pulse" />
+              ))}
+            </div>
+          ) : sortedSessions.length === 0 ? (
+            <div className="text-center py-8 px-4">
+              <MessageSquare className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {searchQuery ? 'No chats found' : 'No chats yet'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {sortedSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className={cn(
+                    "group relative p-3 rounded-lg cursor-pointer transition-all",
+                    "hover:bg-muted/50",
+                    currentSessionId === session.id && "bg-muted"
                   )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(groupedSessions).map(([group, groupSessions]) => (
-                  <div key={group}>
-                    {groupBy !== 'none' && (
-                      <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {group}
+                  onClick={() => handleSessionClick(session)}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-sm truncate flex-1">
+                          {session.title}
+                        </h4>
+                        {session.is_pinned && (
+                          <Pin className="w-3 h-3 text-primary flex-shrink-0" />
+                        )}
                       </div>
-                    )}
-                    <div className="space-y-1">
-                      {groupSessions.map((session) => (
-                        <div
-                          key={session.id}
-                          className={cn(
-                            "group relative p-3 rounded-lg cursor-pointer transition-all duration-200",
-                            "hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10",
-                            "hover:shadow-lg hover:scale-[1.02]",
-                            currentSessionId === session.id && "bg-gradient-to-r from-primary/20 to-secondary/20 ring-2 ring-primary/30 shadow-lg"
-                          )}
-                          onClick={() => handleSessionClick(session)}
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(session.updated_at)}
+                      </p>
+                    </div>
+
+                    {/* Actions Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                {session.is_completed ? (
-                                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                ) : (
-                                  <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                )}
-                                <h4 className="font-medium text-sm truncate">
-                                  {session.title}
-                                </h4>
-                              </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <Calendar className="w-3 h-3" />
-                                  {formatDate(session.updated_at)}
-                                </div>
-                                {getProgressBadge(session)}
-                              </div>
-                            </div>
-
-                            {/* Context Menu */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRenameSession(session.id);
-                                }}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Rename
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDuplicateSession(session.id);
-                                }}>
-                                  <Copy className="w-4 h-4 mr-2" />
-                                  Duplicate
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleExportSession(session.id);
-                                }}>
-                                  <Download className="w-4 h-4 mr-2" />
-                                  Export
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem 
-                                      className="text-destructive focus:text-destructive"
-                                      onSelect={(e) => e.preventDefault()}
-                                    >
-                                      <Trash2 className="w-4 h-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Chat</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete "{session.title}"? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleDeleteSession(session.id)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      >
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                          <span className="text-lg leading-none">⋯</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onClick={(e) => handlePinSession(session.id, e)}>
+                          <Pin className="w-4 h-4 mr-2" />
+                          {session.is_pinned ? 'Unpin' : 'Pin'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => handleRenameSession(session.id, e)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={(e) => handleDeleteClick(session.id, e)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      )}
-
-      {/* User Profile Footer */}
-      {!isCollapsed && user && (
-        <div className="border-t border-border/50 p-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start p-2 h-auto hover:bg-muted/50">
-                <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-9 w-9 ring-2 ring-primary/20">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground">
-                      {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {user.user_metadata?.full_name || 'User'}
-                    </p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <CreditCard className="w-3 h-3" />
-                      <span>{balance}/{monthlyQuota} credits</span>
-                    </div>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/account')}>
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/pricing')}>
-                <CreditCard className="w-4 h-4 mr-2" />
-                Upgrade Plan
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </ScrollArea>
 
-      {/* Collapsed state indicator */}
-      {isCollapsed && (
-        <div className="p-2 space-y-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleNewChat}
-                className="w-full aspect-square p-0 hover:bg-primary/10"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              New Chat
-            </TooltipContent>
-          </Tooltip>
-          <Separator className="my-2" />
-          <div className="space-y-1">
-            {sessions.slice(0, 3).map((session) => (
-              <Tooltip key={session.id}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "w-full aspect-square p-0 hover:bg-primary/10",
-                      currentSessionId === session.id && "bg-primary/20"
-                    )}
-                    onClick={() => handleSessionClick(session)}
-                  >
-                    {session.is_completed ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <Circle className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {session.title}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* User Footer */}
+      <div className="border-t border-border p-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+              <div className="flex items-center gap-3 w-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                    {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                  </p>
+                </div>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete this chat. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-    </TooltipProvider>
   );
 };
