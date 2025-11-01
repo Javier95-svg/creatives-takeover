@@ -36,6 +36,8 @@ import { ReportDisplay } from "@/components/ReportDisplay";
 import { ExampleConversations } from "@/components/bizmap/ExampleConversations";
 import { BookOpen } from "lucide-react";
 import { trackActivity } from "@/lib/activity";
+import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
+import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -72,6 +74,16 @@ const BizMapAI = () => {
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
   const [showExamplesModal, setShowExamplesModal] = useState(false);
+  
+  // Founder OS Integration
+  const { 
+    validating, 
+    generatingRoadmap, 
+    validationComplete, 
+    roadmapComplete,
+    runValidation,
+    generateRoadmap
+  } = useFounderOSIntegration();
   
   // Sprint Planner handlers
   const handleSprintCreated = (sprintId: string) => {
@@ -1288,6 +1300,44 @@ Subject: "Quick question about [their pain point]"
                         if (pdfButton) {
                           pdfButton.click();
                         }
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Founder OS Integration - Show after wizard completion */}
+                {currentStep >= wizardSteps.length && (
+                  <div className="mb-8 animate-fade-in">
+                    <FounderOSIntegration
+                      sessionId={currentSessionId}
+                      businessIdea={userAnswers.overview}
+                      industry={userAnswers.market}
+                      targetMarket={userAnswers.market}
+                      validationComplete={validationComplete}
+                      roadmapComplete={roadmapComplete}
+                      onValidate={async () => {
+                        if (!user) {
+                          toast.error("Please sign in to validate your idea");
+                          return;
+                        }
+                        await runValidation({
+                          sessionId: currentSessionId,
+                          businessIdea: userAnswers.overview,
+                          industry: userAnswers.market,
+                          targetMarket: userAnswers.market
+                        });
+                      }}
+                      onGenerateRoadmap={async () => {
+                        if (!user) {
+                          toast.error("Please sign in to generate your roadmap");
+                          return;
+                        }
+                        await generateRoadmap({
+                          sessionId: currentSessionId,
+                          businessIdea: userAnswers.overview,
+                          industry: userAnswers.market,
+                          targetMarket: userAnswers.market
+                        });
                       }}
                     />
                   </div>
