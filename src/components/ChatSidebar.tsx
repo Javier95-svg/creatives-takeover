@@ -150,9 +150,9 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0 bg-background border border-border shadow-lg hover:scale-110 transition-transform"
+                className="absolute right-0 top-4 z-50 rounded-full w-8 h-8 p-0 bg-background border-2 border-border shadow-lg hover:scale-110 transition-transform translate-x-1/2"
               >
-                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+                {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -205,9 +205,9 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
               variant="ghost"
               size="icon"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0 bg-background border border-border shadow-lg hover:scale-110 transition-transform"
+              className="absolute right-0 top-4 z-50 rounded-full w-8 h-8 p-0 bg-background border-2 border-border shadow-lg hover:scale-110 transition-transform translate-x-1/2"
             >
-              {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
