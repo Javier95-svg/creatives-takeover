@@ -103,52 +103,52 @@ const BizMapAI = () => {
   const wizardSteps = [
     {
       key: "overview",
-      title: "Business Overview",
-      question: "Let's validate your idea and create a 30-day launch roadmap! 🚀 What problem are you solving and for whom? (This is the foundation of everything we'll build together)",
+      title: "Week 1: Business Concept (Days 1-2)",
+      question: "🚀 Let's build your 30-day launch plan! What problem are you solving and for whom? This becomes your Week 1 validation foundation.",
       placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
-      transition: "Excellent! I can already see the potential. Now, let's dive deeper into your target market..."
+      transition: "Perfect! Now let's define who your first customers will be..."
     },
     {
       key: "market", 
-      title: "Target Market",
-      question: "Who are your ideal customers? Tell me about the people who would absolutely love what you're creating. 💡",
-      placeholder: "Example: Working parents aged 28-45 in urban areas who currently struggle with childcare...",
-      transition: "Perfect! Understanding your audience is everything. Now I want to understand the problem you're solving..."
+      title: "Week 1: Target Customer (Days 3-4)",
+      question: "📅 Day 3-4 Focus: Describe your ideal FIRST customer in detail. Where can we find them in the next 7 days?",
+      placeholder: "Example: Working parents aged 28-45 in urban areas, active in mom Facebook groups and parenting subreddits...",
+      transition: "Excellent! Now let's design your minimum viable product for Week 2..."
     },
     {
       key: "problem",
-      title: "Problem Definition", 
-      question: "What specific frustration or pain point does your business solve? What keeps your customers up at night? 🤔",
-      placeholder: "Example: Parents waste hours searching unreliable Facebook groups, often finding no one available...",
-      transition: "Excellent! A clear problem is half the battle won. Now, tell me about your solution..."
+      title: "Week 1: Validation Plan (Days 5-7)", 
+      question: "📊 Week 1 Goal: How will you validate demand this week? List 3 ways you'll test if people want this.",
+      placeholder: "Example: 10 customer interviews, landing page with email signup, competitor research in 3 markets...",
+      transition: "Great validation plan! Now, what's the simplest version we can build in Week 2?"
     },
     {
       key: "solution",
-      title: "Your Solution",
-      question: "Describe your solution—what makes your approach special or different from what's already out there? What's your unfair advantage? ✨", 
-      placeholder: "Example: Our app provides verified sitters with real-time availability and instant booking...",
-      transition: "Love it! Your uniqueness is your strength. Now, let's figure out how to reach your customers..."
+      title: "Week 2: MVP Design (Days 8-14)",
+      question: "🛠️ Week 2 Focus: What's the absolute MINIMUM version that solves the core problem? What features are essential?", 
+      placeholder: "Example: Simple booking form, verified sitter profiles, SMS notifications. NO fancy features yet...",
+      transition: "Perfect MVP scope! Now, where will you launch in Week 3?"
     },
     {
       key: "channels",
-      title: "Marketing Channels",
-      question: "How will you reach and attract your first customers? Where do your ideal customers hang out? 📢",
-      placeholder: "Example: Instagram ads targeting parent hashtags, partnerships with pediatricians, referral program...",
-      transition: "Smart thinking! Getting visible is crucial. Now let's talk about the money side (I promise it won't be scary!)..."
+      title: "Week 3: Launch Strategy (Days 15-21)",
+      question: "🎯 Week 3 Goal: Where will you launch to get your first 10 users? Be specific about channels and tactics.",
+      placeholder: "Example: Product Hunt launch, 5 parenting Facebook groups, Instagram influencer outreach, friend referrals...",
+      transition: "Smart launch strategy! Now let's plan how you'll get your first paying customer..."
     },
     {
       key: "pricing",
-      title: "Pricing & Costs", 
-      question: "How will you price your product or service? What would make this a no-brainer for your customers? 💰",
-      placeholder: "Example: 15% commission per booking, avg $60/booking. Main costs: app development ($5K)...",
-      transition: "Great! You're thinking about sustainability and value. Finally, let's set some achievable goals..."
+      title: "Week 4: Pricing Model (Days 22-25)",
+      question: "💰 Week 4: How will you charge? What pricing makes sense for getting your first paying customer by Day 30?",
+      placeholder: "Example: Early bird: $20/month (50% off), then $40/month. First 10 customers get lifetime discount...",
+      transition: "Excellent pricing strategy! Finally, what does success look like on Day 30?"
     },
     {
       key: "goals",
-      title: "Goals & Timeline",
-      question: "What are your goals for the next 90 days? What would make you do a happy dance? 🎯",
-      placeholder: "Example: Launch MVP, get 100 active users, $5K monthly revenue. Can dedicate 25 hours/week...",
-      transition: "Awesome work! You've completed the planning journey. Generating your personalized launch report... 🎉"
+      title: "Week 4: Day 30 Success Metrics (Days 26-30)",
+      question: "🎯 Final Week: What does success look like on Day 30? How many customers or revenue would make this REAL?",
+      placeholder: "Example: 1 paying customer ($20), 50 email signups, 20 active users. Proof this can work!",
+      transition: "Amazing! Generating your personalized 30-day launch roadmap... 🎉"
     }
   ];
 
@@ -479,6 +479,29 @@ const BizMapAI = () => {
           `Launch Report generated successfully! (Used ${reportCost} credits)`;
         toast.success(successMessage);
         await computeAndStoreSuccessScore(answers);
+        
+        // Auto-generate 30-day roadmap with wizard answers
+        if (currentSessionId && user) {
+          console.log('🗓️ Auto-generating 30-day roadmap with wizard context...');
+          setShowReport(true);
+          try {
+            await generateRoadmap({
+              sessionId: currentSessionId,
+              businessIdea: answers.overview || 'Not specified',
+              industry: 'General',
+              targetMarket: answers.market || 'Not specified'
+            }, answers);
+            toast.success("🎉 Launch Report & 30-Day Roadmap Ready!", {
+              description: "Your personalized launch plan is complete!"
+            });
+          } catch (roadmapError) {
+            console.error('Roadmap generation failed:', roadmapError);
+            // Don't fail the whole process if roadmap generation fails
+          }
+        } else {
+          setShowReport(true);
+        }
+        
         return data.report;
       } else {
         console.error('API returned error:', data?.error);

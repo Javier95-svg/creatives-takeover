@@ -53,7 +53,12 @@ export const useLaunchRoadmap = () => {
   };
 
   // Create new roadmap
-  const createRoadmap = async (sessionId: string, businessIdea: string, industry: string) => {
+  const createRoadmap = async (
+    sessionId: string, 
+    businessIdea: string, 
+    industry: string,
+    wizardAnswers?: Record<string, string>
+  ) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -75,6 +80,7 @@ export const useLaunchRoadmap = () => {
           industry,
           start_date: new Date().toISOString().split('T')[0],
           user_experience_level: 'intermediate',
+          wizard_answers: wizardAnswers || null,
         },
       });
 

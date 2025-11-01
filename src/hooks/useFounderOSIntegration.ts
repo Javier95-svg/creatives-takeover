@@ -52,7 +52,7 @@ export const useFounderOSIntegration = () => {
     }
   };
 
-  const generateRoadmap = async (data: FounderOSIntegrationData) => {
+  const generateRoadmap = async (data: FounderOSIntegrationData, wizardAnswers?: Record<string, string>) => {
     if (!user) {
       toast.error('Please sign in to use Founder OS features');
       return false;
@@ -67,6 +67,7 @@ export const useFounderOSIntegration = () => {
           industry: data.industry,
           start_date: new Date().toISOString().split('T')[0],
           user_experience_level: 'intermediate',
+          wizard_answers: wizardAnswers || null,
         },
       });
 

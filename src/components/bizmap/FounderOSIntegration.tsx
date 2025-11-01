@@ -44,66 +44,81 @@ export const FounderOSIntegration = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Get real-time market validation, AI-powered roadmap, and join a founder cohort for accountability.
+          Your 30-day launch roadmap will be automatically generated when you complete the wizard above. Get validation, personalized tasks, and optional cohort support.
         </p>
 
-        {/* Action Steps */}
+        {/* Progress Status */}
         <div className="space-y-3">
-          {/* Step 1: Validate */}
+          {/* Automatic Roadmap Generation */}
+          <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Rocket className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <div className="font-medium text-sm mb-1">📅 30-Day Launch Roadmap</div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Automatically generated from your wizard answers with personalized weekly goals and daily tasks
+                </p>
+                {roadmapComplete ? (
+                  <Badge variant="default" className="text-xs">
+                    ✅ Ready in Dashboard
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">
+                    Generates after wizard completion
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Optional: Market Validation */}
           <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border">
             <div className="flex items-center gap-3">
               <Target className={`h-5 w-5 ${validationComplete ? 'text-green-500' : 'text-muted-foreground'}`} />
               <div>
-                <div className="font-medium text-sm">Validate Your Idea</div>
-                <div className="text-xs text-muted-foreground">Get market validation score 0-100</div>
+                <div className="font-medium text-sm">Deep Market Validation</div>
+                <div className="text-xs text-muted-foreground">Optional: Get validation score 0-100</div>
               </div>
             </div>
             {validationComplete ? (
               <Badge variant="default">Complete</Badge>
             ) : (
-              <Button size="sm" onClick={onValidate}>
-                Validate
+              <Button size="sm" variant="outline" onClick={onValidate}>
+                Run Analysis
               </Button>
             )}
           </div>
 
-          {/* Step 2: Generate Roadmap */}
-          <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border">
-            <div className="flex items-center gap-3">
-              <Rocket className={`h-5 w-5 ${roadmapComplete ? 'text-green-500' : 'text-muted-foreground'}`} />
-              <div>
-                <div className="font-medium text-sm">Create 30-Day Roadmap</div>
-                <div className="text-xs text-muted-foreground">AI-generated sprint plan</div>
-              </div>
-            </div>
-            {roadmapComplete ? (
-              <Badge variant="default">Complete</Badge>
-            ) : (
-              <Button size="sm" onClick={onGenerateRoadmap} disabled={!validationComplete}>
-                Generate
-              </Button>
-            )}
-          </div>
-
-          {/* Step 3: Join Cohort */}
+          {/* Optional: Join Cohort */}
           <div className="flex items-center justify-between p-3 bg-background/50 rounded-lg border">
             <div className="flex items-center gap-3">
               <TrendingUp className="h-5 w-5 text-muted-foreground" />
               <div>
                 <div className="font-medium text-sm">Join Founder Cohort</div>
-                <div className="text-xs text-muted-foreground">Weekly accountability & support</div>
+                <div className="text-xs text-muted-foreground">Optional: Weekly accountability</div>
               </div>
             </div>
-            <Badge variant="outline">Optional</Badge>
+            <Badge variant="outline">Coming Soon</Badge>
           </div>
         </div>
 
         {/* Success Message */}
-        {(validationComplete && roadmapComplete) && (
+        {roadmapComplete && (
           <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              ✅ Your 30-day launch roadmap is ready! Check your tasks above.
-            </p>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">🎉</div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">
+                  Your 30-Day Launch Roadmap is Ready!
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Personalized tasks for each week based on your business plan
+                </p>
+                <Button size="sm" onClick={() => navigate('/dashboard')} className="w-full">
+                  View Roadmap in Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

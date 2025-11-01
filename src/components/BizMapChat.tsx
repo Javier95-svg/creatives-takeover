@@ -18,6 +18,7 @@ import { PersonalityIndicator } from "./ai-cofounder/PersonalityIndicator";
 interface BizMapChatProps {
   wizardSteps: Array<{
     key: string;
+    title?: string;
     question: string;
     transition?: string;
     placeholder?: string;
@@ -357,17 +358,31 @@ export const BizMapChat = ({
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium">
-              {chatMode === 'wizard' ? `Step ${currentStep + 1} of ${wizardSteps.length}` : 'Ask Me Anything'}
+              {chatMode === 'wizard' 
+                ? `Step ${currentStep + 1} of ${wizardSteps.length}` 
+                : 'Ask Me Anything'}
             </span>
+            {chatMode === 'wizard' && wizardSteps[currentStep] && (
+              <Badge variant="outline" className="text-xs">
+                {wizardSteps[currentStep].title.split(':')[0]}
+              </Badge>
+            )}
             {celebrationMode && (
               <span className="text-lg animate-bounce">🎉</span>
             )}
           </div>
           <Badge variant={chatMode === 'freeform' ? 'default' : 'secondary'} className="text-xs">
-            {chatMode === 'freeform' ? '✨ Freeform' : '🧙 Wizard'}
+            {chatMode === 'freeform' ? '✨ Freeform' : '🧙 30-Day Launch'}
           </Badge>
         </div>
-        {chatMode === 'wizard' && <Progress value={progress} className="h-2" />}
+        {chatMode === 'wizard' && (
+          <div className="space-y-1">
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-muted-foreground">
+              Building your personalized 30-day launch roadmap
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Messages Area */}

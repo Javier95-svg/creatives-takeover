@@ -12,9 +12,16 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, business_idea, industry, start_date, user_experience_level } = await req.json();
+    const { 
+      session_id, 
+      business_idea, 
+      industry, 
+      start_date, 
+      user_experience_level,
+      wizard_answers 
+    } = await req.json();
 
-    console.log('Generating roadmap for:', { business_idea, industry, start_date });
+    console.log('Generating roadmap for:', { business_idea, industry, start_date, hasWizardAnswers: !!wizard_answers });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -33,6 +40,21 @@ serve(async (req) => {
     const targetLaunchDate = new Date(startDateObj);
     targetLaunchDate.setDate(targetLaunchDate.getDate() + 30);
 
+    // Build personalized prompt using wizard answers
+    const contextualPrompt = wizard_answers ? `
+PERSONALIZED BUSINESS CONTEXT (use these exact details in all tasks):
+
+Business Concept & Problem (Days 1-2): ${wizard_answers.overview || business_idea}
+Target Customer Profile (Days 3-4): ${wizard_answers.market || 'Not specified'}
+Week 1 Validation Plan (Days 5-7): ${wizard_answers.problem || 'Market validation needed'}
+MVP Design & Features (Days 8-14): ${wizard_answers.solution || 'MVP to be defined'}
+Week 3 Launch Channels (Days 15-21): ${wizard_answers.channels || 'Launch channels TBD'}
+Pricing Model (Days 22-25): ${wizard_answers.pricing || 'Pricing strategy needed'}
+Day 30 Success Goals (Days 26-30): ${wizard_answers.goals || 'Define success metrics'}
+
+CRITICAL: Every task MUST reference the user's specific inputs above. Don't use generic examples.
+` : '';
+
     // Generate tasks using AI
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -44,27 +66,48 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages: [{
           role: 'user',
-          content: `Create a detailed 30-day launch roadmap for this business:
+          content: `Create a highly personalized 30-day launch roadmap for this specific business:
 
-Business Idea: ${business_idea}
+${contextualPrompt}
+
 Industry: ${industry}
 Experience Level: ${user_experience_level}
 Start Date: ${start_date}
 
-Generate 30 days of actionable tasks divided into 4 weeks:
-- Week 1 (Days 1-7): VALIDATE - Market research, customer interviews, competitor analysis
-- Week 2 (Days 8-14): BUILD MVP - Core features, basic product, landing page
-- Week 3 (Days 15-21): LAUNCH - Marketing, early access, first users
-- Week 4 (Days 22-30): FIRST CUSTOMER - Sales, outreach, conversion
+Generate 30 days of PERSONALIZED, actionable tasks divided into 4 weeks:
 
-Each task should:
-- Be specific and actionable
-- Have realistic estimated hours (2-6 hours)
-- Include priority level
-- Have clear success criteria
-- Build toward getting the first paying customer
+WEEK 1 (Days 1-7): VALIDATE
+- Days 1-2: Research and validate "${wizard_answers?.overview || business_idea}"
+- Days 3-4: Find and interview "${wizard_answers?.market || 'target customers'}"
+- Days 5-7: Execute validation plan: "${wizard_answers?.problem || 'validation activities'}"
+- Goal: Confirm demand exists for this specific solution
 
-Generate 3-5 tasks per day focusing on speed and momentum.`
+WEEK 2 (Days 8-14): BUILD MVP
+- Build specifically: "${wizard_answers?.solution || 'MVP features'}"
+- Keep it minimal - only core features
+- Create landing page with value prop for "${wizard_answers?.market || 'target audience'}"
+- Goal: Working prototype that solves the validated problem
+
+WEEK 3 (Days 15-21): LAUNCH
+- Launch on these channels: "${wizard_answers?.channels || 'primary channels'}"
+- Get first users from "${wizard_answers?.market || 'target customer segments'}"
+- Implement early access strategy
+- Goal: First real users testing the product
+
+WEEK 4 (Days 22-30): FIRST CUSTOMER
+- Set up pricing: "${wizard_answers?.pricing || 'pricing model'}"
+- Sales outreach to validated leads
+- Conversion optimization
+- Goal: ${wizard_answers?.goals || 'First paying customer'}
+
+TASK REQUIREMENTS:
+- Reference specific user inputs (their problem, customers, MVP features, channels, pricing)
+- 3-5 tasks per day
+- Realistic hours (2-6 hours each)
+- Priority: critical/high/medium/low
+- Clear success criteria that builds toward their stated Day 30 goal
+
+Make this feel like THEIR roadmap, not a generic template.`
         }],
         tools: [{
           type: 'function',
