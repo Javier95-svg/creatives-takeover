@@ -98,16 +98,13 @@ export const FounderOSIntegration = ({
           </div>
         </div>
 
-        {/* View Founder OS Button */}
-        {(validationComplete || roadmapComplete) && (
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={() => navigate('/founder-os')}
-          >
-            Open Founder OS Dashboard
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+        {/* Success Message */}
+        {(validationComplete && roadmapComplete) && (
+          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+              ✅ Your 30-day launch roadmap is ready! Check your tasks above.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
