@@ -345,21 +345,9 @@ export const BizMapChat = ({
             <div className="flex flex-col">
               <span className="text-sm font-medium">
                 {chatMode === 'wizard' 
-                  ? `Step ${currentStep + 1} of ${wizardSteps.length}` 
+                  ? `Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || ''}` 
                   : 'Ask Me Anything'}
               </span>
-              {chatMode === 'wizard' && wizardSteps[currentStep] && (
-                <div className="flex flex-col gap-0.5">
-                  <Badge variant="outline" className="text-xs w-fit">
-                    {wizardSteps[currentStep].title.split('(')[0].trim()}
-                  </Badge>
-                  {wizardSteps[currentStep].title.includes('(') && (
-                    <span className="text-xs text-muted-foreground">
-                      {wizardSteps[currentStep].title.match(/\(([^)]+)\)/)?.[1]}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
             {celebrationMode && (
               <span className="text-lg animate-bounce">🎉</span>
