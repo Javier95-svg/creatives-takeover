@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
-import { corsHeaders, handleOptionsRequest, corsResponse } from "../_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return handleOptionsRequest();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -31,7 +35,10 @@ serve(async (req) => {
       .single();
 
     if (existingGoal) {
-      return corsResponse({ message: "Dashboard already initialized" });
+      return new Response(
+        JSON.stringify({ message: "Dashboard already initialized" }), 
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Initialize sample data for all dashboard components
@@ -144,13 +151,25 @@ serve(async (req) => {
     ];
     await supabaseClient.from('daily_tasks').insert(tasks);
 
-    return corsResponse({ 
-      message: "Dashboard initialized successfully",
-      initialized_at: now
-    });
+    return new Response(
+      JSON.stringify({ 
+        message: "Dashboard initialized successfully",
+        initialized_at: now
+      }), 
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200
+      }
+    );
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error initializing dashboard:', error);
-    return corsResponse({ error: error.message }, 400);
+    return new Response(
+      JSON.stringify({ error: error.message }), 
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400
+      }
+    );
   }
 });

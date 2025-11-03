@@ -1,7 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
-import { corsHeaders, handleOptionsRequest, corsResponse } from '../_shared/cors.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 console.log('🔧 Initializing environment variables...');
 const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
@@ -26,7 +30,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return handleOptionsRequest();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -244,10 +248,12 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     if (validArticles.length === 0) {
       console.log('⚠️ No valid articles found after validation');
-      return corsResponse({
+      return new Response(JSON.stringify({
         success: true,
         articles: [],
         message: 'No valid articles found after validation'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -266,10 +272,12 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     if (uniqueArticles.length === 0) {
       console.log('⚠️ No unique articles to insert after deduplication');
-      return corsResponse({
+      return new Response(JSON.stringify({
         success: true,
         articles: [],
         message: 'No unique articles found after deduplication'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -304,19 +312,24 @@ IMPORTANT: Only provide actual published articles with real working URLs from cr
 
     console.log(`✅ Successfully stored ${insertedArticles.length} articles`);
 
-    return corsResponse({
+    return new Response(JSON.stringify({
       success: true,
       articles: insertedArticles,
       message: `Found and stored ${insertedArticles.length} trending articles`
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error in trends-analyzer function:', error);
-    return corsResponse({ 
+    return new Response(JSON.stringify({ 
       error: error.message,
       success: false,
       details: 'Failed to fetch trending articles'
-    }, 500);
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
 
