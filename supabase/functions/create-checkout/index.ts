@@ -1,13 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.55.0";
 import { withErrorBoundary, logInfo, logError } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { handleOptionsRequest, corsResponse } from "../_shared/cors.ts";
 
 // Helper logging function for debugging
 const logStep = (step: string, details?: any) => {
@@ -17,7 +13,7 @@ const logStep = (step: string, details?: any) => {
 
 serve(withErrorBoundary(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleOptionsRequest();
   }
 
   return withIdempotency(req, 'create-checkout', async () => {
@@ -103,9 +99,6 @@ serve(withErrorBoundary(async (req: Request) => {
 
     logInfo('checkout:created', { sessionId: session.id });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return corsResponse({ url: session.url });
   });
 }, { fn: 'create-checkout' }));

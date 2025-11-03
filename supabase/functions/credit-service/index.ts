@@ -1,11 +1,7 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { handleOptionsRequest, corsResponse } from "../_shared/cors.ts";
 
 interface CreditTransaction {
   user_id: string;
@@ -214,7 +210,7 @@ export const CREDIT_COSTS = {
 // Edge function for credit management operations
 export default withErrorBoundary(async function handler(req: Request) {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleOptionsRequest();
   }
 
   try {
@@ -230,62 +226,44 @@ export default withErrorBoundary(async function handler(req: Request) {
       case 'getBalance': {
         const { userId } = params;
         const balance = await creditService.getBalance(userId);
-        return new Response(JSON.stringify({ balance }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse({ balance });
       }
 
       case 'checkCredits': {
         const { userId, amount } = params;
         const hasCredits = await creditService.hasCredits(userId, amount);
-        return new Response(JSON.stringify({ hasCredits }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse({ hasCredits });
       }
 
       case 'deductCredits': {
         const result = await creditService.deductCredits(params);
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse(result);
       }
 
       case 'addCredits': {
         const result = await creditService.addCredits(params);
-        return new Response(JSON.stringify(result), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse(result);
       }
 
       case 'getHistory': {
         const { userId, limit } = params;
         const history = await creditService.getTransactionHistory(userId, limit);
-        return new Response(JSON.stringify({ history }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse({ history });
       }
 
       case 'initialize': {
         const { userId } = params;
         const success = await creditService.initializeUserCredits(userId);
-        return new Response(JSON.stringify({ success }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse({ success });
       }
 
       default:
         logWarn('credit-service:unknown_action', { action });
-        return new Response(JSON.stringify({ error: 'Unknown action' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return corsResponse({ error: 'Unknown action' }, 400);
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in credit-service function:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return corsResponse({ error: 'Internal server error' }, 500);
   }
 }, { fn: 'credit-service' });
