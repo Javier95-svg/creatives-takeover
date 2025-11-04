@@ -2,11 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://rcjlaybjnozqbsoxzboa.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjamxheWJqbm96cWJzb3h6Ym9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDM4MzQsImV4cCI6MjA3MTExOTgzNH0.mDo9bIJKgEYqEKkVzHawTw9eefIq3BzrywmwztBhzng";
+// Prefer environment variables so keys are not committed to source.
+// In development create a `.env` with VITE_SUPABASE_URL and VITE_SUPABASE_KEY (do NOT commit it).
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? '') as string;
+const SUPABASE_PUBLISHABLE_KEY = (import.meta.env.VITE_SUPABASE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '') as string;
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  // Warn in dev/test to avoid confusing runtime errors. Do not throw to keep DX smooth.
+  // Ensure you set VITE_SUPABASE_URL and VITE_SUPABASE_KEY in your environment for dev and production.
+  // Example (local .env, do NOT commit):
+  // VITE_SUPABASE_URL=https://your-project.supabase.co
+  // VITE_SUPABASE_KEY=public-anon-key
+  // eslint-disable-next-line no-console
+  console.warn('Missing Supabase env vars: VITE_SUPABASE_URL or VITE_SUPABASE_KEY. Falling back to empty strings.');
+}
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {

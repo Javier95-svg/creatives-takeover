@@ -1,3 +1,22 @@
+const isProd = import.meta.env.MODE === 'production';
+
+export const log = (...args: unknown[]) => {
+  if (!isProd) console.log(...args);
+};
+
+export const warn = (...args: unknown[]) => {
+  console.warn(...args);
+};
+
+export const error = (...args: unknown[]) => {
+  console.error(...args);
+};
+
+export default {
+  log,
+  warn,
+  error,
+};
 /**
  * Centralized logging utility for frontend
  * Provides environment-aware logging with structured output

@@ -3,8 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Download, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import DOMPurify from 'dompurify';
 
 interface SuccessScore {
@@ -75,6 +73,12 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
         document.body.appendChild(tempDiv);
 
         try {
+          // Lazy-load heavy libraries only when generating PDF to keep initial bundle small
+          const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+            import('jspdf'),
+            import('html2canvas'),
+          ]);
+
           // Generate PDF using html2canvas and jsPDF
           const canvas = await html2canvas(tempDiv, {
             scale: 2,
