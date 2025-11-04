@@ -33,6 +33,7 @@ import Profile from "./pages/Profile";
 import Account from "./pages/Account";
 import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
+import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient();
 
@@ -50,7 +51,8 @@ const App = () => {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
+      <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <UserProvider>
           <ProgressProvider>
@@ -92,7 +94,9 @@ const App = () => {
           </ProgressProvider>
         </UserProvider>
       </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+      <Analytics />
+    </>
   );
 };
 
