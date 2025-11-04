@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
+import { captureEvent } from '@/lib/analytics';
 
 // Generate a session ID for anonymous tracking
 const getSessionId = () => {
@@ -42,6 +43,19 @@ export const usePageAnalytics = (pagePath?: string, pageTitle?: string) => {
         user_agent: navigator.userAgent,
         time_spent: event.event_type === 'time_on_page' ? Math.floor((Date.now() - startTime.current) / 1000) : 0,
       }));
+
+      // Non-blocking: also send the event to PostHog if available
+      try {
+        captureEvent(event.event_type, {
+          ...event.event_data,
+          page_path: event.page_path || pagePath || window.location.pathname,
+          page_title: event.page_title || pageTitle || document.title,
+          user_id: user?.id || null,
+          session_id: sessionId.current,
+        });
+      } catch (e) {
+        // ignore PostHog failures
+      }
     } catch (error) {
       console.error('Analytics tracking error:', error);
     }
