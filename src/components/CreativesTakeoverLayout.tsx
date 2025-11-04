@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import CreativesTakeoverHeader from './CreativesTakeoverHeader';
 import SEO from './SEO';
-import { SpeedInsights } from '@vercel/speed-insights/next';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 interface CreativesTakeoverLayoutProps {
   children: ReactNode;
