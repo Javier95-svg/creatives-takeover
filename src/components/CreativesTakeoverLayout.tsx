@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import CreativesTakeoverHeader from './CreativesTakeoverHeader';
 import SEO from './SEO';
+import { Analytics } from '@vercel/analytics/next';
 
 interface CreativesTakeoverLayoutProps {
   children: ReactNode;
@@ -33,6 +34,7 @@ const CreativesTakeoverLayout = ({
             </p>
           </div>
         </footer>
+        <Analytics />
       </div>
     </>
   );
