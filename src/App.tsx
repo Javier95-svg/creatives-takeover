@@ -47,7 +47,7 @@ const FeedbackWidgetWrapper = () => {
   return showWidget ? <FloatingFeedbackWidget /> : null;
 };
 
-const App = () => {
+function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
   return (
