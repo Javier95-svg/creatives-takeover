@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X, FileText, Image as ImageIcon } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
-import { useChatbot } from "@/hooks/useChatbot";
+import { useChatbot, ChatMessage } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
@@ -65,7 +65,7 @@ const categorizeMessageImportance = (content: string): number => {
 };
 
 // Helper function to extract key content for sharing
-const extractKeyContent = (messages: any[], businessContext: any) => {
+const extractKeyContent = (messages: ChatMessage[], businessContext: Record<string, unknown>) => {
   const botMessages = messages.filter(m => m.isBot);
   
   if (botMessages.length === 0) {

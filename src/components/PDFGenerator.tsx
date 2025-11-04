@@ -7,6 +7,14 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import DOMPurify from 'dompurify';
 
+interface SuccessScore {
+  overall_score?: number;
+  market_clarity_score?: number;
+  problem_validation_score?: number;
+  solution_strength_score?: number;
+  [key: string]: number | string | undefined;
+}
+
 interface PDFGeneratorProps {
   reportContent: string;
   businessName: string;
@@ -19,7 +27,7 @@ interface PDFGeneratorProps {
     pricing: string;
     goals: string;
   };
-  successScore?: any;
+  successScore?: SuccessScore;
   className?: string;
 }
 

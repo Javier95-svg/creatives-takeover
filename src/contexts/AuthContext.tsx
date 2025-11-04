@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logError, logInfo } from '@/lib/logger';
+import { AuthError } from '@/lib/errors';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName: string, dateOfBirth?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, dateOfBirth?: string) => Promise<{ error: SupabaseAuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: SupabaseAuthError | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
@@ -65,9 +67,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     }
                   })
                 ]);
-                console.log('Admin notification and welcome email sent for new user:', session.user.email);
+                logInfo('Admin notification and welcome email sent for new user');
               } catch (notificationError) {
-                console.log('Failed to send admin notification or welcome email:', notificationError);
+                logError('Failed to send admin notification or welcome email', notificationError);
               }
             }
           }, 0);
@@ -87,14 +89,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (user: User): Promise<boolean> => {
     try {
-      // Check if profile already exists to prevent overwriting
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      // Only create profile if it doesn't exist
       if (!existingProfile) {
         const { error } = await supabase
           .from('profiles')
@@ -106,14 +106,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
         
         if (error) {
-          console.error('Error creating profile:', error);
+          logError('Error creating profile', error, { userId: user.id });
           return false;
         }
-        return true; // New profile was created
+        return true;
       }
-      return false; // Profile already existed
+      return false;
     } catch (error) {
-      console.error('Error creating profile:', error);
+      logError('Unexpected error creating profile', error, { userId: user.id });
       return false;
     }
   };
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           body: { email, fullName }
         });
       } catch (welcomeError) {
-        console.log('Welcome email failed:', welcomeError);
+        logError('Welcome email failed', welcomeError, { email });
       }
     }
     
@@ -165,8 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           supabase.rpc('grant_monthly_credits')
         ]);
       } catch (subscriptionError) {
-        // Silently handle subscription check errors
-        console.log('Subscription/credits check on login:', subscriptionError);
+        logError('Subscription/credits check on login', subscriptionError);
       }
     }
     

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError, logWarn } from '@/lib/logger';
+import { APIError } from '@/lib/errors';
 
 interface CreditBalance {
   balance: number;
@@ -15,7 +18,7 @@ interface CreditTransaction {
   reason: string;
   feature: string;
   created_at: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const CREDIT_COSTS = {
@@ -39,21 +42,24 @@ export function useCredits() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('user_credits')
-        .select('balance, monthly_quota')
-        .eq('user_id', user.id)
-        .single();
+      const { data, error } = await safe.select(async () =>
+        await safe.client
+          .from('user_credits')
+          .select('balance, monthly_quota')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      );
 
       if (error) {
-        console.error('Error fetching credit balance:', error);
-        // Try to initialize credits for new users
+        logError('Error fetching credit balance', error, { userId: user.id });
         await initializeCredits();
-      } else {
+      } else if (data) {
         setBalance(data);
+      } else {
+        await initializeCredits();
       }
     } catch (error) {
-      console.error('Error in fetchBalance:', error);
+      logError('Unexpected error in fetchBalance', error, { userId: user.id });
     } finally {
       setLoading(false);
     }
@@ -68,12 +74,16 @@ export function useCredits() {
         body: { action: 'initialize', userId: user.id }
       });
 
+      if (error) {
+        throw new APIError('Failed to initialize credits', 'credit-service', 500);
+      }
+
       if (data?.success) {
-        await fetchBalance(); // Refresh balance after initialization
+        await fetchBalance();
         toast.success('Welcome! You received 5 free credits to get started!');
       }
     } catch (error) {
-      console.error('Error initializing credits:', error);
+      logError('Error initializing credits', error, { userId: user.id });
     }
   };
 
@@ -90,8 +100,11 @@ export function useCredits() {
   };
 
   // Add credits (for purchases, etc.)
-  const addCredits = async (amount: number, reason: string = 'Credit purchase') => {
-    if (!user) return false;
+  const addCredits = async (amount: number, reason: string = 'Credit purchase'): Promise<boolean> => {
+    if (!user) {
+      logWarn('Attempted to add credits without user', { amount, reason });
+      return false;
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke('credit-service', {
@@ -104,23 +117,27 @@ export function useCredits() {
         }
       });
 
+      if (error) {
+        throw new APIError('Failed to add credits', 'credit-service', 500);
+      }
+
       if (data?.success) {
         setBalance(prev => prev ? { ...prev, balance: data.newBalance } : null);
         toast.success(`${amount} credits added to your account!`);
         return true;
-      } else {
-        toast.error('Failed to add credits');
-        return false;
       }
+      
+      toast.error('Failed to add credits');
+      return false;
     } catch (error) {
-      console.error('Error adding credits:', error);
+      logError('Error adding credits', error, { userId: user.id, amount, reason });
       toast.error('Failed to add credits');
       return false;
     }
   };
 
   // Fetch transaction history
-  const fetchTransactionHistory = async (limit: number = 50) => {
+  const fetchTransactionHistory = async (limit: number = 50): Promise<void> => {
     if (!user) return;
 
     try {
@@ -128,11 +145,15 @@ export function useCredits() {
         body: { action: 'getHistory', userId: user.id, limit }
       });
 
+      if (error) {
+        throw new APIError('Failed to fetch transaction history', 'credit-service', 500);
+      }
+
       if (data?.history) {
         setTransactions(data.history);
       }
     } catch (error) {
-      console.error('Error fetching transaction history:', error);
+      logError('Error fetching transaction history', error, { userId: user.id, limit });
     }
   };
 
