@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -25,7 +25,7 @@ export const useChatSessions = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     if (!user) {
       setSessions([]);
       setLoading(false);
@@ -58,9 +58,9 @@ export const useChatSessions = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const createNewSession = async (title?: string): Promise<string | null> => {
+  const createNewSession = useCallback(async (title?: string): Promise<string | null> => {
     if (!user) {
       toast.error('Please sign in to save your conversations');
       return null;
@@ -99,9 +99,9 @@ export const useChatSessions = () => {
       toast.error('Failed to create new chat');
       return null;
     }
-  };
+  }, [user]);
 
-  const updateSession = async (
+  const updateSession = useCallback(async (
     sessionId: string, 
     updates: Partial<Pick<ChatSession, 'title' | 'current_step' | 'is_completed' | 'answers' | 'launch_report'>>
   ) => {
@@ -132,9 +132,9 @@ export const useChatSessions = () => {
     } catch (error) {
       console.error('Error updating session:', error);
     }
-  };
+  }, [user]);
 
-  const deleteSession = async (sessionId: string) => {
+  const deleteSession = useCallback(async (sessionId: string) => {
     if (!user) return;
 
     try {
@@ -161,9 +161,9 @@ export const useChatSessions = () => {
       console.error('Error deleting session:', error);
       toast.error('Failed to delete chat');
     }
-  };
+  }, [user, currentSessionId]);
 
-  const togglePinSession = async (sessionId: string) => {
+  const togglePinSession = useCallback(async (sessionId: string) => {
     if (!user) return;
 
     const session = sessions.find(s => s.id === sessionId);
@@ -195,15 +195,15 @@ export const useChatSessions = () => {
       console.error('Error toggling pin:', error);
       toast.error('Failed to update chat');
     }
-  };
+  }, [user, sessions]);
 
-  const getSession = (sessionId: string): ChatSession | null => {
+  const getSession = useCallback((sessionId: string): ChatSession | null => {
     return sessions.find(session => session.id === sessionId) || null;
-  };
+  }, [sessions]);
 
   useEffect(() => {
     loadSessions();
-  }, [user]);
+  }, [loadSessions]);
 
   return {
     sessions,

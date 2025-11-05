@@ -72,7 +72,7 @@ interface PostCardProps {
   post: Post;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post }) => {
+const PostCard = React.memo<PostCardProps>(({ post }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
@@ -649,6 +649,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
       />
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if critical post data changes
+  return prevProps.post.id === nextProps.post.id &&
+         prevProps.post.votes === nextProps.post.votes &&
+         prevProps.post.commentsCount === nextProps.post.commentsCount &&
+         prevProps.post.repostCount === nextProps.post.repostCount;
+});
 
 export default PostCard;

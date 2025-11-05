@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -62,7 +62,7 @@ export const useAccountabilityPartners = () => {
   const [recentNudges, setRecentNudges] = useState<AccountabilityNudge[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchPartnerships = async () => {
+  const fetchPartnerships = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -99,9 +99,9 @@ export const useAccountabilityPartners = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const fetchRecentNudges = async () => {
+  const fetchRecentNudges = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -123,9 +123,9 @@ export const useAccountabilityPartners = () => {
     } catch (error) {
       console.error('Error fetching nudges:', error);
     }
-  };
+  }, [user]);
 
-  const sendPartnershipRequest = async (
+  const sendPartnershipRequest = useCallback(async (
     partnerId: string, 
     partnershipType: AccountabilityPartnership['partnership_type'],
     sprintId?: string,
@@ -156,9 +156,9 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to send partnership request');
       return { error: error.message };
     }
-  };
+  }, [user, fetchPartnerships]);
 
-  const respondToPartnershipRequest = async (
+  const respondToPartnershipRequest = useCallback(async (
     partnershipId: string, 
     action: 'accept' | 'decline'
   ) => {
@@ -189,9 +189,9 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to respond to partnership request');
       return { error: error.message };
     }
-  };
+  }, [fetchPartnerships]);
 
-  const sendNudge = async (
+  const sendNudge = useCallback(async (
     partnershipId: string,
     partnerId: string,
     nudgeType: AccountabilityNudge['nudge_type'],
@@ -221,9 +221,9 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to send nudge');
       return { error: error.message };
     }
-  };
+  }, [user, partnerships, fetchRecentNudges]);
 
-  const acknowledgeNudge = async (nudgeId: string) => {
+  const acknowledgeNudge = useCallback(async (nudgeId: string) => {
     if (!user) return;
 
     try {
@@ -238,9 +238,9 @@ export const useAccountabilityPartners = () => {
     } catch (error) {
       console.error('Error acknowledging nudge:', error);
     }
-  };
+  }, [fetchRecentNudges]);
 
-  const endPartnership = async (partnershipId: string) => {
+  const endPartnership = useCallback(async (partnershipId: string) => {
     if (!user) return { error: 'Not authenticated' };
 
     try {
@@ -263,14 +263,14 @@ export const useAccountabilityPartners = () => {
       toast.error('Failed to end partnership');
       return { error: error.message };
     }
-  };
+  }, [fetchPartnerships]);
 
   useEffect(() => {
     if (user) {
       fetchPartnerships();
       fetchRecentNudges();
     }
-  }, [user]);
+  }, [user, fetchPartnerships, fetchRecentNudges]);
 
   return {
     partnerships,

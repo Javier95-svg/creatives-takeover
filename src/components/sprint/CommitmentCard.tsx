@@ -27,7 +27,7 @@ interface CommitmentCardProps {
   onCancel?: (commitmentId: string) => void;
 }
 
-const CommitmentCard: React.FC<CommitmentCardProps> = ({
+const CommitmentCard = React.memo<CommitmentCardProps>(({
   commitment,
   onVerify,
   onResolve,
@@ -227,6 +227,11 @@ const CommitmentCard: React.FC<CommitmentCardProps> = ({
       </CardFooter>
     </Card>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if commitment data changes
+  return prevProps.commitment.id === nextProps.commitment.id &&
+         prevProps.commitment.status === nextProps.commitment.status &&
+         prevProps.commitment.verified_by?.length === nextProps.commitment.verified_by?.length;
+});
 
 export default CommitmentCard;
