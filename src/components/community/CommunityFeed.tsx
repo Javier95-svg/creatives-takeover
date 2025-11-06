@@ -264,98 +264,15 @@ const CommunityFeed: React.FC = () => {
     }
   }, [posts, search, sort, selectedTag, postType, engagement]);
 
-  const publish = async (payload: ComposerPayload) => {
-    // Require authentication for posting
-    if (!isAuthenticated || !user) {
-      toast.error('Please sign in to post stories');
-      return;
-    }
-
+  async function handlePublish(payload: ComposerPayload) {
     try {
-      const { data, error } = await supabase
-        .from('community_posts')
-        .insert({
-          title: payload.title,
-          content: payload.content,
-          user_id: user.id
-        })
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error('Error creating post:', error);
-        toast.error('Failed to create post');
-        return;
-      }
-
-      toast.success('Post created successfully!');
-
-      // Check for new badges
-      if (user) {
-        setTimeout(() => checkAndAwardBadges(), 1000);
-      }
-
-      // Auto-complete daily challenge if applicable
-      if (data?.id) {
-        try {
-          const { data: challengeData } = await supabase.rpc('get_todays_challenge');
-          if (challengeData && challengeData.length > 0) {
-            const challenge = challengeData[0];
-            if (challenge.challenge_type === 'post') {
-              await supabase.rpc('complete_daily_challenge', {
-                p_user_id: user.id,
-                p_challenge_id: challenge.id,
-                p_proof_reference_id: data.id,
-                p_proof_reference_type: 'post'
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error auto-completing challenge:', error);
-        }
-      }
-
-      // Behind-the-scenes AI moderation & insight generation
-      setTimeout(async () => {
-        try {
-          toast.message("Analyzing your post with AI…");
-          const { data: aiData, error: aiError } = await supabase.functions.invoke('community-ai-moderator', {
-            body: {
-              title: payload.title,
-              content: payload.content,
-            },
-          });
-
-          if (aiError) {
-            console.error('AI moderation error', aiError);
-            toast.error("AI analysis failed. Your post is still published.");
-            return;
-          }
-
-          // Update the post with AI insights
-          await supabase
-            .from('community_posts')
-            .update({
-              ai_summary: aiData?.tldr,
-              ai_insights: aiData?.insights,
-              ai_related_topics: aiData?.related_topics,
-              ai_structured_idea: aiData?.structured_idea,
-              ai_trending_angle: aiData?.trending_angle,
-              ai_next_step: aiData?.next_step,
-            })
-            .eq('id', data.id);
-
-          toast.success("AI insights added to your post.");
-        } catch (error) {
-          console.error('AI moderation error:', error);
-        }
-      }, 1000);
-
-    } catch (error) {
-      console.error('Error creating post:', error);
-      toast.error('Failed to create post');
+  const { error } = await supabase.from('community_posts').insert([{ ...payload, user_id: user?.id }]);
+      if (error) throw error;
+      toast.success("Your story has been posted!");
+    } catch (e) {
+      toast.error("Error sharing to community!");
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -401,7 +318,7 @@ const CommunityFeed: React.FC = () => {
           <StreakNotificationBanner />
 
           {/* Post Composer */}
-          <PostComposer onPublish={publish} requireAuth={true} />
+          <PostComposer onPublish={handlePublish} requireAuth={true} />
 
           {/* Results Summary */}
           {search && (
