@@ -111,7 +111,6 @@ export const STATUS = {
 // Subscription Tiers
 export const SUBSCRIPTION_TIERS = {
   FREE: 'free',
-  BASIC: 'basic',
-  PREMIUM: 'premium',
-  ENTERPRISE: 'enterprise',
+  CREATOR: 'creator',
+  PROFESSIONAL: 'professional',
 } as const;

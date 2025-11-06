@@ -26,8 +26,7 @@ export function useFeatureGating() {
         const conversationLimits = {
           free: 5,
           creator: 50,
-          professional: 150,
-          enterprise: 500
+          professional: 150
         };
         
         if (!hasCredits(1)) {
@@ -47,7 +46,7 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       case 'community_voting':
-        if (['creator', 'professional', 'enterprise'].includes(tier)) {
+        if (['creator', 'professional'].includes(tier)) {
           return { hasAccess: true };
         }
         return { 
@@ -58,7 +57,7 @@ export function useFeatureGating() {
 
       // Prompt library features
       case 'prompt_library_export':
-        if (['creator', 'professional', 'enterprise'].includes(tier)) {
+        if (['creator', 'professional'].includes(tier)) {
           return { hasAccess: true };
         }
         return { 
@@ -69,7 +68,7 @@ export function useFeatureGating() {
 
       // Sprint planning
       case 'unlimited_sprints':
-        if (['creator', 'professional', 'enterprise'].includes(tier)) {
+        if (['creator', 'professional'].includes(tier)) {
           return { hasAccess: true };
         }
         return { 
@@ -80,7 +79,7 @@ export function useFeatureGating() {
 
       // Market intelligence
       case 'market_intelligence':
-        if (['creator', 'professional', 'enterprise'].includes(tier)) {
+        if (['creator', 'professional'].includes(tier)) {
           return { hasAccess: true };
         }
         return { 
@@ -91,7 +90,7 @@ export function useFeatureGating() {
 
       // Collaboration features
       case 'basic_collaboration':
-        if (['creator', 'professional', 'enterprise'].includes(tier)) {
+        if (['creator', 'professional'].includes(tier)) {
           return { hasAccess: true };
         }
         return { 
@@ -101,7 +100,7 @@ export function useFeatureGating() {
         };
 
       case 'advanced_collaboration':
-        if (['professional', 'enterprise'].includes(tier)) {
+        if (tier === 'professional') {
           return { hasAccess: true };
         }
         return { 
@@ -112,7 +111,7 @@ export function useFeatureGating() {
 
       // Business reports
       case 'custom_reports':
-        if (['professional', 'enterprise'].includes(tier)) {
+        if (tier === 'professional') {
           return { hasAccess: true };
         }
         return { 
@@ -122,7 +121,7 @@ export function useFeatureGating() {
         };
 
       case 'export_reports':
-        if (['professional', 'enterprise'].includes(tier)) {
+        if (tier === 'professional') {
           return { hasAccess: true };
         }
         return { 
@@ -133,7 +132,7 @@ export function useFeatureGating() {
 
       // Success analytics
       case 'success_analytics':
-        if (['professional', 'enterprise'].includes(tier)) {
+        if (tier === 'professional') {
           return { hasAccess: true };
         }
         return { 
@@ -142,36 +141,6 @@ export function useFeatureGating() {
           requiredTier: 'professional'
         };
 
-      // Enterprise features
-      case 'api_access':
-        if (tier === 'enterprise') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'API access is available for Enterprise tier only',
-          requiredTier: 'enterprise'
-        };
-
-      case 'custom_templates':
-        if (tier === 'enterprise') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'Custom business templates are available for Enterprise tier only',
-          requiredTier: 'enterprise'
-        };
-
-      case 'unlimited_collaboration':
-        if (tier === 'enterprise') {
-          return { hasAccess: true };
-        }
-        return { 
-          hasAccess: false, 
-          message: 'Unlimited collaboration participants available for Enterprise tier only',
-          requiredTier: 'enterprise'
-        };
 
       default:
         return { hasAccess: true };
@@ -183,8 +152,7 @@ export function useFeatureGating() {
     const limits = {
       free: 5,
       creator: 50,
-      professional: 150,
-      enterprise: 500
+      professional: 150
     };
     return limits[tier as keyof typeof limits] || 5;
   };
@@ -215,15 +183,6 @@ export function useFeatureGating() {
         'Success score analytics',
         'Export capabilities',
         'Priority support'
-      ],
-      enterprise: [
-        '500 BizMap AI conversations per month',
-        'All collaboration features',
-        'Advanced market intelligence',
-        'API access',
-        'Custom templates',
-        'Dedicated account manager',
-        'Priority feature requests'
       ]
     };
     return featureMap[tierName] || [];

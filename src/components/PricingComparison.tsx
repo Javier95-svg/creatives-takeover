@@ -11,38 +11,38 @@ const PricingComparison = () => {
     {
       category: "BizMap AI Conversations",
       items: [
-        { feature: "Monthly Credits", free: "5 Credits", creator: "50 Credits", professional: "150 Credits", enterprise: "500 Credits" }
+        { feature: "Monthly Credits", free: "5 Credits", creator: "50 Credits", professional: "150 Credits" }
       ]
     },
     {
       category: "Community Features",
       items: [
-        { feature: "Community Access", free: true, creator: true, professional: true, enterprise: true },
-        { feature: "Create Posts", free: true, creator: true, professional: true, enterprise: true },
-        { feature: "Comment & Engage", free: true, creator: true, professional: true, enterprise: true }
+        { feature: "Community Access", free: true, creator: true, professional: true },
+        { feature: "Create Posts", free: true, creator: true, professional: true },
+        { feature: "Comment & Engage", free: true, creator: true, professional: true }
       ]
     },
     {
       category: "Sprint Planning",
       items: [
-        { feature: "Sprint Planning Tools", free: "Basic", creator: "Full access", professional: "Full access", enterprise: "Full access" },
-        { feature: "Task Management", free: "Basic", creator: "Advanced", professional: "Advanced", enterprise: "Advanced" },
-        { feature: "Daily Check-ins", free: false, creator: true, professional: true, enterprise: true }
+        { feature: "Sprint Planning Tools", free: "Basic", creator: "Full access", professional: "Full access" },
+        { feature: "Task Management", free: "Basic", creator: "Advanced", professional: "Advanced" },
+        { feature: "Daily Check-ins", free: false, creator: true, professional: true }
       ]
     },
     {
       category: "Business Tools",
       items: [
-        { feature: "Market Intelligence Widget", free: false, creator: true, professional: true, enterprise: true },
-        { feature: "Business Report Generation", free: false, creator: false, professional: true, enterprise: true },
-        { feature: "PDF Export", free: false, creator: false, professional: true, enterprise: true }
+        { feature: "Market Intelligence Widget", free: false, creator: true, professional: true },
+        { feature: "Business Report Generation", free: false, creator: false, professional: true },
+        { feature: "PDF Export", free: false, creator: false, professional: true }
       ]
     },
     {
       category: "Support",
       items: [
-        { feature: "Email Support", free: true, creator: true, professional: true, enterprise: true },
-        { feature: "Priority Support", free: false, creator: true, professional: true, enterprise: true }
+        { feature: "Email Support", free: true, creator: true, professional: true },
+        { feature: "Priority Support", free: false, creator: true, professional: true }
       ]
     }
   ];
@@ -50,8 +50,7 @@ const PricingComparison = () => {
   const plans = [
     { name: "Free", price: "$0", period: "/month", isPopular: false },
     { name: "Creator", price: "$19.99", period: "/month", isPopular: false },
-    { name: "Professional", price: "$39.99", period: "/month", isPopular: false },
-    { name: "Enterprise", price: "$59.99", period: "/month", isPopular: false }
+    { name: "Professional", price: "$39.99", period: "/month", isPopular: false }
   ];
   const renderFeatureValue = (value: any, animated: boolean = false) => {
     if (typeof value === 'boolean') {
@@ -133,7 +132,7 @@ const PricingComparison = () => {
                   <h4 className="font-semibold text-lg mb-4 text-primary">{category.category}</h4>
                   <div className="space-y-3">
                     {category.items.map(item => {
-                      const planKey = plans[currentMobileIndex].name.toLowerCase() as 'free' | 'creator' | 'professional' | 'enterprise';
+                      const planKey = plans[currentMobileIndex].name.toLowerCase() as 'free' | 'creator' | 'professional';
                       return (
                         <div key={item.feature} className="flex justify-between items-center gap-4">
                           <span className="text-sm flex-1">{item.feature}</span>
@@ -203,8 +202,8 @@ const PricingComparison = () => {
                         style={{ animationDelay: `${(catIndex + 1) * 0.15}s` }}
                         className="animate-fade-in"
                       >
-                        <td 
-                          colSpan={5} 
+                        <td
+                          colSpan={4}
                           className="p-4 bg-muted/50 sticky left-0 z-10 text-center"
                         >
                           <h4 className="font-semibold text-primary">{category.category}</h4>
@@ -231,7 +230,6 @@ const PricingComparison = () => {
                             <td className="p-4 text-center">{renderFeatureValue(item.free, isHighlighted)}</td>
                             <td className="p-4 text-center">{renderFeatureValue(item.creator, isHighlighted)}</td>
                             <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional, isHighlighted)}</td>
-                            <td className="p-4 text-center">{renderFeatureValue(item.enterprise, isHighlighted)}</td>
                           </tr>
                         );
                       })}

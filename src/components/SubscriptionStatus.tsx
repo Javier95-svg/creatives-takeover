@@ -51,9 +51,8 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'free': return 'secondary';
-      case 'basic': return 'default';
-      case 'premium': return 'default';
-      case 'enterprise': return 'default';
+      case 'creator': return 'default';
+      case 'professional': return 'default';
       default: return 'secondary';
     }
   };

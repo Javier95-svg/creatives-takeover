@@ -35,16 +35,6 @@ const Pricing = () => {
         "Success score analytics & tracking",
         "Priority support + community access",
         "Export capabilities for all reports"
-      ],
-      enterprise: [
-        "500 BizMap AI conversations per month",
-        "All collaboration features with unlimited participants",
-        "Advanced market intelligence & trend analysis",
-        "Custom AI business analysis reports",
-        "API access for integrations",
-        "Dedicated account manager",
-        "Custom business templates",
-        "Priority feature requests"
       ]
     };
     return featureMap[tierName] || [];
@@ -54,8 +44,7 @@ const Pricing = () => {
     const descriptions: Record<string, string> = {
       free: "Perfect for getting started with AI-powered business planning",
       creator: "Ideal for solopreneurs who need regular AI insights and community access",
-      professional: "Best value for serious entrepreneurs with comprehensive collaboration features",
-      enterprise: "Perfect for teams and advanced users who need unlimited access and premium support"
+      professional: "Best value for serious entrepreneurs with comprehensive collaboration features"
     };
     return descriptions[tierName] || "";
   };
@@ -64,8 +53,7 @@ const Pricing = () => {
     const details: Record<string, { title: string; cta: string }> = {
       free: { title: "Get Started", cta: "Start Free" },
       creator: { title: "Build & Create", cta: "Upgrade to Creator" },
-      professional: { title: "Scale & Collaborate", cta: "Upgrade to Professional" },
-      enterprise: { title: "Lead & Innovate", cta: "Upgrade to Enterprise" }
+      professional: { title: "Scale & Collaborate", cta: "Upgrade to Professional" }
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
@@ -97,12 +85,6 @@ const Pricing = () => {
     if (tierName === 'professional') {
       // Redirect to external payment URL for professional tier
       window.open("https://pay.creatives-takeover.com/b/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
-      return;
-    }
-
-    if (tierName === 'enterprise') {
-      // Redirect to external payment URL for enterprise tier
-      window.open("https://pay.creatives-takeover.com/b/4gMdR91PH3jy0vE21R0ZW02", "_blank");
       return;
     }
 
