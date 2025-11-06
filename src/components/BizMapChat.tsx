@@ -133,6 +133,7 @@ export const BizMapChat = ({
   const [celebrationMode, setCelebrationMode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
+  const [showCompletionGate, setShowCompletionGate] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -243,21 +244,16 @@ export const BizMapChat = ({
       // User is authenticated, don't show prompts
       setShowInlineBanner(false);
       setShowModal(false);
+      setShowCompletionGate(false);
       return;
     }
 
-    // Step 5: Show inline banner (soft nudge)
-    if (currentStep === 4 && !conversionPromptShown && chatMode === 'wizard') {
-      setShowInlineBanner(true);
+    // Step 5: Show BLOCKING gate for non-authenticated users
+    if (currentStep === 4 && !user && chatMode === 'wizard') {
+      setShowCompletionGate(true);
       trackConversionEvent('shown', 5);
     }
-
-    // Step 7-8: Show modal if banner was dismissed
-    if ((currentStep === 6 || currentStep === 7) && conversionPromptDismissed && !showModal && chatMode === 'wizard') {
-      setShowModal(true);
-      trackConversionEvent('shown', currentStep + 1);
-    }
-  }, [currentStep, user, conversionPromptShown, conversionPromptDismissed, chatMode, wizardSteps.length, trackConversionEvent]);
+  }, [currentStep, user, chatMode, trackConversionEvent]);
 
   // Handle conversion actions
   const handleSignUpClick = () => {
@@ -276,6 +272,7 @@ export const BizMapChat = ({
   const handleDismiss = () => {
     setShowInlineBanner(false);
     setShowModal(false);
+    // Note: Completion gate cannot be dismissed
     trackConversionEvent('dismissed', currentStep + 1);
   };
 
@@ -323,17 +320,9 @@ export const BizMapChat = ({
         <WizardConversionPrompt
           step={currentStep}
           triggerStep={4}
-          variant="inline-banner"
-          show={showInlineBanner}
-          onDismiss={handleDismiss}
-          onSignUp={handleSignUpClick}
-        />
-        <WizardConversionPrompt
-          step={currentStep}
-          triggerStep={6}
-          variant="modal"
-          show={showModal}
-          onDismiss={handleDismiss}
+          variant="completion-gate"
+          show={showCompletionGate}
+          onDismiss={() => {}}
           onSignUp={handleSignUpClick}
         />
         
@@ -368,7 +357,12 @@ export const BizMapChat = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative">
+        {/* Visual overlay when gate is active */}
+        {!user && currentStep >= 4 && chatMode === 'wizard' && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 pointer-events-none" />
+        )}
+        
         {messages.map((msg, index) => (
           <div
             key={msg.id}
@@ -502,8 +496,18 @@ export const BizMapChat = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={chatMode === 'freeform' ? "Ask me anything about your business..." : getCurrentPlaceholder()}
-            disabled={isTyping || isStreaming}
+            placeholder={
+              !user && currentStep >= 4 && chatMode === 'wizard'
+                ? "Sign up to continue your 30-day roadmap..."
+                : chatMode === 'freeform' 
+                  ? "Ask me anything about your business..." 
+                  : getCurrentPlaceholder()
+            }
+            disabled={
+              isTyping || 
+              isStreaming || 
+              (!user && currentStep >= 4 && chatMode === 'wizard')
+            }
             className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
           />
           <FileAttachment 
@@ -516,7 +520,12 @@ export const BizMapChat = ({
           />
           <Button 
             onClick={handleSend}
-            disabled={(!message.trim() && attachedFiles.length === 0) || isTyping || isStreaming}
+            disabled={
+              (!message.trim() && attachedFiles.length === 0) || 
+              isTyping || 
+              isStreaming ||
+              (!user && currentStep >= 4 && chatMode === 'wizard')
+            }
             size="icon"
             className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >

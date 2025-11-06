@@ -132,11 +132,7 @@ export const WizardConversionPrompt = ({
     );
   }
 
-  // REMOVED: Completion Gate (was blocking users from seeing their report)
-  // Now users see their report immediately, with optional signup CTA in ReportDisplay component
-  
-  /*
-  // Completion Gate (Final step - blocking)
+  // Completion Gate (Step 5 - blocking, must sign up to continue)
   if (variant === 'completion-gate') {
     return (
       <Dialog open={show} onOpenChange={() => {}}>
@@ -146,29 +142,29 @@ export const WizardConversionPrompt = ({
               <Lock className="h-6 w-6 text-primary" />
             </div>
             <DialogTitle className="text-center text-xl">
-              Almost there! 🚀
+              🚀 Create Your Free Account to Continue
             </DialogTitle>
             <DialogDescription className="text-center">
-              Create a free account to view your complete Launch Report and access all premium features
+              You've made great progress! Sign up now to unlock the full 30-day launch roadmap and save your business plan.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-2 my-4">
             <div className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>Comprehensive business analysis</span>
+              <span>Complete your personalized 30-day roadmap</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Save className="h-4 w-4 text-primary" />
+              <span>Save your progress automatically</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span>Access AI-powered insights & recommendations</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>Success score & recommendations</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span>Sprint planning & task management</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span>Save & edit your plan anytime</span>
+              <span>Get sprint planning and task breakdown</span>
             </div>
           </div>
 
@@ -177,7 +173,7 @@ export const WizardConversionPrompt = ({
               onClick={onSignUp}
               className="w-full h-11"
             >
-              Sign Up & View Results
+              Sign Up & Continue
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               Free forever • No credit card required
@@ -187,7 +183,6 @@ export const WizardConversionPrompt = ({
       </Dialog>
     );
   }
-  */
 
   return null;
 };
