@@ -37,6 +37,13 @@ const PricingComparison = () => {
         { feature: "Business Report Generation", free: false, creator: false, professional: true },
         { feature: "PDF Export", free: false, creator: false, professional: true }
       ]
+    },
+    {
+      category: "Support",
+      items: [
+        { feature: "Email Support", free: true, creator: true, professional: true },
+        { feature: "Priority Support", free: false, creator: true, professional: true }
+      ]
     }
   ];
 
