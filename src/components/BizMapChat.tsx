@@ -541,13 +541,14 @@ export const BizMapChat = ({
                 
                 setShareData({
                   conversationId: user?.id,
+                  reportType: context?.industry || context?.targetMarket ? 'business_plan' : 'conversation',
                   reportData: {
                     ...context,
                     extractedContent
                   },
                   defaultTitle: context?.industry 
                     ? `${context.industry} Business Plan`
-                    : 'Business Plan',
+                    : 'My Business Journey',
                   defaultContent: extractedContent.summary,
                 });
                 setShowShareDialog(true);
