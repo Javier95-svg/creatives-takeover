@@ -159,7 +159,7 @@ const Pricing = () => {
             const features = getFeatures(tier.tier_name);
             const description = getDescription(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
-            const isPopular = tier.tier_name === 'professional';
+            const isPopular = tier.tier_name === 'creator';
 
             return (
               <div
