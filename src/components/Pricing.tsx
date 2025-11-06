@@ -52,8 +52,8 @@ const Pricing = () => {
   const getTitleAndCTA = (tierName: string) => {
     const details: Record<string, { title: string; cta: string }> = {
       free: { title: "Get Started", cta: "Start Free" },
-      creator: { title: "Build & Create", cta: "Upgrade to Creator" },
-      professional: { title: "Scale & Collaborate", cta: "Upgrade to Professional" }
+      creator: { title: "Build & Create", cta: "Free Trial Available" },
+      professional: { title: "Scale & Collaborate", cta: "Free Trial Available" }
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
