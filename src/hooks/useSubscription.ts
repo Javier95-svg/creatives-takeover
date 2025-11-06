@@ -72,10 +72,11 @@ export function useSubscription() {
         } as SubscriptionTier;
       });
 
-      // Sort normalized tiers by price_cents ascending to keep UI order stable
-      normalized.sort((a, b) => (a.price_cents ?? 0) - (b.price_cents ?? 0));
+      // Filter out enterprise tier and sort by price_cents ascending to keep UI order stable
+      const filtered = normalized.filter(tier => tier.tier_name !== 'enterprise');
+      filtered.sort((a, b) => (a.price_cents ?? 0) - (b.price_cents ?? 0));
 
-      setTiers(normalized);
+      setTiers(filtered);
     } catch (error) {
       console.error('Error fetching subscription tiers:', error);
       setTiers([]);
