@@ -99,7 +99,7 @@ const Navigation = () => {
                 onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
               >
                 {item.name}
-                {item.name === 'BizMap AI' && !isAuthenticated && !bizMapHover.hasShown && (
+                {item.name === 'BizMap AI' && (
                   <div className="absolute -top-1 -right-2 flex items-center">
                     <Gift className="w-3 h-3 text-primary animate-bounce" />
                   </div>
