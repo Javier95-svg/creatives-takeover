@@ -62,8 +62,8 @@ const Pricing = () => {
     // Handle free tier separately
     if (tierName === 'free') {
       if (!user) {
-        // Redirect to signup for free tier
-        window.location.href = "/signup";
+        // Redirect to auth for free tier
+        window.location.href = "/auth";
         return;
       }
       // Free tier - no checkout needed for logged-in users
