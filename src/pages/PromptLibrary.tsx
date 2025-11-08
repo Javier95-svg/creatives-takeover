@@ -355,7 +355,7 @@ const PromptLibrary = () => {
                   
                   <CardContent className="p-4 sm:p-6 pt-0">
                     <div className="bg-primary/5 rounded-lg p-3 mb-4">
-                      <p className="text-sm font-medium mb-2">Complete 7-Step Journey Included:</p>
+                      <p className="text-sm font-medium mb-2">This Prompt Chain Include:</p>
                       <ul className="text-xs space-y-1 text-muted-foreground">
                         <li>✓ Business Concept (Days 1-2)</li>
                         <li>✓ Target Customer (Days 3-4)</li>
