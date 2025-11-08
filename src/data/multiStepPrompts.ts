@@ -264,7 +264,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
         step: 7,
         title: "Day 30 Success Metrics",
         dayRange: "Days 26-30",
-        prompt: "Success on Day 30 means: 2 paying customers at $49/month = $98 MRR, 100 email signups showing interest, 30 active trial users testing the chatbot, and positive feedback confirming this solves a real problem. This proves the business model works and I can confidently invest more time scaling it."
+        prompt: "For my AI-powered customer service automation business: Day 30 success definition: 2-3 paying customers at $49/month = $98-147 MRR, 100+ email signups showing strong market interest, 30+ active trial users testing the chatbot and providing feedback, and detailed positive feedback from at least 2 customers confirming this genuinely solves their customer service pain and saves them time/money. Critical success indicator: customers report handling 30-50% of inquiries automatically without human intervention. This validates the business model works, proves AI chatbot quality is production-ready, and gives me confidence to invest more time scaling customer acquisition and product features."
       }
     ]
   },
@@ -310,13 +310,13 @@ export const multiStepPrompts: MultiStepPrompt[] = [
         step: 6,
         title: "Pricing Model",
         dayRange: "Days 22-25",
-        prompt: "Pricing: Products range from $12-35 (2-3x my cost from suppliers), which is competitive with Amazon but positioned as 'exclusive finds'. Launch special: 25% off first purchase with code LAUNCH25. This pricing works because Gen Z is willing to pay premium for unique, aesthetic products they discover on social media vs mass-market options."
+        prompt: "For my social commerce business: My pricing strategy: Products range from $12-35 each (2-3x my cost from AliExpress/wholesale suppliers), which is competitive with Amazon but positioned as 'exclusive aesthetic finds' you can't get everywhere. Launch special: 25% off first purchase with code LAUNCH25 to drive initial sales and reviews. This pricing works because Gen Z is willing to pay 20-30% premium for unique, aesthetic products they discover through entertaining social content vs boring mass-market Amazon options. Shipping: $4.99 flat rate or free over $35 to encourage larger orders."
       },
       {
         step: 7,
         title: "Day 30 Success Metrics",
         dayRange: "Days 26-30",
-        prompt: "Success on Day 30: 10 paying customers generating $250+ revenue, 1,000+ TikTok followers, one video with 50K+ views proving viral potential, 50+ email subscribers for future launches. This proves I can create engaging content that converts and validates expanding product line and scaling content production."
+        prompt: "For my social commerce business: Day 30 success metrics: 10-15 paying customers generating $250-400 total revenue, 1,000+ TikTok followers genuinely engaged with content, at least one video with 50K+ views proving viral content potential, 50-75 email subscribers for future product launches. Key validation: 20%+ of TikTok viewers visit shop link and 3-5% purchase conversion rate. This proves I can create engaging content that actually converts to sales and validates expanding product line and scaling content production with more videos daily."
       }
     ]
   },
@@ -362,13 +362,13 @@ export const multiStepPrompts: MultiStepPrompt[] = [
         step: 6,
         title: "Pricing Model",
         dayRange: "Days 22-25",
-        prompt: "Pricing: $29/month for teams up to 20 people (launch price, normally $49). Competitor analysis shows meeting tools range from $50-150/month, so I'm positioning as affordable entry point. This covers hosting ($5/month), Zoom API costs ($10/month), and leaves healthy margin. First 10 customers get lifetime 50% off to build testimonials and case studies."
+        prompt: "For my micro-SaaS for remote teams: My pricing strategy: $29/month for teams up to 20 people (launch price, normally $49 after first 50 customers). Competitor analysis shows similar meeting analytics tools range from $50-150/month, so I'm positioning as the affordable entry point for small remote teams. This pricing covers my hosting costs ($5/month), Zoom API costs ($10/month per team), and leaves healthy 50%+ margin. First 10 teams get lifetime 50% discount locked in ($29/month forever) in exchange for detailed testimonials, case studies, and feedback to improve the product."
       },
       {
         step: 7,
         title: "Day 30 Success Metrics",
         dayRange: "Days 26-30",
-        prompt: "Day 30 success: 3 paying teams at $29/month = $87 MRR, 50 trial signups, 200+ landing page visitors, testimonials from 2 happy customers proving ROI. Most importantly: data showing teams actually reduced meeting time by average 15-20% using the tool. This validates product-market fit and justifies building more features."
+        prompt: "For my micro-SaaS for remote teams: Day 30 success definition: 3-5 paying teams at $29/month = $87-145 MRR, 50+ trial signups from Product Hunt and outreach, 200+ landing page visitors from launch activities, detailed testimonials from 2 happy customers proving measurable ROI and time saved. Most critical metric: usage data showing teams actually reduced their meeting time by average 15-20% using the tool within first month. This validates clear product-market fit exists and justifies continuing to build more features like calendar integration and AI suggestions."
       }
     ]
   },
@@ -390,37 +390,37 @@ export const multiStepPrompts: MultiStepPrompt[] = [
         step: 2,
         title: "Target Customer",
         dayRange: "Days 3-4",
-        prompt: "First customers: Solo entrepreneurs and small businesses (1-10 employees) in coaching, real estate, and professional services who know they need content but are overwhelmed creating it. They're active in small business Facebook groups, follow marketing influencers on LinkedIn, and attend Chamber of Commerce meetings. I can reach them through local business networking, LinkedIn posts about AI + content, and Facebook group value posts."
+        prompt: "For my AI content creation agency: My first customers are solo entrepreneurs and small businesses (1-10 employees) in coaching, consulting, real estate, and professional services who know they need consistent content but are overwhelmed by the time and cost of creating it themselves or hiring traditional agencies. They're active in small business Facebook groups, follow marketing influencers on LinkedIn, attend Chamber of Commerce meetings, and search for affordable content solutions online. I can reach them through local business networking events, LinkedIn posts demonstrating AI + content quality, value-driven posts in Facebook groups, and partnerships with web designers and marketing consultants who need content partners."
       },
       {
         step: 3,
         title: "Validation Plan",
         dayRange: "Days 5-7",
-        prompt: "Validation: 1) Offer 3 free content audits to local businesses and pitch my service after showing gaps, 2) Create sample AI-generated content portfolio for 5 industries and share in business groups to gauge interest, 3) Survey 20 small business owners about current content spend and pain points to identify sweet spot pricing."
+        prompt: "For my AI content creation agency: My validation approach: 1) Offer 5 free content audits to local businesses showing gaps in their current content strategy, then pitch paid monthly service at the end - track conversion rate, 2) Create sample AI-generated content portfolio for 5 different industries (coaching, real estate, consulting, healthcare, fitness) and share in business groups to gauge interest and collect feedback, 3) Survey 20-30 small business owners about their current content spend, biggest content pain points, and ideal monthly price point to identify sweet spot pricing and most valuable services."
       },
       {
         step: 4,
         title: "MVP Design",
         dayRange: "Days 8-14",
-        prompt: "MVP service: 1) Monthly package: 4 blog posts + 20 social media posts + 2 email newsletters, 2) Simple Google Doc delivery with revision rounds, 3) Custom AI prompts tailored to each client's voice/brand, 4) Basic analytics on content performance. Skipping: Custom portal, video content, SEO optimization services, white-label options until proven."
+        prompt: "For my AI content creation agency: My MVP service offering: 1) Standard monthly package: 4 long-form blog posts (800-1200 words each) + 20 social media posts + 2 email newsletters, all customized to client's brand voice, 2) Simple delivery via Google Docs with two revision rounds included, 3) Custom AI prompts I develop to match each client's voice, tone, and industry, 4) Basic monthly analytics report showing content performance. Explicitly NOT offering yet: custom content portal, video content creation, full SEO optimization services, white-label solutions, or rush delivery until core offering is proven and streamlined."
       },
       {
         step: 5,
         title: "Launch Strategy",
         dayRange: "Days 15-21",
-        prompt: "Launch plan: 1) Offer first 5 clients 'Founding Member' price of $497/month (50% off) for 6 months guaranteed, 2) LinkedIn daily posts showing before/after AI content examples, 3) Present at 2 local business networking events with live AI content generation demo, 4) Personal outreach to 25 businesses I identify needing content help, 5) Partner with web designers who can refer content clients."
+        prompt: "For my AI content creation agency: My first client acquisition plan: 1) Offer first 5 clients 'Founding Member' pricing at $497/month (50% off regular rate) locked in for 6 months, in exchange for detailed testimonials and case study participation, 2) LinkedIn content strategy: Daily posts for 21 days showing before/after AI content examples, ROI calculations, and my content creation process, 3) Present at 2 local business networking events with live AI content generation demonstrations, 4) Personal outreach to 25-30 businesses I've identified needing content help through LinkedIn and local directories, 5) Partner with 2-3 web designers, branding consultants, or virtual assistants who can refer content clients."
       },
       {
         step: 6,
         title: "Pricing Model",
         dayRange: "Days 22-25",
-        prompt: "Pricing: Launch at $497/month (normally $997/month after first 10 clients). This is 50-70% cheaper than traditional agencies but still profitable since AI tools cost me ~$50/month and content creation takes 5-8 hours vs traditional 20-30 hours. Positioning as premium quality at accessible prices for small businesses."
+        prompt: "For my AI content creation agency: My pricing strategy: Launch at $497/month for standard package (normally $997/month after first 10 clients). This is 50-70% cheaper than traditional content agencies ($2,000-5,000/month) but still highly profitable because AI tools cost only ~$50/month and content creation takes me 5-8 hours versus traditional 20-30 hours per client. Positioning as premium AI-enhanced quality at accessible small business prices. First 5 clients get founding rate of $497/month locked in for 6 months. Additional services: rush delivery (+$200), extra blog posts ($100 each), video scripts ($150 each)."
       },
       {
         step: 7,
         title: "Day 30 Success Metrics",
         dayRange: "Days 26-30",
-        prompt: "Success metrics: 2 paying clients at $497/month = $994 MRR, 10 discovery calls completed, 5 proposals sent, portfolio of 30+ content pieces to showcase. Key validation: clients confirm content quality matches their brand voice and drives engagement. This proves AI+human oversight model works and I can scale by hiring part-time editors."
+        prompt: "For my AI content creation agency: Day 30 success metrics: 2-3 paying clients at $497/month = $994-1,491 MRR, 10-12 discovery calls completed showing strong interest, 5+ proposals sent to qualified leads, portfolio of 30+ high-quality content pieces across multiple industries to showcase. Key validation signals: clients confirm content quality matches their brand voice and drives measurable engagement (website traffic, social engagement, email opens). This proves the AI-enhanced + human oversight model works and I can confidently scale by refining processes and potentially hiring part-time editors or account managers."
       }
     ]
   },
@@ -442,37 +442,37 @@ export const multiStepPrompts: MultiStepPrompt[] = [
         step: 2,
         title: "Target Customer",
         dayRange: "Days 3-4",
-        prompt: "Target: Environmentally conscious millennials and Gen Z (25-35 years old) who actively try to reduce waste, follow sustainability influencers on Instagram, participate in Buy Nothing groups, and read blogs like Treehugger. They shop at Whole Foods, bring reusable bags everywhere, and are willing to pay 15-20% premium for verified sustainable products. I'll find them in zero-waste Facebook groups, sustainability subreddits, and Instagram eco-communities."
+        prompt: "For my sustainable e-commerce store: My ideal customers are environmentally conscious millennials and Gen Z (25-35 years old) who actively try to reduce waste, follow sustainability influencers on Instagram, participate in Buy Nothing groups, and read blogs like Treehugger. They shop at Whole Foods, bring reusable bags everywhere, and are willing to pay 15-20% premium for verified sustainable products. I'll find them in zero-waste Facebook groups, sustainability subreddits, r/zerowaste, Instagram eco-communities (#sustainableliving, #zerowaste), and through partnerships with eco-bloggers."
       },
       {
         step: 3,
         title: "Validation Plan",
         dayRange: "Days 5-7",
-        prompt: "Validation: 1) Survey 50 people in zero-waste communities about their biggest challenges finding sustainable products and willingness to pay, 2) Create Instagram poll asking which product categories they want most (home, beauty, kitchen, etc.), 3) Test selling 5 products on Etsy first to validate demand before building full store, tracking which products get most interest."
+        prompt: "For my sustainable e-commerce store: My validation approach this week: 1) Survey 50 people in zero-waste communities about their biggest challenges finding sustainable products, price sensitivity, and which product categories they need most, 2) Create Instagram polls asking which products they'd buy immediately (home goods, beauty, kitchen, clothing), 3) Test-sell 5 curated eco-friendly products on Etsy first to validate demand before building full store - track which products get most views and sales. Target: 10-15 Etsy sales proving demand exists."
       },
       {
         step: 4,
         title: "MVP Design",
         dayRange: "Days 8-14",
-        prompt: "MVP: Simple Shopify store with 15 carefully curated products in 3 categories (kitchen, beauty, home). Each product page includes detailed sustainability credentials, environmental impact metrics, and sourcing transparency. Plastic-free shipping materials, carbon-neutral shipping through Offset partner. Skipping: subscription boxes, mobile app, loyalty programs, extensive product range until validated."
+        prompt: "For my sustainable e-commerce store: My MVP includes: Simple Shopify store with 15-20 carefully curated products in 3 core categories (kitchen essentials, beauty/personal care, home goods). Each product page features detailed sustainability credentials, environmental impact metrics, and transparent sourcing information. Standard features: plastic-free shipping materials, carbon-neutral shipping through offset partner, email collection for launch list. Explicitly skipping: subscription boxes, mobile app, loyalty program, blog, extensive product range, custom packaging until core store is validated with customers."
       },
       {
         step: 5,
         title: "Launch Strategy",
         dayRange: "Days 15-21",
-        prompt: "Launch: 1) Partner with 3 micro-influencers in sustainability space (10K-50K followers) for product reviews, 2) Launch with 25% off opening week shared in 5 zero-waste Facebook groups, 3) Create valuable content (plastic-free living guides) to share in sustainability communities, 4) Instagram giveaway for first 100 followers, 5) Reach out to 10 sustainability bloggers for feature opportunities."
+        prompt: "For my sustainable e-commerce store: My first customer acquisition plan: 1) Partner with 3-5 micro-influencers in sustainability space (10K-50K followers) for honest product reviews and unboxing content, 2) Launch week promotion: 25% off first order shared in 5-7 zero-waste Facebook groups and subreddits, 3) Create valuable free content (plastic-free living starter guide, sustainable swaps cheat sheet) to share in eco-communities with soft product mentions, 4) Instagram giveaway targeting first 100 followers, 5) Direct outreach to 10 sustainability bloggers for feature opportunities. Launch offer: First 25 customers get 30% off + free shipping."
       },
       {
         step: 6,
         title: "Pricing Model",
         dayRange: "Days 22-25",
-        prompt: "Pricing: Products marked up 2.5x wholesale cost, averaging $20-45 per item. Launch promotion: 20% off first order plus free carbon-neutral shipping over $50. This positioning works because sustainable product customers expect to pay premium for ethical sourcing, and competitive analysis shows similar products sell for 2-3x my planned prices on larger platforms."
+        prompt: "For my sustainable e-commerce store: My pricing strategy: Products marked up 2.5-3x wholesale cost, with most items averaging $20-45. This covers product cost, plastic-free packaging, carbon offset shipping, platform fees, and 30-40% margin. Launch promotion: 20% off first order plus free carbon-neutral shipping over $50. This premium positioning works because sustainable product customers expect to pay more for ethical sourcing and environmental benefits. Competitive analysis shows similar verified eco-products sell for 2-3x my planned prices on larger platforms, so I'm positioned as affordable sustainability."
       },
       {
         step: 7,
         title: "Day 30 Success Metrics",
         dayRange: "Days 26-30",
-        prompt: "Success: 15 orders totaling $500+ revenue, 500+ Instagram followers, 100+ email subscribers, 3 positive product reviews showing customers value the sustainability aspect. This validates: 1) Product-market fit exists, 2) Pricing is acceptable, 3) Marketing channels work, giving confidence to expand product line and increase marketing spend."
+        prompt: "For my sustainable e-commerce store: Day 30 success metrics: 15-20 orders totaling $500-700 revenue, 500+ Instagram followers engaged with eco-content, 100-150 email subscribers for future launches, 5+ five-star product reviews emphasizing sustainability value, 20% of customers signing up for restock alerts on sold-out items. This validates: 1) Product-market fit exists for curated eco-products, 2) Premium pricing is acceptable to target market, 3) Social media and community marketing channels work effectively. These numbers justify expanding product line and increasing marketing budget."
       }
     ]
   },
