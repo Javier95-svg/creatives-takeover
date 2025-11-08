@@ -18,12 +18,72 @@ export interface MultiStepPrompt {
 
 // Helper function to generate contextual steps 2-7 from step 1
 function generateStandardSteps(conceptTitle: string, step1Prompt: string): Array<{step: number; title: string; dayRange: string; prompt: string}> {
-  // Extract key business details from step 1 prompt for context
-  const isService = step1Prompt.toLowerCase().includes('service') || step1Prompt.toLowerCase().includes('agency') || step1Prompt.toLowerCase().includes('consultancy');
-  const isSaaS = step1Prompt.toLowerCase().includes('saas') || step1Prompt.toLowerCase().includes('platform') || step1Prompt.toLowerCase().includes('software') || step1Prompt.toLowerCase().includes('app');
-  const isPhysical = step1Prompt.toLowerCase().includes('product') || step1Prompt.toLowerCase().includes('store') || step1Prompt.toLowerCase().includes('vending') || step1Prompt.toLowerCase().includes('meal prep');
-  const isLocal = step1Prompt.toLowerCase().includes('local') || step1Prompt.toLowerCase().includes('in-person') || step1Prompt.toLowerCase().includes('installation');
-  const isB2B = step1Prompt.toLowerCase().includes('business') || step1Prompt.toLowerCase().includes('b2b') || step1Prompt.toLowerCase().includes('companies');
+  // Advanced business type detection
+  const lower = step1Prompt.toLowerCase();
+
+  // Primary business model detection
+  const isSaaS = lower.includes('saas') || lower.includes('software') || (lower.includes('platform') && !lower.includes('marketplace')) || (lower.includes('app') && !lower.includes('mobile app for local'));
+  const isMarketplace = lower.includes('marketplace') || (lower.includes('platform') && lower.includes('connect'));
+  const isConsulting = lower.includes('consulting') || lower.includes('consultancy');
+  const isAgency = lower.includes('agency');
+  const isService = (lower.includes('service') && !lower.includes('saas')) || isConsulting || isAgency;
+  const isSubscription = lower.includes('subscription box') || lower.includes('subscription service');
+  const isPhysicalProduct = lower.includes('product') || lower.includes('store') || lower.includes('vending') || lower.includes('meal prep') || isSubscription;
+  const isMobileApp = lower.includes('mobile app');
+  const isCourse = lower.includes('course');
+
+  // Target market detection
+  const isB2B = lower.includes('businesses') || lower.includes('companies') || lower.includes('b2b') || lower.includes('small business') || lower.includes('mid-size companies');
+  const isB2C = lower.includes('homeowners') || lower.includes('consumers') || lower.includes('individuals') || lower.includes('professionals') || lower.includes('remote workers') || lower.includes('parents');
+  const isCreatorFocused = lower.includes('creators') || lower.includes('influencers') || lower.includes('content creator');
+  const isLocal = lower.includes('local') || lower.includes('in-person') || lower.includes('installation') || lower.includes('neighborhood');
+
+  // Special categories
+  const isEducation = lower.includes('education') || lower.includes('learning') || lower.includes('course') || lower.includes('bootcamp');
+  const isHealth = lower.includes('health') || lower.includes('wellness') || lower.includes('mental health') || lower.includes('fitness') || lower.includes('care');
+  const isSustainability = lower.includes('sustainability') || lower.includes('eco-friendly') || lower.includes('renewable energy') || lower.includes('carbon');
+
+  // Determine primary business type for prompts
+  let businessType = 'default';
+  if (isSaaS && !isMarketplace) businessType = 'saas';
+  else if (isMarketplace) businessType = 'marketplace';
+  else if (isConsulting) businessType = 'consulting';
+  else if (isAgency) businessType = 'agency';
+  else if (isSubscription) businessType = 'subscription';
+  else if (isService && isLocal) businessType = 'local-service';
+  else if (isService) businessType = 'service';
+  else if (isPhysicalProduct) businessType = 'physical-product';
+  else if (isCourse) businessType = 'course';
+
+  // Determine target market for prompts
+  let targetMarket = 'general';
+  if (isB2B && !isB2C) targetMarket = 'b2b';
+  else if (isB2C && !isB2B) targetMarket = 'b2c';
+  else if (isCreatorFocused) targetMarket = 'creators';
+  else if (isLocal) targetMarket = 'local';
+  else if (isB2B && isB2C) targetMarket = 'hybrid'; // Both B2B and B2C
+
+  const useB2BPrompts = targetMarket === 'b2b' || targetMarket === 'hybrid';
+
+  // STEP 2: Target Customer - Highly specific based on business and market type
+  let step2Prompt = '';
+  if (businessType === 'consulting' && targetMarket === 'hybrid') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: I serve both homeowners and businesses. Describe BOTH customer segments: 1) Residential customers: age, income, location, urgency level, decision process, 2) Business customers: company size, industry, decision-maker role, pain points. Where do I find each segment? List 3 channels for homeowners (local groups, referral partners, home improvement communities) and 3 for businesses (LinkedIn groups, industry associations, B2B platforms).`;
+  } else if (businessType === 'marketplace' || businessType === 'saas') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Define my two-sided market: 1) Supply side: Who provides the service/content? (their profile, motivation to join, current alternatives), 2) Demand side: Who needs this? (demographics, pain points, buying behavior). Which side do I attract first and why? List 3-5 communities for each side where I can find early adopters willing to try a new platform.`;
+  } else if (businessType === 'subscription') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Paint a detailed subscriber profile - age, income, lifestyle, values, and their specific unmet need. Why would they commit to a monthly subscription vs one-time purchase? What's their willingness to pay monthly? List 3-5 places to find potential subscribers: relevant subreddits, Facebook groups, Instagram hashtags, influencers in the space, or complementary subscription box communities.`;
+  } else if (businessType === 'local-service') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Describe my ideal local customer in detail - neighborhood/zip codes to target, home value range, age/family stage, urgency of need, and decision-making process. What triggers them to seek this service NOW? List 5 specific local channels: neighborhood Facebook groups, Nextdoor communities, local business partnerships (who can refer), community events, and local online directories where I need visibility.`;
+  } else if (targetMarket === 'b2b') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Detail my ideal business customer - company size (employees & revenue), industry/vertical, specific department/role I'm selling to, their current pain points costing them money/time, and typical budget cycle. Who's the economic buyer vs champion? List 5 specific places to find them: LinkedIn groups, industry Slack communities, trade associations, conferences/events, and niche B2B forums where they discuss these problems.`;
+  } else if (targetMarket === 'creators') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Profile my ideal creator customer - follower count range, primary platform, content niche, monetization stage, and their biggest business challenge. What's their monthly revenue and growth stage? Where do they hang out online? List 5 specific creator communities: creator Discord servers, YouTuber subreddits, TikTok creator groups, creator economy newsletters, and influencer marketing platforms where I can engage them.`;
+  } else if (businessType === 'course') {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Describe my ideal student/customer - their current skill level, career stage, learning goal, available time commitment, and budget for education. What transformation are they seeking? Why now? List 5 places to find potential students: relevant subreddits, LinkedIn groups, online communities in the subject area, YouTube channels they follow, and forums where they ask questions about this topic.`;
+  } else {
+    step2Prompt = `For my ${conceptTitle.toLowerCase()}: Paint a detailed picture of my ideal first customer - demographics (age, location, income, family status), psychographics (values, interests, online behavior, media consumption), their biggest frustration that my solution solves, what they currently do instead, and their buying triggers. List 5 specific places to find early adopters: online communities, social platforms, forums, Facebook groups, or influencers where they actively discuss this problem.`;
+  }
 
   return [
     {
@@ -36,61 +96,120 @@ function generateStandardSteps(conceptTitle: string, step1Prompt: string): Array
       step: 2,
       title: "Target Customer",
       dayRange: "Days 3-4",
-      prompt: isB2B
-        ? `For my ${conceptTitle.toLowerCase()}: Describe my ideal first business customer in detail - company size, industry, current pain points they face, decision-maker role (CEO, CMO, etc.), and their buying process. List 3-5 specific places to find them: industry conferences, LinkedIn groups, professional associations, or B2B communities. What's their annual budget for solutions like mine?`
-        : isLocal
-        ? `For my ${conceptTitle.toLowerCase()}: Describe my ideal first local customer - age range, income level, lifestyle, specific neighborhood/area, and the problem that's urgent for them. Where do they spend time locally? List 3-5 specific places: community centers, local Facebook groups, neighborhood events, local business associations, or partner referral sources I can tap into this week.`
-        : `For my ${conceptTitle.toLowerCase()}: Paint a detailed picture of my ideal first customer - demographics (age, location, income), psychographics (values, interests, online behavior), their biggest frustration that my business solves, and their current alternative solution. List 3-5 specific online communities, social platforms, forums, or influencers where I'll find early adopters actively discussing this problem.`
+      prompt: step2Prompt
     },
+    // STEP 3: Validation Plan
     {
       step: 3,
       title: "Validation Plan",
       dayRange: "Days 5-7",
-      prompt: isSaaS
-        ? `For my ${conceptTitle.toLowerCase()}: My validation plan: 1) Customer Discovery: Interview 8-10 potential users about their current workflow, pain points, and willingness to pay for a solution, 2) Market Test: Create a landing page with waitlist signup explaining the core value prop - goal is 30+ signups, 3) Competition Analysis: Deep dive into 3-5 competitors' features, pricing, reviews to find gaps. What specific feedback will prove this is worth building?`
-        : isPhysical
-        ? `For my ${conceptTitle.toLowerCase()}: Validation approach: 1) Pre-orders: Launch a pre-order campaign or crowdfunding test to gauge demand - target 10-15 commitments, 2) Customer Interviews: Talk to 10 potential buyers about purchase triggers, price sensitivity, and must-have features, 3) Supplier Research: Confirm reliable suppliers, production costs, and lead times. What metrics prove people will actually buy?`
-        : `For my ${conceptTitle.toLowerCase()}: Validate demand through: 1) Discovery Calls: Schedule 10 conversations with target customers to understand their pain, current solutions, and budget, 2) Test Offer: Create a simple landing page or social post offering my service - track inquiries and conversion rate, 3) Competitive Intelligence: Research 5 competitors' positioning, pricing, and customer reviews to identify market gaps. What proves people need and will pay for this?`
+      prompt: (function() {
+        if (businessType === 'saas' || businessType === 'marketplace') {
+          return `For my ${conceptTitle.toLowerCase()}: Validation this week: 1) User Interviews: Talk to 8-12 potential users - understand current workflow, pain severity (1-10), what they pay now, and must-have features. Record insights. 2) Landing Page Test: Build simple page explaining value prop with email signup or "Request Access" button. Drive 100 visits via communities - target 15-25% conversion to signups. 3) Competitor Deep Dive: Analyze 5 competitors' G2/Capterra reviews - what do users love/hate? Where are gaps I can fill? What validates this is worth building?`;
+        } else if (businessType === 'subscription' || businessType === 'physical-product') {
+          return `For my ${conceptTitle.toLowerCase()}: Market validation: 1) Pre-Launch Campaign: Set up pre-order page or crowdfunding campaign (Kickstarter/Indiegogo) - target 15-25 commitments with deposit/full payment. This proves purchase intent. 2) Customer Research: Interview 10 potential buyers about price sensitivity, must-have vs nice-to-have features, and purchase triggers. 3) Supply Chain Check: Contact 3-5 suppliers - confirm costs, MOQs, lead times, and quality. Can I deliver profitably? What metrics prove demand is real?`;
+        } else if (businessType === 'consulting') {
+          return `For my ${conceptTitle.toLowerCase()}: Validate demand: 1) Free Audits/Consultations: Offer 5 free initial consultations to ideal clients - pitch paid engagement at the end. Track conversion rate. 2) Network Outreach: Contact 20 potential clients explaining my offer - gauge interest and objections. Document feedback. 3) Competitive Analysis: Research 5 competitors - what do they charge, what services, what's their positioning? Find my differentiation angle. What proves people will pay for this expertise?`;
+        } else if (businessType === 'local-service') {
+          return `For my ${conceptTitle.toLowerCase()}: Local validation: 1) Door-to-Door/Direct Outreach: Talk to 15-20 local potential customers - understand needs, current solutions, and willingness to try new provider. Collect emails for launch. 2) Test Offer: Post special intro offer in 3 local Facebook groups and Nextdoor - track inquiries and conversion. 3) Partner Reconnaissance: Meet with 3 complementary local businesses about referral partnerships. What proves this local market wants and will pay for my service?`;
+        } else if (businessType === 'agency') {
+          return `For my ${conceptTitle.toLowerCase()}: Validation strategy: 1) Sample Projects: Create 3-5 portfolio samples in target niche showing my work quality and results. Share in communities for feedback. 2) Outbound Testing: Reach out to 25 ideal clients with personalized pitch - track response and interest level. 3) Competitive Audit: Analyze 5 agency competitors - pricing, services, positioning, client results. Where's my wedge? What proves agencies/clients want this service at my price point?`;
+        } else if (businessType === 'course') {
+          return `For my ${conceptTitle.toLowerCase()}: Course validation: 1) Free Workshop/Webinar: Host free 60-min training on the topic - pitch full course at end. Target 20+ attendees, 20% conversion to course waitlist. 2) Survey Potential Students: Ask 30 people in target market about learning goals, current barriers, willingness to pay, and preferred format. 3) Competitor Research: Review 5 similar courses - pricing, curriculum, reviews. What's missing that I can provide? What proves people will buy my course?`;
+        } else {
+          return `For my ${conceptTitle.toLowerCase()}: Demand validation: 1) Customer Discovery: Conduct 10-15 detailed interviews with target customers - understand current pain level, what they do now, budget available, and decision criteria. 2) MVP Test: Create simple test offer (landing page, social post, or direct outreach) - measure inquiry rate and conversion to intent/payment. 3) Market Analysis: Research 5 competitors and alternatives - pricing, positioning, customer sentiment. What gap do I fill? What specific results prove people want and will pay for this?`;
+        }
+      })()
     },
+    // STEP 4: MVP Design
     {
       step: 4,
       title: "MVP Design",
       dayRange: "Days 8-14",
-      prompt: isSaaS
-        ? `For my ${conceptTitle.toLowerCase()}: My MVP includes ONLY: 1) Core feature that solves the #1 pain point (describe specifically), 2) Simple user dashboard or interface, 3) Basic authentication and user management, 4) One integration or data source if critical. I'm explicitly NOT building: advanced analytics, mobile apps, API access, multiple integrations, team features, or customization options. Launch with less to learn faster.`
-        : isService
-        ? `For my ${conceptTitle.toLowerCase()}: My initial service offering: 1) One core package/deliverable focused on main customer need, 2) Simple delivery method (documents, calls, emails - no custom platforms yet), 3) Standard process I can repeat with each client, 4) Basic client communication tools. I'm NOT offering: multiple tiers, custom solutions, rush delivery, or add-on services until I validate the core offering and pricing.`
-        : `For my ${conceptTitle.toLowerCase()}: MVP scope: 1) Core product/offering with only essential features that solve the main problem, 2) Simple ordering/booking process (basic tools, no custom development), 3) Manual fulfillment/delivery initially to prove demand before automation, 4) Basic customer communication. Explicitly skipping: premium features, customization, advanced logistics, mobile optimization, and expansion until core works.`
+      prompt: (function() {
+        if (businessType === 'saas') {
+          return `For my ${conceptTitle.toLowerCase()}: Minimum viable product: 1) ONE core feature solving the main pain point (be specific - what exactly does it do?), 2) Simple, functional UI/dashboard - clean but not fancy, 3) User auth and basic account management, 4) Critical integration if needed to work (specify which one). Explicitly NOT building yet: mobile app, advanced analytics, API, team features, multiple integrations, customization, or premium features. Launch lean, learn fast, iterate based on real usage.`;
+        } else if (businessType === 'marketplace') {
+          return `For my ${conceptTitle.toLowerCase()}: Platform MVP: 1) Simple two-sided marketplace - basic profiles for both supply and demand sides, 2) Core matching/connection mechanism (search, browse, or matching algorithm), 3) Basic messaging between parties, 4) Simple payment processing or booking system if transactions happen on-platform. NOT building: ratings/reviews system, advanced filters, mobile app, analytics dashboards, API, or premium features. Start with manual processes where possible. Which side launches first?`;
+        } else if (businessType === 'consulting') {
+          return `For my ${conceptTitle.toLowerCase()}: Initial consulting offering: 1) ONE core service package focused on biggest client pain (define exactly what's included), 2) Standard deliverables template I can reuse (report, strategy doc, implementation plan), 3) Simple client process: discovery call → proposal → delivery → follow-up, 4) Basic tools: Google Docs, Zoom, email. NOT offering yet: multiple service tiers, custom solutions, ongoing retainers, or rush delivery. Standardize to scale. What's included in my core package?`;
+        } else if (businessType === 'agency') {
+          return `For my ${conceptTitle.toLowerCase()}: Agency MVP service: 1) ONE service offering (specify exactly what I deliver), 2) Standard package with clear scope and deliverables, 3) Simple client workflow I can repeat, 4) Basic project management and communication (Trello, Slack, email). NOT offering: multiple service lines, custom pricing, 24/7 support, or white-label until proven. Focus on one thing, do it excellently. What's my signature service and delivery timeline?`;
+        } else if (businessType === 'subscription') {
+          return `For my ${conceptTitle.toLowerCase()}: First box/subscription: 1) 5-7 curated items solving core customer need, 2) Simple packaging with branded experience, 3) Monthly subscription model with easy cancellation, 4) Basic fulfillment process (may start manual). NOT including yet: customization options, multiple tier levels, add-ons, or mobile app. Validate core concept first. What exactly is in the first box and why will subscribers love it?`;
+        } else if (businessType === 'local-service') {
+          return `For my ${conceptTitle.toLowerCase()}: Service MVP: 1) Core service offering (be specific about what's included/excluded), 2) Standard pricing and service area coverage, 3) Simple booking process (phone, text, or basic online form), 4) Basic tools and equipment needed. NOT offering yet: premium/rush service, extended service area, multiple service packages, or 24/7 availability. Start focused. What's included in my standard service visit?`;
+        } else if (businessType === 'course') {
+          return `For my ${conceptTitle.toLowerCase()}: MVP course structure: 1) 4-6 core modules covering essential learning outcomes, 2) Mix of video lessons + workbooks/exercises, 3) Simple hosting (Teachable, Gumroad, or even Google Drive + email), 4) Basic student support (email or simple community). NOT building: interactive platform, live coaching, certification, lifetime updates, or mobile app. Validate content quality and student results first. What transformation will students achieve?`;
+        } else {
+          return `For my ${conceptTitle.toLowerCase()}: MVP scope: 1) Core product/service delivering main customer benefit (describe specifically), 2) Essential features only - cut everything not critical to solve the pain, 3) Simple delivery/fulfillment process (manual OK initially), 4) Basic customer communication and support. Explicitly NOT building: premium features, customization, automation, advanced options, or expansion until core is validated. Start small to launch fast. What's the absolute minimum that delivers value?`;
+        }
+      })()
     },
+    // STEP 5: Launch Strategy
     {
       step: 5,
       title: "Launch Strategy",
       dayRange: "Days 15-21",
-      prompt: isLocal
-        ? `For my ${conceptTitle.toLowerCase()}: My first 10 customers plan: 1) Personal network: Reach out to 20 contacts who fit customer profile or can refer, 2) Local partnerships: Partner with 2-3 complementary businesses for referrals, 3) Community engagement: Attend 2 local events, post in 3 neighborhood groups, 4) Local SEO: Optimize Google My Business and get first 5 reviews, 5) Launch offer: Special founding customer discount (20-30% off) for first 10 customers. How will I create urgency?`
-        : isSaaS
-        ? `For my ${conceptTitle.toLowerCase()}: Launch tactics for first 10 users: 1) Product Hunt launch with compelling story and demo video, 2) Founder-led content: Post in 5 relevant subreddits, forums, or communities (not spammy, value-first), 3) Beta access: Reach out to 30 ideal users offering free trial in exchange for feedback, 4) Content marketing: Publish 3 tactical blog posts and share on social, 5) Early bird pricing: Lifetime 50% off for first 10 customers.`
-        : `For my ${conceptTitle.toLowerCase()}: Path to first 10 customers: 1) Direct outreach: Personal messages to 50 ideal customers explaining my offer, 2) Social proof: Share my journey and progress on LinkedIn/Twitter with clear CTA, 3) Strategic partnerships: Identify 3 referral partners who serve my audience, 4) Limited launch offer: Founding member special pricing or exclusive perks for first 10, 5) Community value: Provide free value in 3-5 online communities before soft pitching. How do I build trust fast?`
+      prompt: (function() {
+        if (businessType === 'saas' || businessType === 'marketplace') {
+          return `For my ${conceptTitle.toLowerCase()}: First 10 users strategy: 1) Product Hunt launch with story + demo video + founder deal, 2) Direct outreach to 30 ideal users from validation interviews offering beta access, 3) Founder-led content: Post valuable insights in 5 relevant communities (Reddit, forums, Slack groups) - soft mention my solution, 4) Beta launch post on LinkedIn/Twitter with specific benefits and early adopter pricing, 5) Partner with 1-2 complementary tools/services for co-marketing. Launch offer: Lifetime 50% off for first 10 paying customers. How do I build trust fast with no track record?`;
+        } else if (businessType === 'local-service') {
+          return `For my ${conceptTitle.toLowerCase()}: Local customer acquisition: 1) Personal network: Text/call 25 contacts who match profile or know people who do - ask for referrals, 2) Local partnerships: Meet with 3 complementary businesses (real estate agents, contractors, etc.) to exchange referrals, 3) Community presence: Post in 5 local Facebook groups and Nextdoor with helpful advice (not spammy) + mention service, 4) Google My Business: Set up profile, get first 5-star reviews from beta customers, 5) Door hangers/flyers in target neighborhoods. Founding customer special: 30% off first service. How do I stand out locally?`;
+        } else if (businessType === 'consulting' || businessType === 'agency') {
+          return `For my ${conceptTitle.toLowerCase()}: First client acquisition: 1) Warm outreach: Contact 20 people in network who fit ideal client or can refer - personalized message explaining what I do now, 2) LinkedIn presence: Post 3x weekly about insights in my domain - include case studies and my POV. Invite connections to free consultation, 3) Strategic partnerships: Identify 3 referral partners who serve same audience different way - set up commission structure, 4) Free value: Offer 3 free audits/consultations - convert to paid at end, 5) Speaking: Present at 1 local event or online webinar in my niche. Founding rate: 30% off for first 5 clients locked in 6 months for testimonials. How do I prove expertise fast?`;
+        } else if (businessType === 'subscription') {
+          return `For my ${conceptTitle.toLowerCase()}: Subscriber acquisition: 1) Influencer seeding: Send free boxes to 5-10 micro-influencers in niche - ask for honest reviews/unboxing videos, 2) Social launch: Post unboxing content, behind-the-scenes, and founder story on Instagram/TikTok with special launch code, 3) Community engagement: Active in 5 relevant subreddits, Facebook groups, forums - provide value, mention box when relevant, 4) Friends & family: Offer first 25 people special founders price - focus on getting great reviews, 5) Paid test: Run small Facebook/Instagram ad test to subscription landing page. Launch special: First month 50% off. How do I get people to commit to subscription?`;
+        } else if (businessType === 'course') {
+          return `For my ${conceptTitle.toLowerCase()}: Student acquisition: 1) Free lead magnet: Create valuable free resource (cheat sheet, mini-course, template) to build email list - pitch course to list, 2) Launch webinar: Host live free training showing key insights - sell course at end. Target 30+ attendees, 3) Community launch: Share in 5 communities where target students hang out - focus on transformation results, 4) Testimonial push: Get 3 beta students through course for free in exchange for detailed video testimonials, 5) Personal outreach: Message 20 people who would benefit - explain outcomes and offer founding pricing. Early bird: $100 off for first 25 students. How do I prove course quality before launch?`;
+        } else {
+          return `For my ${conceptTitle.toLowerCase()}: Customer acquisition plan: 1) Direct targeted outreach: Personal messages to 50 ideal customers from validation phase - specific value prop for each, 2) Network activation: Reach out to 20 people who can refer or introduce me to customers, 3) Community presence: Provide valuable content/advice in 5 online communities - soft pitch when contextually relevant, 4) Social proof campaign: Share my journey, progress, early results on LinkedIn/Twitter with clear call-to-action, 5) Strategic partnerships: Secure 2 referral partners who serve my audience. Launch offer: Founding customer pricing - 25-30% off for first 10. How do I overcome the trust barrier as a new business?`;
+        }
+      })()
     },
+    // STEP 6: Pricing Model
     {
       step: 6,
       title: "Pricing Model",
       dayRange: "Days 22-25",
-      prompt: isSaaS
-        ? `For my ${conceptTitle.toLowerCase()}: Pricing strategy: Start with simple tiered pricing - Basic ($X/month) and Pro ($Y/month) based on usage or features. Benchmark: competitors charge $__-$__ monthly, I'm positioning at [lower/middle/premium] to [acquire users fast/signal quality]. My costs per user: $__ monthly. Launch special: First 20 customers get 40-50% lifetime discount to build case studies. What pricing gets me to first revenue fastest while staying sustainable?`
-        : isService
-        ? `For my ${conceptTitle.toLowerCase()}: Service pricing: Starting at $X per [project/hour/month] based on market research showing competitors charge $__-$__. My rate factors in: time required (X hours), expertise value, overhead costs, and desired profit margin. Launch offer: First 5 clients get founding rate of $__ (30% discount) locked in for 6 months in exchange for testimonials. Is this pricing attractive enough to close deals while proving profitability?`
-        : `For my ${conceptTitle.toLowerCase()}: Pricing framework: Core offering at $X [each/monthly] based on: production/delivery costs ($__), competitor prices ($__-$__), and perceived value to customer. Positioning as [affordable/premium/mid-market] option. Early bird special: 25% off for first 15 customers or limited pre-order discount. Break-even: need X customers at $Y each to cover costs. What price point makes buying an easy yes?`
+      prompt: (function() {
+        if (businessType === 'saas' || businessType === 'marketplace') {
+          return `For my ${conceptTitle.toLowerCase()}: Pricing strategy: Start with 2 simple tiers - Starter ($X/month) for individuals/small users and Pro ($Y/month) for power users/teams. Based on competitor research, similar solutions cost $__-$__ monthly. I'm pricing at [lower end/middle/premium] to [acquire users faster/signal quality/maximize revenue]. My per-user costs: hosting $__, third-party APIs $__, support time $__ = total $__ per user monthly. Launch special: First 25 customers get lifetime 50% discount to build case studies. What price point gets me to first revenue fastest while covering costs?`;
+        } else if (businessType === 'consulting') {
+          return `For my ${conceptTitle.toLowerCase()}: Consulting pricing: Core package at $X per project (or $Y/hour for hourly model). Competitive analysis shows market rate is $__-$__ for similar work. My pricing factors: typical project takes X hours, my expertise level, overhead costs, desired margin for my time investment. Positioning as [affordable entry point/mid-market/premium expert]. Founding client offer: First 5 clients get $__ (30% off) locked in for 6 months in exchange for detailed testimonials and case study participation. Is this price compelling enough to close while demonstrating value?`;
+        } else if (businessType === 'agency') {
+          return `For my ${conceptTitle.toLowerCase()}: Agency pricing: Starting at $X for standard package (or $Y retainer for ongoing work). Benchmarking: competitors charge $__-$__ for similar deliverables. My rate reflects: hours required (X-Y hours), team costs if any, tools/software, expertise value, and desired profit margin. Positioning as [affordable alternative/boutique quality/full-service premium]. Launch pricing: First 5 clients get founding rate of $__ (25-30% discount) valid for 6 months with testimonial agreement. Does this pricing win clients while sustaining operations?`;
+        } else if (businessType === 'subscription') {
+          return `For my ${conceptTitle.toLowerCase()}: Subscription pricing: $X per month (or $Y quarterly with discount). Cost breakdown: product costs $__, packaging $__, shipping $__, platform fees $__ = $__ COGS per box. Target margin: 40-50%. Competitive subscriptions in this space: $__-$__ monthly. I'm positioning as [affordable/premium/value leader]. Launch offer: First 50 subscribers get first month 50% off + free shipping to reduce risk and get reviews. Break-even: need X subscribers to cover fixed costs. What price maximizes signups while maintaining healthy margins?`;
+        } else if (businessType === 'local-service') {
+          return `For my ${conceptTitle.toLowerCase()}: Service pricing: $X per standard job (or $Y/hour if hourly). Local competitors charge $__-$__ for similar work. My pricing considers: time per job (X hours), materials/supplies $__, travel time, expertise level, and local market rates. Positioning as [budget-friendly/mid-market/premium quality]. Founding customer special: First 10 customers get 30% off first service + satisfaction guarantee to reduce risk and generate reviews. At this price, I need X jobs per week to hit revenue goals. Does this pricing attract local customers while being profitable?`;
+        } else if (businessType === 'course') {
+          return `For my ${conceptTitle.toLowerCase()}: Course pricing: One-time payment of $X (or payment plan of $Y/month for 3-6 months). Comparable courses on this topic: $__-$__. My pricing reflects: transformation value, course depth (X hours of content + materials), my expertise level, and production costs. Positioning as [accessible entry/mid-tier/premium masterclass]. Early bird pricing: First 25 students get $100-150 off ($X instead of $Y) to generate initial testimonials and momentum. Lifetime access included. At this price, I need X students to hit revenue goal and validate content quality. Does this feel like a valuable investment to students?`;
+        } else {
+          return `For my ${conceptTitle.toLowerCase()}: Pricing structure: Core offering at $X [per unit/per month/per project]. Cost analysis: direct costs $__, overhead $__, time investment valued at $__ = need to charge $__ minimum to break even. Market research shows competitors at $__-$__. I'm pricing at [lower/middle/higher] end to [acquire customers faster/position as quality/maximize margins]. Early adopter special: First 15-20 customers get 25% off to reduce friction and collect testimonials. Need X sales at $Y each to cover initial costs and validate pricing. What price point makes the purchase decision easy for customers while ensuring profitability?`;
+        }
+      })()
     },
+    // STEP 7: Day 30 Success Metrics
     {
       step: 7,
       title: "Day 30 Success Metrics",
       dayRange: "Days 26-30",
-      prompt: isSaaS
-        ? `For my ${conceptTitle.toLowerCase()}: Day 30 success definition: 1) Revenue: 3-5 paying users generating $__+ MRR, 2) Pipeline: 50+ email signups, 20+ trial activations, 3) Validation: User engagement metrics show ___% use core feature weekly, 4) Social proof: 2 detailed testimonials from happy users, 5) Learning: Clear data on what features drive retention. This proves product-market fit exists and justifies continued development. What's my specific revenue and user number goal?`
-        : isService
-        ? `For my ${conceptTitle.toLowerCase()}: By Day 30, success looks like: 1) Revenue: 2-3 paying clients generating $__+ total, 2) Sales pipeline: 10+ qualified leads, 5 proposals sent, 3) Delivery proof: Successfully completed first client project with great feedback, 4) Testimonials: 2 case studies showcasing results, 5) Repeat interest: At least 1 client wants to continue or refer others. This validates my service model works and I can scale by refining process or adding capacity.`
-        : `For my ${conceptTitle.toLowerCase()}: Day 30 success metrics: 1) Revenue: First $__ in sales from X customers, 2) Customer acquisition: Proven I can find and convert customers through [specific channel], 3) Product validation: Positive feedback and repeat purchase interest/referrals, 4) Operations: Confirmed I can deliver/fulfill profitably at scale, 5) Market signal: Waitlist of Y people or strong demand indicators. These numbers prove concept viability and warrant going full-time or raising funds. What's my minimum viable success?`
+      prompt: (function() {
+        if (businessType === 'saas' || businessType === 'marketplace') {
+          return `For my ${conceptTitle.toLowerCase()}: Day 30 success definition: 1) Revenue: 3-5 paying customers generating $__+ in MRR (specify exact dollar amount), 2) Pipeline: 50+ email signups, 20+ trial starts, 10+ active product qualified leads, 3) Engagement: __% of users active weekly using core feature (proves value delivery), 4) Retention: 80%+ of paying users continue to second month, 5) Social proof: 2-3 detailed testimonials and case study with metrics. This validates product-market fit and justifies continuing. Alternative: If no paid users, need 100+ signups with 30%+ active usage proving demand exists. What's my minimum success threshold?`;
+        } else if (businessType === 'consulting' || businessType === 'agency') {
+          return `For my ${conceptTitle.toLowerCase()}: By Day 30, success means: 1) Revenue: 2-3 paying clients generating $__ total (specify amount), 2) Sales pipeline: 15+ qualified leads, 8+ discovery calls held, 5+ proposals sent, 3) Delivery proof: Successfully completed at least 1 client project with measurable results and great feedback, 4) Social proof: 2 detailed written testimonials + 1 video testimonial showcasing results delivered, 5) Referral generated: At least 1 client refers someone new or requests additional work. This validates my service model works and I can scale by refining process or hiring help. What revenue and client number proves viability?`;
+        } else if (businessType === 'subscription') {
+          return `For my ${conceptTitle.toLowerCase()}: Day 30 success metrics: 1) Subscribers: 20-30 paying subscribers at $X/month = $__-$__ MRR, 2) Retention: 85%+ keep subscription into month 2 (low churn proves value), 3) Social proof: 10+ positive reviews/ratings and 3+ unboxing posts/videos from customers, 4) Referrals: At least 2 subscribers refer friends (proves love-it factor), 5) Operations: Confirmed I can source, pack, and ship profitably at scale. This validates the subscription model works. Alternative: 50+ waitlist signups if not launched. What subscriber count and revenue proves sustainability?`;
+        } else if (businessType === 'local-service') {
+          return `For my ${conceptTitle.toLowerCase()}: Local business success by Day 30: 1) Revenue: Completed 8-12 jobs generating $__ total revenue, 2) Customer acquisition: Proven I can consistently generate leads through [specific channel] at $__ cost per lead, 3) Reviews: 5-8 five-star Google/Yelp reviews from satisfied customers, 4) Referrals: At least 2 customers referred new business, 5) Operations: Confirmed profitable delivery - time per job, materials cost, and margin math works. This proves local market demand exists and word-of-mouth engine is starting. What job volume and revenue validates full-time viability?`;
+        } else if (businessType === 'course') {
+          return `For my ${conceptTitle.toLowerCase()}: Course launch success metrics by Day 30: 1) Revenue: 15-25 students enrolled at $X = $__-$__ total revenue, 2) Engagement: 70%+ course completion rate proving content is valuable and students stick with it, 3) Results: At least 3 students share specific wins/transformations from applying lessons, 4) Testimonials: 5+ detailed video or written testimonials about course value and results achieved, 5) Repeat interest: 20+ waitlist signups for advanced course or cohort 2. This validates content quality and market demand for my teaching. What student count and completion rate proves I should create more courses?`;
+        } else {
+          return `For my ${conceptTitle.toLowerCase()}: Day 30 success metrics: 1) Revenue: $__ from X paying customers (specify exact numbers that prove viability), 2) Channel validation: Proven I can acquire customers via [specific channel] at $__ customer acquisition cost, 3) Product validation: 80%+ customer satisfaction, NPS score above 8, positive feedback on core value delivered, 4) Social proof: 3-5 testimonials or case studies showcasing results, 5) Operational proof: Confirmed I can deliver/fulfill profitably at current scale. These metrics prove concept works and justifies going full-time or raising capital. What's my minimum threshold for each metric to continue?`;
+        }
+      })()
     }
   ];
 }
