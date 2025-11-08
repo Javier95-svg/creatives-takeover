@@ -16,8 +16,15 @@ export interface MultiStepPrompt {
   }[];
 }
 
-// Helper function to generate standard steps 2-7 from step 1
+// Helper function to generate contextual steps 2-7 from step 1
 function generateStandardSteps(conceptTitle: string, step1Prompt: string): Array<{step: number; title: string; dayRange: string; prompt: string}> {
+  // Extract key business details from step 1 prompt for context
+  const isService = step1Prompt.toLowerCase().includes('service') || step1Prompt.toLowerCase().includes('agency') || step1Prompt.toLowerCase().includes('consultancy');
+  const isSaaS = step1Prompt.toLowerCase().includes('saas') || step1Prompt.toLowerCase().includes('platform') || step1Prompt.toLowerCase().includes('software') || step1Prompt.toLowerCase().includes('app');
+  const isPhysical = step1Prompt.toLowerCase().includes('product') || step1Prompt.toLowerCase().includes('store') || step1Prompt.toLowerCase().includes('vending') || step1Prompt.toLowerCase().includes('meal prep');
+  const isLocal = step1Prompt.toLowerCase().includes('local') || step1Prompt.toLowerCase().includes('in-person') || step1Prompt.toLowerCase().includes('installation');
+  const isB2B = step1Prompt.toLowerCase().includes('business') || step1Prompt.toLowerCase().includes('b2b') || step1Prompt.toLowerCase().includes('companies');
+
   return [
     {
       step: 1,
@@ -29,37 +36,61 @@ function generateStandardSteps(conceptTitle: string, step1Prompt: string): Array
       step: 2,
       title: "Target Customer",
       dayRange: "Days 3-4",
-      prompt: `For my ${conceptTitle.toLowerCase()} business: Describe my ideal first customer in detail - their demographics, pain points, where they spend time online, and specific places I can find them in the next 7 days. Include 3-5 specific channels or communities where I'll find early adopters.`
+      prompt: isB2B
+        ? `For my ${conceptTitle.toLowerCase()}: Describe my ideal first business customer in detail - company size, industry, current pain points they face, decision-maker role (CEO, CMO, etc.), and their buying process. List 3-5 specific places to find them: industry conferences, LinkedIn groups, professional associations, or B2B communities. What's their annual budget for solutions like mine?`
+        : isLocal
+        ? `For my ${conceptTitle.toLowerCase()}: Describe my ideal first local customer - age range, income level, lifestyle, specific neighborhood/area, and the problem that's urgent for them. Where do they spend time locally? List 3-5 specific places: community centers, local Facebook groups, neighborhood events, local business associations, or partner referral sources I can tap into this week.`
+        : `For my ${conceptTitle.toLowerCase()}: Paint a detailed picture of my ideal first customer - demographics (age, location, income), psychographics (values, interests, online behavior), their biggest frustration that my business solves, and their current alternative solution. List 3-5 specific online communities, social platforms, forums, or influencers where I'll find early adopters actively discussing this problem.`
     },
     {
       step: 3,
       title: "Validation Plan",
       dayRange: "Days 5-7",
-      prompt: `For my ${conceptTitle.toLowerCase()} business: List 3 specific ways I'll validate demand this week: 1) Customer discovery method (interviews, surveys), 2) Market test approach (landing page, pre-orders), 3) Competitive research. What metrics will prove people want this?`
+      prompt: isSaaS
+        ? `For my ${conceptTitle.toLowerCase()}: My validation plan: 1) Customer Discovery: Interview 8-10 potential users about their current workflow, pain points, and willingness to pay for a solution, 2) Market Test: Create a landing page with waitlist signup explaining the core value prop - goal is 30+ signups, 3) Competition Analysis: Deep dive into 3-5 competitors' features, pricing, reviews to find gaps. What specific feedback will prove this is worth building?`
+        : isPhysical
+        ? `For my ${conceptTitle.toLowerCase()}: Validation approach: 1) Pre-orders: Launch a pre-order campaign or crowdfunding test to gauge demand - target 10-15 commitments, 2) Customer Interviews: Talk to 10 potential buyers about purchase triggers, price sensitivity, and must-have features, 3) Supplier Research: Confirm reliable suppliers, production costs, and lead times. What metrics prove people will actually buy?`
+        : `For my ${conceptTitle.toLowerCase()}: Validate demand through: 1) Discovery Calls: Schedule 10 conversations with target customers to understand their pain, current solutions, and budget, 2) Test Offer: Create a simple landing page or social post offering my service - track inquiries and conversion rate, 3) Competitive Intelligence: Research 5 competitors' positioning, pricing, and customer reviews to identify market gaps. What proves people need and will pay for this?`
     },
     {
       step: 4,
       title: "MVP Design",
       dayRange: "Days 8-14",
-      prompt: `For my ${conceptTitle.toLowerCase()} business: Describe the absolute MINIMUM viable product - only the core features that solve the main problem. List 3-5 essential features to build, and explicitly state 3-5 things I'm NOT building yet to stay lean and launch fast.`
+      prompt: isSaaS
+        ? `For my ${conceptTitle.toLowerCase()}: My MVP includes ONLY: 1) Core feature that solves the #1 pain point (describe specifically), 2) Simple user dashboard or interface, 3) Basic authentication and user management, 4) One integration or data source if critical. I'm explicitly NOT building: advanced analytics, mobile apps, API access, multiple integrations, team features, or customization options. Launch with less to learn faster.`
+        : isService
+        ? `For my ${conceptTitle.toLowerCase()}: My initial service offering: 1) One core package/deliverable focused on main customer need, 2) Simple delivery method (documents, calls, emails - no custom platforms yet), 3) Standard process I can repeat with each client, 4) Basic client communication tools. I'm NOT offering: multiple tiers, custom solutions, rush delivery, or add-on services until I validate the core offering and pricing.`
+        : `For my ${conceptTitle.toLowerCase()}: MVP scope: 1) Core product/offering with only essential features that solve the main problem, 2) Simple ordering/booking process (basic tools, no custom development), 3) Manual fulfillment/delivery initially to prove demand before automation, 4) Basic customer communication. Explicitly skipping: premium features, customization, advanced logistics, mobile optimization, and expansion until core works.`
     },
     {
       step: 5,
       title: "Launch Strategy",
       dayRange: "Days 15-21",
-      prompt: `For my ${conceptTitle.toLowerCase()} business: Detail my plan to get first 10 customers - list 5 specific channels/tactics I'll use, what special launch offer I'll make, and how I'll create urgency. Include both online and offline strategies if relevant.`
+      prompt: isLocal
+        ? `For my ${conceptTitle.toLowerCase()}: My first 10 customers plan: 1) Personal network: Reach out to 20 contacts who fit customer profile or can refer, 2) Local partnerships: Partner with 2-3 complementary businesses for referrals, 3) Community engagement: Attend 2 local events, post in 3 neighborhood groups, 4) Local SEO: Optimize Google My Business and get first 5 reviews, 5) Launch offer: Special founding customer discount (20-30% off) for first 10 customers. How will I create urgency?`
+        : isSaaS
+        ? `For my ${conceptTitle.toLowerCase()}: Launch tactics for first 10 users: 1) Product Hunt launch with compelling story and demo video, 2) Founder-led content: Post in 5 relevant subreddits, forums, or communities (not spammy, value-first), 3) Beta access: Reach out to 30 ideal users offering free trial in exchange for feedback, 4) Content marketing: Publish 3 tactical blog posts and share on social, 5) Early bird pricing: Lifetime 50% off for first 10 customers.`
+        : `For my ${conceptTitle.toLowerCase()}: Path to first 10 customers: 1) Direct outreach: Personal messages to 50 ideal customers explaining my offer, 2) Social proof: Share my journey and progress on LinkedIn/Twitter with clear CTA, 3) Strategic partnerships: Identify 3 referral partners who serve my audience, 4) Limited launch offer: Founding member special pricing or exclusive perks for first 10, 5) Community value: Provide free value in 3-5 online communities before soft pitching. How do I build trust fast?`
     },
     {
       step: 6,
       title: "Pricing Model",
       dayRange: "Days 22-25",
-      prompt: `For my ${conceptTitle.toLowerCase()} business: What will I charge and why? Include pricing tier, competitor comparison, cost justification, and any early bird/launch discount. What pricing helps me get first paying customer by Day 30 while staying profitable?`
+      prompt: isSaaS
+        ? `For my ${conceptTitle.toLowerCase()}: Pricing strategy: Start with simple tiered pricing - Basic ($X/month) and Pro ($Y/month) based on usage or features. Benchmark: competitors charge $__-$__ monthly, I'm positioning at [lower/middle/premium] to [acquire users fast/signal quality]. My costs per user: $__ monthly. Launch special: First 20 customers get 40-50% lifetime discount to build case studies. What pricing gets me to first revenue fastest while staying sustainable?`
+        : isService
+        ? `For my ${conceptTitle.toLowerCase()}: Service pricing: Starting at $X per [project/hour/month] based on market research showing competitors charge $__-$__. My rate factors in: time required (X hours), expertise value, overhead costs, and desired profit margin. Launch offer: First 5 clients get founding rate of $__ (30% discount) locked in for 6 months in exchange for testimonials. Is this pricing attractive enough to close deals while proving profitability?`
+        : `For my ${conceptTitle.toLowerCase()}: Pricing framework: Core offering at $X [each/monthly] based on: production/delivery costs ($__), competitor prices ($__-$__), and perceived value to customer. Positioning as [affordable/premium/mid-market] option. Early bird special: 25% off for first 15 customers or limited pre-order discount. Break-even: need X customers at $Y each to cover costs. What price point makes buying an easy yes?`
     },
     {
       step: 7,
       title: "Day 30 Success Metrics",
       dayRange: "Days 26-30",
-      prompt: `For my ${conceptTitle.toLowerCase()} business: Define success on Day 30 - specific numbers for customers/revenue, email signups, active users, or other key metrics. What results would prove this concept works and justify continuing to build?`
+      prompt: isSaaS
+        ? `For my ${conceptTitle.toLowerCase()}: Day 30 success definition: 1) Revenue: 3-5 paying users generating $__+ MRR, 2) Pipeline: 50+ email signups, 20+ trial activations, 3) Validation: User engagement metrics show ___% use core feature weekly, 4) Social proof: 2 detailed testimonials from happy users, 5) Learning: Clear data on what features drive retention. This proves product-market fit exists and justifies continued development. What's my specific revenue and user number goal?`
+        : isService
+        ? `For my ${conceptTitle.toLowerCase()}: By Day 30, success looks like: 1) Revenue: 2-3 paying clients generating $__+ total, 2) Sales pipeline: 10+ qualified leads, 5 proposals sent, 3) Delivery proof: Successfully completed first client project with great feedback, 4) Testimonials: 2 case studies showcasing results, 5) Repeat interest: At least 1 client wants to continue or refer others. This validates my service model works and I can scale by refining process or adding capacity.`
+        : `For my ${conceptTitle.toLowerCase()}: Day 30 success metrics: 1) Revenue: First $__ in sales from X customers, 2) Customer acquisition: Proven I can find and convert customers through [specific channel], 3) Product validation: Positive feedback and repeat purchase interest/referrals, 4) Operations: Confirmed I can deliver/fulfill profitably at scale, 5) Market signal: Waitlist of Y people or strong demand indicators. These numbers prove concept viability and warrant going full-time or raising funds. What's my minimum viable success?`
     }
   ];
 }
