@@ -74,7 +74,11 @@ const PromptLibrary = () => {
             <div className="max-w-5xl mx-auto">
               <Button
                 variant="outline"
-                onClick={() => { setSelectedConcept(null); setCurrentStep(1); }}
+                onClick={() => {
+                  setSelectedConcept(null);
+                  setCurrentStep(1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className="mb-6"
               >
                 ← Back to Library
@@ -290,7 +294,10 @@ const PromptLibrary = () => {
                     
                     <Button
                       size="sm"
-                      onClick={() => setSelectedConcept(prompt)}
+                      onClick={() => {
+                        setSelectedConcept(prompt);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                       className="w-full h-9 sm:h-10 text-sm touch-manipulation"
                     >
                       <ArrowRight className="w-4 h-4 mr-2" />
