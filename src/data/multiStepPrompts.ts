@@ -843,5 +843,149 @@ export const multiStepPrompts: MultiStepPrompt[] = [
       "Pet Health Monitoring Service",
       "I want to launch a service that uses wearable devices and AI to monitor pet health, detect early signs of illness, and provide personalized care recommendations to pet owners. I have veterinary background, $12,000 budget, and can work full-time. The service includes vet consultations and emergency alerts for pet health issues."
     )
+  },
+  {
+    id: 49,
+    conceptTitle: "AI Resume Builder & Career Coach",
+    category: "saas",
+    description: "AI-powered resume optimization and career guidance platform",
+    tags: ["AI", "career services", "job search", "professional development"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "AI Resume Builder & Career Coach",
+      "I want to create an AI-powered platform that helps job seekers optimize their resumes, prepare for interviews, and get personalized career advice. I have HR and tech background, $8,000 budget, and can work full-time. The platform analyzes job descriptions, suggests improvements, and provides industry-specific guidance for career advancement."
+    )
+  },
+  {
+    id: 50,
+    conceptTitle: "Podcast Production Agency",
+    category: "creator",
+    description: "Full-service podcast creation and management for businesses and creators",
+    tags: ["podcasting", "audio production", "content creation", "business services"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Podcast Production Agency",
+      "I want to start an agency that handles everything for clients who want to launch podcasts: recording, editing, show notes, distribution, and promotion. I have audio production experience, $6,000 budget for equipment, and can work full-time. Target clients are thought leaders, businesses, and creators who want professional podcast production without the technical hassle."
+    )
+  },
+  {
+    id: 51,
+    conceptTitle: "Smart Home Installation Service",
+    category: "local",
+    description: "Professional setup and integration of smart home devices",
+    tags: ["smart home", "IoT", "home automation", "local services"],
+    difficulty: "Easy",
+    steps: generateStandardSteps(
+      "Smart Home Installation Service",
+      "I want to offer professional smart home installation and setup services for homeowners who want automation but find it overwhelming. I have technical skills, $4,000 budget for tools and marketing, and can start part-time. Services include device installation, network optimization, automation setup, and ongoing support for smart homes."
+    )
+  },
+  {
+    id: 52,
+    conceptTitle: "B2B Lead Generation SaaS",
+    category: "saas",
+    description: "Automated lead finding and qualification for B2B sales teams",
+    tags: ["B2B", "sales automation", "lead generation", "AI"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "B2B Lead Generation SaaS",
+      "I want to build a SaaS tool that uses AI to find, qualify, and enrich B2B leads automatically by scraping LinkedIn, company websites, and databases. I have sales and tech background, $15,000 budget, and can work full-time. The platform provides verified contact info, company insights, and personalized outreach suggestions for sales teams."
+    )
+  },
+  {
+    id: 53,
+    conceptTitle: "Sustainable Meal Prep Service",
+    category: "local",
+    description: "Locally-sourced meal prep with eco-friendly packaging",
+    tags: ["food service", "sustainability", "meal prep", "local business"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Sustainable Meal Prep Service",
+      "I want to start a meal prep business that sources ingredients from local farms, uses compostable packaging, and delivers healthy, ready-to-eat meals. I have culinary background, $10,000 budget for kitchen equipment and initial inventory, and can work full-time. Target customers are health-conscious professionals who care about sustainability and convenience."
+    )
+  },
+  {
+    id: 54,
+    conceptTitle: "Virtual Assistant Matching Platform",
+    category: "saas",
+    description: "Connect businesses with vetted virtual assistants worldwide",
+    tags: ["remote work", "marketplace", "virtual assistants", "gig economy"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Virtual Assistant Matching Platform",
+      "I want to create a platform that matches businesses with pre-vetted virtual assistants based on skills, timezone, and budget. I have marketplace experience, $12,000 budget, and can work full-time. The platform includes skill assessments, time tracking, payment processing, and quality guarantees to make hiring VAs seamless for small businesses."
+    )
+  },
+  {
+    id: 55,
+    conceptTitle: "Children's Coding Bootcamp",
+    category: "consulting",
+    description: "After-school and summer coding programs for kids",
+    tags: ["education", "coding", "children", "STEM"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Children's Coding Bootcamp",
+      "I want to launch coding classes for kids ages 8-16, teaching programming through game development, robotics, and web design. I have teaching and programming background, $5,000 budget for equipment and curriculum, and can start part-time. Classes will be offered after-school, weekends, and summer camps with both in-person and virtual options."
+    )
+  },
+  {
+    id: 56,
+    conceptTitle: "Influencer CRM Platform",
+    category: "creator",
+    description: "Relationship management tool for influencers and brand partnerships",
+    tags: ["influencer marketing", "CRM", "creator tools", "brand partnerships"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Influencer CRM Platform",
+      "I want to build a CRM specifically designed for influencers to manage brand relationships, track partnerships, organize contracts, and measure campaign performance. I have SaaS experience, $10,000 budget, and can work full-time. The platform helps creators professionalize their business operations and maximize partnership revenue."
+    )
+  },
+  {
+    id: 57,
+    conceptTitle: "Electric Vehicle Charging Network",
+    category: "sustainability",
+    description: "Install and operate EV charging stations in strategic locations",
+    tags: ["EV infrastructure", "sustainability", "charging stations", "clean energy"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Electric Vehicle Charging Network",
+      "I want to install and operate electric vehicle charging stations in underserved areas like apartment complexes, offices, and retail centers. I have business development background, $30,000+ budget for equipment, and can work full-time. Revenue comes from charging fees, advertising on stations, and partnerships with property owners."
+    )
+  },
+  {
+    id: 58,
+    conceptTitle: "Niche Job Board Platform",
+    category: "saas",
+    description: "Specialized job board for specific industry or skill set",
+    tags: ["job board", "recruitment", "niche market", "marketplace"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Niche Job Board Platform",
+      "I want to create a job board focused on a specific niche (e.g., remote design jobs, sustainability careers, Web3 roles) where employers pay to post and talent gets curated opportunities. I have recruitment experience, $6,000 budget, and can work full-time. The platform emphasizes quality over quantity with verified companies and skilled professionals."
+    )
+  },
+  {
+    id: 59,
+    conceptTitle: "Personal Branding Consultancy",
+    category: "consulting",
+    description: "Help professionals build their personal brand online",
+    tags: ["personal branding", "social media", "career development", "consulting"],
+    difficulty: "Easy",
+    steps: generateStandardSteps(
+      "Personal Branding Consultancy",
+      "I want to start a consultancy helping professionals (executives, entrepreneurs, experts) build their personal brand on LinkedIn and other platforms. I have marketing background, $3,000 budget, and can start part-time. Services include brand strategy, content creation guidance, profile optimization, and engagement coaching to increase visibility and opportunities."
+    )
+  },
+  {
+    id: 60,
+    conceptTitle: "Smart Vending Machine Business",
+    category: "ecommerce",
+    description: "Modern vending machines with healthy snacks and tech products",
+    tags: ["vending machines", "passive income", "retail", "automation"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Smart Vending Machine Business",
+      "I want to operate smart vending machines stocked with healthy snacks, tech accessories, and local products in high-traffic locations like gyms, offices, and universities. I have $15,000 budget for machines and initial inventory, and can manage part-time. Machines accept mobile payments and provide real-time inventory tracking for efficient operations."
+    )
   }
 ];
