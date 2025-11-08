@@ -84,33 +84,15 @@ const PromptLibrary = () => {
                 ← Back to Library
               </Button>
 
-              <div className="mb-8">
-                <h1 className="text-3xl sm:text-4xl font-bold mb-3 takeover-gradient creatives-font">
-                  {selectedConcept.conceptTitle}
-                </h1>
-                <p className="text-lg text-muted-foreground mb-4">
-                  {selectedConcept.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedConcept.tags.map((tag, idx) => (
-                    <Badge key={idx} variant="secondary">
-                      {tag}
-                    </Badge>
-                  ))}
-                  <Badge variant="outline" className={getDifficultyColor(selectedConcept.difficulty)}>
-                    {selectedConcept.difficulty}
-                  </Badge>
-                </div>
-              </div>
 
               <Card className="glass-card mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span>30-Day Launch Journey</span>
+                    <span>{selectedConcept.conceptTitle}</span>
                     <Badge variant="secondary">Step {currentStep} of 7</Badge>
                   </CardTitle>
                   <CardDescription>
-                    Complete all 7 steps to get comprehensive guidance from BizMap AI
+                    {selectedConcept.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
