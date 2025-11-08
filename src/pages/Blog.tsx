@@ -4,7 +4,6 @@ import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
-import PitchDeckLibrarySection from "@/components/blog/PitchDeckLibrarySection";
 import TrendingSection from "@/components/blog/TrendingSection";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState, useRef } from "react";
@@ -99,7 +98,6 @@ const Blog = () => {
           <BlogHero onSearch={handleSearch} />
         </div>
         <FundingOpportunitiesSection />
-        <PitchDeckLibrarySection />
         <TrendingSection 
           searchTerm={searchTerm} 
           selectedCategory={selectedCategory}
