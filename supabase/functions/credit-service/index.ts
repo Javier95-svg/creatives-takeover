@@ -166,35 +166,51 @@ export class CreditService {
   // Initialize credits for new users (5 free credits)
   async initializeUserCredits(userId: string): Promise<boolean> {
     try {
-      // First check if user already has credits
+      // Check if user already has credits
       const existing = await this.getBalance(userId);
-      if (existing) {
+      if (existing && existing.balance >= 0) {
+        console.log('User already has credits, skipping initialization');
         return true; // Already initialized
       }
 
-      // Insert initial credit record
-      const { error: insertError } = await this.supabase
+      // Use upsert instead of insert to handle race conditions
+      const { error: upsertError } = await this.supabase
         .from('user_credits')
-        .insert([{
+        .upsert([{
           user_id: userId,
           balance: 5, // 5 free credits for new users
-          monthly_quota: 0
-        }]);
+          monthly_quota: 5,
+          subscription_tier: 'free'
+        }], {
+          onConflict: 'user_id',
+          ignoreDuplicates: true // Don't overwrite if exists
+        });
 
-      if (insertError) {
-        console.error('Error initializing user credits:', insertError);
+      if (upsertError) {
+        console.error('Error initializing user credits:', upsertError);
         return false;
       }
 
-      // Log the grant transaction
-      await this.supabase
+      // Only log transaction if this is truly a new user
+      const { data: existingTx } = await this.supabase
         .from('credit_transactions')
-        .insert([{
-          user_id: userId,
-          amount: 5,
-          tx_type: 'grant',
-          reason: 'Welcome bonus - 5 free credits'
-        }]);
+        .select('id')
+        .eq('user_id', userId)
+        .eq('tx_type', 'grant')
+        .eq('reason', 'Welcome bonus - 5 free credits')
+        .limit(1);
+
+      if (!existingTx || existingTx.length === 0) {
+        await this.supabase
+          .from('credit_transactions')
+          .insert([{
+            user_id: userId,
+            amount: 5,
+            tx_type: 'grant',
+            reason: 'Welcome bonus - 5 free credits',
+            feature: 'Account Creation'
+          }]);
+      }
 
       return true;
     } catch (error) {

@@ -42,10 +42,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(async () => {
             const isNewProfile = await createUserProfile(session.user);
             
-            // Initialize credits for new users (5 free credits)
-            supabase.functions.invoke('credit-service', {
-              body: { action: 'initialize', userId: session.user!.id }
-            });
+            // Only initialize credits for NEW users (5 free credits)
+            if (isNewProfile) {
+              supabase.functions.invoke('credit-service', {
+                body: { action: 'initialize', userId: session.user!.id }
+              });
+            }
+            
             // Grant monthly credits if due (free and paid tiers)
             supabase.rpc('grant_monthly_credits');
             

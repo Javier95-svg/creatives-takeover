@@ -27,8 +27,8 @@ const PromptLibrary = () => {
   const hasAccessToPrompt = (prompt: MultiStepPrompt) => {
     if (prompt.requiredTier === "free") return true;
     if (!user) return false;
-    if (userTier === "professional") return true;
-    if (userTier === "creator" && (prompt.requiredTier === "creator" || prompt.requiredTier === "free")) return true;
+    if (userTier === "professional" || userTier === "enterprise") return true;
+    if (userTier === "creator" && prompt.requiredTier === "creator") return true;
     return false;
   };
 

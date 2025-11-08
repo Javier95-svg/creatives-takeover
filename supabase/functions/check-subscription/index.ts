@@ -96,11 +96,13 @@ serve(async (req) => {
       const price = await stripe.prices.retrieve(priceId);
       const amount = price.unit_amount || 0;
       
-      if (amount <= 999) {
-        subscriptionTier = "basic";
-      } else if (amount <= 1999) {
-        subscriptionTier = "premium";
-      } else {
+      if (amount === 0) {
+        subscriptionTier = "free";
+      } else if (amount <= 2000) { // $20 or less = Creator
+        subscriptionTier = "creator";
+      } else if (amount <= 4000) { // $40 or less = Professional
+        subscriptionTier = "professional";
+      } else { // $40+ = Enterprise
         subscriptionTier = "enterprise";
       }
       logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
