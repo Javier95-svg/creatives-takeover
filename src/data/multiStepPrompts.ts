@@ -1,6 +1,68 @@
 // Multi-step prompts for BizMap AI - Complete 30-day journey
 // Each business concept has 7 prompts covering all BizMap steps
 
+// Tier mapping from prompt_library_tiers.csv
+const TIER_MAPPING: Record<string, "free" | "creator" | "professional"> = {
+  "Social Commerce Store (TikTok Shop)": "free",
+  "Sustainable E-commerce Store": "free",
+  "No-Code AI App Builder Service": "free",
+  "Course Creation Consultancy": "free",
+  "Mental Health App for Remote Workers": "free",
+  "Micro-Influencer Marketplace": "free",
+  "Subscription Box for Remote Workers": "free",
+  "AI Content Creation Agency": "free",
+  "Senior Tech Support Service": "free",
+  "Smart Home Installation Service": "free",
+  "Personal Branding Consultancy": "free",
+  "Mobile Car Care Service": "free",
+  "Hyperlocal Delivery Network": "free",
+  "Pet Health Monitoring Service": "free",
+  "Coworking Space for Creators": "free",
+  "Sustainable Fashion Rental Platform": "free",
+  "AI-Powered Customer Service Automation": "free",
+  "Micro-SaaS for Remote Teams": "creator",
+  "Creator Management Platform": "creator",
+  "Micro-Investment App for Gen Z": "creator",
+  "AI Implementation Consultancy": "creator",
+  "AI-Powered Project Management Tool": "creator",
+  "Carbon Footprint Tracking SaaS": "creator",
+  "Carbon Credit Marketplace for SMBs": "creator",
+  "Smart Vending Machine Business": "creator",
+  "Freelancer Financial Management": "creator",
+  "Influencer CRM Platform": "creator",
+  "Sustainable Product Marketplace": "creator",
+  "Digital Estate Planning Service": "creator",
+  "Local Fitness Coaching with Virtual Reality": "creator",
+  "B2B Lead Generation SaaS": "creator",
+  "Remote Work Transition Consulting": "creator",
+  "AI-Powered Personal Finance Coach": "professional",
+  "Corporate Wellness Platform": "professional",
+  "Electric Vehicle Charging Network": "professional",
+  "Virtual Assistant Matching Platform": "professional",
+  "Professional Skills Bootcamp": "professional",
+  "AI Voice Assistant for Seniors": "professional",
+  "AI Content Creation Studio": "professional",
+  "Telemedicine Platform for Rural Areas": "professional",
+  "AI Mental Health Screening App": "professional",
+  "Personalized Nutrition Planning Service": "professional",
+  "Creator Analytics & Growth Platform": "professional",
+  "Podcast Production Agency": "professional",
+  "Virtual Event Production Company": "professional",
+  "Language Learning for Remote Workers": "professional",
+  "Renewable Energy Consulting": "creator",
+  "Mobile App for Local Services": "creator",
+  "Sustainability Compliance Consulting": "creator",
+  "Loneliness Solutions Platform": "creator",
+  "No-Code AI Automation Platform": "creator",
+  "Senior Care Coordination Service": "creator",
+  "Workplace Wellness Coaching": "creator",
+  "Home Energy Optimization Service": "creator",
+  "AI-Powered Learning Platform for Kids": "professional",
+  "Neighborhood Social Network": "creator",
+  "Children's Coding Bootcamp": "creator",
+  "Niche Job Board Platform": "creator"
+};
+
 export interface MultiStepPrompt {
   id: number;
   conceptTitle: string;
@@ -8,6 +70,7 @@ export interface MultiStepPrompt {
   description: string;
   tags: string[];
   difficulty: "Easy" | "Medium" | "Hard";
+  requiredTier: "free" | "creator" | "professional";
   steps: {
     step: number;
     title: string;
@@ -223,6 +286,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Build AI chatbots and customer support solutions for small businesses",
     tags: ["AI", "automation", "customer service", "B2B"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI-Powered Customer Service Automation"] || "free",
     steps: [
       {
         step: 1,
@@ -275,6 +339,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Build a business around social media selling and livestream shopping",
     tags: ["social commerce", "TikTok", "live selling", "Gen Z"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Social Commerce Store (TikTok Shop)"] || "free",
     steps: [
       {
         step: 1,
@@ -327,6 +392,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Build a focused tool solving one specific remote work problem",
     tags: ["micro-SaaS", "remote work", "productivity", "meetings"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Micro-SaaS for Remote Teams"] || "free",
     steps: [
       {
         step: 1,
@@ -379,6 +445,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Leverage AI tools to create content for businesses at scale",
     tags: ["AI", "content creation", "marketing", "agency"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["AI Content Creation Agency"] || "free",
     steps: [
       {
         step: 1,
@@ -431,6 +498,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Starting an eco-friendly online retail business",
     tags: ["sustainability", "e-commerce", "retail", "eco-friendly"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Sustainable E-commerce Store"] || "free",
     steps: [
       {
         step: 1,
@@ -485,6 +553,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help businesses build AI-powered apps without coding",
     tags: ["no-code", "AI", "app development", "B2B"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["No-Code AI App Builder Service"] || "free",
     steps: generateStandardSteps(
       "No-Code AI App Builder Service",
       "I want to start a service that helps small businesses build AI-powered applications using no-code platforms like Bubble, Zapier, and AI APIs. I have some technical skills, $5,000 budget, and can work full-time. My target is businesses that want AI functionality but can't afford custom development."
@@ -497,6 +566,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help content creators manage their business operations",
     tags: ["creator economy", "SaaS", "influencer marketing", "B2B"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Creator Management Platform"] || "free",
     steps: generateStandardSteps(
       "Creator Management Platform",
       "I want to build a SaaS platform that helps content creators manage their brand partnerships, sponsorship deals, content calendar, and finances in one place. I have business experience, $12,000 budget, and can work full-time. The target market is mid-tier creators (10K-500K followers) who are getting overwhelmed managing their creator business."
@@ -509,6 +579,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help experts turn knowledge into profitable online courses",
     tags: ["online courses", "consulting", "education", "expertise monetization"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Course Creation Consultancy"] || "free",
     steps: generateStandardSteps(
       "Course Creation Consultancy",
       "I want to start a consultancy that helps professionals and experts create, launch, and market online courses. I have marketing and educational background, $3,000 budget, and can start part-time. My goal is to help people monetize their expertise through course creation, from content development to launch strategy."
@@ -521,6 +592,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Connect local businesses with micro-influencers",
     tags: ["influencer marketing", "marketplace", "local business", "micro-influencers"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Micro-Influencer Marketplace"] || "free",
     steps: generateStandardSteps(
       "Micro-Influencer Marketplace",
       "I want to create a platform that connects local businesses with micro-influencers (1K-50K followers) in their area for authentic marketing campaigns. I have marketing experience, $8,000 budget, and can work full-time. The focus is on local restaurants, shops, and services working with community influencers."
@@ -533,6 +605,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Curated productivity and wellness items for remote professionals",
     tags: ["subscription", "remote work", "productivity", "wellness"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Subscription Box for Remote Workers"] || "free",
     steps: generateStandardSteps(
       "Subscription Box for Remote Workers",
       "I want to launch a subscription box service targeting remote workers and digital nomads, featuring productivity tools, ergonomic accessories, healthy snacks, and wellness items. I have $10,000 budget, some e-commerce experience, and can work full-time. The target audience is remote professionals who want to improve their home office setup and wellbeing."
@@ -545,6 +618,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Smart project management with AI assistance and automation",
     tags: ["saas", "AI", "project management", "automation"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI-Powered Project Management Tool"] || "free",
     steps: generateStandardSteps(
       "AI-Powered Project Management Tool",
       "I want to create a SaaS project management tool that uses AI to predict project delays, suggest optimal task assignments, and automate routine project management tasks. I have technical skills, $15,000+ budget, and can work full-time. The target market is mid-size companies (50-200 employees) struggling with project visibility."
@@ -557,6 +631,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Connecting service providers with customers",
     tags: ["mobile app", "marketplace", "local services", "on-demand"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Mobile App for Local Services"] || "free",
     steps: generateStandardSteps(
       "Mobile App for Local Services",
       "I'm planning a mobile app that connects local service providers (plumbers, electricians, cleaners) with customers who need quick help. I have technical skills, $15,000 budget, and can work full-time. Think 'Uber for home services' but focused on my local market first with same-day booking capabilities."
@@ -569,6 +644,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help businesses measure and reduce their environmental impact",
     tags: ["climate tech", "sustainability", "SaaS", "ESG reporting"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Carbon Footprint Tracking SaaS"] || "free",
     steps: generateStandardSteps(
       "Carbon Footprint Tracking SaaS",
       "I want to create a SaaS platform that helps small and medium businesses track their carbon footprint, get actionable reduction recommendations, and report on their sustainability progress. I have environmental science background, $12,000 budget, and can work full-time. The target market is companies preparing for ESG reporting requirements."
@@ -581,6 +657,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help homeowners and businesses transition to clean energy",
     tags: ["renewable energy", "consulting", "solar", "sustainability"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Renewable Energy Consulting"] || "free",
     steps: generateStandardSteps(
       "Renewable Energy Consulting",
       "I want to start a consulting business that helps homeowners and small businesses evaluate, plan, and implement renewable energy solutions like solar panels and battery storage. I have engineering background, $4,000 budget, and can start part-time. My goal is to make the transition to clean energy simple and cost-effective."
@@ -593,6 +670,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Curated platform for verified eco-friendly products",
     tags: ["marketplace", "sustainability", "eco-friendly", "conscious consumption"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Sustainable Product Marketplace"] || "free",
     steps: generateStandardSteps(
       "Sustainable Product Marketplace",
       "I want to create an online marketplace exclusively for verified sustainable and eco-friendly products, with strict vetting criteria and transparent impact metrics. I have e-commerce experience, $8,000 budget, and can work full-time. The platform will focus on helping conscious consumers find genuinely sustainable alternatives to everyday products."
@@ -605,6 +683,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Digital wellness solution for isolated remote professionals",
     tags: ["mental health", "remote work", "wellness app", "burnout prevention"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Mental Health App for Remote Workers"] || "free",
     steps: generateStandardSteps(
       "Mental Health App for Remote Workers",
       "I want to develop a mental health and wellness app specifically for remote workers dealing with isolation, work-life balance issues, and burnout. I have psychology background, $10,000 budget, and can work full-time. The app should include guided meditations, virtual coworking sessions, and mood tracking."
@@ -617,6 +696,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help families manage elderly care with technology",
     tags: ["elderly care", "health tech", "family coordination", "aging population"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Senior Care Coordination Service"] || "free",
     steps: generateStandardSteps(
       "Senior Care Coordination Service",
       "I want to start a service that helps families coordinate care for elderly parents using a combination of technology and personal support. I have healthcare experience, $6,000 budget, and can dedicate 40+ hours weekly. The service will include medication reminders, appointment scheduling, and family communication tools."
@@ -629,6 +709,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Comprehensive employee wellness programs for modern workplaces",
     tags: ["corporate wellness", "employee health", "B2B", "workplace wellness"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Corporate Wellness Platform"] || "free",
     steps: generateStandardSteps(
       "Corporate Wellness Platform",
       "I want to create a comprehensive wellness platform for companies to improve employee health and reduce healthcare costs. I have HR and wellness background, $12,000 budget, and can work full-time. The platform should include fitness challenges, mental health resources, nutrition tracking, and stress management tools."
@@ -641,6 +722,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Combine in-person and VR fitness experiences",
     tags: ["fitness", "VR", "local", "innovative training"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Local Fitness Coaching with Virtual Reality"] || "free",
     steps: generateStandardSteps(
       "Local Fitness Coaching with Virtual Reality",
       "I'm a certified personal trainer who wants to start a fitness business combining traditional personal training with virtual reality workout experiences. I have fitness expertise, $8,000 budget including VR equipment, and can work full-time. The target market is tech-savvy fitness enthusiasts looking for immersive workout experiences."
@@ -653,6 +735,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Same-day delivery for local businesses and residents",
     tags: ["delivery", "local business", "logistics", "community"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Hyperlocal Delivery Network"] || "free",
     steps: generateStandardSteps(
       "Hyperlocal Delivery Network",
       "I want to create a hyperlocal delivery network that helps local businesses offer same-day delivery while also providing personal shopping and errand services for busy residents. I have logistics experience, $7,000 budget, and can work full-time. The focus is on building a strong community network of reliable delivery partners."
@@ -665,6 +748,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Physical space designed for content creators and digital professionals",
     tags: ["coworking", "content creation", "real estate", "community"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Coworking Space for Creators"] || "free",
     steps: generateStandardSteps(
       "Coworking Space for Creators",
       "I want to open a coworking space specifically designed for content creators, including podcast studios, video recording rooms, and photography setups alongside traditional workspaces. I have real estate experience, $25,000 budget, and can commit full-time. The target market is freelance creators, small agencies, and remote workers."
@@ -677,6 +761,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help businesses integrate AI tools into their operations",
     tags: ["AI consulting", "business automation", "digital transformation", "B2B"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["AI Implementation Consultancy"] || "free",
     steps: generateStandardSteps(
       "AI Implementation Consultancy",
       "I want to start a consultancy that helps small and medium businesses identify and implement AI tools to improve their operations, from customer service chatbots to automated data analysis. I have business and technical background, $5,000 budget, and can dedicate 35+ hours weekly. My goal is to democratize AI adoption for smaller companies."
@@ -689,6 +774,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help traditional businesses successfully adopt remote work",
     tags: ["remote work", "organizational change", "HR consulting", "business transformation"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Remote Work Transition Consulting"] || "free",
     steps: generateStandardSteps(
       "Remote Work Transition Consulting",
       "I want to help traditional businesses successfully transition to hybrid or fully remote work models. I have HR and organizational psychology background, $3,000 budget, and can start part-time. My services include culture assessment, tool recommendations, policy development, and change management for remote work adoption."
@@ -701,6 +787,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help businesses meet new environmental regulations and ESG requirements",
     tags: ["ESG consulting", "sustainability", "compliance", "environmental regulations"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Sustainability Compliance Consulting"] || "free",
     steps: generateStandardSteps(
       "Sustainability Compliance Consulting",
       "I want to start a consulting practice that helps businesses comply with increasing environmental regulations and ESG reporting requirements. I have environmental law and business background, $4,000 budget, and can work 30+ hours weekly. My target clients are mid-size companies facing new sustainability compliance challenges."
@@ -713,6 +800,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help people manage their digital assets and online presence after death",
     tags: ["digital estate", "legacy planning", "digital assets", "legal services"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Digital Estate Planning Service"] || "free",
     steps: generateStandardSteps(
       "Digital Estate Planning Service",
       "I want to create a service that helps people organize and plan for their digital assets, social media accounts, cryptocurrency, and online subscriptions for when they pass away. I have legal background, $3,500 budget, and can start part-time. This addresses the growing need for digital legacy planning in our increasingly online world."
@@ -725,6 +813,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Combat social isolation with community-building technology",
     tags: ["social connection", "community building", "mental health", "loneliness"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Loneliness Solutions Platform"] || "free",
     steps: generateStandardSteps(
       "Loneliness Solutions Platform",
       "I want to create a platform that helps combat loneliness and social isolation by connecting people with shared interests for both virtual and in-person activities. I have community organizing experience, $9,000 budget, and can work full-time. The focus is on creating meaningful connections for people struggling with social isolation, especially post-pandemic."
@@ -737,6 +826,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Voice-activated companion and helper for elderly users",
     tags: ["AI", "voice technology", "elderly care", "healthcare"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI Voice Assistant for Seniors"] || "free",
     steps: generateStandardSteps(
       "AI Voice Assistant for Seniors",
       "I want to create an AI-powered voice assistant specifically designed for seniors to help with medication reminders, emergency contacts, entertainment, and staying connected with family. I have tech background, $12,000 budget, and can work full-time. The product should be simple, reliable, and focused on improving quality of life for aging adults."
@@ -749,6 +839,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Smart financial planning and budgeting with AI insights",
     tags: ["AI", "fintech", "personal finance", "budgeting"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI-Powered Personal Finance Coach"] || "free",
     steps: generateStandardSteps(
       "AI-Powered Personal Finance Coach",
       "I want to develop an AI-driven personal finance app that analyzes spending patterns, predicts future expenses, and provides personalized budgeting and investment advice. I have fintech experience, $15,000 budget, and can dedicate full-time. Target audience is millennials and Gen Z looking for smarter money management."
@@ -761,6 +852,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help small businesses automate tasks without coding",
     tags: ["no-code", "AI automation", "small business", "productivity"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["No-Code AI Automation Platform"] || "free",
     steps: generateStandardSteps(
       "No-Code AI Automation Platform",
       "I want to create a no-code platform that allows small business owners to build AI-powered automations for customer service, data entry, and marketing tasks. I have technical background, $20,000+ budget, and can work full-time. The goal is to make AI automation accessible to non-technical business owners."
@@ -773,6 +865,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "AI-powered tools for content creators and marketers",
     tags: ["AI content", "creator tools", "video editing", "automation"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI Content Creation Studio"] || "free",
     steps: generateStandardSteps(
       "AI Content Creation Studio",
       "I want to launch a service that helps content creators and small businesses generate high-quality video, image, and text content using AI tools. I have marketing and design experience, $8,000 budget, and can work full-time. The service includes AI video editing, thumbnail generation, and content scheduling across platforms."
@@ -785,6 +878,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Professional virtual and hybrid event planning and execution",
     tags: ["virtual events", "event planning", "business services", "technology"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Virtual Event Production Company"] || "free",
     steps: generateStandardSteps(
       "Virtual Event Production Company",
       "I want to start an event production company specializing in virtual and hybrid events for businesses, creators, and organizations. I have event planning experience, $10,000 budget, and can work full-time. Services include technical setup, engagement strategies, and post-event analytics for immersive online experiences."
@@ -797,6 +891,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Data-driven insights for content creator success",
     tags: ["creator analytics", "social media", "data analysis", "growth hacking"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Creator Analytics & Growth Platform"] || "free",
     steps: generateStandardSteps(
       "Creator Analytics & Growth Platform",
       "I want to build a platform that provides deep analytics and growth strategies for content creators across multiple platforms (TikTok, Instagram, YouTube, etc.). I have data analysis background, $12,000 budget, and can work full-time. The platform will offer audience insights, optimal posting times, and content performance predictions."
@@ -809,6 +904,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Early detection and intervention for mental health issues",
     tags: ["mental health", "AI", "healthcare", "prevention"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI Mental Health Screening App"] || "free",
     steps: generateStandardSteps(
       "AI Mental Health Screening App",
       "I want to develop an app that uses AI to analyze text, voice, and behavioral patterns to provide early mental health screening and connect users with appropriate resources. I have psychology and tech background, $15,000 budget, and can work full-time. The focus is on preventive mental healthcare and reducing barriers to treatment."
@@ -821,6 +917,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "AI-driven meal planning based on individual health data",
     tags: ["nutrition", "personalized medicine", "meal planning", "health optimization"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Personalized Nutrition Planning Service"] || "free",
     steps: generateStandardSteps(
       "Personalized Nutrition Planning Service",
       "I want to create a service that combines genetic testing, health metrics, and lifestyle data to provide personalized nutrition plans and meal recommendations. I have nutrition background, $10,000 budget, and can work full-time. The service includes meal delivery partnerships and health tracking integration."
@@ -833,6 +930,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "On-site and virtual wellness programs for companies",
     tags: ["workplace wellness", "coaching", "corporate health", "stress management"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Workplace Wellness Coaching"] || "free",
     steps: generateStandardSteps(
       "Workplace Wellness Coaching",
       "I want to start a wellness coaching business that provides on-site and virtual wellness programs for companies dealing with employee burnout and stress. I have wellness coaching certification, $5,000 budget, and can start part-time. Services include stress management workshops, fitness classes, and mental health first aid training."
@@ -845,6 +943,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Simplified carbon offsetting for small businesses",
     tags: ["carbon credits", "climate tech", "sustainability", "marketplace"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Carbon Credit Marketplace for SMBs"] || "free",
     steps: generateStandardSteps(
       "Carbon Credit Marketplace for SMBs",
       "I want to create a marketplace that makes it easy for small businesses to purchase verified carbon credits and track their carbon neutrality progress. I have environmental science background, $12,000 budget, and can work full-time. The platform will focus on transparency, affordability, and measurable impact for climate-conscious SMBs."
@@ -857,6 +956,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Circular fashion economy through clothing rental",
     tags: ["sustainable fashion", "rental economy", "circular economy", "clothing"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Sustainable Fashion Rental Platform"] || "free",
     steps: generateStandardSteps(
       "Sustainable Fashion Rental Platform",
       "I want to launch a clothing rental platform focused on sustainable fashion brands, targeting environmentally conscious consumers who want to reduce textile waste. I have fashion industry experience, $15,000 budget, and can work full-time. The platform includes professional cleaning, style consultations, and rent-to-own options."
@@ -869,6 +969,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Smart home energy auditing and optimization",
     tags: ["energy efficiency", "smart home", "renewable energy", "home optimization"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Home Energy Optimization Service"] || "free",
     steps: generateStandardSteps(
       "Home Energy Optimization Service",
       "I want to start a service that helps homeowners optimize their energy usage through smart home technology, solar installations, and energy-efficient upgrades. I have electrical engineering background, $8,000 budget, and can work full-time. The service includes energy audits, smart device installation, and ongoing optimization."
@@ -881,6 +982,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Personalized education technology for children",
     tags: ["EdTech", "AI", "children's education", "personalized learning"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["AI-Powered Learning Platform for Kids"] || "free",
     steps: generateStandardSteps(
       "AI-Powered Learning Platform for Kids",
       "I want to create an AI-powered learning platform that adapts to each child's learning style and pace, making education more engaging and effective. I have education and tech background, $18,000 budget, and can work full-time. The platform covers core subjects with gamification, progress tracking, and parent insights."
@@ -893,6 +995,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Intensive training for in-demand digital skills",
     tags: ["skills training", "bootcamp", "professional development", "career transition"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Professional Skills Bootcamp"] || "free",
     steps: generateStandardSteps(
       "Professional Skills Bootcamp",
       "I want to start intensive bootcamp programs teaching high-demand skills like AI prompt engineering, no-code development, and digital marketing to professionals looking to upskill. I have training and business background, $7,000 budget, and can work full-time. Programs will be project-based with job placement assistance."
@@ -905,6 +1008,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Business-focused language learning with cultural context",
     tags: ["language learning", "remote work", "business communication", "cultural training"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Language Learning for Remote Workers"] || "free",
     steps: generateStandardSteps(
       "Language Learning for Remote Workers",
       "I want to develop a language learning platform specifically for remote workers who need to communicate effectively in international business settings. I have linguistics background, $10,000 budget, and can work full-time. The platform focuses on business communication, cultural awareness, and virtual meeting skills."
@@ -917,6 +1021,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Hyperlocal community platform for neighbors",
     tags: ["community building", "social network", "local services", "neighborhood"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Neighborhood Social Network"] || "free",
     steps: generateStandardSteps(
       "Neighborhood Social Network",
       "I want to create a social network app that connects neighbors for local recommendations, community events, skill sharing, and mutual aid. I have community organizing experience, $8,000 budget, and can work full-time. The platform emphasizes safety, verification, and building stronger local communities."
@@ -929,6 +1034,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "On-demand automotive maintenance and detailing",
     tags: ["automotive", "mobile service", "convenience", "on-demand"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Mobile Car Care Service"] || "free",
     steps: generateStandardSteps(
       "Mobile Car Care Service",
       "I want to start a mobile car care service that comes to customers' locations for routine maintenance, detailing, and minor repairs. I have automotive experience, $12,000 budget for equipment and vehicle, and can work full-time. The service targets busy professionals and includes electric vehicle specialization."
@@ -941,6 +1047,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Patient technology help for elderly users",
     tags: ["senior services", "tech support", "elderly care", "digital literacy"],
     difficulty: "Easy",
+    requiredTier: TIER_MAPPING["Senior Tech Support Service"] || "free",
     steps: generateStandardSteps(
       "Senior Tech Support Service",
       "I want to start a business providing patient, in-home technology support for seniors who struggle with smartphones, tablets, and smart home devices. I have customer service background, $3,000 budget, and can start part-time. Services include device setup, training, and ongoing support with a focus on safety and simplicity."
@@ -953,6 +1060,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Social investing platform for young investors",
     tags: ["fintech", "micro-investing", "Gen Z", "social investing"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Micro-Investment App for Gen Z"] || "free",
     steps: generateStandardSteps(
       "Micro-Investment App for Gen Z",
       "I want to create a micro-investment app that makes investing accessible and social for Gen Z users through fractional shares, gamification, and peer learning. I have fintech experience, $25,000+ budget, and can work full-time. The app includes investment education, social features, and integration with popular payment apps."
@@ -965,6 +1073,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "All-in-one financial platform for independent contractors",
     tags: ["freelancer tools", "financial management", "gig economy", "accounting"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Freelancer Financial Management"] || "free",
     steps: generateStandardSteps(
       "Freelancer Financial Management",
       "I want to build a financial management platform specifically for freelancers and independent contractors, including invoicing, expense tracking, tax preparation, and retirement planning. I have accounting background, $15,000 budget, and can work full-time. The platform addresses the unique financial challenges of gig economy workers."
@@ -977,6 +1086,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Bridge healthcare gaps in underserved communities",
     tags: ["telemedicine", "rural healthcare", "health equity", "digital health"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Telemedicine Platform for Rural Areas"] || "free",
     steps: generateStandardSteps(
       "Telemedicine Platform for Rural Areas",
       "I want to create a telemedicine platform specifically designed for rural and underserved communities, with features like mobile connectivity optimization and local health worker integration. I have healthcare and tech background, $20,000+ budget, and can work full-time. The goal is to improve healthcare access where traditional services are limited."
@@ -989,6 +1099,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Tech-enabled preventive care for pets",
     tags: ["pet health", "wearable tech", "veterinary care", "AI monitoring"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Pet Health Monitoring Service"] || "free",
     steps: generateStandardSteps(
       "Pet Health Monitoring Service",
       "I want to launch a service that uses wearable devices and AI to monitor pet health, detect early signs of illness, and provide personalized care recommendations to pet owners. I have veterinary background, $12,000 budget, and can work full-time. The service includes vet consultations and emergency alerts for pet health issues."
@@ -1001,6 +1112,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "AI-powered resume optimization and career guidance platform",
     tags: ["AI", "career services", "job search", "professional development"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["AI Resume Builder & Career Coach"] || "free",
     steps: generateStandardSteps(
       "AI Resume Builder & Career Coach",
       "I want to create an AI-powered platform that helps job seekers optimize their resumes, prepare for interviews, and get personalized career advice. I have HR and tech background, $8,000 budget, and can work full-time. The platform analyzes job descriptions, suggests improvements, and provides industry-specific guidance for career advancement."
@@ -1013,6 +1125,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Full-service podcast creation and management for businesses and creators",
     tags: ["podcasting", "audio production", "content creation", "business services"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Podcast Production Agency"] || "free",
     steps: generateStandardSteps(
       "Podcast Production Agency",
       "I want to start an agency that handles everything for clients who want to launch podcasts: recording, editing, show notes, distribution, and promotion. I have audio production experience, $6,000 budget for equipment, and can work full-time. Target clients are thought leaders, businesses, and creators who want professional podcast production without the technical hassle."
@@ -1025,6 +1138,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Professional setup and integration of smart home devices",
     tags: ["smart home", "IoT", "home automation", "local services"],
     difficulty: "Easy",
+    requiredTier: TIER_MAPPING["Smart Home Installation Service"] || "free",
     steps: generateStandardSteps(
       "Smart Home Installation Service",
       "I want to offer professional smart home installation and setup services for homeowners who want automation but find it overwhelming. I have technical skills, $4,000 budget for tools and marketing, and can start part-time. Services include device installation, network optimization, automation setup, and ongoing support for smart homes."
@@ -1037,6 +1151,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Automated lead finding and qualification for B2B sales teams",
     tags: ["B2B", "sales automation", "lead generation", "AI"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["B2B Lead Generation SaaS"] || "free",
     steps: generateStandardSteps(
       "B2B Lead Generation SaaS",
       "I want to build a SaaS tool that uses AI to find, qualify, and enrich B2B leads automatically by scraping LinkedIn, company websites, and databases. I have sales and tech background, $15,000 budget, and can work full-time. The platform provides verified contact info, company insights, and personalized outreach suggestions for sales teams."
@@ -1049,6 +1164,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Locally-sourced meal prep with eco-friendly packaging",
     tags: ["food service", "sustainability", "meal prep", "local business"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Sustainable Meal Prep Service"] || "free",
     steps: generateStandardSteps(
       "Sustainable Meal Prep Service",
       "I want to start a meal prep business that sources ingredients from local farms, uses compostable packaging, and delivers healthy, ready-to-eat meals. I have culinary background, $10,000 budget for kitchen equipment and initial inventory, and can work full-time. Target customers are health-conscious professionals who care about sustainability and convenience."
@@ -1061,6 +1177,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Connect businesses with vetted virtual assistants worldwide",
     tags: ["remote work", "marketplace", "virtual assistants", "gig economy"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Virtual Assistant Matching Platform"] || "free",
     steps: generateStandardSteps(
       "Virtual Assistant Matching Platform",
       "I want to create a platform that matches businesses with pre-vetted virtual assistants based on skills, timezone, and budget. I have marketplace experience, $12,000 budget, and can work full-time. The platform includes skill assessments, time tracking, payment processing, and quality guarantees to make hiring VAs seamless for small businesses."
@@ -1073,6 +1190,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "After-school and summer coding programs for kids",
     tags: ["education", "coding", "children", "STEM"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Children's Coding Bootcamp"] || "free",
     steps: generateStandardSteps(
       "Children's Coding Bootcamp",
       "I want to launch coding classes for kids ages 8-16, teaching programming through game development, robotics, and web design. I have teaching and programming background, $5,000 budget for equipment and curriculum, and can start part-time. Classes will be offered after-school, weekends, and summer camps with both in-person and virtual options."
@@ -1085,6 +1203,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Relationship management tool for influencers and brand partnerships",
     tags: ["influencer marketing", "CRM", "creator tools", "brand partnerships"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Influencer CRM Platform"] || "free",
     steps: generateStandardSteps(
       "Influencer CRM Platform",
       "I want to build a CRM specifically designed for influencers to manage brand relationships, track partnerships, organize contracts, and measure campaign performance. I have SaaS experience, $10,000 budget, and can work full-time. The platform helps creators professionalize their business operations and maximize partnership revenue."
@@ -1097,6 +1216,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Install and operate EV charging stations in strategic locations",
     tags: ["EV infrastructure", "sustainability", "charging stations", "clean energy"],
     difficulty: "Hard",
+    requiredTier: TIER_MAPPING["Electric Vehicle Charging Network"] || "free",
     steps: generateStandardSteps(
       "Electric Vehicle Charging Network",
       "I want to install and operate electric vehicle charging stations in underserved areas like apartment complexes, offices, and retail centers. I have business development background, $30,000+ budget for equipment, and can work full-time. Revenue comes from charging fees, advertising on stations, and partnerships with property owners."
@@ -1109,6 +1229,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Specialized job board for specific industry or skill set",
     tags: ["job board", "recruitment", "niche market", "marketplace"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Niche Job Board Platform"] || "free",
     steps: generateStandardSteps(
       "Niche Job Board Platform",
       "I want to create a job board focused on a specific niche (e.g., remote design jobs, sustainability careers, Web3 roles) where employers pay to post and talent gets curated opportunities. I have recruitment experience, $6,000 budget, and can work full-time. The platform emphasizes quality over quantity with verified companies and skilled professionals."
@@ -1121,6 +1242,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help professionals build their personal brand online",
     tags: ["personal branding", "social media", "career development", "consulting"],
     difficulty: "Easy",
+    requiredTier: TIER_MAPPING["Personal Branding Consultancy"] || "free",
     steps: generateStandardSteps(
       "Personal Branding Consultancy",
       "I want to start a consultancy helping professionals (executives, entrepreneurs, experts) build their personal brand on LinkedIn and other platforms. I have marketing background, $3,000 budget, and can start part-time. Services include brand strategy, content creation guidance, profile optimization, and engagement coaching to increase visibility and opportunities."
@@ -1133,6 +1255,7 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Modern vending machines with healthy snacks and tech products",
     tags: ["vending machines", "passive income", "retail", "automation"],
     difficulty: "Medium",
+    requiredTier: TIER_MAPPING["Smart Vending Machine Business"] || "free",
     steps: generateStandardSteps(
       "Smart Vending Machine Business",
       "I want to operate smart vending machines stocked with healthy snacks, tech accessories, and local products in high-traffic locations like gyms, offices, and universities. I have $15,000 budget for machines and initial inventory, and can manage part-time. Machines accept mobile payments and provide real-time inventory tracking for efficient operations."

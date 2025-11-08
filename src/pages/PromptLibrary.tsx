@@ -3,21 +3,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Grid3x3 } from "lucide-react";
+import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Lock, Sparkles, Crown } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { multiStepPrompts, type MultiStepPrompt } from "@/data/multiStepPrompts";
-import PromptLibraryCatalogue from "@/components/prompt-library/PromptLibraryCatalogue";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedConcept, setSelectedConcept] = useState<MultiStepPrompt | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+
+  const { subscriptionData, loading: subscriptionLoading } = useSubscription();
+  const { user } = useAuth();
+
+  const userTier = subscriptionData.subscription_tier || "free";
+
+  const hasAccessToPrompt = (prompt: MultiStepPrompt) => {
+    if (prompt.requiredTier === "free") return true;
+    if (!user) return false;
+    if (userTier === "professional") return true;
+    if (userTier === "creator" && (prompt.requiredTier === "creator" || prompt.requiredTier === "free")) return true;
+    return false;
+  };
+
+  const canAccessStep = (prompt: MultiStepPrompt, step: number) => {
+    if (step === 1) return true;
+    return hasAccessToPrompt(prompt);
+  };
 
   const promptCategories = [
     { id: "all", name: "All Prompts", icon: Lightbulb },
@@ -62,7 +80,15 @@ const PromptLibrary = () => {
 
   if (selectedConcept) {
     const step = selectedConcept.steps.find(s => s.step === currentStep);
-    
+    const isStepLocked = !canAccessStep(selectedConcept, currentStep);
+    const isPremiumPrompt = selectedConcept.requiredTier !== "free";
+    const getTierIcon = () => {
+      if (selectedConcept.requiredTier === "professional") return Crown;
+      if (selectedConcept.requiredTier === "creator") return Sparkles;
+      return null;
+    };
+    const TierIcon = getTierIcon();
+
     return (
       <div className="relative min-h-screen overflow-hidden">
         <Helmet>
@@ -98,18 +124,27 @@ const PromptLibrary = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-6">
-                    {selectedConcept.steps.map((s) => (
-                      <div
-                        key={s.step}
-                        className={"flex flex-col items-center cursor-pointer " + (s.step === currentStep ? "opacity-100" : "opacity-50")}
-                        onClick={() => setCurrentStep(s.step)}
-                      >
-                        <div className={"w-10 h-10 rounded-full flex items-center justify-center mb-2 " + (s.step === currentStep ? "bg-primary text-white" : s.step < currentStep ? "bg-green-500 text-white" : "bg-muted")}>
-                          {s.step < currentStep ? <CheckCircle className="w-5 h-5" /> : s.step}
+                    {selectedConcept.steps.map((s) => {
+                      const stepLocked = !canAccessStep(selectedConcept, s.step);
+                      return (
+                        <div
+                          key={s.step}
+                          className={"flex flex-col items-center cursor-pointer " + (s.step === currentStep ? "opacity-100" : "opacity-50")}
+                          onClick={() => setCurrentStep(s.step)}
+                        >
+                          <div className={"w-10 h-10 rounded-full flex items-center justify-center mb-2 " + (s.step === currentStep ? "bg-primary text-white" : s.step < currentStep ? "bg-green-500 text-white" : "bg-muted")}>
+                            {stepLocked && s.step > 1 ? (
+                              <Lock className="w-4 h-4" />
+                            ) : s.step < currentStep ? (
+                              <CheckCircle className="w-5 h-5" />
+                            ) : (
+                              s.step
+                            )}
+                          </div>
+                          <span className="text-xs text-center hidden sm:block">{s.title}</span>
                         </div>
-                        <span className="text-xs text-center hidden sm:block">{s.title}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {step && (
@@ -121,28 +156,67 @@ const PromptLibrary = () => {
                         <p className="text-sm text-muted-foreground mb-4">{step.dayRange}</p>
                       </div>
 
-                      <div className="bg-muted/50 rounded-lg p-4">
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {step.prompt}
-                        </p>
+                      <div className="relative">
+                        <div className={`bg-muted/50 rounded-lg p-4 ${isStepLocked ? "blur-md pointer-events-none select-none" : ""}`}>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {step.prompt}
+                          </p>
+                        </div>
+
+                        {isStepLocked && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
+                            <div className="text-center p-6 max-w-md">
+                              {TierIcon && (
+                                <div className="flex justify-center mb-4">
+                                  <TierIcon className={`w-12 h-12 ${selectedConcept.requiredTier === "professional" ? "text-amber-600" : "text-purple-600"}`} />
+                                </div>
+                              )}
+                              <h4 className="text-lg font-semibold mb-2">
+                                Upgrade to {selectedConcept.requiredTier.charAt(0).toUpperCase() + selectedConcept.requiredTier.slice(1)} to Unlock
+                              </h4>
+                              <p className="text-sm text-muted-foreground mb-4">
+                                Get access to Steps 2-7 and complete your 30-day launch journey with premium prompts.
+                              </p>
+                              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                {!user && (
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => window.location.href = "/auth"}
+                                  >
+                                    Sign In
+                                  </Button>
+                                )}
+                                <Button
+                                  onClick={() => window.location.href = "/pricing"}
+                                  className="gap-2"
+                                >
+                                  {TierIcon && <TierIcon className="w-4 h-4" />}
+                                  Upgrade Now
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Button
-                          onClick={() => useInBizMap(step.prompt)}
-                          className="flex-1"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Use in BizMap AI
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => copyPrompt(step.prompt)}
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy
-                        </Button>
-                      </div>
+                      {!isStepLocked && (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            onClick={() => useInBizMap(step.prompt)}
+                            className="flex-1"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Use in BizMap AI
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => copyPrompt(step.prompt)}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy
+                          </Button>
+                        </div>
+                      )}
 
                       <div className="flex justify-between pt-4 border-t">
                         <Button
@@ -197,20 +271,7 @@ const PromptLibrary = () => {
                 Get inspired with ready-to-use business idea prompts. Each concept includes 7 detailed prompts covering your complete 30-day launch journey with BizMap AI.
               </p>
 
-              <Tabs defaultValue="multi-step" className="w-full">
-                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-                  <TabsTrigger value="multi-step" className="flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4" />
-                    Multi-Step Journeys
-                  </TabsTrigger>
-                  <TabsTrigger value="catalogue" className="flex items-center gap-2">
-                    <Grid3x3 className="w-4 h-4" />
-                    Quick Browse
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="multi-step" className="mt-0">
-                  <div className="mb-8 sm:mb-12">
+              <div className="mb-8 sm:mb-12">
               
               <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
                 <div className="relative">
@@ -250,8 +311,11 @@ const PromptLibrary = () => {
                   <CardHeader className="p-4 sm:p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 pr-2">
-                        <CardTitle className="text-lg sm:text-xl mb-2 leading-tight">
-                          {prompt.conceptTitle}
+                        <CardTitle className="text-lg sm:text-xl mb-2 leading-tight flex items-center gap-2">
+                          <span className="flex-1">{prompt.conceptTitle}</span>
+                          {prompt.requiredTier !== "free" && (
+                            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          )}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                           {prompt.description}
@@ -328,12 +392,6 @@ const PromptLibrary = () => {
                 </CardContent>
               </Card>
             </div>
-                </TabsContent>
-
-                <TabsContent value="catalogue" className="mt-0">
-                  <PromptLibraryCatalogue />
-                </TabsContent>
-              </Tabs>
             </div>
           </div>
         </div>
