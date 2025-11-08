@@ -294,7 +294,7 @@ const PromptLibrary = () => {
                       className="w-full h-9 sm:h-10 text-sm touch-manipulation"
                     >
                       <ArrowRight className="w-4 h-4 mr-2" />
-                      View All 7 Steps
+                      View All 7 Prompts
                     </Button>
                   </CardContent>
                 </Card>
