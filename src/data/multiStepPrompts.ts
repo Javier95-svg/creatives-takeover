@@ -485,50 +485,10 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help businesses build AI-powered apps without coding",
     tags: ["no-code", "AI", "app development", "B2B"],
     difficulty: "Medium",
-    steps: [
-      {
-        step: 1,
-        title: "Business Concept",
-        dayRange: "Days 1-2",
-        prompt: "I want to start a service that helps small businesses build AI-powered applications using no-code platforms like Bubble, Zapier, and AI APIs. I have some technical skills, $5,000 budget, and can work full-time. My target is businesses that want AI functionality but can't afford custom development."
-      },
-      {
-        step: 2,
-        title: "Target Customer",
-        dayRange: "Days 3-4",
-        prompt: "My ideal first clients are small businesses (5-25 employees) in professional services, local retail, and coaching who see competitors using AI tools but don't have technical teams or $50K+ budgets for custom development. They're active in small business Facebook groups, local Chamber of Commerce meetings, and follow no-code/automation influencers on LinkedIn. I can reach them through: LinkedIn posts showing AI automation demos, local business networking events, partnerships with web designers/consultants, and posting in r/smallbusiness about AI use cases."
-      },
-      {
-        step: 3,
-        title: "Validation Plan",
-        dayRange: "Days 5-7",
-        prompt: "Validation approach: 1) Offer 5 free AI automation audits to local businesses - show them where AI could save time/money and pitch paid implementation, tracking interest level and pricing feedback, 2) Create 3 sample AI app demos for common use cases (appointment booking bot, customer FAQ assistant, lead qualifier) and share in business communities to gauge demand, 3) Survey 25 small business owners about their biggest manual tasks, budget for automation, and willingness to pay for no-code AI solutions."
-      },
-      {
-        step: 4,
-        title: "MVP Design",
-        dayRange: "Days 8-14",
-        prompt: "MVP service offering: 1) Standard AI app package: needs analysis call + app built on Bubble/Softr with OpenAI integration + 2 revision rounds, 2) Three pre-defined app types: customer service chatbot, appointment scheduler, or lead qualification tool, 3) Simple handoff: video walkthrough + basic documentation, 4) 30-day email support included. NOT offering yet: custom apps outside three templates, ongoing maintenance packages, mobile apps, or complex integrations until proven these three types work."
-      },
-      {
-        step: 5,
-        title: "Launch Strategy",
-        dayRange: "Days 15-21",
-        prompt: "First client acquisition plan: 1) Offer first 5 clients 'Founding Client' rate of $1,497 (normally $2,997) for complete AI app in exchange for detailed video testimonial and case study, 2) LinkedIn strategy: Post 3x weekly showing before/after of manual process vs AI automation with ROI calculations, 3) Present at 2 local business networking events with live demo of AI chatbot being built in 10 minutes, 4) Partner with 3 web designers/virtual assistants who work with small businesses for referral commissions, 5) Personal outreach to 20 businesses I identify with obvious automation opportunities."
-      },
-      {
-        step: 6,
-        title: "Pricing Model",
-        dayRange: "Days 22-25",
-        prompt: "Pricing structure: One-time project fee of $2,997 for standard AI app (chatbot, scheduler, or lead qualifier) including discovery, build, handoff, and 30-day support. This pricing factors in: 15-20 hours of my time, no-code platform costs ($50-100), OpenAI API setup, and healthy margin for my expertise. Competitive analysis shows custom AI development costs $15K-50K, and freelance developers charge $5K-10K, so I'm positioned as the affordable productized option. First 5 clients get founding rate of $1,497. Add-ons available: monthly maintenance ($297/month), additional app types (+$2,000 each), custom features (quoted separately)."
-      },
-      {
-        step: 7,
-        title: "Day 30 Success Metrics",
-        dayRange: "Days 26-30",
-        prompt: "Day 30 success metrics: 2-3 paying clients generating $3K-6K total revenue, 15+ qualified leads from networking and LinkedIn, 8+ discovery calls completed, delivered at least 1 complete AI app with client reporting measurable time/cost savings. Key validation: client uses the app daily and refers 1+ other businesses. Portfolio includes 2-3 case studies with before/after metrics (hours saved, costs reduced, leads captured). This proves the service model works, delivery is smooth, and pricing is attractive enough while remaining profitable. Next steps: hire part-time no-code developer to scale delivery."
-      }
-    ]
+    steps: generateStandardSteps(
+      "No-Code AI App Builder Service",
+      "I want to start a service that helps small businesses build AI-powered applications using no-code platforms like Bubble, Zapier, and AI APIs. I have some technical skills, $5,000 budget, and can work full-time. My target is businesses that want AI functionality but can't afford custom development."
+    )
   },
   {
     id: 7,
@@ -537,50 +497,10 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help content creators manage their business operations",
     tags: ["creator economy", "SaaS", "influencer marketing", "B2B"],
     difficulty: "Hard",
-    steps: [
-      {
-        step: 1,
-        title: "Business Concept",
-        dayRange: "Days 1-2",
-        prompt: "I want to build a SaaS platform that helps content creators manage their brand partnerships, sponsorship deals, content calendar, and finances in one place. I have business experience, $12,000 budget, and can work full-time. The target market is mid-tier creators (10K-500K followers) who are getting overwhelmed managing their creator business."
-      },
-      {
-        step: 2,
-        title: "Target Customer",
-        dayRange: "Days 3-4",
-        prompt: "My ideal first customers are mid-tier content creators (10K-500K followers) on YouTube, Instagram, and TikTok who are juggling 5-10 brand partnerships monthly and struggling with disorganized emails, missed deadlines, and unclear revenue tracking. They're active in creator Discord servers, YouTuber subreddits like r/PartneredYoutube, and follow creator economy newsletters like Passionfroot and The Publish Press. I can reach them through: creator-focused LinkedIn posts, Twitter threads about creator business challenges, partnerships with creator coaching services, and targeted Instagram ads to creators in the 50K-200K follower range."
-      },
-      {
-        step: 3,
-        title: "Validation Plan",
-        dayRange: "Days 5-7",
-        prompt: "To validate demand this week: 1) Interview 15 mid-tier creators about their biggest partnership management pain points, current tools used (likely spreadsheets + email), and willingness to pay for an all-in-one solution, 2) Create a landing page showcasing key features (deal tracker, payment timeline, content calendar) with Loom video demo and collect 50+ email signups from creator communities, 3) Analyze 5 competitor tools (Aspire, Grin, CreatorIQ) to identify gaps - they serve either mega-influencers or brands, not mid-tier creators directly."
-      },
-      {
-        step: 4,
-        title: "MVP Design",
-        dayRange: "Days 8-14",
-        prompt: "My minimum viable product includes: 1) Brand deal pipeline tracker showing status of each partnership (negotiating, content creation, payment pending), 2) Content calendar with deliverable due dates and automated reminders, 3) Income dashboard tracking payments by brand and month, 4) Simple file storage for contracts and brand guidelines, 5) Email integration to import deal details automatically. I'm skipping: team collaboration features, analytics/reporting, media kit generator, tax calculation tools, and mobile app until I validate the core workflow solves the main pain."
-      },
-      {
-        step: 5,
-        title: "Launch Strategy",
-        dayRange: "Days 15-21",
-        prompt: "To get my first 10 creator users: 1) Launch on Product Hunt with creator-focused positioning and early bird lifetime deal, 2) Partner with 3 creator coaches/consultants to recommend my tool to their clients in exchange for affiliate commission, 3) Create Twitter thread about 'how I manage $50K+ in creator deals' with screenshots of the tool, offering beta access, 4) Post in 5 creator Discord servers and subreddits with helpful content about organization, soft mentioning my tool, 5) Direct outreach to 30 creators in my target range via Instagram DMs explaining the tool. Offer first 10 users lifetime 60% discount in exchange for detailed feedback and testimonials."
-      },
-      {
-        step: 6,
-        title: "Pricing Model",
-        dayRange: "Days 22-25",
-        prompt: "Pricing strategy: $29/month for individual creators (launch price, normally $49 after first 100 users). This pricing is positioned below enterprise tools ($200-500/month) but above simple productivity apps ($10-15/month), reflecting the revenue-generating value creators get from better deal management. Cost structure: hosting and database ($15/month for first 50 users), email integration API ($50/month), development time. First 10 users get lifetime rate of $29/month locked in. Revenue goal: 50 paying creators at $29 = $1,450 MRR to validate market and fund feature development."
-      },
-      {
-        step: 7,
-        title: "Day 30 Success Metrics",
-        dayRange: "Days 26-30",
-        prompt: "Day 30 success definition: 5-8 paying creator users generating $145-230 MRR, 100+ email signups showing strong interest, 20+ active trial users testing the platform, and detailed feedback from 3 power users confirming this solves their deal management chaos. Critical metric: creators report saving 3-5 hours weekly on admin work and never missing a partnership deadline. This validates product-market fit exists, proves creators will pay for better business tools, and justifies building advanced features like analytics, media kit generation, and team collaboration."
-      }
-    ]
+    steps: generateStandardSteps(
+      "Creator Management Platform",
+      "I want to build a SaaS platform that helps content creators manage their brand partnerships, sponsorship deals, content calendar, and finances in one place. I have business experience, $12,000 budget, and can work full-time. The target market is mid-tier creators (10K-500K followers) who are getting overwhelmed managing their creator business."
+    )
   },
   {
     id: 8,
@@ -589,50 +509,10 @@ export const multiStepPrompts: MultiStepPrompt[] = [
     description: "Help experts turn knowledge into profitable online courses",
     tags: ["online courses", "consulting", "education", "expertise monetization"],
     difficulty: "Medium",
-    steps: [
-      {
-        step: 1,
-        title: "Business Concept",
-        dayRange: "Days 1-2",
-        prompt: "I want to start a consultancy that helps professionals and experts create, launch, and market online courses. I have marketing and educational background, $3,000 budget, and can start part-time. My goal is to help people monetize their expertise through course creation, from content development to launch strategy."
-      },
-      {
-        step: 2,
-        title: "Target Customer",
-        dayRange: "Days 3-4",
-        prompt: "My ideal first clients are subject matter experts (consultants, coaches, corporate trainers) with 5-15 years experience who want to scale their knowledge into passive income but don't know where to start with online courses. They're active in LinkedIn professional groups, attend industry conferences, and follow online education influencers. I can reach them through: LinkedIn posts about course creation ROI, speaking at professional association meetings, partnerships with business coaches, and posting in industry-specific Facebook groups about knowledge monetization."
-      },
-      {
-        step: 3,
-        title: "Validation Plan",
-        dayRange: "Days 5-7",
-        prompt: "To validate demand this week: 1) Offer 5 free 30-minute course strategy sessions to potential clients - diagnose their expertise, identify course topic, and pitch full service at the end, 2) Create simple course creation roadmap template and share in 5 professional groups asking for feedback on biggest barriers to course creation, 3) Interview 15 subject matter experts about why they haven't created a course yet, their revenue goals, and what support they'd pay for."
-      },
-      {
-        step: 4,
-        title: "MVP Design",
-        dayRange: "Days 8-14",
-        prompt: "MVP service offering: 1) Course Blueprint Package: 3 consulting calls to define course topic, outline modules, identify target students, and create launch plan, 2) Content guidance templates for video scripts and workbooks, 3) Platform selection help (Teachable vs Kajabi vs Thinkific), 4) Launch strategy roadmap with specific marketing tactics. I'm skipping: done-for-you content creation, video production, sales funnels, email marketing execution, and ongoing promotion until clients validate they want help with strategy first."
-      },
-      {
-        step: 5,
-        title: "Launch Strategy",
-        dayRange: "Days 15-21",
-        prompt: "To get my first 5 clients: 1) Offer 'Founding Client' rate of $1,997 (normally $3,997) for complete Course Blueprint Package in exchange for video testimonial and detailed case study, 2) LinkedIn content strategy: 3 posts weekly about course creation myths, success stories, and revenue potential for experts, 3) Host free webinar 'How to Turn Your Expertise Into a $10K Course in 90 Days' targeting 30+ attendees and pitching service at end, 4) Partner with 2 business coaches who can refer clients ready to scale, 5) Direct outreach to 25 consultants/experts I identify on LinkedIn with obvious monetizable expertise."
-      },
-      {
-        step: 6,
-        title: "Pricing Model",
-        dayRange: "Days 22-25",
-        prompt: "Pricing strategy: $3,997 one-time fee for Course Blueprint Package (strategy + guidance + launch plan). This pricing reflects: 10-12 hours of consulting time, templates and frameworks, platform recommendations, and ongoing email support for 60 days. Competitive analysis shows course creation agencies charge $10K-25K for full done-for-you, and DIY courses teach for $500-1,000, so I'm positioned as the affordable expert guidance option. First 5 clients get founding rate of $1,997. Add-ons: launch support package ($2,000), tech setup service ($500), ongoing coaching ($500/month)."
-      },
-      {
-        step: 7,
-        title: "Day 30 Success Metrics",
-        dayRange: "Days 26-30",
-        prompt: "Day 30 success definition: 2-3 paying clients generating $4K-6K revenue, 15+ strategy session requests showing demand, 10+ discovery calls completed, delivered complete Course Blueprint to at least 1 client who begins content creation. Key validation: clients report having clear course roadmap and confidence to create their first course. Portfolio includes 2 detailed case studies. This proves the consulting model works, pricing is attractive for the value provided, and I can help experts successfully plan profitable courses. Next steps: systemize delivery process and add done-for-you services based on client feedback."
-      }
-    ]
+    steps: generateStandardSteps(
+      "Course Creation Consultancy",
+      "I want to start a consultancy that helps professionals and experts create, launch, and market online courses. I have marketing and educational background, $3,000 budget, and can start part-time. My goal is to help people monetize their expertise through course creation, from content development to launch strategy."
+    )
   },
   {
     id: 9,
