@@ -4,13 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle } from "lucide-react";
+import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Grid3x3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { multiStepPrompts, type MultiStepPrompt } from "@/data/multiStepPrompts";
+import PromptLibraryCatalogue from "@/components/prompt-library/PromptLibraryCatalogue";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -195,6 +196,21 @@ const PromptLibrary = () => {
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
                 Get inspired with ready-to-use business idea prompts. Each concept includes 7 detailed prompts covering your complete 30-day launch journey with BizMap AI.
               </p>
+
+              <Tabs defaultValue="multi-step" className="w-full">
+                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+                  <TabsTrigger value="multi-step" className="flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4" />
+                    Multi-Step Journeys
+                  </TabsTrigger>
+                  <TabsTrigger value="catalogue" className="flex items-center gap-2">
+                    <Grid3x3 className="w-4 h-4" />
+                    Quick Browse
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="multi-step" className="mt-0">
+                  <div className="mb-8 sm:mb-12">
               
               <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
                 <div className="relative">
@@ -311,6 +327,13 @@ const PromptLibrary = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+                </TabsContent>
+
+                <TabsContent value="catalogue" className="mt-0">
+                  <PromptLibraryCatalogue />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>
