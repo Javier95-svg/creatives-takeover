@@ -16,7 +16,56 @@ export interface MultiStepPrompt {
   }[];
 }
 
+// Helper function to generate standard steps 2-7 from step 1
+function generateStandardSteps(conceptTitle: string, step1Prompt: string): Array<{step: number; title: string; dayRange: string; prompt: string}> {
+  return [
+    {
+      step: 1,
+      title: "Business Concept",
+      dayRange: "Days 1-2",
+      prompt: step1Prompt
+    },
+    {
+      step: 2,
+      title: "Target Customer",
+      dayRange: "Days 3-4",
+      prompt: `For my ${conceptTitle.toLowerCase()} business: Describe my ideal first customer in detail - their demographics, pain points, where they spend time online, and specific places I can find them in the next 7 days. Include 3-5 specific channels or communities where I'll find early adopters.`
+    },
+    {
+      step: 3,
+      title: "Validation Plan",
+      dayRange: "Days 5-7",
+      prompt: `For my ${conceptTitle.toLowerCase()} business: List 3 specific ways I'll validate demand this week: 1) Customer discovery method (interviews, surveys), 2) Market test approach (landing page, pre-orders), 3) Competitive research. What metrics will prove people want this?`
+    },
+    {
+      step: 4,
+      title: "MVP Design",
+      dayRange: "Days 8-14",
+      prompt: `For my ${conceptTitle.toLowerCase()} business: Describe the absolute MINIMUM viable product - only the core features that solve the main problem. List 3-5 essential features to build, and explicitly state 3-5 things I'm NOT building yet to stay lean and launch fast.`
+    },
+    {
+      step: 5,
+      title: "Launch Strategy",
+      dayRange: "Days 15-21",
+      prompt: `For my ${conceptTitle.toLowerCase()} business: Detail my plan to get first 10 customers - list 5 specific channels/tactics I'll use, what special launch offer I'll make, and how I'll create urgency. Include both online and offline strategies if relevant.`
+    },
+    {
+      step: 6,
+      title: "Pricing Model",
+      dayRange: "Days 22-25",
+      prompt: `For my ${conceptTitle.toLowerCase()} business: What will I charge and why? Include pricing tier, competitor comparison, cost justification, and any early bird/launch discount. What pricing helps me get first paying customer by Day 30 while staying profitable?`
+    },
+    {
+      step: 7,
+      title: "Day 30 Success Metrics",
+      dayRange: "Days 26-30",
+      prompt: `For my ${conceptTitle.toLowerCase()} business: Define success on Day 30 - specific numbers for customers/revenue, email signups, active users, or other key metrics. What results would prove this concept works and justify continuing to build?`
+    }
+  ];
+}
+
 export const multiStepPrompts: MultiStepPrompt[] = [
+  // Detailed concepts (IDs 1-5) - Fully customized 7 steps
   {
     id: 1,
     conceptTitle: "AI-Powered Customer Service Automation",
@@ -276,5 +325,523 @@ export const multiStepPrompts: MultiStepPrompt[] = [
         prompt: "Success: 15 orders totaling $500+ revenue, 500+ Instagram followers, 100+ email subscribers, 3 positive product reviews showing customers value the sustainability aspect. This validates: 1) Product-market fit exists, 2) Pricing is acceptable, 3) Marketing channels work, giving confidence to expand product line and increase marketing spend."
       }
     ]
+  },
+
+  // Standard template concepts (IDs 6-48) - Using helper function for steps 2-7
+  {
+    id: 6,
+    conceptTitle: "No-Code AI App Builder Service",
+    category: "ai",
+    description: "Help businesses build AI-powered apps without coding",
+    tags: ["no-code", "AI", "app development", "B2B"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "No-Code AI App Builder Service",
+      "I want to start a service that helps small businesses build AI-powered applications using no-code platforms like Bubble, Zapier, and AI APIs. I have some technical skills, $5,000 budget, and can work full-time. My target is businesses that want AI functionality but can't afford custom development."
+    )
+  },
+  {
+    id: 7,
+    conceptTitle: "Creator Management Platform",
+    category: "creator",
+    description: "Help content creators manage their business operations",
+    tags: ["creator economy", "SaaS", "influencer marketing", "B2B"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Creator Management Platform",
+      "I want to build a SaaS platform that helps content creators manage their brand partnerships, sponsorship deals, content calendar, and finances in one place. I have business experience, $12,000 budget, and can work full-time. The target market is mid-tier creators (10K-500K followers) who are getting overwhelmed managing their creator business."
+    )
+  },
+  {
+    id: 8,
+    conceptTitle: "Course Creation Consultancy",
+    category: "creator",
+    description: "Help experts turn knowledge into profitable online courses",
+    tags: ["online courses", "consulting", "education", "expertise monetization"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Course Creation Consultancy",
+      "I want to start a consultancy that helps professionals and experts create, launch, and market online courses. I have marketing and educational background, $3,000 budget, and can start part-time. My goal is to help people monetize their expertise through course creation, from content development to launch strategy."
+    )
+  },
+  {
+    id: 9,
+    conceptTitle: "Micro-Influencer Marketplace",
+    category: "creator",
+    description: "Connect local businesses with micro-influencers",
+    tags: ["influencer marketing", "marketplace", "local business", "micro-influencers"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Micro-Influencer Marketplace",
+      "I want to create a platform that connects local businesses with micro-influencers (1K-50K followers) in their area for authentic marketing campaigns. I have marketing experience, $8,000 budget, and can work full-time. The focus is on local restaurants, shops, and services working with community influencers."
+    )
+  },
+  {
+    id: 10,
+    conceptTitle: "Subscription Box for Remote Workers",
+    category: "ecommerce",
+    description: "Curated productivity and wellness items for remote professionals",
+    tags: ["subscription", "remote work", "productivity", "wellness"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Subscription Box for Remote Workers",
+      "I want to launch a subscription box service targeting remote workers and digital nomads, featuring productivity tools, ergonomic accessories, healthy snacks, and wellness items. I have $10,000 budget, some e-commerce experience, and can work full-time. The target audience is remote professionals who want to improve their home office setup and wellbeing."
+    )
+  },
+  {
+    id: 11,
+    conceptTitle: "AI-Powered Project Management Tool",
+    category: "saas",
+    description: "Smart project management with AI assistance and automation",
+    tags: ["saas", "AI", "project management", "automation"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "AI-Powered Project Management Tool",
+      "I want to create a SaaS project management tool that uses AI to predict project delays, suggest optimal task assignments, and automate routine project management tasks. I have technical skills, $15,000+ budget, and can work full-time. The target market is mid-size companies (50-200 employees) struggling with project visibility."
+    )
+  },
+  {
+    id: 12,
+    conceptTitle: "Mobile App for Local Services",
+    category: "saas",
+    description: "Connecting service providers with customers",
+    tags: ["mobile app", "marketplace", "local services", "on-demand"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Mobile App for Local Services",
+      "I'm planning a mobile app that connects local service providers (plumbers, electricians, cleaners) with customers who need quick help. I have technical skills, $15,000 budget, and can work full-time. Think 'Uber for home services' but focused on my local market first with same-day booking capabilities."
+    )
+  },
+  {
+    id: 13,
+    conceptTitle: "Carbon Footprint Tracking SaaS",
+    category: "sustainability",
+    description: "Help businesses measure and reduce their environmental impact",
+    tags: ["climate tech", "sustainability", "SaaS", "ESG reporting"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Carbon Footprint Tracking SaaS",
+      "I want to create a SaaS platform that helps small and medium businesses track their carbon footprint, get actionable reduction recommendations, and report on their sustainability progress. I have environmental science background, $12,000 budget, and can work full-time. The target market is companies preparing for ESG reporting requirements."
+    )
+  },
+  {
+    id: 14,
+    conceptTitle: "Renewable Energy Consulting",
+    category: "sustainability",
+    description: "Help homeowners and businesses transition to clean energy",
+    tags: ["renewable energy", "consulting", "solar", "sustainability"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Renewable Energy Consulting",
+      "I want to start a consulting business that helps homeowners and small businesses evaluate, plan, and implement renewable energy solutions like solar panels and battery storage. I have engineering background, $4,000 budget, and can start part-time. My goal is to make the transition to clean energy simple and cost-effective."
+    )
+  },
+  {
+    id: 15,
+    conceptTitle: "Sustainable Product Marketplace",
+    category: "sustainability",
+    description: "Curated platform for verified eco-friendly products",
+    tags: ["marketplace", "sustainability", "eco-friendly", "conscious consumption"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Sustainable Product Marketplace",
+      "I want to create an online marketplace exclusively for verified sustainable and eco-friendly products, with strict vetting criteria and transparent impact metrics. I have e-commerce experience, $8,000 budget, and can work full-time. The platform will focus on helping conscious consumers find genuinely sustainable alternatives to everyday products."
+    )
+  },
+  {
+    id: 16,
+    conceptTitle: "Mental Health App for Remote Workers",
+    category: "health",
+    description: "Digital wellness solution for isolated remote professionals",
+    tags: ["mental health", "remote work", "wellness app", "burnout prevention"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Mental Health App for Remote Workers",
+      "I want to develop a mental health and wellness app specifically for remote workers dealing with isolation, work-life balance issues, and burnout. I have psychology background, $10,000 budget, and can work full-time. The app should include guided meditations, virtual coworking sessions, and mood tracking."
+    )
+  },
+  {
+    id: 17,
+    conceptTitle: "Senior Care Coordination Service",
+    category: "health",
+    description: "Help families manage elderly care with technology",
+    tags: ["elderly care", "health tech", "family coordination", "aging population"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Senior Care Coordination Service",
+      "I want to start a service that helps families coordinate care for elderly parents using a combination of technology and personal support. I have healthcare experience, $6,000 budget, and can dedicate 40+ hours weekly. The service will include medication reminders, appointment scheduling, and family communication tools."
+    )
+  },
+  {
+    id: 18,
+    conceptTitle: "Corporate Wellness Platform",
+    category: "health",
+    description: "Comprehensive employee wellness programs for modern workplaces",
+    tags: ["corporate wellness", "employee health", "B2B", "workplace wellness"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Corporate Wellness Platform",
+      "I want to create a comprehensive wellness platform for companies to improve employee health and reduce healthcare costs. I have HR and wellness background, $12,000 budget, and can work full-time. The platform should include fitness challenges, mental health resources, nutrition tracking, and stress management tools."
+    )
+  },
+  {
+    id: 19,
+    conceptTitle: "Local Fitness Coaching with Virtual Reality",
+    category: "local",
+    description: "Combine in-person and VR fitness experiences",
+    tags: ["fitness", "VR", "local", "innovative training"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Local Fitness Coaching with Virtual Reality",
+      "I'm a certified personal trainer who wants to start a fitness business combining traditional personal training with virtual reality workout experiences. I have fitness expertise, $8,000 budget including VR equipment, and can work full-time. The target market is tech-savvy fitness enthusiasts looking for immersive workout experiences."
+    )
+  },
+  {
+    id: 20,
+    conceptTitle: "Hyperlocal Delivery Network",
+    category: "local",
+    description: "Same-day delivery for local businesses and residents",
+    tags: ["delivery", "local business", "logistics", "community"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Hyperlocal Delivery Network",
+      "I want to create a hyperlocal delivery network that helps local businesses offer same-day delivery while also providing personal shopping and errand services for busy residents. I have logistics experience, $7,000 budget, and can work full-time. The focus is on building a strong community network of reliable delivery partners."
+    )
+  },
+  {
+    id: 21,
+    conceptTitle: "Coworking Space for Creators",
+    category: "local",
+    description: "Physical space designed for content creators and digital professionals",
+    tags: ["coworking", "content creation", "real estate", "community"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Coworking Space for Creators",
+      "I want to open a coworking space specifically designed for content creators, including podcast studios, video recording rooms, and photography setups alongside traditional workspaces. I have real estate experience, $25,000 budget, and can commit full-time. The target market is freelance creators, small agencies, and remote workers."
+    )
+  },
+  {
+    id: 22,
+    conceptTitle: "AI Implementation Consultancy",
+    category: "consulting",
+    description: "Help businesses integrate AI tools into their operations",
+    tags: ["AI consulting", "business automation", "digital transformation", "B2B"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "AI Implementation Consultancy",
+      "I want to start a consultancy that helps small and medium businesses identify and implement AI tools to improve their operations, from customer service chatbots to automated data analysis. I have business and technical background, $5,000 budget, and can dedicate 35+ hours weekly. My goal is to democratize AI adoption for smaller companies."
+    )
+  },
+  {
+    id: 23,
+    conceptTitle: "Remote Work Transition Consulting",
+    category: "consulting",
+    description: "Help traditional businesses successfully adopt remote work",
+    tags: ["remote work", "organizational change", "HR consulting", "business transformation"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Remote Work Transition Consulting",
+      "I want to help traditional businesses successfully transition to hybrid or fully remote work models. I have HR and organizational psychology background, $3,000 budget, and can start part-time. My services include culture assessment, tool recommendations, policy development, and change management for remote work adoption."
+    )
+  },
+  {
+    id: 24,
+    conceptTitle: "Sustainability Compliance Consulting",
+    category: "consulting",
+    description: "Help businesses meet new environmental regulations and ESG requirements",
+    tags: ["ESG consulting", "sustainability", "compliance", "environmental regulations"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Sustainability Compliance Consulting",
+      "I want to start a consulting practice that helps businesses comply with increasing environmental regulations and ESG reporting requirements. I have environmental law and business background, $4,000 budget, and can work 30+ hours weekly. My target clients are mid-size companies facing new sustainability compliance challenges."
+    )
+  },
+  {
+    id: 25,
+    conceptTitle: "Digital Estate Planning Service",
+    category: "consulting",
+    description: "Help people manage their digital assets and online presence after death",
+    tags: ["digital estate", "legacy planning", "digital assets", "legal services"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Digital Estate Planning Service",
+      "I want to create a service that helps people organize and plan for their digital assets, social media accounts, cryptocurrency, and online subscriptions for when they pass away. I have legal background, $3,500 budget, and can start part-time. This addresses the growing need for digital legacy planning in our increasingly online world."
+    )
+  },
+  {
+    id: 26,
+    conceptTitle: "Loneliness Solutions Platform",
+    category: "health",
+    description: "Combat social isolation with community-building technology",
+    tags: ["social connection", "community building", "mental health", "loneliness"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Loneliness Solutions Platform",
+      "I want to create a platform that helps combat loneliness and social isolation by connecting people with shared interests for both virtual and in-person activities. I have community organizing experience, $9,000 budget, and can work full-time. The focus is on creating meaningful connections for people struggling with social isolation, especially post-pandemic."
+    )
+  },
+  {
+    id: 27,
+    conceptTitle: "AI Voice Assistant for Seniors",
+    category: "saas",
+    description: "Voice-activated companion and helper for elderly users",
+    tags: ["AI", "voice technology", "elderly care", "healthcare"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "AI Voice Assistant for Seniors",
+      "I want to create an AI-powered voice assistant specifically designed for seniors to help with medication reminders, emergency contacts, entertainment, and staying connected with family. I have tech background, $12,000 budget, and can work full-time. The product should be simple, reliable, and focused on improving quality of life for aging adults."
+    )
+  },
+  {
+    id: 28,
+    conceptTitle: "AI-Powered Personal Finance Coach",
+    category: "saas",
+    description: "Smart financial planning and budgeting with AI insights",
+    tags: ["AI", "fintech", "personal finance", "budgeting"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "AI-Powered Personal Finance Coach",
+      "I want to develop an AI-driven personal finance app that analyzes spending patterns, predicts future expenses, and provides personalized budgeting and investment advice. I have fintech experience, $15,000 budget, and can dedicate full-time. Target audience is millennials and Gen Z looking for smarter money management."
+    )
+  },
+  {
+    id: 29,
+    conceptTitle: "No-Code AI Automation Platform",
+    category: "saas",
+    description: "Help small businesses automate tasks without coding",
+    tags: ["no-code", "AI automation", "small business", "productivity"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "No-Code AI Automation Platform",
+      "I want to create a no-code platform that allows small business owners to build AI-powered automations for customer service, data entry, and marketing tasks. I have technical background, $20,000+ budget, and can work full-time. The goal is to make AI automation accessible to non-technical business owners."
+    )
+  },
+  {
+    id: 30,
+    conceptTitle: "AI Content Creation Studio",
+    category: "creator",
+    description: "AI-powered tools for content creators and marketers",
+    tags: ["AI content", "creator tools", "video editing", "automation"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "AI Content Creation Studio",
+      "I want to launch a service that helps content creators and small businesses generate high-quality video, image, and text content using AI tools. I have marketing and design experience, $8,000 budget, and can work full-time. The service includes AI video editing, thumbnail generation, and content scheduling across platforms."
+    )
+  },
+  {
+    id: 31,
+    conceptTitle: "Virtual Event Production Company",
+    category: "creator",
+    description: "Professional virtual and hybrid event planning and execution",
+    tags: ["virtual events", "event planning", "business services", "technology"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Virtual Event Production Company",
+      "I want to start an event production company specializing in virtual and hybrid events for businesses, creators, and organizations. I have event planning experience, $10,000 budget, and can work full-time. Services include technical setup, engagement strategies, and post-event analytics for immersive online experiences."
+    )
+  },
+  {
+    id: 32,
+    conceptTitle: "Creator Analytics & Growth Platform",
+    category: "creator",
+    description: "Data-driven insights for content creator success",
+    tags: ["creator analytics", "social media", "data analysis", "growth hacking"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Creator Analytics & Growth Platform",
+      "I want to build a platform that provides deep analytics and growth strategies for content creators across multiple platforms (TikTok, Instagram, YouTube, etc.). I have data analysis background, $12,000 budget, and can work full-time. The platform will offer audience insights, optimal posting times, and content performance predictions."
+    )
+  },
+  {
+    id: 33,
+    conceptTitle: "AI Mental Health Screening App",
+    category: "health",
+    description: "Early detection and intervention for mental health issues",
+    tags: ["mental health", "AI", "healthcare", "prevention"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "AI Mental Health Screening App",
+      "I want to develop an app that uses AI to analyze text, voice, and behavioral patterns to provide early mental health screening and connect users with appropriate resources. I have psychology and tech background, $15,000 budget, and can work full-time. The focus is on preventive mental healthcare and reducing barriers to treatment."
+    )
+  },
+  {
+    id: 34,
+    conceptTitle: "Personalized Nutrition Planning Service",
+    category: "health",
+    description: "AI-driven meal planning based on individual health data",
+    tags: ["nutrition", "personalized medicine", "meal planning", "health optimization"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Personalized Nutrition Planning Service",
+      "I want to create a service that combines genetic testing, health metrics, and lifestyle data to provide personalized nutrition plans and meal recommendations. I have nutrition background, $10,000 budget, and can work full-time. The service includes meal delivery partnerships and health tracking integration."
+    )
+  },
+  {
+    id: 35,
+    conceptTitle: "Workplace Wellness Coaching",
+    category: "health",
+    description: "On-site and virtual wellness programs for companies",
+    tags: ["workplace wellness", "coaching", "corporate health", "stress management"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Workplace Wellness Coaching",
+      "I want to start a wellness coaching business that provides on-site and virtual wellness programs for companies dealing with employee burnout and stress. I have wellness coaching certification, $5,000 budget, and can start part-time. Services include stress management workshops, fitness classes, and mental health first aid training."
+    )
+  },
+  {
+    id: 36,
+    conceptTitle: "Carbon Credit Marketplace for SMBs",
+    category: "sustainability",
+    description: "Simplified carbon offsetting for small businesses",
+    tags: ["carbon credits", "climate tech", "sustainability", "marketplace"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Carbon Credit Marketplace for SMBs",
+      "I want to create a marketplace that makes it easy for small businesses to purchase verified carbon credits and track their carbon neutrality progress. I have environmental science background, $12,000 budget, and can work full-time. The platform will focus on transparency, affordability, and measurable impact for climate-conscious SMBs."
+    )
+  },
+  {
+    id: 37,
+    conceptTitle: "Sustainable Fashion Rental Platform",
+    category: "sustainability",
+    description: "Circular fashion economy through clothing rental",
+    tags: ["sustainable fashion", "rental economy", "circular economy", "clothing"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Sustainable Fashion Rental Platform",
+      "I want to launch a clothing rental platform focused on sustainable fashion brands, targeting environmentally conscious consumers who want to reduce textile waste. I have fashion industry experience, $15,000 budget, and can work full-time. The platform includes professional cleaning, style consultations, and rent-to-own options."
+    )
+  },
+  {
+    id: 38,
+    conceptTitle: "Home Energy Optimization Service",
+    category: "sustainability",
+    description: "Smart home energy auditing and optimization",
+    tags: ["energy efficiency", "smart home", "renewable energy", "home optimization"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Home Energy Optimization Service",
+      "I want to start a service that helps homeowners optimize their energy usage through smart home technology, solar installations, and energy-efficient upgrades. I have electrical engineering background, $8,000 budget, and can work full-time. The service includes energy audits, smart device installation, and ongoing optimization."
+    )
+  },
+  {
+    id: 39,
+    conceptTitle: "AI-Powered Learning Platform for Kids",
+    category: "saas",
+    description: "Personalized education technology for children",
+    tags: ["EdTech", "AI", "children's education", "personalized learning"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "AI-Powered Learning Platform for Kids",
+      "I want to create an AI-powered learning platform that adapts to each child's learning style and pace, making education more engaging and effective. I have education and tech background, $18,000 budget, and can work full-time. The platform covers core subjects with gamification, progress tracking, and parent insights."
+    )
+  },
+  {
+    id: 40,
+    conceptTitle: "Professional Skills Bootcamp",
+    category: "consulting",
+    description: "Intensive training for in-demand digital skills",
+    tags: ["skills training", "bootcamp", "professional development", "career transition"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Professional Skills Bootcamp",
+      "I want to start intensive bootcamp programs teaching high-demand skills like AI prompt engineering, no-code development, and digital marketing to professionals looking to upskill. I have training and business background, $7,000 budget, and can work full-time. Programs will be project-based with job placement assistance."
+    )
+  },
+  {
+    id: 41,
+    conceptTitle: "Language Learning for Remote Workers",
+    category: "saas",
+    description: "Business-focused language learning with cultural context",
+    tags: ["language learning", "remote work", "business communication", "cultural training"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Language Learning for Remote Workers",
+      "I want to develop a language learning platform specifically for remote workers who need to communicate effectively in international business settings. I have linguistics background, $10,000 budget, and can work full-time. The platform focuses on business communication, cultural awareness, and virtual meeting skills."
+    )
+  },
+  {
+    id: 42,
+    conceptTitle: "Neighborhood Social Network",
+    category: "local",
+    description: "Hyperlocal community platform for neighbors",
+    tags: ["community building", "social network", "local services", "neighborhood"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Neighborhood Social Network",
+      "I want to create a social network app that connects neighbors for local recommendations, community events, skill sharing, and mutual aid. I have community organizing experience, $8,000 budget, and can work full-time. The platform emphasizes safety, verification, and building stronger local communities."
+    )
+  },
+  {
+    id: 43,
+    conceptTitle: "Mobile Car Care Service",
+    category: "local",
+    description: "On-demand automotive maintenance and detailing",
+    tags: ["automotive", "mobile service", "convenience", "on-demand"],
+    difficulty: "Medium",
+    steps: generateStandardSteps(
+      "Mobile Car Care Service",
+      "I want to start a mobile car care service that comes to customers' locations for routine maintenance, detailing, and minor repairs. I have automotive experience, $12,000 budget for equipment and vehicle, and can work full-time. The service targets busy professionals and includes electric vehicle specialization."
+    )
+  },
+  {
+    id: 44,
+    conceptTitle: "Senior Tech Support Service",
+    category: "local",
+    description: "Patient technology help for elderly users",
+    tags: ["senior services", "tech support", "elderly care", "digital literacy"],
+    difficulty: "Easy",
+    steps: generateStandardSteps(
+      "Senior Tech Support Service",
+      "I want to start a business providing patient, in-home technology support for seniors who struggle with smartphones, tablets, and smart home devices. I have customer service background, $3,000 budget, and can start part-time. Services include device setup, training, and ongoing support with a focus on safety and simplicity."
+    )
+  },
+  {
+    id: 45,
+    conceptTitle: "Micro-Investment App for Gen Z",
+    category: "saas",
+    description: "Social investing platform for young investors",
+    tags: ["fintech", "micro-investing", "Gen Z", "social investing"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Micro-Investment App for Gen Z",
+      "I want to create a micro-investment app that makes investing accessible and social for Gen Z users through fractional shares, gamification, and peer learning. I have fintech experience, $25,000+ budget, and can work full-time. The app includes investment education, social features, and integration with popular payment apps."
+    )
+  },
+  {
+    id: 46,
+    conceptTitle: "Freelancer Financial Management",
+    category: "saas",
+    description: "All-in-one financial platform for independent contractors",
+    tags: ["freelancer tools", "financial management", "gig economy", "accounting"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Freelancer Financial Management",
+      "I want to build a financial management platform specifically for freelancers and independent contractors, including invoicing, expense tracking, tax preparation, and retirement planning. I have accounting background, $15,000 budget, and can work full-time. The platform addresses the unique financial challenges of gig economy workers."
+    )
+  },
+  {
+    id: 47,
+    conceptTitle: "Telemedicine Platform for Rural Areas",
+    category: "health",
+    description: "Bridge healthcare gaps in underserved communities",
+    tags: ["telemedicine", "rural healthcare", "health equity", "digital health"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Telemedicine Platform for Rural Areas",
+      "I want to create a telemedicine platform specifically designed for rural and underserved communities, with features like mobile connectivity optimization and local health worker integration. I have healthcare and tech background, $20,000+ budget, and can work full-time. The goal is to improve healthcare access where traditional services are limited."
+    )
+  },
+  {
+    id: 48,
+    conceptTitle: "Pet Health Monitoring Service",
+    category: "health",
+    description: "Tech-enabled preventive care for pets",
+    tags: ["pet health", "wearable tech", "veterinary care", "AI monitoring"],
+    difficulty: "Hard",
+    steps: generateStandardSteps(
+      "Pet Health Monitoring Service",
+      "I want to launch a service that uses wearable devices and AI to monitor pet health, detect early signs of illness, and provide personalized care recommendations to pet owners. I have veterinary background, $12,000 budget, and can work full-time. The service includes vet consultations and emergency alerts for pet health issues."
+    )
   }
 ];
