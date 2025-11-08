@@ -226,19 +226,29 @@ const PromptLibrary = () => {
                         >
                           Previous Step
                         </Button>
-                        <Button
-                          onClick={() => {
-                            if (currentStep < 7) {
-                              setCurrentStep(currentStep + 1);
-                            } else {
-                              toast.success("You have completed all 7 steps!");
-                            }
-                          }}
-                          disabled={currentStep === 7}
-                        >
-                          Next Step
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
+                        {isPremiumPrompt && currentStep === 1 && !hasAccessToPrompt(selectedConcept) ? (
+                          <Button
+                            onClick={() => window.location.href = "/pricing"}
+                            className="gap-2"
+                          >
+                            {TierIcon && <TierIcon className="w-4 h-4" />}
+                            Upgrade to Unlock the Full Journey
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => {
+                              if (currentStep < 7) {
+                                setCurrentStep(currentStep + 1);
+                              } else {
+                                toast.success("You have completed all 7 steps!");
+                              }
+                            }}
+                            disabled={currentStep === 7}
+                          >
+                            Next Step
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
