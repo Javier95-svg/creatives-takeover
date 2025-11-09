@@ -34,61 +34,111 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
 
   return (
     <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
-      {/* Animated Ambient Wallpaper */}
+      {/* Tech-inspired animated wallpaper (mirrors home hero aesthetic) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Base gradient wash */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-background" />
 
-        {/* Rotating aurora glow */}
-        <div
-          className="absolute -top-48 -left-44 w-[60rem] h-[60rem] rounded-full blur-3xl opacity-70 animate-[spin_36s_linear_infinite]"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(56,189,248,0.28), transparent 55%), radial-gradient(circle at 70% 70%, rgba(161,132,252,0.32), transparent 60%)",
-            animationDuration: "36s"
-          }}
-        />
+        {/* Multi-layer grid */}
+        <div className="absolute inset-0 opacity-[0.1]">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(90deg, hsl(var(--primary) / 0.35) 1px, transparent 1px),
+                linear-gradient(0deg, hsl(var(--primary) / 0.35) 1px, transparent 1px),
+                linear-gradient(90deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px),
+                linear-gradient(0deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px),
+                linear-gradient(45deg, hsl(var(--accent) / 0.15) 1px, transparent 1px)
+              `,
+              backgroundSize: '110px 110px, 110px 110px, 28px 28px, 28px 28px, 60px 60px'
+            }}
+          />
+        </div>
 
-        {/* Pulsing gradient ribbons */}
-        <div
-          className="absolute inset-0 opacity-60 animate-[spin_28s_linear_infinite]"
-          style={{
-            backgroundImage:
-              "conic-gradient(from 140deg at 50% 50%, rgba(56,189,248,0.12), rgba(161,132,252,0.18), rgba(56,189,248,0.12))",
-            animationDuration: "28s"
-          }}
-        />
+        {/* Rotating hex clusters */}
+        <div className="absolute top-1/4 left-1/5 hidden sm:block">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={`hero-hex-left-${i}`}
+              className="absolute w-20 h-20"
+              style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                border: '1px solid',
+                borderColor: `hsl(var(--primary) / ${0.28 - i * 0.08})`,
+                transform: `scale(${1 + i * 0.25}) rotate(${i * 12}deg)`,
+                animation: `spin ${22 - i * 4}s linear infinite ${i % 2 === 0 ? 'normal' : 'reverse'}`
+              }}
+            />
+          ))}
+        </div>
 
-        {/* Floating blurred orbs */}
-        <div className="absolute top-24 right-[18%] w-72 h-72 rounded-full bg-primary/20 blur-3xl animate-pulse" style={{ animationDuration: "6.5s" }} />
-        <div className="absolute bottom-16 left-[22%] w-80 h-80 rounded-full bg-secondary/20 blur-3xl animate-pulse" style={{ animationDuration: "7.2s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-accent/25 blur-[90px] animate-ping" style={{ animationDuration: "9s" }} />
+        <div className="absolute bottom-1/4 right-1/6 hidden lg:block">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={`hero-hex-right-${i}`}
+              className="absolute w-16 h-16"
+              style={{
+                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                border: '1px solid',
+                borderColor: `hsl(var(--secondary) / ${0.22 - i * 0.07})`,
+                transform: `scale(${1 + i * 0.2}) rotate(${-i * 10}deg)`,
+                animation: `spin ${20 - i * 3}s linear infinite ${i % 2 === 0 ? 'reverse' : 'normal'}`
+              }}
+            />
+          ))}
+        </div>
 
-        {/* Animated diagonal mesh */}
-        <div
-          className="absolute inset-0 opacity-25 animate-[spin_40s_linear_infinite]"
-          style={{
-            backgroundImage:
-              "linear-gradient(135deg, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.12) 25%, transparent 25%, transparent 50%, rgba(161,132,252,0.12) 50%, rgba(161,132,252,0.12) 75%, transparent 75%, transparent)",
-            backgroundSize: "220px 220px",
-            animationDuration: "40s"
-          }}
-        />
+        {/* Scanning lines */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-slide-down" style={{ animationDuration: '9s' }} />
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-secondary/25 to-transparent animate-slide-down" style={{ animationDuration: '13s', animationDelay: '3s' }} />
+          <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-transparent via-accent/25 to-transparent animate-slide-right" style={{ animationDuration: '11s', animationDelay: '2s' }} />
+        </div>
 
-        {/* Soft dotted shimmer */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.22]" xmlns="http://www.w3.org/2000/svg">
+        {/* Ambient gradient glows */}
+        <div className="absolute top-10 right-1/4 w-[420px] h-[420px] bg-gradient-radial from-primary/12 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '22s' }} />
+        <div className="absolute bottom-10 left-1/4 w-[380px] h-[380px] bg-gradient-radial from-secondary/10 via-transparent to-transparent blur-3xl animate-drift" style={{ animationDuration: '26s', animationDelay: '4s', animationDirection: 'reverse' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gradient-radial from-accent/12 via-transparent to-transparent blur-3xl animate-float" style={{ animationDuration: '18s', animationDelay: '3s' }} />
+
+        {/* Soft connector lines */}
+        <svg className="absolute inset-0 w-full h-full opacity-15" style={{ pointerEvents: 'none' }}>
           <defs>
-            <pattern id="hero-dots" x="0" y="0" width="90" height="90" patternUnits="userSpaceOnUse">
-              <circle cx="6" cy="6" r="2" fill="rgba(56,189,248,0.18)">
-                <animate attributeName="opacity" values="0.35;0.7;0.35" dur="4.5s" repeatCount="indefinite" />
-              </circle>
-            </pattern>
+            <linearGradient id="insighta-hero-line-1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
+              <stop offset="50%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.5 }} />
+              <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
+            </linearGradient>
+            <linearGradient id="insighta-hero-line-2" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style={{ stopColor: 'hsl(var(--secondary))', stopOpacity: 0 }} />
+              <stop offset="50%" style={{ stopColor: 'hsl(var(--secondary))', stopOpacity: 0.45 }} />
+              <stop offset="100%" style={{ stopColor: 'hsl(var(--secondary))', stopOpacity: 0 }} />
+            </linearGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#hero-dots)" />
+          <line x1="20%" y1="25%" x2="28%" y2="38%" stroke="url(#insighta-hero-line-1)" strokeWidth="1.5" />
+          <line x1="75%" y1="35%" x2="65%" y2="52%" stroke="url(#insighta-hero-line-1)" strokeWidth="1.5" />
+          <line x1="30%" y1="70%" x2="42%" y2="82%" stroke="url(#insighta-hero-line-2)" strokeWidth="1.5" />
         </svg>
 
-        {/* Subtle top-to-bottom gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/65 via-background/40 to-background/10" />
+        {/* Tech nodes */}
+        {[
+          { top: '22%', left: '18%' },
+          { top: '32%', left: '26%' },
+          { top: '58%', left: '20%' },
+          { top: '42%', right: '22%' },
+          { bottom: '24%', right: '28%' },
+          { bottom: '18%', left: '42%' }
+        ].map((pos, i) => (
+          <div
+            key={`insighta-node-${i}`}
+            className="absolute w-1.5 h-1.5 rounded-full bg-primary/35"
+            style={{
+              ...pos,
+              animation: `pulse 2.4s ease-in-out infinite`,
+              animationDelay: `${i * 0.6}s`
+            }}
+          />
+        ))}
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
