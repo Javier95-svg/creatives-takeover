@@ -2,20 +2,28 @@ const AboutWallpaper = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {/* Elegant gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#05060d] via-[#0a0d1a] to-[#131a2b]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#030610] via-[#070d1c] to-[#0e1a2e]" />
 
       {/* Horizon glow */}
       <div className="absolute inset-x-0 top-1/3 h-[420px] bg-gradient-to-b from-[#facc15]/10 via-transparent to-transparent blur-2xl opacity-70" />
 
-      {/* Floating parallelograms */}
-      {[...Array(5)].map((_, index) => (
+      {/* Floating bands */}
+      {[
+        { top: '18%', left: '12%', width: '28rem', height: '6rem', rotation: '-8deg' },
+        { top: '42%', left: '38%', width: '24rem', height: '5rem', rotation: '5deg' },
+        { top: '66%', left: '18%', width: '26rem', height: '5.5rem', rotation: '-4deg' }
+      ].map((band, index) => (
         <div
-          key={`about-shape-${index}`}
-          className="absolute w-40 h-16 border border-amber-200/25 rotate-12 animate-[float_12s_ease-in-out_infinite]"
+          key={`about-band-${index}`}
+          className="absolute border border-amber-200/30 bg-gradient-to-r from-amber-100/10 via-transparent to-amber-100/10 opacity-70 rounded-2xl"
           style={{
-            top: `${10 + index * 14}%`,
-            left: `${20 + (index % 3) * 22}%`,
-            animationDelay: `${index * 1.2}s`
+            top: band.top,
+            left: band.left,
+            width: band.width,
+            height: band.height,
+            transform: `rotate(${band.rotation})`,
+            animation: 'float 14s ease-in-out infinite',
+            animationDelay: `${index * 1.4}s`
           }}
         />
       ))}
@@ -27,12 +35,12 @@ const AboutWallpaper = () => {
         { top: '20%', left: '48%', delay: '0.8s', opacity: 0.5 },
         { top: '12%', left: '68%', delay: '1.2s', opacity: 0.65 },
         { top: '26%', left: '22%', delay: '1.6s', opacity: 0.55 },
-        { top: '28%', left: '58%', delay: '2s', opacity: 0.7 },
-        { top: '32%', left: '74%', delay: '2.4s', opacity: 0.6 },
+        { top: '30%', left: '58%', delay: '2s', opacity: 0.7 },
+        { top: '34%', left: '74%', delay: '2.4s', opacity: 0.6 },
         { top: '44%', left: '16%', delay: '2.8s', opacity: 0.55 },
-        { top: '42%', left: '38%', delay: '3.2s', opacity: 0.7 },
-        { top: '48%', left: '62%', delay: '3.6s', opacity: 0.65 },
-        { top: '50%', left: '82%', delay: '4s', opacity: 0.6 },
+        { top: '46%', left: '38%', delay: '3.2s', opacity: 0.7 },
+        { top: '50%', left: '62%', delay: '3.6s', opacity: 0.65 },
+        { top: '52%', left: '82%', delay: '4s', opacity: 0.6 },
         { top: '60%', left: '28%', delay: '4.4s', opacity: 0.55 },
         { top: '62%', left: '46%', delay: '4.8s', opacity: 0.7 },
         { top: '68%', left: '68%', delay: '5.2s', opacity: 0.6 },

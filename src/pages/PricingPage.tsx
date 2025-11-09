@@ -2,7 +2,7 @@ import SEO, { createProductSchema, createBreadcrumbSchema } from "@/components/S
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
-import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
+import AnimatedBackground from "@/components/AnimatedBackground";
 import TrustIndicators from "@/components/TrustIndicators";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import PricingComparison from "@/components/PricingComparison";
@@ -46,7 +46,7 @@ const PricingPage = () => {
         structuredData={structuredData}
       />
       <div className="relative min-h-screen overflow-hidden">
-        <PricingWallpaper />
+        <AnimatedBackground />
         <div className="relative z-10">
           <Navigation />
           <Pricing />
