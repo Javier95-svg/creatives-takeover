@@ -3,15 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { RefreshCw, Sparkles, TrendingUp } from "lucide-react";
 import TrendCard from "./TrendCard";
-import SearchFilters from "./SearchFilters";
 import CategoryTabs from "./CategoryTabs";
 import { useTrends } from "@/hooks/useTrends";
-import { useSearch } from "@/hooks/useSearch";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import opportunitiesImage from "@/assets/opportunities-bg.jpg";
 
 interface TrendingSectionProps {
-  searchTerm?: string;
   selectedCategory?: string;
   onCategoryChange?: (category: string) => void;
 }
@@ -34,20 +30,10 @@ const AnimatedTrendCard = ({ trend, index }: { trend: any; index: number }) => {
 };
 
 const TrendingSection = ({ 
-  searchTerm, 
   selectedCategory: externalCategory = "all",
   onCategoryChange 
 }: TrendingSectionProps) => {
   const { trends, isLoading, error, refetch, generateNewTrends } = useTrends();
-  const { 
-    searchTerm: localSearchTerm, 
-    setSearchTerm, 
-    filters, 
-    updateFilter, 
-    filteredTrends, 
-    clearFilters, 
-    hasActiveFilters 
-  } = useSearch(trends);
   const [isGenerating, setIsGenerating] = useState(false);
   const [internalCategory, setInternalCategory] = useState("all");
   
@@ -55,17 +41,10 @@ const TrendingSection = ({
   const selectedCategory = onCategoryChange ? externalCategory : internalCategory;
   const handleCategoryChange = onCategoryChange || setInternalCategory;
 
-  // Update local search when prop changes
-  React.useEffect(() => {
-    if (searchTerm !== undefined) {
-      setSearchTerm(searchTerm);
-    }
-  }, [searchTerm, setSearchTerm]);
-
   // Filter by category
   const categoryFilteredTrends = selectedCategory === "all" 
-    ? filteredTrends 
-    : filteredTrends.filter(trend => {
+    ? trends 
+    : trends.filter(trend => {
         // Match with actual trend categories and keywords
         const category = trend.category?.toLowerCase() || "";
         const keywords = trend.keywords?.map(k => k.toLowerCase()) || [];
@@ -244,16 +223,11 @@ const TrendingSection = ({
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 mb-10">
             <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-4xl md:text-5xl font-bold gradient-text">
-              {hasActiveFilters ? `Search Results (${displayedTrends.length})` : 'Newspaper'}
-            </h2>
-            {!hasActiveFilters && <span className="text-4xl md:text-5xl animate-bounce">📰</span>}
+            <h2 className="text-4xl md:text-5xl font-bold gradient-text">Newspaper</h2>
+            <span className="text-4xl md:text-5xl animate-bounce">📰</span>
           </div>
           <p className="text-muted-foreground text-lg md:text-xl">
-            {hasActiveFilters 
-              ? 'Filtered business opportunities matching your criteria'
-              : 'Your daily digest of AI-curated market insights, funding opportunities, and emerging trends, delivered fresh to power your entrepreneurial growth.'
-            }
+            Your daily digest of AI-curated market insights, funding opportunities, and emerging trends, delivered fresh to power your entrepreneurial growth.
           </p>
         </div>
 
@@ -261,16 +235,6 @@ const TrendingSection = ({
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
           resultCount={displayedTrends.length}
-        />
-
-        <SearchFilters
-          filters={filters}
-          updateFilter={updateFilter}
-          clearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
-          resultCount={displayedTrends.length}
-          onSearchChange={setSearchTerm}
-          searchTerm={localSearchTerm}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -283,7 +247,7 @@ const TrendingSection = ({
           ))}
         </div>
 
-        {displayedTrends.length === 0 && !hasActiveFilters && (
+        {displayedTrends.length === 0 && (
           <div className="text-center py-12">
             <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No opportunities found</h3>
@@ -300,20 +264,6 @@ const TrendingSection = ({
                 Refresh
               </Button>
             </div>
-          </div>
-        )}
-
-        {displayedTrends.length === 0 && hasActiveFilters && (
-          <div className="text-center py-12">
-            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No matching opportunities</h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your filters to see more results
-            </p>
-            <Button onClick={clearFilters} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Clear Filters
-            </Button>
           </div>
         )}
 

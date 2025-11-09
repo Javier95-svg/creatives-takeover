@@ -1,15 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, ChevronDown, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
-interface BlogHeroProps {
-  onSearch?: (searchTerm: string) => void;
-}
-
-const BlogHero = ({ onSearch }: BlogHeroProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
+const BlogHero = () => {
   const fullText = "Insighta blends AI-driven analysis with curated market intelligence to help entrepreneurs uncover funding opportunities, identify market trends, and make informed, data-based decisions. Covering everything from investment contests to accelerator programs, Insighta turns complex market information into practical insights that empower creative businesses to seize the right opportunities at the perfect moment.";
   
   const { displayedText, isTyping } = useTypingAnimation({ 
@@ -17,20 +9,6 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
     speed: 20,
     startDelay: 500
   });
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch && searchTerm.trim()) {
-      onSearch(searchTerm.trim());
-    }
-  };
-
-  const scrollToOpportunities = () => {
-    const opportunitiesSection = document.querySelector('[data-section="opportunities"]');
-    if (opportunitiesSection) {
-      opportunitiesSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
     <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">

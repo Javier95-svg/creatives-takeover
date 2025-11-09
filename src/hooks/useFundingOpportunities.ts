@@ -34,24 +34,14 @@ export const useFundingOpportunities = (filters?: FundingFilters) => {
         // Try to fetch from database first
         if (useDatabase) {
           try {
-            let query = supabase
-              .from('funding_opportunities')
+            const { data, error: fetchError } = await supabase
+              .from('funding_opportunities' as any)
               .select('*')
               .eq('is_active', true)
               .order('is_featured', { ascending: false })
-              .order('created_at', { ascending: false });
-
-            // Simple type filter
-            if (filters?.type) {
-              query = query.eq('type', filters.type);
-            }
-
-            // Featured filter
-            if (filters?.featured) {
-              query = query.eq('is_featured', true);
-            }
-
-            const { data, error: fetchError } = await query;
+              .order('created_at', { ascending: false })
+              .eq(filters?.type ? 'type' : 'is_active', filters?.type || true)
+              .eq(filters?.featured ? 'is_featured' : 'is_active', filters?.featured || true);
 
             // If table doesn't exist or error, fall back to hardcoded data
             if (fetchError) {
@@ -67,7 +57,7 @@ export const useFundingOpportunities = (filters?: FundingFilters) => {
 
             // If we got data (even if empty array), use it
             if (data !== null) {
-              let results = data;
+              let results = data as unknown as FundingOpportunity[];
 
               // Client-side location filter
               if (filters?.location) {
