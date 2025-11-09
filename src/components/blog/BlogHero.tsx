@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronDown, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
-import heroImage from "@/assets/hero-bg-animated.jpg";
+import { useState } from "react";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 interface BlogHeroProps {
@@ -35,13 +34,62 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
 
   return (
     <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
-      {/* Animated Background with Multiple Layers */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 animate-fade-in" />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-transparent" />
+      {/* Animated Ambient Wallpaper */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Base gradient wash */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+
+        {/* Rotating aurora glow */}
+        <div
+          className="absolute -top-48 -left-44 w-[60rem] h-[60rem] rounded-full blur-3xl opacity-70 animate-[spin_36s_linear_infinite]"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 30%, rgba(56,189,248,0.28), transparent 55%), radial-gradient(circle at 70% 70%, rgba(161,132,252,0.32), transparent 60%)",
+            animationDuration: "36s"
+          }}
+        />
+
+        {/* Pulsing gradient ribbons */}
+        <div
+          className="absolute inset-0 opacity-60 animate-[spin_28s_linear_infinite]"
+          style={{
+            backgroundImage:
+              "conic-gradient(from 140deg at 50% 50%, rgba(56,189,248,0.12), rgba(161,132,252,0.18), rgba(56,189,248,0.12))",
+            animationDuration: "28s"
+          }}
+        />
+
+        {/* Floating blurred orbs */}
+        <div className="absolute top-24 right-[18%] w-72 h-72 rounded-full bg-primary/20 blur-3xl animate-pulse" style={{ animationDuration: "6.5s" }} />
+        <div className="absolute bottom-16 left-[22%] w-80 h-80 rounded-full bg-secondary/20 blur-3xl animate-pulse" style={{ animationDuration: "7.2s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-accent/25 blur-[90px] animate-ping" style={{ animationDuration: "9s" }} />
+
+        {/* Animated diagonal mesh */}
+        <div
+          className="absolute inset-0 opacity-25 animate-[spin_40s_linear_infinite]"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.12) 25%, transparent 25%, transparent 50%, rgba(161,132,252,0.12) 50%, rgba(161,132,252,0.12) 75%, transparent 75%, transparent)",
+            backgroundSize: "220px 220px",
+            animationDuration: "40s"
+          }}
+        />
+
+        {/* Soft dotted shimmer */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.22]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="hero-dots" x="0" y="0" width="90" height="90" patternUnits="userSpaceOnUse">
+              <circle cx="6" cy="6" r="2" fill="rgba(56,189,248,0.18)">
+                <animate attributeName="opacity" values="0.35;0.7;0.35" dur="4.5s" repeatCount="indefinite" />
+              </circle>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hero-dots)" />
+        </svg>
+
+        {/* Subtle top-to-bottom gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/65 via-background/40 to-background/10" />
+      </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
