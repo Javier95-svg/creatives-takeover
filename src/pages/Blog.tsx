@@ -4,19 +4,24 @@ import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
+import TrendingSection from "@/components/blog/TrendingSection";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState, useRef } from "react";
-import { FundingFilters, FundingType } from "@/types/funding";
+import { FundingFilters } from "@/types/funding";
 
 const Blog = () => {
   const { trackPageVisit } = useReadingAnalytics();
+  const [searchTerm, setSearchTerm] = useState<string>();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showStickyNav, setShowStickyNav] = useState(false);
   const [fundingFilters, setFundingFilters] = useState<FundingFilters>({});
   const heroRef = useRef<HTMLDivElement>(null);
 
   const handleSearch = (term: string) => {
-    setFundingFilters((prev) => ({ ...prev, search: term || undefined }));
+    setSearchTerm(term);
+    // Update funding filters with search term
+    setFundingFilters(prev => ({ ...prev, search: term || undefined }));
+    // Scroll to opportunities section
     const opportunitiesSection = document.querySelector('[data-section="opportunities"]');
     if (opportunitiesSection) {
       opportunitiesSection.scrollIntoView({ behavior: 'smooth' });
@@ -24,21 +29,16 @@ const Blog = () => {
   };
 
   const handleSearchClick = () => {
+    // Scroll to hero search
     heroRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-    setFundingFilters((prev) => ({
-      ...prev,
-      type: category === 'all' ? undefined : (category as FundingType)
-    }));
-  };
-
+  // Track page visit when component mounts
   useEffect(() => {
     trackPageVisit('Insighta Blog');
   }, [trackPageVisit]);
 
+  // Show sticky nav after scrolling past hero
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -54,6 +54,7 @@ const Blog = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Structured data for blog page
   const structuredData = [
     {
       "@context": "https://schema.org",
@@ -86,22 +87,28 @@ const Blog = () => {
         structuredData={structuredData}
       />
       <Navigation />
-
+      
+      {/* Sticky Navigation - shows after scrolling past hero */}
       {showStickyNav && (
         <BlogStickyNav
           selectedCategory={selectedCategory}
-          onCategoryChange={handleCategoryChange}
+          onCategoryChange={setSelectedCategory}
           onSearchClick={handleSearchClick}
         />
       )}
-
+      
       <main>
         <div ref={heroRef}>
           <BlogHero onSearch={handleSearch} />
         </div>
-        <FundingOpportunitiesSection
+        <FundingOpportunitiesSection 
           filters={fundingFilters}
           onFiltersChange={setFundingFilters}
+        />
+        <TrendingSection 
+          searchTerm={searchTerm} 
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
         />
       </main>
       <Footer />

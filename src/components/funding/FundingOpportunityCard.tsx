@@ -1,16 +1,14 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, CalendarClock, Layers } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
 
 interface FundingOpportunityCardProps {
   opportunity: FundingOpportunity;
-  onSelect?: (opportunity: FundingOpportunity) => void;
-  isActive?: boolean;
 }
 
-const FundingOpportunityCard = ({ opportunity, onSelect, isActive }: FundingOpportunityCardProps) => {
+const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'grant':
@@ -26,23 +24,10 @@ const FundingOpportunityCard = ({ opportunity, onSelect, isActive }: FundingOppo
     }
   };
 
-  const applicationClose = opportunity.key_dates?.application_close;
-
-  const handleCardClick = () => {
-    if (onSelect) {
-      onSelect(opportunity);
-      return;
-    }
-
-    window.open(opportunity.url, '_blank', 'noopener,noreferrer');
-  };
-
   return (
-    <Card
-      className={`hover:shadow-lg transition-all duration-300 cursor-pointer group border ${
-        isActive ? 'border-primary shadow-primary/20' : 'border-transparent'
-      } bg-gradient-to-br from-background to-muted/20 h-full flex flex-col`}
-      onClick={handleCardClick}
+    <Card 
+      className="hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col"
+      onClick={() => window.open(opportunity.url, '_blank', 'noopener,noreferrer')}
     >
       <CardHeader className="pb-4 flex-grow">
         <div className="flex items-start justify-between gap-3">
@@ -55,7 +40,7 @@ const FundingOpportunityCard = ({ opportunity, onSelect, isActive }: FundingOppo
             </Badge>
           )}
         </div>
-
+        
         <div className="flex items-center gap-2 text-sm mt-2 flex-wrap">
           <Badge variant="outline" className={`text-xs font-medium capitalize ${getTypeColor(opportunity.type)}`}>
             {opportunity.type}
@@ -67,41 +52,18 @@ const FundingOpportunityCard = ({ opportunity, onSelect, isActive }: FundingOppo
           )}
         </div>
       </CardHeader>
-
+      
       <CardContent className="pt-0 space-y-4 flex flex-col flex-grow">
-        <p className="text-muted-foreground text-sm leading-relaxed">
+        <p className="text-muted-foreground text-sm leading-relaxed flex-grow">
           {opportunity.description}
         </p>
-
-        {opportunity.funding_types && opportunity.funding_types.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <Layers className="h-3.5 w-3.5 text-primary" />
-            {opportunity.funding_types.slice(0, 2).map((fundingType, index) => (
-              <Badge key={index} variant="secondary" className="text-[10px] px-2 py-0.5">
-                {fundingType}
-              </Badge>
-            ))}
-            {opportunity.funding_types.length > 2 && (
-              <span className="text-[11px] text-muted-foreground/80">
-                +{opportunity.funding_types.length - 2} more
-              </span>
-            )}
-          </div>
-        )}
-
-        {applicationClose && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <CalendarClock className="h-3.5 w-3.5 text-primary" />
-            <span>Applications close {new Date(applicationClose).toLocaleDateString()}</span>
-          </div>
-        )}
-
+        
         {opportunity.location && opportunity.location.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {opportunity.location.slice(0, 3).map((loc, index) => (
-              <Badge
+              <Badge 
                 key={index}
-                variant="secondary"
+                variant="secondary" 
                 className="text-xs px-2 py-0.5"
               >
                 {loc}
@@ -114,9 +76,9 @@ const FundingOpportunityCard = ({ opportunity, onSelect, isActive }: FundingOppo
             )}
           </div>
         )}
-
-        <Button
-          size="sm"
+        
+        <Button 
+          size="sm" 
           className="w-full text-xs h-8 mt-auto"
           onClick={(e) => {
             e.stopPropagation();
