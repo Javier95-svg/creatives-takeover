@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +40,26 @@ import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 import FoundersProgressTracker, { FounderMilestone } from "@/components/FoundersProgressTracker";
 
+const FOUNDER_MILESTONE_IDS = [
+  "idea-validation",
+  "mvp-build",
+  "launch-prep",
+  "first-sale",
+  "customer-feedback",
+  "growth-traction",
+] as const;
+
+const MILESTONE_STAGE_MAP: Record<string, string> = {
+  "idea-validation": "ideation",
+  "mvp-build": "building",
+  "launch-prep": "launching",
+  "first-sale": "traction",
+  "customer-feedback": "retention",
+  "growth-traction": "scaling",
+};
+
+const GUEST_TRACKER_STORAGE_KEY = "bizmap-founder-tracker";
+
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +96,15 @@ const BizMapAI = () => {
   const [activeTab, setActiveTab] = useState("bizmap");
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(null);
+  const [milestoneProgress, setMilestoneProgress] = useState<{
+    completed: string[];
+    notes: Record<string, string>;
+  }>({
+    completed: [],
+    notes: {},
+  });
+  const milestoneSyncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousSessionId = useRef<string | null>(null);
   
   // Founder OS Integration
   const { 
@@ -105,54 +134,153 @@ const BizMapAI = () => {
   const wizardSteps = [
     {
       key: "overview",
-      title: "Your Vision",
-      question: "In plain language, what are you building and who will it help first?",
-      placeholder: "Example: A studio that helps podcasters turn one recording into a week of video clips, ready for socials. We’re starting with music coaches who already host paid communities.",
-      transition: "Great start. Let’s get specific about the people you want to reach first."
+      title: "Business Concept (Days 1-2)",
+      question: "🚀 Let's build your 30-day launch plan! What problem are you solving and for whom? This becomes your validation foundation.",
+      placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
+      transition: "Perfect! Now let's define who your first customers will be..."
     },
     {
-      key: "market",
-      title: "First Customers",
-      question: "Describe the exact person you’ll approach in the next two weeks. Where can you reach them directly?",
-      placeholder: "Example: Freelance illustrators earning $3–5K/month who hang out in the Visual Storytellers Slack. They struggle with cold outreach and take referrals only.",
-      transition: "Helpful. Now let’s validate that they feel this problem urgently enough to talk to you."
+      key: "market", 
+      title: "Target Customer (Days 3-4)",
+      question: "📅 Day 3-4 Focus: Describe your ideal FIRST customer in detail. Where can we find them in the next 7 days?",
+      placeholder: "Example: Working parents aged 28-45 in urban areas, active in mom Facebook groups and parenting subreddits...",
+      transition: "Excellent! Now let's design your minimum viable product..."
     },
     {
       key: "problem",
-      title: "Problem Signals",
-      question: "What evidence do you already have that this is painful for them? If you haven’t collected any yet, what will you ask or measure?",
-      placeholder: "Example: I’ve had 4 calls where founders said editing eats 6+ hrs/week. I’ll run a quick poll in the Slack group asking how long edits take and what they’d happily pay to skip it.",
-      transition: "Solid. Let’s outline the smallest offer that solves that pain without overbuilding."
+      title: "Validation Plan (Days 5-7)", 
+      question: "📊 Validation Goal: How will you validate demand this week? List 3 ways you'll test if people want this.",
+      placeholder: "Example: 10 customer interviews, landing page with email signup, competitor research in 3 markets...",
+      transition: "Great validation plan! Now, what's the simplest version we can build?"
     },
     {
       key: "solution",
-      title: "Smallest Offer",
-      question: "What’s the minimal version of your solution you can deliver in the next 2–3 weeks? Be concrete about format, tools, and scope.",
-      placeholder: "Example: A ‘Podcast Sprint’—two 90-min sessions where we map 6 episodes, edit 3 clip samples, and set up a content calendar using Descript + Notion. Delivered live, no custom platform yet.",
-      transition: "Nice and focused. Next, map out where you’ll show up to earn those first yeses."
+      title: "MVP Design (Days 8-14)",
+      question: "🛠️ MVP Focus: What's the absolute MINIMUM version that solves the core problem? What features are essential?", 
+      placeholder: "Example: Simple booking form, verified sitter profiles, SMS notifications. NO fancy features yet...",
+      transition: "Perfect MVP scope! Now, where will you launch?"
     },
     {
       key: "channels",
-      title: "Go-to-Market Moves",
-      question: "List the exact steps you’ll take to reach those first customers. Include channels, outreach method, and rough timeline.",
-      placeholder: "Example: Week 1—DM 15 illustrators in Slack with before/after examples. Week 2—host a live teardown for the community and capture testimonials. Week 3—invite warm leads to a 1-hour trial session.",
-      transition: "Great. We also need a rough pricing story so you can talk numbers confidently."
+      title: "Launch Strategy (Days 15-21)",
+      question: "🎯 Launch Goal: Where will you launch to get your first 10 users? Be specific about channels and tactics.",
+      placeholder: "Example: Product Hunt launch, 5 parenting Facebook groups, Instagram influencer outreach, friend referrals...",
+      transition: "Smart launch strategy! Now let's plan how you'll get your first paying customer..."
     },
     {
       key: "pricing",
-      title: "Pricing & Proof",
-      question: "What will you charge for this first offer, and how will you test whether it’s fair? Mention any incentives or success criteria.",
-      placeholder: "Example: $450 for the sprint with a satisfaction checkpoint after the first session. If they don’t feel on track, I comp the editing clip. I’ll test three conversations and adjust based on close rate.",
-      transition: "Last piece: decide what success looks like so we can celebrate and course-correct."
+      title: "Pricing Model (Days 22-25)",
+      question: "💰 Pricing: How will you charge? What pricing makes sense for getting your first paying customer by Day 30?",
+      placeholder: "Example: Early bird: $20/month (50% off), then $40/month. First 10 customers get lifetime discount...",
+      transition: "Excellent pricing strategy! Finally, what does success look like on Day 30?"
     },
     {
       key: "goals",
-      title: "30-Day Milestones",
-      question: "What concrete outcomes will prove you’re on the right track in 30 days? Add a stretch goal and a minimum viable win.",
-      placeholder: "Example: Minimum—secure 3 paid sprints and 2 testimonial videos. Target—book $2K in revenue and have a repeatable onboarding process. Stretch—hire a part-time editor so I can take on double the clients.",
-      transition: "Perfect. I’ll assemble these answers into your founder playbook now."
+      title: "Day 30 Success Metrics (Days 26-30)",
+      question: "🎯 Final Goal: What does success look like on Day 30? How many customers or revenue would make this REAL?",
+      placeholder: "Example: 1 paying customer ($20), 50 email signups, 20 active users. Proof this can work!",
+      transition: "Amazing! Generating your personalized 30-day launch roadmap... 🎉"
     }
   ];
+
+  const parseMilestoneData = useCallback((data: unknown) => {
+    if (!data) {
+      return { completed: [] as string[], notes: {} as Record<string, string> };
+    }
+    if (Array.isArray(data)) {
+      return {
+        completed: data.filter((id): id is string => typeof id === "string"),
+        notes: {},
+      };
+    }
+    if (typeof data === "object") {
+      const rawObject = data as { completed?: unknown; notes?: unknown };
+      const completedList = Array.isArray(rawObject.completed)
+        ? rawObject.completed.filter((id): id is string => typeof id === "string")
+        : [];
+      const notesRecord: Record<string, string> = {};
+      if (rawObject.notes && typeof rawObject.notes === "object" && !Array.isArray(rawObject.notes)) {
+        Object.entries(rawObject.notes as Record<string, unknown>).forEach(([key, value]) => {
+          if (typeof value === "string") {
+            notesRecord[key] = value;
+          }
+        });
+      }
+      return { completed: completedList, notes: notesRecord };
+    }
+    return { completed: [], notes: {} };
+  }, []);
+
+  const computeJourneyStage = useCallback((completed: string[]) => {
+    for (let index = FOUNDER_MILESTONE_IDS.length - 1; index >= 0; index -= 1) {
+      const milestoneId = FOUNDER_MILESTONE_IDS[index];
+      if (completed.includes(milestoneId)) {
+        return MILESTONE_STAGE_MAP[milestoneId] ?? "ideation";
+      }
+    }
+    return "ideation";
+  }, []);
+
+  const handleMilestonesUpdate = useCallback(
+    (completed: string[], notes: Record<string, string>) => {
+      const uniqueCompleted = Array.from(
+        new Set(completed.filter((id): id is string => typeof id === "string"))
+      );
+
+      const sanitizedNotes: Record<string, string> = {};
+      Object.entries(notes).forEach(([key, value]) => {
+        if (typeof value === "string") {
+          sanitizedNotes[key] = value;
+        }
+      });
+
+      setMilestoneProgress({ completed: uniqueCompleted, notes: sanitizedNotes });
+
+      if (milestoneSyncTimeout.current) {
+        clearTimeout(milestoneSyncTimeout.current);
+        milestoneSyncTimeout.current = null;
+      }
+
+      if (currentSessionId && user) {
+        milestoneSyncTimeout.current = setTimeout(() => {
+          updateSession(currentSessionId, {
+            milestones_achieved: { completed: uniqueCompleted, notes: sanitizedNotes },
+            journey_stage: computeJourneyStage(uniqueCompleted),
+          });
+        }, 400);
+      } else {
+        try {
+          localStorage.setItem(
+            GUEST_TRACKER_STORAGE_KEY,
+            JSON.stringify({ completed: uniqueCompleted, notes: sanitizedNotes })
+          );
+        } catch (error) {
+          console.warn("Failed to persist milestone progress", error);
+        }
+      }
+    },
+    [currentSessionId, user, updateSession, computeJourneyStage]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (milestoneSyncTimeout.current) {
+        clearTimeout(milestoneSyncTimeout.current);
+      }
+    };
+  }, []);
+
+  const determineMilestoneFromStep = useCallback(
+    (stepIndex: number) => {
+      if (stepIndex <= 2) return "idea-validation";
+      if (stepIndex === 3) return "mvp-build";
+      if (stepIndex === 4) return "launch-prep";
+      if (stepIndex === 5) return "first-sale";
+      if (stepIndex >= wizardSteps.length) return "customer-feedback";
+      return "customer-feedback";
+    },
+    [wizardSteps.length]
+  );
 
   const founderMilestones: FounderMilestone[] = [
     {
@@ -166,11 +294,7 @@ const BizMapAI = () => {
       ],
       nextAction:
         "Ask BizMap AI: “What assumptions about my customer or problem should I validate next, and how do I test them this week?”",
-      resources: [
-        { label: "Validation Guide", href: "/guides/validation" },
-        { label: "Customer Interview Template", href: "/templates/customer-interview" },
-        { label: "Community Feedback Thread", href: "/community/feedback" },
-      ],
+      resources: [],
     },
     {
       id: "mvp-build",
@@ -183,11 +307,7 @@ const BizMapAI = () => {
       ],
       nextAction:
         "Ask BizMap AI: “Given my validated problem, what’s the leanest MVP I can launch in 14 days and what do I need to build first?”",
-      resources: [
-        { label: "No-Code Toolkit", href: "/resources/no-code-toolkit" },
-        { label: "Sprint Planner", href: "/founder-os" },
-        { label: "Accountability Partner Match", href: "/community/accountability" },
-      ],
+      resources: [],
     },
     {
       id: "launch-prep",
@@ -200,11 +320,7 @@ const BizMapAI = () => {
       ],
       nextAction:
         "Ask BizMap AI: “Help me build a 7-day launch plan with daily tasks so I can create momentum and capture leads.”",
-      resources: [
-        { label: "Launch Checklist", href: "/guides/launch" },
-        { label: "Messaging Playbook", href: "/templates/messaging" },
-        { label: "Growth Experiments Vault", href: "/resources/growth-experiments" },
-      ],
+      resources: [],
     },
     {
       id: "first-sale",
@@ -217,11 +333,7 @@ const BizMapAI = () => {
       ],
       nextAction:
         "Ask BizMap AI: “What’s the best offer structure and outreach message to convert my first paying customer this week?”",
-      resources: [
-        { label: "Sales Script Builder", href: "/templates/sales-script" },
-        { label: "Pricing Calculator", href: "/tools/pricing-calculator" },
-        { label: "Founder Sales Community", href: "/community/sales-daily" },
-      ],
+      resources: [],
     },
     {
       id: "customer-feedback",
@@ -234,11 +346,7 @@ const BizMapAI = () => {
       ],
       nextAction:
         "Ask BizMap AI: “How do I build a repeatable feedback loop with my first customers that informs my next release?”",
-      resources: [
-        { label: "Feedback Survey Template", href: "/templates/feedback-survey" },
-        { label: "Retention Playbook", href: "/guides/retention" },
-        { label: "Founder OS Roadmap", href: "/founder-os" },
-      ],
+      resources: [],
     },
     {
       id: "growth-traction",
@@ -251,29 +359,9 @@ const BizMapAI = () => {
       ],
       nextAction:
         "Ask BizMap AI: “Given my traction so far, what growth experiments or funding pathways should I prioritize next quarter?”",
-      resources: [
-        { label: "Growth Dashboard", href: "/insighta" },
-        { label: "Investor Prep Toolkit", href: "/resources/investor-prep" },
-        { label: "Weekly Accountability Circle", href: "/community/circle" },
-      ],
+      resources: [],
     },
   ];
-  const determineMilestoneFromStep = (stepIndex: number) => {
-    if (stepIndex <= 2) return "idea-validation";
-    if (stepIndex === 3) return "mvp-build";
-    if (stepIndex === 4) return "launch-prep";
-    if (stepIndex === 5) return "first-sale";
-    if (stepIndex >= wizardSteps.length) return "growth-traction";
-    return "customer-feedback";
-  };
-
-  useEffect(() => {
-    const mappedMilestone = determineMilestoneFromStep(currentStep);
-    if (mappedMilestone && mappedMilestone !== activeMilestoneId) {
-      setActiveMilestoneId(mappedMilestone);
-    }
-  }, [currentStep, activeMilestoneId]);
-
   const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
   const { hasPendingCredits } = useFeedbackCredits();
   const [creditGateOpen, setCreditGateOpen] = useState(false);
@@ -292,10 +380,89 @@ const BizMapAI = () => {
     { active: false, stepKey: null, initialAnswer: "" }
   );
 
+  useEffect(() => {
+    if (!currentSessionId || !user) return;
+    const session = getSession(currentSessionId);
+    if (!session) return;
+
+    const data = parseMilestoneData(session.milestones_achieved);
+    setMilestoneProgress(data);
+
+    if (previousSessionId.current !== currentSessionId) {
+      const fallback =
+        data.completed[data.completed.length - 1] ??
+        determineMilestoneFromStep(session.current_step) ??
+        FOUNDER_MILESTONE_IDS[0] ??
+        null;
+      setActiveMilestoneId(fallback);
+      previousSessionId.current = currentSessionId;
+    }
+  }, [currentSessionId, user, getSession, parseMilestoneData, determineMilestoneFromStep]);
+
+  useEffect(() => {
+    if (user) return;
+    try {
+      const stored = localStorage.getItem(GUEST_TRACKER_STORAGE_KEY);
+      if (stored) {
+        const data = parseMilestoneData(JSON.parse(stored));
+        setMilestoneProgress(data);
+        setActiveMilestoneId((prev) =>
+          prev ??
+          data.completed[data.completed.length - 1] ??
+          FOUNDER_MILESTONE_IDS[0] ??
+          null
+        );
+      }
+    } catch (error) {
+      console.warn("Failed to restore guest milestone progress", error);
+    }
+  }, [user, parseMilestoneData]);
+
+  useEffect(() => {
+    const autoUnlocks = [
+      { step: 2, id: "idea-validation" },
+      { step: 3, id: "mvp-build" },
+      { step: 4, id: "launch-prep" },
+      { step: 5, id: "first-sale" },
+    ] as const;
+
+    const nextCompleted = [...milestoneProgress.completed];
+    let changed = false;
+
+    autoUnlocks.forEach(({ step, id }) => {
+      if (currentStep > step && !nextCompleted.includes(id)) {
+        nextCompleted.push(id);
+        changed = true;
+      }
+    });
+
+    if (currentStep >= wizardSteps.length && !nextCompleted.includes("customer-feedback")) {
+      nextCompleted.push("customer-feedback");
+      changed = true;
+    }
+
+    if (changed) {
+      handleMilestonesUpdate(nextCompleted, milestoneProgress.notes);
+    }
+  }, [currentStep, wizardSteps.length, milestoneProgress.completed, milestoneProgress.notes, handleMilestonesUpdate]);
+
+  useEffect(() => {
+    if (activeMilestoneId) return;
+    const fallback =
+      milestoneProgress.completed[milestoneProgress.completed.length - 1] ??
+      determineMilestoneFromStep(currentStep) ??
+      FOUNDER_MILESTONE_IDS[0] ??
+      null;
+    if (fallback !== null) {
+      setActiveMilestoneId(fallback);
+    }
+  }, [activeMilestoneId, milestoneProgress.completed, currentStep, determineMilestoneFromStep]);
+
   // Session Management Functions
   const handleSessionSelect = (session: ChatSession | null) => {
     if (session) {
-      // Properly map session answers to userAnswers structure  
+      previousSessionId.current = session.id;
+
       const mappedAnswers = {
         overview: session.answers.overview || "",
         market: session.answers.market || "",
@@ -303,59 +470,64 @@ const BizMapAI = () => {
         solution: session.answers.solution || "",
         channels: session.answers.channels || "",
         pricing: session.answers.pricing || "",
-        goals: session.answers.goals || ""
+        goals: session.answers.goals || "",
       };
-      
+
       setUserAnswers(mappedAnswers);
       setCurrentStep(session.current_step);
       setLaunchReport(session.launch_report || "");
-      
-      // Reconstruct messages based on session data
+
+      const milestoneData = parseMilestoneData(session.milestones_achieved);
+      setMilestoneProgress(milestoneData);
+      const fallbackMilestone =
+        milestoneData.completed[milestoneData.completed.length - 1] ??
+        determineMilestoneFromStep(session.current_step) ??
+        FOUNDER_MILESTONE_IDS[0] ??
+        null;
+      setActiveMilestoneId(fallbackMilestone);
+
       const reconstructedMessages = [
         {
           type: "assistant",
-          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
-        }
+          content:
+            "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!",
+        },
       ];
 
-      // Add messages for completed steps
       wizardSteps.forEach((step, index) => {
         if (index <= session.current_step && session.answers[step.key]) {
           if (index > 0) {
-            // Add transition from previous step
             reconstructedMessages.push({
               type: "assistant",
-              content: wizardSteps[index - 1].transition + "\n\n" + step.question
+              content: wizardSteps[index - 1].transition + "\n\n" + step.question,
             });
           }
           reconstructedMessages.push({
             type: "user",
-            content: session.answers[step.key]
+            content: session.answers[step.key],
           });
         }
       });
 
-      // Add launch report if completed
       if (session.is_completed && session.launch_report) {
         reconstructedMessages.push({
           type: "assistant",
-          content: session.launch_report
+          content: session.launch_report,
         });
       } else if (session.current_step < wizardSteps.length) {
-        // Add next question if not completed
         const nextStep = session.current_step;
         if (nextStep < wizardSteps.length) {
           const transitionText = nextStep > 0 ? wizardSteps[nextStep - 1].transition + "\n\n" : "";
           reconstructedMessages.push({
             type: "assistant",
-            content: transitionText + wizardSteps[nextStep].question
+            content: transitionText + wizardSteps[nextStep].question,
           });
         }
       }
 
       setMessages(reconstructedMessages);
     } else {
-      // Reset for new chat
+      previousSessionId.current = null;
       resetChat();
     }
   };
@@ -372,6 +544,15 @@ const BizMapAI = () => {
       goals: ""
     });
     setLaunchReport("");
+    setMilestoneProgress({ completed: [], notes: {} });
+    if (!user) {
+      try {
+        localStorage.removeItem(GUEST_TRACKER_STORAGE_KEY);
+      } catch (error) {
+        console.warn("Failed to clear guest milestone progress", error);
+      }
+    }
+    setActiveMilestoneId(FOUNDER_MILESTONE_IDS[0] ?? null);
     setMessages([
       {
         type: "assistant",
@@ -408,7 +589,12 @@ const BizMapAI = () => {
           current_step: currentStep,
           answers: userAnswers,
           is_completed: !!launchReport,
-          launch_report: launchReport
+          launch_report: launchReport,
+          milestones_achieved: {
+            completed: milestoneProgress.completed,
+            notes: milestoneProgress.notes,
+          },
+          journey_stage: computeJourneyStage(milestoneProgress.completed),
         });
       }
     }
@@ -420,7 +606,7 @@ const BizMapAI = () => {
       const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
       return () => clearTimeout(timeoutId);
     }
-  }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
+  }, [userAnswers, currentStep, launchReport, currentSessionId, user, milestoneProgress]);
 
   // Restore saved progress for new users
   useEffect(() => {
@@ -1501,7 +1687,11 @@ Subject: "Quick question about [their pain point]"
                 <FoundersProgressTracker
                   milestones={founderMilestones}
                   activeMilestoneId={activeMilestoneId}
-                  onMilestoneChange={setActiveMilestoneId}
+                  storageKey={currentSessionId ? null : GUEST_TRACKER_STORAGE_KEY}
+                  initialCompleted={milestoneProgress.completed}
+                  initialNotes={milestoneProgress.notes}
+                  onMilestoneChange={(milestoneId) => setActiveMilestoneId(milestoneId)}
+                  onMilestonesUpdate={handleMilestonesUpdate}
                 />
 
                 {/* Where to Start Guide Section */}
