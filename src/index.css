@@ -18,24 +18,24 @@ All colors MUST be HSL.
     --popover: 240 4% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 222 74% 55%;
-    --primary-foreground: 210 40% 96%;
+    --primary: 195 100% 50%;
+    --primary-foreground: 240 4% 4%;
 
-    --secondary: 266 56% 52%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 258 90% 66%;
+    --secondary-foreground: 240 4% 4%;
 
     --muted: 240 4% 12%;
     --muted-foreground: 215.4 16.3% 65%;
 
-    --accent: 202 64% 45%;
-    --accent-foreground: 210 40% 96%;
+    --accent: 258 90% 66%;
+    --accent-foreground: 240 4% 4%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 240 4% 16%;
     --input: 240 4% 12%;
-    --ring: 222 74% 55%;
+    --ring: 195 100% 50%;
 
     --radius: 0.75rem;
 
@@ -175,7 +175,6 @@ All colors MUST be HSL.
     display: inline-block;
     line-height: 1.3;
     padding-bottom: 0.15em;
-    background-size: 100% 100%;
   }
   
   /* Dark Silver Gradient Text Effects */
@@ -184,7 +183,8 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    background-size: 100% 100%;
+    background-size: 300% 300%;
+    animation: silver-flow 4s ease-in-out infinite;
   }
   
   .silver-glow-text {
@@ -192,6 +192,7 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-shadow: 0 0 20px rgba(215, 215, 215, 0.3);
   }
 
   /* Dark Silver Chat Card */
@@ -229,7 +230,8 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    background-size: 100% 100%;
+    background-size: 300% 300%;
+    animation: gradient-flow 4s ease-in-out infinite;
   }
 
   .animated-gradient {
@@ -237,7 +239,8 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    background-size: 100% 100%;
+    background-size: 400% 400%;
+    animation: gradient-shift 6s ease-in-out infinite;
   }
 
   .reverse-gradient {
@@ -245,13 +248,15 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    background-size: 100% 100%;
+    background-size: 200% 200%;
+    animation: gradient-pulse 3s ease-in-out infinite alternate;
   }
 
   .takeover-title {
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.05em;
+    text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
   }
 
   /* Hover effects */
@@ -307,8 +312,8 @@ All colors MUST be HSL.
   }
   
   .btn-magnetic:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 15px 35px rgba(0, 212, 255, 0.3);
   }
   
   .btn-magnetic:active {
@@ -319,6 +324,7 @@ All colors MUST be HSL.
   .btn-start-creating {
     position: relative;
     overflow: hidden;
+    animation: pulse-glow 3s ease-in-out infinite;
   }
   
   .btn-start-creating::before {
@@ -328,8 +334,8 @@ All colors MUST be HSL.
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-    transition: left 0.4s ease;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
   }
   
   .btn-start-creating:hover::before {
@@ -337,8 +343,8 @@ All colors MUST be HSL.
   }
   
   .btn-start-creating:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 20px 40px rgba(0, 212, 255, 0.4), 0 0 30px rgba(139, 95, 255, 0.3);
   }
 
   /* Custom Animation Classes */
