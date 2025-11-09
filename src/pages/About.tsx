@@ -7,6 +7,7 @@ import MissionVision from "@/components/MissionVision";
 
 import HowWeWork from "@/components/HowWeWork";
 import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
+import TeamSection from "@/components/TeamSection";
 
 const About = () => {
   return (
@@ -29,7 +30,7 @@ const About = () => {
           <Navigation />
           <AboutHero />
           <MissionVision />
-          
+          <TeamSection />
           <HowWeWork />
         </div>
       </div>
