@@ -779,6 +779,77 @@ All colors MUST be HSL.
   }
 }
 
+/* Creative + Tech Fusion Wallpaper Animations */
+@keyframes morph {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: scale(1.05) rotate(5deg);
+  }
+  50% {
+    border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%;
+    transform: scale(0.95) rotate(-5deg);
+  }
+  75% {
+    border-radius: 60% 40% 60% 40% / 70% 30% 50% 60%;
+    transform: scale(1.02) rotate(3deg);
+  }
+}
+
+@keyframes drift {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(15px, -20px) rotate(2deg);
+  }
+  50% {
+    transform: translate(-10px, -15px) rotate(-1deg);
+  }
+  75% {
+    transform: translate(-20px, 10px) rotate(1deg);
+  }
+}
+
+@keyframes glitch {
+  0%, 90%, 100% {
+    transform: translateX(0) scaleX(1);
+    opacity: 0.3;
+  }
+  92% {
+    transform: translateX(-3px) scaleX(0.98);
+    opacity: 0.8;
+  }
+  94% {
+    transform: translateX(2px) scaleX(1.02);
+    opacity: 0.5;
+  }
+  96% {
+    transform: translateX(-1px) scaleX(0.99);
+    opacity: 0.7;
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-20vh);
+    opacity: 0;
+  }
+}
+
 /* Dark Silver Gradient Animations */
 @keyframes silver-flow {
   0%, 100% { 
