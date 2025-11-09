@@ -7,16 +7,20 @@ import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesS
 import TrendingSection from "@/components/blog/TrendingSection";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState, useRef } from "react";
+import { FundingFilters } from "@/types/funding";
 
 const Blog = () => {
   const { trackPageVisit } = useReadingAnalytics();
   const [searchTerm, setSearchTerm] = useState<string>();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showStickyNav, setShowStickyNav] = useState(false);
+  const [fundingFilters, setFundingFilters] = useState<FundingFilters>({});
   const heroRef = useRef<HTMLDivElement>(null);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+    // Update funding filters with search term
+    setFundingFilters(prev => ({ ...prev, search: term || undefined }));
     // Scroll to opportunities section
     const opportunitiesSection = document.querySelector('[data-section="opportunities"]');
     if (opportunitiesSection) {
@@ -97,7 +101,10 @@ const Blog = () => {
         <div ref={heroRef}>
           <BlogHero onSearch={handleSearch} />
         </div>
-        <FundingOpportunitiesSection />
+        <FundingOpportunitiesSection 
+          filters={fundingFilters}
+          onFiltersChange={setFundingFilters}
+        />
         <TrendingSection 
           searchTerm={searchTerm} 
           selectedCategory={selectedCategory}
