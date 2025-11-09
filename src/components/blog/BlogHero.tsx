@@ -11,7 +11,7 @@ interface BlogHeroProps {
 
 const BlogHero = ({ onSearch }: BlogHeroProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const fullText = "Discover up-to-date funding opportunities curated for creative entrepreneurs. Browse grants, accelerators, contests, and microfunds. Filter by type, location, or search keywords. Find the perfect funding opportunity for your project.";
+  const fullText = "Insighta blends AI-driven analysis with curated market intelligence to help entrepreneurs uncover funding opportunities, identify market trends, and make informed, data-based decisions. Covering everything from investment contests to accelerator programs, Insighta turns complex market information into practical insights that empower creative businesses to seize the right opportunities at the perfect moment.";
   
   const { displayedText, isTyping } = useTypingAnimation({ 
     text: fullText, 
@@ -52,7 +52,7 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
           
           {/* Subtitle */}
           <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-4">
-            Your curated funding board. Find grants, accelerators, contests, and microfunds.
+            Funding Opportunities and market insights.
           </p>
 
           {/* Value Proposition */}
