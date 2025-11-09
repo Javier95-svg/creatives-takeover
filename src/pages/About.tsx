@@ -6,7 +6,7 @@ import AboutHero from "@/components/AboutHero";
 import MissionVision from "@/components/MissionVision";
 
 import HowWeWork from "@/components/HowWeWork";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
 
 const About = () => {
   return (
@@ -24,9 +24,7 @@ const About = () => {
         <link rel="canonical" href={typeof window !== 'undefined' ? `${window.location.origin}/about` : '/about'} />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/95" />
-        <AnimatedBackground />
+        <AboutWallpaper />
         <div className="relative z-10">
           <Navigation />
           <AboutHero />

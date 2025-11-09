@@ -8,7 +8,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import PromptLibraryWallpaper from "@/components/wallpapers/PromptLibraryWallpaper";
 import { multiStepPrompts, type MultiStepPrompt } from "@/data/multiStepPrompts";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
@@ -94,7 +94,7 @@ const PromptLibrary = () => {
         <Helmet>
           <title>Creatives Takeover</title>
         </Helmet>
-        <AnimatedBackground />
+        <PromptLibraryWallpaper />
         <div className="relative z-10">
           <Navigation />
           <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
@@ -268,7 +268,7 @@ const PromptLibrary = () => {
         <title>Creatives Takeover</title>
         <meta name="description" content="Discover curated business idea prompts with complete 7-step journeys for BizMap AI. Get inspired with proven business concepts across e-commerce, SaaS, consulting, and more." />
       </Helmet>
-      <AnimatedBackground />
+      <PromptLibraryWallpaper />
       <div className="relative z-10">
         <Navigation />
         <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">

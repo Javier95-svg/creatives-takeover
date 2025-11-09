@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import CommunityFeed from "@/components/community/CommunityFeed";
 import CommunityHero from "@/components/CommunityHero";
 import Footer from "@/components/Footer";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import CommunityWallpaper from "@/components/wallpapers/CommunityWallpaper";
 
 
 const CommunityPage = () => {
@@ -21,7 +21,7 @@ const CommunityPage = () => {
         <link rel="canonical" href="/community" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
-        <AnimatedBackground />
+        <CommunityWallpaper />
         <div className="relative z-10">
           <Navigation />
           <div className="pt-16">

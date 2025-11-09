@@ -11,7 +11,7 @@ import InteractiveProgress from "@/components/InteractiveProgress";
 import SEO, { createSoftwareSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import BizmapWallpaper from "@/components/wallpapers/BizmapWallpaper";
 import ReportDownload from "@/components/ReportDownload";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { useChatSessions, ChatSession } from "@/hooks/useChatSessions";
@@ -1182,8 +1182,8 @@ Subject: "Quick question about [their pain point]"
         structuredData={structuredData}
       />
       
-      {/* Enhanced Animated Background */}
-      <AnimatedBackground />
+      {/* BizMap animated wallpaper */}
+      <BizmapWallpaper />
       
       
       <div className="relative z-10">
