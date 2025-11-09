@@ -34,8 +34,8 @@ const Hero = () => {
         `,
         backgroundSize: "120% 120%, 120% 120%, 110% 110%, cover, cover",
         backgroundPosition: "12% 18%, 82% 24%, 38% 88%, center, center",
-        backgroundBlendMode: "screen, lighten, screen, multiply, normal",
-        backgroundAttachment: "fixed",
+        backgroundBlendMode: "screen, lighten, screen, normal, normal",
+        backgroundRepeat: "no-repeat",
       }}
     >
       <div className="absolute inset-0 pointer-events-none">

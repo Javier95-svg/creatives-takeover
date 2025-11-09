@@ -39,16 +39,16 @@
   </g>
   <defs>
     <filter id="blurGlow" x="0" y="0" width="2400" height="1600" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="80"/>
+      <feGaussianBlur stdDeviation="45"/>
     </filter>
     <filter id="glowWarm" x="140" y="60" width="660" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="15"/>
+      <feGaussianBlur stdDeviation="12"/>
     </filter>
     <filter id="glowCool" x="1860" y="200" width="660" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="15"/>
+      <feGaussianBlur stdDeviation="12"/>
     </filter>
     <filter id="techGrid" x="840" y="120" width="840" height="1360" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="20"/>
+      <feGaussianBlur stdDeviation="10"/>
     </filter>
     <linearGradient id="paintCreative" x1="240" y1="220" x2="780" y2="880" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FF8BD7"/>
