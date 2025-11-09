@@ -20,19 +20,22 @@ const FundingOpportunitiesSection = ({
   const handleFiltersChange = onFiltersChange || setInternalFilters;
   
   const { opportunities, loading, error } = useFundingOpportunities(filters);
-  const { opportunities: allOpportunities } = useFundingOpportunities({}); // Fetch all for locations
+  const { opportunities: allOpportunities, loading: allLoading } = useFundingOpportunities({}); // Fetch all for locations
 
   // Get unique locations from all opportunities (not filtered)
   const availableLocations = useMemo(() => {
     const locationsSet = new Set<string>();
-    allOpportunities.forEach(opp => {
+    // Use filtered opportunities if all opportunities are still loading, otherwise use all
+    const source = allOpportunities.length > 0 ? allOpportunities : opportunities;
+    source.forEach(opp => {
       opp.location.forEach(loc => locationsSet.add(loc));
     });
     return Array.from(locationsSet).sort();
-  }, [allOpportunities]);
+  }, [allOpportunities, opportunities]);
 
 
-  if (loading) {
+  // Show loading only if we don't have any opportunities yet
+  if (loading && opportunities.length === 0) {
     return (
       <section className="py-20 px-4 relative overflow-hidden" data-section="opportunities">
         <div className="container mx-auto max-w-7xl relative z-10">
@@ -66,7 +69,8 @@ const FundingOpportunitiesSection = ({
     );
   }
 
-  if (error) {
+  // Only show error if we have an error AND no opportunities (fallback should have loaded data)
+  if (error && opportunities.length === 0) {
     return (
       <section className="py-20 px-4 relative overflow-hidden" data-section="opportunities">
         <div className="container mx-auto max-w-7xl relative z-10">
