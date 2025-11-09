@@ -17,6 +17,8 @@ export interface ChatSession {
   created_at: string;
   updated_at: string;
   launch_report?: string;
+  journey_stage?: string | null;
+  milestones_achieved?: Record<string, unknown> | string[] | null;
 }
 
 export const useChatSessions = () => {
@@ -49,7 +51,9 @@ export const useChatSessions = () => {
         ...session,
         title: session.title || 'New Business Idea',
         answers: (session.answers as Record<string, string>) || {},
-        launch_report: session.launch_report || undefined
+        launch_report: session.launch_report || undefined,
+        journey_stage: session.journey_stage,
+        milestones_achieved: session.milestones_achieved || undefined
       }));
       setSessions(transformedData);
     } catch (error) {
@@ -103,7 +107,7 @@ export const useChatSessions = () => {
 
   const updateSession = useCallback(async (
     sessionId: string, 
-    updates: Partial<Pick<ChatSession, 'title' | 'current_step' | 'is_completed' | 'answers' | 'launch_report'>>
+    updates: Partial<Pick<ChatSession, 'title' | 'current_step' | 'is_completed' | 'answers' | 'launch_report' | 'journey_stage' | 'milestones_achieved'>>
   ) => {
     if (!user) return;
 
