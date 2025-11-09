@@ -38,6 +38,7 @@ import { BookOpen } from "lucide-react";
 import { trackActivity } from "@/lib/activity";
 import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
+import FoundersProgressTracker, { FounderMilestone } from "@/components/FoundersProgressTracker";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -74,6 +75,7 @@ const BizMapAI = () => {
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
   const [showExamplesModal, setShowExamplesModal] = useState(false);
+  const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(null);
   
   // Founder OS Integration
   const { 
@@ -151,6 +153,126 @@ const BizMapAI = () => {
       transition: "Amazing! Generating your personalized 30-day launch roadmap... 🎉"
     }
   ];
+
+  const founderMilestones: FounderMilestone[] = [
+    {
+      id: "idea-validation",
+      title: "Idea Validation",
+      description: "Prove your idea solves a real problem for people who will pay to fix it.",
+      checklist: [
+        "Clarify the problem, audience, and desired outcome",
+        "Talk to 5-10 potential customers to capture raw feedback",
+        "Summarize demand signals and blockers in your BizMap notes",
+      ],
+      nextAction:
+        "Ask BizMap AI: “What assumptions about my customer or problem should I validate next, and how do I test them this week?”",
+      resources: [
+        { label: "Validation Guide", href: "/guides/validation" },
+        { label: "Customer Interview Template", href: "/templates/customer-interview" },
+        { label: "Community Feedback Thread", href: "/community/feedback" },
+      ],
+    },
+    {
+      id: "mvp-build",
+      title: "MVP Build",
+      description: "Translate validated learnings into a focused solution you can ship fast.",
+      checklist: [
+        "Define the single must-have feature that proves value",
+        "Choose tools/no-code stack that match your skills",
+        "Outline completion criteria and timeline for MVP",
+      ],
+      nextAction:
+        "Ask BizMap AI: “Given my validated problem, what’s the leanest MVP I can launch in 14 days and what do I need to build first?”",
+      resources: [
+        { label: "No-Code Toolkit", href: "/resources/no-code-toolkit" },
+        { label: "Sprint Planner", href: "/founder-os" },
+        { label: "Accountability Partner Match", href: "/community/accountability" },
+      ],
+    },
+    {
+      id: "launch-prep",
+      title: "Launch & Marketing Prep",
+      description: "Package your offer, messaging, and launch plan for the first wave of users.",
+      checklist: [
+        "Craft a simple landing page or pitch deck",
+        "Pick 2 acquisition channels with a 30-day experiment plan",
+        "Prep launch assets (emails, socials, outreach scripts)",
+      ],
+      nextAction:
+        "Ask BizMap AI: “Help me build a 7-day launch plan with daily tasks so I can create momentum and capture leads.”",
+      resources: [
+        { label: "Launch Checklist", href: "/guides/launch" },
+        { label: "Messaging Playbook", href: "/templates/messaging" },
+        { label: "Growth Experiments Vault", href: "/resources/growth-experiments" },
+      ],
+    },
+    {
+      id: "first-sale",
+      title: "First Sale & Revenue",
+      description: "Convert validation signals into paying customers and document the revenue path.",
+      checklist: [
+        "Set an introductory offer or pricing package",
+        "Reach out to warm leads and run sales conversations",
+        "Log objections, close your first customer, and onboard them",
+      ],
+      nextAction:
+        "Ask BizMap AI: “What’s the best offer structure and outreach message to convert my first paying customer this week?”",
+      resources: [
+        { label: "Sales Script Builder", href: "/templates/sales-script" },
+        { label: "Pricing Calculator", href: "/tools/pricing-calculator" },
+        { label: "Founder Sales Community", href: "/community/sales-daily" },
+      ],
+    },
+    {
+      id: "customer-feedback",
+      title: "Customer Feedback Loop",
+      description: "Turn early users into champions and refine your product-market fit learnings.",
+      checklist: [
+        "Schedule onboarding, check-ins, and success milestones",
+        "Capture testimonials, metrics, and qualitative insights",
+        "Feed learnings back into roadmap and product updates",
+      ],
+      nextAction:
+        "Ask BizMap AI: “How do I build a repeatable feedback loop with my first customers that informs my next release?”",
+      resources: [
+        { label: "Feedback Survey Template", href: "/templates/feedback-survey" },
+        { label: "Retention Playbook", href: "/guides/retention" },
+        { label: "Founder OS Roadmap", href: "/founder-os" },
+      ],
+    },
+    {
+      id: "growth-traction",
+      title: "Growth & Traction",
+      description: "Scale what works, attract more users, and prepare for fundraising or expansion.",
+      checklist: [
+        "Identify top performing channels and double down",
+        "Set KPIs for revenue, retention, and community growth",
+        "Prepare metrics narrative for mentors, investors, or partners",
+      ],
+      nextAction:
+        "Ask BizMap AI: “Given my traction so far, what growth experiments or funding pathways should I prioritize next quarter?”",
+      resources: [
+        { label: "Growth Dashboard", href: "/insighta" },
+        { label: "Investor Prep Toolkit", href: "/resources/investor-prep" },
+        { label: "Weekly Accountability Circle", href: "/community/circle" },
+      ],
+    },
+  ];
+  const determineMilestoneFromStep = (stepIndex: number) => {
+    if (stepIndex <= 2) return "idea-validation";
+    if (stepIndex === 3) return "mvp-build";
+    if (stepIndex === 4) return "launch-prep";
+    if (stepIndex === 5) return "first-sale";
+    if (stepIndex >= wizardSteps.length) return "growth-traction";
+    return "customer-feedback";
+  };
+
+  useEffect(() => {
+    const mappedMilestone = determineMilestoneFromStep(currentStep);
+    if (mappedMilestone && mappedMilestone !== activeMilestoneId) {
+      setActiveMilestoneId(mappedMilestone);
+    }
+  }, [currentStep, activeMilestoneId]);
 
   const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
   const { hasPendingCredits } = useFeedbackCredits();
@@ -1375,6 +1497,12 @@ Subject: "Quick question about [their pain point]"
                     isComplete={!!launchReport}
                   />
                 </div>
+
+                <FoundersProgressTracker
+                  milestones={founderMilestones}
+                  activeMilestoneId={activeMilestoneId}
+                  onMilestoneChange={setActiveMilestoneId}
+                />
 
                 {/* Where to Start Guide Section */}
                 <div className="mt-12 sm:mt-16 animate-fade-in" style={{ animationDelay: '0.4s' }}>
