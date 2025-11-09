@@ -215,24 +215,16 @@ const FoundersProgressTracker = ({
                 />
               </div>
 
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
-                  Support tools
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {activeMilestone.resources.map((resource) => (
-                    <Button
-                      key={resource.href}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => window.open(resource.href, "_blank", "noopener")}
-                    >
-                      {resource.label}
-                    </Button>
-                  ))}
+              {!!activeMilestone.resources.length && (
+                <div className="rounded-xl border border-border/40 bg-muted/10 p-4 space-y-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Upcoming resources
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    We’re curating guides, templates, and accountability circles specifically for this milestone. You’ll be able to access them right here soon.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </CardContent>
