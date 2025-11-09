@@ -134,52 +134,52 @@ const BizMapAI = () => {
   const wizardSteps = [
     {
       key: "overview",
-      title: "Business Concept (Days 1-2)",
-      question: "🚀 Let's build your 30-day launch plan! What problem are you solving and for whom? This becomes your validation foundation.",
-      placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
-      transition: "Perfect! Now let's define who your first customers will be..."
+      title: "Your Vision",
+      question: "In plain language, what are you building and who will it help first?",
+      placeholder: "Example: A studio that helps podcasters turn one recording into a week of video clips, ready for socials. We’re starting with music coaches who already host paid communities.",
+      transition: "Great start. Let’s get specific about the people you want to reach first."
     },
     {
-      key: "market", 
-      title: "Target Customer (Days 3-4)",
-      question: "📅 Day 3-4 Focus: Describe your ideal FIRST customer in detail. Where can we find them in the next 7 days?",
-      placeholder: "Example: Working parents aged 28-45 in urban areas, active in mom Facebook groups and parenting subreddits...",
-      transition: "Excellent! Now let's design your minimum viable product..."
+      key: "market",
+      title: "First Customers",
+      question: "Describe the exact person you’ll approach in the next two weeks. Where can you reach them directly?",
+      placeholder: "Example: Freelance illustrators earning $3–5K/month who hang out in the Visual Storytellers Slack. They struggle with cold outreach and take referrals only.",
+      transition: "Helpful. Now let’s validate that they feel this problem urgently enough to talk to you."
     },
     {
       key: "problem",
-      title: "Validation Plan (Days 5-7)", 
-      question: "📊 Validation Goal: How will you validate demand this week? List 3 ways you'll test if people want this.",
-      placeholder: "Example: 10 customer interviews, landing page with email signup, competitor research in 3 markets...",
-      transition: "Great validation plan! Now, what's the simplest version we can build?"
+      title: "Problem Signals",
+      question: "What evidence do you already have that this is painful for them? If you haven’t collected any yet, what will you ask or measure?",
+      placeholder: "Example: I’ve had 4 calls where founders said editing eats 6+ hrs/week. I’ll run a quick poll in the Slack group asking how long edits take and what they’d happily pay to skip it.",
+      transition: "Solid. Let’s outline the smallest offer that solves that pain without overbuilding."
     },
     {
       key: "solution",
-      title: "MVP Design (Days 8-14)",
-      question: "🛠️ MVP Focus: What's the absolute MINIMUM version that solves the core problem? What features are essential?", 
-      placeholder: "Example: Simple booking form, verified sitter profiles, SMS notifications. NO fancy features yet...",
-      transition: "Perfect MVP scope! Now, where will you launch?"
+      title: "Smallest Offer",
+      question: "What’s the minimal version of your solution you can deliver in the next 2–3 weeks? Be concrete about format, tools, and scope.",
+      placeholder: "Example: A ‘Podcast Sprint’—two 90-min sessions where we map 6 episodes, edit 3 clip samples, and set up a content calendar using Descript + Notion. Delivered live, no custom platform yet.",
+      transition: "Nice and focused. Next, map out where you’ll show up to earn those first yeses."
     },
     {
       key: "channels",
-      title: "Launch Strategy (Days 15-21)",
-      question: "🎯 Launch Goal: Where will you launch to get your first 10 users? Be specific about channels and tactics.",
-      placeholder: "Example: Product Hunt launch, 5 parenting Facebook groups, Instagram influencer outreach, friend referrals...",
-      transition: "Smart launch strategy! Now let's plan how you'll get your first paying customer..."
+      title: "Go-to-Market Moves",
+      question: "List the exact steps you’ll take to reach those first customers. Include channels, outreach method, and rough timeline.",
+      placeholder: "Example: Week 1—DM 15 illustrators in Slack with before/after examples. Week 2—host a live teardown for the community and capture testimonials. Week 3—invite warm leads to a 1-hour trial session.",
+      transition: "Great. We also need a rough pricing story so you can talk numbers confidently."
     },
     {
       key: "pricing",
-      title: "Pricing Model (Days 22-25)",
-      question: "💰 Pricing: How will you charge? What pricing makes sense for getting your first paying customer by Day 30?",
-      placeholder: "Example: Early bird: $20/month (50% off), then $40/month. First 10 customers get lifetime discount...",
-      transition: "Excellent pricing strategy! Finally, what does success look like on Day 30?"
+      title: "Pricing & Proof",
+      question: "What will you charge for this first offer, and how will you test whether it’s fair? Mention any incentives or success criteria.",
+      placeholder: "Example: $450 for the sprint with a satisfaction checkpoint after the first session. If they don’t feel on track, I comp the editing clip. I’ll test three conversations and adjust based on close rate.",
+      transition: "Last piece: decide what success looks like so we can celebrate and course-correct."
     },
     {
       key: "goals",
-      title: "Day 30 Success Metrics (Days 26-30)",
-      question: "🎯 Final Goal: What does success look like on Day 30? How many customers or revenue would make this REAL?",
-      placeholder: "Example: 1 paying customer ($20), 50 email signups, 20 active users. Proof this can work!",
-      transition: "Amazing! Generating your personalized 30-day launch roadmap... 🎉"
+      title: "30-Day Milestones",
+      question: "What concrete outcomes will prove you’re on the right track in 30 days? Add a stretch goal and a minimum viable win.",
+      placeholder: "Example: Minimum—secure 3 paid sprints and 2 testimonial videos. Target—book $2K in revenue and have a repeatable onboarding process. Stretch—hire a part-time editor so I can take on double the clients.",
+      transition: "Perfect. I’ll assemble these answers into your founder playbook now."
     }
   ];
 
