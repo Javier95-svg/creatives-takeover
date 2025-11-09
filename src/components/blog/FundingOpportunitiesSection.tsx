@@ -85,15 +85,47 @@ const FundingOpportunitiesSection = ({
 
   return (
     <section className="py-20 px-4 relative overflow-hidden" data-section="opportunities">
-      {/* Simple background pattern */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-background via-background/95 to-background">
-        <svg className="absolute inset-0 w-full h-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      {/* Animated funding wallpaper */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Subtle gradient base */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+
+        {/* Animated orbital gradient */}
+        <div
+          className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
+          style={{
+            background:
+              'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.35), transparent 55%)',
+            animationDuration: '28s'
+          }}
+        />
+
+        {/* Blurred accent orbs */}
+        <div className="absolute top-24 left-1/4 w-80 h-80 rounded-full bg-primary/15 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute bottom-20 right-1/5 w-72 h-72 rounded-full bg-secondary/20 blur-3xl animate-pulse" style={{ animationDuration: '7.5s' }} />
+        <div className="absolute top-1/3 right-[38%] w-64 h-64 rounded-full bg-accent/15 blur-3xl animate-ping" style={{ animationDuration: '9s' }} />
+
+        {/* Animated diagonal lines */}
+        <div
+          className="absolute inset-0 opacity-20 animate-[spin_32s_linear_infinite]"
+          style={{
+            backgroundImage:
+              'linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(59,130,246,0.12) 25%, transparent 25%, transparent 50%, rgba(99,102,241,0.12) 50%, rgba(99,102,241,0.12) 75%, transparent 75%, transparent)',
+            backgroundSize: '220px 220px',
+            animationDuration: '32s'
+          }}
+        />
+
+        {/* Pulsing dotted grid */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.18]" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="hexagons" x="0" y="0" width="100" height="87" patternUnits="userSpaceOnUse">
-              <path d="M50,0 L93.3,25 L93.3,62 L50,87 L6.7,62 L6.7,25 Z" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" />
+            <pattern id="funding-dots" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="2" fill="rgba(59,130,246,0.18)">
+                <animate attributeName="opacity" values="0.35;0.7;0.35" dur="4s" repeatCount="indefinite" />
+              </circle>
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#hexagons)" />
+          <rect width="100%" height="100%" fill="url(#funding-dots)" />
         </svg>
       </div>
       
