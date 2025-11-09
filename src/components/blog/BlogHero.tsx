@@ -34,60 +34,71 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
 
   return (
     <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
-      {/* Insighta ambient wallpaper */}
+      {/* Stock-inspired animated wallpaper */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#061424] via-[#0b1e33] to-[#142a44]" />
+        {/* Gradient base */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#030914] via-[#071322] to-[#0b1f33]" />
 
-        {/* Soft spotlight beams */}
-        <div className="absolute inset-0 opacity-60">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 25% 30%, rgba(56,189,248,0.18), transparent 55%), radial-gradient(circle at 75% 35%, rgba(129,140,248,0.18), transparent 60%)'
-            }}
-          />
-        </div>
-
-        {/* Rotating data discs */}
-        <div className="absolute -top-28 right-1/4 w-[32rem] h-[32rem] rounded-full border border-cyan-400/20 blur-[1px] animate-[spin_40s_linear_infinite]" />
-        <div className="absolute top-1/3 -left-28 w-[28rem] h-[28rem] rounded-full border border-sky-300/18 blur-[1px] animate-[spin_30s_linear_infinite_reverse]" />
-
-        {/* Dotted mesh */}
+        {/* Market grid */}
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-[0.18]"
           style={{
-            backgroundImage: 'radial-gradient(circle at 3px 3px, rgba(255,255,255,0.18) 1px, transparent 0)',
-            backgroundSize: '28px 28px'
+            backgroundImage: `
+              linear-gradient(90deg, rgba(59,130,246,0.25) 1px, transparent 1px),
+              linear-gradient(0deg, rgba(59,130,246,0.25) 1px, transparent 1px)
+            `,
+            backgroundSize: '120px 120px'
           }}
         />
 
-        {/* Subtle scanning arcs */}
-        <svg className="absolute inset-0 w-full h-full opacity-25" viewBox="0 0 1440 900">
+        {/* Animated line charts */}
+        <svg className="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 1440 900">
           <defs>
-            <linearGradient id="insighta-arc" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(56,189,248,0)" />
-              <stop offset="50%" stopColor="rgba(56,189,248,0.45)" />
-              <stop offset="100%" stopColor="rgba(56,189,248,0)" />
+            <linearGradient id="insighta-line-1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(59,130,246,0)" />
+              <stop offset="50%" stopColor="rgba(59,130,246,0.6)" />
+              <stop offset="100%" stopColor="rgba(59,130,246,0)" />
+            </linearGradient>
+            <linearGradient id="insighta-line-2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(16,185,129,0)" />
+              <stop offset="50%" stopColor="rgba(16,185,129,0.6)" />
+              <stop offset="100%" stopColor="rgba(16,185,129,0)" />
             </linearGradient>
           </defs>
-          <path d="M180 260 Q360 180 520 280 T860 380 Q1080 420 1280 340" fill="none" stroke="url(#insighta-arc)" strokeWidth="1.6" strokeDasharray="10 18" />
-          <path d="M140 520 Q320 540 480 620 T840 720 Q1060 760 1230 640" fill="none" stroke="rgba(129,140,248,0.35)" strokeWidth="1.2" strokeDasharray="12 20" />
+          {/* Primary trend line */}
+          <path
+            d="M120 540 Q240 420 360 460 T600 400 Q780 360 900 460 T1200 380"
+            fill="none"
+            stroke="url(#insighta-line-1)"
+            strokeWidth="2"
+            strokeDasharray="10 20"
+          />
+          {/* Secondary trend line */}
+          <path
+            d="M160 640 Q320 620 460 520 T720 560 Q900 600 1080 540 T1300 600"
+            fill="none"
+            stroke="url(#insighta-line-2)"
+            strokeWidth="1.6"
+            strokeDasharray="14 24"
+          />
         </svg>
 
-        {/* Pulsing info nodes */}
+        {/* Rotating data discs */}
+        <div className="absolute -top-32 right-1/4 w-[32rem] h-[32rem] rounded-full border border-sky-400/20 blur-[1px] animate-[spin_36s_linear_infinite]" />
+        <div className="absolute top-1/3 -left-28 w-[28rem] h-[28rem] rounded-full border border-emerald-300/20 blur-[1px] animate-[spin_28s_linear_infinite_reverse]" />
+
+        {/* Pulsing data nodes */}
         {[
-          { top: '24%', left: '22%' },
-          { top: '34%', left: '42%' },
-          { top: '52%', left: '32%' },
-          { top: '46%', left: '62%' },
-          { top: '30%', left: '72%' },
-          { top: '60%', left: '78%' }
+          { top: '24%', left: '28%' },
+          { top: '40%', left: '50%' },
+          { top: '58%', left: '34%' },
+          { top: '48%', left: '66%' },
+          { top: '32%', left: '74%' },
+          { top: '62%', left: '78%' }
         ].map((pos, index) => (
           <div
             key={`insighta-node-${index}`}
-            className="absolute w-2.5 h-2.5 rounded-full bg-cyan-200/80 shadow-[0_0_14px_rgba(56,189,248,0.6)]"
+            className="absolute w-2.5 h-2.5 rounded-full bg-cyan-300/80 shadow-[0_0_14px_rgba(56,189,248,0.6)]"
             style={{
               ...pos,
               animation: 'pulse 2.8s ease-in-out infinite',
@@ -97,7 +108,7 @@ const BlogHero = ({ onSearch }: BlogHeroProps) => {
         ))}
 
         {/* Readability overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/45 to-background/78" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/72 via-background/45 to-background/78" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
