@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Linkedin } from "lucide-react";
 
-import javierPhoto from "@/assets/team-javier-pena.jpg";
-import aamirPhoto from "@/assets/team-aamir-khan.jpg";
-import danielaPhoto from "@/assets/team-daniela-hagg.jpg";
+import javierPhoto from "@/assets/team-javier-pena.png";
+import aamirPhoto from "@/assets/team-aamir-khan.png";
+import danielaPhoto from "@/assets/team-daniela-hagg.png";
 
 type TeamMember = {
   name: string;
