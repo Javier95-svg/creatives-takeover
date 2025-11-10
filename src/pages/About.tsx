@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import AboutHero from "@/components/AboutHero";
 
 import MissionVision from "@/components/MissionVision";
+import MeetTheTeam from "@/components/MeetTheTeam";
 
 import HowWeWork from "@/components/HowWeWork";
 import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
@@ -29,7 +30,7 @@ const About = () => {
           <Navigation />
           <AboutHero />
           <MissionVision />
-          
+          <MeetTheTeam />
           <HowWeWork />
         </div>
       </div>

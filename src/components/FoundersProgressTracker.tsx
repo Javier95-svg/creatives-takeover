@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -17,11 +17,8 @@ export interface FounderMilestone {
 interface FoundersProgressTrackerProps {
   milestones: FounderMilestone[];
   activeMilestoneId?: string | null;
-  storageKey?: string | null;
-  initialCompleted?: string[];
-  initialNotes?: Record<string, string>;
+  storageKey?: string;
   onMilestoneChange?: (milestoneId: string) => void;
-  onMilestonesUpdate?: (completed: string[], notes: Record<string, string>) => void;
 }
 
 const defaultStorageKey = "bizmap-founder-tracker";
@@ -30,17 +27,10 @@ const FoundersProgressTracker = ({
   milestones,
   activeMilestoneId,
   storageKey = defaultStorageKey,
-  initialCompleted,
-  initialNotes,
   onMilestoneChange,
-  onMilestonesUpdate,
 }: FoundersProgressTrackerProps) => {
-  const storageEnabled = storageKey !== null;
-  const resolvedStorageKey = storageEnabled ? storageKey ?? defaultStorageKey : null;
-  const hasHydratedFromStorage = useRef(false);
-
-  const [completed, setCompleted] = useState<string[]>(initialCompleted ?? []);
-  const [notes, setNotes] = useState<Record<string, string>>(initialNotes ?? {});
+  const [completed, setCompleted] = useState<string[]>([]);
+  const [notes, setNotes] = useState<Record<string, string>>({});
 
   const activeId =
     activeMilestoneId ??
@@ -51,33 +41,8 @@ const FoundersProgressTracker = ({
   const activeMilestone = activeIndex >= 0 ? milestones[activeIndex] : milestones[0];
 
   useEffect(() => {
-    if (initialCompleted !== undefined) {
-      setCompleted(initialCompleted);
-    }
-  }, [initialCompleted]);
-
-  useEffect(() => {
-    if (initialNotes !== undefined) {
-      setNotes(initialNotes);
-    }
-  }, [initialNotes]);
-
-  useEffect(() => {
-    if (!storageEnabled || !resolvedStorageKey || hasHydratedFromStorage.current) {
-      return;
-    }
-    if (
-      (initialCompleted && initialCompleted.length > 0) ||
-      (initialNotes && Object.keys(initialNotes).length > 0)
-    ) {
-      hasHydratedFromStorage.current = true;
-      return;
-    }
-    const stored = localStorage.getItem(resolvedStorageKey);
-    if (!stored) {
-      hasHydratedFromStorage.current = true;
-      return;
-    }
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return;
     try {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed.completed)) {
@@ -88,15 +53,15 @@ const FoundersProgressTracker = ({
       }
     } catch (error) {
       console.warn("Failed to parse stored tracker state", error);
-    } finally {
-      hasHydratedFromStorage.current = true;
     }
-  }, [storageEnabled, resolvedStorageKey, initialCompleted, initialNotes]);
+  }, [storageKey]);
 
   useEffect(() => {
-    if (!storageEnabled || !resolvedStorageKey) return;
-    localStorage.setItem(resolvedStorageKey, JSON.stringify({ completed, notes }));
-  }, [completed, notes, storageEnabled, resolvedStorageKey]);
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({ completed, notes })
+    );
+  }, [completed, notes, storageKey]);
 
   const progressPercentage = useMemo(() => {
     if (!milestones.length) return 0;
@@ -107,10 +72,7 @@ const FoundersProgressTracker = ({
     if (completed.includes(milestoneId)) return;
     const updated = [...completed, milestoneId];
     setCompleted(updated);
-    const currentIndex = milestones.findIndex((milestone) => milestone.id === milestoneId);
-    const nextMilestone = milestones[currentIndex + 1];
-    onMilestoneChange?.(nextMilestone ? nextMilestone.id : milestoneId);
-    onMilestonesUpdate?.(updated, notes);
+    onMilestoneChange?.(milestoneId);
   };
 
   const handleResume = () => {
@@ -121,9 +83,7 @@ const FoundersProgressTracker = ({
   };
 
   const handleNoteChange = (milestoneId: string, value: string) => {
-    const updatedNotes = { ...notes, [milestoneId]: value };
-    setNotes(updatedNotes);
-    onMilestonesUpdate?.(completed, updatedNotes);
+    setNotes((prev) => ({ ...prev, [milestoneId]: value }));
   };
 
   if (!activeMilestone) {
