@@ -85,7 +85,7 @@ const MeetTheTeam = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-3xl mx-auto text-center mb-16 animate-slide-up">
-          <h2 className="text-4xl font-bold mb-4 gradient-text animate-text-shimmer">
+          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer">
             Meet the Team
           </h2>
           <p
