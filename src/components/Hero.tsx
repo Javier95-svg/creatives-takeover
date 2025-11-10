@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import heroImage from "@/assets/creativity-tech-fusion.svg";
+import heroImage from "@/assets/hero-bg.jpg";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
@@ -26,15 +26,12 @@ const Hero = () => {
       className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6"
       style={{
         backgroundImage: `
-          radial-gradient(circle at 12% 18%, rgba(236, 72, 153, 0.35), transparent 55%),
-          radial-gradient(circle at 82% 24%, rgba(6, 182, 212, 0.28), transparent 52%),
-          radial-gradient(circle at 38% 88%, rgba(139, 92, 246, 0.25), transparent 50%),
-          linear-gradient(135deg, rgba(10, 25, 41, 0.92), rgba(26, 11, 46, 0.88)),
+          linear-gradient(135deg, rgba(12, 18, 32, 0.94), rgba(17, 24, 39, 0.9)),
           url(${heroImage})
         `,
-        backgroundSize: "120% 120%, 120% 120%, 110% 110%, cover, cover",
-        backgroundPosition: "12% 18%, 82% 24%, 38% 88%, center, center",
-        backgroundBlendMode: "screen, lighten, screen, normal, normal",
+        backgroundSize: "cover, cover",
+        backgroundPosition: "center, center",
+        backgroundBlendMode: "overlay, normal",
         backgroundRepeat: "no-repeat",
       }}
     >
