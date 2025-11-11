@@ -1,12 +1,37 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Crown, Check } from "lucide-react";
-import { useSubscription } from "@/hooks/useSubscription";
+import UpgradeCheckoutDialog, {
+  CheckoutFormState,
+} from "@/components/UpgradeCheckoutDialog";
+import { useSubscription, SubscriptionTier } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+const BILLING_STORAGE_KEY = "ct_billing_details";
+
+const createEmptyFormState = (): CheckoutFormState => ({
+  fullName: "",
+  email: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "",
+});
 
 const Pricing = () => {
   const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
   const { user } = useAuth();
+  const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [checkoutForm, setCheckoutForm] = useState<CheckoutFormState>(() =>
+    createEmptyFormState()
+  );
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [hasPrefilledAddress, setHasPrefilledAddress] = useState(false);
 
   // Define feature sets for each tier - based on actual implemented features
   const getFeatures = (tierName: string) => {
@@ -58,38 +83,140 @@ const Pricing = () => {
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
 
-  const handleSubscribe = async (tierName: string) => {
-    // Handle free tier separately
-    if (tierName === 'free') {
+  const handleFormChange = (
+    field: keyof CheckoutFormState,
+    value: string
+  ) => {
+    setCheckoutForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setShowUpgradeDialog(open);
+    if (!open) {
+      setSelectedTier(null);
+      setCheckoutForm(createEmptyFormState());
+      setHasPrefilledAddress(false);
+    }
+  };
+
+  const handleSubscribe = (tierName: string) => {
+    if (tierName === "free") {
       if (!user) {
-        // Redirect to auth for free tier
         window.location.href = "/auth";
-        return;
       }
-      // Free tier - no checkout needed for logged-in users
       return;
     }
 
     if (!user) {
-      // Redirect to auth page for paid tiers
       window.location.href = "/auth";
       return;
     }
 
-    if (tierName === 'creator') {
-      // Redirect to external payment URL for creator tier
-      window.open("https://pay.creatives-takeover.com/b/14A3cv65X5rG6U26i70ZW00", "_blank");
+    const normalizedTierName = tierName.trim().toLowerCase();
+    const tier = tiers.find(
+      (plan) => plan.tier_name.trim().toLowerCase() === normalizedTierName
+    );
+
+    if (!tier) {
+      toast.error("Unable to load that plan right now. Please try again.");
       return;
     }
 
-    if (tierName === 'professional') {
-      // Redirect to external payment URL for professional tier
-      window.open("https://pay.creatives-takeover.com/b/7sY8wP3XP3jy3HQ8qf0ZW01", "_blank");
+    let storedDetails: CheckoutFormState | null = null;
+    if (typeof window !== "undefined") {
+      const raw = window.localStorage.getItem(BILLING_STORAGE_KEY);
+      if (raw) {
+        try {
+          storedDetails = JSON.parse(raw);
+        } catch (error) {
+          console.warn("Failed to parse stored billing details", error);
+        }
+      }
+    }
+
+    const prefilledForm: CheckoutFormState = {
+      ...createEmptyFormState(),
+      ...(storedDetails ?? {}),
+    };
+
+    prefilledForm.fullName =
+      user?.user_metadata?.full_name || storedDetails?.fullName || "";
+    prefilledForm.email = user?.email || storedDetails?.email || "";
+
+    setCheckoutForm(prefilledForm);
+    setHasPrefilledAddress(Boolean(storedDetails?.addressLine1));
+    setSelectedTier(tier);
+    setShowUpgradeDialog(true);
+  };
+
+  const handleConfirmUpgrade = async () => {
+    if (!selectedTier) {
+      toast.error("Select a plan to continue.");
       return;
     }
 
-    // Use internal checkout for other paid tiers
-    await createCheckout(tierName);
+    const requiredFields: Array<keyof CheckoutFormState> = [
+      "fullName",
+      "email",
+      "addressLine1",
+      "city",
+      "state",
+      "postalCode",
+      "country",
+    ];
+
+    const missingFields = requiredFields.filter(
+      (field) => !checkoutForm[field].trim()
+    );
+
+    if (missingFields.length > 0) {
+      toast.error("Please complete all required billing fields.");
+      return;
+    }
+
+    if (
+      checkoutForm.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutForm.email)
+    ) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    setCheckoutSubmitting(true);
+    try {
+      const prefill = {
+        name: checkoutForm.fullName,
+        email: checkoutForm.email,
+        address: {
+          line1: checkoutForm.addressLine1,
+          line2: checkoutForm.addressLine2 || undefined,
+          city: checkoutForm.city,
+          state: checkoutForm.state,
+          postal_code: checkoutForm.postalCode,
+          country: checkoutForm.country,
+        },
+      };
+
+      const url = await createCheckout(selectedTier.tier_name, prefill);
+      if (url) {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            BILLING_STORAGE_KEY,
+            JSON.stringify(checkoutForm)
+          );
+        }
+        toast.success("Redirecting you to secure checkout…");
+        handleDialogOpenChange(false);
+      }
+    } catch (error) {
+      console.error("Upgrade checkout failed", error);
+      toast.error("We couldn't start the checkout. Please try again.");
+    } finally {
+      setCheckoutSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -107,6 +234,16 @@ const Pricing = () => {
 
   return (
     <>
+      <UpgradeCheckoutDialog
+        open={showUpgradeDialog}
+        onOpenChange={handleDialogOpenChange}
+        tier={selectedTier}
+        formData={checkoutForm}
+        onFormChange={handleFormChange}
+        onSubmit={handleConfirmUpgrade}
+        submitting={checkoutSubmitting}
+        hasSavedAddress={hasPrefilledAddress}
+      />
       {/* Pricing Section */}
       <section className="relative py-24 overflow-hidden" id="pricing-plans">
         {/* Animated Background with Multiple Layers */}

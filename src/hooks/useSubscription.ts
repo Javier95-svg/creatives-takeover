@@ -3,18 +3,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+const BILLING_STORAGE_KEY = 'ct_billing_details';
+
 interface SubscriptionData {
   subscribed: boolean;
   subscription_tier: string;
   subscription_end: string | null;
 }
 
-interface SubscriptionTier {
+export interface SubscriptionTier {
   tier_name: string;
   monthly_credits: number;
   price_cents: number;
   features: any; // Use any for Json type from Supabase
 }
+
+export interface CheckoutPrefill {
+  name?: string;
+  email?: string;
+  address?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+  };
+}
+
+type StoredBillingDetails = Partial<{
+  fullName: string;
+  email: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}>;
 
 export function useSubscription() {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
@@ -137,10 +163,116 @@ export function useSubscription() {
   };
 
   // Create checkout session
-  const createCheckout = async (tier: string) => {
+  const createCheckout = async (tier: string, prefill?: CheckoutPrefill) => {
     if (!user) {
       toast.error('Please sign in to subscribe');
       return null;
+    }
+
+    const getStoredBillingDetails = (): CheckoutPrefill | undefined => {
+      if (typeof window === 'undefined') return undefined;
+      const raw = window.localStorage.getItem(BILLING_STORAGE_KEY);
+      if (!raw) return undefined;
+      try {
+        const parsed = JSON.parse(raw) as StoredBillingDetails;
+        const result: CheckoutPrefill = {};
+        if (typeof parsed.fullName === 'string') {
+          result.name = parsed.fullName;
+        }
+        if (typeof parsed.email === 'string') {
+          result.email = parsed.email;
+        }
+
+        const addressFields: NonNullable<CheckoutPrefill['address']> = {};
+        if (typeof parsed.addressLine1 === 'string') {
+          addressFields.line1 = parsed.addressLine1;
+        }
+        if (typeof parsed.addressLine2 === 'string') {
+          addressFields.line2 = parsed.addressLine2;
+        }
+        if (typeof parsed.city === 'string') {
+          addressFields.city = parsed.city;
+        }
+        if (typeof parsed.state === 'string') {
+          addressFields.state = parsed.state;
+        }
+        if (typeof parsed.postalCode === 'string') {
+          addressFields.postal_code = parsed.postalCode;
+        }
+        if (typeof parsed.country === 'string') {
+          addressFields.country = parsed.country;
+        }
+
+        if (Object.keys(addressFields).length > 0) {
+          result.address = addressFields;
+        }
+
+        return Object.keys(result).length > 0 ? result : undefined;
+      } catch (error) {
+        console.warn('Unable to parse stored billing details', error);
+        return undefined;
+      }
+    };
+
+    const sanitizePrefill = (raw?: CheckoutPrefill): CheckoutPrefill | undefined => {
+      if (!raw) return undefined;
+      const trim = (value?: string) => {
+        if (typeof value !== 'string') return undefined;
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : undefined;
+      };
+
+      const sanitized: CheckoutPrefill = {};
+      const name = trim(raw.name);
+      const email = trim(raw.email);
+      if (name) sanitized.name = name;
+      if (email) sanitized.email = email;
+
+      if (raw.address) {
+        const address = raw.address;
+        const sanitizedAddress: NonNullable<CheckoutPrefill['address']> = {};
+        const line1 = trim(address.line1);
+        const line2 = trim(address.line2);
+        const city = trim(address.city);
+        const state = trim(address.state);
+        const postal = trim(address.postal_code);
+        let country = trim(address.country);
+        if (country) {
+          sanitizedAddress.country = country.toUpperCase();
+        }
+        if (line1) sanitizedAddress.line1 = line1;
+        if (line2) sanitizedAddress.line2 = line2;
+        if (city) sanitizedAddress.city = city;
+        if (state) sanitizedAddress.state = state;
+        if (postal) sanitizedAddress.postal_code = postal;
+
+        if (Object.keys(sanitizedAddress).length > 0) {
+          sanitized.address = sanitizedAddress;
+        }
+      }
+
+      return Object.keys(sanitized).length > 0 ? sanitized : undefined;
+    };
+
+    let resolvedPrefill = sanitizePrefill(prefill ?? getStoredBillingDetails());
+
+    const fallbackEmail = typeof user.email === 'string' ? user.email.trim() : '';
+    if (fallbackEmail) {
+      if (!resolvedPrefill) {
+        resolvedPrefill = { email: fallbackEmail };
+      } else if (!resolvedPrefill.email) {
+        resolvedPrefill.email = fallbackEmail;
+      }
+    }
+
+    const rawName = (user.user_metadata as Record<string, unknown> | null)?.full_name;
+    const fallbackName = typeof rawName === 'string' ? rawName.trim() : '';
+    if (fallbackName) {
+      if (!resolvedPrefill) {
+        resolvedPrefill = { name: fallbackName };
+      } else if (!resolvedPrefill.name) {
+        resolvedPrefill.name = fallbackName;
+      }
     }
 
     try {
@@ -152,8 +284,13 @@ export function useSubscription() {
         return null;
       }
 
+      const payload: { tier: string; prefill?: CheckoutPrefill } = { tier };
+      if (resolvedPrefill) {
+        payload.prefill = resolvedPrefill;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { tier },
+        body: payload,
         headers: {
           Authorization: `Bearer ${accessToken}`
         }
