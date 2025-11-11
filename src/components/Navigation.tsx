@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,48 +66,55 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { name: "Home", href: "/" },
-    { name: "BizMap AI", href: "/bizmap-ai" },
-    { name: "Prompt Library", href: "/prompt-library" },
-    { name: "Insighta", href: "/insighta" },
-    { name: "Community", href: "/community" },
-    { name: "About Us", href: "/about" },
-    { name: "Pricing", href: "/pricing" }
+    { name: "Home", href: "/", tooltip: "Return to homepage" },
+    { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan" },
+    { name: "Prompt Library", href: "/prompt-library", tooltip: "Ready-made prompts to grow your business" },
+    { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources" },
+    { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs" },
+    { name: "About Us", href: "/about", tooltip: "Learn about our mission and team" },
+    { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options" }
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 border-0 transition-all ${scrolled ? 'backdrop-blur bg-background/80 shadow-sm' : 'bg-transparent'}`}>
-      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
-        <div className="flex items-center h-16 border-0">
-          {/* Logo */}
-          <div className="flex items-center border-0">
-            <Link to="/" className="flex items-center">
-              <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-12 w-auto animate-fade-in animate-glow hover:scale-110 transition-transform duration-300" />
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => trackClick(item.name, 'Navigation')}
-                className={`text-muted-foreground hover:text-foreground transition-colors animated-underline whitespace-nowrap ${
-                  item.name === 'BizMap AI' ? 'relative' : ''
-                }`}
-                onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
-                onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
-              >
-                {item.name}
-                {item.name === 'BizMap AI' && (
-                  <div className="absolute -top-1 -right-2 flex items-center">
-                    <Gift className="w-3 h-3 text-primary animate-bounce" />
-                  </div>
-                )}
+    <TooltipProvider delayDuration={200}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-0 transition-all ${scrolled ? 'backdrop-blur bg-background/80 shadow-sm' : 'bg-transparent'}`}>
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
+          <div className="flex items-center h-16 border-0">
+            {/* Logo */}
+            <div className="flex items-center border-0">
+              <Link to="/" className="flex items-center">
+                <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-12 w-auto animate-fade-in animate-glow hover:scale-110 transition-transform duration-300" />
               </Link>
-            ))}
-          </div>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
+              {navItems.map((item) => (
+                <Tooltip key={item.name}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={item.href}
+                      onClick={() => trackClick(item.name, 'Navigation')}
+                      className={`text-muted-foreground hover:text-foreground transition-colors animated-underline whitespace-nowrap ${
+                        item.name === 'BizMap AI' ? 'relative' : ''
+                      }`}
+                      onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
+                      onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
+                    >
+                      {item.name}
+                      {item.name === 'BizMap AI' && (
+                        <div className="absolute -top-1 -right-2 flex items-center">
+                          <Gift className="w-3 h-3 text-primary animate-bounce" />
+                        </div>
+                      )}
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{item.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4 !border-0">
@@ -295,7 +303,8 @@ const Navigation = () => {
         open={showFriendRequests}
         onOpenChange={setShowFriendRequests}
       />
-    </nav>
+      </nav>
+    </TooltipProvider>
   );
 };
 
