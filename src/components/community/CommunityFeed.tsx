@@ -266,11 +266,31 @@ const CommunityFeed: React.FC = () => {
 
   async function handlePublish(payload: ComposerPayload) {
     try {
-  const { error } = await supabase.from('community_posts').insert([{ ...payload, user_id: user?.id }]);
-      if (error) throw error;
+      // Transform payload to match database schema
+      const mediaUrls: string[] = [];
+      if (payload.image) mediaUrls.push(payload.image);
+      if (payload.video) mediaUrls.push(payload.video);
+      if (payload.audio) mediaUrls.push(payload.audio);
+      
+      const dbPayload = {
+        title: payload.title,
+        content: payload.content,
+        user_id: user?.id,
+        tags: [],
+        media_urls: mediaUrls.length > 0 ? mediaUrls : null,
+      };
+      
+      const { error } = await supabase.from('community_posts').insert([dbPayload]);
+      
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
       toast.success("Your story has been posted!");
-    } catch (e) {
-      toast.error("Error sharing to community!");
+    } catch (e: any) {
+      console.error('Error posting:', e);
+      toast.error(`Error sharing to community: ${e.message || 'Unknown error'}`);
     }
   }
 
