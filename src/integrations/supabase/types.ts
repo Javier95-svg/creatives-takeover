@@ -1623,6 +1623,36 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_context_cache: {
+        Row: {
+          business_context: Json | null
+          created_at: string | null
+          id: string
+          query_embedding: string | null
+          retrieved_chunks: Json | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          business_context?: Json | null
+          created_at?: string | null
+          id?: string
+          query_embedding?: string | null
+          retrieved_chunks?: Json | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          business_context?: Json | null
+          created_at?: string | null
+          id?: string
+          query_embedding?: string | null
+          retrieved_chunks?: Json | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversation_memory: {
         Row: {
           ai_response_tone: string | null
@@ -2302,6 +2332,45 @@ export type Database = {
         }
         Relationships: []
       }
+      document_chunks: {
+        Row: {
+          content: string
+          content_tokens: number | null
+          created_at: string | null
+          document_type: string
+          embedding: string | null
+          id: string
+          importance_score: number | null
+          metadata: Json | null
+          section: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          content_tokens?: number | null
+          created_at?: string | null
+          document_type: string
+          embedding?: string | null
+          id?: string
+          importance_score?: number | null
+          metadata?: Json | null
+          section?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          content_tokens?: number | null
+          created_at?: string | null
+          document_type?: string
+          embedding?: string | null
+          id?: string
+          importance_score?: number | null
+          metadata?: Json | null
+          section?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       featured_content: {
         Row: {
           content_id: string
@@ -2642,6 +2711,51 @@ export type Database = {
           responsibilities?: string[]
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_chunks: {
+        Row: {
+          content: string
+          content_tokens: number | null
+          created_at: string | null
+          document_type: string | null
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          section_id: string | null
+          source: string | null
+          source_id: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          content_tokens?: number | null
+          created_at?: string | null
+          document_type?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          section_id?: string | null
+          source?: string | null
+          source_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          content_tokens?: number | null
+          created_at?: string | null
+          document_type?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          section_id?: string | null
+          source?: string | null
+          source_id?: string | null
+          title?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -5273,6 +5387,19 @@ export type Database = {
       is_following: {
         Args: { profile_id: string; viewer_id: string }
         Returns: boolean
+      }
+      match_knowledge_chunks: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
       }
       refresh_admin_analytics: { Args: never; Returns: undefined }
       refresh_expired_trends: { Args: never; Returns: undefined }
