@@ -309,12 +309,9 @@ export const BizMapChat = ({
   return (
     <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden">
       <div className="bizmap-chat-ambient" aria-hidden="true">
-        <div className="bizmap-chat-gradient" />
-        <div className="bizmap-chat-gradient bizmap-chat-gradient--secondary" />
-        <div className="bizmap-chat-orb bizmap-chat-orb--primary" />
-        <div className="bizmap-chat-orb bizmap-chat-orb--accent" />
         <div className="bizmap-chat-pattern" />
-        <div className="bizmap-chat-glimmer" />
+        <div className="bizmap-chat-glow-layer" />
+        <div className="bizmap-chat-shimmer" />
       </div>
       <div className="relative z-10 flex h-full flex-col">
         {/* Personality Indicator */}
