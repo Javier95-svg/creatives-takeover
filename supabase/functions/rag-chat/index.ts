@@ -161,7 +161,7 @@ function buildContext(chunks: any[]): ContextBundle {
     source: chunk.source ?? "knowledge",
     similarity: chunk.similarity ?? 0,
     metadata: chunk.metadata ?? {},
-    excerpt: chunk.body,
+    excerpt: chunk.content,
   }));
 
   const contextText = formattedSources

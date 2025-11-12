@@ -30,7 +30,7 @@ interface Chunk {
   source: string;
   sourceId: string;
   title: string;
-  body: string;
+  content: string;
   metadata: Record<string, unknown>;
 }
 
@@ -69,13 +69,13 @@ serve(async (req) => {
 
     for (let i = 0; i < preparedChunks.length; i += batchSize) {
       const batch = preparedChunks.slice(i, i + batchSize);
-      const embeddings = await generateEmbeddings(batch.map((c) => c.body));
+      const embeddings = await generateEmbeddings(batch.map((c) => c.content));
 
       const rows = batch.map((chunk, idx) => ({
         source: chunk.source,
         source_id: chunk.sourceId,
         title: chunk.title,
-        body: chunk.body,
+        content: chunk.content,
         metadata: chunk.metadata,
         embedding: embeddings[idx],
       }));
@@ -131,7 +131,7 @@ function prepareChunks(documents: DocumentPayload[], chunkSize: number, overlap:
         source: doc.source,
         sourceId: chunkId,
         title: doc.title,
-        body,
+        content: body,
         metadata: {
           ...baseMetadata,
           chunk_index: idx + 1,
