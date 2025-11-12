@@ -33,6 +33,7 @@ import Profile from "./pages/Profile";
 import Account from "./pages/Account";
 import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
+import RAGTest from "./pages/RAGTest";
 import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ function App() {
                   <Route path="/profile/:username" element={<Profile />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/creatives-takeover" element={<CreativesTakeover />} />
+                  <Route path="/rag-test" element={<RAGTest />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
