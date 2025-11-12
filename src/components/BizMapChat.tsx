@@ -307,11 +307,19 @@ export const BizMapChat = ({
   };
 
   return (
-    <>
-      <div className="flex flex-col h-full relative">
+    <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden">
+      <div className="bizmap-chat-ambient" aria-hidden="true">
+        <div className="bizmap-chat-gradient" />
+        <div className="bizmap-chat-gradient bizmap-chat-gradient--secondary" />
+        <div className="bizmap-chat-orb bizmap-chat-orb--primary" />
+        <div className="bizmap-chat-orb bizmap-chat-orb--accent" />
+        <div className="bizmap-chat-pattern" />
+        <div className="bizmap-chat-glimmer" />
+      </div>
+      <div className="relative z-10 flex h-full flex-col">
         {/* Personality Indicator */}
         {user && preferences && preferences.onboardingCompleted && (
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-4 right-4 z-20">
             <PersonalityIndicator personality={preferences.aiPersonality} />
           </div>
         )}
@@ -327,7 +335,7 @@ export const BizMapChat = ({
         />
         
         {/* Progress Bar with Mode Indicator */}
-        <div className="p-4 border-b bg-muted/30">
+        <div className="p-4 border-b bg-muted/30 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -584,18 +592,18 @@ export const BizMapChat = ({
       </div>
       
       {/* Share Dialog */}
-      {showShareDialog && shareData && (
-        <ShareToCommunityDialog
-          open={showShareDialog}
-          onOpenChange={setShowShareDialog}
-          reportData={shareData.reportData}
-          reportType={shareData.reportType}
-          conversationId={shareData.conversationId}
-          defaultTitle={shareData.defaultTitle}
-          defaultContent={shareData.defaultContent}
-        />
-      )}
+        {showShareDialog && shareData && (
+          <ShareToCommunityDialog
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            reportData={shareData.reportData}
+            reportType={shareData.reportType}
+            conversationId={shareData.conversationId}
+            defaultTitle={shareData.defaultTitle}
+            defaultContent={shareData.defaultContent}
+          />
+        )}
+      </div>
     </div>
-    </>
   );
 };
