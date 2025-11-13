@@ -98,23 +98,43 @@ serve(async (req) => {
 
     // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
     const needsKnowledge = detectKnowledgeQuery(message, businessContext);
+    let ragData = null;
     
     if (needsKnowledge) {
-      console.log('🔍 Knowledge query detected - routing to RAG');
-      return await handleRAGQuery(
-        message, 
-        messages, 
-        conversation, 
-        businessContext, 
-        conversationHistory, 
-        chatMode,
-        supabase,
-        userId
-      );
+      console.log('🔍 Knowledge query detected - calling RAG');
+      try {
+        const filter: any = {};
+        if (businessContext.industry) filter.tag = businessContext.industry;
+        
+        const result = await supabase.functions.invoke('rag-chat', {
+          body: {
+            messages: messages.filter(m => m.role !== 'system'),
+            userId,
+            matchCount: 5,
+            filter,
+            model: 'google/gemini-2.5-flash',
+            temperature: 0.3,
+          }
+        });
+        
+        if (!result.error) {
+          ragData = result.data;
+          console.log(`✅ RAG returned ${ragData.sources?.length || 0} sources`);
+        } else {
+          console.log('⚠️ RAG error, using conversational AI:', result.error);
+        }
+      } catch (e) {
+        console.log('⚠️ RAG failed, using conversational AI:', e);
+      }
     }
 
-    console.log('💬 Conversational query - routing to Lovable AI');
-    return await streamLovableAI(messages, conversation, businessContext, conversationHistory, chatMode, supabase);
+    // If RAG provided answer, stream it. Otherwise use Lovable AI
+    if (ragData?.answer) {
+      return createRAGStream(ragData, message, conversation, businessContext, conversationHistory, chatMode, supabase);
+    }
+
+    console.log('💬 Using conversational Lovable AI');
+    return await createAIStream(messages, message, conversation, businessContext, conversationHistory, chatMode, supabase);
 
   } catch (error) {
     console.error('Chatbot Streaming Error:', error);
@@ -520,210 +540,89 @@ function detectKnowledgeQuery(message: string, context: BusinessContext): boolea
   return isKnowledgeQuery || (hasQuestionWords && requestsSpecifics && !isConversational);
 }
 
-// 📚 RAG QUERY HANDLER: Call RAG and stream response with sources
-async function handleRAGQuery(
-  message: string,
-  messages: ChatMessage[],
-  conversation: any,
-  businessContext: BusinessContext,
-  conversationHistory: ChatMessage[],
-  chatMode: string,
-  supabase: any,
-  userId: string | null
-): Promise<Response> {
-  try {
-    // Build filter based on business context
-    const filter: any = {};
-    if (businessContext.industry) {
-      filter.tag = businessContext.industry;
-    }
-    
-    // Call RAG chat function
-    const { data: ragData, error: ragError } = await supabase.functions.invoke('rag-chat', {
-      body: {
-        messages: messages.filter(m => m.role !== 'system'), // RAG handles its own system prompt
-        userId,
-        matchCount: 5,
-        filter,
-        model: 'google/gemini-2.5-flash',
-        temperature: 0.3,
-      }
-    });
-    
-    if (ragError) {
-      console.error('RAG error, falling back to Lovable AI:', ragError);
-      // Fallback to regular conversational AI
-      return await streamLovableAI(messages, conversation, businessContext, conversationHistory, chatMode, supabase);
-    }
-    
-    const { answer, sources = [], matchCount } = ragData;
-    console.log(`✅ RAG returned answer with ${sources.length} sources (${matchCount} matches)`);
-    
-    // Stream the RAG response with source citations
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          // Stream the answer content
-          const words = answer.split(' ');
-          for (let i = 0; i < words.length; i++) {
-            const chunk = (i === 0 ? '' : ' ') + words[i];
-            controller.enqueue(new TextEncoder().encode(
-              `data: ${JSON.stringify({ type: 'delta', content: chunk })}\n\n`
-            ));
-            // Small delay for natural streaming feel
-            await new Promise(resolve => setTimeout(resolve, 30));
-          }
-          
-          // Add source citations at the end
-          if (sources.length > 0) {
-            controller.enqueue(new TextEncoder().encode(
-              `data: ${JSON.stringify({ type: 'delta', content: '\n\n📚 **Sources:**\n' })}\n\n`
-            ));
-            
-            for (const source of sources.slice(0, 3)) {
-              const citation = `- ${source.title} (${source.source}) - ${(source.similarity * 100).toFixed(0)}% relevance\n`;
-              controller.enqueue(new TextEncoder().encode(
-                `data: ${JSON.stringify({ type: 'delta', content: citation })}\n\n`
-              ));
-            }
-          }
-          
-          // Save messages in background
-          setTimeout(async () => {
-            await Promise.all([
-              supabase
-                .from('chatbot_messages')
-                .insert({
-                  conversation_id: conversation.id,
-                  role: 'assistant',
-                  content: answer,
-                  metadata: { 
-                    timestamp: new Date().toISOString(),
-                    rag: true,
-                    sources,
-                    matchCount
-                  }
-                }),
-              supabase
-                .from('chatbot_conversations')
-                .update({
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', conversation.id)
-            ]);
-          }, 0);
-          
-          // Send completion
-          const stage = determineConversationStage(businessContext, conversationHistory.length);
-          const quickActions = generateQuickActions(stage, chatMode, message);
-          
+// 📚 Create RAG stream response with sources
+function createRAGStream(ragData: any, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Response {
+  const { answer, sources = [] } = ragData;
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Stream answer word by word
+        const words = answer.split(' ');
+        for (let i = 0; i < words.length; i++) {
           controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ 
-              type: 'complete', 
-              conversationId: conversation.id,
-              quickActions,
-              rag: true,
-              sources: sources.slice(0, 3)
-            })}\n\n`
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
           ));
-          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-          controller.close();
-          
-        } catch (error) {
-          console.error('RAG streaming error:', error);
-          controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`
-          ));
-          controller.close();
+          await new Promise(r => setTimeout(r, 30));
         }
+        
+        // Add sources
+        if (sources.length > 0) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: '\n\n📚 **Sources:**\n' })}\n\n`
+          ));
+          for (const s of sources.slice(0, 3)) {
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({ type: 'delta', content: `- ${s.title} (${s.source})\n` })}\n\n`
+            ));
+          }
+        }
+        
+        // Save in background
+        setTimeout(() => {
+          supabase.from('chatbot_messages').insert({
+            conversation_id: conversation.id,
+            role: 'assistant',
+            content: answer,
+            metadata: { rag: true, sources, timestamp: new Date().toISOString() }
+          }).then(() => {});
+        }, 0);
+        
+        // Complete
+        const stage = determineConversationStage(businessContext, conversationHistory.length);
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, message), rag: true, sources: sources.slice(0, 3) })}\n\n`
+        ));
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      } catch (e) {
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+        controller.close();
       }
-    });
-    
-    return new Response(stream, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
-    
-  } catch (error) {
-    console.error('RAG handler error:', error);
-    // Fallback to conversational AI
-    return await streamLovableAI(messages, conversation, businessContext, conversationHistory, chatMode, supabase);
-  }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+  });
 }
 
-// 💬 LOVABLE AI STREAMING: Extract original streaming logic for reuse
-async function streamLovableAI(
-  messages: ChatMessage[],
-  conversation: any,
-  businessContext: BusinessContext,
-  conversationHistory: ChatMessage[],
-  chatMode: string,
-  supabase: any
-): Promise<Response> {
+// 💬 Create Lovable AI stream response
+async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Promise<Response> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY not configured');
-  }
+  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-  console.log('🤖 Calling Lovable AI Gateway with streaming...');
   const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages,
-      stream: true,
-      temperature: 0.3,
-    }),
+    headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages, stream: true, temperature: 0.3 }),
   });
 
   if (!aiResponse.ok) {
-    const errorBody = await aiResponse.text();
-    console.error('❌ Lovable AI Gateway error:', {
-      status: aiResponse.status,
-      statusText: aiResponse.statusText,
-      body: errorBody
-    });
-    
-    if (aiResponse.status === 429) {
-      return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
-        status: 429,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    if (aiResponse.status === 402) {
-      return new Response(JSON.stringify({ 
-        error: 'Payment required. Please add credits to your Lovable workspace.' 
-      }), {
-        status: 402,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    throw new Error(`Lovable AI Error: ${aiResponse.status} - ${errorBody}`);
+    const err = await aiResponse.text();
+    if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    throw new Error(`AI Error: ${aiResponse.status} - ${err}`);
   }
 
-  console.log('✅ Lovable AI Gateway response OK, starting SSE stream...');
-
-  // Stream the response back to the client
   const stream = new ReadableStream({
     async start(controller) {
       const reader = aiResponse.body?.getReader();
+      if (!reader) { controller.close(); return; }
+      
       const decoder = new TextDecoder();
       let fullMessage = '';
       let buffer = '';
-
-      if (!reader) {
-        controller.close();
-        return;
-      }
 
       try {
         while (true) {
@@ -735,108 +634,55 @@ async function streamLovableAI(
           buffer = lines.pop() || '';
 
           for (const line of lines) {
-            if (line.trim() === '' || line.startsWith(':')) continue;
-            if (!line.startsWith('data: ')) continue;
-
+            if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
             const data = line.slice(6).trim();
             if (data === '[DONE]') continue;
-
+            
             try {
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 fullMessage += content;
-                controller.enqueue(new TextEncoder().encode(
-                  `data: ${JSON.stringify({ type: 'delta', content })}\n\n`
-                ));
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
               }
-            } catch (e) {
-              console.error('Parse error for line:', data.substring(0, 100), 'Error:', e);
-            }
+            } catch (e) {}
           }
         }
 
-        // Process final buffer
-        if (buffer.trim() && buffer.startsWith('data: ')) {
-          const data = buffer.slice(6).trim();
-          if (data !== '[DONE]') {
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                fullMessage += content;
-                controller.enqueue(new TextEncoder().encode(
-                  `data: ${JSON.stringify({ type: 'delta', content })}\n\n`
-                ));
-              }
-            } catch (e) {
-              console.error('Final buffer parse error:', e);
-            }
-          }
-        }
-
-        // Run post-stream operations in background
+        // Save in background
         setTimeout(async () => {
-          const message = messages[messages.length - 1].content;
-          const updatedContext = await extractBusinessContext(message, fullMessage, businessContext);
+          const updatedContext = await extractBusinessContext(userMessage, fullMessage, businessContext);
           const stage = determineConversationStage(updatedContext, conversationHistory.length);
-          
-          const quickActions = generateQuickActions(stage, chatMode, message);
-
           await Promise.all([
-            supabase
-              .from('chatbot_messages')
-              .insert({
-                conversation_id: conversation.id,
-                role: 'assistant',
-                content: fullMessage,
-                metadata: { 
-                  timestamp: new Date().toISOString(),
-                  streaming: true,
-                  quickActions
-                }
-              }),
-            supabase
-              .from('chatbot_conversations')
-              .update({
-                business_context: updatedContext,
-                conversation_stage: stage,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', conversation.id)
+            supabase.from('chatbot_messages').insert({
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: fullMessage,
+              metadata: { timestamp: new Date().toISOString(), streaming: true }
+            }),
+            supabase.from('chatbot_conversations').update({
+              business_context: updatedContext,
+              conversation_stage: stage,
+              updated_at: new Date().toISOString()
+            }).eq('id', conversation.id)
           ]);
         }, 0);
 
-        // Send completion with quick actions
+        // Complete
         const stage = determineConversationStage(businessContext, conversationHistory.length);
-        const quickActions = generateQuickActions(stage, chatMode, messages[messages.length - 1].content);
-        
         controller.enqueue(new TextEncoder().encode(
-          `data: ${JSON.stringify({ 
-            type: 'complete', 
-            conversationId: conversation.id,
-            quickActions 
-          })}\n\n`
+          `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, userMessage) })}\n\n`
         ));
         controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();
-
-      } catch (error) {
-        console.error('Streaming error:', error);
-        controller.enqueue(new TextEncoder().encode(
-          `data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`
-        ));
+      } catch (e) {
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
         controller.close();
       }
     },
   });
 
   return new Response(stream, {
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
+    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
   });
 }
