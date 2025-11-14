@@ -378,8 +378,6 @@ const BizMapAI = () => {
         content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
       }
     ]);
-    // Clear saved chat state when starting a new chat
-    localStorage.removeItem('bizmap_chat_state');
   };
 
   const handleNewChat = async () => {
@@ -448,51 +446,6 @@ const BizMapAI = () => {
       }
     }
   }, [user]);
-
-  // Restore chat state from localStorage on mount (for tab navigation)
-  useEffect(() => {
-    const savedChatState = localStorage.getItem('bizmap_chat_state');
-    if (savedChatState) {
-      try {
-        const chatState = JSON.parse(savedChatState);
-        const timeSinceSave = Date.now() - (chatState.timestamp || 0);
-        
-        // Only restore if state is less than 7 days old
-        if (timeSinceSave < 7 * 24 * 60 * 60 * 1000) {
-          if (chatState.currentStep !== undefined) {
-            setCurrentStep(chatState.currentStep);
-          }
-          if (chatState.userAnswers) {
-            setUserAnswers(chatState.userAnswers);
-          }
-          console.log('✅ Restored chat state from localStorage:', { 
-            currentStep: chatState.currentStep, 
-            hasAnswers: Object.keys(chatState.userAnswers || {}).length 
-          });
-        } else {
-          // Clear old state
-          localStorage.removeItem('bizmap_chat_state');
-        }
-      } catch (e) {
-        console.error('Failed to restore chat state:', e);
-      }
-    }
-  }, []);
-
-  // Save chat state to localStorage whenever it changes
-  useEffect(() => {
-    // Only save if we have meaningful progress (at least one answer or step > 0)
-    const hasProgress = currentStep > 0 || Object.values(userAnswers).some(answer => answer.trim().length > 0);
-    
-    if (hasProgress) {
-      const chatState = {
-        currentStep,
-        userAnswers,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('bizmap_chat_state', JSON.stringify(chatState));
-    }
-  }, [currentStep, userAnswers]);
 
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
