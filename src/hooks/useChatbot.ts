@@ -490,11 +490,18 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
         const savedChatState = localStorage.getItem('bizmap_chat_state');
         const chatState = savedChatState ? JSON.parse(savedChatState) : {};
         
+        // Serialize messages properly (Date objects become ISO strings)
+        const serializedMessages = messages.map(msg => ({
+          ...msg,
+          timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp
+        }));
+        
         // Update messages in saved state
-        chatState.messages = messages;
+        chatState.messages = serializedMessages;
         chatState.timestamp = Date.now();
         
         localStorage.setItem('bizmap_chat_state', JSON.stringify(chatState));
+        console.log('💾 Saved', serializedMessages.length, 'messages to localStorage');
       } catch (e) {
         console.error('Failed to save messages to localStorage:', e);
       }
@@ -502,7 +509,29 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   }, [messages, config.wizardMode?.enabled]);
 
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
+  // Only initialize if messages are empty AND we haven't restored from localStorage
   useEffect(() => {
+    // Check if we have saved messages in localStorage that we should restore instead
+    if (config.wizardMode?.enabled) {
+      try {
+        const savedChatState = localStorage.getItem('bizmap_chat_state');
+        if (savedChatState) {
+          const chatState = JSON.parse(savedChatState);
+          const timeSinceSave = Date.now() - (chatState.timestamp || 0);
+          
+          // If we have valid saved messages, don't initialize - they should already be restored
+          if (timeSinceSave < 7 * 24 * 60 * 60 * 1000 && chatState.messages && Array.isArray(chatState.messages) && chatState.messages.length > 0) {
+            console.log('⏭️ Skipping initialization - messages exist in localStorage');
+            return;
+          }
+        }
+      } catch (e) {
+        // If there's an error checking localStorage, continue with initialization
+        console.error('Error checking localStorage:', e);
+      }
+    }
+    
+    // Only initialize if messages are truly empty
     if (messages.length === 0) {
       if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
         // Initialize wizard mode with first question
@@ -521,7 +550,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
       }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname, config.wizardMode]);
+  }, [location.pathname]); // Only depend on pathname to prevent unnecessary re-runs
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
