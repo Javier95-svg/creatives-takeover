@@ -283,7 +283,34 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   }
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  
+  // Initialize messages from localStorage if available (for tab navigation persistence)
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (config.wizardMode?.enabled) {
+      try {
+        const savedChatState = localStorage.getItem('bizmap_chat_state');
+        if (savedChatState) {
+          const chatState = JSON.parse(savedChatState);
+          const timeSinceSave = Date.now() - (chatState.timestamp || 0);
+          
+          // Only restore if state is less than 7 days old and has messages
+          if (timeSinceSave < 7 * 24 * 60 * 60 * 1000 && chatState.messages && Array.isArray(chatState.messages) && chatState.messages.length > 0) {
+            // Convert timestamp strings back to Date objects
+            const restoredMessages = chatState.messages.map((msg: any) => ({
+              ...msg,
+              timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+            }));
+            console.log('✅ Restored messages from localStorage:', restoredMessages.length);
+            return restoredMessages;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to restore messages from localStorage:', e);
+      }
+    }
+    return [];
+  });
+  
   const [isTyping, setIsTyping] = useState(false);
   const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide'>('wizard');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -455,6 +482,24 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     'Financial Projections',
     'Implementation Timeline'
   ], []);
+
+  // Save messages to localStorage whenever they change (for tab navigation persistence)
+  useEffect(() => {
+    if (config.wizardMode?.enabled && messages.length > 0) {
+      try {
+        const savedChatState = localStorage.getItem('bizmap_chat_state');
+        const chatState = savedChatState ? JSON.parse(savedChatState) : {};
+        
+        // Update messages in saved state
+        chatState.messages = messages;
+        chatState.timestamp = Date.now();
+        
+        localStorage.setItem('bizmap_chat_state', JSON.stringify(chatState));
+      } catch (e) {
+        console.error('Failed to save messages to localStorage:', e);
+      }
+    }
+  }, [messages, config.wizardMode?.enabled]);
 
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
