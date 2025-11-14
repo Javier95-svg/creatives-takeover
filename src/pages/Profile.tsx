@@ -158,7 +158,21 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [username]);
+  }, [username, currentUser?.id]);
+
+  // Debug: Log ownership check (can be removed after verification)
+  useEffect(() => {
+    if (profile && currentUser) {
+      console.log('Profile ownership check:', {
+        currentUserId: currentUser.id,
+        profileId: profile.id,
+        isOwnProfile: currentUser.id === profile.id,
+        username: username,
+        profileUsername: profile.username,
+        profileFullName: profile.full_name
+      });
+    }
+  }, [profile, currentUser, username]);
 
   // Real-time listener for profile updates
   useEffect(() => {
@@ -301,7 +315,7 @@ const Profile = () => {
                             <Settings className="h-4 w-4 mr-2" />
                             Edit Profile
                           </Button>
-                        ) : profile.id && (
+                        ) : profile?.id && (
                           <SocialButtons 
                             userId={profile.id} 
                             userName={profile.full_name || undefined}
