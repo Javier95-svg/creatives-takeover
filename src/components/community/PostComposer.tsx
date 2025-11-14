@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
 import { useNavigate } from "react-router-dom";
+import { ImageCropper } from "./ImageCropper";
 
 export type ComposerPayload = {
   title: string;
@@ -39,6 +40,8 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [originalImage, setOriginalImage] = useState<string | undefined>();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
@@ -50,6 +53,8 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     setContent("");
     setMediaPreview(undefined);
     setMediaType(undefined);
+    setOriginalImage(undefined);
+    setShowCropper(false);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
     if (audioInputRef.current) audioInputRef.current.value = "";
@@ -88,10 +93,31 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
     const reader = new FileReader();
     reader.onload = () => {
-      setMediaPreview(reader.result as string);
-      setMediaType(type);
+      const imageUrl = reader.result as string;
+      if (type === 'image') {
+        // Store original image and show cropper
+        setOriginalImage(imageUrl);
+        setShowCropper(true);
+      } else {
+        // For video/audio, set preview directly
+        setMediaPreview(imageUrl);
+        setMediaType(type);
+      }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    setMediaPreview(croppedImageUrl);
+    setMediaType('image');
+    setShowCropper(false);
+    setOriginalImage(undefined);
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    setOriginalImage(undefined);
+    if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
   const handlePublish = (e: React.FormEvent) => {
@@ -312,6 +338,16 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
           </form>
         </CardContent>
       </Card>
+
+      {/* Image Cropper Modal */}
+      {showCropper && originalImage && (
+        <ImageCropper
+          image={originalImage}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={null} // Set to null for free aspect ratio, or a number like 16/9, 4/3, 1, etc.
+        />
+      )}
 
       <SignInModal
         open={showSignInModal}
