@@ -75,12 +75,31 @@ const Profile = () => {
       try {
         setLoading(true);
 
-        // Load profile by username
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('username', username)
-          .single();
+        // Check if the param is a UUID (user_id) or username
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
+        
+        let profileData;
+        let profileError;
+
+        if (isUUID) {
+          // Load profile by user_id (UUID)
+          const result = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', username)
+            .single();
+          profileData = result.data;
+          profileError = result.error;
+        } else {
+          // Load profile by username
+          const result = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', username)
+            .single();
+          profileData = result.data;
+          profileError = result.error;
+        }
 
         if (profileError) throw profileError;
         setProfile(profileData as Profile);
