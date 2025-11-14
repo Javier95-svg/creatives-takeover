@@ -32,6 +32,7 @@ import { SocialButtons } from "@/components/social/SocialButtons";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import ReputationBadge from "./ReputationBadge";
+import { generateProfileSlug } from "@/utils/profileSlug";
 
 export interface Post {
   id: string;
@@ -395,7 +396,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Link 
-                  to={`/profile/${post.author.username || post.user_id}`}
+                  to={`/profile/${generateProfileSlug(post.author.name) || post.author.username || post.user_id}`}
                   className="font-semibold text-foreground hover:text-primary transition-colors"
                 >
                   {post.author.name}
@@ -576,7 +577,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           <div className="bg-muted rounded-2xl px-4 py-2 relative group">
                             <div className="flex items-start justify-between">
                               <Link 
-                                to={`/profile/${comment.profiles?.username || comment.user_id}`}
+                                to={`/profile/${generateProfileSlug(comment.profiles?.full_name) || comment.profiles?.username || comment.user_id}`}
                                 className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
                               >
                                 {comment.profiles?.full_name || 'Anonymous'}

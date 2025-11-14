@@ -22,6 +22,7 @@ import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
+import { generateProfileSlug } from "@/utils/profileSlug";
 
 interface Profile {
   id: string;
@@ -91,14 +92,36 @@ const Profile = () => {
           profileData = result.data;
           profileError = result.error;
         } else {
-          // Load profile by username
-          const result = await supabase
+          // Load profile by username (which should match the slug pattern)
+          // First try direct username lookup
+          let result = await supabase
             .from('profiles')
             .select('*')
             .eq('username', username)
             .single();
+          
           profileData = result.data;
           profileError = result.error;
+          
+          // If not found by username, try to find by matching slug pattern from full_name
+          // This handles edge cases where username might not be set correctly
+          if (profileError && profileError.code === 'PGRST116') {
+            const { data: allProfiles, error: fetchError } = await supabase
+              .from('profiles')
+              .select('*')
+              .limit(1000); // Reasonable limit for search
+            
+            if (!fetchError && allProfiles) {
+              const matchingProfile = allProfiles.find(profile => 
+                generateProfileSlug(profile.full_name) === username
+              );
+              
+              if (matchingProfile) {
+                profileData = matchingProfile;
+                profileError = null;
+              }
+            }
+          }
         }
 
         if (profileError) throw profileError;
