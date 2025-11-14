@@ -284,6 +284,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   
+  // Track if messages were restored from localStorage to prevent initialization from overwriting them
+  const hasRestoredMessages = useRef(false);
+  
   // Initialize messages from localStorage if available (for tab navigation persistence)
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (config.wizardMode?.enabled) {
@@ -301,6 +304,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
               timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
             }));
             console.log('✅ Restored messages from localStorage:', restoredMessages.length);
+            hasRestoredMessages.current = true; // Mark that we've restored messages
             return restoredMessages;
           }
         }
@@ -511,6 +515,12 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   // Only initialize if messages are empty AND we haven't restored from localStorage
   useEffect(() => {
+    // CRITICAL: Check restoration ref first - if messages were restored, never initialize
+    if (hasRestoredMessages.current) {
+      console.log('⏭️ Skipping initialization - messages were already restored from localStorage');
+      return;
+    }
+    
     // Check if we have saved messages in localStorage that we should restore instead
     if (config.wizardMode?.enabled) {
       try {
@@ -531,8 +541,8 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
       }
     }
     
-    // Only initialize if messages are truly empty
-    if (messages.length === 0) {
+    // Only initialize if messages are truly empty AND we haven't restored
+    if (messages.length === 0 && !hasRestoredMessages.current) {
       if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
         // Initialize wizard mode with first question
         console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
