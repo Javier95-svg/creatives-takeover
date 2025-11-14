@@ -73,53 +73,84 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   const getCroppedImg = async (
     imageSrc: string,
     pixelCrop: Area,
-    rotation = 0,
-    flip = { horizontal: false, vertical: false }
+    rotation = 0
   ): Promise<string> => {
     const image = await createImage(imageSrc);
+    
+    // Create canvas for the final cropped image
     const canvas = document.createElement('canvas');
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
       throw new Error('No 2d context');
     }
 
-    const rotRad = getRadianAngle(rotation);
+    // If there's rotation, we need to handle it properly
+    if (rotation !== 0) {
+      // Create a temporary canvas to rotate the entire image first
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
 
-    // Calculate bounding box of the rotated image
-    const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
-      image.width,
-      image.height,
-      rotation
-    );
+      if (!tempCtx) {
+        throw new Error('No 2d context for temp canvas');
+      }
 
-    // Set canvas size to match the bounding box
-    canvas.width = bBoxWidth;
-    canvas.height = bBoxHeight;
+      const rotRad = getRadianAngle(rotation);
+      
+      // Calculate bounding box of the rotated image
+      const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
+        image.width,
+        image.height,
+        rotation
+      );
 
-    // Translate canvas context to a central location to allow rotating and flipping around the center
-    ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
-    ctx.rotate(rotRad);
-    ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1);
-    ctx.translate(-image.width / 2, -image.height / 2);
+      tempCanvas.width = bBoxWidth;
+      tempCanvas.height = bBoxHeight;
 
-    // Draw rotated image
-    ctx.drawImage(image, 0, 0);
+      // Rotate the entire image
+      tempCtx.translate(bBoxWidth / 2, bBoxHeight / 2);
+      tempCtx.rotate(rotRad);
+      tempCtx.translate(-image.width / 2, -image.height / 2);
+      tempCtx.drawImage(image, 0, 0);
 
-    // Cropped area coordinates relative to the rotated image
-    const data = ctx.getImageData(
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height
-    );
+      // Calculate offset for the bounding box
+      const offsetX = (bBoxWidth - image.width) / 2;
+      const offsetY = (bBoxHeight - image.height) / 2;
 
-    // Set canvas width to final desired crop size
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
+      // Crop from the rotated image
+      // The pixelCrop coordinates need to be adjusted for the rotation offset
+      const sourceX = Math.max(0, Math.min(pixelCrop.x + offsetX, bBoxWidth));
+      const sourceY = Math.max(0, Math.min(pixelCrop.y + offsetY, bBoxHeight));
+      const sourceWidth = Math.min(pixelCrop.width, bBoxWidth - sourceX);
+      const sourceHeight = Math.min(pixelCrop.height, bBoxHeight - sourceY);
 
-    // Paste the rotated image at the top left of the canvas
-    ctx.putImageData(data, 0, 0);
+      ctx.drawImage(
+        tempCanvas,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+    } else {
+      // No rotation - simple direct crop
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+    }
 
     // Return as a blob
     return new Promise((resolve, reject) => {
@@ -135,7 +166,10 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   };
 
   const handleSave = async () => {
-    if (!croppedAreaPixels) return;
+    if (!croppedAreaPixels) {
+      console.error('No crop area selected');
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -143,13 +177,18 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
       onCropComplete(croppedImage);
     } catch (error) {
       console.error('Error cropping image:', error);
+      alert('Failed to crop image. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleCancel = () => {
+    onCancel();
+  };
+
   return (
-    <Dialog open={true} onOpenChange={onCancel}>
+    <Dialog open={true} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Crop & Adjust Image</DialogTitle>
@@ -209,7 +248,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
+          <Button variant="outline" onClick={handleCancel} disabled={isProcessing}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isProcessing || !croppedAreaPixels}>
