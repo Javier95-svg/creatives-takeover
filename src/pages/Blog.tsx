@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
+import FundingToolkitSection from "@/components/blog/FundingToolkitSection";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import TrendingSection from "@/components/blog/TrendingSection";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
@@ -83,6 +84,7 @@ const Blog = () => {
         <div ref={heroRef}>
           <BlogHero />
         </div>
+        <FundingToolkitSection />
         <FundingOpportunitiesSection 
           filters={fundingFilters}
           onFiltersChange={setFundingFilters}
