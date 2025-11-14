@@ -19,7 +19,8 @@ import {
   MapPin, 
   MoreHorizontal,
   Send,
-  MoreVertical
+  MoreVertical,
+  Trash2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -332,11 +333,21 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const handleSaveComment = async (commentId: string) => {
     if (!editingCommentContent.trim()) return;
 
+    // Security check: verify user owns the comment
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment || !user || user.id !== comment.user_id) {
+      toast.error('You can only edit your own comments');
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('post_comments')
         .update({ content: editingCommentContent.trim() })
-        .eq('id', commentId);
+        .eq('id', commentId)
+        .eq('user_id', user.id); // Security: ensure user owns the comment
 
       if (error) throw error;
 
@@ -355,6 +366,38 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditingCommentContent("");
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    // Security check: verify user owns the comment
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment || !user || user.id !== comment.user_id) {
+      toast.error('You can only delete your own comments');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this comment?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', user.id); // Security: ensure user owns the comment
+
+      if (error) throw error;
+
+      // Remove comment from local state
+      setComments(comments.filter(c => c.id !== commentId));
+      // Update comment count
+      setLocalComments(prev => Math.max(0, prev - 1));
+      toast.success('Comment deleted');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Failed to delete comment');
+    }
   };
 
   const handleSignIn = () => {
@@ -599,6 +642,13 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                       className="cursor-pointer hover:bg-accent"
                                     >
                                       Edit comment
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleDeleteComment(comment.id)}
+                                      className="cursor-pointer hover:bg-accent text-destructive focus:text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete comment
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
