@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,13 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   
   const isAIReport = !!reportData?.reportType;
 
+  // Debug: Log when cropper should show
+  useEffect(() => {
+    if (showCropper && originalImage) {
+      console.log('ImageCropper should be visible', { showCropper, hasImage: !!originalImage, imageLength: originalImage.length });
+    }
+  }, [showCropper, originalImage]);
+
   const reset = () => {
     setTitle("");
     setContent("");
@@ -101,10 +108,12 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
       const mediaUrl = reader.result as string;
       if (type === 'image') {
         // Store original image and show cropper
+        console.log('Image loaded, showing cropper');
         setOriginalImage(mediaUrl);
         setShowCropper(true);
       } else if (type === 'video') {
         // Store original video and show video cropper
+        console.log('Video loaded, showing video cropper');
         setOriginalVideo(mediaUrl);
         setShowVideoCropper(true);
       } else {
@@ -112,6 +121,10 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
         setMediaPreview(mediaUrl);
         setMediaType(type);
       }
+    };
+    reader.onerror = (error) => {
+      console.error('Error reading file:', error);
+      toast.error('Failed to read file. Please try again.');
     };
     reader.readAsDataURL(file);
   };

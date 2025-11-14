@@ -200,7 +200,11 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
   };
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && handleCancel()}>
+    <Dialog open={true} onOpenChange={(open) => {
+      if (!open) {
+        handleCancel();
+      }
+    }}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Crop & Adjust Your Image</DialogTitle>
