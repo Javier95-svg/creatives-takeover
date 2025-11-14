@@ -3,7 +3,7 @@ import Cropper from 'react-easy-crop';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { RotateCw, ZoomIn } from 'lucide-react';
+import { RotateCw, ZoomIn, Square, Maximize2, Monitor, Smartphone } from 'lucide-react';
 
 interface ImageCropperProps {
   image: string;
@@ -19,17 +19,29 @@ interface Area {
   height: number;
 }
 
+// Aspect ratio presets
+const ASPECT_RATIOS = [
+  { label: 'Free', value: null, icon: Maximize2 },
+  { label: 'Square', value: 1, icon: Square },
+  { label: '16:9', value: 16 / 9, icon: Monitor },
+  { label: '4:3', value: 4 / 3, icon: Monitor },
+  { label: '9:16', value: 9 / 16, icon: Smartphone },
+  { label: '3:4', value: 3 / 4, icon: Smartphone },
+  { label: '21:9', value: 21 / 9, icon: Monitor },
+];
+
 export const ImageCropper: React.FC<ImageCropperProps> = ({
   image,
   onCropComplete,
   onCancel,
-  aspectRatio = null, // Default to free aspect ratio
+  aspectRatio: initialAspectRatio = null,
 }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(initialAspectRatio);
 
   const onCropChange = useCallback((crop: { x: number; y: number }) => {
     setCrop(crop);
@@ -189,12 +201,37 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>Crop & Adjust Image</DialogTitle>
+          <DialogTitle className="text-xl">Crop & Adjust Your Image</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Choose an aspect ratio or use free form. Drag to reposition, use sliders to adjust.
+          </p>
         </DialogHeader>
         
-        <div className="relative w-full h-[400px] bg-black rounded-lg overflow-hidden">
+        {/* Aspect Ratio Presets */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-muted-foreground">Aspect Ratio:</span>
+          {ASPECT_RATIOS.map((ratio) => {
+            const Icon = ratio.icon;
+            const isSelected = aspectRatio === ratio.value;
+            return (
+              <Button
+                key={ratio.label}
+                type="button"
+                variant={isSelected ? "default" : "outline"}
+                size="sm"
+                onClick={() => setAspectRatio(ratio.value)}
+                className="flex items-center gap-1.5"
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {ratio.label}
+              </Button>
+            );
+          })}
+        </div>
+
+        <div className="relative w-full h-[500px] bg-gradient-to-br from-gray-900 to-black rounded-lg overflow-hidden border border-gray-800">
           <Cropper
             image={image}
             crop={crop}
@@ -215,11 +252,14 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
           />
         </div>
 
-        <div className="space-y-4 pt-4">
+        <div className="space-y-4 pt-2">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <ZoomIn className="h-4 w-4" />
-              <span>Zoom</span>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <ZoomIn className="h-4 w-4" />
+                <span>Zoom</span>
+              </div>
+              <span className="text-muted-foreground">{zoom.toFixed(1)}x</span>
             </div>
             <Slider
               value={[zoom]}
@@ -232,9 +272,12 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <RotateCw className="h-4 w-4" />
-              <span>Rotation</span>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <RotateCw className="h-4 w-4" />
+                <span>Rotation</span>
+              </div>
+              <span className="text-muted-foreground">{rotation}°</span>
             </div>
             <Slider
               value={[rotation]}
@@ -247,12 +290,19 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleCancel} disabled={isProcessing}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isProcessing || !croppedAreaPixels}>
-            {isProcessing ? 'Processing...' : 'Apply Crop'}
+            {isProcessing ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Processing...
+              </>
+            ) : (
+              'Apply Crop'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

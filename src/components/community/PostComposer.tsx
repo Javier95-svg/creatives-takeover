@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
 import { useNavigate } from "react-router-dom";
 import { ImageCropper } from "./ImageCropper";
+import { VideoCropper } from "./VideoCropper";
 
 export type ComposerPayload = {
   title: string;
@@ -41,7 +42,9 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
+  const [showVideoCropper, setShowVideoCropper] = useState(false);
   const [originalImage, setOriginalImage] = useState<string | undefined>();
+  const [originalVideo, setOriginalVideo] = useState<string | undefined>();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
@@ -54,7 +57,9 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     setMediaPreview(undefined);
     setMediaType(undefined);
     setOriginalImage(undefined);
+    setOriginalVideo(undefined);
     setShowCropper(false);
+    setShowVideoCropper(false);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
     if (audioInputRef.current) audioInputRef.current.value = "";
@@ -93,14 +98,18 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
     const reader = new FileReader();
     reader.onload = () => {
-      const imageUrl = reader.result as string;
+      const mediaUrl = reader.result as string;
       if (type === 'image') {
         // Store original image and show cropper
-        setOriginalImage(imageUrl);
+        setOriginalImage(mediaUrl);
         setShowCropper(true);
+      } else if (type === 'video') {
+        // Store original video and show video cropper
+        setOriginalVideo(mediaUrl);
+        setShowVideoCropper(true);
       } else {
-        // For video/audio, set preview directly
-        setMediaPreview(imageUrl);
+        // For audio, set preview directly
+        setMediaPreview(mediaUrl);
         setMediaType(type);
       }
     };
@@ -118,6 +127,19 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     setShowCropper(false);
     setOriginalImage(undefined);
     if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const handleVideoCropComplete = (croppedVideoUrl: string) => {
+    setMediaPreview(croppedVideoUrl);
+    setMediaType('video');
+    setShowVideoCropper(false);
+    setOriginalVideo(undefined);
+  };
+
+  const handleVideoCropCancel = () => {
+    setShowVideoCropper(false);
+    setOriginalVideo(undefined);
+    if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
   const handlePublish = (e: React.FormEvent) => {
@@ -345,7 +367,16 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
           image={originalImage}
           onCropComplete={handleCropComplete}
           onCancel={handleCropCancel}
-          aspectRatio={null} // Set to null for free aspect ratio, or a number like 16/9, 4/3, 1, etc.
+          aspectRatio={null}
+        />
+      )}
+
+      {/* Video Cropper Modal */}
+      {showVideoCropper && originalVideo && (
+        <VideoCropper
+          video={originalVideo}
+          onCropComplete={handleVideoCropComplete}
+          onCancel={handleVideoCropCancel}
         />
       )}
 
