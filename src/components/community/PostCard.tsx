@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,8 @@ interface PostCardProps {
 const PostCard = React.memo<PostCardProps>(({ post }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -890,6 +892,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <input
+                          ref={fileInputRef}
                           type="file"
                           accept="image/*,video/*,audio/*"
                           onChange={(e) => {
@@ -901,7 +904,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                             e.stopPropagation();
                           }}
                           className="hidden"
-                          id={`comment-image-${post.id}`}
                           disabled={uploadingImage}
                           multiple={false}
                         />
@@ -914,24 +916,15 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                             e.stopPropagation();
                             console.log('Media button clicked for post:', post.id);
                             
-                            // Try multiple methods to find and trigger the file input
-                            let fileInput = document.getElementById(`comment-image-${post.id}`) as HTMLInputElement;
-                            
-                            if (!fileInput) {
-                              // Try querySelector as fallback
-                              fileInput = document.querySelector(`#comment-image-${post.id}`) as HTMLInputElement;
-                            }
-                            
-                            if (fileInput) {
-                              console.log('File input found, triggering click');
+                            if (fileInputRef.current) {
+                              console.log('File input ref found, triggering click');
                               // Reset value to allow selecting same file again
-                              fileInput.value = '';
+                              fileInputRef.current.value = '';
                               // Trigger click
-                              fileInput.click();
+                              fileInputRef.current.click();
                             } else {
-                              console.error('File input not found! ID:', `comment-image-${post.id}`);
-                              console.error('Available inputs:', document.querySelectorAll('input[type="file"]'));
-                              toast.error('Media upload not available. Please refresh the page.');
+                              console.error('File input ref not available');
+                              toast.error('Media upload not available. Please try again.');
                             }
                           }}
                           disabled={uploadingImage}
@@ -1058,8 +1051,9 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <input
+                                ref={editFileInputRef}
                                 type="file"
-                                accept="image/*"
+                                accept="image/*,video/*,audio/*"
                                 onChange={(e) => {
                                   console.log('File input onChange triggered for comment edit:', comment.id);
                                   handleImageSelect(e);
@@ -1069,7 +1063,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                   e.stopPropagation();
                                 }}
                                 className="hidden"
-                                id={`edit-image-${comment.id}`}
                                 disabled={uploadingImage}
                                 multiple={false}
                               />
@@ -1080,33 +1073,24 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  console.log('Image button clicked for comment edit:', comment.id);
+                                  console.log('Media button clicked for comment edit:', comment.id);
                                   
-                                  // Try multiple methods to find and trigger the file input
-                                  let fileInput = document.getElementById(`edit-image-${comment.id}`) as HTMLInputElement;
-                                  
-                                  if (!fileInput) {
-                                    // Try querySelector as fallback
-                                    fileInput = document.querySelector(`#edit-image-${comment.id}`) as HTMLInputElement;
-                                  }
-                                  
-                                  if (fileInput) {
-                                    console.log('File input found for edit, triggering click');
+                                  if (editFileInputRef.current) {
+                                    console.log('Edit file input ref found, triggering click');
                                     // Reset value to allow selecting same file again
-                                    fileInput.value = '';
+                                    editFileInputRef.current.value = '';
                                     // Trigger click
-                                    fileInput.click();
+                                    editFileInputRef.current.click();
                                   } else {
-                                    console.error('File input not found for edit! ID:', `edit-image-${comment.id}`);
-                                    console.error('Available inputs:', document.querySelectorAll('input[type="file"]'));
-                                    toast.error('Image upload not available. Please refresh the page.');
+                                    console.error('Edit file input ref not available');
+                                    toast.error('Media upload not available. Please try again.');
                                   }
                                 }}
                                 disabled={uploadingImage}
                                 className="h-8"
                               >
                                 <ImageIcon className="h-4 w-4 mr-1" />
-                                {editingCommentImage ? 'Change Image' : 'Add Image'}
+                                {editingCommentImage || newCommentImagePreview ? 'Change Media' : 'Add Media'}
                               </Button>
                             </div>
                             <div className="flex items-center gap-2">
