@@ -420,15 +420,30 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('=== HANDLE IMAGE SELECT CALLED ===');
+    console.log('Event:', e);
+    console.log('Event target:', e.target);
+    console.log('Files:', e.target.files);
+    console.log('Files length:', e.target.files?.length);
+    
     const file = e.target.files?.[0];
     if (!file) {
+      console.log('❌ No file selected');
       // Reset input if no file selected
       e.target.value = '';
       return;
     }
 
+    console.log('✅ File selected:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified
+    });
+
     // Validate file size (50MB max to match PostComposer)
     if (file.size > 50 * 1024 * 1024) {
+      console.log('❌ File too large:', file.size);
       toast.error('File size must be less than 50MB');
       e.target.value = ''; // Reset input
       return;
@@ -443,30 +458,38 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     } else if (file.type.startsWith('audio/')) {
       mediaType = 'audio';
     } else {
+      console.log('❌ Invalid file type:', file.type);
       toast.error('Please select an image, video, or audio file');
       e.target.value = ''; // Reset input
       return;
     }
 
-    console.log('Media file selected:', file.name, file.type, file.size, 'bytes', 'Type:', mediaType);
+    console.log('✅ Media type determined:', mediaType);
+    console.log('✅ Setting file to state...');
     
     setNewCommentImage(file);
     setNewCommentMediaType(mediaType);
+    
+    console.log('✅ Creating FileReader...');
     const reader = new FileReader();
     reader.onloadend = () => {
       if (reader.result) {
+        console.log('✅ FileReader loaded, preview length:', (reader.result as string).length);
         setNewCommentImagePreview(reader.result as string);
-        console.log('Media preview generated for type:', mediaType);
+        console.log('✅ Media preview generated for type:', mediaType);
+        toast.success(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} loaded successfully!`);
       }
     };
-    reader.onerror = () => {
-      console.error('Error reading media file');
+    reader.onerror = (error) => {
+      console.error('❌ Error reading media file:', error);
+      console.error('FileReader error:', reader.error);
       toast.error('Error reading file. Please try another file.');
       setNewCommentImage(null);
       setNewCommentImagePreview(null);
       setNewCommentMediaType(null);
       e.target.value = '';
     };
+    console.log('✅ Starting to read file as DataURL...');
     reader.readAsDataURL(file);
   };
 
@@ -914,17 +937,38 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Media button clicked for post:', post.id);
+                            console.log('=== MEDIA BUTTON CLICKED ===');
+                            console.log('Post ID:', post.id);
+                            console.log('showComments:', showComments);
+                            console.log('fileInputRef:', fileInputRef);
+                            console.log('fileInputRef.current:', fileInputRef.current);
+                            
+                            if (!showComments) {
+                              console.log('⚠️  Comments section is collapsed!');
+                              toast.error('Please click the comment icon first to expand the comment section, then try adding media');
+                              return;
+                            }
                             
                             if (fileInputRef.current) {
-                              console.log('File input ref found, triggering click');
+                              console.log('✅ File input ref found, triggering click');
+                              console.log('Input element:', fileInputRef.current);
+                              console.log('Input disabled?:', fileInputRef.current.disabled);
+                              console.log('Input type:', fileInputRef.current.type);
+                              console.log('Input accept:', fileInputRef.current.accept);
                               // Reset value to allow selecting same file again
                               fileInputRef.current.value = '';
                               // Trigger click
-                              fileInputRef.current.click();
+                              try {
+                                fileInputRef.current.click();
+                                console.log('✅ Click triggered successfully');
+                              } catch (error) {
+                                console.error('❌ Error triggering click:', error);
+                                toast.error('Failed to open file picker: ' + error);
+                              }
                             } else {
-                              console.error('File input ref not available');
-                              toast.error('Media upload not available. Please try again.');
+                              console.error('❌ File input ref NOT available even though comments are shown!');
+                              console.error('fileInputRef:', fileInputRef);
+                              toast.error('Media upload not available. Please refresh the page and try again.');
                             }
                           }}
                           disabled={uploadingImage}
