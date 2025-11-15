@@ -350,6 +350,25 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     setNewCommentImagePreview(null);
   };
 
+    const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId);
+      
+      if (error) throw error;
+      
+      // Reload comments
+      await loadComments();
+      setLocalComments(prev => Math.max(0, prev - 1));
+      toast.success('Comment deleted!');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Failed to delete comment');
+    }
+  };
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -887,6 +906,12 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                     >
                                       Edit comment
                                     </DropdownMenuItem>
+                                                     <DropdownMenuItem 
+                   onClick={() => handleDeleteComment(comment.id)}
+                   className="cursor-pointer hover:bg-accent text-destructive hover:text-destructive"
+                 >
+                   Delete comment
+                 </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}
