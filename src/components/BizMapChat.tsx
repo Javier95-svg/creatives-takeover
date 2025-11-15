@@ -238,13 +238,9 @@ export const BizMapChat = ({
       console.log('🔄 Restoring wizard progress:', { currentStep, totalSteps: wizardSteps.length });
       hasRestoredProgress.current = true;
       
-      // Import toast dynamically to show feedback
-      import('@/hooks/use-toast').then(({ toast }) => {
-        toast({
-          title: "Welcome back!",
-          description: `Resuming from Step ${currentStep + 1} of ${wizardSteps.length}`,
-          duration: 3000,
-        });
+      // Use sonner toast
+      import('sonner').then(({ toast }) => {
+        toast.success(`Welcome back! Resuming from Step ${currentStep + 1} of ${wizardSteps.length}`);
       });
     }
   }, [currentStep, wizardSteps.length, messages.length]);

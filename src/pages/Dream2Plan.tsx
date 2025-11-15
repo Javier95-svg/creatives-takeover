@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +58,8 @@ const BizMapAI = () => {
   const [successScore, setSuccessScore] = useState<any>(null);
   const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const hasRestoredRef = useRef(false);
+  const [guestSessionId] = useState(() => `guest_${Date.now()}`);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -396,11 +398,17 @@ const BizMapAI = () => {
     if (currentSessionId && user) {
       const session = getSession(currentSessionId);
       if (session) {
-        // Generate title from first answer or use default
+        // Generate meaningful title from first answer
         let title = session.title;
+        
         if (userAnswers.overview && userAnswers.overview.length > 10) {
-          const words = userAnswers.overview.split(' ').slice(0, 6);
-          title = words.join(' ') + (userAnswers.overview.split(' ').length > 6 ? '...' : '');
+          // Extract business name or key concept from first sentence
+          const firstSentence = userAnswers.overview.split(/[.!?]/)[0];
+          const words = firstSentence.trim().split(' ').slice(0, 8);
+          title = words.join(' ') + (firstSentence.split(' ').length > 8 ? '...' : '');
+        } else if (title === 'New Business Idea' || !title) {
+          // If still default, use timestamp
+          title = `Chat ${new Date().toLocaleDateString()}`;
         }
 
         await updateSession(currentSessionId, {
@@ -414,81 +422,96 @@ const BizMapAI = () => {
     }
   };
 
-  // Auto-save when important state changes
+  // Auto-save when important state changes - Save to MULTIPLE keys for redundancy
   useEffect(() => {
     const hasProgress = currentStep > 0 || Object.values(userAnswers).some(answer => answer);
     
     if (hasProgress) {
-      // Save to database for authenticated users
-      if (currentSessionId && user) {
-        const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
-        return () => clearTimeout(timeoutId);
-      }
-      
-      // Always save to localStorage as backup (for non-authenticated or as failsafe)
       const progress = {
         currentStep,
         answers: userAnswers,
         timestamp: Date.now(),
-        sessionId: currentSessionId || 'guest'
+        sessionId: currentSessionId || guestSessionId
       };
-      localStorage.setItem(`bizmap_wizard_progress_${currentSessionId || 'guest'}`, JSON.stringify(progress));
-      console.log('💾 Progress saved to localStorage:', { currentStep, sessionId: currentSessionId });
+      
+      // Save to multiple localStorage keys for redundancy
+      const keys = [
+        currentSessionId ? `bizmap_wizard_${currentSessionId}` : null,
+        user?.id ? `bizmap_wizard_${user.id}` : null,
+        `bizmap_wizard_${guestSessionId}`, // Guest fallback
+        'bizmap_wizard_latest' // Universal fallback
+      ].filter(Boolean) as string[];
+      
+      keys.forEach(key => {
+        localStorage.setItem(key, JSON.stringify(progress));
+      });
+      
+      console.log('💾 Progress saved to localStorage keys:', keys, { currentStep });
+      
+      // Also save to database if authenticated
+      if (currentSessionId && user) {
+        const timeoutId = setTimeout(saveSessionProgress, 1000);
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
+  }, [userAnswers, currentStep, launchReport, currentSessionId, user, guestSessionId]);
 
-  // Restore saved progress for new users
+  // Restore wizard progress from localStorage on mount - Run ONCE with multiple key attempts
   useEffect(() => {
-    if (user) {
-      const savedProgress = localStorage.getItem('bizmap_progress');
-      if (savedProgress) {
-        try {
-          const progress = JSON.parse(savedProgress);
-          const timeSinceProgress = Date.now() - progress.timestamp;
-          
-          // Only restore if progress is less than 24 hours old
-          if (timeSinceProgress < 24 * 60 * 60 * 1000) {
-            setCurrentStep(progress.step);
-            setUserAnswers(progress.answers);
-            toast.success("Welcome back! Your progress has been restored.");
+    // Only run once on mount
+    if (!hasRestoredRef.current) {
+      hasRestoredRef.current = true;
+      
+      // Try multiple localStorage keys in order of preference
+      const possibleKeys = [
+        currentSessionId ? `bizmap_wizard_${currentSessionId}` : null,
+        user?.id ? `bizmap_wizard_${user.id}` : null,
+        `bizmap_wizard_${guestSessionId}`,
+        'bizmap_wizard_latest' // Universal fallback
+      ].filter(Boolean) as string[];
+      
+      console.log('🔍 Attempting to restore progress from keys:', possibleKeys);
+      
+      for (const key of possibleKeys) {
+        const savedProgress = localStorage.getItem(key);
+        if (savedProgress) {
+          try {
+            const progress = JSON.parse(savedProgress);
+            const age = Date.now() - progress.timestamp;
+            
+            // Restore if < 7 days old
+            if (age < 7 * 24 * 60 * 60 * 1000) {
+              console.log('📦 Restoring from:', key, progress);
+              setCurrentStep(progress.currentStep);
+              setUserAnswers(progress.answers);
+              toast.success(`Welcome back! Continuing from Step ${progress.currentStep + 1} of ${wizardSteps.length}`);
+              break; // Stop after first successful restore
+            } else {
+              // Clean up stale progress
+              localStorage.removeItem(key);
+              console.log('🗑️ Cleared stale progress from:', key);
+            }
+          } catch (e) {
+            console.error('Failed to restore from', key, e);
+            localStorage.removeItem(key);
           }
-          
-          // Clear the saved progress
-          localStorage.removeItem('bizmap_progress');
-        } catch (e) {
-          console.error('Failed to restore progress:', e);
         }
       }
     }
-  }, [user]);
+  }, []); // Empty deps - run once on mount
 
-  // Restore wizard progress from localStorage on mount (for returning users)
+  // Auto-create session when user provides first answer (if no session exists)
   useEffect(() => {
-    const storageKey = `bizmap_wizard_progress_${currentSessionId || 'guest'}`;
-    const savedProgress = localStorage.getItem(storageKey);
-    
-    if (savedProgress && currentStep === 0 && Object.keys(userAnswers).length === 0) {
-      try {
-        const progress = JSON.parse(savedProgress);
-        const timeSinceProgress = Date.now() - progress.timestamp;
-        
-        // Restore if progress is less than 7 days old
-        if (timeSinceProgress < 7 * 24 * 60 * 60 * 1000) {
-          console.log('📦 Restoring progress from localStorage:', progress);
-          setCurrentStep(progress.currentStep);
-          setUserAnswers(progress.answers);
-          toast.success(`Progress restored! Continuing from Step ${progress.currentStep + 1}`);
-        } else {
-          // Clear stale progress
-          localStorage.removeItem(storageKey);
-          console.log('🗑️ Cleared stale progress (older than 7 days)');
+    if (!currentSessionId && user && userAnswers.overview && userAnswers.overview.length > 10) {
+      console.log('✨ Auto-creating session for user with first answer');
+      createNewSession().then(sessionId => {
+        if (sessionId) {
+          console.log('✅ Auto-created session:', sessionId);
+          toast.success('Your conversation is being saved!');
         }
-      } catch (e) {
-        console.error('Failed to restore progress from localStorage:', e);
-        localStorage.removeItem(storageKey);
-      }
+      });
     }
-  }, [currentSessionId]); // Only run when sessionId changes (mount/session switch)
+  }, [userAnswers.overview, currentSessionId, user, createNewSession]);
 
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
