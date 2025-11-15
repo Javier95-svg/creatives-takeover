@@ -269,6 +269,53 @@ const BizMapAI = () => {
     return "customer-feedback";
   };
 
+  // Helper function to extract business name from the first answer
+  const extractBusinessName = (answer: string): string => {
+    if (!answer || answer.trim().length < 10) {
+      return 'New Business Idea';
+    }
+
+    // Try to extract a business name or key concept
+    // Look for capitalized phrases that might be business names
+    const trimmed = answer.trim();
+    
+    // Check if the answer starts with a business name pattern (e.g., "Local Fitness Coaching", "A mobile app for...")
+    // Pattern 1: Starts with a capitalized phrase (potential business name)
+    const capitalizedStartMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})/);
+    if (capitalizedStartMatch) {
+      const potentialName = capitalizedStartMatch[1];
+      // If it's 2-5 words and doesn't start with common sentence starters, it's likely a business name
+      const wordCount = potentialName.split(/\s+/).length;
+      const commonStarters = ['I', 'We', 'This', 'That', 'The', 'A', 'An', 'My', 'Our', 'Your'];
+      if (wordCount >= 2 && wordCount <= 5 && !commonStarters.includes(potentialName.split(/\s+/)[0])) {
+        return potentialName;
+      }
+    }
+    
+    // Pattern 2: Extract first 3-4 words as a fallback (removing common words)
+    const words = trimmed.split(/\s+/);
+    const commonWords = ['i', 'am', 'want', 'to', 'create', 'build', 'make', 'a', 'an', 'the', 'for', 'that', 'helps', 'is', 'are'];
+    const meaningfulWords = words.filter(w => w.length > 2 && !commonWords.includes(w.toLowerCase())).slice(0, 4);
+    
+    if (meaningfulWords.length >= 2) {
+      const extracted = meaningfulWords.join(' ');
+      // Capitalize first letter of each word
+      return extracted.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+    
+    // Pattern 3: If answer contains phrases like "a [business type] for [audience]"
+    const businessTypeMatch = trimmed.match(/a\s+([a-z]+(?:\s+[a-z]+){0,2})\s+for/i);
+    if (businessTypeMatch) {
+      const businessType = businessTypeMatch[1];
+      return businessType.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+    
+    // Fallback: First sentence, max 8 words
+    const firstSentence = trimmed.split(/[.!?]/)[0].trim();
+    const firstWords = firstSentence.split(/\s+/).slice(0, 8);
+    return firstWords.join(' ') + (firstSentence.split(/\s+/).length > 8 ? '...' : '');
+  };
+
   useEffect(() => {
     const mappedMilestone = determineMilestoneFromStep(currentStep);
     if (mappedMilestone && mappedMilestone !== activeMilestoneId) {
@@ -398,14 +445,15 @@ const BizMapAI = () => {
     if (currentSessionId && user) {
       const session = getSession(currentSessionId);
       if (session) {
-        // Generate meaningful title from first answer
+        // Always extract business name from first answer if available
         let title = session.title;
         
         if (userAnswers.overview && userAnswers.overview.length > 10) {
-          // Extract business name or key concept from first sentence
-          const firstSentence = userAnswers.overview.split(/[.!?]/)[0];
-          const words = firstSentence.trim().split(' ').slice(0, 8);
-          title = words.join(' ') + (firstSentence.split(' ').length > 8 ? '...' : '');
+          const extractedName = extractBusinessName(userAnswers.overview);
+          // Only update title if we got a meaningful name (not the fallback)
+          if (extractedName !== 'New Business Idea' && extractedName !== session.title) {
+            title = extractedName;
+          }
         } else if (title === 'New Business Idea' || !title) {
           // If still default, use timestamp
           title = `Chat ${new Date().toLocaleDateString()}`;
@@ -500,18 +548,37 @@ const BizMapAI = () => {
     }
   }, []); // Empty deps - run once on mount
 
-  // Auto-create session when user provides first answer (if no session exists)
+  // Auto-create session when user provides first answer (Step 1) with business name as title
   useEffect(() => {
-    if (!currentSessionId && user && userAnswers.overview && userAnswers.overview.length > 10) {
-      console.log('✨ Auto-creating session for user with first answer');
-      createNewSession().then(sessionId => {
+    // Only auto-create when:
+    // 1. No session exists yet
+    // 2. User is authenticated
+    // 3. We're on Step 1 (currentStep === 0)
+    // 4. User has provided their first answer (overview)
+    if (!currentSessionId && user && currentStep === 0 && userAnswers.overview && userAnswers.overview.length > 10) {
+      console.log('✨ Auto-creating session for user with first answer (Step 1)');
+      
+      // Extract business name from the first answer
+      const businessName = extractBusinessName(userAnswers.overview);
+      console.log('📝 Extracted business name:', businessName);
+      
+      // Create session with business name as title
+      createNewSession(businessName).then(sessionId => {
         if (sessionId) {
-          console.log('✅ Auto-created session:', sessionId);
-          toast.success('Your conversation is being saved!');
+          console.log('✅ Auto-created session with title:', businessName);
+          toast.success(`Chat "${businessName}" created and saved!`);
+          
+          // Immediately save the first answer to the session
+          if (sessionId) {
+            updateSession(sessionId, {
+              current_step: 0,
+              answers: { overview: userAnswers.overview }
+            });
+          }
         }
       });
     }
-  }, [userAnswers.overview, currentSessionId, user, createNewSession]);
+  }, [userAnswers.overview, currentStep, currentSessionId, user, createNewSession, updateSession]);
 
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
@@ -1175,7 +1242,27 @@ Subject: "Quick question about [their pain point]"
     }
 
     // Answer is good enough, proceed
-    setUserAnswers(prev => ({ ...prev, [currentKey]: currentAnswer }));
+    setUserAnswers(prev => {
+      const updated = { ...prev, [currentKey]: currentAnswer };
+      
+      // If this is Step 1 (overview) and no session exists yet, create one immediately
+      if (currentKey === 'overview' && !currentSessionId && user) {
+        const businessName = extractBusinessName(currentAnswer);
+        console.log('🎯 Step 1 completed, creating session with name:', businessName);
+        createNewSession(businessName).then(sessionId => {
+          if (sessionId) {
+            console.log('✅ Session created immediately:', sessionId);
+            // Update session with the answer
+            updateSession(sessionId, {
+              current_step: 0,
+              answers: { overview: currentAnswer }
+            });
+          }
+        });
+      }
+      
+      return updated;
+    });
 
     // Add user message to chat
     setMessages(prev => [...prev, {
