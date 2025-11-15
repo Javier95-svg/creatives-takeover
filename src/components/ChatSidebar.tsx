@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/tooltip';
 
 interface ChatSidebarProps {
-  onSessionSelect: (session: ChatSession | null) => void | Promise<void>;
+  onSessionSelect: (session: ChatSession | null) => void;
   onNewChat: () => void;
   className?: string;
 }

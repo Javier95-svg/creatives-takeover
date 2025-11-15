@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,8 +58,6 @@ const BizMapAI = () => {
   const [successScore, setSuccessScore] = useState<any>(null);
   const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const hasRestoredRef = useRef(false);
-  const [guestSessionId] = useState(() => `guest_${Date.now()}`);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -269,53 +267,6 @@ const BizMapAI = () => {
     return "customer-feedback";
   };
 
-  // Helper function to extract business name from the first answer
-  const extractBusinessName = (answer: string): string => {
-    if (!answer || answer.trim().length < 10) {
-      return 'New Business Idea';
-    }
-
-    // Try to extract a business name or key concept
-    // Look for capitalized phrases that might be business names
-    const trimmed = answer.trim();
-    
-    // Check if the answer starts with a business name pattern (e.g., "Local Fitness Coaching", "A mobile app for...")
-    // Pattern 1: Starts with a capitalized phrase (potential business name)
-    const capitalizedStartMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})/);
-    if (capitalizedStartMatch) {
-      const potentialName = capitalizedStartMatch[1];
-      // If it's 2-5 words and doesn't start with common sentence starters, it's likely a business name
-      const wordCount = potentialName.split(/\s+/).length;
-      const commonStarters = ['I', 'We', 'This', 'That', 'The', 'A', 'An', 'My', 'Our', 'Your'];
-      if (wordCount >= 2 && wordCount <= 5 && !commonStarters.includes(potentialName.split(/\s+/)[0])) {
-        return potentialName;
-      }
-    }
-    
-    // Pattern 2: Extract first 3-4 words as a fallback (removing common words)
-    const words = trimmed.split(/\s+/);
-    const commonWords = ['i', 'am', 'want', 'to', 'create', 'build', 'make', 'a', 'an', 'the', 'for', 'that', 'helps', 'is', 'are'];
-    const meaningfulWords = words.filter(w => w.length > 2 && !commonWords.includes(w.toLowerCase())).slice(0, 4);
-    
-    if (meaningfulWords.length >= 2) {
-      const extracted = meaningfulWords.join(' ');
-      // Capitalize first letter of each word
-      return extracted.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    }
-    
-    // Pattern 3: If answer contains phrases like "a [business type] for [audience]"
-    const businessTypeMatch = trimmed.match(/a\s+([a-z]+(?:\s+[a-z]+){0,2})\s+for/i);
-    if (businessTypeMatch) {
-      const businessType = businessTypeMatch[1];
-      return businessType.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
-    
-    // Fallback: First sentence, max 8 words
-    const firstSentence = trimmed.split(/[.!?]/)[0].trim();
-    const firstWords = firstSentence.split(/\s+/).slice(0, 8);
-    return firstWords.join(' ') + (firstSentence.split(/\s+/).length > 8 ? '...' : '');
-  };
-
   useEffect(() => {
     const mappedMilestone = determineMilestoneFromStep(currentStep);
     if (mappedMilestone && mappedMilestone !== activeMilestoneId) {
@@ -333,8 +284,7 @@ const BizMapAI = () => {
     createNewSession,
     updateSession,
     getSession,
-    sessions,
-    loadSessionMessages
+    sessions
   } = useChatSessions();
 
   const [message, setMessage] = useState("");
@@ -343,177 +293,70 @@ const BizMapAI = () => {
   );
 
   // Session Management Functions
-  const handleSessionSelect = async (session: ChatSession | null) => {
+  const handleSessionSelect = (session: ChatSession | null) => {
     if (session) {
-      try {
-        // Set current session ID
-        setCurrentSessionId(session.id);
-        
-        // Properly map session answers to userAnswers structure  
-        const mappedAnswers = {
-          overview: session.answers.overview || "",
-          market: session.answers.market || "",
-          problem: session.answers.problem || "",
-          solution: session.answers.solution || "",
-          channels: session.answers.channels || "",
-          pricing: session.answers.pricing || "",
-          goals: session.answers.goals || ""
-        };
-        
-        setUserAnswers(mappedAnswers);
-        setCurrentStep(session.current_step);
-        setLaunchReport(session.launch_report || "");
-        
-        // Load messages from database (freeform chat messages)
-        // Handle errors gracefully - if loading fails, continue with wizard messages only
-        let dbMessages: Array<{
-          id: string;
-          type: 'user' | 'assistant';
-          content: string;
-          timestamp: Date;
-        }> = [];
-        
-        try {
-          dbMessages = await loadSessionMessages(session.id);
-        } catch (error) {
-          console.error('Error loading messages from database:', error);
-          // Continue with wizard messages only
-        }
+      // Properly map session answers to userAnswers structure  
+      const mappedAnswers = {
+        overview: session.answers.overview || "",
+        market: session.answers.market || "",
+        problem: session.answers.problem || "",
+        solution: session.answers.solution || "",
+        channels: session.answers.channels || "",
+        pricing: session.answers.pricing || "",
+        goals: session.answers.goals || ""
+      };
       
-      // Reconstruct wizard messages based on session data with timestamps
-      const sessionStartTime = new Date(session.created_at);
-      const sessionUpdateTime = new Date(session.updated_at);
-      const timeBetweenSteps = session.current_step > 0 
-        ? (sessionUpdateTime.getTime() - sessionStartTime.getTime()) / (session.current_step + 1)
-        : 0;
+      setUserAnswers(mappedAnswers);
+      setCurrentStep(session.current_step);
+      setLaunchReport(session.launch_report || "");
       
-      const wizardMessages: Array<{
-        type: "user" | "assistant";
-        content: string;
-        timestamp: Date;
-        id: string;
-      }> = [
+      // Reconstruct messages based on session data
+      const reconstructedMessages = [
         {
           type: "assistant",
-          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!",
-          timestamp: sessionStartTime,
-          id: `wizard-0-assistant`
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
         }
       ];
 
-      // Add messages for completed steps with estimated timestamps
+      // Add messages for completed steps
       wizardSteps.forEach((step, index) => {
         if (index <= session.current_step && session.answers[step.key]) {
-          const stepTime = new Date(sessionStartTime.getTime() + (index + 1) * timeBetweenSteps);
-          
           if (index > 0) {
             // Add transition from previous step
-            wizardMessages.push({
+            reconstructedMessages.push({
               type: "assistant",
-              content: wizardSteps[index - 1].transition + "\n\n" + step.question,
-              timestamp: new Date(stepTime.getTime() - 1000), // Assistant message slightly before user response
-              id: `wizard-${index}-assistant`
+              content: wizardSteps[index - 1].transition + "\n\n" + step.question
             });
           }
-          
-          wizardMessages.push({
+          reconstructedMessages.push({
             type: "user",
-            content: session.answers[step.key],
-            timestamp: stepTime,
-            id: `wizard-${index}-user`
+            content: session.answers[step.key]
           });
         }
       });
 
       // Add launch report if completed
       if (session.is_completed && session.launch_report) {
-        wizardMessages.push({
+        reconstructedMessages.push({
           type: "assistant",
-          content: session.launch_report,
-          timestamp: sessionUpdateTime,
-          id: `wizard-report-assistant`
+          content: session.launch_report
         });
       } else if (session.current_step < wizardSteps.length) {
         // Add next question if not completed
         const nextStep = session.current_step;
         if (nextStep < wizardSteps.length) {
-          const nextStepTime = new Date(sessionUpdateTime);
           const transitionText = nextStep > 0 ? wizardSteps[nextStep - 1].transition + "\n\n" : "";
-          wizardMessages.push({
+          reconstructedMessages.push({
             type: "assistant",
-            content: transitionText + wizardSteps[nextStep].question,
-            timestamp: nextStepTime,
-            id: `wizard-${nextStep}-assistant-next`
+            content: transitionText + wizardSteps[nextStep].question
           });
         }
       }
 
-      // Merge wizard messages and database messages chronologically
-      // Handle edge cases: empty messages, missing timestamps, duplicates
-      const allMessages = [...wizardMessages];
-      
-      // Add database messages, filtering out any potential duplicates
-      // (duplicates might occur if wizard messages were also saved to database)
-      dbMessages.forEach(dbMsg => {
-        // Check if this message is already represented by a wizard message
-        // by comparing content and approximate timestamp
-        const isDuplicate = wizardMessages.some(wizMsg => {
-          const timeDiff = Math.abs(dbMsg.timestamp.getTime() - wizMsg.timestamp.getTime());
-          const contentMatch = dbMsg.content.trim() === wizMsg.content.trim();
-          return contentMatch && timeDiff < 5000; // Within 5 seconds
-        });
-        
-        if (!isDuplicate) {
-          allMessages.push(dbMsg);
-        }
-      });
-      
-      // Sort by timestamp to ensure chronological order
-      allMessages.sort((a, b) => {
-        const timeA = a.timestamp?.getTime() || 0;
-        const timeB = b.timestamp?.getTime() || 0;
-        if (timeA !== timeB) {
-          return timeA - timeB;
-        }
-        // If timestamps are equal, ensure assistant messages come before user messages
-        // (question then answer)
-        if (a.type === 'assistant' && b.type === 'user') return -1;
-        if (a.type === 'user' && b.type === 'assistant') return 1;
-        return 0;
-      });
-      
-      // Ensure we have at least the initial welcome message
-      if (allMessages.length === 0) {
-        allMessages.push({
-          type: "assistant" as const,
-          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!",
-          timestamp: sessionStartTime,
-          id: 'wizard-0-assistant-welcome'
-        });
-      }
-      
-      // Convert to format expected by setMessages (simple format without timestamp/id for now)
-      // But we keep the structure compatible
-      const formattedMessages = allMessages.map(msg => ({
-        type: msg.type,
-        content: msg.content
-      }));
-
-      setMessages(formattedMessages);
-      
-      // Store full message history in a ref or state for useChatbot if needed
-      // For now, setMessages will be used by legacy code, but BizMapChat uses useChatbot internally
-      // The wizard mode in useChatbot will reconstruct messages from answers, so we need to ensure
-      // that freeform messages are also accessible
-      
-      } catch (error) {
-        console.error('Error loading session:', error);
-        toast.error('Failed to load session. Please try again.');
-      }
+      setMessages(reconstructedMessages);
     } else {
       // Reset for new chat
       resetChat();
-      setCurrentSessionId(null);
     }
   };
 
@@ -553,18 +396,11 @@ const BizMapAI = () => {
     if (currentSessionId && user) {
       const session = getSession(currentSessionId);
       if (session) {
-        // Always extract business name from first answer if available
+        // Generate title from first answer or use default
         let title = session.title;
-        
         if (userAnswers.overview && userAnswers.overview.length > 10) {
-          const extractedName = extractBusinessName(userAnswers.overview);
-          // Only update title if we got a meaningful name (not the fallback)
-          if (extractedName !== 'New Business Idea' && extractedName !== session.title) {
-            title = extractedName;
-          }
-        } else if (title === 'New Business Idea' || !title) {
-          // If still default, use timestamp
-          title = `Chat ${new Date().toLocaleDateString()}`;
+          const words = userAnswers.overview.split(' ').slice(0, 6);
+          title = words.join(' ') + (userAnswers.overview.split(' ').length > 6 ? '...' : '');
         }
 
         await updateSession(currentSessionId, {
@@ -578,115 +414,38 @@ const BizMapAI = () => {
     }
   };
 
-  // Auto-save when important state changes - Save to MULTIPLE keys for redundancy
+  // Auto-save when important state changes
   useEffect(() => {
-    const hasProgress = currentStep > 0 || Object.values(userAnswers).some(answer => answer);
-    
-    if (hasProgress) {
-      const progress = {
-        currentStep,
-        answers: userAnswers,
-        timestamp: Date.now(),
-        sessionId: currentSessionId || guestSessionId
-      };
-      
-      // Save to multiple localStorage keys for redundancy
-      const keys = [
-        currentSessionId ? `bizmap_wizard_${currentSessionId}` : null,
-        user?.id ? `bizmap_wizard_${user.id}` : null,
-        `bizmap_wizard_${guestSessionId}`, // Guest fallback
-        'bizmap_wizard_latest' // Universal fallback
-      ].filter(Boolean) as string[];
-      
-      keys.forEach(key => {
-        localStorage.setItem(key, JSON.stringify(progress));
-      });
-      
-      console.log('💾 Progress saved to localStorage keys:', keys, { currentStep });
-      
-      // Also save to database if authenticated
-      if (currentSessionId && user) {
-        const timeoutId = setTimeout(saveSessionProgress, 1000);
-        return () => clearTimeout(timeoutId);
-      }
+    if (currentSessionId && user && (Object.values(userAnswers).some(answer => answer))) {
+      const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
+      return () => clearTimeout(timeoutId);
     }
-  }, [userAnswers, currentStep, launchReport, currentSessionId, user, guestSessionId]);
+  }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
-  // Restore wizard progress from localStorage on mount - Run ONCE with multiple key attempts
+  // Restore saved progress for new users
   useEffect(() => {
-    // Only run once on mount
-    if (!hasRestoredRef.current) {
-      hasRestoredRef.current = true;
-      
-      // Try multiple localStorage keys in order of preference
-      const possibleKeys = [
-        currentSessionId ? `bizmap_wizard_${currentSessionId}` : null,
-        user?.id ? `bizmap_wizard_${user.id}` : null,
-        `bizmap_wizard_${guestSessionId}`,
-        'bizmap_wizard_latest' // Universal fallback
-      ].filter(Boolean) as string[];
-      
-      console.log('🔍 Attempting to restore progress from keys:', possibleKeys);
-      
-      for (const key of possibleKeys) {
-        const savedProgress = localStorage.getItem(key);
-        if (savedProgress) {
-          try {
-            const progress = JSON.parse(savedProgress);
-            const age = Date.now() - progress.timestamp;
-            
-            // Restore if < 7 days old
-            if (age < 7 * 24 * 60 * 60 * 1000) {
-              console.log('📦 Restoring from:', key, progress);
-              setCurrentStep(progress.currentStep);
-              setUserAnswers(progress.answers);
-              toast.success(`Welcome back! Continuing from Step ${progress.currentStep + 1} of ${wizardSteps.length}`);
-              break; // Stop after first successful restore
-            } else {
-              // Clean up stale progress
-              localStorage.removeItem(key);
-              console.log('🗑️ Cleared stale progress from:', key);
-            }
-          } catch (e) {
-            console.error('Failed to restore from', key, e);
-            localStorage.removeItem(key);
-          }
-        }
-      }
-    }
-  }, []); // Empty deps - run once on mount
-
-  // Auto-create session when user provides first answer (Step 1) with business name as title
-  useEffect(() => {
-    // Only auto-create when:
-    // 1. No session exists yet
-    // 2. User is authenticated
-    // 3. We're on Step 1 (currentStep === 0)
-    // 4. User has provided their first answer (overview)
-    if (!currentSessionId && user && currentStep === 0 && userAnswers.overview && userAnswers.overview.length > 10) {
-      console.log('✨ Auto-creating session for user with first answer (Step 1)');
-      
-      // Extract business name from the first answer
-      const businessName = extractBusinessName(userAnswers.overview);
-      console.log('📝 Extracted business name:', businessName);
-      
-      // Create session with business name as title
-      createNewSession(businessName).then(sessionId => {
-        if (sessionId) {
-          console.log('✅ Auto-created session with title:', businessName);
-          toast.success(`Chat "${businessName}" created and saved!`);
+    if (user) {
+      const savedProgress = localStorage.getItem('bizmap_progress');
+      if (savedProgress) {
+        try {
+          const progress = JSON.parse(savedProgress);
+          const timeSinceProgress = Date.now() - progress.timestamp;
           
-          // Immediately save the first answer to the session
-          if (sessionId) {
-            updateSession(sessionId, {
-              current_step: 0,
-              answers: { overview: userAnswers.overview }
-            });
+          // Only restore if progress is less than 24 hours old
+          if (timeSinceProgress < 24 * 60 * 60 * 1000) {
+            setCurrentStep(progress.step);
+            setUserAnswers(progress.answers);
+            toast.success("Welcome back! Your progress has been restored.");
           }
+          
+          // Clear the saved progress
+          localStorage.removeItem('bizmap_progress');
+        } catch (e) {
+          console.error('Failed to restore progress:', e);
         }
-      });
+      }
     }
-  }, [userAnswers.overview, currentStep, currentSessionId, user, createNewSession, updateSession]);
+  }, [user]);
 
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
@@ -1350,27 +1109,7 @@ Subject: "Quick question about [their pain point]"
     }
 
     // Answer is good enough, proceed
-    setUserAnswers(prev => {
-      const updated = { ...prev, [currentKey]: currentAnswer };
-      
-      // If this is Step 1 (overview) and no session exists yet, create one immediately
-      if (currentKey === 'overview' && !currentSessionId && user) {
-        const businessName = extractBusinessName(currentAnswer);
-        console.log('🎯 Step 1 completed, creating session with name:', businessName);
-        createNewSession(businessName).then(sessionId => {
-          if (sessionId) {
-            console.log('✅ Session created immediately:', sessionId);
-            // Update session with the answer
-            updateSession(sessionId, {
-              current_step: 0,
-              answers: { overview: currentAnswer }
-            });
-          }
-        });
-      }
-      
-      return updated;
-    });
+    setUserAnswers(prev => ({ ...prev, [currentKey]: currentAnswer }));
 
     // Add user message to chat
     setMessages(prev => [...prev, {
@@ -1620,7 +1359,6 @@ Subject: "Quick question about [their pain point]"
                     <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-sm h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
-                        sessionId={currentSessionId || undefined}
                         onStepComplete={(step, answer) => {
                           setCurrentStep(step + 1);
                           setUserAnswers(prev => ({
