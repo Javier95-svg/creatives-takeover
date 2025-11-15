@@ -5,6 +5,7 @@ import { Trophy, Medal, Award, Crown, Sparkles } from "lucide-react";
 import { useLeaderboard } from "@/hooks/useReputation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import { getProfileUrl } from "@/utils/profileUtils";
 
 const LeaderboardCard = () => {
   const { leaderboard, isLoading } = useLeaderboard(10);
@@ -62,7 +63,7 @@ const LeaderboardCard = () => {
             {leaderboard.map((user: any, index) => (
               <Link
                 key={user.user_id}
-                to={user.profiles?.username ? `/profile/${user.profiles.username}` : '#'}
+                to={getProfileUrl(user.profiles?.username, user.profiles?.full_name || undefined)}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors"
               >
                 <div className="w-8 flex items-center justify-center">
