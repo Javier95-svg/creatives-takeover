@@ -151,12 +151,12 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 takeover-title creatives-font leading-tight">
-            <span className="animated-gradient">Your Digital Partner for Building From Zero</span>
+            <span className="animated-gradient">The Platform That Brings Your Idea to Life</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed px-4">
-            Get AI-powered guidance, personalized 30-day launch roadmaps, and join a community turning ideas into reality
+            We make life of entrepreneurs and founders easier by offering a platform that unites AI-powered business planning, funding guidance, and a vibrant founder community.
           </p>
           
           {/* Trust Indicators */}
