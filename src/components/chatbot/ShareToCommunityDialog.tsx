@@ -117,13 +117,19 @@ export const ShareToCommunityDialog = ({
               id="content"
               value={content}
               onChange={(e) => {
-                if (e.target.value.length <= 5000) {
-                  setContent(e.target.value);
+                const newValue = e.target.value;
+                // Allow all characters including numbers, only limit by length
+                if (newValue.length <= 5000) {
+                  setContent(newValue);
+                } else {
+                  // If over limit, truncate to 5000 characters
+                  setContent(newValue.slice(0, 5000));
                 }
               }}
               placeholder="Add context about your business and what specific feedback you're looking for..."
               rows={6}
               maxLength={5000}
+              inputMode="text"
             />
             <p className="text-xs text-muted-foreground text-right">
               <span className={content.length > 4500 ? 'text-destructive' : ''}>

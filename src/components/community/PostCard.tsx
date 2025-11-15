@@ -483,6 +483,53 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     }
   };
 
+  const handleDeletePost = async () => {
+    if (!isAuthenticated || !user || !post.user_id || user.id !== post.user_id) {
+      toast.error('You can only delete your own posts');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Delete all comments for this post first (cascade should handle this, but being explicit)
+      await supabase
+        .from('post_comments')
+        .delete()
+        .eq('post_id', post.id);
+
+      // Delete votes for this post
+      await supabase
+        .from('user_votes')
+        .delete()
+        .eq('post_id', post.id);
+
+      // Delete reposts for this post
+      await supabase
+        .from('post_reposts')
+        .delete()
+        .eq('post_id', post.id);
+
+      // Delete the post
+      const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Post deleted successfully');
+      // Reload the page to refresh the feed
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
+
   return (
     <>
       <Card className="w-full hover:shadow-md transition-all duration-200 border-border/50">
@@ -528,9 +575,23 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
               )}
             </div>
             
-            <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            {isAuthenticated && user && post.user_id === user.id && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="z-50 bg-background border shadow-md">
+                  <DropdownMenuItem 
+                    onClick={handleDeletePost}
+                    className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    Delete post
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
           
           {/* Post Content */}
@@ -635,13 +696,19 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                       placeholder="What are your thoughts?"
                       value={newComment}
                       onChange={(e) => {
-                        if (e.target.value.length <= 5000) {
-                          setNewComment(e.target.value);
+                        const newValue = e.target.value;
+                        // Allow all characters including numbers, only limit by length
+                        if (newValue.length <= 5000) {
+                          setNewComment(newValue);
+                        } else {
+                          // If over limit, truncate to 5000 characters
+                          setNewComment(newValue.slice(0, 5000));
                         }
                       }}
                       rows={4}
                       maxLength={5000}
                       className="resize-none min-h-[100px]"
+                      inputMode="text"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -719,13 +786,19 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           <Textarea
                             value={editingCommentContent}
                             onChange={(e) => {
-                              if (e.target.value.length <= 5000) {
-                                setEditingCommentContent(e.target.value);
+                              const newValue = e.target.value;
+                              // Allow all characters including numbers, only limit by length
+                              if (newValue.length <= 5000) {
+                                setEditingCommentContent(newValue);
+                              } else {
+                                // If over limit, truncate to 5000 characters
+                                setEditingCommentContent(newValue.slice(0, 5000));
                               }
                             }}
                             maxLength={5000}
                             className="min-h-[120px] resize-none"
                             placeholder="Edit your comment..."
+                            inputMode="text"
                           />
                           {(editingCommentImage || newCommentImagePreview) && (
                             <div className="relative inline-block">

@@ -187,8 +187,13 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
               <Textarea
                 value={content}
                 onChange={(e) => {
-                  if (e.target.value.length <= 5000) {
-                    setContent(e.target.value);
+                  const newValue = e.target.value;
+                  // Allow all characters including numbers, only limit by length
+                  if (newValue.length <= 5000) {
+                    setContent(newValue);
+                  } else {
+                    // If over limit, truncate to 5000 characters
+                    setContent(newValue.slice(0, 5000));
                   }
                 }}
                 placeholder="Describe your work, process, challenges, or learnings. What inspired you? What did you discover?"
@@ -196,6 +201,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
                 rows={6}
                 maxLength={5000}
                 disabled={requireAuth && !isAuthenticated}
+                inputMode="text"
               />
               <div className="mt-1 text-xs text-muted-foreground text-right">
                 <span className={content.length > 4500 ? 'text-destructive' : ''}>
