@@ -201,6 +201,59 @@ export const useChatSessions = () => {
     return sessions.find(session => session.id === sessionId) || null;
   }, [sessions]);
 
+  const loadSessionMessages = useCallback(async (sessionId: string): Promise<Array<{
+    id: string;
+    type: 'user' | 'assistant';
+    content: string;
+    timestamp: Date;
+  }>> => {
+    if (!user) {
+      return [];
+    }
+
+    try {
+      // Find conversation associated with this session
+      const { data: conversation, error: convError } = await supabase
+        .from('chatbot_conversations')
+        .select('id')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (convError) {
+        console.error('Error loading conversation:', convError);
+        return [];
+      }
+
+      // If no conversation exists, return empty array (wizard-only messages)
+      if (!conversation) {
+        return [];
+      }
+
+      // Load all messages for this conversation
+      const { data: messages, error: messagesError } = await supabase
+        .from('chatbot_messages')
+        .select('id, role, content, created_at')
+        .eq('conversation_id', conversation.id)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error('Error loading messages:', messagesError);
+        return [];
+      }
+
+      // Convert database format to component format
+      return (messages || []).map(msg => ({
+        id: msg.id,
+        type: msg.role === 'user' ? 'user' as const : 'assistant' as const,
+        content: msg.content,
+        timestamp: new Date(msg.created_at)
+      }));
+    } catch (error) {
+      console.error('Error loading session messages:', error);
+      return [];
+    }
+  }, [user]);
+
   useEffect(() => {
     loadSessions();
   }, [loadSessions]);
@@ -215,6 +268,7 @@ export const useChatSessions = () => {
     deleteSession,
     togglePinSession,
     getSession,
-    loadSessions
+    loadSessions,
+    loadSessionMessages
   };
 };

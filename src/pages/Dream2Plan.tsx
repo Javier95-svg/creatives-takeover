@@ -333,7 +333,8 @@ const BizMapAI = () => {
     createNewSession,
     updateSession,
     getSession,
-    sessions
+    sessions,
+    loadSessionMessages
   } = useChatSessions();
 
   const [message, setMessage] = useState("");
@@ -342,70 +343,177 @@ const BizMapAI = () => {
   );
 
   // Session Management Functions
-  const handleSessionSelect = (session: ChatSession | null) => {
+  const handleSessionSelect = async (session: ChatSession | null) => {
     if (session) {
-      // Properly map session answers to userAnswers structure  
-      const mappedAnswers = {
-        overview: session.answers.overview || "",
-        market: session.answers.market || "",
-        problem: session.answers.problem || "",
-        solution: session.answers.solution || "",
-        channels: session.answers.channels || "",
-        pricing: session.answers.pricing || "",
-        goals: session.answers.goals || ""
-      };
+      try {
+        // Set current session ID
+        setCurrentSessionId(session.id);
+        
+        // Properly map session answers to userAnswers structure  
+        const mappedAnswers = {
+          overview: session.answers.overview || "",
+          market: session.answers.market || "",
+          problem: session.answers.problem || "",
+          solution: session.answers.solution || "",
+          channels: session.answers.channels || "",
+          pricing: session.answers.pricing || "",
+          goals: session.answers.goals || ""
+        };
+        
+        setUserAnswers(mappedAnswers);
+        setCurrentStep(session.current_step);
+        setLaunchReport(session.launch_report || "");
+        
+        // Load messages from database (freeform chat messages)
+        // Handle errors gracefully - if loading fails, continue with wizard messages only
+        let dbMessages: Array<{
+          id: string;
+          type: 'user' | 'assistant';
+          content: string;
+          timestamp: Date;
+        }> = [];
+        
+        try {
+          dbMessages = await loadSessionMessages(session.id);
+        } catch (error) {
+          console.error('Error loading messages from database:', error);
+          // Continue with wizard messages only
+        }
       
-      setUserAnswers(mappedAnswers);
-      setCurrentStep(session.current_step);
-      setLaunchReport(session.launch_report || "");
+      // Reconstruct wizard messages based on session data with timestamps
+      const sessionStartTime = new Date(session.created_at);
+      const sessionUpdateTime = new Date(session.updated_at);
+      const timeBetweenSteps = session.current_step > 0 
+        ? (sessionUpdateTime.getTime() - sessionStartTime.getTime()) / (session.current_step + 1)
+        : 0;
       
-      // Reconstruct messages based on session data
-      const reconstructedMessages = [
+      const wizardMessages: Array<{
+        type: "user" | "assistant";
+        content: string;
+        timestamp: Date;
+        id: string;
+      }> = [
         {
           type: "assistant",
-          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!",
+          timestamp: sessionStartTime,
+          id: `wizard-0-assistant`
         }
       ];
 
-      // Add messages for completed steps
+      // Add messages for completed steps with estimated timestamps
       wizardSteps.forEach((step, index) => {
         if (index <= session.current_step && session.answers[step.key]) {
+          const stepTime = new Date(sessionStartTime.getTime() + (index + 1) * timeBetweenSteps);
+          
           if (index > 0) {
             // Add transition from previous step
-            reconstructedMessages.push({
+            wizardMessages.push({
               type: "assistant",
-              content: wizardSteps[index - 1].transition + "\n\n" + step.question
+              content: wizardSteps[index - 1].transition + "\n\n" + step.question,
+              timestamp: new Date(stepTime.getTime() - 1000), // Assistant message slightly before user response
+              id: `wizard-${index}-assistant`
             });
           }
-          reconstructedMessages.push({
+          
+          wizardMessages.push({
             type: "user",
-            content: session.answers[step.key]
+            content: session.answers[step.key],
+            timestamp: stepTime,
+            id: `wizard-${index}-user`
           });
         }
       });
 
       // Add launch report if completed
       if (session.is_completed && session.launch_report) {
-        reconstructedMessages.push({
+        wizardMessages.push({
           type: "assistant",
-          content: session.launch_report
+          content: session.launch_report,
+          timestamp: sessionUpdateTime,
+          id: `wizard-report-assistant`
         });
       } else if (session.current_step < wizardSteps.length) {
         // Add next question if not completed
         const nextStep = session.current_step;
         if (nextStep < wizardSteps.length) {
+          const nextStepTime = new Date(sessionUpdateTime);
           const transitionText = nextStep > 0 ? wizardSteps[nextStep - 1].transition + "\n\n" : "";
-          reconstructedMessages.push({
+          wizardMessages.push({
             type: "assistant",
-            content: transitionText + wizardSteps[nextStep].question
+            content: transitionText + wizardSteps[nextStep].question,
+            timestamp: nextStepTime,
+            id: `wizard-${nextStep}-assistant-next`
           });
         }
       }
 
-      setMessages(reconstructedMessages);
+      // Merge wizard messages and database messages chronologically
+      // Handle edge cases: empty messages, missing timestamps, duplicates
+      const allMessages = [...wizardMessages];
+      
+      // Add database messages, filtering out any potential duplicates
+      // (duplicates might occur if wizard messages were also saved to database)
+      dbMessages.forEach(dbMsg => {
+        // Check if this message is already represented by a wizard message
+        // by comparing content and approximate timestamp
+        const isDuplicate = wizardMessages.some(wizMsg => {
+          const timeDiff = Math.abs(dbMsg.timestamp.getTime() - wizMsg.timestamp.getTime());
+          const contentMatch = dbMsg.content.trim() === wizMsg.content.trim();
+          return contentMatch && timeDiff < 5000; // Within 5 seconds
+        });
+        
+        if (!isDuplicate) {
+          allMessages.push(dbMsg);
+        }
+      });
+      
+      // Sort by timestamp to ensure chronological order
+      allMessages.sort((a, b) => {
+        const timeA = a.timestamp?.getTime() || 0;
+        const timeB = b.timestamp?.getTime() || 0;
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
+        // If timestamps are equal, ensure assistant messages come before user messages
+        // (question then answer)
+        if (a.type === 'assistant' && b.type === 'user') return -1;
+        if (a.type === 'user' && b.type === 'assistant') return 1;
+        return 0;
+      });
+      
+      // Ensure we have at least the initial welcome message
+      if (allMessages.length === 0) {
+        allMessages.push({
+          type: "assistant" as const,
+          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!",
+          timestamp: sessionStartTime,
+          id: 'wizard-0-assistant-welcome'
+        });
+      }
+      
+      // Convert to format expected by setMessages (simple format without timestamp/id for now)
+      // But we keep the structure compatible
+      const formattedMessages = allMessages.map(msg => ({
+        type: msg.type,
+        content: msg.content
+      }));
+
+      setMessages(formattedMessages);
+      
+      // Store full message history in a ref or state for useChatbot if needed
+      // For now, setMessages will be used by legacy code, but BizMapChat uses useChatbot internally
+      // The wizard mode in useChatbot will reconstruct messages from answers, so we need to ensure
+      // that freeform messages are also accessible
+      
+      } catch (error) {
+        console.error('Error loading session:', error);
+        toast.error('Failed to load session. Please try again.');
+      }
     } else {
       // Reset for new chat
       resetChat();
+      setCurrentSessionId(null);
     }
   };
 
