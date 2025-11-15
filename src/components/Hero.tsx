@@ -163,11 +163,11 @@ const Hero = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 mb-8 sm:mb-10 text-xs sm:text-sm text-muted-foreground px-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Launch before perfection</span>
+              <span>Ideas to Product Fast</span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>No investors needed</span>
+              <span>Launch with Real Support</span>
             </div>
           </div>
 
