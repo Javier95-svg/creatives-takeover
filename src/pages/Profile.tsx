@@ -82,7 +82,32 @@ const Profile = () => {
           .eq('username', username)
           .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile lookup error:', profileError);
+          console.error('Looking for username:', username);
+          
+          // Try to find if there's a similar username (case-insensitive fallback)
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('profiles')
+            .select('*')
+            .ilike('username', username)
+            .maybeSingle();
+          
+          if (fallbackData) {
+            console.log('Found profile with case-insensitive match');
+            setProfile(fallbackData as Profile);
+            return;
+          }
+          
+          throw profileError;
+        }
+        
+        if (!profileData) {
+          console.error('No profile found for username:', username);
+          toast.error('Profile not found');
+          return;
+        }
+        
         setProfile(profileData as Profile);
 
         // Load user's posts
