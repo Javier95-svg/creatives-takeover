@@ -294,25 +294,59 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       // If there's a new image to upload
       if (newCommentImage) {
         setUploadingImage(true);
-        const fileExt = newCommentImage.name.split('.').pop();
-        const fileName = `${user?.id}/${commentId}_${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('comment-images')
-          .upload(fileName, newCommentImage);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('comment-images')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
+        try {
+          const fileExt = newCommentImage.name.split('.').pop();
+          const fileName = `${user?.id}/${commentId}_${Date.now()}.${fileExt}`;
+          
+          console.log('Uploading image for comment edit:', fileName);
+          
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('comment-images')
+            .upload(fileName, newCommentImage, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (uploadError) {
+            console.error('Storage upload error:', uploadError);
+            if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('does not exist')) {
+              throw new Error('Image storage bucket not found. Please contact support to set up image storage.');
+            } else if (uploadError.message?.includes('row-level security') || uploadError.message?.includes('RLS')) {
+              throw new Error('Permission denied. Please check your account permissions.');
+            } else if (uploadError.message?.includes('File size') || uploadError.message?.includes('too large')) {
+              throw new Error('Image is too large. Maximum size is 10MB.');
+            } else {
+              throw new Error(`Upload failed: ${uploadError.message || 'Unknown error'}`);
+            }
+          }
+          
+          if (!uploadData) {
+            throw new Error('Upload succeeded but no data returned');
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('comment-images')
+            .getPublicUrl(fileName);
+          
+          if (!publicUrl) {
+            throw new Error('Failed to get public URL for uploaded image');
+          }
+          
+          imageUrl = publicUrl;
+          console.log('Image uploaded successfully:', publicUrl);
+        } catch (uploadErr: any) {
+          console.error('Image upload failed:', uploadErr);
+          toast.error(uploadErr.message || 'Failed to upload image. Please try again.');
+          setUploadingImage(false);
+          return; // Don't proceed with comment update if image upload fails
+        } finally {
+          setUploadingImage(false);
+        }
       }
 
-      // Update comment with content and image
+      // Update comment with content and image - preserve user text
       const updateData: any = { 
-        content: editingCommentContent.trim() || (imageUrl ? '[Image]' : '')
+        content: editingCommentContent.trim() || null  // Allow null if only image, preserve text otherwise
       };
       
       if (imageUrl) {
@@ -334,9 +368,21 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       setNewCommentImage(null);
       setNewCommentImagePreview(null);
       toast.success('Comment updated!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating comment:', error);
-      toast.error('Failed to update comment');
+      const errorMessage = error?.message || 'Failed to update comment';
+      toast.error(errorMessage);
+      
+      // Log detailed error for debugging
+      if (error?.code) {
+        console.error('Error code:', error.code);
+      }
+      if (error?.details) {
+        console.error('Error details:', error.details);
+      }
+      if (error?.hint) {
+        console.error('Error hint:', error.hint);
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -371,22 +417,42 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      // Reset input if no file selected
+      e.target.value = '';
+      return;
+    }
 
+    // Validate file size
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Image size must be less than 10MB');
+      e.target.value = ''; // Reset input
       return;
     }
 
+    // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('Please select an image file (JPEG, PNG, GIF, WebP, etc.)');
+      e.target.value = ''; // Reset input
       return;
     }
 
+    console.log('Image selected:', file.name, file.type, file.size, 'bytes');
+    
     setNewCommentImage(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setNewCommentImagePreview(reader.result as string);
+      if (reader.result) {
+        setNewCommentImagePreview(reader.result as string);
+        console.log('Image preview generated');
+      }
+    };
+    reader.onerror = () => {
+      console.error('Error reading image file');
+      toast.error('Error reading image file. Please try another image.');
+      setNewCommentImage(null);
+      setNewCommentImagePreview(null);
+      e.target.value = '';
     };
     reader.readAsDataURL(file);
   };
@@ -416,27 +482,62 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       // Upload image if present
       if (newCommentImage) {
         setUploadingImage(true);
-        const fileExt = newCommentImage.name.split('.').pop();
-        const fileName = `${user.id}/${post.id}_${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('comment-images')
-          .upload(fileName, newCommentImage);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('comment-images')
-          .getPublicUrl(fileName);
-        
-        imageUrl = publicUrl;
+        try {
+          const fileExt = newCommentImage.name.split('.').pop();
+          const fileName = `${user.id}/${post.id}_${Date.now()}.${fileExt}`;
+          
+          console.log('Uploading image to comment-images bucket:', fileName);
+          
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('comment-images')
+            .upload(fileName, newCommentImage, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (uploadError) {
+            console.error('Storage upload error:', uploadError);
+            // Provide specific error messages
+            if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('does not exist')) {
+              throw new Error('Image storage bucket not found. Please contact support to set up image storage.');
+            } else if (uploadError.message?.includes('row-level security') || uploadError.message?.includes('RLS')) {
+              throw new Error('Permission denied. Please check your account permissions.');
+            } else if (uploadError.message?.includes('File size') || uploadError.message?.includes('too large')) {
+              throw new Error('Image is too large. Maximum size is 10MB.');
+            } else {
+              throw new Error(`Upload failed: ${uploadError.message || 'Unknown error'}`);
+            }
+          }
+          
+          if (!uploadData) {
+            throw new Error('Upload succeeded but no data returned');
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('comment-images')
+            .getPublicUrl(fileName);
+          
+          if (!publicUrl) {
+            throw new Error('Failed to get public URL for uploaded image');
+          }
+          
+          imageUrl = publicUrl;
+          console.log('Image uploaded successfully:', publicUrl);
+        } catch (uploadErr: any) {
+          console.error('Image upload failed:', uploadErr);
+          toast.error(uploadErr.message || 'Failed to upload image. Please try again.');
+          setUploadingImage(false);
+          return; // Don't proceed with comment if image upload fails
+        } finally {
+          setUploadingImage(false);
+        }
       }
 
-      // Insert comment
+      // Insert comment - preserve user text, only use empty string if no text and no image
       const commentData: any = {
         post_id: post.id,
         user_id: user.id,
-        content: newComment.trim() || (imageUrl ? '[Image]' : '')
+        content: newComment.trim() || null  // Allow null if only image, preserve text otherwise
       };
       
       if (imageUrl) {
@@ -473,9 +574,21 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       } catch (error) {
         console.error('Error auto-completing challenge:', error);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
+      const errorMessage = error?.message || 'Failed to add comment';
+      toast.error(errorMessage);
+      
+      // Log detailed error for debugging
+      if (error?.code) {
+        console.error('Error code:', error.code);
+      }
+      if (error?.details) {
+        console.error('Error details:', error.details);
+      }
+      if (error?.hint) {
+        console.error('Error hint:', error.hint);
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -738,6 +851,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           className="hidden"
                           id={`comment-image-${post.id}`}
                           disabled={uploadingImage}
+                          multiple={false}
                         />
                         <Button
                           type="button"
@@ -848,6 +962,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 className="hidden"
                                 id={`edit-image-${comment.id}`}
                                 disabled={uploadingImage}
+                                multiple={false}
                               />
                               <Button
                                 type="button"
@@ -916,10 +1031,16 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 </DropdownMenu>
                               )}
                             </div>
-                            <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {comment.content}
-                              </ReactMarkdown>
+                            <div className="prose prose-sm max-w-none dark:prose-invert text-sm whitespace-pre-wrap break-words">
+                              {comment.content ? (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {comment.content}
+                                </ReactMarkdown>
+                              ) : (
+                                comment.image_url && (
+                                  <span className="text-muted-foreground italic">[Image only]</span>
+                                )
+                              )}
                             </div>
                             {comment.image_url && (
                               <div className="mt-2">
