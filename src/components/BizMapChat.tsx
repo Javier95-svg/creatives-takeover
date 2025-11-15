@@ -139,6 +139,7 @@ export const BizMapChat = ({
   const navigate = useNavigate();
   const { addStepResponse } = useChatBotStore();
   const { preferences } = useCofounderPersonality();
+  const hasRestoredProgress = useRef(false);
   
   // Listen for examples modal event
   useEffect(() => {
@@ -230,6 +231,23 @@ export const BizMapChat = ({
     }
   }, [currentStep]);
 
+
+  // Restore wizard progress from props
+  useEffect(() => {
+    if (currentStep > 0 && !hasRestoredProgress.current && messages.length > 0) {
+      console.log('🔄 Restoring wizard progress:', { currentStep, totalSteps: wizardSteps.length });
+      hasRestoredProgress.current = true;
+      
+      // Import toast dynamically to show feedback
+      import('@/hooks/use-toast').then(({ toast }) => {
+        toast({
+          title: "Welcome back!",
+          description: `Resuming from Step ${currentStep + 1} of ${wizardSteps.length}`,
+          duration: 3000,
+        });
+      });
+    }
+  }, [currentStep, wizardSteps.length, messages.length]);
 
   // Expose switchToFreeform to parent
   useEffect(() => {

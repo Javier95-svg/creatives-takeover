@@ -321,6 +321,21 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
   
+  // Sync wizard state when props change (for progress restoration)
+  useEffect(() => {
+    if (config.wizardMode?.currentStep !== undefined && config.wizardMode.currentStep !== wizardStep) {
+      console.log('🔄 Syncing wizard step from props:', config.wizardMode.currentStep);
+      setWizardStep(config.wizardMode.currentStep);
+    }
+  }, [config.wizardMode?.currentStep]);
+
+  useEffect(() => {
+    if (config.wizardMode?.answers && Object.keys(config.wizardMode.answers).length > 0) {
+      console.log('🔄 Syncing wizard answers from props:', config.wizardMode.answers);
+      setWizardAnswers(config.wizardMode.answers);
+    }
+  }, [config.wizardMode?.answers]);
+  
   // Phase 3: Feedback Collection
   const [feedbackTriggerCount, setFeedbackTriggerCount] = useState(0);
   const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
