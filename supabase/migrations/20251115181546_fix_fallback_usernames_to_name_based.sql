@@ -3,6 +3,11 @@
 -- This migration fixes profiles that have fallback usernames
 -- (starting with 'user_') to use name-based usernames instead
 -- Example: user_96efce7e... -> aamirkhan
+-- 
+-- Enhanced to:
+-- - Extract UUID from username if in format user_<UUID>
+-- - Handle profiles with missing full_name
+-- - Directly fix Aamir Khan's profile even without full_name
 -- =====================================================
 
 -- Step 1: Fix all profiles with fallback usernames (starting with 'user_')
@@ -16,14 +21,37 @@ DECLARE
   final_slug TEXT;
   counter INTEGER;
   updated_count INTEGER := 0;
+  extracted_uuid TEXT;
+  uuid_from_username UUID;
+  profile_by_uuid RECORD;
 BEGIN
   -- Process all profiles that have fallback usernames (starting with 'user_')
   FOR profile_record IN 
     SELECT id, full_name, username 
     FROM public.profiles
-    WHERE username LIKE 'user_%' OR username LIKE 'user%'
+    WHERE username LIKE 'user_%' OR (username LIKE 'user%' AND LENGTH(username) > 10)
   LOOP
-    -- Only regenerate if they have a valid full_name
+    -- Try to extract UUID from username if it's in format user_<UUID>
+    IF profile_record.username LIKE 'user_%' THEN
+      extracted_uuid := SUBSTRING(profile_record.username FROM 6); -- Skip 'user_'
+      
+      -- Try to parse as UUID and find profile by ID
+      BEGIN
+        uuid_from_username := extracted_uuid::UUID;
+        
+        -- If the username UUID matches the profile ID, we can trust it
+        IF profile_record.id = uuid_from_username THEN
+          -- Profile ID matches UUID in username, this is a fallback username
+          RAISE NOTICE 'Found profile with UUID-based fallback username: %', profile_record.id;
+        END IF;
+      EXCEPTION
+        WHEN OTHERS THEN
+          -- Not a valid UUID format, continue with normal processing
+          NULL;
+      END;
+    END IF;
+    
+    -- Regenerate username if they have a valid full_name
     IF profile_record.full_name IS NOT NULL AND profile_record.full_name != '' THEN
       name_parts := string_to_array(trim(profile_record.full_name), ' ');
       
@@ -60,6 +88,32 @@ BEGIN
         
         updated_count := updated_count + 1;
         RAISE NOTICE 'Updated profile % from % to %', profile_record.id, profile_record.username, final_slug;
+      END IF;
+    ELSE
+      -- No full_name available, but we might be able to identify the user
+      -- Check if this is Aamir Khan by checking if UUID matches known patterns
+      -- or if we can find the user in other tables
+      IF profile_record.username = 'user_96efce7e-9c78-4561-a0fa-e88e8f5cc964' THEN
+        -- This is Aamir Khan - set full_name and username
+        -- First check if aamirkhan is available
+        final_slug := 'aamirkhan';
+        IF EXISTS (SELECT 1 FROM public.profiles WHERE username = 'aamirkhan' AND id != profile_record.id) THEN
+          counter := 1;
+          final_slug := 'aamirkhan' || counter::TEXT;
+          WHILE EXISTS (SELECT 1 FROM public.profiles WHERE username = final_slug AND id != profile_record.id) LOOP
+            counter := counter + 1;
+            final_slug := 'aamirkhan' || counter::TEXT;
+          END LOOP;
+        END IF;
+        
+        -- Update with both full_name and username
+        UPDATE public.profiles
+        SET full_name = 'Aamir Khan',
+            username = final_slug
+        WHERE id = profile_record.id;
+        
+        updated_count := updated_count + 1;
+        RAISE NOTICE 'Updated Aamir Khan profile (no full_name) from % to %', profile_record.username, final_slug;
       END IF;
     END IF;
   END LOOP;
