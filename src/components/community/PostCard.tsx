@@ -463,7 +463,14 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   };
 
   const handleAddComment = async () => {
+    console.log('handleAddComment called');
+    console.log('isAuthenticated:', isAuthenticated);
+    console.log('user:', user);
+    console.log('newComment:', newComment);
+    console.log('newCommentImage:', newCommentImage);
+    
     if (!isAuthenticated || !user) {
+      console.log('User not authenticated, showing sign in modal');
       setSignInTriggerAction('comment');
       setShowSignInModal(true);
       sessionStorage.setItem('conversion_source', JSON.stringify({
@@ -474,7 +481,13 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       return;
     }
 
-    if (!newComment.trim() && !newCommentImage) return;
+    if (!newComment.trim() && !newCommentImage) {
+      console.log('No comment text and no image, returning');
+      toast.error('Please enter a comment or attach an image');
+      return;
+    }
+    
+    console.log('Proceeding with comment submission');
 
     try {
       let imageUrl = null;
@@ -774,9 +787,16 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setShowComments(!showComments);
-                  if (!showComments) loadComments();
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Comment button clicked. Current showComments:', showComments);
+                  const newShowComments = !showComments;
+                  setShowComments(newShowComments);
+                  if (newShowComments) {
+                    console.log('Loading comments for post:', post.id);
+                    loadComments();
+                  }
                 }}
                 className="flex items-center gap-2 rounded-full px-3 py-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
@@ -828,26 +848,40 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                       placeholder="What are your thoughts?"
                       value={newComment}
                       onChange={(e) => {
+                        // Allow ALL characters including numbers, preserve spacing exactly
                         const newValue = e.target.value;
-                        // Allow all characters including numbers, only limit by length
                         if (newValue.length <= 5000) {
                           setNewComment(newValue);
                         } else {
-                          // If over limit, truncate to 5000 characters
                           setNewComment(newValue.slice(0, 5000));
                         }
                       }}
+                      onInput={(e) => {
+                        // Ensure input is not blocked
+                        const target = e.target as HTMLTextAreaElement;
+                        console.log('Textarea input event:', target.value);
+                      }}
                       rows={4}
                       maxLength={5000}
-                      className="resize-none min-h-[100px]"
+                      className="resize-none min-h-[100px] font-normal"
+                      style={{ whiteSpace: 'pre-wrap', wordBreak: 'normal' }}
                       inputMode="text"
+                      autoComplete="off"
+                      spellCheck="true"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={handleImageSelect}
+                          onChange={(e) => {
+                            console.log('File input onChange triggered for post:', post.id);
+                            handleImageSelect(e);
+                          }}
+                          onClick={(e) => {
+                            console.log('File input clicked');
+                            e.stopPropagation();
+                          }}
                           className="hidden"
                           id={`comment-image-${post.id}`}
                           disabled={uploadingImage}
@@ -857,7 +891,31 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => document.getElementById(`comment-image-${post.id}`)?.click()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Image button clicked for post:', post.id);
+                            
+                            // Try multiple methods to find and trigger the file input
+                            let fileInput = document.getElementById(`comment-image-${post.id}`) as HTMLInputElement;
+                            
+                            if (!fileInput) {
+                              // Try querySelector as fallback
+                              fileInput = document.querySelector(`#comment-image-${post.id}`) as HTMLInputElement;
+                            }
+                            
+                            if (fileInput) {
+                              console.log('File input found, triggering click');
+                              // Reset value to allow selecting same file again
+                              fileInput.value = '';
+                              // Trigger click
+                              fileInput.click();
+                            } else {
+                              console.error('File input not found! ID:', `comment-image-${post.id}`);
+                              console.error('Available inputs:', document.querySelectorAll('input[type="file"]'));
+                              toast.error('Image upload not available. Please refresh the page.');
+                            }
+                          }}
                           disabled={uploadingImage || !!newCommentImage}
                           className="h-8"
                         >
@@ -889,7 +947,12 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                         </span>
                         <Button
                           size="sm"
-                          onClick={handleAddComment}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Comment button clicked');
+                            handleAddComment();
+                          }}
                           disabled={(!newComment.trim() && !newCommentImage) || uploadingImage}
                           className="h-8"
                         >
@@ -919,19 +982,26 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           <Textarea
                             value={editingCommentContent}
                             onChange={(e) => {
+                              // Allow ALL characters including numbers, preserve spacing exactly
                               const newValue = e.target.value;
-                              // Allow all characters including numbers, only limit by length
                               if (newValue.length <= 5000) {
                                 setEditingCommentContent(newValue);
                               } else {
-                                // If over limit, truncate to 5000 characters
                                 setEditingCommentContent(newValue.slice(0, 5000));
                               }
                             }}
+                            onInput={(e) => {
+                              // Ensure input is not blocked
+                              const target = e.target as HTMLTextAreaElement;
+                              console.log('Edit textarea input event:', target.value);
+                            }}
                             maxLength={5000}
-                            className="min-h-[120px] resize-none"
+                            className="min-h-[120px] resize-none font-normal"
+                            style={{ whiteSpace: 'pre-wrap', wordBreak: 'normal' }}
                             placeholder="Edit your comment..."
                             inputMode="text"
+                            autoComplete="off"
+                            spellCheck="true"
                           />
                           {(editingCommentImage || newCommentImagePreview) && (
                             <div className="relative inline-block">
@@ -958,7 +1028,14 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={handleImageSelect}
+                                onChange={(e) => {
+                                  console.log('File input onChange triggered for comment edit:', comment.id);
+                                  handleImageSelect(e);
+                                }}
+                                onClick={(e) => {
+                                  console.log('File input clicked for edit');
+                                  e.stopPropagation();
+                                }}
                                 className="hidden"
                                 id={`edit-image-${comment.id}`}
                                 disabled={uploadingImage}
@@ -968,7 +1045,31 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => document.getElementById(`edit-image-${comment.id}`)?.click()}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  console.log('Image button clicked for comment edit:', comment.id);
+                                  
+                                  // Try multiple methods to find and trigger the file input
+                                  let fileInput = document.getElementById(`edit-image-${comment.id}`) as HTMLInputElement;
+                                  
+                                  if (!fileInput) {
+                                    // Try querySelector as fallback
+                                    fileInput = document.querySelector(`#edit-image-${comment.id}`) as HTMLInputElement;
+                                  }
+                                  
+                                  if (fileInput) {
+                                    console.log('File input found for edit, triggering click');
+                                    // Reset value to allow selecting same file again
+                                    fileInput.value = '';
+                                    // Trigger click
+                                    fileInput.click();
+                                  } else {
+                                    console.error('File input not found for edit! ID:', `edit-image-${comment.id}`);
+                                    console.error('Available inputs:', document.querySelectorAll('input[type="file"]'));
+                                    toast.error('Image upload not available. Please refresh the page.');
+                                  }
+                                }}
                                 disabled={uploadingImage}
                                 className="h-8"
                               >
@@ -1031,11 +1132,11 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 </DropdownMenu>
                               )}
                             </div>
-                            <div className="prose prose-sm max-w-none dark:prose-invert text-sm whitespace-pre-wrap break-words">
+                            <div className="text-sm whitespace-pre-wrap break-words text-foreground">
                               {comment.content ? (
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                                   {comment.content}
-                                </ReactMarkdown>
+                                </span>
                               ) : (
                                 comment.image_url && (
                                   <span className="text-muted-foreground italic">[Image only]</span>
