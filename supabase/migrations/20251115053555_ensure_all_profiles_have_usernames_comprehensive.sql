@@ -2,6 +2,7 @@
 -- Comprehensive Migration: Ensure ALL Profiles Have Usernames
 -- This migration ensures every profile in the database has a username
 -- Format: firstname + lastname (e.g., javieralonso1, carlosrodriguez, aamirkhan)
+-- Also fixes profiles with fallback usernames (starting with 'user_')
 -- =====================================================
 
 -- Step 1: Generate usernames for all profiles missing them
@@ -16,11 +17,16 @@ DECLARE
   counter INTEGER;
   generated_count INTEGER := 0;
 BEGIN
-  -- Process all profiles that don't have a username or have an empty username
+  -- Process all profiles that don't have a username, have an empty username, or have fallback usernames
+  -- Fallback usernames start with 'user_' (followed by UUID) or 'user' followed by exactly 8 hex chars
   FOR profile_record IN 
     SELECT id, full_name, username 
     FROM public.profiles
-    WHERE username IS NULL OR username = '' OR TRIM(username) = ''
+    WHERE username IS NULL 
+       OR username = '' 
+       OR TRIM(username) = ''
+       OR username LIKE 'user_%'
+       OR (username ~ '^user[0-9a-f]{8}$' AND full_name IS NOT NULL AND full_name != '')
   LOOP
     -- Generate username from full_name using same logic as handle_new_user()
     IF profile_record.full_name IS NOT NULL AND profile_record.full_name != '' THEN
