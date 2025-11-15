@@ -183,14 +183,26 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
               </div>
             </div>
 
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Describe your work, process, challenges, or learnings. What inspired you? What did you discover?"
-              aria-label="Post content"
-              rows={6}
-              disabled={requireAuth && !isAuthenticated}
-            />
+            <div>
+              <Textarea
+                value={content}
+                onChange={(e) => {
+                  if (e.target.value.length <= 5000) {
+                    setContent(e.target.value);
+                  }
+                }}
+                placeholder="Describe your work, process, challenges, or learnings. What inspired you? What did you discover?"
+                aria-label="Post content"
+                rows={6}
+                maxLength={5000}
+                disabled={requireAuth && !isAuthenticated}
+              />
+              <div className="mt-1 text-xs text-muted-foreground text-right">
+                <span className={content.length > 4500 ? 'text-destructive' : ''}>
+                  {content.length}/5000
+                </span>
+              </div>
+            </div>
 
             {mediaPreview && (
               <div className="relative">

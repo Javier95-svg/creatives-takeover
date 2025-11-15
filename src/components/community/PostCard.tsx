@@ -19,7 +19,9 @@ import {
   MapPin, 
   MoreHorizontal,
   Send,
-  MoreVertical
+  MoreVertical,
+  Image as ImageIcon,
+  X
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -88,6 +90,10 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const [localComments, setLocalComments] = useState(post.commentsCount);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [editingCommentImage, setEditingCommentImage] = useState<string | null>(null);
+  const [newCommentImage, setNewCommentImage] = useState<File | null>(null);
+  const [newCommentImagePreview, setNewCommentImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const timeAgo = (dateString: string) => {
     const now = new Date();
@@ -270,11 +276,111 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     }
   };
 
+
+  const handleEditComment = (commentId: string, currentContent: string, currentImageUrl?: string | null) => {
+    setEditingCommentId(commentId);
+    setEditingCommentContent(currentContent);
+    setEditingCommentImage(currentImageUrl || null);
+    setNewCommentImage(null);
+    setNewCommentImagePreview(null);
+  };
+
+  const handleSaveComment = async (commentId: string) => {
+    if (!editingCommentContent.trim() && !editingCommentImage) return;
+
+    try {
+      let imageUrl = editingCommentImage;
+      
+      // If there's a new image to upload
+      if (newCommentImage) {
+        setUploadingImage(true);
+        const fileExt = newCommentImage.name.split('.').pop();
+        const fileName = `${user?.id}/${commentId}_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('comment-images')
+          .upload(fileName, newCommentImage);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('comment-images')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
+      // Update comment with content and image
+      const updateData: any = { 
+        content: editingCommentContent.trim() || (imageUrl ? '[Image]' : '')
+      };
+      
+      if (imageUrl) {
+        updateData.image_url = imageUrl;
+      }
+
+      const { error } = await supabase
+        .from('post_comments')
+        .update(updateData)
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      // Reload comments to get updated data
+      await loadComments();
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+      setEditingCommentImage(null);
+      setNewCommentImage(null);
+      setNewCommentImagePreview(null);
+      toast.success('Comment updated!');
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      toast.error('Failed to update comment');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingCommentContent("");
+    setEditingCommentImage(null);
+    setNewCommentImage(null);
+    setNewCommentImagePreview(null);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    setNewCommentImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewCommentImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setNewCommentImage(null);
+    setNewCommentImagePreview(null);
+  };
+
   const handleAddComment = async () => {
     if (!isAuthenticated || !user) {
       setSignInTriggerAction('comment');
       setShowSignInModal(true);
-      // Track conversion trigger
       sessionStorage.setItem('conversion_source', JSON.stringify({
         type: 'community_comment',
         post_id: post.id,
@@ -283,25 +389,55 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       return;
     }
 
-    if (!newComment.trim()) return;
+    if (!newComment.trim() && !newCommentImage) return;
 
     try {
+      let imageUrl = null;
+      
+      // Upload image if present
+      if (newCommentImage) {
+        setUploadingImage(true);
+        const fileExt = newCommentImage.name.split('.').pop();
+        const fileName = `${user.id}/${post.id}_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('comment-images')
+          .upload(fileName, newCommentImage);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('comment-images')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
+      // Insert comment
+      const commentData: any = {
+        post_id: post.id,
+        user_id: user.id,
+        content: newComment.trim() || (imageUrl ? '[Image]' : '')
+      };
+      
+      if (imageUrl) {
+        commentData.image_url = imageUrl;
+      }
+
       const { error } = await supabase
         .from('post_comments')
-        .insert({
-          post_id: post.id,
-          user_id: user.id,
-          content: newComment
-        });
+        .insert(commentData);
 
       if (error) throw error;
       
       setNewComment("");
+      setNewCommentImage(null);
+      setNewCommentImagePreview(null);
       setLocalComments(prev => prev + 1);
       loadComments();
       toast.success('Comment added!');
       
-      // Auto-complete daily challenge if applicable (comment type)
+      // Auto-complete daily challenge if applicable
       try {
         const { data: challengeData } = await supabase.rpc('get_todays_challenge');
         if (challengeData && challengeData.length > 0) {
@@ -321,40 +457,9 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
+    } finally {
+      setUploadingImage(false);
     }
-  };
-
-  const handleEditComment = (commentId: string, currentContent: string) => {
-    setEditingCommentId(commentId);
-    setEditingCommentContent(currentContent);
-  };
-
-  const handleSaveComment = async (commentId: string) => {
-    if (!editingCommentContent.trim()) return;
-
-    try {
-      const { error } = await supabase
-        .from('post_comments')
-        .update({ content: editingCommentContent.trim() })
-        .eq('id', commentId);
-
-      if (error) throw error;
-
-      setComments(comments.map(c => 
-        c.id === commentId ? { ...c, content: editingCommentContent.trim() } : c
-      ));
-      setEditingCommentId(null);
-      setEditingCommentContent("");
-      toast.success('Comment updated!');
-    } catch (error) {
-      console.error('Error updating comment:', error);
-      toast.error('Failed to update comment');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCommentId(null);
-    setEditingCommentContent("");
   };
 
   const handleSignIn = () => {
@@ -517,29 +622,82 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
           {/* Comments Section */}
           {showComments && (
             <div className="mt-4 pt-4 border-t border-border/50">
-              {/* Add Comment */}
-              <div className="flex gap-3 mb-4">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-xs">
-                    {user ? user.email?.charAt(0).toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 flex gap-2">
-                  <Input
-                    placeholder="Write a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-                    className="flex-1 rounded-full"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                    className="rounded-full"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+              {/* Add Comment - Reddit Style */}
+              <div className="space-y-3 mb-4">
+                <div className="flex gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-xs">
+                      {user ? user.email?.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-2">
+                    <Textarea
+                      placeholder="What are your thoughts?"
+                      value={newComment}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 5000) {
+                          setNewComment(e.target.value);
+                        }
+                      }}
+                      rows={4}
+                      maxLength={5000}
+                      className="resize-none min-h-[100px]"
+                    />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          id={`comment-image-${post.id}`}
+                          disabled={uploadingImage}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById(`comment-image-${post.id}`)?.click()}
+                          disabled={uploadingImage || !!newCommentImage}
+                          className="h-8"
+                        >
+                          <ImageIcon className="h-4 w-4 mr-1" />
+                          Image
+                        </Button>
+                        {newCommentImagePreview && (
+                          <div className="relative inline-block">
+                            <img
+                              src={newCommentImagePreview}
+                              alt="Preview"
+                              className="h-12 w-12 object-cover rounded"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleRemoveImage}
+                              className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs ${newComment.length > 4500 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {newComment.length}/5000
+                        </span>
+                        <Button
+                          size="sm"
+                          onClick={handleAddComment}
+                          disabled={(!newComment.trim() && !newCommentImage) || uploadingImage}
+                          className="h-8"
+                        >
+                          {uploadingImage ? 'Uploading...' : 'Comment'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -557,19 +715,75 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                     </Avatar>
                     <div className="flex-1">
                       {editingCommentId === comment.id ? (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <Textarea
                             value={editingCommentContent}
-                            onChange={(e) => setEditingCommentContent(e.target.value)}
-                            className="min-h-[80px]"
+                            onChange={(e) => {
+                              if (e.target.value.length <= 5000) {
+                                setEditingCommentContent(e.target.value);
+                              }
+                            }}
+                            maxLength={5000}
+                            className="min-h-[120px] resize-none"
+                            placeholder="Edit your comment..."
                           />
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleSaveComment(comment.id)}>
-                              Save
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                              Cancel
-                            </Button>
+                          {(editingCommentImage || newCommentImagePreview) && (
+                            <div className="relative inline-block">
+                              <img
+                                src={newCommentImagePreview || editingCommentImage || ''}
+                                alt="Comment"
+                                className="h-32 w-auto rounded-lg object-cover"
+                              />
+                              {newCommentImagePreview && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleRemoveImage}
+                                  className="absolute top-2 right-2 h-6 w-6 p-0 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="hidden"
+                                id={`edit-image-${comment.id}`}
+                                disabled={uploadingImage}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => document.getElementById(`edit-image-${comment.id}`)?.click()}
+                                disabled={uploadingImage}
+                                className="h-8"
+                              >
+                                <ImageIcon className="h-4 w-4 mr-1" />
+                                {editingCommentImage ? 'Change Image' : 'Add Image'}
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs ${editingCommentContent.length > 4500 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {editingCommentContent.length}/5000
+                              </span>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleSaveComment(comment.id)}
+                                disabled={uploadingImage || (!editingCommentContent.trim() && !editingCommentImage && !newCommentImage)}
+                              >
+                                {uploadingImage ? 'Saving...' : 'Save'}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -595,7 +809,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="z-50 bg-background border shadow-md">
                                     <DropdownMenuItem 
-                                      onClick={() => handleEditComment(comment.id, comment.content)}
+                                      onClick={() => handleEditComment(comment.id, comment.content, comment.image_url)}
                                       className="cursor-pointer hover:bg-accent"
                                     >
                                       Edit comment
@@ -609,6 +823,16 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 {comment.content}
                               </ReactMarkdown>
                             </div>
+                            {comment.image_url && (
+                              <div className="mt-2">
+                                <img
+                                  src={comment.image_url}
+                                  alt="Comment attachment"
+                                  className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(comment.image_url, '_blank')}
+                                />
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-4 mt-1 px-2">
                             <span className="text-xs text-muted-foreground">

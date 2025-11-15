@@ -116,13 +116,19 @@ export const ShareToCommunityDialog = ({
             <Textarea
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 5000) {
+                  setContent(e.target.value);
+                }
+              }}
               placeholder="Add context about your business and what specific feedback you're looking for..."
               rows={6}
-              maxLength={2000}
+              maxLength={5000}
             />
             <p className="text-xs text-muted-foreground text-right">
-              {content.length}/2000
+              <span className={content.length > 4500 ? 'text-destructive' : ''}>
+                {content.length}/5000
+              </span>
             </p>
           </div>
 
