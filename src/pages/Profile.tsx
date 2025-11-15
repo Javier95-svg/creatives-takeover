@@ -82,9 +82,13 @@ const Profile = () => {
           .eq('username', username)
           .single();
 
+        let finalProfileData = profileData;
+        
         if (profileError) {
           console.error('Profile lookup error:', profileError);
           console.error('Looking for username:', username);
+          console.error('Error code:', profileError.code);
+          console.error('Error message:', profileError.message);
           
           // Try to find if there's a similar username (case-insensitive fallback)
           const { data: fallbackData, error: fallbackError } = await supabase
@@ -94,43 +98,67 @@ const Profile = () => {
             .maybeSingle();
           
           if (fallbackData) {
-            console.log('Found profile with case-insensitive match');
-            setProfile(fallbackData as Profile);
+            console.log('Found profile with case-insensitive match:', fallbackData.id);
+            finalProfileData = fallbackData;
+          } else {
+            // No profile found at all
+            console.error('No profile found for username:', username);
+            console.error('Fallback search also failed:', fallbackError);
+            toast.error(`Profile "${username}" not found`);
+            setLoading(false);
             return;
           }
-          
-          throw profileError;
         }
         
-        if (!profileData) {
+        if (!finalProfileData) {
           console.error('No profile found for username:', username);
           toast.error('Profile not found');
+          setLoading(false);
           return;
         }
         
-        setProfile(profileData as Profile);
+        setProfile(finalProfileData as Profile);
 
-        // Load user's posts
-        const { data: postsData, error: postsError } = await supabase
-          .from('community_posts')
-          .select('*')
-          .eq('user_id', profileData.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
+        // Load user's posts (handle errors gracefully)
+        try {
+          const { data: postsData, error: postsError } = await supabase
+            .from('community_posts')
+            .select('*')
+            .eq('user_id', finalProfileData.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
 
-        if (postsError) throw postsError;
-        setPosts(postsData || []);
+          if (postsError) {
+            console.error('Error loading posts:', postsError);
+            setPosts([]); // Set empty array on error
+          } else {
+            setPosts(postsData || []);
+          }
+        } catch (postsErr) {
+          console.error('Error loading posts:', postsErr);
+          setPosts([]); // Set empty array on error
+        }
 
-        // Load pinned posts
-        const { data: pinnedData } = await supabase
-          .from('community_posts')
-          .select('*')
-          .eq('user_id', profileData.id)
-          .eq('is_pinned', true)
-          .order('created_at', { ascending: false })
-          .limit(4);
-        
-        setPinnedPosts(pinnedData || []);
+        // Load pinned posts (handle errors gracefully)
+        try {
+          const { data: pinnedData, error: pinnedError } = await supabase
+            .from('community_posts')
+            .select('*')
+            .eq('user_id', finalProfileData.id)
+            .eq('is_pinned', true)
+            .order('created_at', { ascending: false })
+            .limit(4);
+          
+          if (pinnedError) {
+            console.error('Error loading pinned posts:', pinnedError);
+            setPinnedPosts([]); // Set empty array on error
+          } else {
+            setPinnedPosts(pinnedData || []);
+          }
+        } catch (pinnedErr) {
+          console.error('Error loading pinned posts:', pinnedErr);
+          setPinnedPosts([]); // Set empty array on error
+        }
 
       } catch (error: any) {
         console.error('Error loading profile:', error);

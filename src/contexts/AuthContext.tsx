@@ -99,13 +99,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .maybeSingle();
 
       if (!existingProfile) {
+        // Generate username from full_name
+        let username = '';
+        const fullName = user.user_metadata?.full_name || '';
+        
+        if (fullName) {
+          const nameParts = fullName.trim().split(/\s+/).filter(p => p.length > 0);
+          if (nameParts.length >= 2) {
+            const firstName = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+            const lastName = nameParts[nameParts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
+            username = firstName + lastName;
+          } else if (nameParts.length === 1) {
+            username = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+          }
+        }
+        
+        // If no username generated, use user ID
+        if (!username) {
+          username = 'user' + user.id.substring(0, 8);
+        }
+        
+        // Ensure uniqueness by checking database
+        let finalUsername = username;
+        let counter = 1;
+        let isUnique = false;
+        
+        while (!isUnique) {
+          const { data: existing } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', finalUsername)
+            .maybeSingle();
+          
+          if (!existing) {
+            isUnique = true;
+          } else {
+            finalUsername = username + counter.toString();
+            counter++;
+          }
+        }
+        
         const { error } = await supabase
           .from('profiles')
           .insert({
             id: user.id,
-            full_name: user.user_metadata?.full_name || '',
+            full_name: fullName || '',
             avatar_url: user.user_metadata?.avatar_url || '',
             date_of_birth: user.user_metadata?.date_of_birth || null,
+            username: finalUsername,
           });
         
         if (error) {
