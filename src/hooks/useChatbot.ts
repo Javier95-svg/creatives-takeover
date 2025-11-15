@@ -321,20 +321,25 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
   
-  // Sync wizard state when props change (for progress restoration)
+  // Sync wizard state when props change - Remove flawed conditionals
   useEffect(() => {
-    if (config.wizardMode?.currentStep !== undefined && config.wizardMode.currentStep !== wizardStep) {
-      console.log('🔄 Syncing wizard step from props:', config.wizardMode.currentStep);
-      setWizardStep(config.wizardMode.currentStep);
+    const propStep = config.wizardMode?.currentStep;
+    if (propStep !== undefined && propStep !== wizardStep) {
+      console.log('🔄 Syncing wizard step from props:', propStep, '(was:', wizardStep, ')');
+      setWizardStep(propStep);
     }
-  }, [config.wizardMode?.currentStep]);
+  }, [config.wizardMode?.currentStep, wizardStep]);
 
   useEffect(() => {
-    if (config.wizardMode?.answers && Object.keys(config.wizardMode.answers).length > 0) {
-      console.log('🔄 Syncing wizard answers from props:', config.wizardMode.answers);
-      setWizardAnswers(config.wizardMode.answers);
+    const propAnswers = config.wizardMode?.answers;
+    if (propAnswers && Object.keys(propAnswers).length > 0) {
+      const hasChanges = JSON.stringify(propAnswers) !== JSON.stringify(wizardAnswers);
+      if (hasChanges) {
+        console.log('🔄 Syncing wizard answers from props');
+        setWizardAnswers(propAnswers);
+      }
     }
-  }, [config.wizardMode?.answers]);
+  }, [config.wizardMode?.answers, wizardAnswers]);
   
   // Phase 3: Feedback Collection
   const [feedbackTriggerCount, setFeedbackTriggerCount] = useState(0);
