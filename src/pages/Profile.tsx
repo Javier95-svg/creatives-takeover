@@ -101,12 +101,40 @@ const Profile = () => {
             console.log('Found profile with case-insensitive match:', fallbackData.id);
             finalProfileData = fallbackData;
           } else {
-            // No profile found at all
-            console.error('No profile found for username:', username);
-            console.error('Fallback search also failed:', fallbackError);
-            toast.error(`Profile "${username}" not found`);
-            setLoading(false);
-            return;
+            // Additional fallback: Try to find profile by matching full_name
+            // This handles edge cases where username might not match exactly
+            // For example, if username is "aamirkhan", try to find profiles with "Aamir" or "Khan" in full_name
+            // Remove trailing numbers from username for better matching
+            const baseUsername = username.replace(/\d+$/, '');
+            
+            if (baseUsername && baseUsername.length > 2) {
+              // Try to find profiles where full_name contains parts of the username
+              // This is a best-effort fallback for edge cases
+              const { data: nameFallbackData } = await supabase
+                .from('profiles')
+                .select('*')
+                .ilike('full_name', `%${baseUsername}%`)
+                .maybeSingle();
+              
+              if (nameFallbackData) {
+                console.log('Found profile by name pattern match:', nameFallbackData.id);
+                finalProfileData = nameFallbackData;
+              } else {
+                // No profile found at all
+                console.error('No profile found for username:', username);
+                console.error('All fallback searches failed');
+                toast.error(`Profile "${username}" not found`);
+                setLoading(false);
+                return;
+              }
+            } else {
+              // No profile found at all
+              console.error('No profile found for username:', username);
+              console.error('Fallback search also failed:', fallbackError);
+              toast.error(`Profile "${username}" not found`);
+              setLoading(false);
+              return;
+            }
           }
         }
         
