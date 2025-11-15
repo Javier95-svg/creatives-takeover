@@ -156,7 +156,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed px-4">
-            We make life of entrepreneurs and founders easier by offering a platform that unites AI-powered business planning, funding guidance, and a vibrant founder community.
+            We make life of entrepreneurs and founders easier by offering a platform that unites AI-powered business planning, funding guidance, and a vibrant community.
           </p>
           
           {/* Trust Indicators */}
