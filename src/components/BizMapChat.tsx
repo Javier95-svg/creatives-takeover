@@ -27,7 +27,6 @@ interface BizMapChatProps {
   currentStep: number;
   answers: Record<string, string>;
   onChatModeReady?: (switchToFreeform: () => void) => void;
-  sessionId?: string; // Optional session ID to load messages from database
 }
 
 // Helper function to categorize message importance
@@ -127,8 +126,7 @@ export const BizMapChat = ({
   onWizardComplete,
   currentStep,
   answers,
-  onChatModeReady,
-  sessionId
+  onChatModeReady
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -141,7 +139,6 @@ export const BizMapChat = ({
   const navigate = useNavigate();
   const { addStepResponse } = useChatBotStore();
   const { preferences } = useCofounderPersonality();
-  const hasRestoredProgress = useRef(false);
   
   // Listen for examples modal event
   useEffect(() => {
@@ -177,7 +174,6 @@ export const BizMapChat = ({
     enableAnalytics: true,
     enablePersonalization: true,
     enableAIGeneratedAnswers: false,
-    sessionId: sessionId, // Pass sessionId to load messages from database
     wizardMode: {
       enabled: true,
       currentStep,
@@ -234,19 +230,6 @@ export const BizMapChat = ({
     }
   }, [currentStep]);
 
-
-  // Restore wizard progress from props
-  useEffect(() => {
-    if (currentStep > 0 && !hasRestoredProgress.current && messages.length > 0) {
-      console.log('🔄 Restoring wizard progress:', { currentStep, totalSteps: wizardSteps.length });
-      hasRestoredProgress.current = true;
-      
-      // Use sonner toast
-      import('sonner').then(({ toast }) => {
-        toast.success(`Welcome back! Resuming from Step ${currentStep + 1} of ${wizardSteps.length}`);
-      });
-    }
-  }, [currentStep, wizardSteps.length, messages.length]);
 
   // Expose switchToFreeform to parent
   useEffect(() => {

@@ -19,8 +19,7 @@ import {
   MapPin, 
   MoreHorizontal,
   Send,
-  MoreVertical,
-  Trash2
+  MoreVertical
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -33,7 +32,6 @@ import { SocialButtons } from "@/components/social/SocialButtons";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import ReputationBadge from "./ReputationBadge";
-import { generateProfileSlug } from "@/utils/profileSlug";
 
 export interface Post {
   id: string;
@@ -333,21 +331,11 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const handleSaveComment = async (commentId: string) => {
     if (!editingCommentContent.trim()) return;
 
-    // Security check: verify user owns the comment
-    const comment = comments.find(c => c.id === commentId);
-    if (!comment || !user || user.id !== comment.user_id) {
-      toast.error('You can only edit your own comments');
-      setEditingCommentId(null);
-      setEditingCommentContent("");
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('post_comments')
         .update({ content: editingCommentContent.trim() })
-        .eq('id', commentId)
-        .eq('user_id', user.id); // Security: ensure user owns the comment
+        .eq('id', commentId);
 
       if (error) throw error;
 
@@ -366,38 +354,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditingCommentContent("");
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    // Security check: verify user owns the comment
-    const comment = comments.find(c => c.id === commentId);
-    if (!comment || !user || user.id !== comment.user_id) {
-      toast.error('You can only delete your own comments');
-      return;
-    }
-
-    if (!confirm('Are you sure you want to delete this comment?')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('post_comments')
-        .delete()
-        .eq('id', commentId)
-        .eq('user_id', user.id); // Security: ensure user owns the comment
-
-      if (error) throw error;
-
-      // Remove comment from local state
-      setComments(comments.filter(c => c.id !== commentId));
-      // Update comment count
-      setLocalComments(prev => Math.max(0, prev - 1));
-      toast.success('Comment deleted');
-    } catch (error) {
-      console.error('Error deleting comment:', error);
-      toast.error('Failed to delete comment');
-    }
   };
 
   const handleSignIn = () => {
@@ -439,7 +395,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Link 
-                  to={`/profile/${generateProfileSlug(post.author.name) || post.author.username || post.user_id}`}
+                  to={`/profile/${post.author.username || post.user_id}`}
                   className="font-semibold text-foreground hover:text-primary transition-colors"
                 >
                   {post.author.name}
@@ -620,7 +576,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           <div className="bg-muted rounded-2xl px-4 py-2 relative group">
                             <div className="flex items-start justify-between">
                               <Link 
-                                to={`/profile/${generateProfileSlug(comment.profiles?.full_name) || comment.profiles?.username || comment.user_id}`}
+                                to={`/profile/${comment.profiles?.username || comment.user_id}`}
                                 className="font-medium text-sm mb-1 hover:text-primary transition-colors inline-block"
                               >
                                 {comment.profiles?.full_name || 'Anonymous'}
@@ -642,13 +598,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                       className="cursor-pointer hover:bg-accent"
                                     >
                                       Edit comment
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDeleteComment(comment.id)}
-                                      className="cursor-pointer hover:bg-accent text-destructive focus:text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete comment
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>

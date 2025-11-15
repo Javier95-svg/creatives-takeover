@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
 import { useNavigate } from "react-router-dom";
-import { ImageCropper } from "./ImageCropper";
-import { VideoCropper } from "./VideoCropper";
 
 export type ComposerPayload = {
   title: string;
@@ -41,32 +39,17 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | undefined>();
   const [showSignInModal, setShowSignInModal] = useState(false);
-  const [showCropper, setShowCropper] = useState(false);
-  const [showVideoCropper, setShowVideoCropper] = useState(false);
-  const [originalImage, setOriginalImage] = useState<string | undefined>();
-  const [originalVideo, setOriginalVideo] = useState<string | undefined>();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   
   const isAIReport = !!reportData?.reportType;
 
-  // Debug: Log when cropper should show
-  useEffect(() => {
-    if (showCropper && originalImage) {
-      console.log('ImageCropper should be visible', { showCropper, hasImage: !!originalImage, imageLength: originalImage.length });
-    }
-  }, [showCropper, originalImage]);
-
   const reset = () => {
     setTitle("");
     setContent("");
     setMediaPreview(undefined);
     setMediaType(undefined);
-    setOriginalImage(undefined);
-    setOriginalVideo(undefined);
-    setShowCropper(false);
-    setShowVideoCropper(false);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
     if (audioInputRef.current) audioInputRef.current.value = "";
@@ -105,54 +88,10 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
 
     const reader = new FileReader();
     reader.onload = () => {
-      const mediaUrl = reader.result as string;
-      if (type === 'image') {
-        // Store original image and show cropper
-        console.log('Image loaded, showing cropper');
-        setOriginalImage(mediaUrl);
-        setShowCropper(true);
-      } else if (type === 'video') {
-        // Store original video and show video cropper
-        console.log('Video loaded, showing video cropper');
-        setOriginalVideo(mediaUrl);
-        setShowVideoCropper(true);
-      } else {
-        // For audio, set preview directly
-        setMediaPreview(mediaUrl);
-        setMediaType(type);
-      }
-    };
-    reader.onerror = (error) => {
-      console.error('Error reading file:', error);
-      toast.error('Failed to read file. Please try again.');
+      setMediaPreview(reader.result as string);
+      setMediaType(type);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleCropComplete = (croppedImageUrl: string) => {
-    setMediaPreview(croppedImageUrl);
-    setMediaType('image');
-    setShowCropper(false);
-    setOriginalImage(undefined);
-  };
-
-  const handleCropCancel = () => {
-    setShowCropper(false);
-    setOriginalImage(undefined);
-    if (imageInputRef.current) imageInputRef.current.value = "";
-  };
-
-  const handleVideoCropComplete = (croppedVideoUrl: string) => {
-    setMediaPreview(croppedVideoUrl);
-    setMediaType('video');
-    setShowVideoCropper(false);
-    setOriginalVideo(undefined);
-  };
-
-  const handleVideoCropCancel = () => {
-    setShowVideoCropper(false);
-    setOriginalVideo(undefined);
-    if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
   const handlePublish = (e: React.FormEvent) => {
@@ -373,25 +312,6 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
           </form>
         </CardContent>
       </Card>
-
-      {/* Image Cropper Modal */}
-      {showCropper && originalImage && (
-        <ImageCropper
-          image={originalImage}
-          onCropComplete={handleCropComplete}
-          onCancel={handleCropCancel}
-          aspectRatio={null}
-        />
-      )}
-
-      {/* Video Cropper Modal */}
-      {showVideoCropper && originalVideo && (
-        <VideoCropper
-          video={originalVideo}
-          onCropComplete={handleVideoCropComplete}
-          onCancel={handleVideoCropCancel}
-        />
-      )}
 
       <SignInModal
         open={showSignInModal}

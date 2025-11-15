@@ -34,10 +34,6 @@ import Account from "./pages/Account";
 import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
 import RAGTest from "./pages/RAGTest";
-import PitchDeckGuide from "./pages/guides/PitchDeckGuide";
-import FundingWorksGuide from "./pages/guides/FundingWorksGuide";
-import InvestorDiscoveryGuide from "./pages/guides/InvestorDiscoveryGuide";
-import FundraisingChecklistGuide from "./pages/guides/FundraisingChecklistGuide";
 import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient();
@@ -86,10 +82,6 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/insighta" element={<Blog />} />
-                  <Route path="/insighta/pitch-deck" element={<PitchDeckGuide />} />
-                  <Route path="/insighta/funding-works" element={<FundingWorksGuide />} />
-                  <Route path="/insighta/investor-discovery" element={<InvestorDiscoveryGuide />} />
-                  <Route path="/insighta/fundraising-checklist" element={<FundraisingChecklistGuide />} />
                   <Route path="/demo" element={<Demo />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/profile/:username" element={<Profile />} />

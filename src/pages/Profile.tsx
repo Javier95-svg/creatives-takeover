@@ -22,7 +22,6 @@ import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
-import { generateProfileSlug } from "@/utils/profileSlug";
 
 interface Profile {
   id: string;
@@ -76,53 +75,12 @@ const Profile = () => {
       try {
         setLoading(true);
 
-        // Check if the param is a UUID (user_id) or username
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
-        
-        let profileData;
-        let profileError;
-
-        if (isUUID) {
-          // Load profile by user_id (UUID)
-          const result = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', username)
-            .single();
-          profileData = result.data;
-          profileError = result.error;
-        } else {
-          // Load profile by username (which should match the slug pattern)
-          // First try direct username lookup
-          let result = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('username', username)
-            .single();
-          
-          profileData = result.data;
-          profileError = result.error;
-          
-          // If not found by username, try to find by matching slug pattern from full_name
-          // This handles edge cases where username might not be set correctly
-          if (profileError && profileError.code === 'PGRST116') {
-            const { data: allProfiles, error: fetchError } = await supabase
-              .from('profiles')
-              .select('*')
-              .limit(1000); // Reasonable limit for search
-            
-            if (!fetchError && allProfiles) {
-              const matchingProfile = allProfiles.find(profile => 
-                generateProfileSlug(profile.full_name) === username
-              );
-              
-              if (matchingProfile) {
-                profileData = matchingProfile;
-                profileError = null;
-              }
-            }
-          }
-        }
+        // Load profile by username
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .single();
 
         if (profileError) throw profileError;
         setProfile(profileData as Profile);
@@ -158,21 +116,7 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [username, currentUser?.id]);
-
-  // Debug: Log ownership check (can be removed after verification)
-  useEffect(() => {
-    if (profile && currentUser) {
-      console.log('Profile ownership check:', {
-        currentUserId: currentUser.id,
-        profileId: profile.id,
-        isOwnProfile: currentUser.id === profile.id,
-        username: username,
-        profileUsername: profile.username,
-        profileFullName: profile.full_name
-      });
-    }
-  }, [profile, currentUser, username]);
+  }, [username]);
 
   // Real-time listener for profile updates
   useEffect(() => {
@@ -315,7 +259,7 @@ const Profile = () => {
                             <Settings className="h-4 w-4 mr-2" />
                             Edit Profile
                           </Button>
-                        ) : profile?.id && (
+                        ) : profile.id && (
                           <SocialButtons 
                             userId={profile.id} 
                             userName={profile.full_name || undefined}
