@@ -212,6 +212,8 @@ export interface EnhancedChatbotConfig {
   enableAnalytics: boolean;
   enablePersonalization: boolean;
   enableAIGeneratedAnswers: boolean;
+  sessionId?: string; // Optional session ID - if provided, will load messages from this session
+  initialMessages?: ChatMessage[]; // Optional initial messages to load
   nluConfig?: {
     confidenceThreshold: number;
     fallbackThreshold: number;
@@ -316,10 +318,22 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     }
   });
   
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  // Use provided sessionId or generate a new one - React to config changes
+  const [sessionId, setSessionId] = useState(() => config.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
+  const [messagesLoaded, setMessagesLoaded] = useState(false); // Track if messages have been loaded from database
+  
+  // Update sessionId if config.sessionId changes
+  useEffect(() => {
+    if (config.sessionId && config.sessionId !== sessionId) {
+      console.log('🔄 Session ID changed from', sessionId, 'to', config.sessionId);
+      setSessionId(config.sessionId);
+      setMessagesLoaded(false); // Reset so messages reload with new session
+      setMessages([]); // Clear existing messages
+    }
+  }, [config.sessionId, sessionId]);
   
   // Sync wizard state when props change - Remove flawed conditionals
   useEffect(() => {
@@ -476,9 +490,165 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     'Implementation Timeline'
   ], []);
 
-  // Initialize with welcome message - Compatible with ChatbotWidget expectations
+  // Load messages from database if sessionId is provided and matches chat_sessions format (UUID)
   useEffect(() => {
-    if (messages.length === 0) {
+    // Only load if: sessionId is provided, is a valid UUID (from chat_sessions), messages haven't been loaded yet, and no initialMessages provided
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId);
+    
+    if (config.sessionId && isUUID && !messagesLoaded && !config.initialMessages) {
+      console.log('📥 Loading messages from database for session:', sessionId);
+      setMessagesLoaded(true);
+      
+      const loadMessages = async () => {
+        try {
+          // Find conversation associated with this session
+          const { data: conversation, error: convError } = await supabase
+            .from('chatbot_conversations')
+            .select('id')
+            .eq('session_id', sessionId)
+            .maybeSingle();
+
+          if (convError) {
+            console.error('Error loading conversation:', convError);
+            return;
+          }
+
+          // If conversation exists, load messages
+          if (conversation) {
+            const { data: dbMessages, error: messagesError } = await supabase
+              .from('chatbot_messages')
+              .select('id, role, content, created_at')
+              .eq('conversation_id', conversation.id)
+              .order('created_at', { ascending: true });
+
+            if (messagesError) {
+              console.error('Error loading messages:', messagesError);
+              return;
+            }
+
+            // Convert database messages to ChatMessage format
+            const loadedMessages: ChatMessage[] = (dbMessages || []).map(msg => ({
+              id: msg.id,
+              content: msg.content,
+              isBot: msg.role === 'assistant',
+              timestamp: new Date(msg.created_at)
+            }));
+
+            // Reconstruct wizard messages from wizardMode.answers and currentStep
+            // Use timestamps that place wizard messages before freeform messages
+            // Freeform messages have real timestamps, wizard messages get estimated timestamps
+            const wizardMessages: ChatMessage[] = [];
+            
+            if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
+              // Get the earliest freeform message timestamp (if any) to place wizard messages before it
+              const earliestFreeformTime = loadedMessages.length > 0 
+                ? Math.min(...loadedMessages.map(m => m.timestamp.getTime()))
+                : Date.now() - (config.wizardMode.currentStep * 60000); // Estimate if no freeform messages
+              
+              // Base timestamp for wizard messages (1 hour before earliest freeform, or current time - steps * 1 min)
+              const wizardBaseTime = loadedMessages.length > 0 
+                ? earliestFreeformTime - (60 * 60 * 1000) // 1 hour before first freeform
+                : Date.now() - ((config.wizardMode.currentStep + 1) * 60000); // Estimate based on steps
+              
+              // Add welcome message for wizard mode
+              const welcomeMsg: ChatMessage = {
+                id: `wizard-welcome-${sessionId}`,
+                content: config.wizardMode.steps[0].question || "Hey there! 👋 I'm your AI co-founder, ready to help you validate your idea and launch in 30 days! \n\nLet's start by understanding your business concept. In a few sentences, what problem are you solving and for whom?",
+                isBot: true,
+                timestamp: new Date(wizardBaseTime)
+              };
+              wizardMessages.push(welcomeMsg);
+
+              // Add messages for completed wizard steps with sequential timestamps
+              config.wizardMode.steps.forEach((step, index) => {
+                const answer = config.wizardMode?.answers?.[step.key];
+                
+                if (answer && index <= (config.wizardMode?.currentStep || 0)) {
+                  // Calculate timestamp for this step (sequential, with time gaps)
+                  const stepTime = wizardBaseTime + (index * 60000); // 1 minute per step
+                  
+                  // Add transition/question message if not first step
+                  if (index > 0 && step.transition) {
+                    const transitionMsg: ChatMessage = {
+                      id: `wizard-${index}-transition-${sessionId}`,
+                      content: config.wizardMode.steps[index - 1].transition + "\n\n" + step.question,
+                      isBot: true,
+                      timestamp: new Date(stepTime - 1000) // Slightly before user answer
+                    };
+                    wizardMessages.push(transitionMsg);
+                  }
+                  
+                  // Add user answer
+                  const userMsg: ChatMessage = {
+                    id: `wizard-${index}-user-${sessionId}`,
+                    content: answer,
+                    isBot: false,
+                    timestamp: new Date(stepTime)
+                  };
+                  wizardMessages.push(userMsg);
+                }
+              });
+            }
+
+            // Merge wizard messages and loaded freeform messages chronologically
+            const allMessages = [...wizardMessages, ...loadedMessages];
+            
+            // Sort by timestamp (wizard messages will be approximate, freeform have real timestamps)
+            // Freeform messages will naturally be after wizard if they happened later
+            allMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+            // Filter out duplicates (same content within 5 seconds)
+            const uniqueMessages: ChatMessage[] = [];
+            allMessages.forEach(msg => {
+              const isDuplicate = uniqueMessages.some(existing => {
+                const timeDiff = Math.abs(existing.timestamp.getTime() - msg.timestamp.getTime());
+                const contentMatch = existing.content.trim() === msg.content.trim();
+                return contentMatch && timeDiff < 5000 && existing.isBot === msg.isBot;
+              });
+              
+              if (!isDuplicate) {
+                uniqueMessages.push(msg);
+              }
+            });
+
+            if (uniqueMessages.length > 0) {
+              console.log('✅ Loaded', uniqueMessages.length, 'messages from database');
+              setMessages(uniqueMessages);
+            }
+          } else {
+            console.log('ℹ️ No conversation found for session:', sessionId);
+          }
+        } catch (error) {
+          console.error('Error loading messages:', error);
+        }
+      };
+
+      loadMessages();
+    }
+  }, [sessionId, config.sessionId, messagesLoaded, config.initialMessages, config.wizardMode?.steps, config.wizardMode?.answers, config.wizardMode?.currentStep, config.wizardMode?.enabled]);
+
+  // Initialize with welcome message or initialMessages - Compatible with ChatbotWidget expectations
+  useEffect(() => {
+    // Use initialMessages if provided
+    if (config.initialMessages && config.initialMessages.length > 0 && messages.length === 0) {
+      console.log('📥 Using initialMessages provided in config');
+      const convertedMessages: ChatMessage[] = config.initialMessages.map((msg, index) => ({
+        id: msg.id || `initial-${index}-${generateId()}`,
+        content: msg.content,
+        isBot: msg.isBot,
+        timestamp: msg.timestamp || new Date()
+      }));
+      setMessages(convertedMessages);
+      return;
+    }
+
+    // Only initialize default message if no messages loaded yet
+    if (messages.length === 0 && messagesLoaded) {
+      // Messages were already loaded from database, don't initialize
+      return;
+    }
+
+    if (messages.length === 0 && !messagesLoaded) {
       if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
         // Initialize wizard mode with first question
         console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
@@ -496,7 +666,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
       }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname, config.wizardMode]);
+  }, [location.pathname, config.wizardMode, config.initialMessages, messages.length, messagesLoaded]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {

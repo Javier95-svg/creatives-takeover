@@ -1620,6 +1620,7 @@ Subject: "Quick question about [their pain point]"
                     <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-sm h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
+                        sessionId={currentSessionId || undefined}
                         onStepComplete={(step, answer) => {
                           setCurrentStep(step + 1);
                           setUserAnswers(prev => ({

@@ -27,6 +27,7 @@ interface BizMapChatProps {
   currentStep: number;
   answers: Record<string, string>;
   onChatModeReady?: (switchToFreeform: () => void) => void;
+  sessionId?: string; // Optional session ID to load messages from database
 }
 
 // Helper function to categorize message importance
@@ -126,7 +127,8 @@ export const BizMapChat = ({
   onWizardComplete,
   currentStep,
   answers,
-  onChatModeReady
+  onChatModeReady,
+  sessionId
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -175,6 +177,7 @@ export const BizMapChat = ({
     enableAnalytics: true,
     enablePersonalization: true,
     enableAIGeneratedAnswers: false,
+    sessionId: sessionId, // Pass sessionId to load messages from database
     wizardMode: {
       enabled: true,
       currentStep,
