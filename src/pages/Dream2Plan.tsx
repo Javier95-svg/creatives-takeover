@@ -416,9 +416,24 @@ const BizMapAI = () => {
 
   // Auto-save when important state changes
   useEffect(() => {
-    if (currentSessionId && user && (Object.values(userAnswers).some(answer => answer))) {
-      const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
-      return () => clearTimeout(timeoutId);
+    const hasProgress = currentStep > 0 || Object.values(userAnswers).some(answer => answer);
+    
+    if (hasProgress) {
+      // Save to database for authenticated users
+      if (currentSessionId && user) {
+        const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
+        return () => clearTimeout(timeoutId);
+      }
+      
+      // Always save to localStorage as backup (for non-authenticated or as failsafe)
+      const progress = {
+        currentStep,
+        answers: userAnswers,
+        timestamp: Date.now(),
+        sessionId: currentSessionId || 'guest'
+      };
+      localStorage.setItem(`bizmap_wizard_progress_${currentSessionId || 'guest'}`, JSON.stringify(progress));
+      console.log('💾 Progress saved to localStorage:', { currentStep, sessionId: currentSessionId });
     }
   }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
@@ -446,6 +461,34 @@ const BizMapAI = () => {
       }
     }
   }, [user]);
+
+  // Restore wizard progress from localStorage on mount (for returning users)
+  useEffect(() => {
+    const storageKey = `bizmap_wizard_progress_${currentSessionId || 'guest'}`;
+    const savedProgress = localStorage.getItem(storageKey);
+    
+    if (savedProgress && currentStep === 0 && Object.keys(userAnswers).length === 0) {
+      try {
+        const progress = JSON.parse(savedProgress);
+        const timeSinceProgress = Date.now() - progress.timestamp;
+        
+        // Restore if progress is less than 7 days old
+        if (timeSinceProgress < 7 * 24 * 60 * 60 * 1000) {
+          console.log('📦 Restoring progress from localStorage:', progress);
+          setCurrentStep(progress.currentStep);
+          setUserAnswers(progress.answers);
+          toast.success(`Progress restored! Continuing from Step ${progress.currentStep + 1}`);
+        } else {
+          // Clear stale progress
+          localStorage.removeItem(storageKey);
+          console.log('🗑️ Cleared stale progress (older than 7 days)');
+        }
+      } catch (e) {
+        console.error('Failed to restore progress from localStorage:', e);
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [currentSessionId]); // Only run when sessionId changes (mount/session switch)
 
   // Check for pre-populated prompt from Prompt Library or Template
   useEffect(() => {
