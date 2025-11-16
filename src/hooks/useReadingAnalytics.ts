@@ -31,7 +31,10 @@ export const useReadingAnalytics = () => {
       // and in database for authenticated users
       if (user) {
         // TODO: When we create analytics table, store in database
-        console.log('Tracking authenticated user event:', eventData);
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('Tracking authenticated user event:', eventData);
+        }
       } else {
         // Store anonymous analytics in localStorage
         const anonymousEvents = JSON.parse(

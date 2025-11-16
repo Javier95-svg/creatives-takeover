@@ -95,6 +95,7 @@ export const CreativeCollections = ({ collections, isOwnProfile }: CreativeColle
                         src={collection.thumbnail} 
                         alt={collection.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
                       />
                     </div>
                   ) : (

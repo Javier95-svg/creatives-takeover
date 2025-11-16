@@ -98,7 +98,10 @@ const Profile = () => {
             .maybeSingle();
           
           if (fallbackData) {
-            console.log('Found profile with case-insensitive match:', fallbackData.id);
+            if (import.meta.env.DEV) {
+              // eslint-disable-next-line no-console
+              console.log('Found profile with case-insensitive match:', fallbackData.id);
+            }
             finalProfileData = fallbackData;
           } else {
             // Additional fallback: Try to find profile by matching full_name
@@ -117,7 +120,10 @@ const Profile = () => {
                 .maybeSingle();
               
               if (nameFallbackData) {
-                console.log('Found profile by name pattern match:', nameFallbackData.id);
+                if (import.meta.env.DEV) {
+                  // eslint-disable-next-line no-console
+                  console.log('Found profile by name pattern match:', nameFallbackData.id);
+                }
                 finalProfileData = nameFallbackData;
               } else {
                 // No profile found at all

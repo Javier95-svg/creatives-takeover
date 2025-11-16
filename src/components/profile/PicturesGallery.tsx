@@ -238,6 +238,7 @@ export const PicturesGallery = ({ userId, isOwnProfile }: PicturesGalleryProps) 
                       src={photo.image_url}
                       alt={photo.caption || 'User photo'}
                       className="w-full h-full object-cover rounded-lg"
+                      loading="lazy"
                     />
                     {isOwnProfile && (
                       <Button

@@ -6,7 +6,10 @@ export const useExitIntent = () => {
   useEffect(() => {
     // Check if user has already seen the exit intent in this session
     const hasSeenExitIntent = sessionStorage.getItem('exit-intent-seen');
-    console.log('Exit intent check:', { hasSeenExitIntent });
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log('Exit intent check:', { hasSeenExitIntent });
+    }
     if (hasSeenExitIntent) return;
 
     let isExitIntentTriggered = false;

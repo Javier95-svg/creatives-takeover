@@ -1,3 +1,4 @@
+import React from "react";
 import { Lightbulb, Users, Rocket } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,4 +139,4 @@ const ValuePropositionCards = () => {
   );
 };
 
-export default ValuePropositionCards;
+export default React.memo(ValuePropositionCards);

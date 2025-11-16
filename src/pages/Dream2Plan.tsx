@@ -486,7 +486,9 @@ const BizMapAI = () => {
         
         // Auto-generate 30-day roadmap with wizard answers
         if (currentSessionId && user) {
-          console.log('🗓️ Auto-generating 30-day roadmap with wizard context...');
+                      if (import.meta.env.DEV) {
+                        console.log('🗓️ Auto-generating 30-day roadmap with wizard context...');
+                      }
           setShowReport(true);
           try {
             await generateRoadmap({
@@ -1304,68 +1306,74 @@ Subject: "Quick question about [their pain point]"
                 </div>
 
                 {/* Example Conversations Modal */}
-                <ExampleConversations
-                  open={showExamplesModal}
-                  onOpenChange={setShowExamplesModal}
-                  onSelectTemplate={(template) => {
-                    // Store the prompt in localStorage for BizMapChat to pick up
-                    localStorage.setItem('bizmap_example_prompt', template.promptMessage);
-                    // Trigger a page refresh or force BizMapChat to reload
-                    window.location.reload();
-                  }}
-                />
+                <Suspense fallback={null}>
+                  <ExampleConversations
+                    open={showExamplesModal}
+                    onOpenChange={setShowExamplesModal}
+                    onSelectTemplate={(template) => {
+                      // Store the prompt in localStorage for BizMapChat to pick up
+                      localStorage.setItem('bizmap_example_prompt', template.promptMessage);
+                      // Trigger a page refresh or force BizMapChat to reload
+                      window.location.reload();
+                    }}
+                  />
+                </Suspense>
 
                 {/* Business Report Display */}
                 {showReport && launchReport && (
                   <div className="mb-8">
-                    <ReportDisplay 
-                      report={launchReport}
-                      onDownloadPDF={() => {
-                        // Trigger existing PDF generator
-                        const pdfButton = document.querySelector('[data-pdf-download]') as HTMLButtonElement;
-                        if (pdfButton) {
-                          pdfButton.click();
-                        }
-                      }}
-                    />
+                    <Suspense fallback={<div className="h-40 rounded-xl bg-muted/30 animate-pulse" />}>
+                      <ReportDisplay 
+                        report={launchReport}
+                        onDownloadPDF={() => {
+                          // Trigger existing PDF generator
+                          const pdfButton = document.querySelector('[data-pdf-download]') as HTMLButtonElement;
+                          if (pdfButton) {
+                            pdfButton.click();
+                          }
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 )}
 
                 {/* Founder OS Integration - Show after wizard completion */}
                 {currentStep >= wizardSteps.length && (
                   <div className="mb-8 animate-fade-in">
-                    <FounderOSIntegration
-                      sessionId={currentSessionId}
-                      businessIdea={userAnswers.overview}
-                      industry={userAnswers.market}
-                      targetMarket={userAnswers.market}
-                      validationComplete={validationComplete}
-                      roadmapComplete={roadmapComplete}
-                      onValidate={async () => {
-                        if (!user) {
-                          toast.error("Please sign in to validate your idea");
-                          return;
-                        }
-                        await runValidation({
-                          sessionId: currentSessionId,
-                          businessIdea: userAnswers.overview,
-                          industry: userAnswers.market,
-                          targetMarket: userAnswers.market
-                        });
-                      }}
-                      onGenerateRoadmap={async () => {
-                        if (!user) {
-                          toast.error("Please sign in to generate your roadmap");
-                          return;
-                        }
-                        await generateRoadmap({
-                          sessionId: currentSessionId,
-                          businessIdea: userAnswers.overview,
-                          industry: userAnswers.market,
-                          targetMarket: userAnswers.market
-                        });
-                      }}
-                    />
+                    <Suspense fallback={<div className="h-40 rounded-xl bg-muted/30 animate-pulse" />}>
+                      <FounderOSIntegration
+                        sessionId={currentSessionId}
+                        businessIdea={userAnswers.overview}
+                        industry={userAnswers.market}
+                        targetMarket={userAnswers.market}
+                        validationComplete={validationComplete}
+                        roadmapComplete={roadmapComplete}
+                        onValidate={async () => {
+                          if (!user) {
+                            toast.error("Please sign in to validate your idea");
+                            return;
+                          }
+                          await runValidation({
+                            sessionId: currentSessionId,
+                            businessIdea: userAnswers.overview,
+                            industry: userAnswers.market,
+                            targetMarket: userAnswers.market
+                          });
+                        }}
+                        onGenerateRoadmap={async () => {
+                          if (!user) {
+                            toast.error("Please sign in to generate your roadmap");
+                            return;
+                          }
+                          await generateRoadmap({
+                            sessionId: currentSessionId,
+                            businessIdea: userAnswers.overview,
+                            industry: userAnswers.market,
+                            targetMarket: userAnswers.market
+                          });
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 )}
              
@@ -1607,14 +1615,16 @@ Subject: "Quick question about [their pain point]"
                 </div>
                 
                 {!activeSprint ? (
-                  <SprintPlannerComponent 
-                    onSprintCreated={handleSprintCreated}
-                    businessPlanData={launchReport ? {
-                      answers: userAnswers,
-                      launchReport: launchReport,
-                      successScore: successScore
-                    } : undefined}
-                  />
+                  <Suspense fallback={<div className="h-64 rounded-xl bg-muted/30 animate-pulse" />}>
+                    <SprintPlannerComponent 
+                      onSprintCreated={handleSprintCreated}
+                      businessPlanData={launchReport ? {
+                        answers: userAnswers,
+                        launchReport: launchReport,
+                        successScore: successScore
+                      } : undefined}
+                    />
+                  </Suspense>
                 ) : (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
@@ -1634,14 +1644,16 @@ Subject: "Quick question about [their pain point]"
                       </Button>
                     </div>
                     
-                    <SprintKanban 
-                      sprint={activeSprint} 
-                      onStatusChange={(status) => {
-                        if (activeSprint) {
-                          setCurrentSprint({ ...activeSprint, status });
-                        }
-                      }}
-                    />
+                    <Suspense fallback={<div className="h-64 rounded-xl bg-muted/30 animate-pulse" />}>
+                      <SprintKanban 
+                        sprint={activeSprint} 
+                        onStatusChange={(status) => {
+                          if (activeSprint) {
+                            setCurrentSprint({ ...activeSprint, status });
+                          }
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 )}
               </TabsContent>

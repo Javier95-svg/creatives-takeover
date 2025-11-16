@@ -47,7 +47,10 @@ export function CreditGate({
   };
 
   const handleCreditPackagePurchase = (packageCredits: number, price: number) => {
-    console.log(`Purchase ${packageCredits} credits for $${price}`);
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log(`Purchase ${packageCredits} credits for $${price}`);
+    }
     onPurchase?.();
     // TODO: Implement one-time credit purchase
   };

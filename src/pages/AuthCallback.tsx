@@ -29,7 +29,10 @@ const AuthCallback = () => {
           return;
         }
 
-        console.log('Waiting for auth session...');
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('Waiting for auth session...');
+        }
         
         // Wait for session to be established
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -43,12 +46,18 @@ const AuthCallback = () => {
         }
 
         if (session?.user) {
-          console.log('Auth successful, redirecting to home');
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('Auth successful, redirecting to home');
+          }
           setStatus('success');
           toast.success('Successfully signed in!');
           navigate('/');
         } else {
-          console.log('No session found, redirecting to login');
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('No session found, redirecting to login');
+          }
           setStatus('error');
           setTimeout(() => navigate('/login'), 2000);
         }
