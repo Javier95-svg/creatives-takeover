@@ -37,12 +37,12 @@ const Hero = () => {
     >
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-background/10 to-background/20 mix-blend-overlay" />
+        {/* Static gradient overlays – no animation on wallpaper */}
         <div
           className="absolute inset-y-0 left-0 w-1/2 opacity-60"
           style={{
             backgroundImage:
               "linear-gradient(160deg, rgba(236,72,153,0.2) 0%, rgba(249,115,22,0.08) 60%, transparent 100%)",
-            animation: "drift 22s ease-in-out infinite alternate",
           }}
         />
         <div
@@ -50,7 +50,6 @@ const Hero = () => {
           style={{
             backgroundImage:
               "linear-gradient(210deg, rgba(59,130,246,0.18) 0%, rgba(14,165,233,0.12) 50%, transparent 100%)",
-            animation: "drift 26s ease-in-out infinite alternate-reverse",
           }}
         />
         <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
@@ -61,24 +60,21 @@ const Hero = () => {
               <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
             </linearGradient>
           </defs>
+          {/* Static fusion lines – animation removed */}
           <path
             d="M 180 260 Q 520 160 860 300 T 1420 320 Q 1780 280 2080 180"
             fill="none"
             stroke="url(#fusion-lines)"
             strokeWidth="2"
             strokeDasharray="12 18"
-          >
-            <animate attributeName="stroke-dashoffset" from="0" to="30" dur="3s" repeatCount="indefinite" />
-          </path>
+          />
           <path
             d="M 200 1120 Q 580 980 960 1080 T 1540 1150 Q 1880 1120 2140 960"
             fill="none"
             stroke="url(#fusion-lines)"
             strokeWidth="1.5"
             strokeDasharray="10 16"
-          >
-            <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="3.5s" repeatCount="indefinite" />
-          </path>
+          />
         </svg>
         <div className="absolute inset-0 opacity-20" style={{
           backgroundImage: `
@@ -88,14 +84,15 @@ const Hero = () => {
           backgroundSize: "80px 80px, 80px 80px",
           mixBlendMode: "screen",
         }} />
+        {/* Static horizontal accent lines – glitch animation removed */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
           <div
             className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#06b6d4] to-transparent"
-            style={{ top: "32%", animation: "glitch 14s ease-in-out infinite" }}
+            style={{ top: "32%" }}
           />
           <div
             className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#8b5cf6] to-transparent"
-            style={{ top: "68%", animation: "glitch 18s ease-in-out infinite", animationDelay: "5s" }}
+            style={{ top: "68%" }}
           />
         </div>
         {creativeParticles.map((particle, index) => (
@@ -109,8 +106,6 @@ const Hero = () => {
               height: `${particle.size}px`,
               background: `radial-gradient(circle, ${particle.color}, transparent)`,
               boxShadow: `0 0 30px ${particle.color}`,
-              animation: `pulse 3s ease-in-out infinite`,
-              animationDelay: particle.delay,
             }}
           />
         ))}
@@ -122,15 +117,14 @@ const Hero = () => {
               <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
             </linearGradient>
           </defs>
+          {/* Static tech network path – animation removed */}
           <path
             d="M 1760 220 L 1840 360 L 1720 460 L 1860 580 L 1680 660"
             fill="none"
             stroke="url(#tech-network)"
             strokeWidth="1.8"
             strokeLinecap="round"
-          >
-            <animate attributeName="stroke-dasharray" values="0 600; 600 0" dur="20s" repeatCount="indefinite" />
-          </path>
+          />
         </svg>
         {techNodes.map((node, index) => (
           <div
@@ -139,8 +133,6 @@ const Hero = () => {
             style={{
               ...node,
               boxShadow: "0 0 18px rgba(34, 211, 238, 0.8)",
-              animation: "pulse 2.8s ease-in-out infinite",
-              animationDelay: `${index * 0.6}s`,
             }}
           />
         ))}
