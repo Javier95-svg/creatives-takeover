@@ -5,7 +5,6 @@ import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import FundraisingReadinessToolkit from "@/components/blog/FundraisingReadinessToolkit";
-import TrendingSection from "@/components/blog/TrendingSection";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState, useRef } from "react";
 import { FundingFilters } from "@/types/funding";
@@ -84,14 +83,10 @@ const Blog = () => {
         <div ref={heroRef}>
           <BlogHero />
         </div>
+        <FundraisingReadinessToolkit />
         <FundingOpportunitiesSection 
           filters={fundingFilters}
           onFiltersChange={setFundingFilters}
-        />
-        <FundraisingReadinessToolkit />
-        <TrendingSection 
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
         />
       </main>
       <Footer />

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -172,54 +173,6 @@ const FundraisingReadinessToolkit = () => {
     }
   };
 
-  // Show login prompt if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <section className="py-20 px-4 relative overflow-hidden" data-section="fundraising-readiness">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-        </div>
-
-        <div className="container mx-auto max-w-5xl relative z-10">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 mb-6">
-              <Rocket className="h-6 w-6 text-primary" />
-              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-                Fundraising Readiness Toolkit
-              </h2>
-              <span className="text-4xl md:text-5xl">🎯</span>
-            </div>
-          </div>
-
-          <Card>
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-4 rounded-full bg-primary/10 w-fit">
-                <LogIn className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Sign In Required</CardTitle>
-              <CardDescription className="text-base mt-2">
-                Sign in to assess your fundraising readiness and get personalized AI-powered insights
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p className="text-muted-foreground">
-                Our AI-powered toolkit will analyze your startup's readiness and provide actionable recommendations.
-              </p>
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
-                className="mt-4"
-              >
-                <LogIn className="h-4 w-4 mr-2" />
-                Sign In to Continue
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="py-20 px-4 relative overflow-hidden" data-section="fundraising-readiness">
       {/* Background styling */}
@@ -248,6 +201,32 @@ const FundraisingReadinessToolkit = () => {
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
             Assess your readiness for pre-seed fundraising. Move the sliders to rate each area, then get AI-powered insights!
           </p>
+          {!isAuthenticated && (
+            <div className="mt-6">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <LogIn className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">Sign in to use this tool</p>
+                        <p className="text-sm text-muted-foreground">Get personalized AI-powered insights on your fundraising readiness</p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="lg" 
+                      onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In to Continue
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Main Card */}
@@ -255,10 +234,13 @@ const FundraisingReadinessToolkit = () => {
           <CardHeader>
             <CardTitle className="text-2xl">How ready are you?</CardTitle>
             <CardDescription>
-              Move each slider from 0 (Not Started) to 5 (Complete). Be honest with yourself!
+              {isAuthenticated 
+                ? "Move each slider from 0 (Not Started) to 5 (Complete). Be honest with yourself!"
+                : "Preview the assessment below. Sign in to adjust scores and get AI-powered insights!"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
+            <TooltipProvider>
             {criteria.map((criterion) => {
               const currentScore = scores[criterion.id] || 0;
               const isHelpExpanded = expandedHelp[criterion.id];
@@ -313,14 +295,39 @@ const FundraisingReadinessToolkit = () => {
                       <span className="text-sm font-medium">Score: {currentScore} / 5</span>
                       <span className="text-xs text-muted-foreground">{scoreLabels[currentScore]}</span>
                     </div>
-                    <Slider
-                      value={[currentScore]}
-                      onValueChange={(value) => handleScoreChange(criterion.id, value)}
-                      min={0}
-                      max={5}
-                      step={1}
-                      className="w-full"
-                    />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={cn(
+                            "relative",
+                            !isAuthenticated && "cursor-not-allowed"
+                          )}>
+                            <Slider
+                              value={[currentScore]}
+                              onValueChange={(value) => {
+                                if (isAuthenticated) {
+                                  handleScoreChange(criterion.id, value);
+                                }
+                              }}
+                              min={0}
+                              max={5}
+                              step={1}
+                              disabled={!isAuthenticated}
+                              className={cn(
+                                "w-full",
+                                !isAuthenticated && "opacity-60"
+                              )}
+                            />
+                            {!isAuthenticated && (
+                              <div className="absolute inset-0 cursor-not-allowed z-10" />
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        {!isAuthenticated && (
+                          <TooltipContent>
+                            <p>Sign in to adjust this score</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>0</span>
                       <span>1</span>
@@ -340,36 +347,55 @@ const FundraisingReadinessToolkit = () => {
                 </div>
               );
             })}
+            </TooltipProvider>
           </CardContent>
         </Card>
 
         {/* Analyze Button */}
-        {allScored && (
+        {(allScored || !isAuthenticated) && (
           <Card className="mb-8">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Average Score</p>
-                  <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 5.0</p>
-                </div>
-                <Button
-                  size="lg"
-                  onClick={analyzeReadiness}
-                  disabled={isAnalyzing}
-                  className="w-full md:w-auto min-w-[200px]"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="h-4 w-4 mr-2" />
-                      Get AI Analysis
-                    </>
-                  )}
-                </Button>
+                {allScored && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Average Score</p>
+                    <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 5.0</p>
+                  </div>
+                )}
+                {!isAuthenticated ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Sign in to get AI-powered analysis of your fundraising readiness
+                    </p>
+                    <Button
+                      size="lg"
+                      onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
+                      className="w-full md:w-auto min-w-[200px]"
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In to Get Analysis
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="lg"
+                    onClick={analyzeReadiness}
+                    disabled={isAnalyzing || !allScored}
+                    className="w-full md:w-auto min-w-[200px]"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="h-4 w-4 mr-2" />
+                        Get AI Analysis
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
