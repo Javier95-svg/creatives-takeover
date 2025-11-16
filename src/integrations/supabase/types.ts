@@ -3468,6 +3468,7 @@ export type Database = {
           created_at: string
           downvotes: number | null
           id: string
+          image_url: string | null
           post_id: string
           updated_at: string
           upvotes: number | null
@@ -3478,6 +3479,7 @@ export type Database = {
           created_at?: string
           downvotes?: number | null
           id?: string
+          image_url?: string | null
           post_id: string
           updated_at?: string
           upvotes?: number | null
@@ -3488,6 +3490,7 @@ export type Database = {
           created_at?: string
           downvotes?: number | null
           id?: string
+          image_url?: string | null
           post_id?: string
           updated_at?: string
           upvotes?: number | null
@@ -3608,7 +3611,7 @@ export type Database = {
           twitter_url: string | null
           updated_at: string
           user_preferences: Json | null
-          username: string | null
+          username: string
           website_url: string | null
           youtube_url: string | null
         }
@@ -3646,7 +3649,7 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           user_preferences?: Json | null
-          username?: string | null
+          username: string
           website_url?: string | null
           youtube_url?: string | null
         }
@@ -3684,7 +3687,7 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           user_preferences?: Json | null
-          username?: string | null
+          username?: string
           website_url?: string | null
           youtube_url?: string | null
         }
