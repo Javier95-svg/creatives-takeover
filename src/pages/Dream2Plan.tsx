@@ -1376,211 +1376,155 @@ Subject: "Quick question about [their pain point]"
                   />
                 </div>
 
-                {/* BizMap AI 7-Step Guide Section */}
+                {/* BizMap AI Timeline Explanation - FAQ-style section */}
                 <div className="mt-12 sm:mt-16 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                  <Card className="border-primary/20 bg-gradient-to-br from-background via-card/50 to-muted/30 overflow-hidden">
-                    <CardContent className="p-6 sm:p-8 lg:p-10">
+                  <section className="relative py-8 sm:py-10 lg:py-12 overflow-hidden bg-gradient-to-b from-background via-primary/5/40 to-background rounded-3xl">
+                    <div className="container mx-auto px-4 sm:px-6 relative z-10">
                       {/* Section Header */}
-                      <div className="text-center mb-10 sm:mb-12">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent flex items-center justify-center gap-3 animate-fade-in pb-2" style={{ animation: 'fadeInScale 0.6s ease-out' }}>
-                          <Compass className="w-8 h-8 text-primary animate-pulse" style={{ animationDuration: '2s' }} />
-                          Where to Start — Mastering BizMap AI
+                      <div className="text-center mb-8 sm:mb-10">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent flex items-center justify-center gap-3">
+                          <Compass className="w-7 h-7 text-primary" />
+                          BizMap AI 7-Step Timeline
                         </h2>
                         <p className="text-muted-foreground text-sm sm:text-base max-w-3xl mx-auto">
-                          Follow this step-by-step guide to transform your concepts into real products using BizMap AI effectively
+                          Each BizMap AI step builds on the last to turn a raw idea into a launch-ready, 30-day execution plan. Use this as your roadmap as you move through the wizard.
                         </p>
                       </div>
 
-                      {/* Steps Grid */}
-                      <div className="space-y-6 sm:space-y-8">
-                        {/* Step 1 */}
-                        <Card className="border-primary/30 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-primary/5 to-transparent">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                                <Compass className="w-6 h-6 text-primary-foreground" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                                  🧭 Step 1: Define Your Vision
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  Before chatting with BizMap AI, clarify your idea's purpose. Ask yourself:
-                                </p>
-                                <ul className="space-y-2 mb-4 ml-4">
-                                  <li className="text-sm flex items-start gap-2">
-                                    <span className="text-primary mt-1">•</span>
-                                    <span>What problem am I solving?</span>
-                                  </li>
-                                  <li className="text-sm flex items-start gap-2">
-                                    <span className="text-primary mt-1">•</span>
-                                    <span>Who will benefit from this idea?</span>
-                                  </li>
-                                  <li className="text-sm flex items-start gap-2">
-                                    <span className="text-primary mt-1">•</span>
-                                    <span>What's my ideal outcome — a product, service, or brand?</span>
-                                  </li>
-                                </ul>
-                                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
-                                  <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                  <p className="text-sm">
-                                    <span className="font-semibold">Tip:</span> The clearer your intent, the smarter BizMap AI's responses become.
-                                  </p>
-                                </div>
-                              </div>
+                      {/* FAQ-style container */}
+                      <div className="max-w-4xl mx-auto px-4">
+                        <div className="backdrop-blur-sm bg-card/60 rounded-2xl border border-border/50 p-5 sm:p-6 lg:p-8 shadow-2xl">
+                          <div className="space-y-6 sm:space-y-7">
+                            {/* Step 1 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 1 · Business Concept
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Turn your scattered idea into a clear concept
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                In this step, BizMap AI helps you describe what you want to build in plain language: who it’s for, what it does, and why it matters. You don’t need a polished pitch—just an honest snapshot of what’s in your head.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Share your rough idea, the problem you care about, and the kind of people you want to help.</li>
+                                <li>Clarify what success looks like for you (income, impact, creative freedom, portfolio piece, etc.).</li>
+                                <li>Expect a simple, human-readable summary of your business concept you can reuse in future steps.</li>
+                              </ul>
                             </div>
-                          </CardContent>
-                        </Card>
 
-                        {/* Step 2 */}
-                        <Card className="border-secondary/30 hover:border-secondary/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-secondary/5 to-transparent">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-secondary/70 flex items-center justify-center">
-                                <MessageSquare className="w-6 h-6 text-secondary-foreground" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                                  💬 Step 2: Talk to BizMap AI Like a Partner
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  Treat the chatbot as your creative strategist — not just a tool. Try prompts like:
-                                </p>
-                                <div className="space-y-2 mb-4">
-                                  <div className="bg-muted/50 rounded-md p-3 text-sm font-mono border border-border">
-                                    "Help me structure my business idea into key milestones."
-                                  </div>
-                                  <div className="bg-muted/50 rounded-md p-3 text-sm font-mono border border-border">
-                                    "Generate a brand identity concept based on [my idea]."
-                                  </div>
-                                  <div className="bg-muted/50 rounded-md p-3 text-sm font-mono border border-border">
-                                    "List potential customer segments for my product."
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Brain className="w-4 h-4 text-secondary" />
-                                  <span>Ask follow-up questions — BizMap AI adapts to your context.</span>
-                                </div>
-                              </div>
+                            {/* Step 2 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 2 · Market & Audience
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Find your first believable customers
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                Here, you’ll work with BizMap AI to define the specific people most likely to buy from you first—not the entire world. The goal is to get concrete about who they are, where they hang out, and what they already care about.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Describe your ideal early adopter (demographics, interests, platforms they use).</li>
+                                <li>Identify where you can realistically reach them in the next 30 days (online communities, platforms, networks).</li>
+                                <li>Expect a focused audience profile you can plug straight into your outreach and content plans.</li>
+                              </ul>
                             </div>
-                          </CardContent>
-                        </Card>
 
-                        {/* Step 3 */}
-                        <Card className="border-accent/30 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-accent/5 to-transparent">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center">
-                                <Package className="w-6 h-6 text-accent-foreground" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                                  🧩 Step 3: From Concept to Product
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  Once your idea feels defined:
-                                </p>
-                                <ul className="space-y-2 mb-4">
-                                  <li className="text-sm flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                                    <span>Use BizMap AI to create your <strong>Product Roadmap</strong> — idea → MVP → launch.</span>
-                                  </li>
-                                  <li className="text-sm flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                                    <span>Use <strong>Design Sprint tools</strong> to bring your vision to life.</span>
-                                  </li>
-                                  <li className="text-sm flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                                    <span>Connect your results to Creative Journey steps (Brand, Build, Grow).</span>
-                                  </li>
-                                </ul>
-                                <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-                                  <p className="text-sm flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-accent" />
-                                    Each chat session builds a living map of your business.
-                                  </p>
-                                </div>
-                              </div>
+                            {/* Step 3 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 3 · Core Problem
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Nail the real pain your audience feels
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                Instead of guessing, this step forces your idea to connect to a specific, lived problem your audience experiences. BizMap AI helps you turn vague frustrations into sharp, testable problem statements.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Describe the day-to-day friction your audience feels before your product exists.</li>
+                                <li>Explore why this problem hasn’t been solved properly yet, and what people currently do instead.</li>
+                                <li>Expect 1–3 clear problem statements you can use in messaging, landing pages, and validation interviews.</li>
+                              </ul>
                             </div>
-                          </CardContent>
-                        </Card>
 
-                        {/* Step 4 */}
-                        <Card className="border-primary/30 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-primary/5 to-transparent">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-primary flex items-center justify-center">
-                                <RefreshCw className="w-6 h-6 text-primary-foreground" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                                  🔄 Step 4: Iterate and Validate
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  Innovation is a loop — revisit your BizMap conversations to:
-                                </p>
-                                <ul className="space-y-2 mb-4">
-                                  <li className="text-sm flex items-start gap-2">
-                                    <ArrowRight className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                    <span>Refine your business model.</span>
-                                  </li>
-                                  <li className="text-sm flex items-start gap-2">
-                                    <ArrowRight className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                    <span>Test pricing or positioning ideas.</span>
-                                  </li>
-                                  <li className="text-sm flex items-start gap-2">
-                                    <ArrowRight className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                    <span>Get fresh branding or marketing angles.</span>
-                                  </li>
-                                </ul>
-                                <div className="flex items-center gap-2 text-sm">
-                                  <TrendingUp className="w-4 h-4 text-primary" />
-                                  <span className="font-semibold">Your BizMap evolves as your business grows.</span>
-                                </div>
-                              </div>
+                            {/* Step 4 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 4 · Solution & Offer
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Shape a solution people would actually pay for
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                With the problem nailed, BizMap AI helps you turn your concept into a concrete offer: what you deliver, how it works, and why it feels valuable from your customer’s point of view.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Choose the simplest version of your product or service you can launch in 30 days (your MVP).</li>
+                                <li>Define key features or deliverables that directly solve the core problem—no feature bloat.</li>
+                                <li>Expect a clear offer description you can paste into sales pages, outreach messages, or decks.</li>
+                              </ul>
                             </div>
-                          </CardContent>
-                        </Card>
 
-                        {/* Step 5 */}
-                        <Card className="border-accent/30 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-accent/5 via-primary/5 to-secondary/5">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
-                                <Zap className="w-6 h-6 text-primary-foreground" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                                  🧬 Step 5: Align with the Creatives Takeover Mindset
-                                </h3>
-                                <p className="text-muted-foreground mb-4">
-                                  Every project inside BizMap should embody our values:
-                                </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                                    <p className="font-semibold text-primary mb-1">Clarity</p>
-                                    <p className="text-sm text-muted-foreground">Make complex ideas simple.</p>
-                                  </div>
-                                  <div className="bg-secondary/10 border border-secondary/20 rounded-lg p-4">
-                                    <p className="font-semibold text-secondary mb-1">Creativity</p>
-                                    <p className="text-sm text-muted-foreground">Explore new angles.</p>
-                                  </div>
-                                  <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-                                    <p className="font-semibold text-accent mb-1">Collaboration</p>
-                                    <p className="text-sm text-muted-foreground">Use AI as your co-creator.</p>
-                                  </div>
-                                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                                    <p className="font-semibold text-primary mb-1">Momentum</p>
-                                    <p className="text-sm text-muted-foreground">Always move ideas forward.</p>
-                                  </div>
-                                </div>
-                              </div>
+                            {/* Step 5 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 5 · Channels & Visibility
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Decide how you’ll get in front of real humans
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                This step turns “I’ll post on social” into a focused visibility plan. BizMap AI helps you choose the 1–3 channels most likely to work for your idea, based on your audience and strengths.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Pick your primary discovery channels (e.g. Twitter, LinkedIn, TikTok, communities, email, partnerships).</li>
+                                <li>Outline specific actions you can take weekly—posts, DMs, collaborations, or outreach sequences.</li>
+                                <li>Expect a lightweight channel strategy that feels doable, not overwhelming.</li>
+                              </ul>
                             </div>
-                          </CardContent>
-                        </Card>
+
+                            {/* Step 6 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 6 · Pricing & Revenue
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Choose a pricing model that matches your goals
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                Here, BizMap AI helps you think through how you’ll actually make money: pricing tiers, payment structure, and what “good” looks like for you financially in the first 30–90 days.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Test different pricing scenarios (one-time, subscription, packages, retainers, etc.).</li>
+                                <li>Align your price with the value you deliver and the audience you’re targeting.</li>
+                                <li>Expect a simple revenue target and starter pricing structure you can adjust as you learn.</li>
+                              </ul>
+                            </div>
+
+                            {/* Step 7 */}
+                            <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
+                              <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
+                                Step 7 · Goals & 30-Day Roadmap
+                              </p>
+                              <h3 className="text-lg sm:text-xl font-semibold mb-3">
+                                Lock in a focused launch plan you can actually follow
+                              </h3>
+                              <p className="text-sm sm:text-base text-muted-foreground mb-3">
+                                The final step pulls everything together into a practical timeline. BizMap AI helps you break your plan into clear milestones and actions so you always know what to do next.
+                              </p>
+                              <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-muted-foreground">
+                                <li>Set measurable 30-day outcomes (first customers, beta users, revenue goal, or launch milestone).</li>
+                                <li>Break the month into weekly themes so you’re not doing everything at once.</li>
+                                <li>Expect a structured roadmap you can export, plug into sprints, and refine as you gather real-world feedback.</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </section>
                 </div>
                 
                  {/* PDF Generator and Download Component - Show only when report is completed */}
