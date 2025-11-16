@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,20 +24,73 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import SuccessScore from "@/components/SuccessScore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
-import SprintKanban from "@/components/sprint/SprintKanban";
+const SprintPlannerComponent = lazy(() => import("@/components/sprint/SprintPlanner"));
+const SprintKanban = lazy(() => import("@/components/sprint/SprintKanban"));
 import { useSprints } from "@/hooks/useSprints";
 import { ArrowLeft, Zap } from "lucide-react";
-import PDFGenerator from "@/components/PDFGenerator";
+const PDFGenerator = lazy(() => import("@/components/PDFGenerator"));
 
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
-import { ReportDisplay } from "@/components/ReportDisplay";
-import { ExampleConversations } from "@/components/bizmap/ExampleConversations";
+const ReportDisplay = lazy(() => import("@/components/ReportDisplay"));
+const ExampleConversations = lazy(() => import("@/components/bizmap/ExampleConversations"));
 import { BookOpen } from "lucide-react";
 import { trackActivity } from "@/lib/activity";
-import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
+const FounderOSIntegration = lazy(() => import("@/components/bizmap/FounderOSIntegration"));
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
+import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
+
+const wizardSteps = [
+  {
+    key: "overview",
+    title: "Business Concept (Days 1-2)",
+    question: "🚀 Let's build your 30-day launch plan! What problem are you solving and for whom? This becomes your validation foundation.",
+    placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
+    transition: "Perfect! Now let's define who your first customers will be..."
+  },
+  {
+    key: "market", 
+    title: "Target Customer (Days 3-4)",
+    question: "📅 Day 3-4 Focus: Describe your ideal FIRST customer in detail. Where can we find them in the next 7 days?",
+    placeholder: "Example: Working parents aged 28-45 in urban areas, active in mom Facebook groups and parenting subreddits...",
+    transition: "Excellent! Now let's design your minimum viable product..."
+  },
+  {
+    key: "problem",
+    title: "Validation Plan (Days 5-7)", 
+    question: "📊 Validation Goal: How will you validate demand this week? List 3 ways you'll test if people want this.",
+    placeholder: "Example: 10 customer interviews, landing page with email signup, competitor research in 3 markets...",
+    transition: "Great validation plan! Now, what's the simplest version we can build?"
+  },
+  {
+    key: "solution",
+    title: "MVP Design (Days 8-14)",
+    question: "🛠️ MVP Focus: What's the absolute MINIMUM version that solves the core problem? What features are essential?", 
+    placeholder: "Example: Simple booking form, verified sitter profiles, SMS notifications. NO fancy features yet...",
+    transition: "Perfect MVP scope! Now, where will you launch?"
+  },
+  {
+    key: "channels",
+    title: "Launch Strategy (Days 15-21)",
+    question: "🎯 Launch Goal: Where will you launch to get your first 10 users? Be specific about channels and tactics.",
+    placeholder: "Example: Product Hunt launch, 5 parenting Facebook groups, Instagram influencer outreach, friend referrals...",
+    transition: "Smart launch strategy! Now let's plan how you'll get your first paying customer..."
+  },
+  {
+    key: "pricing",
+    title: "Pricing Model (Days 22-25)",
+    question: "💰 Pricing: How will you charge? What pricing makes sense for getting your first paying customer by Day 30?",
+    placeholder: "Example: Early bird: $20/month (50% off), then $40/month. First 10 customers get lifetime discount...",
+    transition: "Excellent pricing strategy! Finally, what does success look like on Day 30?"
+  },
+  {
+    key: "goals",
+    title: "Day 30 Success Metrics (Days 26-30)",
+    question: "🎯 Final Goal: What does success look like on Day 30? How many customers or revenue would make this REAL?",
+    placeholder: "Example: 1 paying customer ($20), 50 email signups, 20 active users. Proof this can work!",
+    transition: "Amazing! Generating your personalized 30-day launch roadmap... 🎉"
+  }
+];
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -95,62 +148,13 @@ const BizMapAI = () => {
     }
   };
 
-  const activeSprint = activeSprintId 
-    ? sprints.find(s => s.id === activeSprintId) 
-    : currentSprint;
-
-  // Define wizardSteps before using it in hooks
-  const wizardSteps = [
-    {
-      key: "overview",
-      title: "Business Concept (Days 1-2)",
-      question: "🚀 Let's build your 30-day launch plan! What problem are you solving and for whom? This becomes your validation foundation.",
-      placeholder: "Example: A mobile app that helps busy parents find and book last-minute childcare...",
-      transition: "Perfect! Now let's define who your first customers will be..."
-    },
-    {
-      key: "market", 
-      title: "Target Customer (Days 3-4)",
-      question: "📅 Day 3-4 Focus: Describe your ideal FIRST customer in detail. Where can we find them in the next 7 days?",
-      placeholder: "Example: Working parents aged 28-45 in urban areas, active in mom Facebook groups and parenting subreddits...",
-      transition: "Excellent! Now let's design your minimum viable product..."
-    },
-    {
-      key: "problem",
-      title: "Validation Plan (Days 5-7)", 
-      question: "📊 Validation Goal: How will you validate demand this week? List 3 ways you'll test if people want this.",
-      placeholder: "Example: 10 customer interviews, landing page with email signup, competitor research in 3 markets...",
-      transition: "Great validation plan! Now, what's the simplest version we can build?"
-    },
-    {
-      key: "solution",
-      title: "MVP Design (Days 8-14)",
-      question: "🛠️ MVP Focus: What's the absolute MINIMUM version that solves the core problem? What features are essential?", 
-      placeholder: "Example: Simple booking form, verified sitter profiles, SMS notifications. NO fancy features yet...",
-      transition: "Perfect MVP scope! Now, where will you launch?"
-    },
-    {
-      key: "channels",
-      title: "Launch Strategy (Days 15-21)",
-      question: "🎯 Launch Goal: Where will you launch to get your first 10 users? Be specific about channels and tactics.",
-      placeholder: "Example: Product Hunt launch, 5 parenting Facebook groups, Instagram influencer outreach, friend referrals...",
-      transition: "Smart launch strategy! Now let's plan how you'll get your first paying customer..."
-    },
-    {
-      key: "pricing",
-      title: "Pricing Model (Days 22-25)",
-      question: "💰 Pricing: How will you charge? What pricing makes sense for getting your first paying customer by Day 30?",
-      placeholder: "Example: Early bird: $20/month (50% off), then $40/month. First 10 customers get lifetime discount...",
-      transition: "Excellent pricing strategy! Finally, what does success look like on Day 30?"
-    },
-    {
-      key: "goals",
-      title: "Day 30 Success Metrics (Days 26-30)",
-      question: "🎯 Final Goal: What does success look like on Day 30? How many customers or revenue would make this REAL?",
-      placeholder: "Example: 1 paying customer ($20), 50 email signups, 20 active users. Proof this can work!",
-      transition: "Amazing! Generating your personalized 30-day launch roadmap... 🎉"
-    }
-  ];
+  const activeSprint = useMemo(
+    () =>
+      activeSprintId
+        ? sprints.find((s) => s.id === activeSprintId) ?? null
+        : currentSprint,
+    [activeSprintId, sprints, currentSprint]
+  );
 
   const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
   const { hasPendingCredits } = useFeedbackCredits();

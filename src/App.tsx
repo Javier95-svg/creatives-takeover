@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,30 +11,32 @@ import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import FloatingFeedbackWidget from "@/components/FloatingFeedbackWidget";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import PricingPage from "./pages/PricingPage";
-import CommunityPage from "./pages/CommunityPage";
-import NotFound from "./pages/NotFound";
-import Careers from "./pages/Careers";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Terms from "./pages/Terms";
-import Signup from "./pages/Signup";
-import Dream2Plan from "./pages/Dream2Plan";
+import React from "react";
 
-import Login from "./pages/Login";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import PromptLibrary from "./pages/PromptLibrary";
-import Dashboard from "./pages/Dashboard";
-import Blog from "./pages/Blog";
+const Index = React.lazy(() => import("./pages/Index"));
+const About = React.lazy(() => import("./pages/About"));
+const PricingPage = React.lazy(() => import("./pages/PricingPage"));
+const CommunityPage = React.lazy(() => import("./pages/CommunityPage"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const Careers = React.lazy(() => import("./pages/Careers"));
+const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = React.lazy(() => import("./pages/Terms"));
+const Signup = React.lazy(() => import("./pages/Signup"));
+const Dream2Plan = React.lazy(() => import("./pages/Dream2Plan"));
+
+const Login = React.lazy(() => import("./pages/Login"));
+const Auth = React.lazy(() => import("./pages/Auth"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
+const PromptLibrary = React.lazy(() => import("./pages/PromptLibrary"));
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const Blog = React.lazy(() => import("./pages/Blog"));
 import ScrollToTop from "./components/ScrollToTop";
-import Demo from "./pages/Demo";
-import Profile from "./pages/Profile";
-import Account from "./pages/Account";
-import Messages from "./pages/Messages";
-import CreativesTakeover from "./pages/CreativesTakeover";
-import RAGTest from "./pages/RAGTest";
+const Demo = React.lazy(() => import("./pages/Demo"));
+const Profile = React.lazy(() => import("./pages/Profile"));
+const Account = React.lazy(() => import("./pages/Account"));
+const Messages = React.lazy(() => import("./pages/Messages"));
+const CreativesTakeover = React.lazy(() => import("./pages/CreativesTakeover"));
+const RAGTest = React.lazy(() => import("./pages/RAGTest"));
 import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient();
@@ -65,32 +68,34 @@ function App() {
               <BrowserRouter>
                 <ScrollToTop />
                 <FeedbackWidgetWrapper />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/community" element={<CommunityPage />} />
-                  <Route path="/careers" element={<Careers />} />
-                  <Route path="/prompt-library" element={<PromptLibrary />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                  
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/account" element={<Account />} />
-                  <Route path="/insighta" element={<Blog />} />
-                  <Route path="/demo" element={<Demo />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/profile/:username" element={<Profile />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/creatives-takeover" element={<CreativesTakeover />} />
-                  <Route path="/rag-test" element={<RAGTest />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <Suspense fallback={<div className="min-h-screen bg-background" />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/community" element={<CommunityPage />} />
+                    <Route path="/careers" element={<Careers />} />
+                    <Route path="/prompt-library" element={<PromptLibrary />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/bizmap-ai" element={<Dream2Plan />} />
+                    
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/account" element={<Account />} />
+                    <Route path="/insighta" element={<Blog />} />
+                    <Route path="/demo" element={<Demo />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/profile/:username" element={<Profile />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/creatives-takeover" element={<CreativesTakeover />} />
+                    <Route path="/rag-test" element={<RAGTest />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
               </BrowserRouter>
             </TooltipProvider>
           </ProgressProvider>
