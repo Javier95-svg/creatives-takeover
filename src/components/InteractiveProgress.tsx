@@ -1,4 +1,4 @@
-import { CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle, Sparkles, Compass, Target, Rocket, TrendingUp } from "lucide-react";
 
 interface InteractiveProgressProps {
   currentStep: number;
@@ -26,6 +26,51 @@ const InteractiveProgress = ({
     "✅ Plan Refinement"
   ];
 
+  const stepMeta = [
+    {
+      label: "Step 1 · Concept",
+      description: "Clarify what you’re building and why it matters.",
+      accentClass: "from-primary/15 via-primary/5 to-transparent",
+      icon: Compass,
+    },
+    {
+      label: "Step 2 · Market",
+      description: "Define the people most likely to become your first customers.",
+      accentClass: "from-secondary/15 via-secondary/5 to-transparent",
+      icon: Target,
+    },
+    {
+      label: "Step 3 · Problem",
+      description: "Turn vague frustrations into sharp, testable problems.",
+      accentClass: "from-accent/15 via-accent/5 to-transparent",
+      icon: Sparkles,
+    },
+    {
+      label: "Step 4 · Solution",
+      description: "Shape an offer that directly solves the core problem.",
+      accentClass: "from-primary/15 via-secondary/10 to-transparent",
+      icon: Rocket,
+    },
+    {
+      label: "Step 5 · Channels",
+      description: "Decide how you’ll reach real humans in the next 30 days.",
+      accentClass: "from-secondary/15 via-primary/10 to-transparent",
+      icon: TrendingUp,
+    },
+    {
+      label: "Step 6 · Pricing",
+      description: "Choose a pricing model that fits your goals and audience.",
+      accentClass: "from-primary/15 via-accent/10 to-transparent",
+      icon: CheckCircle,
+    },
+    {
+      label: "Step 7 · Roadmap",
+      description: "Lock in your focused 30-day launch plan.",
+      accentClass: "from-primary/15 via-secondary/10 to-transparent",
+      icon: Rocket,
+    },
+  ];
+
   const displayTitles = stepTitles.length > 0 ? stepTitles : enhancedStepTitles;
 
   const getStepStatus = (stepIndex: number) => {
@@ -37,108 +82,141 @@ const InteractiveProgress = ({
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* Modern Timeline Card with Glass Effect */}
-      <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-700 hover:shadow-2xl hover:shadow-primary/20 border border-primary/10 rounded-2xl">
-        {/* Dynamic Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-        
-        {/* Floating Elements */}
-        <div className="absolute top-4 right-4 w-3 h-3 bg-primary/30 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-500" />
-        <div className="absolute bottom-6 left-6 w-2 h-2 bg-secondary/40 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-500" style={{ animationDelay: '0.3s' }} />
-        
-        <div className="relative z-10 p-8">
+      <div className="group relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-background via-card/60 to-background shadow-xl hover:shadow-2xl transition-all duration-700">
+        {/* Subtle gradient + shimmer */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 opacity-70" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+
+        {/* Decorative corner nodes */}
+        <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-8 w-48 h-48 rounded-full bg-secondary/10 blur-3xl" />
+
+        <div className="relative z-10 p-6 sm:p-8 lg:p-9">
           {/* Progress Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="relative p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 group-hover:scale-110 transition-all duration-500 shadow-lg">
-                <CheckCircle className="w-6 h-6 text-primary group-hover:animate-pulse" />
-                <div className="absolute inset-0 rounded-xl bg-primary/20 opacity-0 group-hover:opacity-100 animate-ping transition-opacity duration-500" />
-              </div>
-              <h3 className="text-2xl font-bold creatives-font group-hover:text-primary transition-colors duration-500">
-                {isComplete ? "🎉 Plan Complete!" : `Progress: Step ${currentStep + 1} of ${totalSteps}`}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-primary/80 uppercase mb-1">
+                BizMap AI Timeline
+              </p>
+              <h3 className="text-xl sm:text-2xl font-bold creatives-font bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                {isComplete ? "Plan Complete" : `Step ${currentStep + 1} of ${totalSteps}`}
               </h3>
+              <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-md">
+                {isComplete
+                  ? "Your AI-generated plan is ready. Use the roadmap and report to move into execution."
+                  : `Currently working on: ${displayTitles[currentStep]}`}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
-              {isComplete 
-                ? "✨ Your AI-powered comprehensive business plan is ready with industry insights and smart recommendations" 
-                : `Currently working on: ${displayTitles[currentStep]}`
-              }
-            </p>
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                <div className="absolute inset-0 rounded-xl border border-primary/30 animate-pulse opacity-40" />
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">
+                  {Math.round(((currentStep + (isComplete ? 1 : 0)) / totalSteps) * 100)}% complete
+                </p>
+                <p>Follow the steps in order for the smoothest 30-day launch.</p>
+              </div>
+            </div>
           </div>
 
           {/* Horizontal Timeline */}
-          <div className="relative px-4">
+          <div className="relative px-2 sm:px-4">
             {/* Progress Line */}
-            <div className="absolute top-6 left-8 right-8 h-1 bg-muted-foreground/20 rounded-full" />
-            <div 
-              className="absolute top-6 left-8 h-1 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out shadow-sm shadow-primary/30"
-              style={{ 
-                width: totalSteps > 1 ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 1rem)` : '0%'
+            <div className="absolute top-7 left-10 right-10 h-1 bg-muted-foreground/20 rounded-full" />
+            <div
+              className="absolute top-7 left-10 h-1 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out shadow-sm shadow-primary/30"
+              style={{
+                width:
+                  totalSteps > 1
+                    ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 0.75rem)`
+                    : "0%",
               }}
             />
 
             {/* Steps */}
-            <div className="flex justify-between items-center relative">
+            <div className="flex justify-between items-start relative">
               {displayTitles.map((title, index) => {
                 const status = getStepStatus(index);
                 const isCompleted = status === "completed";
                 const isCurrent = status === "current";
-                
+                const meta = stepMeta[index] ?? stepMeta[0];
+                const Icon = meta.icon;
+
                 return (
-                  <div 
+                  <div
                     key={index}
                     className={`flex flex-col items-center group/step transition-all duration-300 ${
-                      onStepClick ? 'cursor-pointer hover:scale-105' : ''
+                      onStepClick ? "cursor-pointer hover:scale-105" : ""
                     }`}
                     onClick={() => onStepClick?.(index)}
                     style={{ width: `${100 / totalSteps}%` }}
                   >
-                    {/* Step Circle */}
-                    <div className={`
-                      relative z-10 w-12 h-12 rounded-full border-2 transition-all duration-500 shadow-lg
-                      flex items-center justify-center
-                      ${isCompleted 
-                        ? 'bg-primary border-primary shadow-primary/30' 
-                        : isCurrent 
-                        ? 'bg-background border-primary border-4 shadow-primary/20 animate-pulse' 
-                        : 'bg-background border-muted-foreground/30'
-                      }
-                    `}>
+                    {/* Step Circle with icon */}
+                    <div
+                      className={`
+                        relative z-10 w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center shadow-lg
+                        transition-all duration-500
+                        ${
+                          isCompleted
+                            ? "bg-primary border-primary shadow-primary/40"
+                            : isCurrent
+                            ? "bg-background border-primary border-4 shadow-primary/30"
+                            : "bg-background border-muted-foreground/30"
+                        }
+                      `}
+                    >
                       {isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-primary-foreground" />
-                      ) : isCurrent ? (
-                        <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                       ) : (
-                        <Circle className="w-5 h-5 text-muted-foreground/50" />
+                        <Icon
+                          className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                            isCurrent ? "text-primary" : "text-muted-foreground/70"
+                          }`}
+                        />
                       )}
-                      
+
                       {/* Glowing Ring for Current Step */}
                       {isCurrent && (
-                        <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-primary animate-ping opacity-75" />
+                        <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping opacity-70" />
                       )}
+
+                      {/* Soft aura */}
+                      <div
+                        className={`pointer-events-none absolute -inset-3 rounded-full bg-gradient-to-br ${
+                          meta.accentClass
+                        } opacity-0 group-hover/step:opacity-100 transition-opacity duration-500`}
+                      />
                     </div>
 
-                    {/* Step Label */}
-                    <div className="mt-4 text-center max-w-[140px] group-hover/step:transform group-hover/step:translate-y-1 transition-transform duration-300">
-                      <p className={`text-xs font-semibold transition-colors duration-300 ${
-                        isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
-                        {title}
+                    {/* Step Label + mini description */}
+                    <div className="mt-4 text-center max-w-[160px] group-hover/step:translate-y-0.5 transition-transform duration-300">
+                      <p
+                        className={`text-[11px] sm:text-xs font-semibold tracking-wide uppercase mb-1 ${
+                          isCurrent
+                            ? "text-primary"
+                            : isCompleted
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {meta.label}
                       </p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">
-                        Step {index + 1}
+                      <p className="text-xs sm:text-[13px] text-muted-foreground/70 leading-snug">
+                        {meta.description}
                       </p>
-                      
+
                       {/* Status Badge */}
                       {(isCompleted || isCurrent) && (
                         <div className="mt-2">
                           {isCompleted && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
                               ✓ Done
                             </span>
                           )}
                           {isCurrent && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium animate-pulse">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-[11px] font-medium animate-pulse">
                               <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-ping" />
                               Active
                             </span>
