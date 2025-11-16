@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Rocket, Users, Zap, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { TrendingUp, Rocket, Users, Zap, ArrowUpRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 const SocialProof = () => {
@@ -197,114 +197,6 @@ const SocialProof = () => {
           </Card>
         </div>
 
-        {/* Real Review Section */}
-        <Card className="border-2 border-primary/20 bg-primary/5 mb-12">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  Real User Review
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Here's what real entrepreneurs are saying about Creatives Takeover
-                </p>
-              </div>
-              <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
-                Verified
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-background rounded-lg border border-border p-6 shadow-lg">
-              {/* Review Screenshot Placeholder - User should add the actual image */}
-              <div className="relative w-full bg-white rounded-lg border-2 border-border overflow-hidden">
-                <img 
-                  src="/lovable-uploads/max-pavlov-review.png" 
-                  alt="Max Pavlov Review - 5 stars, 188 reviews"
-                  className="w-full h-auto"
-                  onError={(e) => {
-                    // Fallback if image doesn't exist - show structured review
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = target.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'block';
-                  }}
-                />
-                {/* Fallback structured review if image not found */}
-                <div className="hidden p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-primary font-semibold">MP</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">Max Pavlov</h3>
-                        <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <span key={i} className="text-yellow-400">★</span>
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">188 reviews</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-foreground leading-relaxed mb-4">
-                    Creatives Takeover really stands out with its user-friendly design. I love how it offers customizable templates that make creating content a breeze. Freelance graphic designers will appreciate the seamless collaboration features and AI design suggestions that spark creativity and save time. If you're targeting freelance graphic designers, this could be perfect for them. Found 136 conversations where freelance graphic designers need this. Check them: quickmarketfit.com/discussions/kKRhkWpbZu I hope it helps to grow the product.
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground pt-3 border-t">
-                    <button className="flex items-center gap-1 hover:text-foreground">
-                      <span>👁️</span> Helpful
-                    </button>
-                    <button className="flex items-center gap-1 hover:text-foreground">
-                      <span>💬</span> Reply
-                    </button>
-                    <button className="flex items-center gap-1 hover:text-foreground">
-                      <span>↗️</span> Share
-                    </button>
-                    <span className="ml-auto">8h ago</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Call to Action */}
-        <div className="text-center">
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-            <CardContent className="p-8">
-              <h3 className="text-2xl sm:text-3xl font-bold mb-4">
-                Now is the Time to Start
-              </h3>
-              <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-                With startup creation at an all-time high, the opportunity has never been better. 
-                Join thousands of entrepreneurs who are building their dreams with Creatives Takeover.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>AI-powered planning tools</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>Real market intelligence</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>Community support</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span>Fundraising readiness tools</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </section>
   );
