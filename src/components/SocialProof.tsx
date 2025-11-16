@@ -54,11 +54,11 @@ const SocialProof = () => {
             Market Trends
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-            We Are <span className="gradient-text">Gaining Momentum</span>
+            A New Wave of <span className="gradient-text">StartUp Creation Exploding</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             Startup creation is exploding right now. According to Global Entrepreneurship Monitor and Crunchbase data, 
-            we're seeing unprecedented growth in new business formation. Join thousands of entrepreneurs who are building their dreams with the right tools and support.
+            we're seeing unprecedented growth in new business formation.
           </p>
         </div>
 
