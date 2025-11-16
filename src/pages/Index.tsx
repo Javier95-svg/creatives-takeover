@@ -10,7 +10,6 @@ import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 // Lazy load below-the-fold components for better performance
-const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const SocialProof = lazy(() => import("@/components/SocialProof"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
@@ -49,17 +48,14 @@ const Index = () => {
       <Navigation />
       <main>
         <Hero />
-        <ValuePropositionCards />
         <EntrepreneurProblems />
         
         {/* Lazy-loaded below-the-fold components with loading fallback */}
-        <Suspense fallback={<div className="h-screen animate-pulse bg-muted/20" />}>
-          <HowItWorks />
-        </Suspense>
-        
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
           <SocialProof />
         </Suspense>
+        
+        <ValuePropositionCards />
         
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
           <HomeFAQ />
