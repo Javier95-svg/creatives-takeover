@@ -48,28 +48,116 @@ const criteria: Criterion[] = [
     id: "mvp",
     title: "MVP Complete",
     description: "Do you have a working version of your product that solves a real problem?",
-    helpText: "This doesn't need to be perfect - just something you can show to customers",
+    helpText: `An MVP (Minimum Viable Product) is the simplest version of your product that still solves a real problem for customers. You don't need all features - just enough to demonstrate value.
+
+What counts as an MVP:
+• A working prototype you can show to people (even if it's basic)
+• Something that solves at least one core problem
+• Can be a website, app, physical product, or service
+• Doesn't need to be perfect or polished
+
+Examples:
+- A simple landing page that collects emails (0-3)
+- A basic prototype with core features working (4-6)
+- A functional product with real users testing it (7-8)
+- A polished product with multiple features and user feedback incorporated (9-10)
+
+Remember: Investors care more about whether you've validated the problem than whether your product is perfect. A working MVP that people actually use is better than a perfect product nobody wants.`,
     icon: <Rocket className="h-5 w-5" />,
   },
   {
     id: "feedback",
     title: "Initial Customer Feedback",
     description: "Have you talked to potential customers and received feedback?",
-    helpText: "Even 5-10 conversations with people who might use your product counts!",
+    helpText: `Customer feedback means you've actually talked to people who might use your product and listened to what they say. This is crucial because it proves people actually want what you're building.
+
+How to get customer feedback:
+• Talk to 10-20 potential customers (people who have the problem you're solving)
+• Ask open-ended questions: "What's your biggest challenge with [problem]?"
+• Show them your product (even if it's just a sketch) and ask what they think
+• Listen more than you talk - let them tell you what they need
+
+What good feedback looks like:
+- People say they'd use your product (0-3: No conversations yet)
+- You've talked to 5-10 people and heard common themes (4-6: Getting started)
+- You've talked to 15+ people and made changes based on their feedback (7-8: Strong validation)
+- You have documented feedback, testimonials, and people actively using your product (9-10: Excellent validation)
+
+Key questions to ask:
+• "Would you pay for this?" (validates willingness to pay)
+• "What's missing?" (identifies gaps)
+• "Who else has this problem?" (finds your market)
+
+Remember: Even negative feedback is valuable - it tells you what to fix before you waste time building the wrong thing.`,
     icon: <Target className="h-5 w-5" />,
   },
   {
     id: "team",
     title: "Team in Place",
     description: "Do you have the right people to build and grow your startup?",
-    helpText: "This could be just you, or a co-founder, or a small team - what matters is having the skills needed",
+    helpText: `Having the "right people" means you have the skills needed to build your product and grow your business. This could be just you, a co-founder, or a small team.
+
+Essential skills to consider:
+• Technical skills: Can someone build the product? (coding, design, manufacturing, etc.)
+• Business skills: Can someone handle sales, marketing, operations?
+• Domain expertise: Does someone understand the industry/problem deeply?
+• Execution ability: Can the team actually get things done?
+
+Scoring guide:
+- 0-3: You're doing it alone and missing key skills (consider finding help)
+- 4-6: You have some skills covered, maybe a co-founder or advisor
+- 7-8: You have a solid team with complementary skills
+- 9-10: You have an experienced team with proven track records
+
+When to find a co-founder:
+• You're missing critical skills (e.g., you're technical but can't sell)
+• You need someone to share the workload
+• You want someone to challenge your ideas and keep you accountable
+
+What "right people" means:
+• They believe in your vision
+• They have skills you don't have
+• They're committed and reliable
+• They complement your weaknesses
+
+Remember: A solo founder with advisors can work, but investors often prefer teams because it shows you can work with others and reduces risk.`,
     icon: <Users className="h-5 w-5" />,
   },
   {
     id: "runway",
     title: "Runway Secured",
     description: "Do you have enough money to operate while fundraising?",
-    helpText: "Runway = how many months you can operate without new funding. 3-6 months is a good minimum",
+    helpText: `Runway is how many months you can operate your startup without new funding. Think of it like fuel in your car - you need enough to get where you're going.
+
+Why runway matters:
+Fundraising takes time (often 3-6 months or longer). If you run out of money during fundraising, you'll be desperate and make bad decisions. Having runway gives you the power to say "no" to bad deals and wait for the right investors.
+
+How to calculate your runway:
+1. Add up all your monthly expenses (salaries, rent, software, etc.)
+2. Divide your available cash by monthly expenses
+3. That's your runway in months
+
+Example:
+• You have $30,000 saved
+• Your monthly expenses are $5,000
+• Your runway = 6 months ($30,000 ÷ $5,000)
+
+Scoring guide:
+- 0-3: Less than 3 months runway (very risky - start cutting costs or find income)
+- 4-6: 3-6 months runway (decent, but try to extend it)
+- 7-8: 6-12 months runway (good - gives you time to be selective)
+- 9-10: 12+ months runway (excellent - you're in a strong position)
+
+Ways to extend runway:
+• Reduce costs (work from home, use free tools, delay hiring)
+• Find additional income (consulting, part-time work, small revenue)
+• Get a small loan or line of credit
+• Ask family/friends for a bridge loan
+
+What's a good minimum?
+Most investors want to see at least 3-6 months of runway. This shows you're not desperate and gives you time to close a deal. Less than 3 months is risky because fundraising can take longer than expected.
+
+Remember: Runway isn't just about money - it's about having time to make good decisions. The more runway you have, the better position you're in to negotiate with investors.`,
     icon: <DollarSign className="h-5 w-5" />,
   }
 ];
@@ -77,10 +165,15 @@ const criteria: Criterion[] = [
 const scoreLabels: { [key: number]: string } = {
   0: "Not Started",
   1: "Just Beginning",
-  2: "In Progress",
-  3: "Almost There",
-  4: "Very Close",
-  5: "Complete"
+  2: "Early Stage",
+  3: "Making Progress",
+  4: "Getting There",
+  5: "Halfway There",
+  6: "Strong Progress",
+  7: "Almost Ready",
+  8: "Very Close",
+  9: "Nearly Complete",
+  10: "Complete"
 };
 
 const FundraisingReadinessToolkit = () => {
@@ -209,7 +302,7 @@ const FundraisingReadinessToolkit = () => {
             <CardTitle className="text-2xl">How ready are you?</CardTitle>
             <CardDescription>
               {isAuthenticated 
-                ? "Move each slider from 0 (Not Started) to 5 (Complete). Be honest with yourself!"
+                ? "Move each slider from 0 (Not Started) to 10 (Complete). Be honest with yourself!"
                 : "Preview the assessment below. Sign in to adjust scores and get AI-powered insights!"}
             </CardDescription>
           </CardHeader>
@@ -256,7 +349,7 @@ const FundraisingReadinessToolkit = () => {
                             )}
                           </Button>
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="text-xs text-muted-foreground mt-1 pl-4 border-l-2 border-primary/20">
+                        <CollapsibleContent className="text-sm text-muted-foreground mt-2 pl-4 border-l-2 border-primary/20 space-y-2 whitespace-pre-line">
                           {criterion.helpText}
                         </CollapsibleContent>
                       </Collapsible>
@@ -266,7 +359,7 @@ const FundraisingReadinessToolkit = () => {
                   {/* Slider */}
                   <div className="space-y-3 pl-12">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Score: {currentScore} / 5</span>
+                      <span className="text-sm font-medium">Score: {currentScore} / 10</span>
                       <span className="text-xs text-muted-foreground">{scoreLabels[currentScore]}</span>
                     </div>
                       <Tooltip>
@@ -283,7 +376,7 @@ const FundraisingReadinessToolkit = () => {
                                 }
                               }}
                               min={0}
-                              max={5}
+                              max={10}
                               step={1}
                               disabled={!isAuthenticated}
                               className={cn(
@@ -304,17 +397,17 @@ const FundraisingReadinessToolkit = () => {
                       </Tooltip>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>0</span>
-                      <span>1</span>
                       <span>2</span>
-                      <span>3</span>
                       <span>4</span>
-                      <span>5</span>
+                      <span>6</span>
+                      <span>8</span>
+                      <span>10</span>
                     </div>
                     
                     {/* Progress Bar */}
                     {currentScore > 0 && (
                       <div className="space-y-1">
-                        <Progress value={(currentScore / 5) * 100} className="h-2" />
+                        <Progress value={(currentScore / 10) * 100} className="h-2" />
                       </div>
                     )}
                   </div>
@@ -333,7 +426,7 @@ const FundraisingReadinessToolkit = () => {
                 {allScored && (
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Average Score</p>
-                    <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 5.0</p>
+                    <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
                   </div>
                 )}
                 {!isAuthenticated ? (
@@ -420,7 +513,7 @@ const FundraisingReadinessToolkit = () => {
                      "Not Quite Ready Yet"}
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Confidence: {aiAnalysis.confidence}% • Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 5.0
+                    Confidence: {aiAnalysis.confidence}% • Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
                   </CardDescription>
                 </div>
               </div>

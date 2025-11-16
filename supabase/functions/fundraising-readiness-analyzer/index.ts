@@ -16,13 +16,13 @@ serve(async (req) => {
 
     // Validate scores
     if (
-      typeof mvp_score !== 'number' || mvp_score < 0 || mvp_score > 5 ||
-      typeof feedback_score !== 'number' || feedback_score < 0 || feedback_score > 5 ||
-      typeof team_score !== 'number' || team_score < 0 || team_score > 5 ||
-      typeof runway_score !== 'number' || runway_score < 0 || runway_score > 5
+      typeof mvp_score !== 'number' || mvp_score < 0 || mvp_score > 10 ||
+      typeof feedback_score !== 'number' || feedback_score < 0 || feedback_score > 10 ||
+      typeof team_score !== 'number' || team_score < 0 || team_score > 10 ||
+      typeof runway_score !== 'number' || runway_score < 0 || runway_score > 10
     ) {
       return new Response(
-        JSON.stringify({ error: 'Invalid scores. All scores must be between 0 and 5.' }),
+        JSON.stringify({ error: 'Invalid scores. All scores must be between 0 and 10.' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -48,7 +48,7 @@ serve(async (req) => {
 
     // Calculate average score
     const averageScore = (mvp_score + feedback_score + team_score + runway_score) / 4;
-    const isReady = averageScore >= 3.5;
+    const isReady = averageScore >= 7.0;
 
     // Use Lovable AI to analyze the results
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -59,21 +59,26 @@ serve(async (req) => {
     const scoreLabels = {
       0: 'Not Started',
       1: 'Just Beginning',
-      2: 'In Progress',
-      3: 'Almost There',
-      4: 'Very Close',
-      5: 'Complete'
+      2: 'Early Stage',
+      3: 'Making Progress',
+      4: 'Getting There',
+      5: 'Halfway There',
+      6: 'Strong Progress',
+      7: 'Almost Ready',
+      8: 'Very Close',
+      9: 'Nearly Complete',
+      10: 'Complete'
     };
 
     const prompt = `You are a fundraising readiness expert analyzing a pre-seed startup's readiness assessment.
 
-Assessment Scores (0-5 scale):
+Assessment Scores (0-10 scale):
 - MVP Complete: ${mvp_score} (${scoreLabels[mvp_score as keyof typeof scoreLabels]})
 - Customer Feedback: ${feedback_score} (${scoreLabels[feedback_score as keyof typeof scoreLabels]})
 - Team in Place: ${team_score} (${scoreLabels[team_score as keyof typeof scoreLabels]})
 - Runway Secured: ${runway_score} (${scoreLabels[runway_score as keyof typeof scoreLabels]})
 
-Average Score: ${averageScore.toFixed(1)}/5.0
+Average Score: ${averageScore.toFixed(1)}/10.0
 Current Status: ${isReady ? 'Ready' : 'Not Ready'}
 
 Provide a comprehensive, actionable analysis for a first-time entrepreneur. Be encouraging but realistic.`;
