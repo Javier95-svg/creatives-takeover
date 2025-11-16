@@ -520,7 +520,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
 
     if (!newComment.trim() && !newCommentImage) {
       console.log('No comment text and no image, returning');
-      toast.error('Please enter a comment or attach an image');
+      toast.error('Please write something or attach media (image/video/audio)');
       return;
     }
     
@@ -632,7 +632,24 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       }
     } catch (error: any) {
       console.error('Error adding comment:', error);
-      const errorMessage = error?.message || 'Failed to add comment';
+      console.error('Comment data being inserted:', { 
+        post_id: post.id, 
+        user_id: user?.id, 
+        has_content: !!newComment.trim(), 
+        has_media: !!newCommentImage,
+        media_type: newCommentMediaType
+      });
+      
+      // Provide specific error messages based on error type
+      let errorMessage = 'Failed to add comment';
+      if (error?.message?.includes('null value')) {
+        errorMessage = 'Database error: Content field issue. Please add some text with your media.';
+      } else if (error?.code === '23502') {
+        errorMessage = 'Please add text to your comment. Media-only comments are being set up.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast.error(errorMessage);
       
       // Log detailed error for debugging
