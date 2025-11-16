@@ -3,14 +3,8 @@ import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
 import { ChatbotReportCard } from "./ChatbotReportCard";
 import AdvancedFilters from "./AdvancedFilters";
-import CommunityInsights from "./CommunityInsights";
-import LeaderboardCard from "./LeaderboardCard";
-import DailyChallengeCard from "./DailyChallengeCard";
 import StreakNotificationBanner from "./StreakNotificationBanner";
-import CommunityPulseCard from "./CommunityPulseCard";
 import TrendingPostsCard from "./TrendingPostsCard";
-import CommunityMilestones from "./CommunityMilestones";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, Sparkles } from "lucide-react";
@@ -297,15 +291,6 @@ const CommunityFeed: React.FC = () => {
   if (loading) {
     return (
       <main className="container mx-auto px-4 py-8 space-y-6">
-        {/* Loading Community Pulse */}
-        <div className="animate-pulse">
-          <div className="h-32 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg"></div>
-        </div>
-        
-        {/* Loading Trending Carousel */}
-        <div className="animate-pulse">
-          <div className="h-48 bg-gradient-to-r from-orange-500/5 to-red-500/5 rounded-lg"></div>
-        </div>
         
         <div className="grid lg:grid-cols-12 gap-6">
           <section className="lg:col-span-8 space-y-6">
@@ -400,14 +385,7 @@ const CommunityFeed: React.FC = () => {
 
         {/* Enhanced Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
-          <CommunityPulseCard />
-          <DailyChallengeCard />
           <TrendingPostsCard />
-          <CommunityMilestones />
-          <LeaderboardCard />
-          <CommunityInsights />
-          
-          {/* Advanced Filters */}
           <AdvancedFilters
             selectedTag={selectedTag}
             onTagSelect={setSelectedTag}
