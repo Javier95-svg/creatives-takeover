@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,8 @@ import {
   Send,
   MoreVertical,
   Image as ImageIcon,
-  X
+  X,
+  Music
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -78,6 +79,8 @@ interface PostCardProps {
 const PostCard = React.memo<PostCardProps>(({ post }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -93,6 +96,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const [editingCommentImage, setEditingCommentImage] = useState<string | null>(null);
   const [newCommentImage, setNewCommentImage] = useState<File | null>(null);
   const [newCommentImagePreview, setNewCommentImagePreview] = useState<string | null>(null);
+  const [newCommentMediaType, setNewCommentMediaType] = useState<'image' | 'video' | 'audio' | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const timeAgo = (dateString: string) => {
@@ -423,35 +427,44 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       return;
     }
 
-    // Validate file size
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image size must be less than 10MB');
+    // Validate file size (50MB max to match PostComposer)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('File size must be less than 50MB');
       e.target.value = ''; // Reset input
       return;
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file (JPEG, PNG, GIF, WebP, etc.)');
+    // Validate file type and determine media type
+    let mediaType: 'image' | 'video' | 'audio' | null = null;
+    if (file.type.startsWith('image/')) {
+      mediaType = 'image';
+    } else if (file.type.startsWith('video/')) {
+      mediaType = 'video';
+    } else if (file.type.startsWith('audio/')) {
+      mediaType = 'audio';
+    } else {
+      toast.error('Please select an image, video, or audio file');
       e.target.value = ''; // Reset input
       return;
     }
 
-    console.log('Image selected:', file.name, file.type, file.size, 'bytes');
+    console.log('Media file selected:', file.name, file.type, file.size, 'bytes', 'Type:', mediaType);
     
     setNewCommentImage(file);
+    setNewCommentMediaType(mediaType);
     const reader = new FileReader();
     reader.onloadend = () => {
       if (reader.result) {
         setNewCommentImagePreview(reader.result as string);
-        console.log('Image preview generated');
+        console.log('Media preview generated for type:', mediaType);
       }
     };
     reader.onerror = () => {
-      console.error('Error reading image file');
-      toast.error('Error reading image file. Please try another image.');
+      console.error('Error reading media file');
+      toast.error('Error reading file. Please try another file.');
       setNewCommentImage(null);
       setNewCommentImagePreview(null);
+      setNewCommentMediaType(null);
       e.target.value = '';
     };
     reader.readAsDataURL(file);
@@ -460,6 +473,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const handleRemoveImage = () => {
     setNewCommentImage(null);
     setNewCommentImagePreview(null);
+    setNewCommentMediaType(null);
   };
 
   const handleAddComment = async () => {
@@ -492,17 +506,22 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
     try {
       let imageUrl = null;
       
-      // Upload image if present
+      // Upload media file if present
       if (newCommentImage) {
         setUploadingImage(true);
         try {
           const fileExt = newCommentImage.name.split('.').pop();
           const fileName = `${user.id}/${post.id}_${Date.now()}.${fileExt}`;
           
-          console.log('Uploading image to comment-images bucket:', fileName);
+          // Determine storage bucket based on media type
+          const bucketName = newCommentMediaType === 'video' ? 'comment-videos' 
+            : newCommentMediaType === 'audio' ? 'comment-audio' 
+            : 'comment-images';
+          
+          console.log(`Uploading ${newCommentMediaType} to ${bucketName} bucket:`, fileName);
           
           const { error: uploadError, data: uploadData } = await supabase.storage
-            .from('comment-images')
+            .from(bucketName)
             .upload(fileName, newCommentImage, {
               cacheControl: '3600',
               upsert: false
@@ -512,11 +531,11 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
             console.error('Storage upload error:', uploadError);
             // Provide specific error messages
             if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('does not exist')) {
-              throw new Error('Image storage bucket not found. Please contact support to set up image storage.');
+              throw new Error(`${newCommentMediaType} storage bucket not found. Please contact support to set up media storage.`);
             } else if (uploadError.message?.includes('row-level security') || uploadError.message?.includes('RLS')) {
               throw new Error('Permission denied. Please check your account permissions.');
             } else if (uploadError.message?.includes('File size') || uploadError.message?.includes('too large')) {
-              throw new Error('Image is too large. Maximum size is 10MB.');
+              throw new Error('File is too large. Maximum size is 50MB.');
             } else {
               throw new Error(`Upload failed: ${uploadError.message || 'Unknown error'}`);
             }
@@ -527,30 +546,30 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
           }
           
           const { data: { publicUrl } } = supabase.storage
-            .from('comment-images')
+            .from(bucketName)
             .getPublicUrl(fileName);
           
           if (!publicUrl) {
-            throw new Error('Failed to get public URL for uploaded image');
+            throw new Error('Failed to get public URL for uploaded file');
           }
           
           imageUrl = publicUrl;
-          console.log('Image uploaded successfully:', publicUrl);
+          console.log(`${newCommentMediaType} uploaded successfully:`, publicUrl);
         } catch (uploadErr: any) {
-          console.error('Image upload failed:', uploadErr);
-          toast.error(uploadErr.message || 'Failed to upload image. Please try again.');
+          console.error('Media upload failed:', uploadErr);
+          toast.error(uploadErr.message || 'Failed to upload file. Please try again.');
           setUploadingImage(false);
-          return; // Don't proceed with comment if image upload fails
+          return; // Don't proceed with comment if media upload fails
         } finally {
           setUploadingImage(false);
         }
       }
 
-      // Insert comment - preserve user text, only use empty string if no text and no image
+      // Insert comment - preserve user text, store media URL based on type
       const commentData: any = {
         post_id: post.id,
         user_id: user.id,
-        content: newComment.trim() || null  // Allow null if only image, preserve text otherwise
+        content: newComment.trim() || null  // Allow null if only media, preserve text otherwise
       };
       
       if (imageUrl) {
@@ -566,6 +585,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       setNewComment("");
       setNewCommentImage(null);
       setNewCommentImagePreview(null);
+      setNewCommentMediaType(null);
       setLocalComments(prev => prev + 1);
       loadComments();
       toast.success('Comment added!');
@@ -872,8 +892,9 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <input
+                          ref={fileInputRef}
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*,audio/*"
                           onChange={(e) => {
                             console.log('File input onChange triggered for post:', post.id);
                             handleImageSelect(e);
@@ -883,7 +904,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                             e.stopPropagation();
                           }}
                           className="hidden"
-                          id={`comment-image-${post.id}`}
                           disabled={uploadingImage}
                           multiple={false}
                         />
@@ -894,41 +914,46 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Image button clicked for post:', post.id);
+                            console.log('Media button clicked for post:', post.id);
                             
-                            // Try multiple methods to find and trigger the file input
-                            let fileInput = document.getElementById(`comment-image-${post.id}`) as HTMLInputElement;
-                            
-                            if (!fileInput) {
-                              // Try querySelector as fallback
-                              fileInput = document.querySelector(`#comment-image-${post.id}`) as HTMLInputElement;
-                            }
-                            
-                            if (fileInput) {
-                              console.log('File input found, triggering click');
+                            if (fileInputRef.current) {
+                              console.log('File input ref found, triggering click');
                               // Reset value to allow selecting same file again
-                              fileInput.value = '';
+                              fileInputRef.current.value = '';
                               // Trigger click
-                              fileInput.click();
+                              fileInputRef.current.click();
                             } else {
-                              console.error('File input not found! ID:', `comment-image-${post.id}`);
-                              console.error('Available inputs:', document.querySelectorAll('input[type="file"]'));
-                              toast.error('Image upload not available. Please refresh the page.');
+                              console.error('File input ref not available');
+                              toast.error('Media upload not available. Please try again.');
                             }
                           }}
-                          disabled={uploadingImage || !!newCommentImage}
+                          disabled={uploadingImage}
                           className="h-8"
                         >
                           <ImageIcon className="h-4 w-4 mr-1" />
-                          Image
+                          {newCommentImagePreview ? 'Change Media' : 'Add Media'}
                         </Button>
                         {newCommentImagePreview && (
                           <div className="relative inline-block">
-                            <img
-                              src={newCommentImagePreview}
-                              alt="Preview"
-                              className="h-12 w-12 object-cover rounded"
-                            />
+                            {newCommentMediaType === 'image' && (
+                              <img
+                                src={newCommentImagePreview}
+                                alt="Preview"
+                                className="h-12 w-12 object-cover rounded"
+                              />
+                            )}
+                            {newCommentMediaType === 'video' && (
+                              <video
+                                src={newCommentImagePreview}
+                                className="h-12 w-20 object-cover rounded"
+                                muted
+                              />
+                            )}
+                            {newCommentMediaType === 'audio' && (
+                              <div className="h-12 w-20 flex items-center justify-center bg-muted rounded">
+                                <Music className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
                             <Button
                               type="button"
                               variant="ghost"
@@ -1026,8 +1051,9 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <input
+                                ref={editFileInputRef}
                                 type="file"
-                                accept="image/*"
+                                accept="image/*,video/*,audio/*"
                                 onChange={(e) => {
                                   console.log('File input onChange triggered for comment edit:', comment.id);
                                   handleImageSelect(e);
@@ -1037,7 +1063,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                   e.stopPropagation();
                                 }}
                                 className="hidden"
-                                id={`edit-image-${comment.id}`}
                                 disabled={uploadingImage}
                                 multiple={false}
                               />
@@ -1048,33 +1073,24 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  console.log('Image button clicked for comment edit:', comment.id);
+                                  console.log('Media button clicked for comment edit:', comment.id);
                                   
-                                  // Try multiple methods to find and trigger the file input
-                                  let fileInput = document.getElementById(`edit-image-${comment.id}`) as HTMLInputElement;
-                                  
-                                  if (!fileInput) {
-                                    // Try querySelector as fallback
-                                    fileInput = document.querySelector(`#edit-image-${comment.id}`) as HTMLInputElement;
-                                  }
-                                  
-                                  if (fileInput) {
-                                    console.log('File input found for edit, triggering click');
+                                  if (editFileInputRef.current) {
+                                    console.log('Edit file input ref found, triggering click');
                                     // Reset value to allow selecting same file again
-                                    fileInput.value = '';
+                                    editFileInputRef.current.value = '';
                                     // Trigger click
-                                    fileInput.click();
+                                    editFileInputRef.current.click();
                                   } else {
-                                    console.error('File input not found for edit! ID:', `edit-image-${comment.id}`);
-                                    console.error('Available inputs:', document.querySelectorAll('input[type="file"]'));
-                                    toast.error('Image upload not available. Please refresh the page.');
+                                    console.error('Edit file input ref not available');
+                                    toast.error('Media upload not available. Please try again.');
                                   }
                                 }}
                                 disabled={uploadingImage}
                                 className="h-8"
                               >
                                 <ImageIcon className="h-4 w-4 mr-1" />
-                                {editingCommentImage ? 'Change Image' : 'Add Image'}
+                                {editingCommentImage || newCommentImagePreview ? 'Change Media' : 'Add Media'}
                               </Button>
                             </div>
                             <div className="flex items-center gap-2">
@@ -1139,18 +1155,49 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
                                 </span>
                               ) : (
                                 comment.image_url && (
-                                  <span className="text-muted-foreground italic">[Image only]</span>
+                                  <span className="text-muted-foreground italic">[Media only]</span>
                                 )
                               )}
                             </div>
                             {comment.image_url && (
                               <div className="mt-2">
-                                <img
-                                  src={comment.image_url}
-                                  alt="Comment attachment"
-                                  className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => window.open(comment.image_url, '_blank')}
-                                />
+                                {/* Detect media type from URL */}
+                                {(() => {
+                                  const url = comment.image_url.toLowerCase();
+                                  const isVideo = url.includes('comment-videos') || 
+                                    /\.(mp4|webm|ogg|mov)(\?|$)/.test(url);
+                                  const isAudio = url.includes('comment-audio') || 
+                                    /\.(mp3|wav|ogg|m4a|aac)(\?|$)/.test(url);
+                                  
+                                  if (isVideo) {
+                                    return (
+                                      <video
+                                        src={comment.image_url}
+                                        controls
+                                        className="max-w-full h-auto rounded-lg"
+                                      >
+                                        Your browser does not support video playback.
+                                      </video>
+                                    );
+                                  } else if (isAudio) {
+                                    return (
+                                      <div className="p-4 border rounded-md bg-muted">
+                                        <audio src={comment.image_url} controls className="w-full">
+                                          Your browser does not support audio playback.
+                                        </audio>
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <img
+                                        src={comment.image_url}
+                                        alt="Comment attachment"
+                                        className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                        onClick={() => window.open(comment.image_url, '_blank')}
+                                      />
+                                    );
+                                  }
+                                })()}
                               </div>
                             )}
                           </div>
