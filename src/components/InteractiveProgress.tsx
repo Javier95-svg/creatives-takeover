@@ -80,7 +80,7 @@ const InteractiveProgress = ({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
       {/* Modern Timeline Card with Glass Effect */}
       <div className="group relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-background via-card/60 to-background shadow-xl hover:shadow-2xl transition-all duration-700">
         {/* Subtle gradient + shimmer */}
@@ -91,9 +91,9 @@ const InteractiveProgress = ({
         <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 w-48 h-48 rounded-full bg-secondary/10 blur-3xl" />
 
-        <div className="relative z-10 p-6 sm:p-8 lg:p-9">
+        <div className="relative z-10 p-7 sm:p-9 lg:p-10">
           {/* Progress Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
             <div>
               <p className="text-xs font-semibold tracking-wide text-primary/80 uppercase mb-1">
                 BizMap AI Timeline
@@ -122,15 +122,15 @@ const InteractiveProgress = ({
           </div>
 
           {/* Horizontal Timeline */}
-          <div className="relative px-2 sm:px-4">
+          <div className="relative px-1 sm:px-4 lg:px-8">
             {/* Progress Line */}
-            <div className="absolute top-7 left-10 right-10 h-1 bg-muted-foreground/20 rounded-full" />
+            <div className="absolute top-7 left-6 right-6 lg:left-10 lg:right-10 h-1 bg-muted-foreground/20 rounded-full" />
             <div
               className="absolute top-7 left-10 h-1 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out shadow-sm shadow-primary/30"
               style={{
                 width:
                   totalSteps > 1
-                    ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 0.75rem)`
+                    ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 0.5rem)`
                     : "0%",
               }}
             />
@@ -191,9 +191,9 @@ const InteractiveProgress = ({
                     </div>
 
                     {/* Step Label + mini description */}
-                    <div className="mt-4 text-center max-w-[160px] group-hover/step:translate-y-0.5 transition-transform duration-300">
+                    <div className="mt-5 text-center max-w-[180px] group-hover/step:translate-y-0.5 transition-transform duration-300">
                       <p
-                        className={`text-[11px] sm:text-xs font-semibold tracking-wide uppercase mb-1 ${
+                        className={`text-[11px] sm:text-xs font-semibold tracking-wide uppercase mb-1.5 ${
                           isCurrent
                             ? "text-primary"
                             : isCompleted
@@ -203,7 +203,7 @@ const InteractiveProgress = ({
                       >
                         {meta.label}
                       </p>
-                      <p className="text-xs sm:text-[13px] text-muted-foreground/70 leading-snug">
+                      <p className="text-xs sm:text-sm text-muted-foreground/70 leading-relaxed">
                         {meta.description}
                       </p>
 
