@@ -203,7 +203,7 @@ const InteractiveProgress = ({
                       >
                         {meta.label}
                       </p>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground/70 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-muted-foreground/70 leading-relaxed">
                         {meta.description}
                       </p>
 

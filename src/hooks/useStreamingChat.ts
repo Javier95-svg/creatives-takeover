@@ -57,25 +57,19 @@ export const streamChat = async (
 ): Promise<string> => {
   const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
 
-  if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
-    console.log('🚀 Starting SSE streaming chat:', { 
-      sessionId, 
-      messageLength: message.length,
-      wizardMode: wizardMode?.enabled,
-      currentStep,
-      filesCount: files?.length || 0,
-      url: STREAM_URL 
-    });
-  }
+  console.log('🚀 Starting SSE streaming chat:', { 
+    sessionId, 
+    messageLength: message.length,
+    wizardMode: wizardMode?.enabled,
+    currentStep,
+    filesCount: files?.length || 0,
+    url: STREAM_URL 
+  });
 
   // Convert files to base64 if provided
   let attachments: FileAttachment[] = [];
   if (files && files.length > 0) {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('📎 Converting files to base64...');
-    }
+    console.log('📎 Converting files to base64...');
     try {
       attachments = await Promise.all(
         files.map(async (file) => ({
@@ -85,10 +79,7 @@ export const streamChat = async (
           base64: await fileToBase64(file)
         }))
       );
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('✅ Files converted:', attachments.length);
-      }
+      console.log('✅ Files converted:', attachments.length);
     } catch (error) {
       console.error('❌ Error converting files:', error);
       throw new Error('Failed to process file attachments');
@@ -140,10 +131,7 @@ export const streamChat = async (
           const decoder = new TextDecoder();
           let buffer = '';
 
-          if (import.meta.env.DEV) {
-            // eslint-disable-next-line no-console
-            console.log('📡 SSE connection established');
-          }
+          console.log('📡 SSE connection established');
 
           const processStream = async () => {
             try {
@@ -151,10 +139,7 @@ export const streamChat = async (
                 const { done, value } = await reader.read();
                 
                 if (done) {
-                  if (import.meta.env.DEV) {
-                    // eslint-disable-next-line no-console
-                    console.log('✅ Stream complete. Message length:', fullMessage.length);
-                  }
+                  console.log('✅ Stream complete. Message length:', fullMessage.length);
                   onComplete?.(fullMessage);
                   resolve(fullMessage);
                   break;
@@ -171,10 +156,7 @@ export const streamChat = async (
                   const data = line.slice(6).trim();
                   
                   if (data === '[DONE]') {
-                    if (import.meta.env.DEV) {
-                      // eslint-disable-next-line no-console
-                      console.log('✅ Received [DONE] signal');
-                    }
+                    console.log('✅ Received [DONE] signal');
                     onComplete?.(fullMessage);
                     resolve(fullMessage);
                     return;
@@ -186,10 +168,7 @@ export const streamChat = async (
                       fullMessage += parsed.content;
                       onChunk?.(parsed.content);
                     } else if (parsed.type === 'complete') {
-                      if (import.meta.env.DEV) {
-                        // eslint-disable-next-line no-console
-                        console.log('✅ Stream complete with quick actions');
-                      }
+                      console.log('✅ Stream complete with quick actions');
                       if (parsed.quickActions) {
                         onComplete?.(fullMessage, parsed.quickActions);
                       } else {
@@ -209,20 +188,14 @@ export const streamChat = async (
               
               // If we got partial content, return it
               if (fullMessage.length > 0) {
-                if (import.meta.env.DEV) {
-                  // eslint-disable-next-line no-console
-                  console.log('⚠️ Returning partial message after error:', fullMessage.length, 'chars');
-                }
+                console.log('⚠️ Returning partial message after error:', fullMessage.length, 'chars');
                 onComplete?.(fullMessage);
                 resolve(fullMessage);
               } else if (retryCount < MAX_RETRIES) {
                 // Retry with exponential backoff
                 retryCount++;
                 const delay = Math.pow(2, retryCount) * 1000;
-                if (import.meta.env.DEV) {
-                  // eslint-disable-next-line no-console
-                  console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
-                }
+                console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
                 
                 setTimeout(() => {
                   connectWithRetry().then(resolve).catch(reject);
@@ -242,10 +215,7 @@ export const streamChat = async (
           if (retryCount < MAX_RETRIES) {
             retryCount++;
             const delay = Math.pow(2, retryCount) * 1000;
-            if (import.meta.env.DEV) {
-              // eslint-disable-next-line no-console
-              console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
-            }
+            console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
             
             setTimeout(() => {
               connectWithRetry().then(resolve).catch(reject);
@@ -277,9 +247,6 @@ export const streamChat = async (
 
 // Cancel function for stopping streaming
 export const cancelStream = () => {
-  if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
-    console.log('🛑 Cancelling stream');
-  }
+  console.log('🛑 Cancelling stream');
   // Cleanup will happen automatically when component unmounts
 };

@@ -129,10 +129,7 @@ const Login = () => {
   // Google OAuth login
   const handleGoogleLogin = async () => {
     try {
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("Starting Google OAuth...");
-      }
+      console.log("Starting Google OAuth...");
       toast("Redirecting to Google...");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -146,10 +143,7 @@ const Login = () => {
         }
       });
       
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("OAuth response:", { data, error });
-      }
+      console.log("OAuth response:", { data, error });
       
       if (error) {
         console.error("OAuth error:", error);
@@ -158,10 +152,7 @@ const Login = () => {
       }
       
       // If we get here without error, the redirect should have happened
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("OAuth initiated successfully");
-      }
+      console.log("OAuth initiated successfully");
       
     } catch (err) {
       console.error("Caught error:", err);

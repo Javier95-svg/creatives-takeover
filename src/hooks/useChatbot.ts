@@ -376,10 +376,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   
   // Cancel streaming function
   const cancelStreaming = useCallback(() => {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('🛑 Canceling stream');
-    }
+    console.log('🛑 Canceling stream');
     streamingAbortRef.current = true;
     setIsStreaming(false);
     setStreamingMessage('');
@@ -464,10 +461,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
     if (messages.length === 0) {
       if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
         // Initialize wizard mode with first question
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
-        }
+        console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
         const firstMessage: ChatMessage = {
           id: generateId(),
           content: config.wizardMode.steps[0].question,

@@ -26,18 +26,12 @@ export default function AdminFeedback() {
   useEffect(() => {
     async function checkAdminRole() {
       if (!user) {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log("No user, redirecting to login");
-        }
+        console.log("No user, redirecting to login");
         navigate("/login");
         return;
       }
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("Checking admin role for user:", user.id);
-      }
+      console.log("Checking admin role for user:", user.id);
       
       const { data, error } = await supabase
         .from('user_roles')
@@ -46,24 +40,15 @@ export default function AdminFeedback() {
         .eq('role', 'admin')
         .maybeSingle();
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("Admin check result:", { data, error });
-      }
+      console.log("Admin check result:", { data, error });
 
       if (!data || error) {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log("Admin check failed, redirecting to home");
-        }
+        console.log("Admin check failed, redirecting to home");
         if (error) console.error("Error details:", error);
         setIsAdmin(false);
         navigate("/");
       } else {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log("User is admin");
-        }
+        console.log("User is admin");
         setIsAdmin(true);
       }
     }

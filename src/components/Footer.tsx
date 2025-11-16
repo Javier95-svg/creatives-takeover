@@ -129,7 +129,6 @@ const Footer = () => {
                     src="/lovable-uploads/reddit-logo.png" 
                     alt="Reddit" 
                     className="h-5 w-5 hover:opacity-80 transition-opacity" 
-                    loading="lazy"
                   />
                 </a>
               </li>
@@ -149,8 +148,7 @@ const Footer = () => {
                   className="hover:opacity-80 transition-opacity" 
                   style={{ width: '250px', height: '54px' }} 
                   width="250" 
-                  height="54"
-                  loading="lazy" 
+                  height="54" 
                 />
               </a>
             </div>
@@ -167,7 +165,6 @@ const Footer = () => {
                   src="https://peerpush.net/p/creatives-takeover/badge" 
                   alt="Creatives Takeover badge" 
                   className="hover:opacity-80 transition-opacity h-[60px]"
-                  loading="lazy"
                 />
               </a>
             </div>
@@ -185,7 +182,6 @@ const Footer = () => {
                   alt="Creatives Takeover badge" 
                   className="hover:opacity-80 transition-opacity"
                   style={{ maxWidth: '150px' }}
-                  loading="lazy"
                 />
               </a>
             </div>

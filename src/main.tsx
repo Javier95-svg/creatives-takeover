@@ -16,19 +16,14 @@ if (import.meta.env.VITE_POSTHOG_API_KEY) {
       api_host: (import.meta.env.VITE_POSTHOG_API_HOST as string) || 'https://app.posthog.com',
       autocapture: true,
     })
-    // Debug helpers: confirm init and send a test event (dev-only)
-    if (import.meta.env.DEV) {
+    // Debug helpers: confirm init and send a test event (remove in production)
+    // eslint-disable-next-line no-console
+    console.log('PostHog init OK — test event will be sent. Masked key:', (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...')
+    try {
+      posthog.capture('debug_posthog_init')
+    } catch (err) {
       // eslint-disable-next-line no-console
-      console.log(
-        'PostHog init OK — test event will be sent. Masked key:',
-        (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0, 6) + '...'
-      )
-      try {
-        posthog.capture('debug_posthog_init')
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('PostHog capture debug event failed:', err)
-      }
+      console.warn('PostHog capture debug event failed:', err)
     }
   } catch (e) {
     // Fail silently in case posthog init causes issues during build or runtime.

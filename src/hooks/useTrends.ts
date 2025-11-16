@@ -47,10 +47,7 @@ export const useTrends = () => {
     try {
       setIsLoading(true);
       setError(null);
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('📋 Fetching trends from database...');
-      }
+      console.log('📋 Fetching trends from database...');
 
       const { data, error: fetchError } = await supabase
         .from('trends')
@@ -61,10 +58,7 @@ export const useTrends = () => {
         .order('trend_score', { ascending: false })
         .limit(60);
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('📊 Fetch trends result:', { data, error: fetchError, count: data?.length });
-      }
+      console.log('📊 Fetch trends result:', { data, error: fetchError, count: data?.length });
 
       if (fetchError) {
         console.error('❌ Database fetch error:', fetchError);
@@ -89,10 +83,7 @@ export const useTrends = () => {
         summary: item.summary || undefined
       })) as Trend[];
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('✅ Successfully fetched trends:', processedTrends.length);
-      }
+      console.log('✅ Successfully fetched trends:', processedTrends.length);
       setTrends(processedTrends);
     } catch (err) {
       console.error('❌ Error fetching trends:', err);
@@ -105,10 +96,7 @@ export const useTrends = () => {
   const generateNewTrends = async () => {
     try {
       setError(null);
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('🔍 Fetching fresh articles from NewsAPI...');
-      }
+      console.log('🔍 Fetching fresh articles from NewsAPI...');
       
       // Try the news-aggregator function with business-focused queries
       const { data, error: functionError } = await supabase.functions.invoke('news-aggregator', {
@@ -119,10 +107,7 @@ export const useTrends = () => {
         }
       });
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('📊 News aggregator response:', { data, error: functionError });
-      }
+      console.log('📊 News aggregator response:', { data, error: functionError });
 
       if (functionError) {
         console.error('❌ News aggregator error:', functionError);
@@ -130,10 +115,7 @@ export const useTrends = () => {
       }
 
       if (data?.success) {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.log('✅ News aggregation successful:', data.saved, 'new articles saved');
-        }
+        console.log('✅ News aggregation successful:', data.saved, 'new articles saved');
         // Refresh trends after generation
         await fetchTrends();
         return data.processed || [];
@@ -163,10 +145,7 @@ export const useTrends = () => {
   };
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('🚀 useTrends: Fetching existing trends from database...');
-    }
+    console.log('🚀 useTrends: Fetching existing trends from database...');
     fetchTrends();
   }, []);
 

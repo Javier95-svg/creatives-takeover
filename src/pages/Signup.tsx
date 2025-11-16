@@ -162,10 +162,7 @@ const Signup = () => {
       } else {
         // Track conversion source
         if (conversionSource.source !== 'direct') {
-          if (import.meta.env.DEV) {
-            // eslint-disable-next-line no-console
-            console.log('User signed up from:', conversionSource.source);
-          }
+          console.log('User signed up from:', conversionSource.source);
           // Could send this to analytics here
         }
 
@@ -207,10 +204,7 @@ const Signup = () => {
   // Google OAuth signup
   const handleGoogleSignup = async () => {
     try {
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("Starting Google OAuth signup...");
-      }
+      console.log("Starting Google OAuth signup...");
       toast("Redirecting to Google...");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -224,10 +218,7 @@ const Signup = () => {
         }
       });
       
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("OAuth response:", { data, error });
-      }
+      console.log("OAuth response:", { data, error });
       
       if (error) {
         console.error("OAuth error:", error);
@@ -236,10 +227,7 @@ const Signup = () => {
       }
       
       // If we get here without error, the redirect should have happened
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log("OAuth initiated successfully");
-      }
+      console.log("OAuth initiated successfully");
       try {
         await trackActivity('user:signup_oauth', { provider: 'google' });
       } catch {}
