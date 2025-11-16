@@ -1,7 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import CommunityFeed from "@/components/community/CommunityFeed";
-import CommunityHero from "@/components/CommunityHero";
 import Footer from "@/components/Footer";
 import CommunityWallpaper from "@/components/wallpapers/CommunityWallpaper";
 
@@ -25,7 +24,6 @@ const CommunityPage = () => {
         <div className="relative z-10">
           <Navigation />
           <div className="pt-16">
-            <CommunityHero />
             <CommunityFeed />
             <Footer />
           </div>
