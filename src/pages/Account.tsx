@@ -256,7 +256,8 @@ const Account = () => {
       // Update profiles table
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           full_name: fullName,
           avatar_url: avatarUrl,
           bio: bio,
@@ -267,8 +268,7 @@ const Account = () => {
           youtube_url: youtubeUrl,
           github_url: githubUrl,
           website_url: websiteUrl,
-        })
-        .eq('id', user.id);
+        });
 
       if (profileError) throw profileError;
 
