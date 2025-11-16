@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
+import FundraisingReadinessToolkit from "@/components/blog/FundraisingReadinessToolkit";
 import TrendingSection from "@/components/blog/TrendingSection";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState, useRef } from "react";
@@ -87,6 +88,7 @@ const Blog = () => {
           filters={fundingFilters}
           onFiltersChange={setFundingFilters}
         />
+        <FundraisingReadinessToolkit />
         <TrendingSection 
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
