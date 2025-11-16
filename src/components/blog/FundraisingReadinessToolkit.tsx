@@ -201,32 +201,6 @@ const FundraisingReadinessToolkit = () => {
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
             Assess your readiness for pre-seed fundraising. Move the sliders to rate each area, then get AI-powered insights!
           </p>
-          {!isAuthenticated && (
-            <div className="mt-6">
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <LogIn className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Sign in to use this tool</p>
-                        <p className="text-sm text-muted-foreground">Get personalized AI-powered insights on your fundraising readiness</p>
-                      </div>
-                    </div>
-                    <Button 
-                      size="lg" 
-                      onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
-                    >
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In to Continue
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
 
         {/* Main Card */}
