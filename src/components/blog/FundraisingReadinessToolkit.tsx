@@ -1,11 +1,16 @@
-import React, { useState, useMemo } from "react";
-import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Criterion {
   id: string;
@@ -13,8 +18,27 @@ interface Criterion {
   description: string;
   helpText: string;
   icon: React.ReactNode;
-  recommendations: {
-    [key: number]: string; // score -> recommendation
+}
+
+interface AIAnalysis {
+  verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
+  confidence: number;
+  strengths: string[];
+  critical_gaps: string[];
+  prioritized_actions: Array<{
+    action: string;
+    priority: 'High' | 'Medium' | 'Low';
+    estimated_time?: string;
+  }>;
+  timeline_to_readiness?: string;
+  risk_assessment?: string;
+  summary: string;
+  average_score?: number;
+  scores?: {
+    mvp: number;
+    feedback: number;
+    team: number;
+    runway: number;
   };
 }
 
@@ -25,13 +49,6 @@ const criteria: Criterion[] = [
     description: "Do you have a working version of your product that solves a real problem?",
     helpText: "This doesn't need to be perfect - just something you can show to customers",
     icon: <Rocket className="h-5 w-5" />,
-    recommendations: {
-      1: "Start by building a simple prototype that solves one core problem. You don't need all features - just enough to show value.",
-      2: "Focus on getting your MVP to a point where you can demonstrate it to potential customers. Polish can come later.",
-      3: "Great progress! Consider adding one or two key features that make your MVP more compelling to investors.",
-      4: "You're almost there! Make sure your MVP is stable and can handle real user testing before fundraising.",
-      5: "Excellent! Your MVP is ready. Make sure you have metrics and user feedback to share with investors."
-    }
   },
   {
     id: "feedback",
@@ -39,13 +56,6 @@ const criteria: Criterion[] = [
     description: "Have you talked to potential customers and received feedback?",
     helpText: "Even 5-10 conversations with people who might use your product counts!",
     icon: <Target className="h-5 w-5" />,
-    recommendations: {
-      1: "Start talking to potential customers today! Reach out to 5-10 people who might use your product and ask for their honest feedback.",
-      2: "You've started the conversation - keep going! Aim for at least 10-15 customer interviews to validate your idea.",
-      3: "Good work! You're getting feedback. Now focus on addressing the most common concerns or suggestions you're hearing.",
-      4: "You're doing great! Make sure you've documented this feedback and can show investors how you've improved based on it.",
-      5: "Perfect! You have solid customer validation. Prepare a summary of key feedback and how you've addressed it for investors."
-    }
   },
   {
     id: "team",
@@ -53,13 +63,6 @@ const criteria: Criterion[] = [
     description: "Do you have the right people to build and grow your startup?",
     helpText: "This could be just you, or a co-founder, or a small team - what matters is having the skills needed",
     icon: <Users className="h-5 w-5" />,
-    recommendations: {
-      1: "Identify what skills are missing. Consider finding a co-founder or advisor who complements your strengths.",
-      2: "You're building your team! Focus on finding people who share your vision and bring essential skills you don't have.",
-      3: "You have a solid foundation. Consider adding advisors or part-time help in areas where you need support.",
-      4: "Great team setup! Make sure everyone is aligned on the vision and ready to commit to the fundraising process.",
-      5: "Excellent! Your team is ready. Ensure everyone understands their role in the fundraising process and can speak to investors."
-    }
   },
   {
     id: "runway",
@@ -67,27 +70,31 @@ const criteria: Criterion[] = [
     description: "Do you have enough money to operate while fundraising?",
     helpText: "Runway = how many months you can operate without new funding. 3-6 months is a good minimum",
     icon: <DollarSign className="h-5 w-5" />,
-    recommendations: {
-      1: "Fundraising takes time (often 3-6 months). Start cutting costs and securing personal savings or a small loan to give yourself at least 3 months of runway.",
-      2: "You have some runway, but it's tight. Focus on extending it to at least 3-4 months before starting serious fundraising conversations.",
-      3: "You have a decent runway. Consider ways to extend it further (reduce costs, find additional income) to give yourself more time.",
-      4: "Good runway! This gives you time to be selective with investors and not rush into bad deals. Maintain this buffer.",
-      5: "Perfect! You have enough runway to fundraise without pressure. This puts you in a strong negotiating position with investors."
-    }
   }
 ];
 
 const scoreLabels: { [key: number]: string } = {
-  1: "Not Started",
-  2: "Just Beginning",
-  3: "In Progress",
-  4: "Almost There",
+  0: "Not Started",
+  1: "Just Beginning",
+  2: "In Progress",
+  3: "Almost There",
+  4: "Very Close",
   5: "Complete"
 };
 
 const FundraisingReadinessToolkit = () => {
-  const [scores, setScores] = useState<{ [key: string]: number }>({});
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [scores, setScores] = useState<{ [key: string]: number }>({
+    mvp: 0,
+    feedback: 0,
+    team: 0,
+    runway: 0
+  });
   const [expandedHelp, setExpandedHelp] = useState<{ [key: string]: boolean }>({});
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const averageScore = useMemo(() => {
     const scoreValues = Object.values(scores);
@@ -96,14 +103,21 @@ const FundraisingReadinessToolkit = () => {
     return sum / scoreValues.length;
   }, [scores]);
 
-  const isReady = averageScore >= 3.5;
-  const allScored = Object.keys(scores).length === criteria.length;
+  const allScored = useMemo(() => {
+    return Object.values(scores).every(score => score > 0);
+  }, [scores]);
 
-  const handleScoreChange = (criterionId: string, score: number) => {
+  const handleScoreChange = (criterionId: string, value: number[]) => {
+    const newScore = value[0];
     setScores(prev => ({
       ...prev,
-      [criterionId]: score
+      [criterionId]: newScore
     }));
+    // Clear previous analysis when scores change
+    if (aiAnalysis) {
+      setAiAnalysis(null);
+      setAnalysisError(null);
+    }
   };
 
   const toggleHelp = (criterionId: string) => {
@@ -113,22 +127,102 @@ const FundraisingReadinessToolkit = () => {
     }));
   };
 
-  const getRecommendations = () => {
-    const recommendations: string[] = [];
-    criteria.forEach(criterion => {
-      const score = scores[criterion.id];
-      if (score && score < 3) {
-        recommendations.push(criterion.recommendations[score] || criterion.recommendations[1]);
+  const analyzeReadiness = async () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to analyze your readiness");
+      navigate('/login', { state: { returnTo: '/insighta' } });
+      return;
+    }
+
+    if (!allScored) {
+      toast.error("Please set all scores before analyzing");
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
+        body: {
+          mvp_score: scores.mvp,
+          feedback_score: scores.feedback,
+          team_score: scores.team,
+          runway_score: scores.runway
+        }
+      });
+
+      if (error) {
+        throw error;
       }
-    });
-    return recommendations;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setAiAnalysis(data as AIAnalysis);
+      toast.success("Analysis complete!");
+    } catch (error) {
+      console.error('Analysis error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
+      setAnalysisError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const recommendations = getRecommendations();
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <section className="py-20 px-4 relative overflow-hidden" data-section="fundraising-readiness">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+        </div>
+
+        <div className="container mx-auto max-w-5xl relative z-10">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 mb-6">
+              <Rocket className="h-6 w-6 text-primary" />
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
+                Fundraising Readiness Toolkit
+              </h2>
+              <span className="text-4xl md:text-5xl">🎯</span>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-4 rounded-full bg-primary/10 w-fit">
+                <LogIn className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Sign In Required</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Sign in to assess your fundraising readiness and get personalized AI-powered insights
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <p className="text-muted-foreground">
+                Our AI-powered toolkit will analyze your startup's readiness and provide actionable recommendations.
+              </p>
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
+                className="mt-4"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In to Continue
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 px-4 relative overflow-hidden" data-section="fundraising-readiness">
-      {/* Background styling similar to FundingOpportunitiesSection */}
+      {/* Background styling */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
         <div
@@ -152,7 +246,7 @@ const FundraisingReadinessToolkit = () => {
             <span className="text-4xl md:text-5xl">🎯</span>
           </div>
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Assess your readiness for pre-seed fundraising. Answer honestly - this helps you identify what to work on next!
+            Assess your readiness for pre-seed fundraising. Move the sliders to rate each area, then get AI-powered insights!
           </p>
         </div>
 
@@ -161,7 +255,7 @@ const FundraisingReadinessToolkit = () => {
           <CardHeader>
             <CardTitle className="text-2xl">How ready are you?</CardTitle>
             <CardDescription>
-              Rate each area below from 1 (Not Started) to 5 (Complete). Be honest with yourself!
+              Move each slider from 0 (Not Started) to 5 (Complete). Be honest with yourself!
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
@@ -213,34 +307,33 @@ const FundraisingReadinessToolkit = () => {
                     </div>
                   </div>
 
-                  {/* Score Buttons */}
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {[1, 2, 3, 4, 5].map((score) => (
-                        <Button
-                          key={score}
-                          type="button"
-                          variant={currentScore === score ? "default" : "outline"}
-                          size="lg"
-                          onClick={() => handleScoreChange(criterion.id, score)}
-                          className={cn(
-                            "min-w-[100px] flex-1 md:flex-none",
-                            currentScore === score && "ring-2 ring-primary ring-offset-2"
-                          )}
-                        >
-                          <span className="text-lg mr-2">{score}</span>
-                          <span className="text-xs">{scoreLabels[score]}</span>
-                        </Button>
-                      ))}
+                  {/* Slider */}
+                  <div className="space-y-3 pl-12">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Score: {currentScore} / 5</span>
+                      <span className="text-xs text-muted-foreground">{scoreLabels[currentScore]}</span>
+                    </div>
+                    <Slider
+                      value={[currentScore]}
+                      onValueChange={(value) => handleScoreChange(criterion.id, value)}
+                      min={0}
+                      max={5}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0</span>
+                      <span>1</span>
+                      <span>2</span>
+                      <span>3</span>
+                      <span>4</span>
+                      <span>5</span>
                     </div>
                     
                     {/* Progress Bar */}
                     {currentScore > 0 && (
                       <div className="space-y-1">
                         <Progress value={(currentScore / 5) * 100} className="h-2" />
-                        <p className="text-xs text-muted-foreground">
-                          {currentScore === 5 ? "🎉 Perfect!" : currentScore >= 3 ? "👍 Good progress!" : "💪 Keep working on this!"}
-                        </p>
                       </div>
                     )}
                   </div>
@@ -250,126 +343,181 @@ const FundraisingReadinessToolkit = () => {
           </CardContent>
         </Card>
 
-        {/* Results Card */}
+        {/* Analyze Button */}
         {allScored && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Average Score</p>
+                  <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 5.0</p>
+                </div>
+                <Button
+                  size="lg"
+                  onClick={analyzeReadiness}
+                  disabled={isAnalyzing}
+                  className="w-full md:w-auto min-w-[200px]"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Get AI Analysis
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error Message */}
+        {analysisError && (
+          <Card className="mb-8 border-destructive/50 bg-destructive/5">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                <div>
+                  <p className="font-medium text-destructive">Analysis Error</p>
+                  <p className="text-sm text-muted-foreground mt-1">{analysisError}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={analyzeReadiness}
+                    className="mt-3"
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI Analysis Results */}
+        {aiAnalysis && (
           <Card className={cn(
             "border-2",
-            isReady ? "border-green-500/50 bg-green-500/5" : "border-orange-500/50 bg-orange-500/5"
+            aiAnalysis.verdict === 'Ready' ? "border-green-500/50 bg-green-500/5" : 
+            aiAnalysis.verdict === 'Almost Ready' ? "border-yellow-500/50 bg-yellow-500/5" :
+            "border-orange-500/50 bg-orange-500/5"
           )}>
             <CardHeader>
               <div className="flex items-center gap-3">
-                {isReady ? (
+                {aiAnalysis.verdict === 'Ready' ? (
                   <CheckCircle2 className="h-6 w-6 text-green-500" />
                 ) : (
                   <AlertCircle className="h-6 w-6 text-orange-500" />
                 )}
                 <div>
                   <CardTitle className="text-2xl">
-                    {isReady ? "You're Ready! 🎉" : "Not Quite Ready Yet"}
+                    {aiAnalysis.verdict === 'Ready' ? "You're Ready! 🎉" : 
+                     aiAnalysis.verdict === 'Almost Ready' ? "Almost Ready! ⚡" :
+                     "Not Quite Ready Yet"}
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Your average score: <strong>{averageScore.toFixed(1)}</strong> / 5.0
+                    Confidence: {aiAnalysis.confidence}% • Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 5.0
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Overall Progress */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Overall Readiness</span>
-                  <span className="text-muted-foreground">
-                    {Math.round((averageScore / 5) * 100)}%
-                  </span>
-                </div>
-                <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary">
-                  <div 
-                    className={cn(
-                      "h-full rounded-full transition-all",
-                      isReady ? "bg-green-500" : "bg-orange-500"
-                    )}
-                    style={{ width: `${(averageScore / 5) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Status Message */}
+            <CardContent className="space-y-6">
+              {/* Summary */}
               <div className={cn(
                 "p-4 rounded-lg",
-                isReady ? "bg-green-500/10 border border-green-500/20" : "bg-orange-500/10 border border-orange-500/20"
+                aiAnalysis.verdict === 'Ready' ? "bg-green-500/10 border border-green-500/20" : 
+                aiAnalysis.verdict === 'Almost Ready' ? "bg-yellow-500/10 border border-yellow-500/20" :
+                "bg-orange-500/10 border border-orange-500/20"
               )}>
-                <p className="text-sm font-medium mb-2">
-                  {isReady ? (
-                    <>
-                      <strong>Congratulations!</strong> You're in a good position to start fundraising. 
-                      You have the key foundations in place. Now focus on preparing your pitch deck and 
-                      identifying the right investors for your startup.
-                    </>
-                  ) : (
-                    <>
-                      <strong>You're on the right track!</strong> Fundraising is a journey, and you're 
-                      making progress. Focus on the areas below to strengthen your position before 
-                      approaching investors.
-                    </>
-                  )}
-                </p>
+                <p className="text-sm font-medium mb-2">Summary</p>
+                <p className="text-sm text-muted-foreground">{aiAnalysis.summary}</p>
               </div>
 
-              {/* Recommendations */}
-              {recommendations.length > 0 && (
+              {/* Strengths */}
+              {aiAnalysis.strengths && aiAnalysis.strengths.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Focus Areas to Improve
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    Strengths
                   </h4>
                   <ul className="space-y-2">
-                    {recommendations.map((rec, index) => (
+                    {aiAnalysis.strengths.map((strength, index) => (
                       <li key={index} className="flex gap-3 text-sm">
-                        <span className="text-primary mt-1">•</span>
-                        <span className="text-muted-foreground">{rec}</span>
+                        <span className="text-green-500 mt-1">✓</span>
+                        <span className="text-muted-foreground">{strength}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* Next Steps */}
-              <div className="pt-4 border-t">
-                <h4 className="font-semibold text-sm mb-2">Next Steps</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {isReady ? (
-                    <>
-                      <li className="flex gap-2">
-                        <span>✓</span>
-                        <span>Prepare a compelling pitch deck highlighting your MVP and customer feedback</span>
+              {/* Critical Gaps */}
+              {aiAnalysis.critical_gaps && aiAnalysis.critical_gaps.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-orange-500" />
+                    Critical Gaps
+                  </h4>
+                  <ul className="space-y-2">
+                    {aiAnalysis.critical_gaps.map((gap, index) => (
+                      <li key={index} className="flex gap-3 text-sm">
+                        <span className="text-orange-500 mt-1">•</span>
+                        <span className="text-muted-foreground">{gap}</span>
                       </li>
-                      <li className="flex gap-2">
-                        <span>✓</span>
-                        <span>Research and identify investors who fund companies at your stage</span>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Prioritized Actions */}
+              {aiAnalysis.prioritized_actions && aiAnalysis.prioritized_actions.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Prioritized Action Items
+                  </h4>
+                  <ul className="space-y-3">
+                    {aiAnalysis.prioritized_actions.map((action, index) => (
+                      <li key={index} className="flex gap-3 text-sm">
+                        <Badge 
+                          variant={action.priority === 'High' ? 'destructive' : action.priority === 'Medium' ? 'default' : 'secondary'}
+                          className="h-fit"
+                        >
+                          {action.priority}
+                        </Badge>
+                        <div className="flex-1">
+                          <span className="text-foreground">{action.action}</span>
+                          {action.estimated_time && (
+                            <span className="text-xs text-muted-foreground ml-2">({action.estimated_time})</span>
+                          )}
+                        </div>
                       </li>
-                      <li className="flex gap-2">
-                        <span>✓</span>
-                        <span>Practice your pitch with advisors or other founders</span>
-                      </li>
-                    </>
-                  ) : (
-                    <>
-                      <li className="flex gap-2">
-                        <span>→</span>
-                        <span>Work on the focus areas above - even small improvements make a difference</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span>→</span>
-                        <span>Reassess in a few weeks as you make progress</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span>→</span>
-                        <span>Consider finding a mentor or advisor to help guide you</span>
-                      </li>
-                    </>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Timeline & Risk Assessment */}
+              {(aiAnalysis.timeline_to_readiness || aiAnalysis.risk_assessment) && (
+                <div className="grid md:grid-cols-2 gap-4 pt-4 border-t">
+                  {aiAnalysis.timeline_to_readiness && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Timeline to Readiness</h4>
+                      <p className="text-sm text-muted-foreground">{aiAnalysis.timeline_to_readiness}</p>
+                    </div>
                   )}
-                </ul>
-              </div>
+                  {aiAnalysis.risk_assessment && (
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Risk Assessment</h4>
+                      <p className="text-sm text-muted-foreground">{aiAnalysis.risk_assessment}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
