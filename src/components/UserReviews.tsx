@@ -180,33 +180,25 @@ const UserReviews = () => {
                   </p>
 
                   {/* User Info */}
-                  <div className="flex items-start gap-4 pt-4 border-t border-border/50">
-                    <Avatar className="w-12 h-12 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <AvatarImage src={review.avatar} alt={review.name} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
-                        {review.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
-                        {review.name}
-                      </h4>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        {review.role && (
-                          <Badge variant="outline" className="text-xs px-2 py-0">
-                            {review.role}
-                          </Badge>
-                        )}
-                        {review.location && (
-                          <span className="whitespace-nowrap">📍 {review.location}</span>
-                        )}
-                      </div>
-                      {review.timestamp && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {review.timestamp}
-                        </p>
-                      )}
-                    </div>
+                  <div className="pt-4 border-t border-border/50">
+                    <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
+                      {review.name}
+                    </h4>
+                    {review.role && (
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {review.role}
+                      </p>
+                    )}
+                    {review.location && (
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {review.location}
+                      </p>
+                    )}
+                    {review.timestamp && (
+                      <p className="text-xs text-muted-foreground">
+                        {review.timestamp}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
