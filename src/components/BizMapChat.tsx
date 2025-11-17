@@ -6,7 +6,6 @@ import { FileAttachment } from './chatbot/FileAttachment';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot, ChatMessage } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
-import { Progress } from "@/components/ui/progress";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
 import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { useNavigate } from "react-router-dom";
@@ -192,8 +191,6 @@ export const BizMapChat = ({
     }
   });
 
-  const progress = (currentStep / wizardSteps.length) * 100;
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ 
       behavior: "smooth",
@@ -367,14 +364,6 @@ export const BizMapChat = ({
             {chatMode === 'freeform' ? '✨ Freeform' : '🧙 30-Day Launch'}
           </Badge>
         </div>
-        {chatMode === 'wizard' && (
-          <div className="space-y-1">
-            <Progress value={progress} className="h-2" />
-            <p className="text-xs text-muted-foreground">
-              Building your personalized 30-day launch roadmap
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Messages Area */}
