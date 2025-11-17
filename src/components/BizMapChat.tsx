@@ -344,27 +344,6 @@ export const BizMapChat = ({
           onSignUp={handleSignUpClick}
         />
         
-        {/* Progress Bar with Mode Indicator */}
-        <div className="p-4 border-b bg-muted/30 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">
-                {chatMode === 'wizard' 
-                  ? `Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || ''}` 
-                  : 'Ask Me Anything'}
-              </span>
-            </div>
-            {celebrationMode && (
-              <span className="text-lg animate-bounce">🎉</span>
-            )}
-          </div>
-          <Badge variant={chatMode === 'freeform' ? 'default' : 'secondary'} className="text-xs">
-            {chatMode === 'freeform' ? '✨ Freeform' : '🧙 30-Day Launch'}
-          </Badge>
-        </div>
-      </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative">
