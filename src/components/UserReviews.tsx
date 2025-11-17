@@ -11,6 +11,7 @@ const UserReviews = () => {
       timestamp: "3 days ago",
       location: "Mumbai, India",
       role: "Indie founder",
+      rating: 5,
       avatar: "https://ui-avatars.com/api/?name=Priya+Sharma&background=6366f1&color=fff&size=128&bold=true"
     },
     {
@@ -19,6 +20,7 @@ const UserReviews = () => {
       timestamp: "1 week ago",
       location: "London, UK",
       role: "First-time creator",
+      rating: 4.5,
       avatar: "https://ui-avatars.com/api/?name=James+Mitchell&background=3b82f6&color=fff&size=128&bold=true"
     },
     {
@@ -27,6 +29,7 @@ const UserReviews = () => {
       timestamp: "2 weeks ago",
       location: "Barcelona, Spain",
       role: "Creative entrepreneur",
+      rating: 4,
       avatar: "https://ui-avatars.com/api/?name=Sofia+Martinez&background=ec4899&color=fff&size=128&bold=true"
     },
     {
@@ -35,6 +38,7 @@ const UserReviews = () => {
       timestamp: "5 days ago",
       location: "Seoul, South Korea",
       role: "Tech founder",
+      rating: 4.5,
       avatar: "https://ui-avatars.com/api/?name=David+Kim&background=10b981&color=fff&size=128&bold=true"
     },
     {
@@ -43,6 +47,7 @@ const UserReviews = () => {
       timestamp: "1 month ago",
       location: "Lagos, Nigeria",
       role: "Startup founder",
+      rating: 5,
       avatar: "https://ui-avatars.com/api/?name=Aisha+Okafor&background=f59e0b&color=fff&size=128&bold=true"
     },
     {
@@ -51,6 +56,7 @@ const UserReviews = () => {
       timestamp: "1 week ago",
       location: "Stockholm, Sweden",
       role: "Solo entrepreneur",
+      rating: 4,
       avatar: "https://ui-avatars.com/api/?name=Lucas+Anderson&background=8b5cf6&color=fff&size=128&bold=true"
     },
     {
@@ -59,6 +65,7 @@ const UserReviews = () => {
       timestamp: "4 days ago",
       location: "Tokyo, Japan",
       role: "Indie developer",
+      rating: 4.5,
       avatar: "https://ui-avatars.com/api/?name=Yuki+Tanaka&background=ef4444&color=fff&size=128&bold=true"
     },
     {
@@ -67,6 +74,7 @@ const UserReviews = () => {
       timestamp: "2 weeks ago",
       location: "Melbourne, Australia",
       role: "First-time creator",
+      rating: 4,
       avatar: "https://ui-avatars.com/api/?name=Emma+Thompson&background=06b6d4&color=fff&size=128&bold=true"
     }
   ];
@@ -139,13 +147,31 @@ const UserReviews = () => {
                 
                 <CardContent className="relative p-6 md:p-8">
                   {/* Rating Stars */}
-                  <div className="flex items-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                      />
-                    ))}
+                  <div className="flex items-center mb-4 gap-0.5">
+                    {[...Array(5)].map((_, i) => {
+                      const rating = review.rating || 5;
+                      const starValue = i + 1;
+                      const isFullStar = starValue <= Math.floor(rating);
+                      const isHalfStar = !isFullStar && starValue === Math.ceil(rating) && rating % 1 !== 0;
+                      const isEmptyStar = starValue > Math.ceil(rating);
+                      
+                      return (
+                        <div key={i} className="relative inline-block w-4 h-4">
+                          {/* Empty star background */}
+                          <Star className="absolute inset-0 w-4 h-4 fill-gray-300 text-gray-300" />
+                          {/* Full star overlay */}
+                          {isFullStar && (
+                            <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          )}
+                          {/* Half star overlay */}
+                          {isHalfStar && (
+                            <div className="absolute inset-0 w-4 h-4" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}>
+                              <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Review Comment */}
