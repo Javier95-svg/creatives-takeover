@@ -74,16 +74,16 @@ const InteractiveProgress = ({
   return (
     <div className="w-full max-w-7xl mx-auto">
       {/* Dark Gradient Background Container */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative bg-gradient-to-br from-background via-background/95 to-background rounded-2xl shadow-2xl overflow-hidden border border-primary/10">
         <div className="p-6 sm:p-8 lg:p-10">
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8">
             {/* Left Side - Title and Step Info */}
             <div className="mb-4 sm:mb-0">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 BIZMAP AI TIMELINE
               </h2>
-              <div className="text-sm sm:text-base text-gray-300">
+              <div className="text-sm sm:text-base text-muted-foreground">
                 <span className="font-semibold">Step {activeStepIndex + 1} of {totalSteps}</span>
                 <span className="mx-2">·</span>
                 <span>Currently working on: {activeStep.name} ({activeStep.days})</span>
@@ -91,11 +91,11 @@ const InteractiveProgress = ({
             </div>
 
             {/* Right Side - Progress Box */}
-            <div className="bg-gray-800/90 border border-gray-700 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px]">
-              <div className="text-3xl sm:text-4xl font-bold text-blue-500 mb-1">
+            <div className="bg-background/90 border border-primary/20 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px]">
+              <div className="text-3xl sm:text-4xl font-bold text-primary mb-1">
                 {progressPercentage}% complete
               </div>
-              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 Follow the steps in order for the smoothest 30-day launch.
               </p>
             </div>
@@ -104,11 +104,11 @@ const InteractiveProgress = ({
           {/* Horizontal Timeline */}
           <div className="relative">
             {/* Connecting Line Background */}
-            <div className="absolute top-10 left-0 right-0 h-0.5 bg-gray-700" />
+            <div className="absolute top-10 left-0 right-0 h-0.5 bg-border" />
             
             {/* Progress Line */}
             <div 
-              className="absolute top-10 left-0 h-0.5 bg-blue-500 transition-all duration-500 ease-out"
+              className="absolute top-10 left-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
               style={{ 
                 width: totalSteps > 1 ? `${(activeStepIndex / (totalSteps - 1)) * 100}%` : '0%'
               }}
@@ -136,19 +136,19 @@ const InteractiveProgress = ({
                       relative z-10 w-20 h-20 rounded-full transition-all duration-300
                       flex items-center justify-center mb-4
                       ${isCurrent 
-                        ? 'bg-blue-500 border-2 border-blue-400 shadow-lg shadow-blue-500/50' 
-                        : 'bg-gray-600 border-2 border-gray-500'
+                        ? 'bg-gradient-to-br from-primary to-secondary border-2 border-primary/50 shadow-lg shadow-primary/50' 
+                        : 'bg-background/60 border-2 border-border'
                       }
                     `}>
                       <Icon className={`w-8 h-8 ${
-                        isCurrent ? 'text-white' : 'text-gray-300'
+                        isCurrent ? 'text-foreground' : 'text-muted-foreground'
                       }`} />
                     </div>
 
                     {/* Step Title */}
                     <h4 className={`
                       text-xs sm:text-sm font-semibold mb-2 text-center transition-colors
-                      ${isCurrent ? 'text-white' : 'text-gray-400'}
+                      ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}
                     `}>
                       STEP {index + 1} · {step.name}
                     </h4>
@@ -156,14 +156,14 @@ const InteractiveProgress = ({
                     {/* Step Description */}
                     <p className={`
                       text-[10px] sm:text-xs text-center leading-relaxed max-w-[140px] transition-colors
-                      ${isCurrent ? 'text-gray-300' : 'text-gray-500'}
+                      ${isCurrent ? 'text-muted-foreground' : 'text-muted-foreground/80'}
                     `}>
                       {step.description}
                     </p>
 
                     {/* Active Button */}
                     {isCurrent && (
-                      <button className="mt-3 px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors">
+                      <button className="mt-3 px-4 py-1.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-foreground text-xs font-medium rounded-md transition-all">
                         Active
                       </button>
                     )}
