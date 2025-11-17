@@ -270,7 +270,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   };
 
 
-  const handleEditComment = (commentId: string, currentContent: string) => {
+  const handleEditComment = (commentId: string, currentContent: string, imageUrl?: string | null) => {
     setEditingCommentId(commentId);
     setEditingCommentContent(currentContent);
   };
