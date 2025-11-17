@@ -74,7 +74,7 @@ const InteractiveProgress = ({
   return (
     <div className="w-full max-w-7xl mx-auto">
       {/* Dark Gradient Background Container */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-2xl overflow-hidden">
         <div className="p-6 sm:p-8 lg:p-10">
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8">
@@ -83,7 +83,7 @@ const InteractiveProgress = ({
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                 BIZMAP AI TIMELINE
               </h2>
-              <div className="text-sm sm:text-base text-slate-300">
+              <div className="text-sm sm:text-base text-gray-300">
                 <span className="font-semibold">Step {activeStepIndex + 1} of {totalSteps}</span>
                 <span className="mx-2">·</span>
                 <span>Currently working on: {activeStep.name} ({activeStep.days})</span>
@@ -91,11 +91,11 @@ const InteractiveProgress = ({
             </div>
 
             {/* Right Side - Progress Box */}
-            <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px]">
-              <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-1">
+            <div className="bg-gray-800/90 border border-gray-700 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px]">
+              <div className="text-3xl sm:text-4xl font-bold text-blue-500 mb-1">
                 {progressPercentage}% complete
               </div>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
                 Follow the steps in order for the smoothest 30-day launch.
               </p>
             </div>
@@ -104,7 +104,7 @@ const InteractiveProgress = ({
           {/* Horizontal Timeline */}
           <div className="relative">
             {/* Connecting Line Background */}
-            <div className="absolute top-10 left-0 right-0 h-0.5 bg-slate-700" />
+            <div className="absolute top-10 left-0 right-0 h-0.5 bg-gray-700" />
             
             {/* Progress Line */}
             <div 
@@ -137,20 +137,18 @@ const InteractiveProgress = ({
                       flex items-center justify-center mb-4
                       ${isCurrent 
                         ? 'bg-blue-500 border-2 border-blue-400 shadow-lg shadow-blue-500/50' 
-                        : isCompleted
-                        ? 'bg-slate-600 border-2 border-slate-500'
-                        : 'bg-slate-700 border-2 border-slate-600'
+                        : 'bg-gray-600 border-2 border-gray-500'
                       }
                     `}>
                       <Icon className={`w-8 h-8 ${
-                        isCurrent ? 'text-white' : isCompleted ? 'text-slate-300' : 'text-slate-400'
+                        isCurrent ? 'text-white' : 'text-gray-300'
                       }`} />
                     </div>
 
                     {/* Step Title */}
                     <h4 className={`
                       text-xs sm:text-sm font-semibold mb-2 text-center transition-colors
-                      ${isCurrent ? 'text-white' : isCompleted ? 'text-slate-300' : 'text-slate-400'}
+                      ${isCurrent ? 'text-white' : 'text-gray-400'}
                     `}>
                       STEP {index + 1} · {step.name}
                     </h4>
@@ -158,7 +156,7 @@ const InteractiveProgress = ({
                     {/* Step Description */}
                     <p className={`
                       text-[10px] sm:text-xs text-center leading-relaxed max-w-[140px] transition-colors
-                      ${isCurrent ? 'text-slate-300' : 'text-slate-500'}
+                      ${isCurrent ? 'text-gray-300' : 'text-gray-500'}
                     `}>
                       {step.description}
                     </p>
