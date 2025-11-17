@@ -1,5 +1,4 @@
-import { CheckCircle, Circle } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { CheckCircle, Circle, Target, Users, AlertCircle, Sparkles, Share2, DollarSign, Rocket } from "lucide-react";
 
 interface InteractiveProgressProps {
   currentStep: number;
@@ -9,40 +8,40 @@ interface InteractiveProgressProps {
   isComplete?: boolean;
 }
 
-// Step configuration with emojis and descriptions
+// Step configuration with icons and descriptions
 const stepConfig = [
   {
-    emoji: "🎯",
+    icon: Target,
     title: "Business Concept",
     description: "Define your business concept and vision"
   },
   {
-    emoji: "🔍",
+    icon: Users,
     title: "Target Customer",
     description: "Identify your target audience and market"
   },
   {
-    emoji: "💡",
+    icon: AlertCircle,
     title: "Validation Plan",
     description: "Understand the core problem you're solving"
   },
   {
-    emoji: "✨",
+    icon: Sparkles,
     title: "MVP Design",
     description: "Design your unique solution"
   },
   {
-    emoji: "📢",
+    icon: Share2,
     title: "Launch Strategy",
     description: "Choose your marketing and distribution channels"
   },
   {
-    emoji: "💰",
+    icon: DollarSign,
     title: "Pricing Model",
     description: "Set your pricing strategy and revenue model"
   },
   {
-    emoji: "🚀",
+    icon: Rocket,
     title: "Success Metrics",
     description: "Define your launch goals and timeline"
   }
@@ -56,7 +55,6 @@ const InteractiveProgress = ({
   isComplete = false 
 }: InteractiveProgressProps) => {
   const displayTitles = stepTitles.length > 0 ? stepTitles : stepConfig.map(s => s.title);
-  const progressPercentage = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStep) return "completed";
@@ -65,14 +63,12 @@ const InteractiveProgress = ({
   };
 
   const getStepConfig = (index: number) => {
-    // Try to extract emoji from title if it exists
     const title = displayTitles[index] || stepConfig[index]?.title || `Step ${index + 1}`;
-    const hasEmoji = /[\u{1F300}-\u{1F9FF}]/u.test(title);
-    const emoji = hasEmoji ? title.match(/[\u{1F300}-\u{1F9FF}]/u)?.[0] : stepConfig[index]?.emoji || "•";
+    // Remove any emojis from title
     const cleanTitle = title.replace(/[\u{1F300}-\u{1F9FF}]/u, "").trim();
     
     return {
-      emoji: emoji || stepConfig[index]?.emoji || "•",
+      icon: stepConfig[index]?.icon || Target,
       title: cleanTitle || stepConfig[index]?.title || `Step ${index + 1}`,
       description: stepConfig[index]?.description || ""
     };
@@ -80,143 +76,83 @@ const InteractiveProgress = ({
 
   return (
     <div className="w-full max-w-6xl mx-auto">
-      {/* Modern Timeline Card */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-background via-background to-muted/20 border border-border/50 rounded-2xl shadow-lg backdrop-blur-sm">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_1px_1px,rgb(0,0,0)_1px,transparent_0)] bg-[length:20px_20px]" />
-        
-        <div className="relative p-6 sm:p-8">
-          {/* Progress Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                {isComplete ? "🎉 Plan Complete!" : `Step ${currentStep + 1} of ${totalSteps}`}
-              </h3>
-            </div>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6">
-              {isComplete 
-                ? "Your AI-powered business plan is ready with industry insights and recommendations" 
-                : `Currently working on: ${getStepConfig(currentStep).title}`
-              }
-            </p>
-            
-            {/* Progress Bar */}
-            <div className="max-w-md mx-auto">
-              <Progress value={progressPercentage} className="h-2.5 mb-2" />
-              <p className="text-xs font-medium text-muted-foreground">
-                {Math.round(progressPercentage)}% Complete
-              </p>
-            </div>
-          </div>
-
-          {/* Modern Horizontal Timeline */}
-          <div className="relative px-4 sm:px-6">
+      {/* Professional Timeline Container */}
+      <div className="relative bg-card border border-border/50 rounded-xl shadow-sm">
+        <div className="p-6 sm:p-8">
+          {/* Horizontal Timeline */}
+          <div className="relative">
             {/* Connecting Line Background */}
-            <div className="absolute top-16 left-8 right-8 h-1 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full" />
+            <div className="absolute top-8 left-12 right-12 h-0.5 bg-muted rounded-full" />
             
             {/* Progress Line */}
             <div 
-              className="absolute top-16 left-8 h-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-full transition-all duration-700 ease-out shadow-lg shadow-primary/30"
+              className="absolute top-8 left-12 h-0.5 bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ 
-                width: totalSteps > 1 ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 2rem)` : '0%'
+                width: totalSteps > 1 ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 3rem)` : '0%'
               }}
             />
 
-            {/* Step Cards */}
-            <div className="flex justify-between items-start relative gap-2">
+            {/* Step Indicators */}
+            <div className="flex justify-between items-start relative">
               {displayTitles.map((title, index) => {
                 const status = getStepStatus(index);
                 const isCompleted = status === "completed";
                 const isCurrent = status === "current";
                 const config = getStepConfig(index);
+                const Icon = config.icon;
                 
                 return (
                   <div 
                     key={index}
-                    className={`flex flex-col items-center transition-all duration-300 flex-1 ${
-                      onStepClick ? 'cursor-pointer hover:scale-105' : ''
+                    className={`flex flex-col items-center transition-all duration-300 ${
+                      onStepClick ? 'cursor-pointer' : ''
                     }`}
                     onClick={() => onStepClick?.(index)}
+                    style={{ width: `${100 / totalSteps}%` }}
                   >
-                    {/* Step Card */}
+                    {/* Icon Circle */}
                     <div className={`
-                      relative z-10 w-full max-w-[140px] sm:max-w-[160px] rounded-xl p-4 sm:p-5
-                      transition-all duration-300 border-2
+                      relative z-10 w-16 h-16 rounded-full border-2 transition-all duration-300
+                      flex items-center justify-center mb-4
                       ${isCompleted 
-                        ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 shadow-md shadow-primary/10' 
+                        ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20' 
                         : isCurrent 
-                        ? 'bg-gradient-to-br from-accent/15 to-accent/5 border-accent/40 shadow-lg shadow-accent/20 scale-105' 
-                        : 'bg-card/50 border-border/30 shadow-sm'
+                        ? 'bg-background border-primary border-2 shadow-lg shadow-primary/30' 
+                        : 'bg-background border-muted-foreground/30 text-muted-foreground'
                       }
                     `}>
-                      {/* Emoji */}
-                      <div className={`
-                        text-4xl sm:text-5xl mb-3 text-center transition-all duration-300
-                        ${isCompleted ? 'scale-110' : isCurrent ? 'scale-110 animate-pulse' : 'opacity-60'}
-                      `}>
-                        {config.emoji}
-                      </div>
+                      {isCompleted ? (
+                        <CheckCircle className="w-7 h-7" />
+                      ) : (
+                        <Icon className={`w-7 h-7 ${isCurrent ? 'text-primary' : ''}`} />
+                      )}
                       
-                      {/* Status Indicator */}
-                      <div className="absolute top-2 right-2">
-                        {isCompleted ? (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                            <CheckCircle className="w-4 h-4 text-primary-foreground" />
-                          </div>
-                        ) : isCurrent ? (
-                          <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center shadow-sm animate-pulse">
-                            <div className="w-2.5 h-2.5 bg-accent-foreground rounded-full" />
-                          </div>
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-muted border-2 border-border flex items-center justify-center">
-                            <Circle className="w-3 h-3 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Step Title */}
-                      <h4 className={`
-                        text-sm sm:text-base font-semibold mb-2 text-center transition-colors
-                        ${isCurrent ? 'text-accent' : isCompleted ? 'text-primary' : 'text-foreground/70'}
-                      `}>
-                        {config.title}
-                      </h4>
-                      
-                      {/* Step Description */}
-                      <p className={`
-                        text-xs text-center leading-relaxed transition-colors
-                        ${isCurrent ? 'text-accent-foreground/80' : isCompleted ? 'text-muted-foreground' : 'text-muted-foreground/70'}
-                      `}>
-                        {config.description}
-                      </p>
-                      
-                      {/* Step Number */}
-                      <div className="mt-3 pt-3 border-t border-border/30">
-                        <p className="text-xs text-center text-muted-foreground font-medium">
-                          Step {index + 1}
-                        </p>
-                      </div>
+                      {/* Current Step Pulse Effect */}
+                      {isCurrent && (
+                        <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping opacity-20" />
+                      )}
                     </div>
+
+                    {/* Step Title */}
+                    <h4 className={`
+                      text-sm font-semibold mb-1.5 text-center transition-colors
+                      ${isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'}
+                    `}>
+                      {config.title}
+                    </h4>
+                    
+                    {/* Step Description */}
+                    <p className={`
+                      text-xs text-center leading-relaxed max-w-[120px] transition-colors
+                      ${isCurrent ? 'text-foreground/80' : 'text-muted-foreground'}
+                    `}>
+                      {config.description}
+                    </p>
                   </div>
                 );
               })}
             </div>
           </div>
-
-          {/* Completion Message */}
-          {isComplete && (
-            <div className="mt-10 p-6 sm:p-8 bg-gradient-to-r from-primary/10 via-secondary/5 to-accent/10 border border-primary/20 rounded-xl text-center backdrop-blur-sm">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <CheckCircle className="w-6 h-6 text-primary" />
-                <p className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  All Steps Completed! 🎉
-                </p>
-              </div>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Your AI-enhanced business plan with smart insights and personalized recommendations is ready to launch
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
