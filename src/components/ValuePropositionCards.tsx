@@ -89,7 +89,7 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Plan with BizMap AI, explore the Prompt Library, connect in Community, and discover opportunities with Insighta. Everything is designed to support you throughout your journey to build a profitable and lasting venture.
+            Plan with BizMap AI, explore the Prompt Library, connect with the Community, and uncover opportunities through Insighta. Every tool is designed to support you at every stage of building a profitable, enduring venture.
           </p>
         </div>
 
