@@ -1,4 +1,4 @@
-import { Lightbulb, Users, Rocket } from "lucide-react";
+import { Lightbulb, Users, Rocket, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -13,6 +13,15 @@ const ValuePropositionCards = () => {
       cta: "Try BizMap AI",
       link: "/bizmap-ai",
       gradient: "from-primary/20 to-primary/5"
+    },
+    {
+      icon: Sparkles,
+      title: "EXPLORE",
+      subtitle: "Prompt Library",
+      description: "Discover battle-tested prompts and business ideas from successful founders. Jumpstart your planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to use in your BizMap AI journey.",
+      cta: "Explore Prompts",
+      link: "/prompt-library",
+      gradient: "from-purple-500/20 to-purple-500/5"
     },
     {
       icon: Users,
@@ -84,8 +93,8 @@ const ValuePropositionCards = () => {
           </p>
         </div>
 
-        {/* Three Cards */}
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+        {/* Four Cards */}
+        <div className="grid md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto">
           {cards.map((card, index) => {
             const Icon = card.icon;
             return (
