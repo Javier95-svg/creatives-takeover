@@ -292,7 +292,7 @@ const FundraisingReadinessToolkit = () => {
             <span className="text-4xl md:text-5xl">🎯</span>
           </div>
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Take our comprehensive self-assessment to understand your startup's fundraising readiness. Rate yourself honestly on four critical areas, then receive personalized AI-powered analysis with actionable insights tailored for first-time founders.
+            Take our comprehensive self-assessment to understand your startup's fundraising readiness.
           </p>
         </div>
 
