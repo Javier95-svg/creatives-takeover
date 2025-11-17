@@ -107,65 +107,72 @@ const UserReviews = () => {
           </p>
         </div>
 
-        {/* Reviews Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
-          {reviews.map((review, index) => (
-            <Card 
-              key={index} 
-              className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* Gradient background on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <CardContent className="relative p-6 md:p-8">
-                {/* Rating Stars */}
-                <div className="flex items-center mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                    />
-                  ))}
-                </div>
-
-                {/* Review Comment */}
-                <p className="text-muted-foreground mb-6 leading-relaxed text-sm sm:text-base">
-                  "{review.comment}"
-                </p>
-
-                {/* User Info */}
-                <div className="flex items-start gap-4 pt-4 border-t border-border/50">
-                  <Avatar className="w-12 h-12 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <AvatarImage src={review.avatar} alt={review.name} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
-                      {review.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
-                      {review.name}
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      {review.role && (
-                        <Badge variant="outline" className="text-xs px-2 py-0">
-                          {review.role}
-                        </Badge>
-                      )}
-                      {review.location && (
-                        <span className="whitespace-nowrap">📍 {review.location}</span>
-                      )}
+        {/* Reviews Horizontal Scroll */}
+        <div className="relative">
+          <div 
+            className="overflow-x-auto scrollbar-hide pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6"
+            style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}
+          >
+            <div className="flex gap-6 md:gap-8" style={{ width: 'max-content' }}>
+              {reviews.map((review, index) => (
+                <Card 
+                  key={index} 
+                  className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 animate-fade-in flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px]"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Gradient background on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <CardContent className="relative p-6 md:p-8">
+                    {/* Rating Stars */}
+                    <div className="flex items-center mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                        />
+                      ))}
                     </div>
-                    {review.timestamp && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {review.timestamp}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                    {/* Review Comment */}
+                    <p className="text-muted-foreground mb-6 leading-relaxed text-sm sm:text-base">
+                      "{review.comment}"
+                    </p>
+
+                    {/* User Info */}
+                    <div className="flex items-start gap-4 pt-4 border-t border-border/50">
+                      <Avatar className="w-12 h-12 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <AvatarImage src={review.avatar} alt={review.name} />
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                          {review.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
+                          {review.name}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          {review.role && (
+                            <Badge variant="outline" className="text-xs px-2 py-0">
+                              {review.role}
+                            </Badge>
+                          )}
+                          {review.location && (
+                            <span className="whitespace-nowrap">📍 {review.location}</span>
+                          )}
+                        </div>
+                        {review.timestamp && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {review.timestamp}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
