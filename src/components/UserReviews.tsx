@@ -113,9 +113,6 @@ const UserReviews = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 lg:mb-10 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] break-words">
             Write Your Own Story
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
-            Real stories from entrepreneurs who are building their businesses with Creatives Takeover.
-          </p>
         </div>
 
         {/* Reviews Auto-Scrolling */}
