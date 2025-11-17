@@ -92,13 +92,13 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in">
           <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            Don't Repeat the Same Mistakes.
+            Don't Repeat the Same Mistakes
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
             Why Most Small Businesses <span className="text-red-500">Never Scale</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Generic business advice doesn't work for creatives. You need a system built specifically for how you think and create.
+            Generic business advice doesn't work for early-stage founders. You need a system built specifically for how you think, build, and scale.
           </p>
         </div>
 
