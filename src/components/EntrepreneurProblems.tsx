@@ -92,7 +92,7 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in">
           <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            Why Most Start Ups Fail
+            Don't Repeat the Same Mistakes.
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
             Why Most Small Businesses <span className="text-red-500">Never Scale</span>
