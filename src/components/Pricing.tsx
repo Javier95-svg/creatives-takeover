@@ -158,14 +158,10 @@ const Pricing = () => {
       return;
     }
 
+    // Only require email and name - address is optional
     const requiredFields: Array<keyof CheckoutFormState> = [
       "fullName",
       "email",
-      "addressLine1",
-      "city",
-      "state",
-      "postalCode",
-      "country",
     ];
 
     const missingFields = requiredFields.filter(
@@ -173,7 +169,7 @@ const Pricing = () => {
     );
 
     if (missingFields.length > 0) {
-      toast.error("Please complete all required billing fields.");
+      toast.error("Please enter your name and email address.");
       return;
     }
 
@@ -187,17 +183,31 @@ const Pricing = () => {
 
     setCheckoutSubmitting(true);
     try {
+      // Build address object only if at least one field is provided
+      const addressFields = {
+        line1: checkoutForm.addressLine1,
+        line2: checkoutForm.addressLine2,
+        city: checkoutForm.city,
+        state: checkoutForm.state,
+        postal_code: checkoutForm.postalCode,
+        country: checkoutForm.country,
+      };
+
+      const hasAddress = Object.values(addressFields).some(val => val && val.trim());
+
       const prefill = {
         name: checkoutForm.fullName,
         email: checkoutForm.email,
-        address: {
-          line1: checkoutForm.addressLine1,
-          line2: checkoutForm.addressLine2 || undefined,
-          city: checkoutForm.city,
-          state: checkoutForm.state,
-          postal_code: checkoutForm.postalCode,
-          country: checkoutForm.country,
-        },
+        ...(hasAddress ? {
+          address: {
+            line1: checkoutForm.addressLine1 || undefined,
+            line2: checkoutForm.addressLine2 || undefined,
+            city: checkoutForm.city || undefined,
+            state: checkoutForm.state || undefined,
+            postal_code: checkoutForm.postalCode || undefined,
+            country: checkoutForm.country || undefined,
+          }
+        } : {}),
       };
 
       const url = await createCheckout(selectedTier.tier_name, prefill);
