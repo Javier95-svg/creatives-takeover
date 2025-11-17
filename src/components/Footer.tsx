@@ -185,6 +185,23 @@ const Footer = () => {
                 />
               </a>
             </div>
+
+            {/* Turbo0 Badge */}
+            <div className="mt-4">
+              <a 
+                href="https://turbo0.com/item/creatives-takeover" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Listed on Turbo0"
+              >
+                <img 
+                  src="https://img.turbo0.com/badge-listed-light.svg" 
+                  alt="Listed on Turbo0" 
+                  className="hover:opacity-80 transition-opacity"
+                  style={{ height: '54px', width: 'auto' }}
+                />
+              </a>
+            </div>
           </nav>
         </div>
 
