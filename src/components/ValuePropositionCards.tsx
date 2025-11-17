@@ -37,7 +37,7 @@ const ValuePropositionCards = () => {
       title: "LAUNCH",
       subtitle: "Insighta",
       description: "Access exclusive funding opportunities and accelerator programs. Learn from founders who've secured investment and get the resources to scale your creative business.",
-      cta: "Explore Insighta",
+      cta: "Leverage Insighta",
       link: "/insighta",
       gradient: "from-accent/20 to-accent/5"
     }
