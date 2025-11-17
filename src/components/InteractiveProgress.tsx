@@ -1,4 +1,5 @@
 import { CheckCircle, Circle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface InteractiveProgressProps {
   currentStep: number;
@@ -27,6 +28,7 @@ const InteractiveProgress = ({
   ];
 
   const displayTitles = stepTitles.length > 0 ? stepTitles : enhancedStepTitles;
+  const progressPercentage = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStep) return "completed";
@@ -36,49 +38,45 @@ const InteractiveProgress = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      {/* Modern Timeline Card with Glass Effect */}
-      <div className="group relative overflow-hidden glass-card-silver hover-lift transition-all duration-700 hover:shadow-2xl hover:shadow-primary/20 border border-primary/10 rounded-2xl">
-        {/* Dynamic Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-        
-        {/* Floating Elements */}
-        <div className="absolute top-4 right-4 w-3 h-3 bg-primary/30 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-500" />
-        <div className="absolute bottom-6 left-6 w-2 h-2 bg-secondary/40 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-500" style={{ animationDelay: '0.3s' }} />
-        
-        <div className="relative z-10 p-8">
+      {/* Clean Timeline Card */}
+      <div className="relative overflow-hidden bg-card border border-border rounded-xl shadow-sm">
+        <div className="p-6 sm:p-8">
           {/* Progress Header */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="relative p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 group-hover:scale-110 transition-all duration-500 shadow-lg">
-                <CheckCircle className="w-6 h-6 text-primary group-hover:animate-pulse" />
-                <div className="absolute inset-0 rounded-xl bg-primary/20 opacity-0 group-hover:opacity-100 animate-ping transition-opacity duration-500" />
-              </div>
-              <h3 className="text-2xl font-bold creatives-font group-hover:text-primary transition-colors duration-500">
-                {isComplete ? "🎉 Plan Complete!" : `Progress: Step ${currentStep + 1} of ${totalSteps}`}
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <h3 className="text-xl sm:text-2xl font-bold">
+                {isComplete ? "🎉 Plan Complete!" : `Step ${currentStep + 1} of ${totalSteps}`}
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+            <p className="text-sm text-muted-foreground mb-4">
               {isComplete 
-                ? "✨ Your AI-powered comprehensive business plan is ready with industry insights and smart recommendations" 
+                ? "Your AI-powered business plan is ready with industry insights and recommendations" 
                 : `Currently working on: ${displayTitles[currentStep]}`
               }
             </p>
+            
+            {/* Progress Bar */}
+            <div className="max-w-md mx-auto">
+              <Progress value={progressPercentage} className="h-2 mb-2" />
+              <p className="text-xs text-muted-foreground">
+                {Math.round(progressPercentage)}% Complete
+              </p>
+            </div>
           </div>
 
           {/* Horizontal Timeline */}
-          <div className="relative px-4">
+          <div className="relative px-2 sm:px-4">
             {/* Progress Line */}
-            <div className="absolute top-6 left-8 right-8 h-1 bg-muted-foreground/20 rounded-full" />
+            <div className="absolute top-6 left-4 right-4 h-0.5 bg-muted rounded-full" />
             <div 
-              className="absolute top-6 left-8 h-1 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out shadow-sm shadow-primary/30"
+              className="absolute top-6 left-4 h-0.5 bg-primary rounded-full transition-all duration-500 ease-out"
               style={{ 
-                width: totalSteps > 1 ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 1rem)` : '0%'
+                width: totalSteps > 1 ? `${(currentStep / (totalSteps - 1)) * 100}%` : '0%'
               }}
             />
 
             {/* Steps */}
-            <div className="flex justify-between items-center relative">
+            <div className="flex justify-between items-start relative">
               {displayTitles.map((title, index) => {
                 const status = getStepStatus(index);
                 const isCompleted = status === "completed";
@@ -87,64 +85,42 @@ const InteractiveProgress = ({
                 return (
                   <div 
                     key={index}
-                    className={`flex flex-col items-center group/step transition-all duration-300 ${
-                      onStepClick ? 'cursor-pointer hover:scale-105' : ''
+                    className={`flex flex-col items-center transition-all duration-300 ${
+                      onStepClick ? 'cursor-pointer' : ''
                     }`}
                     onClick={() => onStepClick?.(index)}
                     style={{ width: `${100 / totalSteps}%` }}
                   >
                     {/* Step Circle */}
                     <div className={`
-                      relative z-10 w-12 h-12 rounded-full border-2 transition-all duration-500 shadow-lg
+                      relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300
                       flex items-center justify-center
                       ${isCompleted 
-                        ? 'bg-primary border-primary shadow-primary/30' 
+                        ? 'bg-primary border-primary text-primary-foreground' 
                         : isCurrent 
-                        ? 'bg-background border-primary border-4 shadow-primary/20 animate-pulse' 
-                        : 'bg-background border-muted-foreground/30'
+                        ? 'bg-background border-primary border-2 shadow-md shadow-primary/20' 
+                        : 'bg-background border-muted-foreground/30 text-muted-foreground'
                       }
                     `}>
                       {isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-primary-foreground" />
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                       ) : isCurrent ? (
-                        <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 bg-primary rounded-full" />
                       ) : (
-                        <Circle className="w-5 h-5 text-muted-foreground/50" />
-                      )}
-                      
-                      {/* Glowing Ring for Current Step */}
-                      {isCurrent && (
-                        <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-primary animate-ping opacity-75" />
+                        <Circle className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </div>
 
                     {/* Step Label */}
-                    <div className="mt-4 text-center max-w-[140px] group-hover/step:transform group-hover/step:translate-y-1 transition-transform duration-300">
-                      <p className={`text-xs font-semibold transition-colors duration-300 ${
+                    <div className="mt-3 text-center max-w-[120px] sm:max-w-[140px]">
+                      <p className={`text-xs font-medium transition-colors ${
                         isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
                         {title}
                       </p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Step {index + 1}
                       </p>
-                      
-                      {/* Status Badge */}
-                      {(isCompleted || isCurrent) && (
-                        <div className="mt-2">
-                          {isCompleted && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                              ✓ Done
-                            </span>
-                          )}
-                          {isCurrent && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium animate-pulse">
-                              <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-ping" />
-                              Active
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
@@ -154,15 +130,15 @@ const InteractiveProgress = ({
 
           {/* Completion Message */}
           {isComplete && (
-            <div className="mt-8 p-6 bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-xl text-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+            <div className="mt-8 p-6 bg-primary/5 border border-primary/20 rounded-lg text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-primary animate-pulse" />
-                <p className="text-lg font-bold text-primary">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                <p className="text-lg font-semibold text-primary">
                   All Steps Completed!
                 </p>
               </div>
               <p className="text-sm text-muted-foreground">
-                🚀 Your AI-enhanced business plan with smart insights, industry benchmarks, and personalized recommendations is ready to launch
+                Your AI-enhanced business plan with smart insights and personalized recommendations is ready to launch
               </p>
             </div>
           )}
