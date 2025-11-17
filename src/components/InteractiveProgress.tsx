@@ -80,7 +80,7 @@ const InteractiveProgress = ({
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8">
             {/* Left Side - Title and Step Info */}
             <div className="mb-4 sm:mb-0">
-              <h2 className="text-2xl sm:text-3xl font-bold text-secondary mb-2 animate-pulse-glow">
+              <h2 className="text-2xl sm:text-3xl font-bold text-secondary mb-2">
                 BIZMAP AI TIMELINE
               </h2>
               <div className="text-sm sm:text-base text-muted-foreground">
@@ -92,7 +92,7 @@ const InteractiveProgress = ({
 
             {/* Right Side - Progress Box */}
             <div className="bg-background/90 border border-primary/20 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px] hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
-              <div className="text-3xl sm:text-4xl font-bold text-primary mb-1 animate-pulse-glow">
+              <div className="text-3xl sm:text-4xl font-bold text-primary mb-1">
                 {progressPercentage}% complete
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
