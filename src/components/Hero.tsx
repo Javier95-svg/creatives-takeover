@@ -143,7 +143,7 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 takeover-title creatives-font leading-tight">
-            <span className="animated-gradient">The Platform That Brings Ideas to Life</span>
+            <span className="animated-gradient">Your Digital Partner for Building From Zero</span>
           </h1>
 
           {/* Subheadline */}
