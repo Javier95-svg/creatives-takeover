@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, Target, Users, AlertCircle, Sparkles, Share2, DollarSign, Rocket } from "lucide-react";
+import { Compass, Target, Sparkles, Rocket, TrendingUp, CheckCircle } from "lucide-react";
 
 interface InteractiveProgressProps {
   currentStep: number;
@@ -8,42 +8,49 @@ interface InteractiveProgressProps {
   isComplete?: boolean;
 }
 
-// Step configuration with icons and descriptions
+// Step configuration matching the screenshot design
 const stepConfig = [
   {
+    icon: Compass,
+    name: "CONCEPT",
+    description: "Clarify what you're building and why it matters.",
+    days: "Days 1-2"
+  },
+  {
     icon: Target,
-    title: "Business Concept",
-    description: "Define your business concept and vision"
-  },
-  {
-    icon: Users,
-    title: "Target Customer",
-    description: "Identify your target audience and market"
-  },
-  {
-    icon: AlertCircle,
-    title: "Validation Plan",
-    description: "Understand the core problem you're solving"
+    name: "MARKET",
+    description: "Define the people most likely to become your first customers.",
+    days: "Days 3-4"
   },
   {
     icon: Sparkles,
-    title: "MVP Design",
-    description: "Design your unique solution"
-  },
-  {
-    icon: Share2,
-    title: "Launch Strategy",
-    description: "Choose your marketing and distribution channels"
-  },
-  {
-    icon: DollarSign,
-    title: "Pricing Model",
-    description: "Set your pricing strategy and revenue model"
+    name: "PROBLEM",
+    description: "Turn vague frustrations into sharp, testable problems.",
+    days: "Days 5-7"
   },
   {
     icon: Rocket,
-    title: "Success Metrics",
-    description: "Define your launch goals and timeline"
+    name: "SOLUTION",
+    description: "Shape an offer that directly solves the core problem.",
+    days: "Days 8-14"
+  },
+  {
+    icon: TrendingUp,
+    name: "CHANNELS",
+    description: "Decide how you'll reach real humans in the next 30 days.",
+    days: "Days 15-21"
+  },
+  {
+    icon: CheckCircle,
+    name: "PRICING",
+    description: "Choose a pricing model that fits your goals and audience.",
+    days: "Days 22-25"
+  },
+  {
+    icon: Rocket,
+    name: "ROADMAP",
+    description: "Lock in your focused 30-day launch plan.",
+    days: "Days 26-30"
   }
 ];
 
@@ -54,52 +61,66 @@ const InteractiveProgress = ({
   onStepClick,
   isComplete = false 
 }: InteractiveProgressProps) => {
-  const displayTitles = stepTitles.length > 0 ? stepTitles : stepConfig.map(s => s.title);
+  const activeStepIndex = currentStep;
+  const activeStep = stepConfig[activeStepIndex] || stepConfig[0];
+  const progressPercentage = Math.round(((activeStepIndex + 1) / totalSteps) * 100);
 
   const getStepStatus = (stepIndex: number) => {
-    if (stepIndex < currentStep) return "completed";
-    if (stepIndex === currentStep) return "current";
+    if (stepIndex < activeStepIndex) return "completed";
+    if (stepIndex === activeStepIndex) return "current";
     return "upcoming";
   };
 
-  const getStepConfig = (index: number) => {
-    const title = displayTitles[index] || stepConfig[index]?.title || `Step ${index + 1}`;
-    // Remove any emojis from title
-    const cleanTitle = title.replace(/[\u{1F300}-\u{1F9FF}]/u, "").trim();
-    
-    return {
-      icon: stepConfig[index]?.icon || Target,
-      title: cleanTitle || stepConfig[index]?.title || `Step ${index + 1}`,
-      description: stepConfig[index]?.description || ""
-    };
-  };
-
   return (
-    <div className="w-full max-w-6xl mx-auto">
-      {/* Professional Timeline Container */}
-      <div className="relative bg-card border border-border/50 rounded-xl shadow-sm">
-        <div className="p-6 sm:p-8">
+    <div className="w-full max-w-7xl mx-auto">
+      {/* Dark Gradient Background Container */}
+      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="p-6 sm:p-8 lg:p-10">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8">
+            {/* Left Side - Title and Step Info */}
+            <div className="mb-4 sm:mb-0">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                BIZMAP AI TIMELINE
+              </h2>
+              <div className="text-sm sm:text-base text-slate-300">
+                <span className="font-semibold">Step {activeStepIndex + 1} of {totalSteps}</span>
+                <span className="mx-2">·</span>
+                <span>Currently working on: {activeStep.name} ({activeStep.days})</span>
+              </div>
+            </div>
+
+            {/* Right Side - Progress Box */}
+            <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px]">
+              <div className="text-3xl sm:text-4xl font-bold text-blue-400 mb-1">
+                {progressPercentage}% complete
+              </div>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                Follow the steps in order for the smoothest 30-day launch.
+              </p>
+            </div>
+          </div>
+
           {/* Horizontal Timeline */}
           <div className="relative">
             {/* Connecting Line Background */}
-            <div className="absolute top-8 left-12 right-12 h-0.5 bg-muted rounded-full" />
+            <div className="absolute top-10 left-0 right-0 h-0.5 bg-slate-700" />
             
             {/* Progress Line */}
             <div 
-              className="absolute top-8 left-12 h-0.5 bg-primary rounded-full transition-all duration-500 ease-out"
+              className="absolute top-10 left-0 h-0.5 bg-blue-500 transition-all duration-500 ease-out"
               style={{ 
-                width: totalSteps > 1 ? `calc(${(currentStep / (totalSteps - 1)) * 100}% - 3rem)` : '0%'
+                width: totalSteps > 1 ? `${(activeStepIndex / (totalSteps - 1)) * 100}%` : '0%'
               }}
             />
 
             {/* Step Indicators */}
             <div className="flex justify-between items-start relative">
-              {displayTitles.map((title, index) => {
+              {stepConfig.map((step, index) => {
                 const status = getStepStatus(index);
                 const isCompleted = status === "completed";
                 const isCurrent = status === "current";
-                const config = getStepConfig(index);
-                const Icon = config.icon;
+                const Icon = step.icon;
                 
                 return (
                   <div 
@@ -112,42 +133,42 @@ const InteractiveProgress = ({
                   >
                     {/* Icon Circle */}
                     <div className={`
-                      relative z-10 w-16 h-16 rounded-full border-2 transition-all duration-300
+                      relative z-10 w-20 h-20 rounded-full transition-all duration-300
                       flex items-center justify-center mb-4
-                      ${isCompleted 
-                        ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20' 
-                        : isCurrent 
-                        ? 'bg-background border-primary border-2 shadow-lg shadow-primary/30' 
-                        : 'bg-background border-muted-foreground/30 text-muted-foreground'
+                      ${isCurrent 
+                        ? 'bg-blue-500 border-2 border-blue-400 shadow-lg shadow-blue-500/50' 
+                        : isCompleted
+                        ? 'bg-slate-600 border-2 border-slate-500'
+                        : 'bg-slate-700 border-2 border-slate-600'
                       }
                     `}>
-                      {isCompleted ? (
-                        <CheckCircle className="w-7 h-7" />
-                      ) : (
-                        <Icon className={`w-7 h-7 ${isCurrent ? 'text-primary' : ''}`} />
-                      )}
-                      
-                      {/* Current Step Pulse Effect */}
-                      {isCurrent && (
-                        <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping opacity-20" />
-                      )}
+                      <Icon className={`w-8 h-8 ${
+                        isCurrent ? 'text-white' : isCompleted ? 'text-slate-300' : 'text-slate-400'
+                      }`} />
                     </div>
 
                     {/* Step Title */}
                     <h4 className={`
-                      text-sm font-semibold mb-1.5 text-center transition-colors
-                      ${isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'}
+                      text-xs sm:text-sm font-semibold mb-2 text-center transition-colors
+                      ${isCurrent ? 'text-white' : isCompleted ? 'text-slate-300' : 'text-slate-400'}
                     `}>
-                      {config.title}
+                      STEP {index + 1} · {step.name}
                     </h4>
                     
                     {/* Step Description */}
                     <p className={`
-                      text-xs text-center leading-relaxed max-w-[120px] transition-colors
-                      ${isCurrent ? 'text-foreground/80' : 'text-muted-foreground'}
+                      text-[10px] sm:text-xs text-center leading-relaxed max-w-[140px] transition-colors
+                      ${isCurrent ? 'text-slate-300' : 'text-slate-500'}
                     `}>
-                      {config.description}
+                      {step.description}
                     </p>
+
+                    {/* Active Button */}
+                    {isCurrent && (
+                      <button className="mt-3 px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors">
+                        Active
+                      </button>
+                    )}
                   </div>
                 );
               })}
