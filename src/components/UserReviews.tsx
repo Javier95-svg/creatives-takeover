@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 
 const UserReviews = () => {
   const reviews = [
@@ -181,24 +181,35 @@ const UserReviews = () => {
 
                   {/* User Info */}
                   <div className="pt-4 border-t border-border/50">
-                    <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
-                      {review.name}
-                    </h4>
-                    {review.role && (
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {review.role}
-                      </p>
-                    )}
-                    {review.location && (
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {review.location}
-                      </p>
-                    )}
-                    {review.timestamp && (
-                      <p className="text-xs text-muted-foreground">
-                        {review.timestamp}
-                      </p>
-                    )}
+                    <div className="flex items-start gap-3 mb-3">
+                      <Avatar className="w-10 h-10 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <AvatarImage src={review.avatar} alt={review.name} />
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs">
+                          {review.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
+                          {review.name}
+                        </h4>
+                        {review.role && (
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {review.role}
+                          </p>
+                        )}
+                        {review.location && (
+                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {review.location}
+                          </p>
+                        )}
+                        {review.timestamp && (
+                          <p className="text-xs text-muted-foreground">
+                            {review.timestamp}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
