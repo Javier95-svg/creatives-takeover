@@ -1384,7 +1384,7 @@ Subject: "Quick question about [their pain point]"
                       <div className="text-center mb-8 sm:mb-10">
                         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent flex items-center justify-center gap-3">
                           <Compass className="w-7 h-7 text-primary" />
-                          BizMap AI 7-Step Timeline
+                          BizMap AI Masterclass
                         </h2>
                         <p className="text-muted-foreground text-sm sm:text-base max-w-3xl mx-auto">
                           Each BizMap AI step builds on the last to turn a raw idea into a launch-ready, 30-day execution plan. Use this as your roadmap as you move through the wizard.
