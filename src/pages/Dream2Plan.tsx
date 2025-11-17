@@ -1583,6 +1583,9 @@ Subject: "Quick question about [their pain point]"
                     </div>
                   </div>
                 )}
+                
+                {/* Footer Section */}
+                <Footer />
               </TabsContent>
 
               <TabsContent value="sprint">
