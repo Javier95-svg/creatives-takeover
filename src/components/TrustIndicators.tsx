@@ -61,7 +61,7 @@ const TrustIndicators = () => {
               <Tooltip key={index}>
                 <TooltipTrigger asChild>
                   <Card 
-                    className={`bg-gradient-to-br from-background/80 via-secondary/20 to-primary/20 backdrop-blur-sm border-secondary/40 p-6 text-center hover:from-background/90 hover:via-secondary/30 hover:to-primary/30 transition-all duration-300 opacity-0 animate-fade-in hover-scale cursor-pointer animate-float ${
+                    className={`bg-gradient-to-br from-background/80 via-secondary/20 to-primary/20 backdrop-blur-sm border-secondary/40 p-6 text-center hover:from-background/90 hover:via-secondary/30 hover:to-primary/30 transition-all duration-300 opacity-0 animate-fade-in hover-scale cursor-pointer ${
                       indicator.pulse ? 'hover:shadow-lg hover:shadow-secondary/30' : 'hover:shadow-md hover:shadow-primary/20'
                     }`}
                     style={{ 
