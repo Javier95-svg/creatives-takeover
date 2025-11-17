@@ -3,7 +3,6 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Pricing from "@/components/Pricing";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import TrustIndicators from "@/components/TrustIndicators";
 import SubscriptionFeatures from "@/components/SubscriptionFeatures";
 import PricingComparison from "@/components/PricingComparison";
 import PricingFAQ from "@/components/PricingFAQ";
@@ -50,7 +49,6 @@ const PricingPage = () => {
         <div className="relative z-10">
           <Navigation />
           <Pricing />
-          <TrustIndicators />
           <SubscriptionFeatures />
           <PricingComparison />
           <PricingFAQ />

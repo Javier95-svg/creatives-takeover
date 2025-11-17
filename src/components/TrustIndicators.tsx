@@ -53,7 +53,7 @@ const TrustIndicators = () => {
   ];
 
   return (
-    <section className="py-12 relative z-10">
+    <div className="py-12 relative z-10">
       <div className="container mx-auto px-4">
         <TooltipProvider>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
@@ -61,21 +61,21 @@ const TrustIndicators = () => {
               <Tooltip key={index}>
                 <TooltipTrigger asChild>
                   <Card 
-                    className={`bg-background/60 backdrop-blur-sm border-border/50 p-6 text-center hover:bg-background/80 transition-all duration-300 opacity-0 animate-fade-in hover-scale cursor-pointer ${
-                      indicator.pulse ? 'hover:shadow-lg hover:shadow-primary/20' : ''
+                    className={`bg-slate-200/80 backdrop-blur-sm border-slate-300/60 p-6 text-center hover:bg-slate-300/90 transition-all duration-300 opacity-0 animate-fade-in hover-scale cursor-pointer ${
+                      indicator.pulse ? 'hover:shadow-lg hover:shadow-slate-400/30' : ''
                     }`}
                     style={{ 
                       animationDelay: `${index * 150}ms`,
                       animationFillMode: 'forwards'
                     }}
                   >
-                    <indicator.icon className={`h-8 w-8 mx-auto mb-3 text-primary ${
+                    <indicator.icon className={`h-8 w-8 mx-auto mb-3 text-slate-700 ${
                       indicator.pulse ? 'animate-pulse' : ''
                     }`} />
-                    <h3 className="font-semibold text-sm text-foreground mb-1">
+                    <h3 className="font-semibold text-sm text-slate-800 mb-1">
                       {indicator.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-600">
                       {indicator.description}
                     </p>
                   </Card>
@@ -88,7 +88,7 @@ const TrustIndicators = () => {
           </div>
         </TooltipProvider>
       </div>
-    </section>
+    </div>
   );
 };
 
