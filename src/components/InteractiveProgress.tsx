@@ -80,7 +80,7 @@ const InteractiveProgress = ({
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-8">
             {/* Left Side - Title and Step Info */}
             <div className="mb-4 sm:mb-0">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-secondary mb-2 animate-pulse-glow">
                 BIZMAP AI TIMELINE
               </h2>
               <div className="text-sm sm:text-base text-muted-foreground">
@@ -91,8 +91,8 @@ const InteractiveProgress = ({
             </div>
 
             {/* Right Side - Progress Box */}
-            <div className="bg-background/90 border border-primary/20 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px]">
-              <div className="text-3xl sm:text-4xl font-bold text-primary mb-1">
+            <div className="bg-background/90 border border-primary/20 rounded-lg p-4 sm:p-5 min-w-[200px] sm:min-w-[250px] hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+              <div className="text-3xl sm:text-4xl font-bold text-primary mb-1 animate-pulse-glow">
                 {progressPercentage}% complete
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -108,9 +108,10 @@ const InteractiveProgress = ({
             
             {/* Progress Line */}
             <div 
-              className="absolute top-10 left-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
+              className="absolute top-10 left-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out animate-pulse"
               style={{ 
-                width: totalSteps > 1 ? `${(activeStepIndex / (totalSteps - 1)) * 100}%` : '0%'
+                width: totalSteps > 1 ? `${(activeStepIndex / (totalSteps - 1)) * 100}%` : '0%',
+                boxShadow: '0 0 8px hsl(var(--primary) / 0.5), 0 0 12px hsl(var(--secondary) / 0.3)'
               }}
             />
 
@@ -126,10 +127,13 @@ const InteractiveProgress = ({
                   <div 
                     key={index}
                     className={`flex flex-col items-center transition-all duration-300 ${
-                      onStepClick ? 'cursor-pointer' : ''
+                      onStepClick ? 'cursor-pointer hover:scale-105' : ''
                     }`}
                     onClick={() => onStepClick?.(index)}
-                    style={{ width: `${100 / totalSteps}%` }}
+                    style={{ 
+                      width: `${100 / totalSteps}%`,
+                      animationDelay: `${index * 0.1}s`
+                    }}
                   >
                     {/* Icon Circle */}
                     <div className={`
@@ -137,25 +141,41 @@ const InteractiveProgress = ({
                       flex items-center justify-center mb-4
                       ${isCurrent 
                         ? 'bg-gradient-to-br from-primary to-secondary border-2 border-primary/50 shadow-lg shadow-primary/50' 
-                        : 'bg-background/60 border-2 border-border'
+                        : 'bg-background/60 border-2 border-border hover:border-primary/30 hover:bg-background/80'
                       }
-                    `}>
-                      <Icon className={`w-8 h-8 ${
-                        isCurrent ? 'text-foreground' : 'text-muted-foreground'
-                      }`} />
+                    `}
+                    style={isCurrent ? {
+                      animation: 'pulse-scale 2s ease-in-out infinite'
+                    } : {}}
+                    >
+                      <Icon className={`w-8 h-8 transition-all duration-300 ${
+                        isCurrent 
+                          ? 'text-foreground' 
+                          : 'text-muted-foreground'
+                      }`}
+                      style={isCurrent ? {
+                        animation: 'bounce-slow 3s ease-in-out infinite'
+                      } : {}}
+                      />
+                      {isCurrent && (
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 animate-ping opacity-75" style={{ animationDuration: '2s' }} />
+                      )}
                     </div>
 
                     {/* Step Title */}
                     <h4 className={`
-                      text-xs sm:text-sm font-semibold mb-2 text-center transition-colors
-                      ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}
+                      text-xs sm:text-sm font-semibold mb-2 text-center transition-all duration-300
+                      ${isCurrent 
+                        ? 'text-foreground animate-pulse-glow' 
+                        : 'text-muted-foreground'
+                      }
                     `}>
                       STEP {index + 1} · {step.name}
                     </h4>
                     
                     {/* Step Description */}
                     <p className={`
-                      text-[10px] sm:text-xs text-center leading-relaxed max-w-[140px] transition-colors
+                      text-[10px] sm:text-xs text-center leading-relaxed max-w-[140px] transition-all duration-300
                       ${isCurrent ? 'text-muted-foreground' : 'text-muted-foreground/80'}
                     `}>
                       {step.description}
@@ -163,7 +183,7 @@ const InteractiveProgress = ({
 
                     {/* Active Button */}
                     {isCurrent && (
-                      <button className="mt-3 px-4 py-1.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-foreground text-xs font-medium rounded-md transition-all">
+                      <button className="mt-3 px-4 py-1.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-foreground text-xs font-medium rounded-md transition-all animate-pulse-glow hover:scale-105 hover:shadow-lg hover:shadow-primary/50">
                         Active
                       </button>
                     )}
