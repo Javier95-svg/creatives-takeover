@@ -11,6 +11,9 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { trackActivity } from "@/lib/activity";
+import { getPrimaryPromotion } from "@/config/promotions";
+import { PromotionBanner } from "@/components/PromotionBanner";
+import { SocialProofCounter, generateSocialProofData } from "@/components/SocialProofCounter";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -33,6 +36,8 @@ const Signup = () => {
   
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
+  const promotion = getPrimaryPromotion('/signup', 'new');
+  const socialProof = generateSocialProofData();
 
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
@@ -261,6 +266,27 @@ const Signup = () => {
           <p className="text-muted-foreground">
             Start turning your creative ideas into reality
           </p>
+        </div>
+
+        {/* Promotion Banner */}
+        {promotion && (
+          <div className="mb-6 animate-fade-in">
+            <PromotionBanner
+              promotion={promotion}
+              variant="inline"
+              className="max-w-md mx-auto"
+            />
+          </div>
+        )}
+
+        {/* Social Proof */}
+        <div className="mb-6 flex justify-center animate-fade-in">
+          <SocialProofCounter
+            count={socialProof.count}
+            label="people signed up in the last hour"
+            period={socialProof.period}
+            variant="badge"
+          />
         </div>
 
         {/* Signup Form */}
