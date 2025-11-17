@@ -104,7 +104,8 @@ export function UpgradeCheckoutDialog({
             ) : null}
           </div>
           <DialogDescription>
-            We&apos;ve pre-filled your name and email. Billing address is optional—Stripe will collect it during checkout if needed for tax purposes.
+            We&apos;ve pre-filled what we already know. Confirm your details and
+            continue to checkout—your fields on Stripe will match automatically.
           </DialogDescription>
           {hasSavedAddress ? (
             <div className="rounded-md bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
@@ -204,14 +205,16 @@ export function UpgradeCheckoutDialog({
           <div className="grid gap-2">
             <Label
               htmlFor="upgrade-address-line1"
-              className="text-sm font-medium leading-none"
+              className={cn(fieldBaseClasses, {
+                "after:hidden": Boolean(formData.addressLine1),
+              })}
             >
-              Billing address <span className="text-muted-foreground text-xs">(optional - will be collected by Stripe if needed)</span>
+              Billing address
             </Label>
             <Input
               id="upgrade-address-line1"
               autoComplete="address-line1"
-              placeholder="123 Creative Ave (optional)"
+              placeholder="123 Creative Ave"
               value={formData.addressLine1}
               onChange={(event) =>
                 onFormChange("addressLine1", event.target.value)
@@ -232,14 +235,16 @@ export function UpgradeCheckoutDialog({
             <div className="grid gap-2">
               <Label
                 htmlFor="upgrade-city"
-                className="text-sm font-medium leading-none"
+                className={cn(fieldBaseClasses, {
+                  "after:hidden": Boolean(formData.city),
+                })}
               >
-                City <span className="text-muted-foreground text-xs">(optional)</span>
+                City
               </Label>
               <Input
                 id="upgrade-city"
                 autoComplete="address-level2"
-                placeholder="Austin (optional)"
+                placeholder="Austin"
                 value={formData.city}
                 onChange={(event) => onFormChange("city", event.target.value)}
               />
@@ -247,14 +252,16 @@ export function UpgradeCheckoutDialog({
             <div className="grid gap-2">
               <Label
                 htmlFor="upgrade-state"
-                className="text-sm font-medium leading-none"
+                className={cn(fieldBaseClasses, {
+                  "after:hidden": Boolean(formData.state),
+                })}
               >
-                State / Province <span className="text-muted-foreground text-xs">(optional)</span>
+                State / Province
               </Label>
               <Input
                 id="upgrade-state"
                 autoComplete="address-level1"
-                placeholder="TX (optional)"
+                placeholder="TX"
                 value={formData.state}
                 onChange={(event) => onFormChange("state", event.target.value)}
               />
@@ -265,14 +272,16 @@ export function UpgradeCheckoutDialog({
             <div className="grid gap-2">
               <Label
                 htmlFor="upgrade-postal"
-                className="text-sm font-medium leading-none"
+                className={cn(fieldBaseClasses, {
+                  "after:hidden": Boolean(formData.postalCode),
+                })}
               >
-                Postal code <span className="text-muted-foreground text-xs">(optional)</span>
+                Postal code
               </Label>
               <Input
                 id="upgrade-postal"
                 autoComplete="postal-code"
-                placeholder="73301 (optional)"
+                placeholder="73301"
                 value={formData.postalCode}
                 onChange={(event) =>
                   onFormChange("postalCode", event.target.value)
@@ -282,14 +291,16 @@ export function UpgradeCheckoutDialog({
             <div className="grid gap-2 sm:col-span-2">
               <Label
                 htmlFor="upgrade-country"
-                className="text-sm font-medium leading-none"
+                className={cn(fieldBaseClasses, {
+                  "after:hidden": Boolean(formData.country),
+                })}
               >
-                Country / Region <span className="text-muted-foreground text-xs">(optional)</span>
+                Country / Region
               </Label>
               <Input
                 id="upgrade-country"
                 autoComplete="country-name"
-                placeholder="United States (optional)"
+                placeholder="United States"
                 value={formData.country}
                 onChange={(event) =>
                   onFormChange("country", event.target.value)

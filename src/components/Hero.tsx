@@ -3,15 +3,9 @@ import { ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-bg.jpg";
-import { getPrimaryPromotion } from "@/config/promotions";
-import { PromotionBanner } from "./PromotionBanner";
-import { SocialProofCounter, generateSocialProofData } from "./SocialProofCounter";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
-  const userType = isAuthenticated ? 'existing' : 'new';
-  const promotion = getPrimaryPromotion('/', userType);
-  const socialProof = generateSocialProofData();
   const creativeParticles = [
     { top: "18%", left: "16%", size: 8, color: "#fda4af", delay: "0s" },
     { top: "42%", left: "12%", size: 10, color: "#f473b5", delay: "0.8s" },
@@ -147,29 +141,6 @@ const Hero = () => {
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Promotion Banner */}
-          {promotion && !isAuthenticated && (
-            <div className="mb-6 animate-fade-in">
-              <PromotionBanner
-                promotion={promotion}
-                variant="inline"
-                className="max-w-2xl mx-auto"
-              />
-            </div>
-          )}
-
-          {/* Social Proof Counter */}
-          {!isAuthenticated && (
-            <div className="mb-6 flex justify-center animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <SocialProofCounter
-                count={socialProof.count}
-                label="founders joined today"
-                period={socialProof.period}
-                variant="badge"
-              />
-            </div>
-          )}
-
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 takeover-title creatives-font leading-tight">
             <span className="animated-gradient">Your Digital Partner for Building From Zero</span>

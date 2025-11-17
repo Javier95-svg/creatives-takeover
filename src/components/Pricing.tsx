@@ -1,17 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Crown, Check, Clock } from "lucide-react";
+import { Star, Crown, Check } from "lucide-react";
 import UpgradeCheckoutDialog, {
   CheckoutFormState,
 } from "@/components/UpgradeCheckoutDialog";
 import { useSubscription, SubscriptionTier } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { getPrimaryPromotion, getPromotionsForPage } from "@/config/promotions";
-import { PromotionBanner } from "./PromotionBanner";
-import { CountdownTimer } from "./CountdownTimer";
-import { SocialProofCounter, generateSocialProofData } from "./SocialProofCounter";
 
 const BILLING_STORAGE_KEY = "ct_billing_details";
 
@@ -28,7 +24,7 @@ const createEmptyFormState = (): CheckoutFormState => ({
 
 const Pricing = () => {
   const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState<CheckoutFormState>(() =>
@@ -36,10 +32,6 @@ const Pricing = () => {
   );
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [hasPrefilledAddress, setHasPrefilledAddress] = useState(false);
-  
-  const userType = isAuthenticated ? 'existing' : 'new';
-  const promotion = getPrimaryPromotion('/pricing', userType);
-  const socialProof = generateSocialProofData();
 
   // Define feature sets for each tier - based on actual implemented features
   const getFeatures = (tierName: string) => {
@@ -166,10 +158,14 @@ const Pricing = () => {
       return;
     }
 
-    // Only require email and name - address is optional
     const requiredFields: Array<keyof CheckoutFormState> = [
       "fullName",
       "email",
+      "addressLine1",
+      "city",
+      "state",
+      "postalCode",
+      "country",
     ];
 
     const missingFields = requiredFields.filter(
@@ -177,7 +173,7 @@ const Pricing = () => {
     );
 
     if (missingFields.length > 0) {
-      toast.error("Please enter your name and email address.");
+      toast.error("Please complete all required billing fields.");
       return;
     }
 
@@ -191,31 +187,17 @@ const Pricing = () => {
 
     setCheckoutSubmitting(true);
     try {
-      // Build address object only if at least one field is provided
-      const addressFields = {
-        line1: checkoutForm.addressLine1,
-        line2: checkoutForm.addressLine2,
-        city: checkoutForm.city,
-        state: checkoutForm.state,
-        postal_code: checkoutForm.postalCode,
-        country: checkoutForm.country,
-      };
-
-      const hasAddress = Object.values(addressFields).some(val => val && val.trim());
-
       const prefill = {
         name: checkoutForm.fullName,
         email: checkoutForm.email,
-        ...(hasAddress ? {
-          address: {
-            line1: checkoutForm.addressLine1 || undefined,
-            line2: checkoutForm.addressLine2 || undefined,
-            city: checkoutForm.city || undefined,
-            state: checkoutForm.state || undefined,
-            postal_code: checkoutForm.postalCode || undefined,
-            country: checkoutForm.country || undefined,
-          }
-        } : {}),
+        address: {
+          line1: checkoutForm.addressLine1,
+          line2: checkoutForm.addressLine2 || undefined,
+          city: checkoutForm.city,
+          state: checkoutForm.state,
+          postal_code: checkoutForm.postalCode,
+          country: checkoutForm.country,
+        },
       };
 
       const url = await createCheckout(selectedTier.tier_name, prefill);
@@ -298,29 +280,6 @@ const Pricing = () => {
         <div className="absolute top-72 left-12 w-2 h-2 bg-accent/60 rounded-full animate-orbit opacity-75" style={{ animationDelay: '13s' }} />
         <div className="absolute bottom-72 right-12 w-2 h-2 bg-primary/50 rounded-full animate-spiral opacity-70" style={{ animationDelay: '14s' }} />
       <div className="container mx-auto px-4 relative z-20">
-        {/* Promotion Banner */}
-        {promotion && (
-          <div className="mb-12 animate-fade-in">
-            <PromotionBanner
-              promotion={promotion}
-              variant="inline"
-              className="max-w-3xl mx-auto"
-            />
-          </div>
-        )}
-
-        {/* Social Proof */}
-        {!isAuthenticated && (
-          <div className="mb-8 flex justify-center animate-fade-in">
-            <SocialProofCounter
-              count={socialProof.count}
-              label="people upgraded today"
-              period={socialProof.period}
-              variant="badge"
-            />
-          </div>
-        )}
-
         <div className="text-center mb-16 animate-fade-in">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 gradient-text">
             Choose Your Plan
@@ -374,16 +333,6 @@ const Pricing = () => {
                   </div>
                 )}
 
-                {/* Limited Time Badge for Popular Tier */}
-                {isPopular && promotion && promotion.type === 'discount' && (
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="destructive" className="text-xs flex items-center gap-1 animate-pulse">
-                      <Clock className="w-3 h-3" />
-                      Limited Time
-                    </Badge>
-                  </div>
-                )}
-
                 <div className="text-center mb-6 sm:mb-8">
                   <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 capitalize">{tier.tier_name}</h3>
                   <p className="text-base sm:text-lg font-semibold text-primary mb-1 sm:mb-2">{title}</p>
@@ -392,11 +341,6 @@ const Pricing = () => {
 
                 <div className="text-center mb-4 sm:mb-6">
                   <div className="flex items-baseline justify-center gap-1 sm:gap-2">
-                    {promotion && promotion.type === 'discount' && isPopular && (
-                      <span className="text-lg sm:text-xl text-muted-foreground line-through mr-1">
-                        ${((tier.price_cents / 100) / (1 - promotion.value / 100)).toFixed(2)}
-                      </span>
-                    )}
                     <span className="text-3xl sm:text-4xl font-bold">
                       ${(tier.price_cents / 100).toFixed(2)}
                     </span>
@@ -404,23 +348,9 @@ const Pricing = () => {
                       <span className="text-muted-foreground text-sm sm:text-base">/month</span>
                     )}
                   </div>
-                  {promotion && promotion.type === 'discount' && isPopular && (
-                    <div className="text-sm text-primary font-semibold mt-1">
-                      Save {promotion.value}% - Limited Time!
-                    </div>
-                  )}
                   {tier.monthly_credits > 0 && (
                     <div className="text-xs sm:text-sm text-primary mt-2">
                       {tier.monthly_credits} credits/month
-                    </div>
-                  )}
-                  {promotion && promotion.showCountdown && isPopular && (
-                    <div className="mt-3 flex justify-center">
-                      <CountdownTimer
-                        endDate={promotion.endDate}
-                        variant="badge"
-                        showIcon={true}
-                      />
                     </div>
                   )}
                 </div>

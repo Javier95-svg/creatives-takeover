@@ -5,7 +5,6 @@ import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
-import { FloatingUrgencyWidget } from "@/components/FloatingUrgencyWidget";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -69,9 +68,6 @@ const Index = () => {
       
       {/* Enhanced Quiz Popup - Only popup to avoid overwhelming visitors */}
       <CreditCampaignPopup trigger="time" delay={20000} />
-      
-      {/* Floating Urgency Widget */}
-      <FloatingUrgencyWidget />
       
     </div>
   );

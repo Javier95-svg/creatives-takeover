@@ -1,12 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Gift, Clock, Users, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { CountdownTimer } from "./CountdownTimer";
-import { getPrimaryPromotion } from "@/config/promotions";
 
 const CampaignPromotion = () => {
-  const promotion = getPrimaryPromotion('/', 'new');
-  
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Animated Background */}
@@ -16,23 +12,10 @@ const CampaignPromotion = () => {
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge with Countdown */}
-          <div className="inline-flex flex-col items-center gap-3 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-8 p-4 animate-fade-in">
-            <div className="flex items-center gap-2">
-              <Gift className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">LIMITED TIME OFFER</span>
-            </div>
-            {promotion && promotion.showCountdown && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Ends in:</span>
-                <CountdownTimer
-                  endDate={promotion.endDate}
-                  variant="compact"
-                  showIcon={false}
-                />
-              </div>
-            )}
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 glass-card bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 mb-8 animate-fade-in">
+            <Gift className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">LIMITED TIME OFFER</span>
           </div>
 
           {/* Headline */}
