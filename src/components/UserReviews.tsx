@@ -1,0 +1,176 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Star } from "lucide-react";
+
+const UserReviews = () => {
+  const reviews = [
+    {
+      name: "Priya Sharma",
+      comment: "BizMap AI made planning my creative business so much easier. The conversational approach felt natural, and I had a solid plan in minutes instead of days. The success score really helped me validate my idea before investing more time.",
+      timestamp: "3 days ago",
+      location: "Mumbai, India",
+      role: "Indie founder",
+      avatar: "https://ui-avatars.com/api/?name=Priya+Sharma&background=6366f1&color=fff&size=128&bold=true"
+    },
+    {
+      name: "James Mitchell",
+      comment: "The fundraising toolkit through Insighta is incredible. I found three accelerator programs that were perfect fits for my stage. The deadline reminders saved me from missing applications. Already got accepted to one!",
+      timestamp: "1 week ago",
+      location: "London, UK",
+      role: "First-time creator",
+      avatar: "https://ui-avatars.com/api/?name=James+Mitchell&background=3b82f6&color=fff&size=128&bold=true"
+    },
+    {
+      name: "Sofia Martinez",
+      comment: "The community here is unlike anything I've experienced. Everyone genuinely wants to help each other succeed. My accountability partner has been a game-changer - we check in daily and keep each other motivated.",
+      timestamp: "2 weeks ago",
+      location: "Barcelona, Spain",
+      role: "Creative entrepreneur",
+      avatar: "https://ui-avatars.com/api/?name=Sofia+Martinez&background=ec4899&color=fff&size=128&bold=true"
+    },
+    {
+      name: "David Kim",
+      comment: "The feedback quality on my business plan was outstanding. Community members gave me actionable insights I hadn't considered. The anonymous sharing feature let me get honest feedback without feeling exposed.",
+      timestamp: "5 days ago",
+      location: "Seoul, South Korea",
+      role: "Tech founder",
+      avatar: "https://ui-avatars.com/api/?name=David+Kim&background=10b981&color=fff&size=128&bold=true"
+    },
+    {
+      name: "Aisha Okafor",
+      comment: "Investor visibility through the platform has been amazing. I shared my plan and got connected with an angel investor who's now mentoring me. The Demo Days feature helped me practice my pitch with real feedback.",
+      timestamp: "1 month ago",
+      location: "Lagos, Nigeria",
+      role: "Startup founder",
+      avatar: "https://ui-avatars.com/api/?name=Aisha+Okafor&background=f59e0b&color=fff&size=128&bold=true"
+    },
+    {
+      name: "Lucas Anderson",
+      comment: "The Prompt Library saved me hours of research. I found templates for my exact niche and adapted them quickly. Combined with BizMap AI, I went from idea to launch-ready plan in one weekend.",
+      timestamp: "1 week ago",
+      location: "Stockholm, Sweden",
+      role: "Solo entrepreneur",
+      avatar: "https://ui-avatars.com/api/?name=Lucas+Anderson&background=8b5cf6&color=fff&size=128&bold=true"
+    },
+    {
+      name: "Yuki Tanaka",
+      comment: "Sprint-based accountability is what I needed. The daily check-ins keep me focused, and seeing my progress visually motivates me. I've completed more in 30 days than I did in the previous 6 months.",
+      timestamp: "4 days ago",
+      location: "Tokyo, Japan",
+      role: "Indie developer",
+      avatar: "https://ui-avatars.com/api/?name=Yuki+Tanaka&background=ef4444&color=fff&size=128&bold=true"
+    },
+    {
+      name: "Emma Thompson",
+      comment: "As someone new to business, the step-by-step guidance from BizMap AI was perfect. It asked questions I didn't know I needed to answer. The PDF export made it easy to share with my co-founder and get aligned.",
+      timestamp: "2 weeks ago",
+      location: "Melbourne, Australia",
+      role: "First-time creator",
+      avatar: "https://ui-avatars.com/api/?name=Emma+Thompson&background=06b6d4&color=fff&size=128&bold=true"
+    }
+  ];
+
+  return (
+    <section className="py-20 lg:py-32 bg-background relative overflow-hidden">
+      {/* Animated Blue Neon Wallpaper - matching ValuePropositionCards style */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-background to-cyan-950/30" />
+      
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+            linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
+      
+      {/* Animated Glow Orbs */}
+      <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      
+      {/* Neon Light Streaks */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent animate-pulse" style={{ animationDelay: '1.5s' }} />
+
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        {/* Section Header */}
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+            What Our Community Says
+          </h2>
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
+            Real stories from creators who are building their businesses with Creatives Takeover. See how our tools and community are helping entrepreneurs turn ideas into reality.
+          </p>
+        </div>
+
+        {/* Reviews Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
+          {reviews.map((review, index) => (
+            <Card 
+              key={index} 
+              className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 animate-fade-in"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              {/* Gradient background on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <CardContent className="relative p-6 md:p-8">
+                {/* Rating Stars */}
+                <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                    />
+                  ))}
+                </div>
+
+                {/* Review Comment */}
+                <p className="text-muted-foreground mb-6 leading-relaxed text-sm sm:text-base">
+                  "{review.comment}"
+                </p>
+
+                {/* User Info */}
+                <div className="flex items-start gap-4 pt-4 border-t border-border/50">
+                  <Avatar className="w-12 h-12 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <AvatarImage src={review.avatar} alt={review.name} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                      {review.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
+                      {review.name}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      {review.role && (
+                        <Badge variant="outline" className="text-xs px-2 py-0">
+                          {review.role}
+                        </Badge>
+                      )}
+                      {review.location && (
+                        <span className="whitespace-nowrap">📍 {review.location}</span>
+                      )}
+                    </div>
+                    {review.timestamp && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {review.timestamp}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default UserReviews;
+

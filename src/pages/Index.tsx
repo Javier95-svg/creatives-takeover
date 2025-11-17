@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
+import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 
@@ -56,6 +57,8 @@ const Index = () => {
         </Suspense>
         
         <ValuePropositionCards />
+        
+        <UserReviews />
         
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
           <HomeFAQ />
