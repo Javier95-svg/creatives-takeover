@@ -98,7 +98,7 @@ const EntrepreneurProblems = () => {
             Why Most Small Businesses <span className="text-red-500">Never Scale</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Generic business advice doesn't work for early-stage founders. You need a system built specifically for how you think, build, and scale.
+            Generic business advice fails when you're building from zero. You need a system designed for the unique challenges of early stage entrepreneurship: moving fast, validating quickly, and scaling without the resources of established companies.
           </p>
         </div>
 
