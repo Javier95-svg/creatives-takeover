@@ -1496,14 +1496,29 @@ What specific aspect of your business would you like to focus on first?`;
         setMessages(prev => [...prev, streamingMsg]);
         setIsTyping(false); // Remove typing indicator when streaming starts
 
-        // Prepare conversation history for API (optimized - only last 5 messages)
-        const conversationHistory = messages
+        // 🚀 OPTIMIZATION: Prepare conversation history for API (reduced from 5 to 6 for better context, but still optimized)
+        // Smart selection: prioritize important messages (bot responses with insights, user questions)
+        const importantMessages = messages
           .filter(msg => msg.id !== 'streaming')
-          .slice(-5)
-          .map(msg => ({
-            role: msg.isBot ? 'assistant' as const : 'user' as const,
-            content: msg.content
-          }));
+          .map((msg, idx) => ({
+            msg,
+            importance: msg.isBot && msg.content.length > 100 ? 2 : 
+                       !msg.isBot ? 1 : 0,
+            recency: idx
+          }))
+          .sort((a, b) => {
+            // Sort by importance first, then recency
+            if (a.importance !== b.importance) return b.importance - a.importance;
+            return b.recency - a.recency;
+          })
+          .slice(0, 6) // Take top 6 most important/recent
+          .sort((a, b) => a.recency - b.recency) // Restore chronological order
+          .map(item => item.msg);
+        
+        const conversationHistory = importantMessages.map(msg => ({
+          role: msg.isBot ? 'assistant' as const : 'user' as const,
+          content: msg.content
+        }));
 
         // Start streaming
         setIsStreaming(true);

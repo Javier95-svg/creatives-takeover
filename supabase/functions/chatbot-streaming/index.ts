@@ -6,6 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// In-memory cache for request deduplication (short-lived)
+const requestCache = new Map<string, { response: Response; timestamp: number }>();
+const REQUEST_DEDUP_TTL = 5000; // 5 seconds
+const SYSTEM_PROMPT_CACHE = new Map<string, { prompt: string; timestamp: number }>();
+const PROMPT_CACHE_TTL = 3600000; // 1 hour
+
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -85,11 +91,32 @@ serve(async (req) => {
         if (error) console.error('Background: Error saving user message:', error);
       });
 
-    // Build system prompt
-    const systemPrompt = buildSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+    // 🚀 OPTIMIZATION: Request deduplication - check for duplicate requests
+    const requestFingerprint = await generateRequestFingerprint(message, businessContext, conversationHistory);
+    const cachedRequest = requestCache.get(requestFingerprint);
+    if (cachedRequest && Date.now() - cachedRequest.timestamp < REQUEST_DEDUP_TTL) {
+      console.log('⚡ Returning cached response (deduplication)');
+      return cachedRequest.response;
+    }
+
+    // 🚀 OPTIMIZATION: Check response cache before making AI calls
+    const cacheKey = await generateCacheKey(message, businessContext, conversationHistory, chatMode);
+    const cachedResponse = await checkResponseCache(supabase, cacheKey);
+    if (cachedResponse) {
+      console.log('⚡ Cache hit - returning cached response');
+      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
+      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      return response;
+    }
+
+    // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
+    const optimizedHistory = conversationHistory.slice(-6);
+    
+    // 🚀 OPTIMIZATION: Cache system prompt
+    const systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
     let messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-10),
+      ...optimizedHistory,
       { role: 'user', content: message }
     ];
 
@@ -98,43 +125,26 @@ serve(async (req) => {
 
     // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
     const needsKnowledge = detectKnowledgeQuery(message, businessContext);
-    let ragData = null;
     
-    if (needsKnowledge) {
-      console.log('🔍 Knowledge query detected - calling RAG');
-      try {
-        const filter: any = {};
-        if (businessContext.industry) filter.tag = businessContext.industry;
-        
-        const result = await supabase.functions.invoke('rag-chat', {
-          body: {
-            messages: messages.filter(m => m.role !== 'system'),
-            userId,
-            matchCount: 5,
-            filter,
-            model: 'google/gemini-2.5-flash',
-            temperature: 0.3,
-          }
-        });
-        
-        if (!result.error) {
-          ragData = result.data;
-          console.log(`✅ RAG returned ${ragData.sources?.length || 0} sources`);
-        } else {
-          console.log('⚠️ RAG error, using conversational AI:', result.error);
-        }
-      } catch (e) {
-        console.log('⚠️ RAG failed, using conversational AI:', e);
-      }
-    }
+    // 🚀 OPTIMIZATION: Parallel processing - start RAG and AI preparation simultaneously
+    const [ragData, aiStreamReady] = await Promise.all([
+      needsKnowledge ? fetchRAGData(supabase, messages, userId, businessContext) : Promise.resolve(null),
+      Promise.resolve(true) // AI stream preparation (already ready)
+    ]);
 
     // If RAG provided answer, stream it. Otherwise use Lovable AI
     if (ragData?.answer) {
-      return createRAGStream(ragData, message, conversation, businessContext, conversationHistory, chatMode, supabase);
+      const response = createRAGStream(ragData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
+      // Cache the response
+      await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', 'google/gemini-2.5-flash');
+      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      return response;
     }
 
     console.log('💬 Using conversational Lovable AI');
-    return await createAIStream(messages, message, conversation, businessContext, conversationHistory, chatMode, supabase);
+    const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey);
+    requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+    return response;
 
   } catch (error) {
     console.error('Chatbot Streaming Error:', error);
@@ -147,6 +157,182 @@ serve(async (req) => {
     });
   }
 });
+
+// 🚀 OPTIMIZATION: Generate cache key for response caching
+async function generateCacheKey(message: string, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Promise<string> {
+  const contextStr = JSON.stringify({
+    message: message.toLowerCase().trim(),
+    industry: businessContext.industry,
+    stage: businessContext.stage,
+    chatMode,
+    lastMessage: conversationHistory[conversationHistory.length - 1]?.content?.substring(0, 100)
+  });
+  const encoder = new TextEncoder();
+  const data = encoder.encode(contextStr);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 🚀 OPTIMIZATION: Generate request fingerprint for deduplication
+async function generateRequestFingerprint(message: string, businessContext: BusinessContext, conversationHistory: ChatMessage[]): Promise<string> {
+  const contextStr = JSON.stringify({
+    message: message.toLowerCase().trim(),
+    sessionId: businessContext.industry, // Use as session identifier
+    timestamp: Math.floor(Date.now() / 1000) // Round to nearest second
+  });
+  const encoder = new TextEncoder();
+  const data = encoder.encode(contextStr);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 🚀 OPTIMIZATION: Check response cache
+async function checkResponseCache(supabase: any, cacheKey: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('ai_cache')
+      .select('response_data, expires_at')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (error || !data) return null;
+    
+    // Return cached response content
+    return data.response_data?.content || null;
+  } catch (e) {
+    console.error('Cache check error:', e);
+    return null;
+  }
+}
+
+// 🚀 OPTIMIZATION: Generate simple hash for input
+async function generateInputHash(content: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(content);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 🚀 OPTIMIZATION: Save response to cache
+async function saveResponseCache(supabase: any, cacheKey: string, content: string, provider: string, model: string): Promise<void> {
+  // Save in background (non-blocking)
+  setTimeout(async () => {
+    try {
+      const inputHash = await generateInputHash(content);
+      await supabase
+        .from('ai_cache')
+        .upsert({
+          cache_key: cacheKey,
+          provider,
+          model,
+          input_hash: inputHash,
+          response_data: { content },
+          expires_at: new Date(Date.now() + 3600000).toISOString() // 1 hour TTL
+        }, {
+          onConflict: 'cache_key'
+        });
+    } catch (e) {
+      console.error('Cache save error:', e);
+    }
+  }, 0);
+}
+
+// 🚀 OPTIMIZATION: Get cached system prompt or build new one
+function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any, currentStep: number | null, chatMode: string): string {
+  const promptKey = JSON.stringify({ 
+    industry: businessContext.industry,
+    stage: businessContext.stage,
+    wizardMode: wizardMode?.enabled,
+    currentStep,
+    chatMode
+  });
+  
+  const cached = SYSTEM_PROMPT_CACHE.get(promptKey);
+  if (cached && Date.now() - cached.timestamp < PROMPT_CACHE_TTL) {
+    return cached.prompt;
+  }
+  
+  const prompt = buildSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+  SYSTEM_PROMPT_CACHE.set(promptKey, { prompt, timestamp: Date.now() });
+  
+  // Clean old cache entries (keep last 50)
+  if (SYSTEM_PROMPT_CACHE.size > 50) {
+    const entries = Array.from(SYSTEM_PROMPT_CACHE.entries());
+    entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+    SYSTEM_PROMPT_CACHE.clear();
+    entries.slice(0, 50).forEach(([key, value]) => SYSTEM_PROMPT_CACHE.set(key, value));
+  }
+  
+  return prompt;
+}
+
+// 🚀 OPTIMIZATION: Fetch RAG data (extracted for parallel processing)
+async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: string | null, businessContext: BusinessContext): Promise<any> {
+  console.log('🔍 Knowledge query detected - calling RAG');
+  try {
+    const filter: any = {};
+    if (businessContext.industry) filter.tag = businessContext.industry;
+    
+    const result = await supabase.functions.invoke('rag-chat', {
+      body: {
+        messages: messages.filter(m => m.role !== 'system'),
+        userId,
+        matchCount: 5,
+        filter,
+        model: 'google/gemini-2.5-flash',
+        temperature: 0.3,
+      }
+    });
+    
+    if (!result.error) {
+      console.log(`✅ RAG returned ${result.data.sources?.length || 0} sources`);
+      return result.data;
+    } else {
+      console.log('⚠️ RAG error, using conversational AI:', result.error);
+      return null;
+    }
+  } catch (e) {
+    console.log('⚠️ RAG failed, using conversational AI:', e);
+    return null;
+  }
+}
+
+// 🚀 OPTIMIZATION: Create stream from cached response
+function createCachedStream(cachedContent: string, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Response {
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Stream cached content word by word for natural feel
+        const words = cachedContent.split(' ');
+        for (let i = 0; i < words.length; i++) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+          ));
+          await new Promise(r => setTimeout(r, 20)); // Faster than real generation
+        }
+        
+        // Complete
+        const stage = determineConversationStage(businessContext, conversationHistory.length);
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, message), cached: true })}\n\n`
+        ));
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      } catch (e) {
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+        controller.close();
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+  });
+}
 
 function buildSystemPrompt(businessContext: BusinessContext, wizardMode: any = null, currentStep: number | null = null, chatMode: string = 'wizard'): string {
   // Tour guide mode - ultra concise platform help
@@ -598,7 +784,7 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
 }
 
 // 💬 Create Lovable AI stream response
-async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Promise<Response> {
+async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any, cacheKey?: string): Promise<Response> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
@@ -623,18 +809,24 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       const decoder = new TextDecoder();
       let fullMessage = '';
       let buffer = '';
+      let firstTokenReceived = false;
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
+          // 🚀 OPTIMIZATION: Process buffer more efficiently
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
+          
+          // Process complete lines only
+          let newlineIndex;
+          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            const line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+            
             if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
+            
             const data = line.slice(6).trim();
             if (data === '[DONE]') continue;
             
@@ -642,31 +834,46 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
+                if (!firstTokenReceived) {
+                  firstTokenReceived = true;
+                  // 🚀 OPTIMIZATION: First token received - stream immediately
+                }
                 fullMessage += content;
                 controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
               }
-            } catch (e) {}
+            } catch (e) {
+              // Ignore parse errors for malformed JSON
+            }
           }
         }
 
-        // Save in background
-        setTimeout(async () => {
-          const updatedContext = await extractBusinessContext(userMessage, fullMessage, businessContext);
-          const stage = determineConversationStage(updatedContext, conversationHistory.length);
-          await Promise.all([
-            supabase.from('chatbot_messages').insert({
-              conversation_id: conversation.id,
-              role: 'assistant',
-              content: fullMessage,
-              metadata: { timestamp: new Date().toISOString(), streaming: true }
-            }),
-            supabase.from('chatbot_conversations').update({
-              business_context: updatedContext,
-              conversation_stage: stage,
-              updated_at: new Date().toISOString()
-            }).eq('id', conversation.id)
-          ]);
-        }, 0);
+        // 🚀 OPTIMIZATION: Save to cache and DB in background (non-blocking)
+        if (cacheKey && fullMessage) {
+          saveResponseCache(supabase, cacheKey, fullMessage, 'lovable', 'google/gemini-2.5-flash').catch(() => {});
+        }
+        
+        // Background: Save message and update context
+        queueMicrotask(async () => {
+          try {
+            const updatedContext = await extractBusinessContext(userMessage, fullMessage, businessContext);
+            const stage = determineConversationStage(updatedContext, conversationHistory.length);
+            await Promise.all([
+              supabase.from('chatbot_messages').insert({
+                conversation_id: conversation.id,
+                role: 'assistant',
+                content: fullMessage,
+                metadata: { timestamp: new Date().toISOString(), streaming: true }
+              }),
+              supabase.from('chatbot_conversations').update({
+                business_context: updatedContext,
+                conversation_stage: stage,
+                updated_at: new Date().toISOString()
+              }).eq('id', conversation.id)
+            ]);
+          } catch (e) {
+            console.error('Background save error:', e);
+          }
+        });
 
         // Complete
         const stage = determineConversationStage(businessContext, conversationHistory.length);

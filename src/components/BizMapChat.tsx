@@ -276,15 +276,31 @@ export const BizMapChat = ({
     trackConversionEvent('dismissed', currentStep + 1);
   };
 
+  // 🚀 OPTIMIZATION: Request deduplication - prevent duplicate sends
+  const lastSentMessage = useRef<string>('');
+  const lastSendTime = useRef<number>(0);
+  const SEND_DEBOUNCE_MS = 1000; // 1 second debounce
+
   const handleSend = () => {
-    if ((message.trim() || attachedFiles.length > 0) && !isTyping && !isStreaming) {
+    const now = Date.now();
+    const messageContent = message.trim();
+    
+    // 🚀 OPTIMIZATION: Debounce rapid sends and prevent duplicates
+    if (now - lastSendTime.current < SEND_DEBOUNCE_MS && lastSentMessage.current === messageContent) {
+      console.log('⚡ Ignoring duplicate send request');
+      return;
+    }
+    
+    if ((messageContent || attachedFiles.length > 0) && !isTyping && !isStreaming) {
       console.log('💬 Sending message:', { message, filesCount: attachedFiles.length });
+      lastSentMessage.current = messageContent;
+      lastSendTime.current = now;
       sendMessage(message, attachedFiles);
       setMessage("");
       setAttachedFiles([]);
     } else {
       console.log('⚠️ Cannot send message:', { 
-        hasMessage: !!message.trim(), 
+        hasMessage: !!messageContent, 
         hasFiles: attachedFiles.length > 0,
         isTyping, 
         isStreaming 
