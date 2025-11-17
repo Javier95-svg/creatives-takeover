@@ -103,10 +103,10 @@ const UserReviews = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-            Your Story Is Next
+            Write Your Own Story
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Real stories from creators who are building their businesses with Creatives Takeover. See how our tools and community are helping entrepreneurs turn ideas into reality.
+            Real stories from entrepreneurs who are building their businesses with Creatives Takeover.
           </p>
         </div>
 
