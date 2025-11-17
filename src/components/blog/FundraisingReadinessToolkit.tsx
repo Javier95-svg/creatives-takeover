@@ -298,9 +298,9 @@ const FundraisingReadinessToolkit = () => {
 
         {/* Main Card */}
         <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">How ready are you?</CardTitle>
-            <CardDescription>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-primary animate-pulse">How ready are you?</CardTitle>
+            <CardDescription className="mt-2">
               {isAuthenticated 
                 ? "Move each slider from 0 (Not Started) to 10 (Complete). Be honest with yourself!"
                 : "Preview the assessment below. Sign in to adjust scores and get AI-powered insights!"}
