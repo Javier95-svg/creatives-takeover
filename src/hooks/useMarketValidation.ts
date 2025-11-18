@@ -1,133 +1,94 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import type { MarketValidationScore } from '@/types/founderOS';
+import { toast } from 'sonner';
+import { MarketValidationScore } from '@/types/founderOS';
 
-export const useMarketValidation = (sessionId?: string) => {
+export const useMarketValidation = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [validation, setValidation] = useState<MarketValidationScore | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Fetch validation score for session
-  const fetchValidation = async () => {
-    if (!user || !sessionId) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
+  // Fetch validation scores
+  const { data: validationScores = [], isLoading } = useQuery({
+    queryKey: ['market-validation', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
-      const { data, error: fetchError } = await supabase
+      const { data, error } = await supabase
         .from('market_validation_scores')
         .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .eq('user_id', user.id)
+        .order('validation_date', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
       
-      if (fetchError) throw fetchError;
-      
-      if (data) {
-        setValidation({
-          ...data,
-          top_competitors: (data.top_competitors as any) || [],
-          demand_trends: (data.demand_trends as any) || {},
-          search_volume_data: (data.search_volume_data as any) || {},
-          competitor_gaps: (data.competitor_gaps as any) || [],
-          data_sources: (data.data_sources as any) || [],
-        } as MarketValidationScore);
-      } else {
-        setValidation(null);
-      }
-    } catch (err) {
-      console.error('Error fetching validation:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch validation');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Parse JSONB fields
+      return (data || []).map((score) => ({
+        ...score,
+        top_competitors: (score.top_competitors || []) as any[],
+        demand_trends: (score.demand_trends || {}) as any,
+        search_volume_data: (score.search_volume_data || {}) as any,
+        competitor_gaps: (score.competitor_gaps || []) as any[],
+        differentiation_opportunities: (score.differentiation_opportunities || []) as string[],
+        data_sources: (score.data_sources || []) as any[],
+      })) as MarketValidationScore[];
+    },
+    enabled: !!user,
+  });
 
-  // Run market validation
-  const runValidation = async (businessIdea: string, industry: string, targetMarket: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to validate your idea",
-        variant: "destructive",
-      });
-      return null;
-    }
+  // Get latest validation score
+  const latestValidation = validationScores[0] || null;
 
-    try {
-      setLoading(true);
-      setError(null);
+  // Trigger new validation
+  const triggerValidation = useMutation({
+    mutationFn: async (params: {
+      business_idea: string;
+      industry?: string;
+      target_market?: string;
+      session_id?: string;
+    }) => {
+      if (!user) throw new Error('User not authenticated');
 
-      // Call edge function to run validation
-      const { data, error: functionError } = await supabase.functions.invoke('market-validation-engine', {
+      const { data, error } = await supabase.functions.invoke('market-validation-engine', {
         body: {
-          business_idea: businessIdea,
-          industry,
-          target_market: targetMarket,
-          session_id: sessionId,
+          business_idea: params.business_idea,
+          industry: params.industry,
+          target_market: params.target_market,
+          session_id: params.session_id,
         },
       });
 
-      if (functionError) throw functionError;
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['market-validation'] });
+      toast.success('Market validation completed');
+    },
+    onError: (error) => {
+      toast.error('Failed to validate market');
+      console.error('Error validating market:', error);
+    },
+  });
 
-      if (data?.validation_score) {
-        setValidation(data.validation_score);
-        toast({
-          title: "Validation Complete",
-          description: `Overall score: ${data.validation_score.overall_validation_score}/100`,
-        });
-        return data.validation_score;
-      }
+  // Calculate average validation score
+  const averageScore = validationScores.length > 0
+    ? validationScores.reduce((sum, score) => sum + (score.overall_validation_score || 0), 0) / validationScores.length
+    : 0;
 
-      return null;
-    } catch (err) {
-      console.error('Error running validation:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to validate idea';
-      setError(errorMessage);
-      toast({
-        title: "Validation Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get validation score color based on value
-  const getScoreColor = (score: number) => {
-    if (score >= 75) return 'text-green-500';
-    if (score >= 50) return 'text-yellow-500';
-    return 'text-red-500';
-  };
-
-  // Get validation level text
-  const getValidationLevel = (score: number): string => {
-    if (score >= 75) return 'Strong Validation';
-    if (score >= 50) return 'Moderate Validation';
-    return 'Needs Improvement';
-  };
-
-  useEffect(() => {
-    if (sessionId) {
-      fetchValidation();
-    }
-  }, [sessionId, user]);
+  // Get score trend (comparing latest to previous)
+  const scoreTrend = validationScores.length >= 2
+    ? (validationScores[0].overall_validation_score || 0) - (validationScores[1].overall_validation_score || 0)
+    : 0;
 
   return {
-    validation,
-    loading,
-    error,
-    runValidation,
-    refreshValidation: fetchValidation,
-    getScoreColor,
-    getValidationLevel,
+    validationScores,
+    latestValidation,
+    averageScore,
+    scoreTrend,
+    isLoading,
+    triggerValidation: triggerValidation.mutate,
+    isTriggering: triggerValidation.isPending,
   };
 };

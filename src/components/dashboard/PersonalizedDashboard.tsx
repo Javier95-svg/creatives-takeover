@@ -12,6 +12,10 @@ import { RevenueHub } from './RevenueHub';
 import { QuickActionsPanel } from './QuickActionsPanel';
 import { ProgressTimeline } from './ProgressTimeline';
 import { TaskCalendar } from './TaskCalendar';
+import { BudgetManager } from './BudgetManager';
+import { MarketValidationHub } from './MarketValidationHub';
+import { OutreachHub } from './OutreachHub';
+import { CrossModuleInsights } from './CrossModuleInsights';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 
 export const PersonalizedDashboard = () => {
@@ -258,6 +262,18 @@ export const PersonalizedDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Primary Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Budget Manager */}
+            <BudgetManager />
+            
+            {/* Market Validation Hub */}
+            <MarketValidationHub />
+            
+            {/* Outreach Hub */}
+            <OutreachHub />
+            
+            {/* Cross-Module Insights */}
+            <CrossModuleInsights />
+            
             {/* Revenue Hub */}
             <RevenueHub />
             
