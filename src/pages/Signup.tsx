@@ -83,9 +83,11 @@ const Signup = () => {
       confirmPassword: ""
     };
 
-    // Full name validation (optional - only validate if provided)
-    if (formData.fullName.trim() && formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
+    // Full name validation (optional - only validate format if provided)
+    if (formData.fullName.trim()) {
+      if (formData.fullName.trim().length < 2) {
+        newErrors.fullName = "Full name must be at least 2 characters";
+      }
     }
 
     // Email validation
