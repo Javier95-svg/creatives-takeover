@@ -34,56 +34,119 @@ serve(async (req) => {
       throw new Error('Authentication required');
     }
 
-    // Use Lovable AI to analyze market potential
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    // Use OpenAI API for enhanced market validation analysis
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const systemPrompt = `You are an elite market validation expert with 20+ years of experience in venture capital, startup consulting, and market research. You've evaluated thousands of business ideas and have deep expertise in identifying viable market opportunities.
+
+YOUR CORE MISSION:
+Provide brutally honest, data-driven market validation that helps entrepreneurs understand if their idea has real demand before they invest time and money.
+
+VALIDATION FRAMEWORK (Apply rigorously):
+
+1. MARKET SIZE ANALYSIS (0-100 score):
+   - Total Addressable Market (TAM): Is this a billion-dollar+ market or niche?
+   - Serviceable Addressable Market (SAM): Realistic market you can capture
+   - Serviceable Obtainable Market (SOM): What you can realistically get in 3 years
+   - Market growth trends: Growing, stagnant, or declining?
+   - Market maturity: Emerging, maturing, or saturated?
+
+2. DEMAND STRENGTH ANALYSIS (0-100 score):
+   - Problem intensity: How painful is this problem? (1-10 scale)
+   - Existing solutions: Are people currently solving this? How?
+   - Willingness to pay: Evidence of paying for similar solutions?
+   - Search volume trends: Are people actively searching for solutions?
+   - Social proof indicators: Forums, Reddit, social media discussions?
+   - Customer urgency: Do they need this NOW or can wait?
+
+3. COMPETITION ANALYSIS (0-100 score, higher = more competitive):
+   - Direct competitors: Who's solving the exact same problem?
+   - Indirect competitors: Alternative solutions people use?
+   - Market saturation: How crowded is the space?
+   - Barriers to entry: What stops others from competing?
+   - Competitive moats: What advantages do incumbents have?
+
+4. VIABILITY ASSESSMENT:
+   - Problem-solution fit: Does the solution address a real problem?
+   - Product-market fit potential: Can this become a viable business?
+   - Revenue model viability: Is the business model sustainable?
+   - Customer acquisition feasibility: How hard will it be to get customers?
+   - Scalability potential: Can this grow beyond the founder?
+
+5. RISK FACTORS:
+   - Market risks: Is demand real or assumed?
+   - Competition risks: Can you compete with established players?
+   - Execution risks: Is this too complex to build?
+   - Market timing: Is the market ready for this?
+   - Customer adoption: Will people actually switch from existing solutions?
+
+6. DIFFERENTIATION OPPORTUNITIES:
+   - Specific gaps competitors aren't addressing
+   - Unique angles you can leverage
+   - Underserved customer segments
+   - Better pricing/value propositions
+
+VALIDATION PRINCIPLES:
+- Be brutally honest: False positives hurt more than false negatives
+- Demand > Supply: A large market with weak demand scores lower than a small market with strong demand
+- Evidence > Assumptions: Prefer validated signals over theoretical potential
+- Competition isn't always bad: It proves the market exists
+- Timing matters: Great ideas at wrong time fail
+
+SCORING GUIDELINES:
+- 75-100: Strong validation - proceed with confidence (clear demand signals, viable market)
+- 50-74: Moderate validation - proceed with caution (some demand, needs more validation)
+- 25-49: Weak validation - pivot or more research needed (unclear demand, high risk)
+- 0-24: Poor validation - reconsider seriously (little/no evidence of demand)
+
+OUTPUT REQUIREMENTS:
+- Provide specific, actionable insights (not generic advice)
+- Reference similar businesses/industries for context
+- Identify the biggest risks and opportunities
+- Give concrete next steps for validation
+- Be encouraging but realistic`;
+
+    const userPrompt = `Analyze and validate this business idea step-by-step:
+
+BUSINESS IDEA: ${business_idea}
+INDUSTRY: ${industry || 'Not specified'}
+TARGET MARKET: ${target_market || 'Not specified'}
+
+Think step-by-step:
+1. First, analyze market size - is this a real market with spending power?
+2. Second, assess demand strength - do people actually need/want this?
+3. Third, evaluate competition - can you compete and differentiate?
+4. Fourth, identify risks and opportunities
+5. Finally, calculate scores and provide recommendations
+
+Provide a comprehensive market validation analysis following the framework above. Be specific and data-driven in your analysis.`;
+
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o', // Using GPT-4o for better analysis
         messages: [
           {
             role: 'system',
-            content: `You are a market validation expert. Analyze business ideas and provide realistic validation scores.
-            
-Your job is to:
-1. Assess market size potential (0-100)
-2. Evaluate competition intensity (0-100, higher = more competitive)
-3. Analyze demand strength (0-100)
-4. Identify top 3-5 competitors with their strengths/weaknesses
-5. Find differentiation opportunities
-6. Calculate overall validation score (weighted average)
-
-Be realistic and data-driven. Consider:
-- Market saturation
-- Entry barriers
-- Customer acquisition difficulty
-- Revenue potential
-- Execution complexity`
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: `Validate this business idea:
-
-Business Idea: ${business_idea}
-Industry: ${industry}
-Target Market: ${target_market}
-
-Provide a comprehensive market validation analysis.`
+            content: userPrompt
           }
         ],
         tools: [{
           type: 'function',
           function: {
             name: 'validate_market',
-            description: 'Return market validation scores and analysis',
+            description: 'Return comprehensive market validation analysis with scores, insights, and recommendations',
             parameters: {
               type: 'object',
               properties: {
@@ -119,8 +182,12 @@ Provide a comprehensive market validation analysis.`
                     type: 'object',
                     properties: {
                       name: { type: 'string' },
+                      website: { type: 'string' },
+                      market_share: { type: 'number' },
                       strengths: { type: 'array', items: { type: 'string' } },
-                      weaknesses: { type: 'array', items: { type: 'string' } }
+                      weaknesses: { type: 'array', items: { type: 'string' } },
+                      pricing_model: { type: 'string' },
+                      features: { type: 'array', items: { type: 'string' } }
                     }
                   }
                 },
@@ -136,20 +203,68 @@ Provide a comprehensive market validation analysis.`
                     properties: {
                       category: { type: 'string' },
                       gap_description: { type: 'string' },
-                      opportunity_score: { type: 'number', minimum: 0, maximum: 100 }
+                      opportunity_score: { type: 'number', minimum: 0, maximum: 100 },
+                      difficulty: { type: 'string', enum: ['low', 'medium', 'high'] }
                     }
                   }
+                },
+                problem_intensity: {
+                  type: 'number',
+                  description: 'How painful is the problem (1-10 scale)',
+                  minimum: 1,
+                  maximum: 10
+                },
+                willingness_to_pay: {
+                  type: 'object',
+                  properties: {
+                    score: { type: 'number', description: 'WTP score 0-100' },
+                    evidence: { type: 'string', description: 'Evidence of willingness to pay' },
+                    price_range: { type: 'string', description: 'Estimated price customers would pay' }
+                  }
+                },
+                market_trends: {
+                  type: 'object',
+                  properties: {
+                    growth_rate: { type: 'string', enum: ['declining', 'stagnant', 'growing', 'exploding'] },
+                    maturity: { type: 'string', enum: ['emerging', 'maturing', 'mature', 'saturated'] },
+                    timing_score: { type: 'number', description: 'Market timing score 0-100' }
+                  }
+                },
+                risk_assessment: {
+                  type: 'object',
+                  properties: {
+                    market_risk: { type: 'string', description: 'Main market risks' },
+                    competition_risk: { type: 'string', description: 'Main competition risks' },
+                    execution_risk: { type: 'string', description: 'Main execution risks' },
+                    overall_risk_level: { type: 'string', enum: ['low', 'medium', 'high', 'very_high'] }
+                  }
+                },
+                validation_recommendations: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Specific actions to validate the idea further'
+                },
+                detailed_analysis: {
+                  type: 'string',
+                  description: 'Comprehensive written analysis (2-3 paragraphs) explaining the validation, risks, opportunities, and recommendations'
+                },
+                viability_verdict: {
+                  type: 'string',
+                  enum: ['highly_viable', 'moderately_viable', 'questionable', 'not_recommended'],
+                  description: 'Overall viability assessment'
                 },
                 confidence_level: {
                   type: 'string',
                   enum: ['low', 'medium', 'high']
                 }
               },
-              required: ['market_size_score', 'competition_score', 'demand_score', 'confidence_level']
+              required: ['market_size_score', 'competition_score', 'demand_score', 'detailed_analysis', 'viability_verdict', 'confidence_level']
             }
           }
         }],
-        tool_choice: { type: 'function', function: { name: 'validate_market' } }
+        tool_choice: { type: 'function', function: { name: 'validate_market' } },
+        temperature: 0.3, // Lower temperature for more consistent, analytical responses
+        max_tokens: 2000 // Allow for comprehensive analysis
       }),
     });
 
@@ -169,13 +284,39 @@ Provide a comprehensive market validation analysis.`
     const validationData = JSON.parse(toolCall.function.arguments);
 
     // Calculate overall validation score (weighted average)
+    // Demand is most important (40%), then market size (35%), competition inverted (25%)
     const overall_score = (
       (validationData.market_size_score * 0.35) +
-      ((100 - validationData.competition_score) * 0.30) + // Invert competition - lower is better
-      (validationData.demand_score * 0.35)
+      ((100 - validationData.competition_score) * 0.25) + // Invert competition - lower is better
+      (validationData.demand_score * 0.40) // Demand is weighted highest
     );
 
-    // Store validation in database
+    // Prepare enhanced demand trends data
+    const demandTrendsData = {
+      problem_intensity: validationData.problem_intensity || null,
+      willingness_to_pay: validationData.willingness_to_pay || null,
+      market_trends: validationData.market_trends || null,
+      ...(validationData.willingness_to_pay && { 
+        wtp_score: validationData.willingness_to_pay.score,
+        wtp_evidence: validationData.willingness_to_pay.evidence,
+        estimated_price: validationData.willingness_to_pay.price_range
+      }),
+      ...(validationData.market_trends && {
+        growth_rate: validationData.market_trends.growth_rate,
+        maturity: validationData.market_trends.maturity,
+        timing_score: validationData.market_trends.timing_score
+      })
+    };
+
+    // Prepare risk assessment data
+    const riskAssessmentData = validationData.risk_assessment || {
+      market_risk: 'Not assessed',
+      competition_risk: 'Not assessed',
+      execution_risk: 'Not assessed',
+      overall_risk_level: 'medium'
+    };
+
+    // Store validation in database with enhanced fields
     const { data: validationScore, error: dbError } = await supabase
       .from('market_validation_scores')
       .insert({
@@ -193,10 +334,25 @@ Provide a comprehensive market validation analysis.`
         top_competitors: validationData.top_competitors || [],
         competitor_gaps: validationData.competitor_gaps || [],
         differentiation_opportunities: validationData.differentiation_opportunities || [],
+        demand_trends: demandTrendsData, // Store enhanced demand data
         confidence_level: validationData.confidence_level,
         data_sources: [
-          { name: 'AI Analysis', type: 'ai_inference', reliability_score: 75 }
-        ]
+          { 
+            name: 'OpenAI GPT-4o Analysis', 
+            type: 'ai_inference', 
+            reliability_score: 85,
+            model: 'gpt-4o',
+            analysis_type: 'comprehensive_market_validation'
+          }
+        ],
+        // Store additional analysis in search_volume_data (repurposing for flexibility)
+        search_volume_data: {
+          detailed_analysis: validationData.detailed_analysis,
+          viability_verdict: validationData.viability_verdict,
+          validation_recommendations: validationData.validation_recommendations || [],
+          risk_assessment: riskAssessmentData,
+          problem_intensity: validationData.problem_intensity
+        }
       })
       .select()
       .single();
