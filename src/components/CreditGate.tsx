@@ -2,6 +2,7 @@ import { AlertCircle, Coins, CreditCard, Zap, Crown } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
+import { CREDIT_COSTS } from "@/config/constants";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,7 @@ export function CreditGate({
   feature,
   onPurchase 
 }: CreditGateProps) {
-  const { balance, CREDIT_COSTS } = useCredits();
+  const { balance } = useCredits();
   const { createCheckout, tiers, subscriptionData } = useSubscription();
 
   const creditPackages = [
@@ -196,6 +197,12 @@ export function CreditGate({
               <div>• Launch Report: {CREDIT_COSTS.LAUNCH_REPORT} credits</div>
               <div>• Asset Generation: {CREDIT_COSTS.ASSET_GENERATION} credits each</div>
               <div>• Premium Features: {CREDIT_COSTS.PREMIUM_FEATURE} credits</div>
+              <div>• AI Chat Message: {CREDIT_COSTS.AI_CHAT_MESSAGE} credit</div>
+              <div>• Market Research: {CREDIT_COSTS.MARKET_RESEARCH} credits</div>
+              <div>• Financial Analysis: {CREDIT_COSTS.FINANCIAL_ANALYSIS} credits</div>
+              <div>• Sprint Task Generation: {CREDIT_COSTS.SPRINT_TASK_GENERATION} credits</div>
+              <div>• PDF Export: {CREDIT_COSTS.PDF_EXPORT} credits</div>
+              <div>• Advanced Analytics: {CREDIT_COSTS.ADVANCED_ANALYTICS} credits</div>
             </div>
           </div>
         </div>

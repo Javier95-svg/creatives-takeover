@@ -164,34 +164,21 @@ export class CreditService {
   }
 
   // Initialize credits for new users (5 free credits)
-  async initializeUserCredits(userId: string): Promise<boolean> {
+  async initializeUserCredits(userId: string): Promise<{ success: boolean; isNewUser: boolean }> {
     try {
-      // Check if user already has credits
+      // Check if user already has a credit record
       const existing = await this.getBalance(userId);
-      if (existing && existing.balance >= 0) {
-        console.log('User already has credits, skipping initialization');
-        return true; // Already initialized
-      }
-
-      // Use upsert instead of insert to handle race conditions
-      const { error: upsertError } = await this.supabase
-        .from('user_credits')
-        .upsert([{
-          user_id: userId,
-          balance: 5, // 5 free credits for new users
-          monthly_quota: 5,
-          subscription_tier: 'free'
-        }], {
-          onConflict: 'user_id',
-          ignoreDuplicates: true // Don't overwrite if exists
+      
+      // If user already has a record (even with 0 balance), don't overwrite
+      if (existing !== null) {
+        console.log('User already has credit record, skipping initialization', { 
+          userId, 
+          existingBalance: existing.balance 
         });
-
-      if (upsertError) {
-        console.error('Error initializing user credits:', upsertError);
-        return false;
+        return { success: true, isNewUser: false }; // Already initialized, don't overwrite
       }
 
-      // Only log transaction if this is truly a new user
+      // Check if there's already a welcome transaction to avoid duplicate grants
       const { data: existingTx } = await this.supabase
         .from('credit_transactions')
         .select('id')
@@ -200,8 +187,33 @@ export class CreditService {
         .eq('reason', 'Welcome bonus - 5 free credits')
         .limit(1);
 
-      if (!existingTx || existingTx.length === 0) {
-        await this.supabase
+      const isNewUser = !existingTx || existingTx.length === 0;
+
+      // Only create new record if it truly doesn't exist
+      // Use insert with ON CONFLICT DO NOTHING to prevent race conditions
+      const { error: insertError } = await this.supabase
+        .from('user_credits')
+        .insert([{
+          user_id: userId,
+          balance: 5, // 5 free credits for new users
+          monthly_quota: 5,
+          subscription_tier: 'free'
+        }])
+        .select();
+
+      // If insert failed due to conflict (race condition), user already exists
+      if (insertError) {
+        if (insertError.code === '23505') { // Unique violation
+          console.log('Credit record already exists (race condition), skipping initialization', { userId });
+          return { success: true, isNewUser: false };
+        }
+        console.error('Error initializing user credits:', insertError);
+        return { success: false, isNewUser: false };
+      }
+
+      // Only log transaction if this is truly a new user
+      if (isNewUser) {
+        const { error: txError } = await this.supabase
           .from('credit_transactions')
           .insert([{
             user_id: userId,
@@ -210,21 +222,33 @@ export class CreditService {
             reason: 'Welcome bonus - 5 free credits',
             feature: 'Account Creation'
           }]);
+
+        if (txError) {
+          console.error('Error logging welcome transaction:', txError);
+          // Don't fail initialization if transaction logging fails
+        }
       }
 
-      return true;
+      return { success: true, isNewUser };
     } catch (error) {
       console.error('Error in initializeUserCredits:', error);
-      return false;
+      return { success: false, isNewUser: false };
     }
   }
 }
 
-// Credit costs configuration
+// Credit costs configuration - must match src/config/constants.ts
+// This is kept here for edge function use, but constants.ts is the source of truth
 export const CREDIT_COSTS = {
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
-  PREMIUM_FEATURE: 3
+  PREMIUM_FEATURE: 3,
+  AI_CHAT_MESSAGE: 1,
+  MARKET_RESEARCH: 10,
+  FINANCIAL_ANALYSIS: 8,
+  SPRINT_TASK_GENERATION: 2,
+  PDF_EXPORT: 3,
+  ADVANCED_ANALYTICS: 5,
 } as const;
 
 // Edge function for credit management operations
@@ -283,8 +307,15 @@ export default withErrorBoundary(async function handler(req: Request) {
 
       case 'initialize': {
         const { userId } = params;
-        const success = await creditService.initializeUserCredits(userId);
-        return new Response(JSON.stringify({ success }), {
+        const result = await creditService.initializeUserCredits(userId);
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      case 'getCreditCosts': {
+        // Return all credit costs for transparency
+        return new Response(JSON.stringify({ costs: CREDIT_COSTS }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }

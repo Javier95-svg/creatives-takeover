@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logError, logWarn } from '@/lib/logger';
 import { APIError } from '@/lib/errors';
+import { CREDIT_COSTS } from '@/config/constants';
 
 interface CreditBalance {
   balance: number;
@@ -21,25 +22,22 @@ interface CreditTransaction {
   metadata?: Record<string, unknown>;
 }
 
-export const CREDIT_COSTS = {
-  LAUNCH_REPORT: 5,
-  ASSET_GENERATION: 5,
-  PREMIUM_FEATURE: 3
-} as const;
-
 export function useCredits() {
   const [balance, setBalance] = useState<CreditBalance | null>(null);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const { user } = useAuth();
 
-  // Fetch current credit balance
-  const fetchBalance = async () => {
+  // Fetch current credit balance with retry logic
+  const fetchBalance = async (retryCount: number = 0): Promise<void> => {
     if (!user) {
       setBalance(null);
       setLoading(false);
       return;
     }
+
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 second
 
     try {
       const { data, error } = await safe.select(async () =>
@@ -51,23 +49,55 @@ export function useCredits() {
       );
 
       if (error) {
-        logError('Error fetching credit balance', error, { userId: user.id });
-        await initializeCredits();
+        // Check if it's a "not found" error (PGRST116) vs other errors
+        const isNotFoundError = error.code === 'PGRST116' || error.message?.includes('not found');
+        
+        if (isNotFoundError) {
+          // User truly has no credit record - initialize only in this case
+          logWarn('No credit record found for user, initializing', { userId: user.id });
+          await initializeCredits();
+        } else if (retryCount < MAX_RETRIES) {
+          // Transient error - retry with exponential backoff
+          logWarn(`Error fetching credit balance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount)));
+          return fetchBalance(retryCount + 1);
+        } else {
+          // Max retries reached - log error but don't reset credits
+          logError('Failed to fetch credit balance after retries', error, { userId: user.id });
+          // Keep existing balance if available, don't reset
+          if (!balance) {
+            toast.error('Unable to load credit balance. Please refresh the page.');
+          }
+        }
       } else if (data) {
+        // Successfully fetched balance
         setBalance(data);
       } else {
+        // No data returned but no error - user has no record
+        logWarn('No credit record found for user (null data), initializing', { userId: user.id });
         await initializeCredits();
       }
     } catch (error) {
-      logError('Unexpected error in fetchBalance', error, { userId: user.id });
+      // Unexpected error - retry if possible
+      if (retryCount < MAX_RETRIES) {
+        logWarn(`Unexpected error in fetchBalance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount)));
+        return fetchBalance(retryCount + 1);
+      } else {
+        logError('Unexpected error in fetchBalance after retries', error, { userId: user.id });
+        // Don't reset credits on unexpected errors
+        if (!balance) {
+          toast.error('Unable to load credit balance. Please refresh the page.');
+        }
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Initialize credits for new users
-  const initializeCredits = async () => {
-    if (!user) return;
+  // Initialize credits for new users only
+  const initializeCredits = async (): Promise<boolean> => {
+    if (!user) return false;
 
     try {
       const { data, error } = await supabase.functions.invoke('credit-service', {
@@ -80,10 +110,16 @@ export function useCredits() {
 
       if (data?.success) {
         await fetchBalance();
-        toast.success('Welcome! You received 5 free credits to get started!');
+        // Only show welcome toast if this was a new initialization (not a re-initialization)
+        if (data?.isNewUser) {
+          toast.success('Welcome! You received 5 free credits to get started!');
+        }
+        return true;
       }
+      return false;
     } catch (error) {
       logError('Error initializing credits', error, { userId: user.id });
+      return false;
     }
   };
 

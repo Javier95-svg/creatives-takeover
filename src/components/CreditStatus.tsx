@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { CREDIT_COSTS } from "@/config/constants";
 
 interface CreditStatusProps {
   requiredCredits?: number;
@@ -12,7 +13,7 @@ interface CreditStatusProps {
 }
 
 export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true }: CreditStatusProps) {
-  const { balance, hasCredits, CREDIT_COSTS } = useCredits();
+  const { balance, hasCredits } = useCredits();
 
   const getStatusInfo = () => {
     if (requiredCredits && !hasCredits(requiredCredits)) {

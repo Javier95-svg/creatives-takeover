@@ -3,15 +3,51 @@
  * Centralized configuration values to avoid magic numbers
  */
 
-// Credit costs for various features
+// Credit costs for various features - SINGLE SOURCE OF TRUTH
+// All credit costs must be defined here and referenced from this file
 export const CREDIT_COSTS = {
+  // BizMap AI Features
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
+  
+  // AI Chat Features
   AI_CHAT_MESSAGE: 1,
+  
+  // Research & Analysis
   MARKET_RESEARCH: 10,
   FINANCIAL_ANALYSIS: 8,
+  
+  // Sprint & Task Features
+  SPRINT_TASK_GENERATION: 2,
+  
+  // Other Premium Features
+  PDF_EXPORT: 3,
+  ADVANCED_ANALYTICS: 5,
 } as const;
+
+// Type for credit cost feature names
+export type CreditFeature = keyof typeof CREDIT_COSTS;
+
+/**
+ * Get credit cost for a specific feature
+ * @param feature - The feature name (key from CREDIT_COSTS)
+ * @returns The credit cost, or null if feature doesn't consume credits
+ */
+export function getCreditCost(feature: CreditFeature | string): number | null {
+  if (feature in CREDIT_COSTS) {
+    return CREDIT_COSTS[feature as CreditFeature];
+  }
+  return null;
+}
+
+/**
+ * Get all credit costs as a readable object
+ * @returns Object with feature names and their costs
+ */
+export function getAllCreditCosts(): Record<string, number> {
+  return { ...CREDIT_COSTS };
+}
 
 // AI Model Configuration
 export const AI_CONFIG = {
