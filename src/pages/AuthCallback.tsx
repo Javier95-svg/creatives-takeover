@@ -43,10 +43,44 @@ const AuthCallback = () => {
         }
 
         if (session?.user) {
-          console.log('Auth successful, redirecting to home');
+          console.log('Auth successful, checking for return URL...');
           setStatus('success');
           toast.success('Successfully signed in!');
-          navigate('/');
+          
+          // Get return URL from localStorage (saved before OAuth redirect)
+          const returnUrl = localStorage.getItem('oauth_return_url') || '/';
+          const oauthSource = localStorage.getItem('oauth_source');
+          
+          // Restore BizMap progress if it exists
+          const savedBizMapProgress = localStorage.getItem('oauth_bizmap_progress');
+          if (savedBizMapProgress) {
+            localStorage.setItem('bizmap_progress', savedBizMapProgress);
+            localStorage.removeItem('oauth_bizmap_progress');
+          }
+          
+          // Clean up OAuth-related localStorage
+          localStorage.removeItem('oauth_return_url');
+          localStorage.removeItem('oauth_source');
+          
+          // Track OAuth signup if source exists
+          if (oauthSource && oauthSource !== 'direct') {
+            try {
+              const { trackActivity } = await import('@/lib/activity');
+              await trackActivity('user:signup_oauth', { provider: 'google', source: oauthSource });
+            } catch {}
+          }
+          
+          // Navigate to return URL or check for BizMap progress
+          if (returnUrl.includes('dream2plan') || savedBizMapProgress) {
+            toast.success("Restoring your business plan...");
+            setTimeout(() => {
+              navigate(returnUrl);
+            }, 500);
+          } else {
+            setTimeout(() => {
+              navigate(returnUrl);
+            }, 500);
+          }
         } else {
           console.log('No session found, redirecting to login');
           setStatus('error');
@@ -66,7 +100,21 @@ const AuthCallback = () => {
   // If user is already authenticated from context, redirect immediately
   useEffect(() => {
     if (user && status === 'success') {
-      navigate('/');
+      // Get return URL from localStorage
+      const returnUrl = localStorage.getItem('oauth_return_url') || '/';
+      
+      // Restore BizMap progress if it exists
+      const savedBizMapProgress = localStorage.getItem('oauth_bizmap_progress');
+      if (savedBizMapProgress) {
+        localStorage.setItem('bizmap_progress', savedBizMapProgress);
+        localStorage.removeItem('oauth_bizmap_progress');
+      }
+      
+      // Clean up OAuth-related localStorage
+      localStorage.removeItem('oauth_return_url');
+      localStorage.removeItem('oauth_source');
+      
+      navigate(returnUrl);
     }
   }, [user, navigate, status]);
 

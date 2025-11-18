@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield, Calendar as CalendarIcon } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -17,8 +17,7 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    dateOfBirth: ""
+    confirmPassword: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,8 +26,7 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    dateOfBirth: ""
+    confirmPassword: ""
   });
   
   const { signUp, user } = useAuth();
@@ -76,35 +74,20 @@ const Signup = () => {
     }
   };
 
-  // Calculate age from date of birth
-  const calculateAge = (dateOfBirth: string) => {
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  };
-
   // Form validation
   const validateForm = () => {
     const newErrors = {
       fullName: "",
       email: "",
       password: "",
-      confirmPassword: "",
-      dateOfBirth: ""
+      confirmPassword: ""
     };
 
-    // Full name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
+    // Full name validation (optional - only validate format if provided)
+    if (formData.fullName.trim()) {
+      if (formData.fullName.trim().length < 2) {
+        newErrors.fullName = "Full name must be at least 2 characters";
+      }
     }
 
     // Email validation
@@ -121,27 +104,13 @@ const Signup = () => {
       newErrors.password = "Password must be at least 8 characters";
     }
 
-    // Confirm password validation
-    if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
+    // Confirm password validation (optional - only validate if provided)
+    if (formData.confirmPassword.trim() && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    // Date of birth validation
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = "Date of birth is required";
-    } else {
-      const age = calculateAge(formData.dateOfBirth);
-      if (age < 18) {
-        newErrors.dateOfBirth = "You must be at least 18 years old to create an account";
-      } else if (age > 120) {
-        newErrors.dateOfBirth = "Please enter a valid date of birth";
-      }
-    }
-
     setErrors(newErrors);
-    return !newErrors.fullName && !newErrors.email && !newErrors.password && !newErrors.confirmPassword && !newErrors.dateOfBirth;
+    return !newErrors.fullName && !newErrors.email && !newErrors.password && !newErrors.confirmPassword;
   };
 
   // Handle form submission
@@ -155,7 +124,11 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.dateOfBirth);
+      const { error } = await signUp(
+        formData.email, 
+        formData.password, 
+        formData.fullName.trim() || undefined
+      );
       
       if (error) {
         toast.error(error.message || "Failed to create account. Please try again.");
@@ -178,11 +151,11 @@ const Signup = () => {
           toast.success("Restoring your business plan...");
           setTimeout(() => {
             navigate(conversionSource.returnUrl);
-          }, 1500);
+          }, 500);
         } else {
           setTimeout(() => {
             navigate(conversionSource.returnUrl);
-          }, 1500);
+          }, 500);
         }
       }
     } catch (error) {
@@ -205,6 +178,17 @@ const Signup = () => {
   const handleGoogleSignup = async () => {
     try {
       console.log("Starting Google OAuth signup...");
+      
+      // Save return URL and conversion source to localStorage before OAuth redirect
+      localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
+      localStorage.setItem('oauth_source', conversionSource.source);
+      
+      // Also save BizMap progress if it exists
+      const savedProgress = localStorage.getItem('bizmap_progress');
+      if (savedProgress) {
+        localStorage.setItem('oauth_bizmap_progress', savedProgress);
+      }
+      
       toast("Redirecting to Google...");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -276,7 +260,7 @@ const Signup = () => {
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
-                  Full name
+                  Full name <span className="text-muted-foreground text-xs font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -286,7 +270,7 @@ const Signup = () => {
                     type="text"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name"
+                    placeholder="Enter your full name (optional)"
                     className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
@@ -372,7 +356,7 @@ const Signup = () => {
               {/* Confirm Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm password
+                  Confirm password <span className="text-muted-foreground text-xs font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -382,7 +366,7 @@ const Signup = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    placeholder="Confirm your password"
+                    placeholder="Confirm your password (optional)"
                     className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
@@ -402,37 +386,14 @@ const Signup = () => {
                     )}
                   </button>
                 </div>
+                {!errors.confirmPassword && formData.confirmPassword && formData.password === formData.confirmPassword && (
+                  <p className="text-xs text-green-600">Passwords match ✓</p>
+                )}
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.confirmPassword}</p>
                 )}
-              </div>
-
-              {/* Date of Birth Field */}
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="text-sm font-medium">
-                  Date of birth
-                </Label>
-                <div className="relative">
-                  <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.dateOfBirth ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
-                    }`}
-                    disabled={isLoading}
-                    autoComplete="bday"
-                  />
-                </div>
-                {!errors.dateOfBirth && formData.dateOfBirth && (
-                  <p className="text-xs text-muted-foreground">You must be at least 18 years old</p>
-                )}
-                {errors.dateOfBirth && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.dateOfBirth}</p>
+                {!errors.confirmPassword && !formData.confirmPassword && (
+                  <p className="text-xs text-muted-foreground">Optional - helps prevent typos</p>
                 )}
               </div>
 

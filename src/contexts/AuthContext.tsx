@@ -162,7 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, dateOfBirth?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, dateOfBirth?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -171,8 +171,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          full_name: fullName,
-          date_of_birth: dateOfBirth,
+          full_name: fullName || '',
+          date_of_birth: dateOfBirth || null,
         }
       }
     });
@@ -180,7 +180,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!error) {
       try {
         await supabase.functions.invoke('send-welcome-email', {
-          body: { email, fullName }
+          body: { email, fullName: fullName || '' }
         });
       } catch (welcomeError) {
         logError('Welcome email failed', welcomeError, { email });
