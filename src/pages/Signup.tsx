@@ -17,8 +17,7 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    dateOfBirth: ""
+    confirmPassword: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,8 +26,7 @@ const Signup = () => {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    dateOfBirth: ""
+    confirmPassword: ""
   });
   
   const { signUp, user } = useAuth();
@@ -96,8 +94,7 @@ const Signup = () => {
       fullName: "",
       email: "",
       password: "",
-      confirmPassword: "",
-      dateOfBirth: ""
+      confirmPassword: ""
     };
 
     // Full name validation (optional - only validate if provided)
@@ -149,7 +146,12 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.fullName, formData.dateOfBirth);
+      const { error } = await signUp(
+        formData.email, 
+        formData.password, 
+        formData.fullName.trim() || undefined, 
+        formData.dateOfBirth || undefined
+      );
       
       if (error) {
         toast.error(error.message || "Failed to create account. Please try again.");
