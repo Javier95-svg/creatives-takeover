@@ -100,10 +100,8 @@ const Signup = () => {
       dateOfBirth: ""
     };
 
-    // Full name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    } else if (formData.fullName.trim().length < 2) {
+    // Full name validation (optional - only validate if provided)
+    if (formData.fullName.trim() && formData.fullName.trim().length < 2) {
       newErrors.fullName = "Full name must be at least 2 characters";
     }
 
@@ -121,17 +119,13 @@ const Signup = () => {
       newErrors.password = "Password must be at least 8 characters";
     }
 
-    // Confirm password validation
-    if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
+    // Confirm password validation (optional - only validate if provided)
+    if (formData.confirmPassword.trim() && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    // Date of birth validation
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = "Date of birth is required";
-    } else {
+    // Date of birth validation (optional - only validate if provided)
+    if (formData.dateOfBirth) {
       const age = calculateAge(formData.dateOfBirth);
       if (age < 18) {
         newErrors.dateOfBirth = "You must be at least 18 years old to create an account";
@@ -178,11 +172,11 @@ const Signup = () => {
           toast.success("Restoring your business plan...");
           setTimeout(() => {
             navigate(conversionSource.returnUrl);
-          }, 1500);
+          }, 500);
         } else {
           setTimeout(() => {
             navigate(conversionSource.returnUrl);
-          }, 1500);
+          }, 500);
         }
       }
     } catch (error) {
@@ -205,6 +199,17 @@ const Signup = () => {
   const handleGoogleSignup = async () => {
     try {
       console.log("Starting Google OAuth signup...");
+      
+      // Save return URL and conversion source to localStorage before OAuth redirect
+      localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
+      localStorage.setItem('oauth_source', conversionSource.source);
+      
+      // Also save BizMap progress if it exists
+      const savedProgress = localStorage.getItem('bizmap_progress');
+      if (savedProgress) {
+        localStorage.setItem('oauth_bizmap_progress', savedProgress);
+      }
+      
       toast("Redirecting to Google...");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -276,7 +281,7 @@ const Signup = () => {
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
-                  Full name
+                  Full name <span className="text-muted-foreground text-xs font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -286,7 +291,7 @@ const Signup = () => {
                     type="text"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name"
+                    placeholder="Enter your full name (optional)"
                     className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
@@ -372,7 +377,7 @@ const Signup = () => {
               {/* Confirm Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm password
+                  Confirm password <span className="text-muted-foreground text-xs font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -382,7 +387,7 @@ const Signup = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    placeholder="Confirm your password"
+                    placeholder="Confirm your password (optional)"
                     className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
@@ -402,15 +407,21 @@ const Signup = () => {
                     )}
                   </button>
                 </div>
+                {!errors.confirmPassword && formData.confirmPassword && formData.password === formData.confirmPassword && (
+                  <p className="text-xs text-green-600">Passwords match ✓</p>
+                )}
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.confirmPassword}</p>
+                )}
+                {!errors.confirmPassword && !formData.confirmPassword && (
+                  <p className="text-xs text-muted-foreground">Optional - helps prevent typos</p>
                 )}
               </div>
 
               {/* Date of Birth Field */}
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth" className="text-sm font-medium">
-                  Date of birth
+                  Date of birth <span className="text-muted-foreground text-xs font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
                   <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -430,6 +441,9 @@ const Signup = () => {
                 </div>
                 {!errors.dateOfBirth && formData.dateOfBirth && (
                   <p className="text-xs text-muted-foreground">You must be at least 18 years old</p>
+                )}
+                {!errors.dateOfBirth && !formData.dateOfBirth && (
+                  <p className="text-xs text-muted-foreground">Optional - helps us personalize your experience</p>
                 )}
                 {errors.dateOfBirth && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.dateOfBirth}</p>
