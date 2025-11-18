@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS } from '@/config/constants';
 import type { LaunchRoadmap, RoadmapTask, WeekMilestone } from '@/types/founderOS';
 
 export const useLaunchRoadmap = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { hasCredits } = useCredits();
   const [roadmap, setRoadmap] = useState<LaunchRoadmap | null>(null);
   const [tasks, setTasks] = useState<RoadmapTask[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,6 +71,17 @@ export const useLaunchRoadmap = () => {
       return null;
     }
 
+    // Check credits before proceeding
+    const requiredCredits = CREDIT_COSTS.ROADMAP_GENERATION;
+    if (!hasCredits(requiredCredits)) {
+      toast({
+        title: "Insufficient Credits",
+        description: `Roadmap generation requires ${requiredCredits} credits. Please purchase more credits.`,
+        variant: "destructive",
+      });
+      return null;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -84,14 +98,37 @@ export const useLaunchRoadmap = () => {
         },
       });
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        // Handle credit errors specifically
+        if (functionError.status === 402 || (functionError.message && functionError.message.includes('credits'))) {
+          toast({
+            title: "Insufficient Credits",
+            description: `Roadmap generation requires ${requiredCredits} credits. Please purchase more credits.`,
+            variant: "destructive",
+          });
+          return null;
+        }
+        throw functionError;
+      }
+
+      if (data?.error) {
+        if (data.error.includes('credits') || data.required) {
+          toast({
+            title: "Insufficient Credits",
+            description: `Roadmap generation requires ${data.required || requiredCredits} credits. Please purchase more credits.`,
+            variant: "destructive",
+          });
+          return null;
+        }
+        throw new Error(data.error);
+      }
 
       if (data?.roadmap) {
         setRoadmap(data.roadmap);
         setTasks(data.tasks || []);
         toast({
           title: "Roadmap Created",
-          description: "Your 30-day launch roadmap is ready!",
+          description: `Your 30-day launch roadmap is ready! (Used ${requiredCredits} credits)`,
         });
         return data.roadmap;
       }
@@ -101,11 +138,13 @@ export const useLaunchRoadmap = () => {
       console.error('Error creating roadmap:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to create roadmap';
       setError(errorMessage);
-      toast({
-        title: "Creation Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (!errorMessage.includes('credits')) {
+        toast({
+          title: "Creation Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
       return null;
     } finally {
       setLoading(false);

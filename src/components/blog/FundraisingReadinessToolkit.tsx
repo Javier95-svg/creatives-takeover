@@ -12,6 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditGate } from "@/components/CreditGate";
+import { CREDIT_COSTS } from "@/config/constants";
 
 interface Criterion {
   id: string;
@@ -179,6 +182,7 @@ const scoreLabels: { [key: number]: string } = {
 const FundraisingReadinessToolkit = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { hasCredits, balance } = useCredits();
   const [scores, setScores] = useState<{ [key: string]: number }>({
     mvp: 0,
     feedback: 0,
@@ -189,6 +193,7 @@ const FundraisingReadinessToolkit = () => {
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [creditGateOpen, setCreditGateOpen] = useState(false);
 
   const averageScore = useMemo(() => {
     const scoreValues = Object.values(scores);
@@ -233,6 +238,13 @@ const FundraisingReadinessToolkit = () => {
       return;
     }
 
+    // Check credits before proceeding
+    const requiredCredits = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
+    if (!hasCredits(requiredCredits)) {
+      setCreditGateOpen(true);
+      return;
+    }
+
     setIsAnalyzing(true);
     setAnalysisError(null);
 
@@ -247,20 +259,31 @@ const FundraisingReadinessToolkit = () => {
       });
 
       if (error) {
+        // Handle credit errors specifically
+        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
+          setCreditGateOpen(true);
+          throw new Error('Insufficient credits');
+        }
         throw error;
       }
 
-      if (data.error) {
+      if (data?.error) {
+        if (data.error.includes('credits') || data.required) {
+          setCreditGateOpen(true);
+          throw new Error('Insufficient credits');
+        }
         throw new Error(data.error);
       }
 
       setAiAnalysis(data as AIAnalysis);
-      toast.success("Analysis complete!");
+      toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
     } catch (error) {
       console.error('Analysis error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
       setAnalysisError(errorMessage);
-      toast.error(errorMessage);
+      if (!errorMessage.includes('credits')) {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -615,6 +638,13 @@ const FundraisingReadinessToolkit = () => {
           </Card>
         )}
       </div>
+
+      <CreditGate
+        isOpen={creditGateOpen}
+        onClose={() => setCreditGateOpen(false)}
+        requiredCredits={CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS}
+        feature="Fundraising Readiness Analysis"
+      />
     </section>
   );
 };

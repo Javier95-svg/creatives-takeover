@@ -16,10 +16,14 @@ export const CREDIT_COSTS = {
   
   // Research & Analysis
   MARKET_RESEARCH: 10,
+  MARKET_VALIDATION: 10,
   FINANCIAL_ANALYSIS: 8,
+  FUNDRAISING_READINESS_ANALYSIS: 8,
+  BUSINESS_INSIGHTS: 5,
   
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
+  ROADMAP_GENERATION: 5,
   
   // Other Premium Features
   PDF_EXPORT: 3,

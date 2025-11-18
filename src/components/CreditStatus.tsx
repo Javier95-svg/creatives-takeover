@@ -57,11 +57,40 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
   const getCreditCostMessage = () => {
     if (!feature) return '';
     
-    if (feature.toLowerCase().includes('launch report')) {
+    const featureLower = feature.toLowerCase();
+    
+    if (featureLower.includes('launch report')) {
       return ` Launch reports cost ${CREDIT_COSTS.LAUNCH_REPORT} credits each.`;
     }
-    if (feature.toLowerCase().includes('asset')) {
+    if (featureLower.includes('asset')) {
       return ` Asset generation costs ${CREDIT_COSTS.ASSET_GENERATION} credits each.`;
+    }
+    if (featureLower.includes('fundraising') || featureLower.includes('readiness')) {
+      return ` Fundraising readiness analysis costs ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits.`;
+    }
+    if (featureLower.includes('roadmap')) {
+      return ` Roadmap generation costs ${CREDIT_COSTS.ROADMAP_GENERATION} credits.`;
+    }
+    if (featureLower.includes('market validation') || featureLower.includes('validation')) {
+      return ` Market validation costs ${CREDIT_COSTS.MARKET_VALIDATION} credits.`;
+    }
+    if (featureLower.includes('business insights') || featureLower.includes('insights')) {
+      return ` Business insights generation costs ${CREDIT_COSTS.BUSINESS_INSIGHTS} credits.`;
+    }
+    if (featureLower.includes('sprint') || featureLower.includes('task generation')) {
+      return ` Sprint task generation costs ${CREDIT_COSTS.SPRINT_TASK_GENERATION} credits.`;
+    }
+    if (featureLower.includes('pdf') || featureLower.includes('export')) {
+      return ` PDF export costs ${CREDIT_COSTS.PDF_EXPORT} credits.`;
+    }
+    if (featureLower.includes('chat') || featureLower.includes('message')) {
+      return ` AI chat messages cost ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit each.`;
+    }
+    if (featureLower.includes('market research')) {
+      return ` Market research costs ${CREDIT_COSTS.MARKET_RESEARCH} credits.`;
+    }
+    if (featureLower.includes('financial')) {
+      return ` Financial analysis costs ${CREDIT_COSTS.FINANCIAL_ANALYSIS} credits.`;
     }
     return '';
   };

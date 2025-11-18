@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Credit cost for business insights generation - must match CREDIT_COSTS.BUSINESS_INSIGHTS in constants.ts
+const BUSINESS_INSIGHTS_CREDIT_COST = 5;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,7 +27,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check cache first
+    // Check cache first (free if cached)
     const cacheKey = `${industry}-${businessStage || 'general'}`;
     const { data: cachedInsights } = await supabase
       .from('business_insights_cache')
@@ -42,6 +46,40 @@ serve(async (req) => {
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Authenticate user (only needed for new generation)
+    const user = await getUserFromAuth(req);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and deduct credits before generating new insights
+    const creditCheck = await checkAndDeductCredits(
+      user.id,
+      BUSINESS_INSIGHTS_CREDIT_COST,
+      'Business Insights Generation',
+      undefined,
+      { industry, businessStage }
+    );
+
+    if (!creditCheck.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: creditCheck.error || 'Insufficient credits',
+          required: BUSINESS_INSIGHTS_CREDIT_COST
+        }),
+        { 
+          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Get market intelligence data

@@ -196,12 +196,16 @@ export function CreditGate({
             <div className="space-y-1 text-muted-foreground">
               <div>• Launch Report: {CREDIT_COSTS.LAUNCH_REPORT} credits</div>
               <div>• Asset Generation: {CREDIT_COSTS.ASSET_GENERATION} credits each</div>
-              <div>• Premium Features: {CREDIT_COSTS.PREMIUM_FEATURE} credits</div>
+              <div>• Fundraising Readiness Analysis: {CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits</div>
+              <div>• Roadmap Generation: {CREDIT_COSTS.ROADMAP_GENERATION} credits</div>
+              <div>• Market Validation: {CREDIT_COSTS.MARKET_VALIDATION} credits</div>
+              <div>• Business Insights: {CREDIT_COSTS.BUSINESS_INSIGHTS} credits</div>
+              <div>• Sprint Task Generation: {CREDIT_COSTS.SPRINT_TASK_GENERATION} credits</div>
+              <div>• PDF Export: {CREDIT_COSTS.PDF_EXPORT} credits</div>
               <div>• AI Chat Message: {CREDIT_COSTS.AI_CHAT_MESSAGE} credit</div>
               <div>• Market Research: {CREDIT_COSTS.MARKET_RESEARCH} credits</div>
               <div>• Financial Analysis: {CREDIT_COSTS.FINANCIAL_ANALYSIS} credits</div>
-              <div>• Sprint Task Generation: {CREDIT_COSTS.SPRINT_TASK_GENERATION} credits</div>
-              <div>• PDF Export: {CREDIT_COSTS.PDF_EXPORT} credits</div>
+              <div>• Premium Features: {CREDIT_COSTS.PREMIUM_FEATURE} credits</div>
               <div>• Advanced Analytics: {CREDIT_COSTS.ADVANCED_ANALYTICS} credits</div>
             </div>
           </div>

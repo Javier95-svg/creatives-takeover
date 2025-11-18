@@ -2,11 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useCredits } from '@/hooks/useCredits';
+import { CREDIT_COSTS } from '@/config/constants';
 import { MarketValidationScore } from '@/types/founderOS';
 
 export const useMarketValidation = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { hasCredits } = useCredits();
 
   // Fetch validation scores
   const { data: validationScores = [], isLoading } = useQuery({
@@ -50,6 +53,12 @@ export const useMarketValidation = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
+      // Check credits before proceeding
+      const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
+      if (!hasCredits(requiredCredits)) {
+        throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
+      }
+
       const { data, error } = await supabase.functions.invoke('market-validation-engine', {
         body: {
           business_idea: params.business_idea,
@@ -59,15 +68,34 @@ export const useMarketValidation = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle credit errors specifically
+        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
+          throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
+        }
+        throw error;
+      }
+
+      if (data?.error) {
+        if (data.error.includes('credits') || data.required) {
+          throw new Error(`Insufficient credits. Market validation requires ${data.required || requiredCredits} credits.`);
+        }
+        throw new Error(data.error);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['market-validation'] });
-      toast.success('Market validation completed');
+      toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
     },
     onError: (error) => {
-      toast.error('Failed to validate market');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to validate market';
+      if (errorMessage.includes('credits')) {
+        toast.error(errorMessage);
+      } else {
+        toast.error('Failed to validate market');
+      }
       console.error('Error validating market:', error);
     },
   });

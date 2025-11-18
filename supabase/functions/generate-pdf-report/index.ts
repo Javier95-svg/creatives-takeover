@@ -3,11 +3,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { withErrorBoundary, logInfo } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Credit cost for PDF export - must match CREDIT_COSTS.PDF_EXPORT in constants.ts
+const PDF_EXPORT_CREDIT_COST = 3;
 
 interface PDFRequest {
   reportContent: string;
@@ -30,27 +34,36 @@ serve(withErrorBoundary(async (req: Request) => {
   }
 
   return withIdempotency(req, 'generate-pdf-report', async () => {
-    // Get authenticated user
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Authentication required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    // Authenticate user
+    const user = await getUserFromAuth(req);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: userData, error: authError } = await supabaseClient.auth.getUser(token);
-    
-    if (authError || !userData.user) {
-      return new Response(JSON.stringify({ error: 'Invalid authentication' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    // Check and deduct credits before processing
+    const creditCheck = await checkAndDeductCredits(
+      user.id,
+      PDF_EXPORT_CREDIT_COST,
+      'PDF Export'
+    );
+
+    if (!creditCheck.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: creditCheck.error || 'Insufficient credits',
+          required: PDF_EXPORT_CREDIT_COST
+        }),
+        { 
+          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const { reportContent, businessName, userAnswers, successScore }: PDFRequest = await req.json();

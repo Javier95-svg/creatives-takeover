@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Credit cost for roadmap generation - must match CREDIT_COSTS.ROADMAP_GENERATION in constants.ts
+const ROADMAP_GENERATION_CREDIT_COST = 5;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,14 +27,43 @@ serve(async (req) => {
 
     console.log('Generating roadmap for:', { business_idea, industry, start_date, hasWizardAnswers: !!wizard_answers });
 
+    // Authenticate user
+    const user = await getUserFromAuth(req);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and deduct credits before processing
+    const creditCheck = await checkAndDeductCredits(
+      user.id,
+      ROADMAP_GENERATION_CREDIT_COST,
+      'Roadmap Generation',
+      session_id,
+      { business_idea, industry, user_experience_level }
+    );
+
+    if (!creditCheck.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: creditCheck.error || 'Insufficient credits',
+          required: ROADMAP_GENERATION_CREDIT_COST
+        }),
+        { 
+          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const authHeader = req.headers.get('Authorization');
-    const { data: { user } } = await supabase.auth.getUser(authHeader?.replace('Bearer ', '') || '');
-    
-    if (!user) throw new Error('Authentication required');
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');

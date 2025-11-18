@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Credit cost for market validation - must match CREDIT_COSTS.MARKET_VALIDATION in constants.ts
+const MARKET_VALIDATION_CREDIT_COST = 10;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,23 +20,44 @@ serve(async (req) => {
 
     console.log('Starting market validation for:', { business_idea, industry, target_market });
 
+    // Authenticate user
+    const user = await getUserFromAuth(req);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and deduct credits before processing
+    const creditCheck = await checkAndDeductCredits(
+      user.id,
+      MARKET_VALIDATION_CREDIT_COST,
+      'Market Validation',
+      session_id,
+      { business_idea, industry, target_market }
+    );
+
+    if (!creditCheck.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: creditCheck.error || 'Insufficient credits',
+          required: MARKET_VALIDATION_CREDIT_COST
+        }),
+        { 
+          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
-    let userId: string | null = null;
-    
-    if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-      userId = user?.id || null;
-    }
-
-    if (!userId) {
-      throw new Error('Authentication required');
-    }
 
     // Use Lovable AI to analyze market potential
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
