@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { useChatbot, ChatMessage } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShareToCommunityDialog } from "./chatbot/ShareToCommunityDialog";
-import { WizardConversionPrompt } from "./chatbot/WizardConversionPrompt";
 import { useNavigate } from "react-router-dom";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { useCofounderPersonality } from "@/hooks/useCofounderPersonality";
@@ -132,7 +131,6 @@ export const BizMapChat = ({
   const [celebrationMode, setCelebrationMode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
-  const [showCompletionGate, setShowCompletionGate] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -241,37 +239,9 @@ export const BizMapChat = ({
       // User is authenticated, don't show prompts
       setShowInlineBanner(false);
       setShowModal(false);
-      setShowCompletionGate(false);
       return;
     }
-
-    // Step 5: Show BLOCKING gate for non-authenticated users
-    if (currentStep === 4 && !user && chatMode === 'wizard') {
-      setShowCompletionGate(true);
-      trackConversionEvent('shown', 5);
-    }
   }, [currentStep, user, chatMode, trackConversionEvent]);
-
-  // Handle conversion actions
-  const handleSignUpClick = () => {
-    // Save current progress to localStorage for non-authenticated users
-    const progress = {
-      step: currentStep,
-      answers,
-      timestamp: Date.now()
-    };
-    localStorage.setItem('bizmap_progress', JSON.stringify(progress));
-    
-    trackConversionEvent('converted', currentStep + 1);
-    navigate(`/signup?source=bizmap-step-${currentStep + 1}&return=/bizmap-ai`);
-  };
-
-  const handleDismiss = () => {
-    setShowInlineBanner(false);
-    setShowModal(false);
-    // Note: Completion gate cannot be dismissed
-    trackConversionEvent('dismissed', currentStep + 1);
-  };
 
   // 🚀 OPTIMIZATION: Request deduplication - prevent duplicate sends
   const lastSentMessage = useRef<string>('');
@@ -334,24 +304,8 @@ export const BizMapChat = ({
           </div>
         )}
         
-        {/* Conversion Prompts */}
-        <WizardConversionPrompt
-          step={currentStep}
-          triggerStep={4}
-          variant="completion-gate"
-          show={showCompletionGate}
-          onDismiss={() => {}}
-          onSignUp={handleSignUpClick}
-        />
-        
-
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative">
-        {/* Visual overlay when gate is active */}
-        {!user && currentStep >= 4 && chatMode === 'wizard' && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-10 pointer-events-none" />
-        )}
-        
         {messages.map((msg, index) => (
           <div
             key={msg.id}
@@ -486,16 +440,13 @@ export const BizMapChat = ({
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={
-              !user && currentStep >= 4 && chatMode === 'wizard'
-                ? "Sign up to continue your 30-day roadmap..."
-                : chatMode === 'freeform' 
-                  ? "Ask me anything about your business..." 
-                  : getCurrentPlaceholder()
+              chatMode === 'freeform' 
+                ? "Ask me anything about your business..." 
+                : getCurrentPlaceholder()
             }
             disabled={
               isTyping || 
-              isStreaming || 
-              (!user && currentStep >= 4 && chatMode === 'wizard')
+              isStreaming
             }
             className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
           />
@@ -512,8 +463,7 @@ export const BizMapChat = ({
             disabled={
               (!message.trim() && attachedFiles.length === 0) || 
               isTyping || 
-              isStreaming ||
-              (!user && currentStep >= 4 && chatMode === 'wizard')
+              isStreaming
             }
             size="icon"
             className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
