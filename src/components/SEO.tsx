@@ -67,16 +67,24 @@ const SEO = ({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={fullUrl} />
       <meta property="og:image" content={fullImageUrl} />
+      <meta property="og:image:secure_url" content={fullImageUrl} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={optimizedTitle} />
+      <meta property="og:locale" content="en_US" />
       <meta property="og:site_name" content="Creatives Takeover" />
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
       {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+      {author && type === 'article' && <meta property="article:author" content={author} />}
       
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={optimizedTitle} />
       <meta name="twitter:description" content={optimizedDescription} />
       <meta name="twitter:image" content={fullImageUrl} />
+      <meta name="twitter:image:alt" content={optimizedTitle} />
       <meta name="twitter:site" content="@CreativesTakeover" />
+      <meta name="twitter:creator" content="@CreativesTakeover" />
       
       {/* Structured Data (JSON-LD) */}
       {structuredData && (
@@ -223,4 +231,145 @@ export const createSoftwareSchema = () => ({
     "ratingValue": "4.8",
     "ratingCount": "15000"
   }
+});
+
+// Helper function to create AboutPage schema
+export const createAboutPageSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About Creatives Takeover",
+  "description": "Learn about Creatives Takeover's mission and vision to empower creators and solopreneurs with AI and no-code solutions.",
+  "url": "https://creatives-takeover.com/about",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "Creatives Takeover",
+    "url": "https://creatives-takeover.com",
+    "logo": "https://creatives-takeover.com/lovable-uploads/new-favicon.png",
+    "description": "The creative entrepreneur's AI co-founder. Go from scattered ideas to profitable launch in 30 days.",
+    "sameAs": [
+      "https://twitter.com/CreativesTakeover",
+      "https://linkedin.com/company/creatives-takeover",
+      "https://www.instagram.com/creativestakeover.official/",
+      "https://www.youtube.com/@CreativesTakeover"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Support",
+      "email": "admin@creatives-takeover.com"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "71-75, Shelton Street",
+      "addressLocality": "Covent Garden",
+      "addressRegion": "London",
+      "postalCode": "WC2H 9JQ",
+      "addressCountry": "GB"
+    }
+  }
+});
+
+// Helper function to create Service/ServiceList schema
+export const createServiceSchema = (services?: Array<{ name: string; description: string }>) => {
+  if (services && services.length > 0) {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Creative Subscription Service",
+      "name": "Creatives Takeover Services",
+      "description": "Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Creatives Takeover",
+        "url": "https://creatives-takeover.com"
+      },
+      "areaServed": "Worldwide",
+      "availableChannel": {
+        "@type": "ServiceChannel",
+        "serviceUrl": "https://creatives-takeover.com/services"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Creative Services",
+        "itemListElement": services.map((service, index) => ({
+          "@type": "OfferCatalogItem",
+          "position": index + 1,
+          "itemOffered": {
+            "@type": "Service",
+            "name": service.name,
+            "description": service.description
+          }
+        }))
+      }
+    };
+  }
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": "Creative Subscription Service",
+    "name": "Creatives Takeover Services",
+    "description": "Transform your creative workflow with our creative subscription service. Unlimited design access, AI-powered tools, and premium features for modern creatives.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Creatives Takeover",
+      "url": "https://creatives-takeover.com"
+    },
+    "areaServed": "Worldwide",
+    "availableChannel": {
+      "@type": "ServiceChannel",
+      "serviceUrl": "https://creatives-takeover.com/services"
+    }
+  };
+};
+
+// Helper function to create LocalBusiness/ContactPage schema
+export const createLocalBusinessSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Creatives Takeover",
+  "image": "https://creatives-takeover.com/lovable-uploads/new-favicon.png",
+  "url": "https://creatives-takeover.com",
+  "telephone": "",
+  "email": "admin@creatives-takeover.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "71-75, Shelton Street",
+    "addressLocality": "Covent Garden",
+    "addressRegion": "London",
+    "postalCode": "WC2H 9JQ",
+    "addressCountry": "GB"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "51.5134",
+    "longitude": "-0.1236"
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "opens": "09:00",
+    "closes": "17:00"
+  },
+  "sameAs": [
+    "https://twitter.com/CreativesTakeover",
+    "https://linkedin.com/company/creatives-takeover",
+    "https://www.instagram.com/creativestakeover.official/",
+    "https://www.youtube.com/@CreativesTakeover"
+  ]
+});
+
+// Helper function to create ContactPage schema
+export const createContactPageSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": "Contact Creatives Takeover",
+  "description": "Contact Creatives Takeover. We're here to help with product questions, partnerships, and support.",
+  "url": "https://creatives-takeover.com/contact",
+  "mainEntity": createLocalBusinessSchema()
 });

@@ -1,15 +1,28 @@
-import { Helmet } from "react-helmet-async";
+import SEO, { createContactPageSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 
 const Contact = () => {
+  // Structured data for Contact page
+  const structuredData = [
+    createContactPageSchema(),
+    createBreadcrumbSchema([
+      { name: 'Home', url: '/' },
+      { name: 'Contact', url: '/contact' }
+    ])
+  ];
+
   return (
     <>
-      <Helmet>
-        <title>Creatives Takeover</title>
-        <meta name="description" content="Contact Creatives Takeover. We're here to help with product questions, partnerships, and support." />
-        <link rel="canonical" href="/contact" />
-      </Helmet>
+      <SEO
+        title="Contact Creatives Takeover - Get In Touch"
+        description="Contact Creatives Takeover. We're here to help with product questions, partnerships, and support. Reach out and we'll get back within 1-2 business days."
+        keywords="contact Creatives Takeover, support, customer service, partnerships, business inquiries, creative platform support"
+        url="/contact"
+        canonical="https://creatives-takeover.com/contact"
+        image="/lovable-uploads/new-favicon.png"
+        structuredData={structuredData}
+      />
       <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-6 py-24">
