@@ -38,7 +38,6 @@ import { BookOpen } from "lucide-react";
 import { trackActivity } from "@/lib/activity";
 import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
-import { useMarketValidation } from "@/hooks/useMarketValidation";
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -75,11 +74,6 @@ const BizMapAI = () => {
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
   const [showExamplesModal, setShowExamplesModal] = useState(false);
-  const [validationResults, setValidationResults] = useState<any>(null);
-  const [isValidating, setIsValidating] = useState(false);
-  
-  // Market Validation Hook
-  const { validation, loading: validationLoading, runValidation: runMarketValidation } = useMarketValidation(currentSessionId || undefined);
   
   // Founder OS Integration
   const { 
@@ -90,46 +84,6 @@ const BizMapAI = () => {
     runValidation,
     generateRoadmap
   } = useFounderOSIntegration();
-  
-  // Auto-trigger validation when problem + solution steps are complete
-  useEffect(() => {
-    // Trigger validation after step 3 (problem) if both problem and solution are filled
-    if (
-      userAnswers.problem && 
-      userAnswers.solution && 
-      userAnswers.market && 
-      userAnswers.overview &&
-      currentStep >= 3 && // After problem step (step index 3)
-      !validationResults && // Haven't validated yet
-      !isValidating && // Not currently validating
-      !validationLoading && // Not already loading
-      user && // User is authenticated
-      currentSessionId // Session exists
-    ) {
-      setIsValidating(true);
-      runMarketValidation(
-        userAnswers.overview || userAnswers.solution,
-        'General', // Can extract from answers later
-        userAnswers.market
-      ).then((result) => {
-        if (result) {
-          setValidationResults(result);
-          toast.success(`🎯 Market Validation Complete! Score: ${result.overall_validation_score}/100`);
-        }
-        setIsValidating(false);
-      }).catch((error) => {
-        console.error('Auto-validation error:', error);
-        setIsValidating(false);
-      });
-    }
-  }, [userAnswers.problem, userAnswers.solution, userAnswers.market, userAnswers.overview, currentStep, user, currentSessionId, validationResults, isValidating, validationLoading, runMarketValidation]);
-  
-  // Update validation results when hook updates
-  useEffect(() => {
-    if (validation && !validationResults) {
-      setValidationResults(validation);
-    }
-  }, [validation, validationResults]);
   
   // Sprint Planner handlers
   const handleSprintCreated = (sprintId: string) => {
