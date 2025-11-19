@@ -98,7 +98,7 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Transform your idea into an investable, revenue-driving business. Use the Dashboard, BizMap AI, Prompt Library, Community, and Insighta to guide every step. The perfect ecosystem for early-stage founders and entrepreneurs serious about building a lasting venture.
+            Transform your idea into an investable, revenue-driving business. The perfect ecosystem for early-stage founders and entrepreneurs serious about building a lasting venture.
           </p>
         </div>
 
