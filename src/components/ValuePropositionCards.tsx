@@ -28,7 +28,7 @@ const ValuePropositionCards = () => {
       title: "EXPLORE",
       subtitle: "Prompt Library",
       description: "Discover tested prompt-chains from uprising industries. Jumpstart your business planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to use in your BizMap AI journey.",
-      cta: "Explore Prompts",
+      cta: "Learn Prompts",
       link: "/prompt-library",
       gradient: "from-purple-500/20 to-purple-500/5"
     },
@@ -46,7 +46,7 @@ const ValuePropositionCards = () => {
       title: "FUNDRAISE",
       subtitle: "Insighta",
       description: "Access exclusive funding opportunities and accelerator programs. Learn from founders who've secured investment and get the resources to scale your creative business.",
-      cta: "Leverage Insighta",
+      cta: "Explore Insighta",
       link: "/insighta",
       gradient: "from-accent/20 to-accent/5"
     }
