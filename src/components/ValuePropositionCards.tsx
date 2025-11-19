@@ -27,7 +27,7 @@ const ValuePropositionCards = () => {
       icon: Sparkles,
       title: "EXPLORE",
       subtitle: "Prompt Library",
-      description: "Discover battle-tested prompts and business ideas from successful founders. Jumpstart your planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to use in your BizMap AI journey.",
+      description: "Discover tested prompt-chains from uprising industries. Jumpstart your business planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to use in your BizMap AI journey.",
       cta: "Explore Prompts",
       link: "/prompt-library",
       gradient: "from-purple-500/20 to-purple-500/5"
