@@ -2,17 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Rocket } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const SocialProof = () => {
-  // Typing animation for description
-  const descriptionText = "Startup creation is exploding. Global Entrepreneurship Monitor and Crunchbase data show a record surge in new business formation.";
-  const { displayedText, isTyping } = useTypingAnimation({
-    text: descriptionText,
-    speed: 40,
-    startDelay: 500
-  });
-
   // Startup creation growth data (based on Global Entrepreneurship Monitor, Crunchbase, and industry reports)
   const startupGrowthData = [
     { year: '2020', startups: 1.2, creative: 0.3 },
@@ -66,10 +57,7 @@ const SocialProof = () => {
             <span className="gradient-text">AI Is Lowering the Barrier to Launch a Startup</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            {displayedText}
-            {isTyping && (
-              <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
-            )}
+            Startup creation is exploding. Global Entrepreneurship Monitor and Crunchbase data show a record surge in new business formation.
           </p>
         </div>
 
