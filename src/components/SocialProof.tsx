@@ -64,58 +64,81 @@ const SocialProof = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Startup Growth Chart */}
-          <Card className="border-border animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <Card className="border-border animate-fade-in hover:shadow-xl transition-all duration-500 group" style={{ animationDelay: '0.2s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary animate-pulse" />
+                <TrendingUp className="w-5 h-5 text-primary animate-pulse group-hover:scale-110 transition-transform duration-300" />
                 Startup Creation Growth
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={startupGrowthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <defs>
+                    <linearGradient id="startupsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                    </linearGradient>
+                    <linearGradient id="creativeGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={1} />
+                      <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0.6} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="hsl(var(--border))" 
+                    opacity={0.3}
+                    className="animate-pulse"
+                    style={{ animationDuration: '3s' }}
+                  />
                   <XAxis 
                     dataKey="year" 
                     stroke="hsl(var(--muted-foreground))"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    animationDuration={800}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    animationDuration={800}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                   />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
+                      transition: 'all 0.3s ease'
                     }}
-                    animationDuration={200}
+                    animationDuration={300}
+                    animationEasing="ease-out"
+                    cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
                   />
                   <Bar 
                     dataKey="startups" 
-                    fill="hsl(var(--primary))" 
+                    fill="url(#startupsGradient)" 
                     name="Total Startups (M)" 
                     radius={[8, 8, 0, 0]}
                     animationBegin={0}
-                    animationDuration={1200}
+                    animationDuration={1500}
                     animationEasing="ease-out"
+                    className="hover:opacity-80 transition-opacity duration-200"
                   />
                   <Bar 
                     dataKey="creative" 
-                    fill="hsl(var(--chart-2))" 
+                    fill="url(#creativeGradient)" 
                     name="Creative Startups (M)" 
                     radius={[8, 8, 0, 0]}
-                    animationBegin={200}
-                    animationDuration={1200}
+                    animationBegin={300}
+                    animationDuration={1500}
                     animationEasing="ease-out"
+                    className="hover:opacity-80 transition-opacity duration-200"
                   />
                 </BarChart>
               </ResponsiveContainer>
-              <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '1.4s' }}>
+              <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '1.8s' }}>
                 <p className="text-sm text-muted-foreground">
                   Creative startups growing <span className="font-semibold text-foreground animate-pulse">67% faster</span> than overall market
                 </p>
@@ -127,17 +150,34 @@ const SocialProof = () => {
           </Card>
 
           {/* Monthly Growth Trend */}
-          <Card className="border-border animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <Card className="border-border animate-fade-in hover:shadow-xl transition-all duration-500 group" style={{ animationDelay: '0.4s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-primary animate-bounce" style={{ animationDuration: '2s', animationIterationCount: 'infinite' }} />
+                <Rocket className="w-5 h-5 text-primary animate-bounce group-hover:scale-110 transition-transform duration-300" style={{ animationDuration: '2s', animationIterationCount: 'infinite' }} />
                 Monthly Startup Creation (2024-2025)
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={monthlyGrowthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                      <stop offset="50%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                    </linearGradient>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="hsl(var(--border))" 
+                    opacity={0.3}
+                    className="animate-pulse"
+                    style={{ animationDuration: '3s' }}
+                  />
                   <XAxis 
                     dataKey="month" 
                     stroke="hsl(var(--muted-foreground))"
@@ -146,37 +186,55 @@ const SocialProof = () => {
                     textAnchor="end"
                     height={80}
                     interval={0}
-                    animationDuration={800}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    animationDuration={800}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                   />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
+                      transition: 'all 0.3s ease'
                     }}
-                    animationDuration={200}
+                    animationDuration={300}
+                    animationEasing="ease-out"
+                    cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 2, strokeDasharray: '5 5' }}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="startups" 
-                    stroke="hsl(var(--primary))" 
+                    stroke="url(#lineGradient)" 
                     strokeWidth={3}
-                    dot={{ fill: 'hsl(var(--primary))', r: 5, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
-                    activeDot={{ r: 7, strokeWidth: 2, stroke: 'hsl(var(--primary))' }}
+                    dot={{ 
+                      fill: 'hsl(var(--primary))', 
+                      r: 5, 
+                      strokeWidth: 2, 
+                      stroke: 'hsl(var(--background))',
+                      className: 'animate-pulse'
+                    }}
+                    activeDot={{ 
+                      r: 8, 
+                      strokeWidth: 3, 
+                      stroke: 'hsl(var(--primary))',
+                      fill: 'hsl(var(--background))',
+                      className: 'transition-all duration-200'
+                    }}
                     name="New Startups (K)"
                     animationBegin={0}
-                    animationDuration={1500}
+                    animationDuration={2000}
                     animationEasing="ease-out"
+                    className="drop-shadow-lg"
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '1.7s' }}>
+              <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '2.2s' }}>
                 <p className="text-sm text-muted-foreground">
                   Projected <span className="font-semibold text-foreground animate-pulse">390K+</span> new startups in February 2025
                 </p>
