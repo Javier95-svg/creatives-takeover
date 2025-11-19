@@ -83,11 +83,11 @@ const Signup = () => {
       confirmPassword: ""
     };
 
-    // Full name validation (optional - only validate format if provided)
-    if (formData.fullName.trim()) {
-      if (formData.fullName.trim().length < 2) {
-        newErrors.fullName = "Full name must be at least 2 characters";
-      }
+    // Full name validation
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    } else if (formData.fullName.trim().length < 2) {
+      newErrors.fullName = "Full name must be at least 2 characters";
     }
 
     // Email validation
@@ -260,7 +260,7 @@ const Signup = () => {
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
-                  Full name <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                  Full name
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -270,7 +270,7 @@ const Signup = () => {
                     type="text"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name (optional)"
+                    placeholder="Enter your full name"
                     className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
