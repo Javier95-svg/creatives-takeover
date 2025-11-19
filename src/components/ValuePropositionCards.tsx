@@ -109,41 +109,50 @@ const ValuePropositionCards = () => {
             return (
               <Card 
                 key={index} 
-                className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30"
+                className="relative overflow-hidden group hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 border-2 hover:border-primary/50 animate-fade-in hover:-translate-y-2"
+                style={{ 
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'both'
+                }}
               >
-                {/* Gradient background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
+                {/* Animated gradient background */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-80 transition-opacity duration-500`} />
+                
+                {/* Shimmer effect on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                </div>
                 
                 <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center text-center">
-                  {/* Icon */}
+                  {/* Icon with enhanced animations */}
                   <div className="mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Icon className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:bg-primary/20 group-hover:shadow-lg group-hover:shadow-primary/50">
+                      <Icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-500" />
                     </div>
                   </div>
 
-                  {/* Title */}
-                  <div className="mb-2">
-                    <div className="text-sm font-bold text-primary mb-1">
+                  {/* Title with fade-in animation */}
+                  <div className="mb-2 transform group-hover:scale-105 transition-transform duration-300">
+                    <div className="text-sm font-bold text-primary mb-1 group-hover:text-primary/90 transition-colors">
                       {card.title}
                     </div>
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-semibold group-hover:text-foreground transition-colors">
                       {card.subtitle}
                     </h3>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-sm text-muted-foreground mb-5 flex-grow">
+                  {/* Description with subtle animation */}
+                  <p className="text-sm text-muted-foreground mb-5 flex-grow group-hover:text-foreground/80 transition-colors duration-300">
                     {card.description}
                   </p>
 
-                  {/* CTA Button */}
+                  {/* CTA Button with enhanced animations */}
                   <Link to={card.link} className="w-full">
                     <Button 
                       variant="outline" 
-                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden"
                     >
-                      {card.cta}
+                      <span className="relative z-10">{card.cta}</span>
                     </Button>
                   </Link>
                 </CardContent>
