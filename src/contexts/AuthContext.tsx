@@ -7,7 +7,7 @@ import { AuthError } from '@/lib/errors';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName: string, dateOfBirth?: string) => Promise<{ error: SupabaseAuthError | null }>;
+  signUp: (email: string, password: string, fullName?: string, dateOfBirth?: string) => Promise<{ error: SupabaseAuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: SupabaseAuthError | null }>;
   signOut: () => Promise<void>;
   loading: boolean;

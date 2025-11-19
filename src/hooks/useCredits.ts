@@ -58,7 +58,7 @@ export function useCredits() {
           await initializeCredits();
         } else if (retryCount < MAX_RETRIES) {
           // Transient error - retry with exponential backoff
-          logWarn(`Error fetching credit balance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
+          logError(`Error fetching credit balance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
           await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount)));
           return fetchBalance(retryCount + 1);
         } else {
@@ -80,7 +80,7 @@ export function useCredits() {
     } catch (error) {
       // Unexpected error - retry if possible
       if (retryCount < MAX_RETRIES) {
-        logWarn(`Unexpected error in fetchBalance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
+        logError(`Unexpected error in fetchBalance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount)));
         return fetchBalance(retryCount + 1);
       } else {
