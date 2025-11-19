@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
+import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { CreditGate } from '@/components/CreditGate';
 import { CREDIT_COSTS } from '@/config/constants';
 import CommitmentCreator from './CommitmentCreator';
@@ -34,7 +35,8 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
   const { user } = useAuth();
   const { toast } = useToast();
   const { hasCredits } = useCredits();
-  const { createSprint, createSprintTasks } = useSprints();
+  const { createSprint, createSprintTasks, sprints } = useSprints();
+  const { checkFeatureAccess } = useFeatureGating();
   const { 
     userActiveCommitments, 
     createCommitment, 
@@ -154,6 +156,25 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
         variant: "destructive",
       });
       return;
+    }
+
+    // Check for unlimited sprints access
+    const unlimitedAccess = checkFeatureAccess('unlimited_sprints');
+    if (!unlimitedAccess.hasAccess) {
+      // Count active sprints
+      const activeSprints = sprints?.filter(s => s.status === 'active' || s.status === 'planning') || [];
+      if (activeSprints.length >= 1) {
+        toast({
+          title: "Sprint Limit Reached",
+          description: unlimitedAccess.message || "Free tier is limited to 1 active sprint. Upgrade for unlimited sprints.",
+          variant: "destructive",
+        });
+        // Optionally navigate to pricing
+        setTimeout(() => {
+          window.location.href = '/pricing';
+        }, 2000);
+        return;
+      }
     }
 
     try {

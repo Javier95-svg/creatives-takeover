@@ -7,17 +7,19 @@ import StreakNotificationBanner from "./StreakNotificationBanner";
 import TrendingPostsCard from "./TrendingPostsCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useBadgeSystem } from "@/hooks/useBadgeSystem";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { checkAndAwardBadges } = useBadgeSystem(user?.id);
+  const { checkFeatureAccess } = useFeatureGating();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -25,6 +27,8 @@ const CommunityFeed: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [postType, setPostType] = useState("all");
   const [engagement, setEngagement] = useState("all");
+  
+  const postingAccess = checkFeatureAccess('community_posting');
 
   // Fetch posts from database
   const fetchPosts = async () => {
@@ -322,8 +326,33 @@ const CommunityFeed: React.FC = () => {
           {/* Streak Notification */}
           <StreakNotificationBanner />
 
-          {/* Post Composer */}
-          <PostComposer onPublish={handlePublish} requireAuth={true} />
+          {/* Post Composer or Upgrade Prompt */}
+          {postingAccess.hasAccess ? (
+            <PostComposer onPublish={handlePublish} requireAuth={true} />
+          ) : (
+            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <Lock className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold mb-2">Upgrade to Create Posts</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {postingAccess.message || 'Upgrade to Creator tier or higher to create posts in the community'}
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/pricing')}
+                      className="gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Upgrade to {postingAccess.requiredTier === 'creator' ? 'Creator' : 'Professional'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Results Summary */}
           {search && (

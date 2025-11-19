@@ -17,32 +17,52 @@ const PricingComparison = () => {
     {
       category: "Community Features",
       items: [
-        { feature: "Community Access", free: true, creator: true, professional: true },
-        { feature: "Create Posts", free: true, creator: true, professional: true },
-        { feature: "Comment & Engage", free: true, creator: true, professional: true }
+        { feature: "Community Access", free: "Read-only", creator: "Full access", professional: "Full access" },
+        { feature: "Create Posts", free: false, creator: true, professional: true },
+        { feature: "Comment & Engage", free: false, creator: true, professional: true },
+        { feature: "Vote on Posts", free: false, creator: true, professional: true },
+        { feature: "AI-Enhanced Insights", free: false, creator: false, professional: true }
       ]
     },
     {
       category: "Sprint Planning",
       items: [
-        { feature: "Sprint Planning Tools", free: "Basic", creator: "Full access", professional: "Full access" },
-        { feature: "Task Management", free: "Basic", creator: "Advanced", professional: "Advanced" },
+        { feature: "Active Sprints", free: "1 sprint", creator: "Unlimited", professional: "Unlimited" },
+        { feature: "Kanban Boards", free: "Basic", creator: "Full access", professional: "Full access" },
         { feature: "Daily Check-ins", free: false, creator: true, professional: true }
       ]
     },
     {
       category: "Business Tools",
       items: [
-        { feature: "Market Intelligence Widget", free: false, creator: true, professional: true },
-        { feature: "Business Report Generation", free: false, creator: false, professional: true },
-        { feature: "PDF Export", free: false, creator: false, professional: true }
+        { feature: "Market Intelligence", free: false, creator: "10 queries/month", professional: "Unlimited" },
+        { feature: "Report Generation", free: false, creator: "5/month", professional: "Unlimited" },
+        { feature: "PDF Export", free: false, creator: false, professional: true },
+        { feature: "Success Score Analytics", free: false, creator: false, professional: true }
+      ]
+    },
+    {
+      category: "Collaboration",
+      items: [
+        { feature: "Basic Collaboration", free: false, creator: "3 max", professional: "Unlimited" },
+        { feature: "Advanced Tools", free: false, creator: false, professional: true },
+        { feature: "Whiteboarding", free: false, creator: false, professional: true },
+        { feature: "Video Calls", free: false, creator: false, professional: true }
+      ]
+    },
+    {
+      category: "Support & Access",
+      items: [
+        { feature: "Support Type", free: "Community forum", creator: "Priority email (48hr)", professional: "24hr priority" },
+        { feature: "API Access", free: false, creator: false, professional: true },
+        { feature: "Prompt Library Export", free: false, creator: true, professional: true }
       ]
     }
   ];
 
   const plans = [
     { name: "Free", price: "$0", period: "/month", isPopular: false },
-    { name: "Creator", price: "$19.99", period: "/month", isPopular: false },
+    { name: "Creator", price: "$19.99", period: "/month", isPopular: true },
     { name: "Professional", price: "$39.99", period: "/month", isPopular: false }
   ];
   const renderFeatureValue = (value: any, animated: boolean = false) => {

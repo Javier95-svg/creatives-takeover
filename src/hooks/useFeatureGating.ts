@@ -39,11 +39,25 @@ export function useFeatureGating() {
         return { hasAccess: true };
 
       // Community features
-      case 'community_commenting':
-        if (tier === 'free') {
-          return { hasAccess: true }; // Basic access for free tier
+      case 'community_posting':
+        if (['creator', 'professional'].includes(tier)) {
+          return { hasAccess: true };
         }
-        return { hasAccess: true };
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Creator tier or higher to create posts in the community',
+          requiredTier: 'creator'
+        };
+
+      case 'community_commenting':
+        if (['creator', 'professional'].includes(tier)) {
+          return { hasAccess: true };
+        }
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Creator tier or higher to comment on community posts',
+          requiredTier: 'creator'
+        };
 
       case 'community_voting':
         if (['creator', 'professional'].includes(tier)) {
@@ -53,6 +67,16 @@ export function useFeatureGating() {
           hasAccess: false, 
           message: 'Upgrade to Creator tier or higher to vote on community posts',
           requiredTier: 'creator'
+        };
+
+      case 'community_ai_insights':
+        if (tier === 'professional') {
+          return { hasAccess: true };
+        }
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Professional tier for AI-enhanced community features',
+          requiredTier: 'professional'
         };
 
       // Prompt library features
@@ -88,6 +112,16 @@ export function useFeatureGating() {
           requiredTier: 'creator'
         };
 
+      case 'market_intelligence_unlimited':
+        if (tier === 'professional') {
+          return { hasAccess: true };
+        }
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Professional tier for unlimited market intelligence queries',
+          requiredTier: 'professional'
+        };
+
       // Collaboration features
       case 'basic_collaboration':
         if (['creator', 'professional'].includes(tier)) {
@@ -109,7 +143,27 @@ export function useFeatureGating() {
           requiredTier: 'professional'
         };
 
+      case 'collaboration_unlimited':
+        if (tier === 'professional') {
+          return { hasAccess: true };
+        }
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Professional tier for unlimited collaborators',
+          requiredTier: 'professional'
+        };
+
       // Business reports
+      case 'report_generation':
+        if (['creator', 'professional'].includes(tier)) {
+          return { hasAccess: true };
+        }
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Creator tier or higher to generate business reports',
+          requiredTier: 'creator'
+        };
+
       case 'custom_reports':
         if (tier === 'professional') {
           return { hasAccess: true };
@@ -121,12 +175,13 @@ export function useFeatureGating() {
         };
 
       case 'export_reports':
+      case 'report_export_pdf':
         if (tier === 'professional') {
           return { hasAccess: true };
         }
         return { 
           hasAccess: false, 
-          message: 'Upgrade to Professional tier or higher to export reports',
+          message: 'Upgrade to Professional tier or higher to export reports as PDF',
           requiredTier: 'professional'
         };
 
@@ -141,6 +196,16 @@ export function useFeatureGating() {
           requiredTier: 'professional'
         };
 
+      // API access
+      case 'api_access':
+        if (tier === 'professional') {
+          return { hasAccess: true };
+        }
+        return { 
+          hasAccess: false, 
+          message: 'Upgrade to Professional tier for API access',
+          requiredTier: 'professional'
+        };
 
       default:
         return { hasAccess: true };
@@ -161,28 +226,30 @@ export function useFeatureGating() {
     const featureMap: Record<string, string[]> = {
       free: [
         '5 BizMap AI conversations per month',
-        'Basic community access',
+        'Community read-only access',
         'Prompt library (view only)',
         '1 active sprint',
-        'Email support'
+        'Community forum support'
       ],
       creator: [
         '50 BizMap AI conversations per month',
-        'Full community features',
-        'Prompt library export',
+        'Full community access',
+        'Prompt library with export',
         'Unlimited sprints',
-        'Market intelligence',
-        'Basic collaboration',
-        'Priority support'
+        'Market intelligence (10 queries/month)',
+        'Basic collaboration (3 max)',
+        'Basic reports (5/month)',
+        'Priority email support'
       ],
       professional: [
         '150 BizMap AI conversations per month',
-        'AI-enhanced community features',
-        'Custom business reports',
-        'Advanced collaboration tools',
+        'AI-enhanced community',
+        'Unlimited market intelligence',
+        'Unlimited custom reports + PDF export',
+        'Advanced collaboration (unlimited)',
         'Success score analytics',
-        'Export capabilities',
-        'Priority support'
+        'API access',
+        '24hr priority support'
       ]
     };
     return featureMap[tierName] || [];

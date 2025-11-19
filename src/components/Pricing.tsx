@@ -39,28 +39,30 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "5 BizMap AI conversations per month",
-        "Basic community forum access (read & post)",
-        "Access to prompt library (view only)",
-        "Basic sprint planning (1 active sprint)",
-        "Email support"
+        "Community read-only access",
+        "Prompt library (view only)",
+        "1 active sprint",
+        "Community forum support"
       ],
       creator: [
         "50 BizMap AI conversations per month",
-        "Full community features (posting, commenting, voting)",
+        "Full community access (post, comment, vote)",
         "Prompt library with copy/export functionality", 
         "Unlimited sprint planning & Kanban boards",
-        "Market intelligence widget access",
-        "Basic collaboration tools (text chat, file sharing)",
-        "Priority email support"
+        "Market intelligence (10 queries/month)",
+        "Basic collaboration tools (max 3 collaborators)",
+        "Basic reports (5/month)",
+        "Priority email support (48hr response)"
       ],
       professional: [
         "150 BizMap AI conversations per month",
-        "AI-enhanced community features (post insights, trending)",
-        "Custom business report generation",
-        "Advanced collaboration tools (whiteboarding, polls, video calls)",
+        "AI-enhanced community (post insights, trending)",
+        "Unlimited market intelligence",
+        "Unlimited custom reports + PDF export",
+        "Advanced collaboration (whiteboarding, polls, video calls)",
         "Success score analytics & tracking",
-        "Priority support + community access",
-        "Export capabilities for all reports"
+        "API access",
+        "24hr priority support"
       ]
     };
     return featureMap[tierName] || [];
@@ -68,9 +70,9 @@ const Pricing = () => {
 
   const getDescription = (tierName: string) => {
     const descriptions: Record<string, string> = {
-      free: "Perfect for getting started with AI-powered business planning",
-      creator: "Ideal for solopreneurs who need regular AI insights and community access",
-      professional: "Best value for serious entrepreneurs with comprehensive collaboration features"
+      free: "Try before you buy - explore our platform with limited access",
+      creator: "Build your business - perfect for active solopreneurs",
+      professional: "Scale & collaborate - for serious entrepreneurs and small teams"
     };
     return descriptions[tierName] || "";
   };
@@ -298,6 +300,15 @@ const Pricing = () => {
             const description = getDescription(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'creator';
+            
+            // Group features by category for better display
+            const groupedFeatures = (() => {
+              const allFeatures = features;
+              const core = allFeatures.slice(0, 2);
+              const tools = allFeatures.slice(2, -1);
+              const support = allFeatures.slice(-1);
+              return { core, tools, support };
+            })();
 
             return (
               <div
@@ -358,12 +369,28 @@ const Pricing = () => {
 
                 {/* Features List */}
                 <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-3 flex-grow">
-                  {features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-start gap-2 sm:gap-3">
-                      <Check className="w-3 sm:w-4 h-3 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature}</span>
-                    </div>
-                  ))}
+                  {features.map((feature, featureIndex) => {
+                    // Highlight Professional-only features
+                    const isProOnly = tier.tier_name === 'professional' && (
+                      feature.includes('Unlimited') || 
+                      feature.includes('AI-enhanced') ||
+                      feature.includes('API access') ||
+                      feature.includes('24hr')
+                    );
+                    
+                    return (
+                      <div key={featureIndex} className="flex items-start gap-2 sm:gap-3">
+                        <Check className={`w-3 sm:w-4 h-3 sm:h-4 mt-0.5 flex-shrink-0 ${
+                          isProOnly ? 'text-primary' : 'text-primary'
+                        }`} />
+                        <span className={`text-xs sm:text-sm leading-relaxed ${
+                          isProOnly ? 'text-primary font-medium' : 'text-muted-foreground'
+                        }`}>
+                          {feature}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <Button
