@@ -98,7 +98,11 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Execute with your Dashboard, plan with BizMap AI, explore the Prompt Library, connect with the Community, and fundraise through Insighta. Every tool is designed to support you at every stage of building a profitable, enduring venture.
+            Transform your idea into an investable, revenue-driving business.
+            <br /><br />
+            Use the Dashboard, BizMap AI, Prompt Library, Community, and Insighta to guide every step.
+            <br /><br />
+            The perfect ecosystem for early-stage founders and entrepreneurs serious about building a lasting venture.
           </p>
         </div>
 
