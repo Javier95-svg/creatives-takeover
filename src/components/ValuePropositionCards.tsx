@@ -1,4 +1,4 @@
-import { Lightbulb, Users, Rocket, Sparkles } from "lucide-react";
+import { Lightbulb, Users, Rocket, Sparkles, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -6,8 +6,17 @@ import { Link } from "react-router-dom";
 const ValuePropositionCards = () => {
   const cards = [
     {
+      icon: LayoutDashboard,
+      title: "EXECUTE",
+      subtitle: "Dashboard",
+      description: "Your command center for tracking progress, managing tasks, and monitoring business health. Track daily check-ins, maintain momentum streaks, manage priorities, and view your project portfolio all in one place.",
+      cta: "View Dashboard",
+      link: "/dashboard",
+      gradient: "from-green-500/20 to-green-500/5"
+    },
+    {
       icon: Lightbulb,
-      title: "BUILD",
+      title: "PLAN",
       subtitle: "BizMap AI",
       description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
       cta: "Try BizMap AI",
@@ -34,7 +43,7 @@ const ValuePropositionCards = () => {
     },
     {
       icon: Rocket,
-      title: "LAUNCH",
+      title: "FUNDRAISE",
       subtitle: "Insighta",
       description: "Access exclusive funding opportunities and accelerator programs. Learn from founders who've secured investment and get the resources to scale your creative business.",
       cta: "Leverage Insighta",
@@ -89,12 +98,12 @@ const ValuePropositionCards = () => {
             Here's What You Get
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Plan with BizMap AI, explore the Prompt Library, connect with the Community, and uncover opportunities through Insighta. Every tool is designed to support you at every stage of building a profitable, enduring venture.
+            Execute with your Dashboard, plan with BizMap AI, explore the Prompt Library, connect with the Community, and fundraise through Insighta. Every tool is designed to support you at every stage of building a profitable, enduring venture.
           </p>
         </div>
 
-        {/* Four Cards */}
-        <div className="grid md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto">
+        {/* Five Cards */}
+        <div className="grid md:grid-cols-5 gap-4 md:gap-5 max-w-7xl mx-auto">
           {cards.map((card, index) => {
             const Icon = card.icon;
             return (
@@ -105,26 +114,26 @@ const ValuePropositionCards = () => {
                 {/* Gradient background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-70 transition-opacity`} />
                 
-                <CardContent className="relative p-6 md:p-8 flex flex-col h-full items-center text-center">
+                <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center text-center">
                   {/* Icon */}
-                  <div className="mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Icon className="w-6 h-6 text-primary" />
+                  <div className="mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Icon className="w-5 h-5 text-primary" />
                     </div>
                   </div>
 
                   {/* Title */}
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <div className="text-sm font-bold text-primary mb-1">
                       {card.title}
                     </div>
-                    <h3 className="text-xl font-semibold">
+                    <h3 className="text-lg font-semibold">
                       {card.subtitle}
                     </h3>
                   </div>
 
                   {/* Description */}
-                  <p className="text-muted-foreground mb-6 flex-grow">
+                  <p className="text-sm text-muted-foreground mb-5 flex-grow">
                     {card.description}
                   </p>
 
