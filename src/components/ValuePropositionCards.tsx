@@ -9,7 +9,7 @@ const ValuePropositionCards = () => {
       icon: LayoutDashboard,
       title: "EXECUTE",
       subtitle: "Dashboard",
-      description: "Your command center for tracking progress, managing tasks, and monitoring business health. Track daily check-ins, maintain momentum streaks, manage priorities, and view your project portfolio all in one place.",
+      description: "Your command center for tracking progress, managing tasks, and monitoring your business progress. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
       cta: "View Dashboard",
       link: "/dashboard",
       gradient: "from-green-500/20 to-green-500/5"
