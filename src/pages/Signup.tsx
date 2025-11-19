@@ -83,11 +83,11 @@ const Signup = () => {
       confirmPassword: ""
     };
 
-    // Full name validation (optional - only validate format if provided)
-    if (formData.fullName.trim()) {
-      if (formData.fullName.trim().length < 2) {
-        newErrors.fullName = "Full name must be at least 2 characters";
-      }
+    // Full name validation
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    } else if (formData.fullName.trim().length < 2) {
+      newErrors.fullName = "Full name must be at least 2 characters";
     }
 
     // Email validation
@@ -100,12 +100,14 @@ const Signup = () => {
     // Password validation
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
-    // Confirm password validation (optional - only validate if provided)
-    if (formData.confirmPassword.trim() && formData.password !== formData.confirmPassword) {
+    // Confirm password validation
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
@@ -260,7 +262,7 @@ const Signup = () => {
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
-                  Full name <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                  Username
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -270,7 +272,7 @@ const Signup = () => {
                     type="text"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name (optional)"
+                    placeholder="Create your username"
                     className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
@@ -356,7 +358,7 @@ const Signup = () => {
               {/* Confirm Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm password <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                  Confirm password
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -366,7 +368,7 @@ const Signup = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    placeholder="Confirm your password (optional)"
+                    placeholder="Confirm your password"
                     className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
@@ -391,9 +393,6 @@ const Signup = () => {
                 )}
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.confirmPassword}</p>
-                )}
-                {!errors.confirmPassword && !formData.confirmPassword && (
-                  <p className="text-xs text-muted-foreground">Optional - helps prevent typos</p>
                 )}
               </div>
 
