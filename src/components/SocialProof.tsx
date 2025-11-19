@@ -65,40 +65,60 @@ const SocialProof = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Startup Growth Chart */}
-          <Card className="border-border">
+          <Card className="border-border animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
+                <TrendingUp className="w-5 h-5 text-primary animate-pulse" />
                 Startup Creation Growth
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={startupGrowthData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <BarChart data={startupGrowthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                   <XAxis 
                     dataKey="year" 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    animationDuration={800}
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    animationDuration={800}
                   />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                     }}
+                    animationDuration={200}
                   />
-                  <Bar dataKey="startups" fill="hsl(var(--primary))" name="Total Startups (M)" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="creative" fill="hsl(var(--chart-2))" name="Creative Startups (M)" radius={[8, 8, 0, 0]} />
+                  <Bar 
+                    dataKey="startups" 
+                    fill="hsl(var(--primary))" 
+                    name="Total Startups (M)" 
+                    radius={[8, 8, 0, 0]}
+                    animationBegin={0}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
+                  />
+                  <Bar 
+                    dataKey="creative" 
+                    fill="hsl(var(--chart-2))" 
+                    name="Creative Startups (M)" 
+                    radius={[8, 8, 0, 0]}
+                    animationBegin={200}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
+                  />
                 </BarChart>
               </ResponsiveContainer>
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '1.4s' }}>
                 <p className="text-sm text-muted-foreground">
-                  Creative startups growing <span className="font-semibold text-foreground">67% faster</span> than overall market
+                  Creative startups growing <span className="font-semibold text-foreground animate-pulse">67% faster</span> than overall market
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   Data sources: Global Entrepreneurship Monitor, Crunchbase, Statista
@@ -108,17 +128,17 @@ const SocialProof = () => {
           </Card>
 
           {/* Monthly Growth Trend */}
-          <Card className="border-border">
+          <Card className="border-border animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-primary" />
+                <Rocket className="w-5 h-5 text-primary animate-bounce" style={{ animationDuration: '2s', animationIterationCount: 'infinite' }} />
                 Monthly Startup Creation (2024-2025)
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyGrowthData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <LineChart data={monthlyGrowthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                   <XAxis 
                     dataKey="month" 
                     stroke="hsl(var(--muted-foreground))"
@@ -127,31 +147,39 @@ const SocialProof = () => {
                     textAnchor="end"
                     height={80}
                     interval={0}
+                    animationDuration={800}
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    animationDuration={800}
                   />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                     }}
+                    animationDuration={200}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="startups" 
                     stroke="hsl(var(--primary))" 
                     strokeWidth={3}
-                    dot={{ fill: 'hsl(var(--primary))', r: 5 }}
+                    dot={{ fill: 'hsl(var(--primary))', r: 5, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                    activeDot={{ r: 7, strokeWidth: 2, stroke: 'hsl(var(--primary))' }}
                     name="New Startups (K)"
+                    animationBegin={0}
+                    animationDuration={1500}
+                    animationEasing="ease-out"
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '1.7s' }}>
                 <p className="text-sm text-muted-foreground">
-                  Projected <span className="font-semibold text-foreground">390K+</span> new startups in February 2025
+                  Projected <span className="font-semibold text-foreground animate-pulse">390K+</span> new startups in February 2025
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   Based on Global Entrepreneurship Monitor 2024 trends and Crunchbase data
