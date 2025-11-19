@@ -7,7 +7,7 @@ import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { trackActivity } from "@/lib/activity";
@@ -231,8 +231,8 @@ const Signup = () => {
         <meta name="description" content="Create your Creatives Takeover account to start transforming creative ideas into actionable plans with AI-powered insights." />
       </Helmet>
 
-      {/* Animated Background */}
-      <AnimatedBackground />
+      {/* Modern Animated Wallpaper */}
+      <AuthWallpaper />
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
