@@ -45,7 +45,7 @@ const ValuePropositionCards = () => {
       icon: Rocket,
       title: "FUNDRAISE",
       subtitle: "Insighta",
-      description: "Access a complete fundraising toolkit designed for solopreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy to take your business to the next stage.",
+      description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy",
       cta: "Explore Insighta",
       link: "/insighta",
       gradient: "from-accent/20 to-accent/5"
