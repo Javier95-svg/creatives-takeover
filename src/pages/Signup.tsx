@@ -260,7 +260,7 @@ const Signup = () => {
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
-                  Full name
+                  Username
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -270,7 +270,7 @@ const Signup = () => {
                     type="text"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name"
+                    placeholder="Create your username"
                     className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
                       errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
