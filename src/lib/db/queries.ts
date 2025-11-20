@@ -68,10 +68,10 @@ export const queries = {
         .from('accountability_partnerships')
         .select(`
           *,
-          partner_profile:profiles!accountability_partnerships_partner_id_fkey(
+          partner_profile:profiles!partner_id(
             id, full_name, avatar_url, bio
           ),
-          requester_profile:profiles!accountability_partnerships_requester_id_fkey(
+          requester_profile:profiles!requester_id(
             id, full_name, avatar_url, bio
           ),
           sprint:sprints(id, title, description, start_date, end_date)
@@ -116,7 +116,7 @@ export const queries = {
         .from('accountability_nudges')
         .select(`
           *,
-          nudger_profile:profiles!accountability_nudges_nudger_id_fkey(
+          nudger_profile:profiles!nudger_id(
             id, full_name, avatar_url
           )
         `)

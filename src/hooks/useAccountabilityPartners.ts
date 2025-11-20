@@ -69,14 +69,15 @@ export const useAccountabilityPartners = () => {
       setLoading(true);
       
       // Fetch partnerships with profile and sprint data
+      // Using simpler syntax that works with or without explicit foreign key constraint names
       const { data, error } = await supabase
         .from('accountability_partnerships')
         .select(`
           *,
-          partner_profile:profiles!accountability_partnerships_partner_id_fkey(
+          partner_profile:profiles!partner_id(
             id, full_name, avatar_url, bio
           ),
-          requester_profile:profiles!accountability_partnerships_requester_id_fkey(
+          requester_profile:profiles!requester_id(
             id, full_name, avatar_url, bio
           ),
           sprint:sprints(
@@ -109,7 +110,7 @@ export const useAccountabilityPartners = () => {
         .from('accountability_nudges')
         .select(`
           *,
-          nudger_profile:profiles!accountability_nudges_nudger_id_fkey(
+          nudger_profile:profiles!nudger_id(
             id, full_name, avatar_url
           )
         `)
