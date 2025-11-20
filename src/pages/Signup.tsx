@@ -129,16 +129,43 @@ const Signup = () => {
       const { error } = await signUp(
         formData.email, 
         formData.password, 
-        formData.fullName.trim() || undefined
+        formData.fullName.trim() || ''
       );
       
       if (error) {
-        toast.error(error.message || "Failed to create account. Please try again.");
+        // Handle specific error cases with user-friendly messages
+        let errorMessage = error.message || "Failed to create account. Please try again.";
+        
+        // Check for common Supabase error codes and messages
+        if (error.message?.includes('database error') || error.message?.includes('saving new user')) {
+          errorMessage = "There was an issue creating your profile. Your account may have been created - please try signing in.";
+        } else if (error.message?.includes('User already registered') || error.message?.includes('already exists')) {
+          errorMessage = "An account with this email already exists. Please sign in instead.";
+        } else if (error.message?.includes('Email rate limit') || error.message?.includes('too many requests')) {
+          errorMessage = "Too many signup attempts. Please wait a few minutes and try again.";
+        } else if (error.message?.includes('Invalid email')) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message?.includes('Password')) {
+          errorMessage = "Password does not meet requirements. Please use a stronger password.";
+        }
+        
+        console.error('Signup error:', error);
+        toast.error(errorMessage);
       } else {
+        // Check if user needs to confirm email
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // Email confirmation required
+          toast.success("Account created! Please check your email to confirm your account.");
+          // Don't redirect - let user know they need to confirm
+          return;
+        }
+        
+        // User is already logged in (email confirmation disabled or auto-confirmed)
         // Track conversion source
         if (conversionSource.source !== 'direct') {
           console.log('User signed up from:', conversionSource.source);
-          // Could send this to analytics here
         }
 
         try {
@@ -161,7 +188,18 @@ const Signup = () => {
         }
       }
     } catch (error) {
-      toast.error("An unexpected error occurred.");
+      // Handle unexpected errors
+      console.error('Unexpected signup error:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "An unexpected error occurred. Please try again.";
+      
+      // Check if it's a database/profile error
+      if (errorMessage.includes('database') || errorMessage.includes('profile') || errorMessage.includes('saving')) {
+        toast.error("There was an issue creating your profile. Your account may have been created - please try signing in.");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

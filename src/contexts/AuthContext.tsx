@@ -40,40 +40,112 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Create or update profile when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
-            const isNewProfile = await createUserProfile(session.user);
+            // Verify profile exists or create it
+            let profileExists = false;
+            let isNewProfile = false;
             
-            // Only initialize credits for NEW users (5 free credits)
-            if (isNewProfile) {
-              supabase.functions.invoke('credit-service', {
-                body: { action: 'initialize', userId: session.user!.id }
-              });
+            // First, check if profile exists
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+            
+            if (existingProfile) {
+              profileExists = true;
+              logInfo('Profile already exists for user', { userId: session.user.id });
+            } else {
+              // Profile doesn't exist, try to create it
+              isNewProfile = await createUserProfile(session.user);
+              
+              // Verify profile was created successfully
+              if (isNewProfile) {
+                const { data: verifyProfile } = await supabase
+                  .from('profiles')
+                  .select('id')
+                  .eq('id', session.user.id)
+                  .maybeSingle();
+                
+                if (verifyProfile) {
+                  profileExists = true;
+                  logInfo('Profile created and verified successfully', { userId: session.user.id });
+                } else {
+                  logError('Profile creation reported success but profile not found', null, { userId: session.user.id });
+                  // Retry once after a short delay (in case of race condition with trigger)
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  const { data: retryCheck } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+                  
+                  if (retryCheck) {
+                    profileExists = true;
+                    logInfo('Profile found on retry (likely created by trigger)', { userId: session.user.id });
+                  }
+                }
+              } else {
+                // createUserProfile returned false - check if profile exists anyway (trigger might have created it)
+                const { data: checkProfile } = await supabase
+                  .from('profiles')
+                  .select('id')
+                  .eq('id', session.user.id)
+                  .maybeSingle();
+                
+                if (checkProfile) {
+                  profileExists = true;
+                  logInfo('Profile exists (likely created by trigger)', { userId: session.user.id });
+                } else {
+                  logError('Profile does not exist and creation failed', null, { userId: session.user.id });
+                }
+              }
             }
             
-            // Grant monthly credits if due (free and paid tiers)
-            supabase.rpc('grant_monthly_credits');
-            
-            // Send emails for new signups only
-            if (isNewProfile) {
-              try {
-                await Promise.all([
-                  supabase.functions.invoke('notify-admin', {
-                    body: {
-                      email: session.user.email || '',
-                      fullName: session.user.user_metadata?.full_name || '',
-                      timestamp: new Date().toISOString()
-                    }
-                  }),
-                  supabase.functions.invoke('send-welcome-email', {
-                    body: {
-                      email: session.user.email || '',
-                      fullName: session.user.user_metadata?.full_name || ''
-                    }
-                  })
-                ]);
-                logInfo('Admin notification and welcome email sent for new user');
-              } catch (notificationError) {
-                logError('Failed to send admin notification or welcome email', notificationError);
+            // Only proceed if profile exists
+            if (profileExists) {
+              // Only initialize credits for NEW users (5 free credits)
+              if (isNewProfile) {
+                try {
+                  await supabase.functions.invoke('credit-service', {
+                    body: { action: 'initialize', userId: session.user!.id }
+                  });
+                } catch (creditError) {
+                  logError('Failed to initialize credits', creditError, { userId: session.user.id });
+                }
               }
+              
+              // Grant monthly credits if due (free and paid tiers)
+              try {
+                await supabase.rpc('grant_monthly_credits');
+              } catch (creditError) {
+                logError('Failed to grant monthly credits', creditError, { userId: session.user.id });
+              }
+              
+              // Send emails for new signups only
+              if (isNewProfile) {
+                try {
+                  await Promise.all([
+                    supabase.functions.invoke('notify-admin', {
+                      body: {
+                        email: session.user.email || '',
+                        fullName: session.user.user_metadata?.full_name || '',
+                        timestamp: new Date().toISOString()
+                      }
+                    }),
+                    supabase.functions.invoke('send-welcome-email', {
+                      body: {
+                        email: session.user.email || '',
+                        fullName: session.user.user_metadata?.full_name || ''
+                      }
+                    })
+                  ]);
+                  logInfo('Admin notification and welcome email sent for new user');
+                } catch (notificationError) {
+                  logError('Failed to send admin notification or welcome email', notificationError);
+                }
+              }
+            } else {
+              logError('Profile does not exist after sign in - user may experience issues', null, { userId: session.user.id });
             }
           }, 0);
         }
@@ -92,72 +164,129 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const createUserProfile = async (user: User): Promise<boolean> => {
     try {
+      // First check if profile already exists (might have been created by database trigger)
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (!existingProfile) {
-        // Generate username from full_name
-        let username = '';
-        const fullName = user.user_metadata?.full_name || '';
-        
-        if (fullName) {
-          const nameParts = fullName.trim().split(/\s+/).filter(p => p.length > 0);
-          if (nameParts.length >= 2) {
-            const firstName = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-            const lastName = nameParts[nameParts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
-            username = firstName + lastName;
-          } else if (nameParts.length === 1) {
-            username = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-          }
+      // If profile already exists, return success (trigger already created it)
+      if (existingProfile) {
+        logInfo('Profile already exists, skipping creation', { userId: user.id });
+        return false; // Return false because it's not a NEW profile
+      }
+
+      // Generate username from full_name
+      let username = '';
+      const fullName = user.user_metadata?.full_name || '';
+      
+      if (fullName) {
+        const nameParts = fullName.trim().split(/\s+/).filter(p => p.length > 0);
+        if (nameParts.length >= 2) {
+          const firstName = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+          const lastName = nameParts[nameParts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
+          username = firstName + lastName;
+        } else if (nameParts.length === 1) {
+          username = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
         }
+      }
+      
+      // If no username generated, use user ID
+      if (!username) {
+        username = 'user' + user.id.substring(0, 8);
+      }
+      
+      // Ensure uniqueness by checking database
+      let finalUsername = username;
+      let counter = 1;
+      let isUnique = false;
+      
+      while (!isUnique) {
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', finalUsername)
+          .maybeSingle();
         
-        // If no username generated, use user ID
-        if (!username) {
-          username = 'user' + user.id.substring(0, 8);
+        if (!existing) {
+          isUnique = true;
+        } else {
+          finalUsername = username + counter.toString();
+          counter++;
         }
-        
-        // Ensure uniqueness by checking database
-        let finalUsername = username;
-        let counter = 1;
-        let isUnique = false;
-        
-        while (!isUnique) {
-          const { data: existing } = await supabase
+      }
+      
+      // Attempt to insert profile
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          full_name: fullName || '',
+          avatar_url: user.user_metadata?.avatar_url || '',
+          date_of_birth: user.user_metadata?.date_of_birth || null,
+          username: finalUsername,
+        });
+      
+      // Handle insert errors gracefully
+      if (error) {
+        // Check if error is due to duplicate key (race condition with trigger)
+        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+          // Profile was likely created by trigger in the meantime - verify it exists
+          const { data: profileAfterError } = await supabase
             .from('profiles')
             .select('id')
-            .eq('username', finalUsername)
+            .eq('id', user.id)
             .maybeSingle();
           
-          if (!existing) {
-            isUnique = true;
-          } else {
-            finalUsername = username + counter.toString();
-            counter++;
+          if (profileAfterError) {
+            // Profile exists now, so success (trigger created it)
+            logInfo('Profile created by trigger after race condition', { userId: user.id });
+            return false; // Return false because it's not a NEW profile (trigger created it)
           }
         }
         
-        const { error } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            full_name: fullName || '',
-            avatar_url: user.user_metadata?.avatar_url || '',
-            date_of_birth: user.user_metadata?.date_of_birth || null,
-            username: finalUsername,
-          });
+        // Log other errors but don't fail completely
+        logError('Error creating profile', error, { userId: user.id, errorCode: error.code });
         
-        if (error) {
-          logError('Error creating profile', error, { userId: user.id });
-          return false;
+        // Double-check if profile exists despite the error (might have been created by trigger)
+        const { data: profileCheck } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (profileCheck) {
+          // Profile exists, so it's fine
+          logInfo('Profile exists despite insert error (likely created by trigger)', { userId: user.id });
+          return false; // Return false because it's not a NEW profile
         }
-        return true;
+        
+        // Profile doesn't exist and insert failed - return false
+        return false;
       }
-      return false;
+      
+      // Insert succeeded - this is a new profile
+      return true;
     } catch (error) {
       logError('Unexpected error creating profile', error, { userId: user.id });
+      
+      // Final check: verify if profile exists despite the error
+      try {
+        const { data: profileCheck } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (profileCheck) {
+          logInfo('Profile exists despite exception (likely created by trigger)', { userId: user.id });
+          return false; // Return false because it's not a NEW profile
+        }
+      } catch (checkError) {
+        logError('Error checking profile existence after exception', checkError, { userId: user.id });
+      }
+      
       return false;
     }
   };
