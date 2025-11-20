@@ -45,6 +45,14 @@ export function useFeatureGating() {
 
       // Community features
       case 'community_posting':
+        // Allow specific email addresses to post regardless of tier
+        const allowedCommunityPosters = [
+          'tyler.jacob.tennant517@gmail.com',
+          'aamirkgigyani@gmail.com'
+        ];
+        if (user.email && allowedCommunityPosters.includes(user.email.toLowerCase())) {
+          return { hasAccess: true };
+        }
         if (['creator', 'professional'].includes(tier)) {
           return { hasAccess: true };
         }
