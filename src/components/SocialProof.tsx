@@ -95,14 +95,10 @@ const SocialProof = () => {
                     dataKey="year" 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    animationDuration={1000}
-                    animationEasing="ease-out"
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    animationDuration={1000}
-                    animationEasing="ease-out"
                   />
                   <Tooltip 
                     contentStyle={{ 
@@ -186,14 +182,10 @@ const SocialProof = () => {
                     textAnchor="end"
                     height={80}
                     interval={0}
-                    animationDuration={1000}
-                    animationEasing="ease-out"
                   />
                   <YAxis 
                     stroke="hsl(var(--muted-foreground))"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    animationDuration={1000}
-                    animationEasing="ease-out"
                   />
                   <Tooltip 
                     contentStyle={{ 
