@@ -103,7 +103,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             // Only proceed if profile exists
             if (profileExists) {
-              // Only initialize credits for NEW users (5 free credits)
+              // Ensure admin account has professional tier
+              const isAdmin = session.user.email?.toLowerCase() === 'admin@creatives-takeover.com';
+              if (isAdmin) {
+                try {
+                  // Update profile to ensure professional tier
+                  await supabase
+                    .from('profiles')
+                    .update({ subscription_tier: 'professional' })
+                    .eq('id', session.user.id);
+                  
+                  // Update user_credits to ensure professional tier
+                  await supabase
+                    .from('user_credits')
+                    .upsert({
+                      user_id: session.user.id,
+                      subscription_tier: 'professional'
+                    }, { onConflict: 'user_id' });
+                  
+                  // Update subscribers table
+                  await supabase
+                    .from('subscribers')
+                    .upsert({
+                      user_id: session.user.id,
+                      email: session.user.email,
+                      subscribed: true,
+                      subscription_tier: 'professional'
+                    }, { onConflict: 'email' });
+                  
+                  logInfo('Admin account updated to professional tier', { userId: session.user.id });
+                } catch (adminError) {
+                  logError('Failed to update admin tier', adminError, { userId: session.user.id });
+                }
+              }
+              
+              // Only initialize credits for NEW users (5 free credits, or 150 for admin)
               if (isNewProfile) {
                 try {
                   await supabase.functions.invoke('credit-service', {
@@ -217,6 +251,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
       
+      // Check if this is the admin account
+      const isAdmin = user.email?.toLowerCase() === 'admin@creatives-takeover.com';
+      
       // Attempt to insert profile
       const { error } = await supabase
         .from('profiles')
@@ -226,6 +263,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           avatar_url: user.user_metadata?.avatar_url || '',
           date_of_birth: user.user_metadata?.date_of_birth || null,
           username: finalUsername,
+          subscription_tier: isAdmin ? 'professional' : 'free',
         });
       
       // Handle insert errors gracefully

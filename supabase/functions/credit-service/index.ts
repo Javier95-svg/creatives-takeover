@@ -178,13 +178,18 @@ export class CreditService {
         return { success: true, isNewUser: false }; // Already initialized, don't overwrite
       }
 
+      // Determine credits and tier - admin gets professional tier but normal credits
+      const initialCredits = 5; // Standard free credits for all new users
+      const subscriptionTier = 'free'; // Will be updated to professional by other mechanisms
+      const welcomeReason = 'Welcome bonus - 5 free credits';
+
       // Check if there's already a welcome transaction to avoid duplicate grants
       const { data: existingTx } = await this.supabase
         .from('credit_transactions')
         .select('id')
         .eq('user_id', userId)
         .eq('tx_type', 'grant')
-        .eq('reason', 'Welcome bonus - 5 free credits')
+        .eq('reason', welcomeReason)
         .limit(1);
 
       const isNewUser = !existingTx || existingTx.length === 0;
@@ -195,9 +200,9 @@ export class CreditService {
         .from('user_credits')
         .insert([{
           user_id: userId,
-          balance: 5, // 5 free credits for new users
-          monthly_quota: 5,
-          subscription_tier: 'free'
+          balance: initialCredits,
+          monthly_quota: initialCredits,
+          subscription_tier: subscriptionTier
         }])
         .select();
 
@@ -217,9 +222,9 @@ export class CreditService {
           .from('credit_transactions')
           .insert([{
             user_id: userId,
-            amount: 5,
+            amount: initialCredits,
             tx_type: 'grant',
-            reason: 'Welcome bonus - 5 free credits',
+            reason: welcomeReason,
             feature: 'Account Creation'
           }]);
 

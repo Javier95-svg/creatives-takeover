@@ -45,6 +45,42 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if this is the admin account - grant professional tier immediately
+    if (user.email.toLowerCase() === 'admin@creatives-takeover.com') {
+      logStep("Admin account detected - granting professional tier");
+      
+      // Update subscribers table
+      await supabaseService.from("subscribers").upsert({
+        email: user.email,
+        user_id: user.id,
+        stripe_customer_id: null,
+        subscribed: true,
+        subscription_tier: 'professional',
+        subscription_end: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
+
+      // Update user_credits table
+      await supabaseService.from("user_credits").upsert({
+        user_id: user.id,
+        subscription_tier: 'professional',
+      }, { onConflict: 'user_id' });
+
+      // Update profiles table
+      await supabaseService.from("profiles").update({
+        subscription_tier: 'professional'
+      }).eq('id', user.id);
+
+      return new Response(JSON.stringify({
+        subscribed: true,
+        subscription_tier: 'professional',
+        subscription_end: null
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     
     // Find Stripe customer

@@ -18,6 +18,11 @@ export function useFeatureGating() {
       return { hasAccess: false, message: 'Please sign in to access this feature' };
     }
 
+    // Grant all features to admin account
+    if (user.email?.toLowerCase() === 'admin@creatives-takeover.com') {
+      return { hasAccess: true };
+    }
+
     const tier = subscriptionData.subscription_tier;
 
     switch (feature) {
