@@ -3611,7 +3611,7 @@ export type Database = {
           twitter_url: string | null
           updated_at: string
           user_preferences: Json | null
-          username: string
+          username: string | null
           website_url: string | null
           youtube_url: string | null
         }
@@ -3649,7 +3649,7 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           user_preferences?: Json | null
-          username: string
+          username?: string | null
           website_url?: string | null
           youtube_url?: string | null
         }
@@ -3687,7 +3687,7 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           user_preferences?: Json | null
-          username?: string
+          username?: string | null
           website_url?: string | null
           youtube_url?: string | null
         }
