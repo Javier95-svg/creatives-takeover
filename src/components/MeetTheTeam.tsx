@@ -104,11 +104,11 @@ const MeetTheTeam = () => {
           </p>
         </div>
 
-        <div className="flex flex-row gap-8 overflow-x-auto scroll-smooth pb-4 -mx-6 px-6">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {teamMembers.map((member) => (
             <Card
               key={member.name}
-              className="glass border-border/60 overflow-hidden flex flex-col min-w-[320px] flex-shrink-0"
+              className="glass border-border/60 overflow-hidden flex flex-col"
             >
               <figure className="aspect-square overflow-hidden">
                 <img
