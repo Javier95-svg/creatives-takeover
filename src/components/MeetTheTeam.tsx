@@ -63,15 +63,9 @@ const MeetTheTeam = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-3xl mx-auto text-center mb-16 animate-slide-up">
-          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer">
+          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in">
             Meet the Team
           </h2>
-          <p
-            className="text-lg text-muted-foreground leading-relaxed"
-            style={{ animationDelay: "0.2s" }}
-          >
-            The team behind the platform.
-          </p>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
