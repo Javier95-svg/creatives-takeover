@@ -4,6 +4,7 @@ import { Linkedin } from "lucide-react";
 import javierPhoto from "@/assets/team-javier-pena.png";
 import aamirPhoto from "@/assets/team-aamir-khan.png";
 import danielaPhoto from "@/assets/team-daniela-hagg.png";
+import tylerPhoto from "@/assets/team-tyler-tennant.png";
 
 type TeamMember = {
   name: string;
@@ -34,6 +35,13 @@ const teamMembers: TeamMember[] = [
     bio: "Customer advocate obsessed with clear positioning, data-backed experiments, and building community trust at every touchpoint.",
     linkedin: "https://www.linkedin.com/in/daniela-h-72752914b/",
     photo: danielaPhoto,
+  },
+  {
+    name: "Tyler Tennant",
+    role: "Technical Lead",
+    bio: "AI/ML Engineer with 7+ years of experience designing, building, and deploying production-grade AI systems.",
+    linkedin: "https://www.linkedin.com/in/tyler-tennant-59a247398/",
+    photo: tylerPhoto,
   },
 ];
 
