@@ -54,10 +54,15 @@ export const useMarketValidation = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Check credits before proceeding
-      const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
-      if (!hasCredits(requiredCredits)) {
-        throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
+      // Check if admin account - skip credit check
+      const isAdmin = user.email?.toLowerCase() === 'admin@creatives-takeover.com';
+      
+      // Check credits before proceeding (skip for admin)
+      if (!isAdmin) {
+        const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
+        if (!hasCredits(requiredCredits)) {
+          throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
+        }
       }
 
       const { data, error } = await supabase.functions.invoke('market-validation-engine', {
@@ -70,15 +75,18 @@ export const useMarketValidation = () => {
       });
 
       if (error) {
-        // Handle credit errors specifically
-        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
+        // Handle credit errors specifically (skip for admin)
+        const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
+        if (!isAdmin && (error.status === 402 || (error.message && error.message.includes('credits')))) {
           throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
         }
         throw error;
       }
 
       if (data?.error) {
-        if (data.error.includes('credits') || data.required) {
+        // Handle credit errors specifically (skip for admin)
+        if (!isAdmin && (data.error.includes('credits') || data.required)) {
+          const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
           throw new Error(`Insufficient credits. Market validation requires ${data.required || requiredCredits} credits.`);
         }
         throw new Error(data.error);
@@ -88,7 +96,12 @@ export const useMarketValidation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['market-validation'] });
-      toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
+      const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+      if (isAdmin) {
+        toast.success('Market validation completed! (Admin - no credits used)');
+      } else {
+        toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
+      }
     },
     onError: (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to validate market';

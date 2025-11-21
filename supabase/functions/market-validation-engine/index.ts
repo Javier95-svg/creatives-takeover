@@ -32,32 +32,50 @@ serve(async (req) => {
       );
     }
 
-    // Check and deduct credits before processing
-    const creditCheck = await checkAndDeductCredits(
-      user.id,
-      MARKET_VALIDATION_CREDIT_COST,
-      'Market Validation',
-      session_id,
-      { business_idea, industry, target_market }
-    );
-
-    if (!creditCheck.success) {
-      return new Response(
-        JSON.stringify({ 
-          error: creditCheck.error || 'Insufficient credits',
-          required: MARKET_VALIDATION_CREDIT_COST
-        }),
-        { 
-          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user email to check if admin
+    let isAdmin = false;
+    try {
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(user.id);
+      if (!authError && authUser?.user?.email) {
+        const userEmail = authUser.user.email.toLowerCase();
+        isAdmin = userEmail === 'admin@creatives-takeover.com';
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      // Continue without admin bypass if check fails
+    }
+
+    // Skip credit check for admin account
+    if (!isAdmin) {
+      // Check and deduct credits before processing
+      const creditCheck = await checkAndDeductCredits(
+        user.id,
+        MARKET_VALIDATION_CREDIT_COST,
+        'Market Validation',
+        session_id,
+        { business_idea, industry, target_market }
+      );
+
+      if (!creditCheck.success) {
+        return new Response(
+          JSON.stringify({ 
+            error: creditCheck.error || 'Insufficient credits',
+            required: MARKET_VALIDATION_CREDIT_COST
+          }),
+          { 
+            status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } else {
+      console.log('Admin account detected - skipping credit check for market validation');
+    }
 
     // Use Lovable AI to analyze market potential
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
