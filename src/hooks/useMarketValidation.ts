@@ -34,6 +34,7 @@ export const useMarketValidation = () => {
         search_volume_data: (score.search_volume_data || {}) as any,
         competitor_gaps: (score.competitor_gaps || []) as any[],
         differentiation_opportunities: (score.differentiation_opportunities || []) as string[],
+        customer_needs_data: (score.customer_needs_data || undefined) as any,
         data_sources: (score.data_sources || []) as any[],
       })) as MarketValidationScore[];
     },

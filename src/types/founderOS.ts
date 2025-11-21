@@ -4,6 +4,24 @@
 // MARKET VALIDATION TYPES
 // ============================================
 
+export interface CustomerNeedsData {
+  primary_needs: string[];
+  key_requirements: string[];
+  pain_points: Array<{
+    point: string;
+    severity: 'high' | 'medium' | 'low';
+  }>;
+  buying_factors: Array<{
+    factor: string;
+    importance: number; // 0-100
+  }>;
+  customer_segments: Array<{
+    segment: string;
+    needs: string[];
+    size?: string; // e.g., 'small', 'medium', 'large'
+  }>;
+}
+
 export interface MarketValidationScore {
   id: string;
   user_id: string;
@@ -28,6 +46,9 @@ export interface MarketValidationScore {
   // Gap Analysis
   competitor_gaps: CompetitorGap[];
   differentiation_opportunities: string[];
+  
+  // Customer Analysis
+  customer_needs_data?: CustomerNeedsData;
   
   // Metadata
   validation_date: string;

@@ -76,7 +76,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a market validation expert. Analyze business ideas and provide realistic validation scores.
+            content: `You are a market validation expert and customer research analyst. Analyze business ideas and provide comprehensive validation scores and customer insights.
             
 Your job is to:
 1. Assess market size potential (0-100)
@@ -84,14 +84,21 @@ Your job is to:
 3. Analyze demand strength (0-100)
 4. Identify top 3-5 competitors with their strengths/weaknesses
 5. Find differentiation opportunities
-6. Calculate overall validation score (weighted average)
+6. Analyze customer needs, requirements, and pain points
+7. Identify key buying factors for customers
+8. Segment target customers and their specific needs
+9. Calculate overall validation score (weighted average)
 
 Be realistic and data-driven. Consider:
 - Market saturation
 - Entry barriers
 - Customer acquisition difficulty
 - Revenue potential
-- Execution complexity`
+- Execution complexity
+- What customers actually need (not just what they say they want)
+- Real pain points customers face with current solutions
+- Requirements customers have when evaluating solutions
+- What influences customer purchase decisions`
           },
           {
             role: 'user',
@@ -168,9 +175,56 @@ Provide a comprehensive market validation analysis.`
                 confidence_level: {
                   type: 'string',
                   enum: ['low', 'medium', 'high']
+                },
+                customer_needs: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Primary needs customers have in this niche (3-5 key needs)'
+                },
+                customer_requirements: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'Key requirements customers have when evaluating solutions (3-5 requirements)'
+                },
+                pain_points: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      point: { type: 'string', description: 'Description of the pain point' },
+                      severity: { type: 'string', enum: ['high', 'medium', 'low'], description: 'How severe this pain point is for customers' }
+                    },
+                    required: ['point', 'severity']
+                  },
+                  description: 'Specific pain points customers face with current solutions (3-5 pain points)'
+                },
+                buying_factors: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      factor: { type: 'string', description: 'Factor that influences purchase decisions' },
+                      importance: { type: 'number', minimum: 0, maximum: 100, description: 'Importance score 0-100' }
+                    },
+                    required: ['factor', 'importance']
+                  },
+                  description: 'What influences customer purchase decisions (3-5 factors)'
+                },
+                customer_segments: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      segment: { type: 'string', description: 'Customer segment name' },
+                      needs: { type: 'array', items: { type: 'string' }, description: 'Specific needs for this segment' },
+                      size: { type: 'string', description: 'Estimated segment size (e.g., small, medium, large)' }
+                    },
+                    required: ['segment', 'needs']
+                  },
+                  description: 'Different customer segments with their specific needs (2-3 segments)'
                 }
               },
-              required: ['market_size_score', 'competition_score', 'demand_score', 'confidence_level']
+              required: ['market_size_score', 'competition_score', 'demand_score', 'confidence_level', 'customer_needs', 'customer_requirements', 'pain_points', 'buying_factors']
             }
           }
         }],
@@ -200,11 +254,20 @@ Provide a comprehensive market validation analysis.`
       (validationData.demand_score * 0.35)
     );
 
+    // Prepare customer needs data
+    const customerNeedsData = {
+      primary_needs: validationData.customer_needs || [],
+      key_requirements: validationData.customer_requirements || [],
+      pain_points: validationData.pain_points || [],
+      buying_factors: validationData.buying_factors || [],
+      customer_segments: validationData.customer_segments || []
+    };
+
     // Store validation in database
     const { data: validationScore, error: dbError } = await supabase
       .from('market_validation_scores')
       .insert({
-        user_id: userId,
+        user_id: user.id,
         session_id: session_id,
         business_idea,
         industry,
@@ -218,6 +281,7 @@ Provide a comprehensive market validation analysis.`
         top_competitors: validationData.top_competitors || [],
         competitor_gaps: validationData.competitor_gaps || [],
         differentiation_opportunities: validationData.differentiation_opportunities || [],
+        customer_needs_data: customerNeedsData,
         confidence_level: validationData.confidence_level,
         data_sources: [
           { name: 'AI Analysis', type: 'ai_inference', reliability_score: 75 }

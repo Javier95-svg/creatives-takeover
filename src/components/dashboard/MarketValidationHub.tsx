@@ -9,6 +9,7 @@ import { useMarketValidation } from '@/hooks/useMarketValidation';
 import { ValidationScoreGauge } from './ValidationScoreGauge';
 import { CompetitorAnalysis } from './CompetitorAnalysis';
 import { DemandTrends } from './DemandTrends';
+import { CustomerNeedsAnalysis } from './CustomerNeedsAnalysis';
 import { BarChart3, RefreshCw, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -144,11 +145,15 @@ export const MarketValidationHub = () => {
             <ValidationScoreGauge validation={latestValidation} />
 
             {/* Tabs for Detailed Analysis */}
-            <Tabs defaultValue="competitors" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="customer-needs" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="customer-needs">Customer Needs</TabsTrigger>
                 <TabsTrigger value="competitors">Competitors</TabsTrigger>
                 <TabsTrigger value="trends">Demand Trends</TabsTrigger>
               </TabsList>
+              <TabsContent value="customer-needs" className="mt-4">
+                <CustomerNeedsAnalysis validation={latestValidation} />
+              </TabsContent>
               <TabsContent value="competitors" className="mt-4">
                 <CompetitorAnalysis validation={latestValidation} />
               </TabsContent>
