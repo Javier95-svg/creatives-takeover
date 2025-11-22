@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import Signup from "./pages/Signup";
 import Dream2Plan from "./pages/Dream2Plan";
+import Onboarding from "./pages/Onboarding";
 
 import Login from "./pages/Login";
 import Auth from "./pages/Auth";
@@ -79,6 +80,7 @@ function App() {
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/insighta" element={<Blog />} />
