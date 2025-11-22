@@ -48,6 +48,7 @@ interface UserContextType {
   finishOnboarding: () => Promise<void>;
   getOnboardingProgress: () => Promise<OnboardingProgress | null>;
   shouldShowOnboarding: () => Promise<boolean>;
+  syncOnboardingToDatabase: () => Promise<void>;
 }
 
 const STORAGE_KEY = 'creatives_takeover_user_context';
@@ -92,15 +93,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           console.error('Error loading user context:', error);
         }
       }
-      // Load onboarding from localStorage for non-authenticated users
-      const onboardingStored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (onboardingStored) {
-        try {
-          setOnboardingProgress(JSON.parse(onboardingStored));
-        } catch (error) {
-          console.error('Error loading onboarding progress:', error);
-        }
-      }
+      // Always load onboarding from localStorage (works for anonymous users)
+      loadOnboardingProgress();
       setIsLoading(false);
     }
   }, [user]);
@@ -230,50 +224,82 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return Math.round((completed / total) * 100);
   };
 
-  // Load onboarding progress from database
+  // Load onboarding progress from localStorage (always) and database (if authenticated)
   const loadOnboardingProgress = async () => {
-    if (!user) return;
-
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('onboarding_status, onboarding_completed_step, onboarding_completed_at, onboarding_goal')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (profile) {
-        const progress: OnboardingProgress = {
-          status: (profile.onboarding_status as 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED') || 'NOT_STARTED',
-          completedStep: profile.onboarding_completed_step || null,
-          completedAt: profile.onboarding_completed_at || null,
-          goal: profile.onboarding_goal || null,
-        };
-        setOnboardingProgress(progress);
-        // Sync to localStorage as backup
-        localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
+    // Always check localStorage first (works for anonymous users)
+    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (stored) {
+      try {
+        const localStorageProgress = JSON.parse(stored) as OnboardingProgress;
+        setOnboardingProgress(localStorageProgress);
+      } catch (e) {
+        console.error('Error parsing stored onboarding progress:', e);
       }
-    } catch (error) {
-      console.error('Error loading onboarding progress:', error);
-      // Fallback to localStorage
-      const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (stored) {
-        try {
-          setOnboardingProgress(JSON.parse(stored));
-        } catch (e) {
-          console.error('Error parsing stored onboarding progress:', e);
+    }
+
+    // If user is authenticated, also load from database and merge
+    if (user) {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('onboarding_status, onboarding_completed_step, onboarding_completed_at, onboarding_goal')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (profile) {
+          const dbProgress: OnboardingProgress = {
+            status: (profile.onboarding_status as 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED') || 'NOT_STARTED',
+            completedStep: profile.onboarding_completed_step || null,
+            completedAt: profile.onboarding_completed_at || null,
+            goal: profile.onboarding_goal || null,
+          };
+          
+          // Merge: Prefer database if it exists, but localStorage takes priority for completion status
+          // If localStorage says completed, trust it (user may have completed anonymously)
+          const localStorageProgress = stored ? JSON.parse(stored) as OnboardingProgress : null;
+          
+          if (localStorageProgress?.status === 'COMPLETED') {
+            // LocalStorage says completed, use it
+            setOnboardingProgress(localStorageProgress);
+            // Sync to database
+            await supabase
+              .from('profiles')
+              .update({
+                onboarding_status: localStorageProgress.status,
+                onboarding_completed_step: localStorageProgress.completedStep,
+                onboarding_completed_at: localStorageProgress.completedAt,
+                onboarding_goal: localStorageProgress.goal,
+              })
+              .eq('id', user.id);
+          } else if (dbProgress.status === 'COMPLETED') {
+            // Database says completed, use it and sync to localStorage
+            setOnboardingProgress(dbProgress);
+            localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(dbProgress));
+          } else {
+            // Neither is completed, use database (more authoritative) but merge with localStorage goal if set
+            const mergedProgress: OnboardingProgress = {
+              ...dbProgress,
+              goal: localStorageProgress?.goal || dbProgress.goal,
+            };
+            setOnboardingProgress(mergedProgress);
+            localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(mergedProgress));
+          }
         }
+      } catch (error) {
+        console.error('Error loading onboarding progress from database:', error);
+        // Continue with localStorage progress if available
       }
     }
   };
 
-  // Save onboarding progress to database and localStorage
+  // Save onboarding progress to localStorage (always) and database (if authenticated)
   const saveOnboardingProgress = async (progress: OnboardingProgress) => {
     // Update state
     setOnboardingProgress(progress);
     
-    // Save to localStorage as backup
+    // Always save to localStorage first (works for anonymous users immediately)
     localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
 
     // Save to database if user is authenticated
@@ -292,19 +318,39 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         if (error) throw error;
       } catch (error) {
         console.error('Error saving onboarding progress to database:', error);
-        // Continue even if DB save fails - localStorage backup is saved
+        // Continue even if DB save fails - localStorage is saved
       }
     }
   };
 
-  // Update onboarding goal
-  const updateOnboardingGoal = async (goal: string) => {
-    const current = onboardingProgress || {
+  // Get current progress from state or localStorage
+  const getCurrentProgress = (): OnboardingProgress => {
+    if (onboardingProgress) {
+      return onboardingProgress;
+    }
+    
+    // Check localStorage if state is not available (works for anonymous users)
+    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored) as OnboardingProgress;
+      } catch (e) {
+        console.error('Error parsing stored onboarding progress:', e);
+      }
+    }
+    
+    // Default: not started
+    return {
       status: 'NOT_STARTED' as const,
       completedStep: null,
       completedAt: null,
       goal: null,
     };
+  };
+
+  // Update onboarding goal
+  const updateOnboardingGoal = async (goal: string) => {
+    const current = getCurrentProgress();
     
     await saveOnboardingProgress({
       ...current,
@@ -314,12 +360,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   // Update onboarding status
   const updateOnboardingStatus = async (status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED') => {
-    const current = onboardingProgress || {
-      status: 'NOT_STARTED' as const,
-      completedStep: null,
-      completedAt: null,
-      goal: null,
-    };
+    const current = getCurrentProgress();
     
     await saveOnboardingProgress({
       ...current,
@@ -330,12 +371,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   // Complete a specific onboarding step
   const completeOnboardingStep = async (step: number) => {
-    const current = onboardingProgress || {
-      status: 'NOT_STARTED' as const,
-      completedStep: null,
-      completedAt: null,
-      goal: null,
-    };
+    const current = getCurrentProgress();
     
     const newStatus = current.status === 'NOT_STARTED' ? 'IN_PROGRESS' : current.status;
     
@@ -348,27 +384,102 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   // Complete entire onboarding
   const finishOnboarding = async () => {
+    const current = getCurrentProgress();
+    
     await saveOnboardingProgress({
       status: 'COMPLETED',
       completedStep: 4,
       completedAt: new Date().toISOString(),
-      goal: onboardingProgress?.goal || null,
+      goal: current.goal || null,
     });
   };
 
-  // Get onboarding progress
+  // Get onboarding progress (from localStorage for anonymous, localStorage + DB for authenticated)
   const getOnboardingProgress = async (): Promise<OnboardingProgress | null> => {
-    if (!onboardingProgress && user) {
-      await loadOnboardingProgress();
+    // Always check localStorage first (works for anonymous users)
+    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (stored) {
+      try {
+        const localStorageProgress = JSON.parse(stored) as OnboardingProgress;
+        // If we have localStorage and no user, return it immediately and update state
+        if (!user) {
+          setOnboardingProgress(localStorageProgress);
+          return localStorageProgress;
+        }
+        // If we have a user, also load from DB to merge
+        if (!onboardingProgress) {
+          await loadOnboardingProgress();
+        }
+        // Return current state (which may have been merged with DB)
+        return onboardingProgress || localStorageProgress;
+      } catch (e) {
+        console.error('Error parsing stored onboarding progress:', e);
+      }
     }
-    return onboardingProgress;
+    
+    // No localStorage: if authenticated, load from DB
+    if (user && !onboardingProgress) {
+      await loadOnboardingProgress();
+      return onboardingProgress;
+    }
+    
+    // No progress found anywhere
+    return onboardingProgress || null;
   };
 
-  // Check if onboarding should be shown
+  // Check if onboarding should be shown (checks localStorage first, then DB if authenticated)
   const shouldShowOnboarding = async (): Promise<boolean> => {
-    const progress = await getOnboardingProgress();
-    // Only show if status is NOT 'COMPLETED'
-    return progress?.status !== 'COMPLETED';
+    // Always check localStorage first (works for anonymous users)
+    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (stored) {
+      try {
+        const progress = JSON.parse(stored) as OnboardingProgress;
+        // If localStorage says completed, don't show
+        if (progress?.status === 'COMPLETED') {
+          return false;
+        }
+      } catch (e) {
+        // If corrupted, show onboarding
+      }
+    }
+    
+    // If authenticated, also check database
+    if (user) {
+      const progress = await getOnboardingProgress();
+      return progress?.status !== 'COMPLETED';
+    }
+    
+    // No localStorage and no user = first visit = show onboarding
+    return true;
+  };
+
+  // Sync anonymous onboarding progress to database when user authenticates
+  const syncOnboardingToDatabase = async () => {
+    if (!user) return;
+    
+    try {
+      const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if (stored) {
+        const progress = JSON.parse(stored) as OnboardingProgress;
+        
+        // Sync to database
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            onboarding_status: progress.status,
+            onboarding_completed_step: progress.completedStep,
+            onboarding_completed_at: progress.completedAt,
+            onboarding_goal: progress.goal,
+          })
+          .eq('id', user.id);
+
+        if (error) throw error;
+        
+        console.log('Synced anonymous onboarding progress to database');
+      }
+    } catch (error) {
+      console.error('Error syncing onboarding progress to database:', error);
+    }
   };
 
   return (
@@ -388,6 +499,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       finishOnboarding,
       getOnboardingProgress,
       shouldShowOnboarding,
+      syncOnboardingToDatabase,
     }}>
       {children}
     </UserContext.Provider>

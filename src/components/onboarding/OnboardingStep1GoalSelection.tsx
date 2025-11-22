@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Rocket, Calendar, Lightbulb, Users } from "lucide-react";
 import { captureEvent } from "@/lib/analytics";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type OnboardingGoal = "Get Funded" | "Launch in 30 Days" | "Validate My Idea" | "Build My Team";
 
@@ -47,6 +48,7 @@ export const OnboardingStep1GoalSelection = ({
   onGoalSelect, 
   selectedGoal 
 }: OnboardingStep1GoalSelectionProps) => {
+  const { user } = useAuth();
   const [localSelected, setLocalSelected] = useState<OnboardingGoal | null>(selectedGoal || null);
 
   const handleGoalClick = (goal: OnboardingGoal) => {
@@ -55,6 +57,8 @@ export const OnboardingStep1GoalSelection = ({
     captureEvent('onboarding_goal_selected', {
       goal,
       step: 1,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
     onGoalSelect(goal);
   };

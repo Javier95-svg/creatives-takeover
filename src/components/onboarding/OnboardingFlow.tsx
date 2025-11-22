@@ -32,17 +32,14 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [stepStartTime, setStepStartTime] = useState<Record<number, number>>({});
 
-  // Load progress on mount and resume from where user left off
+  // Load progress on mount and resume from where user left off (works for anonymous and authenticated)
   useEffect(() => {
     const loadProgress = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
       try {
+        // Get progress from localStorage (for anonymous) or DB (for authenticated)
         const progress = await getOnboardingProgress();
+        
         if (progress) {
           // Resume from last completed step + 1
           if (progress.status === 'IN_PROGRESS' && progress.completedStep !== null) {
@@ -60,9 +57,14 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
           if (progress.goal) {
             setSelectedGoal(progress.goal as OnboardingGoal);
           }
+        } else {
+          // No progress found, start from Step 1 (first visit)
+          setCurrentStep(1);
         }
       } catch (error) {
         console.error('Error loading onboarding progress:', error);
+        // On error, start from Step 1
+        setCurrentStep(1);
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +73,7 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
     if (open) {
       loadProgress();
     }
-  }, [open, user, getOnboardingProgress, onComplete]);
+  }, [open, getOnboardingProgress, onComplete]);
 
   // Track step start time
   useEffect(() => {
@@ -81,21 +83,41 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
         [currentStep]: Date.now()
       }));
 
-      // Track step viewed in PostHog
+      // Track step viewed in PostHog (with anonymous_id if no user)
       captureEvent('onboarding_step_viewed', {
         step: currentStep,
         goal: selectedGoal,
+        user_authenticated: !!user,
+        user_id: user?.id || null,
       });
     }
   }, [currentStep, open, selectedGoal]);
 
   // Track onboarding started
   useEffect(() => {
-    if (open && currentStep === 1 && onboardingProgress?.status === 'NOT_STARTED') {
-      updateOnboardingStatus('IN_PROGRESS');
-      captureEvent('onboarding_started', {});
+    if (open && currentStep === 1) {
+      // Check localStorage if onboardingProgress is not loaded yet
+      const stored = localStorage.getItem('ct_onboarding_progress');
+      let currentStatus = onboardingProgress?.status;
+      
+      if (!currentStatus && stored) {
+        try {
+          const progress = JSON.parse(stored);
+          currentStatus = progress?.status;
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      // Start onboarding if not started yet
+      if (!currentStatus || currentStatus === 'NOT_STARTED') {
+        updateOnboardingStatus('IN_PROGRESS');
+        captureEvent('onboarding_started', {
+          user_authenticated: !!user,
+        });
+      }
     }
-  }, [open, currentStep, onboardingProgress]);
+  }, [open, currentStep, onboardingProgress, updateOnboardingStatus, user]);
 
   const handleGoalSelect = async (goal: OnboardingGoal) => {
     setSelectedGoal(goal);
@@ -108,6 +130,8 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
       step: 1,
       goal,
       time_spent_seconds: timeSpent,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
 
     // Move to next step after a brief delay
@@ -125,6 +149,8 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
       step: 2,
       goal: selectedGoal,
       time_spent_seconds: timeSpent,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
 
     setTimeout(() => {
@@ -141,6 +167,8 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
       step: 3,
       goal: selectedGoal,
       time_spent_seconds: timeSpent,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
 
     setTimeout(() => {
@@ -157,6 +185,8 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
       goal: selectedGoal,
       time_spent_seconds: timeSpent,
       skipped_tour: false,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
 
     onComplete();
@@ -171,10 +201,14 @@ export const OnboardingFlow = ({ open, onComplete }: OnboardingFlowProps) => {
       goal: selectedGoal,
       time_spent_seconds: timeSpent,
       skipped_tour: true,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
 
     captureEvent('onboarding_skipped_tour', {
       goal: selectedGoal,
+      user_authenticated: !!user,
+      user_id: user?.id || null,
     });
 
     onComplete();
