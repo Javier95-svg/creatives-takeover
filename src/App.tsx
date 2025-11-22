@@ -35,7 +35,6 @@ import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
 import RAGTest from "./pages/RAGTest";
 import { Analytics } from '@vercel/analytics/react';
-import { OnboardingWrapper } from "@/components/onboarding/OnboardingWrapper";
 
 const queryClient = new QueryClient();
 
@@ -65,7 +64,6 @@ function App() {
               <Sonner />
               <BrowserRouter>
                 <ScrollToTop />
-                <OnboardingWrapper />
                 <FeedbackWidgetWrapper />
                 <Routes>
                   <Route path="/" element={<Index />} />
