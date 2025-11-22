@@ -25,17 +25,33 @@ interface UserContextState {
   isInitialized: boolean;
 }
 
+export interface OnboardingProgress {
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  completedStep: number | null;
+  completedAt: string | null;
+  goal: string | null;
+}
+
 interface UserContextType {
   state: UserContextState;
   updateSurveyData: (data: Partial<SurveyData>) => void;
   updatePreferences: (prefs: Partial<Preferences>) => void;
-  completeOnboarding: () => void;
+  completeOnboarding: () => void; // Legacy method for backwards compatibility
   resetUserData: () => void;
   getSurveyProgress: () => number;
   isLoading: boolean;
+  // Onboarding methods
+  onboardingProgress: OnboardingProgress | null;
+  updateOnboardingGoal: (goal: string) => Promise<void>;
+  updateOnboardingStatus: (status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED') => Promise<void>;
+  completeOnboardingStep: (step: number) => Promise<void>;
+  finishOnboarding: () => Promise<void>;
+  getOnboardingProgress: () => Promise<OnboardingProgress | null>;
+  shouldShowOnboarding: () => Promise<boolean>;
 }
 
 const STORAGE_KEY = 'creatives_takeover_user_context';
+const ONBOARDING_STORAGE_KEY = 'ct_onboarding_progress';
 
 const initialState: UserContextState = {
   surveyData: {
@@ -60,11 +76,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [state, setState] = useState<UserContextState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
+  const [onboardingProgress, setOnboardingProgress] = useState<OnboardingProgress | null>(null);
 
   // Load from database or localStorage on mount
   useEffect(() => {
     if (user) {
       loadUserContextFromDatabase();
+      loadOnboardingProgress();
     } else {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -72,6 +90,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           setState(JSON.parse(stored));
         } catch (error) {
           console.error('Error loading user context:', error);
+        }
+      }
+      // Load onboarding from localStorage for non-authenticated users
+      const onboardingStored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if (onboardingStored) {
+        try {
+          setOnboardingProgress(JSON.parse(onboardingStored));
+        } catch (error) {
+          console.error('Error loading onboarding progress:', error);
         }
       }
       setIsLoading(false);
@@ -171,7 +198,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const completeOnboarding = () => {
+  const completeLegacyOnboarding = () => {
     updatePreferences({ onboardingCompleted: true });
   };
 
@@ -203,15 +230,164 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return Math.round((completed / total) * 100);
   };
 
+  // Load onboarding progress from database
+  const loadOnboardingProgress = async () => {
+    if (!user) return;
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('onboarding_status, onboarding_completed_step, onboarding_completed_at, onboarding_goal')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (profile) {
+        const progress: OnboardingProgress = {
+          status: (profile.onboarding_status as 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED') || 'NOT_STARTED',
+          completedStep: profile.onboarding_completed_step || null,
+          completedAt: profile.onboarding_completed_at || null,
+          goal: profile.onboarding_goal || null,
+        };
+        setOnboardingProgress(progress);
+        // Sync to localStorage as backup
+        localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
+      }
+    } catch (error) {
+      console.error('Error loading onboarding progress:', error);
+      // Fallback to localStorage
+      const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if (stored) {
+        try {
+          setOnboardingProgress(JSON.parse(stored));
+        } catch (e) {
+          console.error('Error parsing stored onboarding progress:', e);
+        }
+      }
+    }
+  };
+
+  // Save onboarding progress to database and localStorage
+  const saveOnboardingProgress = async (progress: OnboardingProgress) => {
+    // Update state
+    setOnboardingProgress(progress);
+    
+    // Save to localStorage as backup
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
+
+    // Save to database if user is authenticated
+    if (user) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            onboarding_status: progress.status,
+            onboarding_completed_step: progress.completedStep,
+            onboarding_completed_at: progress.completedAt,
+            onboarding_goal: progress.goal,
+          })
+          .eq('id', user.id);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error saving onboarding progress to database:', error);
+        // Continue even if DB save fails - localStorage backup is saved
+      }
+    }
+  };
+
+  // Update onboarding goal
+  const updateOnboardingGoal = async (goal: string) => {
+    const current = onboardingProgress || {
+      status: 'NOT_STARTED' as const,
+      completedStep: null,
+      completedAt: null,
+      goal: null,
+    };
+    
+    await saveOnboardingProgress({
+      ...current,
+      goal,
+    });
+  };
+
+  // Update onboarding status
+  const updateOnboardingStatus = async (status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED') => {
+    const current = onboardingProgress || {
+      status: 'NOT_STARTED' as const,
+      completedStep: null,
+      completedAt: null,
+      goal: null,
+    };
+    
+    await saveOnboardingProgress({
+      ...current,
+      status,
+      completedAt: status === 'COMPLETED' ? new Date().toISOString() : current.completedAt,
+    });
+  };
+
+  // Complete a specific onboarding step
+  const completeOnboardingStep = async (step: number) => {
+    const current = onboardingProgress || {
+      status: 'NOT_STARTED' as const,
+      completedStep: null,
+      completedAt: null,
+      goal: null,
+    };
+    
+    const newStatus = current.status === 'NOT_STARTED' ? 'IN_PROGRESS' : current.status;
+    
+    await saveOnboardingProgress({
+      ...current,
+      status: newStatus,
+      completedStep: step,
+    });
+  };
+
+  // Complete entire onboarding
+  const finishOnboarding = async () => {
+    await saveOnboardingProgress({
+      status: 'COMPLETED',
+      completedStep: 4,
+      completedAt: new Date().toISOString(),
+      goal: onboardingProgress?.goal || null,
+    });
+  };
+
+  // Get onboarding progress
+  const getOnboardingProgress = async (): Promise<OnboardingProgress | null> => {
+    if (!onboardingProgress && user) {
+      await loadOnboardingProgress();
+    }
+    return onboardingProgress;
+  };
+
+  // Check if onboarding should be shown
+  const shouldShowOnboarding = async (): Promise<boolean> => {
+    const progress = await getOnboardingProgress();
+    // Only show if status is NOT 'COMPLETED'
+    return progress?.status !== 'COMPLETED';
+  };
+
   return (
     <UserContext.Provider value={{
       state,
       updateSurveyData,
       updatePreferences,
-      completeOnboarding,
+      completeOnboarding: completeLegacyOnboarding,
       resetUserData,
       getSurveyProgress,
       isLoading,
+      // Onboarding methods
+      onboardingProgress,
+      updateOnboardingGoal,
+      updateOnboardingStatus,
+      completeOnboardingStep,
+      finishOnboarding,
+      getOnboardingProgress,
+      shouldShowOnboarding,
     }}>
       {children}
     </UserContext.Provider>
