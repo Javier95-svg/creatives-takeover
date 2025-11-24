@@ -98,7 +98,7 @@ const EntrepreneurProblems = () => {
             Why Most Pre-Seed Founders <span className="text-red-500">Fail</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            The pre-seed stage is brutal. You're trying to validate an idea, build a team, raise capital, and find product-market fit—all at once, with limited resources and no playbook. Most founders fail not because their idea is bad, but because they're overwhelmed by the complexity and don't have the right systems to navigate it. We've been there. Here's what actually kills pre-seed startups, and how to avoid it.
+            Most pre-seed founders fail because they're overwhelmed by complexity, not because their idea is bad. You're juggling validation, team building, fundraising, and product-market fit all at once, with limited resources and no playbook. Here's what actually kills pre-seed startups, and how to avoid it.
           </p>
         </div>
 
