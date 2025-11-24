@@ -3,12 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { 
-  Brain,
-  Clock,
-  Target,
-  TrendingDown,
+  Search,
   Users,
-  Zap,
+  DollarSign,
+  Map,
+  AlertCircle,
+  Flame,
   ArrowRight,
   CheckCircle
 } from "lucide-react";
@@ -16,40 +16,40 @@ import {
 const EntrepreneurProblems = () => {
   const problems = [
     {
-      icon: <Clock className="w-8 h-8 text-red-500" />,
-      problem: "Endless Planning, No Revenue",
-      description: "Six months of 'perfect planning' while competitors are already making money. You're stuck in research mode.",
-      solution: "30-day sprint roadmap forces you to ship fast and validate with real customers, not hypothetical plans."
-    },
-    {
-      icon: <Brain className="w-8 h-8 text-red-500" />,
-      problem: "Generic MBA Advice",
-      description: "Business consultants who've never launched a creative business telling you to 'write a 50-page business plan.'",
-      solution: "AI trained specifically on creative business models - understands your vision without corporate jargon."
-    },
-    {
-      icon: <TrendingDown className="w-8 h-8 text-red-500" />,
-      problem: "Launching in the Dark",
-      description: "No idea if anyone will actually pay for your idea. You're guessing instead of validating with real data.",
-      solution: "Real-time market intelligence shows what creative businesses are working RIGHT NOW in your niche."
+      icon: <Search className="w-8 h-8 text-red-500" />,
+      problem: "Building Without Validating Problem-Solution Fit",
+      description: "You've spent months building your MVP, but you're not sure if anyone actually needs it. You're guessing whether people will pay, or if you're solving a real problem. Every 'no' from a potential customer feels like a personal rejection, and you're running out of runway to pivot.",
+      solution: "Our validation framework helps you test problem-solution fit before you burn months building. Get real feedback from your ideal customers, understand what they'll actually pay for, and validate demand before you commit to a full build."
     },
     {
       icon: <Users className="w-8 h-8 text-red-500" />,
-      problem: "Zero Accountability",
-      description: "Starting strong on Monday, ghosting your project by Friday. No one to keep you on track or celebrate wins with.",
-      solution: "Accountability partners, daily check-ins, and monthly demo days keep you shipping and celebrating progress."
+      problem: "Team Building and Equity Division Nightmares",
+      description: "You need a co-founder or early team members, but how do you split equity fairly? Should your technical co-founder get 50%? What about the advisor who's helping with connections? You're paralyzed by the fear of making the wrong decision and creating resentment down the line.",
+      solution: "Get clear frameworks for equity splits, vesting schedules, and co-founder agreements. Our tools help you structure fair deals that protect everyone's interests and set your startup up for long-term success."
     },
     {
-      icon: <Target className="w-8 h-8 text-red-500" />,
-      problem: "Fear of Being 'Too Creative'",
-      description: "Everyone says 'be practical' and 'play it safe.' You water down your bold ideas trying to fit corporate molds.",
-      solution: "Built FOR creatives BY creatives. We celebrate bold ideas and help you monetize your unique vision."
+      icon: <DollarSign className="w-8 h-8 text-red-500" />,
+      problem: "Raising Your First Capital Feels Impossible",
+      description: "Friends and family are skeptical. Angels want traction you don't have yet. Pre-seed funds want a team you're still building. You're stuck in the 'need money to get money' trap, and every rejection makes you question if your idea is even worth pursuing.",
+      solution: "Learn exactly how to structure your first raise, from friends & family rounds to angel investors and pre-seed funds. Get pitch deck templates, investor outreach strategies, and real examples of what worked for other founders at your stage."
     },
     {
-      icon: <Zap className="w-8 h-8 text-red-500" />,
-      problem: "No Clear First Steps",
-      description: "Overwhelmed by all the things you 'should' do. Where do you even start? What matters most?",
-      solution: "Day-by-day roadmap tells you exactly what to do today to get to your first paying customer."
+      icon: <Map className="w-8 h-8 text-red-500" />,
+      problem: "Go-to-Market Strategy Confusion and Unclear ICP",
+      description: "You know you need to 'go to market,' but what does that actually mean? Who exactly is your ideal customer? Should you focus on B2B or B2C? Direct sales or inbound marketing? You're throwing darts in the dark, wasting time and money on channels that don't convert.",
+      solution: "Define your ideal customer profile with precision, then build a go-to-market strategy that actually works for pre-seed startups. Get step-by-step frameworks for customer discovery, channel selection, and early customer acquisition that don't require a massive budget."
+    },
+    {
+      icon: <AlertCircle className="w-8 h-8 text-red-500" />,
+      problem: "Weak Execution Habits and Lack of Focus",
+      description: "You start each week with big plans, but by Wednesday you're distracted by shiny new ideas. You're juggling product development, customer calls, fundraising prep, and marketing—but nothing feels like it's moving forward. You're busy, but not productive.",
+      solution: "Build execution systems that keep you focused on what matters. Daily check-ins, weekly sprints, and clear prioritization frameworks help you ship consistently instead of spinning in circles. Get accountability that actually works for solo founders."
+    },
+    {
+      icon: <Flame className="w-8 h-8 text-red-500" />,
+      problem: "Early Burnout and Losing Momentum",
+      description: "You were so excited three months ago, but now you're exhausted. The late nights, the constant rejection, the uncertainty—it's wearing you down. You're questioning if you have what it takes, and the initial fire is starting to fade. You need to find a sustainable pace, but you don't know how.",
+      solution: "Learn how to build sustainable founder habits that prevent burnout. Get strategies for managing energy, setting boundaries, and maintaining momentum even when things get tough. Connect with other founders who understand the emotional rollercoaster of building from zero."
     }
   ];
 
@@ -95,10 +95,10 @@ const EntrepreneurProblems = () => {
             Don't Repeat the Same Mistakes
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Why Most Small Businesses <span className="text-red-500">Never Scale</span>
+            Why Most Pre-Seed Founders <span className="text-red-500">Fail</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Generic business advice fails when you're building from zero. You need a system designed for the unique challenges of early stage entrepreneurship: moving fast, validating quickly, and scaling without the resources of established companies.
+            The pre-seed stage is brutal. You're trying to validate an idea, build a team, raise capital, and find product-market fit—all at once, with limited resources and no playbook. Most founders fail not because their idea is bad, but because they're overwhelmed by the complexity and don't have the right systems to navigate it. We've been there. Here's what actually kills pre-seed startups, and how to avoid it.
           </p>
         </div>
 
