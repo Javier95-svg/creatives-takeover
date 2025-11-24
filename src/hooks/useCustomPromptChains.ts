@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { MultiStepPrompt } from '@/data/multiStepPrompts';
 import { toast } from 'sonner';
 
@@ -26,6 +27,7 @@ export interface CustomPromptChain {
 
 export function useCustomPromptChains() {
   const { user } = useAuth();
+  const { subscriptionData } = useSubscription();
   const [publishedChains, setPublishedChains] = useState<MultiStepPrompt[]>([]);
   const [userChains, setUserChains] = useState<CustomPromptChain[]>([]);
   const [loading, setLoading] = useState(false);
@@ -95,6 +97,17 @@ export function useCustomPromptChains() {
   const createChain = async (chainData: Omit<CustomPromptChain, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) {
       throw new Error('You must be logged in to create a prompt chain');
+    }
+
+    // Check subscription tier if trying to publish - only Creator and Professional users can publish
+    if (chainData.published) {
+      const userTier = subscriptionData.subscription_tier || 'free';
+      if (userTier !== 'creator' && userTier !== 'professional' && userTier !== 'enterprise') {
+        const errorMessage = 'Upgrade to Creator or Professional plan to publish prompt chains';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
     }
 
     setLoading(true);
@@ -184,6 +197,15 @@ export function useCustomPromptChains() {
   const publishChain = async (chainId: string) => {
     if (!user) {
       throw new Error('You must be logged in to publish a prompt chain');
+    }
+
+    // Check subscription tier - only Creator and Professional users can publish
+    const userTier = subscriptionData.subscription_tier || 'free';
+    if (userTier !== 'creator' && userTier !== 'professional' && userTier !== 'enterprise') {
+      const errorMessage = 'Upgrade to Creator or Professional plan to publish prompt chains';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
 
     setLoading(true);
