@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Lock, Sparkles, Crown } from "lucide-react";
+import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Lock, Sparkles, Crown, Plus, User } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
@@ -12,17 +12,33 @@ import PromptLibraryWallpaper from "@/components/wallpapers/PromptLibraryWallpap
 import { multiStepPrompts, type MultiStepPrompt } from "@/data/multiStepPrompts";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCustomPromptChains } from "@/hooks/useCustomPromptChains";
+import CustomPromptChainCreator from "@/components/prompt-library/CustomPromptChainCreator";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedConcept, setSelectedConcept] = useState<MultiStepPrompt | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [showCreator, setShowCreator] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const { subscriptionData, loading: subscriptionLoading } = useSubscription();
   const { user } = useAuth();
+  const { publishedChains, fetchPublishedChains, loading: chainsLoading } = useCustomPromptChains();
 
   const userTier = subscriptionData.subscription_tier || "free";
+
+  // Check if user can create prompt chains
+  const canCreatePromptChain = () => {
+    return userTier === "creator" || userTier === "professional" || userTier === "enterprise";
+  };
+
+  // Fetch custom prompt chains on mount
+  useEffect(() => {
+    fetchPublishedChains();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const hasAccessToPrompt = (prompt: MultiStepPrompt) => {
     if (prompt.requiredTier === "free") return true;
@@ -49,13 +65,20 @@ const PromptLibrary = () => {
     { id: "health", name: "Health & Wellness", icon: TrendingUp },
   ];
 
-  const filteredPrompts = multiStepPrompts.filter(prompt => {
-    const matchesCategory = selectedCategory === "all" || prompt.category === selectedCategory;
-    const matchesSearch = prompt.conceptTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         prompt.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         prompt.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  // Merge static and custom prompts
+  const allPrompts = useMemo(() => {
+    return [...multiStepPrompts, ...publishedChains];
+  }, [publishedChains]);
+
+  const filteredPrompts = useMemo(() => {
+    return allPrompts.filter(prompt => {
+      const matchesCategory = selectedCategory === "all" || prompt.category === selectedCategory;
+      const matchesSearch = prompt.conceptTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           prompt.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           prompt.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    });
+  }, [allPrompts, selectedCategory, searchQuery]);
 
   const copyPrompt = (prompt: string) => {
     navigator.clipboard.writeText(prompt);
@@ -118,6 +141,14 @@ const PromptLibrary = () => {
                     <span>{selectedConcept.conceptTitle}</span>
                     <Badge variant="secondary">Step {currentStep} of 7</Badge>
                   </CardTitle>
+                  {selectedConcept.is_custom && selectedConcept.author_name && (
+                    <div className="mb-2">
+                      <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
+                        <User className="w-3 h-3" />
+                        Created by {selectedConcept.author_name}
+                      </Badge>
+                    </div>
+                  )}
                   <CardDescription>
                     {selectedConcept.description}
                   </CardDescription>
@@ -315,6 +346,40 @@ const PromptLibrary = () => {
               </div>
             </div>
 
+            {/* Make Your Own Prompt Chain Card */}
+            <div className="mb-6">
+              <Card className="glass-card border-2 border-dashed hover:border-solid transition-all">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="p-3 rounded-lg bg-primary/10">
+                        <Plus className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold mb-1">Make Your Own Prompt Chain</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {canCreatePromptChain() 
+                            ? "Create and publish your custom 7-step business idea prompt chain"
+                            : "Upgrade to Creator or Professional plan to create and publish custom prompt chains"}
+                        </p>
+                      </div>
+                    </div>
+                    {canCreatePromptChain() ? (
+                      <Button onClick={() => setShowCreator(true)} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create Prompt Chain
+                      </Button>
+                    ) : (
+                      <Button onClick={() => setShowUpgradeModal(true)} variant="outline" className="gap-2">
+                        <Lock className="w-4 h-4" />
+                        Upgrade to Unlock
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {filteredPrompts.map((prompt) => (
                 <Card key={prompt.id} className="glass-card hover:shadow-lg transition-shadow">
@@ -327,6 +392,14 @@ const PromptLibrary = () => {
                             <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           )}
                         </CardTitle>
+                        {prompt.is_custom && prompt.author_name && (
+                          <div className="mb-2">
+                            <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
+                              <User className="w-3 h-3" />
+                              Created by {prompt.author_name}
+                            </Badge>
+                          </div>
+                        )}
                         <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                           {prompt.description}
                         </p>
@@ -407,6 +480,63 @@ const PromptLibrary = () => {
         </div>
       </div>
       <Footer />
+
+      {/* Custom Prompt Chain Creator Modal */}
+      {showCreator && (
+        <CustomPromptChainCreator
+          onClose={() => setShowCreator(false)}
+          onSuccess={() => {
+            fetchPublishedChains();
+            setShowCreator(false);
+          }}
+        />
+      )}
+
+      {/* Upgrade Modal for Free Users */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-primary" />
+                Upgrade Required
+              </CardTitle>
+              <CardDescription>
+                Create custom prompt chains is available for Creator and Professional plans
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold">With Creator or Professional plan, you can:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Create custom 7-step business idea prompt chains</li>
+                  <li>Publish your prompt chains to the library</li>
+                  <li>Get attribution for your published chains</li>
+                  <li>Help other entrepreneurs with your expertise</li>
+                </ul>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowUpgradeModal(false);
+                    window.location.href = "/pricing";
+                  }}
+                  className="flex-1"
+                >
+                  View Pricing
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

@@ -64,7 +64,7 @@ const TIER_MAPPING: Record<string, "free" | "creator" | "professional"> = {
 };
 
 export interface MultiStepPrompt {
-  id: number;
+  id: number | string; // Can be number for static prompts or string (UUID) for custom prompts
   conceptTitle: string;
   category: string;
   description: string;
@@ -77,6 +77,8 @@ export interface MultiStepPrompt {
     dayRange: string;
     prompt: string;
   }[];
+  author_name?: string; // Optional: for custom prompt chains
+  is_custom?: boolean; // Optional: indicates if this is a user-generated prompt chain
 }
 
 // Helper function to generate contextual steps 2-7 from step 1
