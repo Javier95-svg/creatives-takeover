@@ -19,7 +19,7 @@ const EntrepreneurProblems = () => {
       icon: <Search className="w-8 h-8 text-red-500" />,
       problem: "Building Without Validating Problem-Solution Fit",
       description: "You have spent months building your MVP, but you still are not sure anyone genuinely needs it. Most days you are guessing, trying to figure out whether people will ever pay for it or whether you are just polishing a product that does not really solve a painful problem. Each time a potential customer says "no," it hits you personally, like a judgment on your skills and your idea, and the more it happens the harder it becomes to stay confident. Meanwhile your runway is shrinking, your savings are disappearing, and the pressure to choose the right next move is increasing, even though you still do not have clear data to guide a pivot.",
-      solution: "Use BizMap AI to validate your idea with a structured 7-question framework that tests problem-solution fit before you burn months building. Get real feedback and validate demand before committing to a full build."
+      solution: "Use BizMap AI to validate your idea with a structured 7-question framework that tests problem-solution fit before you burn months building. Get real feedback and validate demand before committing to a full build.",
     },
     {
       icon: <Users className="w-8 h-8 text-red-500" />,
