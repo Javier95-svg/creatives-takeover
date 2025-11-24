@@ -19,37 +19,37 @@ const EntrepreneurProblems = () => {
       icon: <Search className="w-8 h-8 text-red-500" />,
       problem: "Building Without Validating Problem-Solution Fit",
       description: "You've spent months building your MVP, but you're not sure if anyone actually needs it. You're guessing whether people will pay, or if you're solving a real problem. Every 'no' from a potential customer feels like a personal rejection, and you're running out of runway to pivot.",
-      solution: "Our validation framework helps you test problem-solution fit before you burn months building. Get real feedback from your ideal customers, understand what they'll actually pay for, and validate demand before you commit to a full build."
+      solution: "Use BizMap AI to validate your idea with a structured 7-question framework that tests problem-solution fit before you burn months building. Insighta provides real-time market research and competitor analysis to understand demand. Track your validation progress in your Dashboard, so you know exactly where you stand before committing to a full build."
     },
     {
       icon: <Users className="w-8 h-8 text-red-500" />,
       problem: "Team Building and Equity Division Nightmares",
       description: "You need a co-founder or early team members, but how do you split equity fairly? Should your technical co-founder get 50%? What about the advisor who's helping with connections? You're paralyzed by the fear of making the wrong decision and creating resentment down the line.",
-      solution: "Get clear frameworks for equity splits, vesting schedules, and co-founder agreements. Our tools help you structure fair deals that protect everyone's interests and set your startup up for long-term success."
+      solution: "Access ready-to-use equity split templates and co-founder agreement prompts in our Prompt Library. Connect with potential co-founders and advisors in our Community who've navigated these decisions. Use BizMap AI to build a strategic roadmap that helps you make informed team-building decisions aligned with your startup's goals."
     },
     {
       icon: <DollarSign className="w-8 h-8 text-red-500" />,
       problem: "Raising Your First Capital Feels Impossible",
       description: "Friends and family are skeptical. Angels want traction you don't have yet. Pre-seed funds want a team you're still building. You're stuck in the 'need money to get money' trap, and every rejection makes you question if your idea is even worth pursuing.",
-      solution: "Learn exactly how to structure your first raise, from friends & family rounds to angel investors and pre-seed funds. Get pitch deck templates, investor outreach strategies, and real examples of what worked for other founders at your stage."
+      solution: "Find proven pitch deck templates and investor email prompts in our Prompt Library. Connect with founders in our Community who've successfully raised from friends & family, angels, and pre-seed funds. Use Insighta to research investors, understand their thesis, and identify the right fit for your startup."
     },
     {
       icon: <Map className="w-8 h-8 text-red-500" />,
       problem: "Go-to-Market Strategy Confusion and Unclear ICP",
       description: "You know you need to 'go to market,' but what does that actually mean? Who exactly is your ideal customer? Should you focus on B2B or B2C? Direct sales or inbound marketing? You're throwing darts in the dark, wasting time and money on channels that don't convert.",
-      solution: "Define your ideal customer profile with precision, then build a go-to-market strategy that actually works for pre-seed startups. Get step-by-step frameworks for customer discovery, channel selection, and early customer acquisition that don't require a massive budget."
+      solution: "Use BizMap AI to build a comprehensive go-to-market strategy tailored to your startup. Insighta helps you research your ideal customer profile, analyze market segments, and identify the most effective channels. Track your GTM metrics and customer acquisition progress in your Dashboard to see what's actually working."
     },
     {
       icon: <AlertCircle className="w-8 h-8 text-red-500" />,
       problem: "Weak Execution Habits and Lack of Focus",
       description: "You start each week with big plans, but by Wednesday you're distracted by shiny new ideas. You're juggling product development, customer calls, fundraising prep, and marketing—but nothing feels like it's moving forward. You're busy, but not productive.",
-      solution: "Build execution systems that keep you focused on what matters. Daily check-ins, weekly sprints, and clear prioritization frameworks help you ship consistently instead of spinning in circles. Get accountability that actually works for solo founders."
+      solution: "Your Dashboard keeps you focused on what matters with clear priorities, progress tracking, and weekly sprint planning. Join our Community for daily check-ins and accountability partners who keep you shipping consistently. Stop spinning in circles and start making real progress."
     },
     {
       icon: <Flame className="w-8 h-8 text-red-500" />,
       problem: "Early Burnout and Losing Momentum",
       description: "You were so excited three months ago, but now you're exhausted. The late nights, the constant rejection, the uncertainty—it's wearing you down. You're questioning if you have what it takes, and the initial fire is starting to fade. You need to find a sustainable pace, but you don't know how.",
-      solution: "Learn how to build sustainable founder habits that prevent burnout. Get strategies for managing energy, setting boundaries, and maintaining momentum even when things get tough. Connect with other founders who understand the emotional rollercoaster of building from zero."
+      solution: "Connect with founders in our Community who understand the emotional rollercoaster and can help you maintain momentum. Your Dashboard tracks sustainable progress so you can see wins even during tough weeks. Access productivity prompts and burnout prevention resources in our Prompt Library to build habits that last."
     }
   ];
 
