@@ -42,7 +42,7 @@ const EntrepreneurProblems = () => {
     {
       icon: <AlertCircle className="w-8 h-8 text-red-500" />,
       problem: "Weak Execution Habits and Lack of Focus",
-      description: "You start each week with big plans, but by Wednesday you're distracted by shiny new ideas. You're juggling product development, customer calls, fundraising prep, and marketing—but nothing feels like it's moving forward. You're busy, but not productive.",
+      description: "You start each week with big plans, but by Wednesday you're distracted by shiny new ideas. You're juggling product development, customer calls, fundraising prep, and marketing, but nothing feels like it's moving forward. You're busy, but not productive.",
       solution: "Your Dashboard keeps you focused on what matters with clear priorities, progress tracking, and weekly sprint planning. Build execution systems that help you ship consistently instead of spinning in circles."
     },
     {
