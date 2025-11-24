@@ -1,19 +1,41 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+
+// Conditionally import lovable-tagger only in development to avoid build issues
+// Use a function to lazily load the plugin to prevent build failures
+function getComponentTagger() {
+  try {
+    const { componentTagger } = require("lovable-tagger");
+    return componentTagger;
+  } catch (e) {
+    // Silently fail if lovable-tagger is not available
+    // This prevents build failures in production
+    return null;
+  }
+}
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+export default defineConfig(({ mode }) => {
+  const plugins = [react()];
+  
+  // Only add componentTagger in development mode
+  if (mode === 'development') {
+    const tagger = getComponentTagger();
+    if (tagger) {
+      plugins.push(tagger());
+    }
+  }
+
+  return {
+    server: {
+      host: "::",
+      port: 8080,
+    },
+    plugins,
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
