@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-bg.jpg";
@@ -168,8 +168,8 @@ const Hero = () => {
               <span className="text-muted-foreground">AI-Powered</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Community Support</span>
+              <DollarSign className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Fundraising Guidance</span>
             </div>
           </div>
 
