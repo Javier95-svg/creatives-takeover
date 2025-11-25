@@ -148,7 +148,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed px-4">
-            AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Launch faster, build smarter.
+            AI-powered planning, community support, and fundraising tools designed for rookie founders. Launch faster, build smarter.
           </p>
           
           {/* Trust Indicators - Enhanced with 4 metrics, all visible on mobile */}
