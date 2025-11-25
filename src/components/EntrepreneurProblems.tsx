@@ -29,7 +29,7 @@ const EntrepreneurProblems = () => {
       icon: <Users className="w-8 h-8 text-red-500" />,
       problem: "Team Building and Equity Division Nightmares",
       description: [
-        "You need co-founders or early team members but are paralyzed by uncertainty about fair equity splits—should your technical co-founder get 50%? What about advisors helping with connections?",
+        "You need co-founders or early team members but are paralyzed by uncertainty about fair equity splits. Should your technical co-founder get 50%? What about advisors helping with connections?",
         "The fear of making the wrong decision and creating resentment down the line keeps you stuck, unable to move forward with team building",
         "Without clear frameworks or guidance, you're left guessing at critical decisions that will impact your startup's future and founder relationships"
       ],
@@ -39,7 +39,7 @@ const EntrepreneurProblems = () => {
       icon: <DollarSign className="w-8 h-8 text-red-500" />,
       problem: "Raising Your First Capital Feels Impossible",
       description: [
-        "You're stuck in the 'need money to get money' trap—friends and family are skeptical, angels want traction you don't have, and pre-seed funds want a team you're still building",
+        "You're stuck in the 'need money to get money' trap. Friends and family are skeptical, angels want traction you don't have, and pre-seed funds want a team you're still building",
         "Every rejection makes you question if your idea is even worth pursuing, creating a cycle of self-doubt that undermines your confidence and momentum",
         "Without understanding investor theses or knowing which investors are actually active in your space, you're wasting time pitching to the wrong people"
       ],
@@ -50,7 +50,7 @@ const EntrepreneurProblems = () => {
       problem: "Go-to-Market Strategy Confusion and Unclear ICP",
       description: [
         "You know you need to 'go to market' but have no clear understanding of what that means or who your ideal customer actually is, leaving you unable to make strategic decisions",
-        "You're paralyzed by fundamental questions—should you focus on B2B or B2C? Direct sales or inbound marketing?—with no framework to guide your choices",
+        "You're paralyzed by fundamental questions like should you focus on B2B or B2C, or direct sales versus inbound marketing, with no framework to guide your choices",
         "You're throwing darts in the dark, wasting precious time and money on channels that don't convert because you lack a structured approach to customer discovery and channel selection"
       ],
       solution: "Use BizMap AI to build a comprehensive go-to-market strategy tailored to your startup. Define your ideal customer profile and get step-by-step frameworks for customer discovery and channel selection."
@@ -60,7 +60,7 @@ const EntrepreneurProblems = () => {
       problem: "Weak Execution Habits and Lack of Focus",
       description: [
         "You start each week with big plans but get distracted by Wednesday, constantly pulled toward shiny new ideas instead of executing on your core priorities",
-        "You're juggling too many things at once—product development, customer calls, fundraising prep, and marketing—but nothing feels like it's moving forward despite being constantly busy",
+        "You're juggling too many things at once including product development, customer calls, fundraising prep, and marketing, but nothing feels like it's moving forward despite being constantly busy",
         "Without clear priorities, progress tracking, or execution systems, you're spinning in circles, feeling productive but actually making little meaningful progress toward your goals"
       ],
       solution: "Your Dashboard keeps you focused on what matters with clear priorities, progress tracking, and weekly sprint planning. Build execution systems that help you ship consistently instead of spinning in circles."
