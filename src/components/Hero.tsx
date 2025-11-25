@@ -176,7 +176,7 @@ const Hero = () => {
           {/* Social Proof in Hero */}
           <div className="mb-6 sm:mb-8 px-4">
             <p className="text-sm sm:text-base text-muted-foreground">
-              Join <span className="font-semibold text-foreground">creative entrepreneurs</span> building our future
+              Join creative entrepreneurs building our future
             </p>
           </div>
 
