@@ -36,23 +36,24 @@ export default defineConfig(({ mode }) => {
       port: 8080,
     },
     plugins,
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  define: {
-    // Prefer package version when available, otherwise a timestamp
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || new Date().toISOString()),
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        // Use [hash] for long-term caching rather than an ever-changing timestamp
-        entryFileNames: `assets/[name].[hash].js`,
-        chunkFileNames: `assets/[name].[hash].js`,
-        assetFileNames: `assets/[name].[hash].[ext]`,
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
       },
     },
-  },
+    define: {
+      // Prefer package version when available, otherwise a timestamp
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || new Date().toISOString()),
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          // Use [hash] for long-term caching rather than an ever-changing timestamp
+          entryFileNames: `assets/[name].[hash].js`,
+          chunkFileNames: `assets/[name].[hash].js`,
+          assetFileNames: `assets/[name].[hash].[ext]`,
+        },
+      },
+    },
+  };
 });
