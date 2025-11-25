@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Lock, Sparkles, Crown, Plus, User } from "lucide-react";
+import { Search, Copy, ExternalLink, Lightbulb, TrendingUp, Users, DollarSign, Rocket, Building2, ArrowRight, CheckCircle, Lock, Sparkles, Crown, User } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
@@ -13,26 +13,18 @@ import { multiStepPrompts, type MultiStepPrompt } from "@/data/multiStepPrompts"
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomPromptChains } from "@/hooks/useCustomPromptChains";
-import CustomPromptChainCreator from "@/components/prompt-library/CustomPromptChainCreator";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedConcept, setSelectedConcept] = useState<MultiStepPrompt | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [showCreator, setShowCreator] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const { subscriptionData, loading: subscriptionLoading } = useSubscription();
   const { user } = useAuth();
   const { publishedChains, fetchPublishedChains, loading: chainsLoading } = useCustomPromptChains();
 
   const userTier = subscriptionData.subscription_tier || "free";
-
-  // Check if user can create prompt chains
-  const canCreatePromptChain = () => {
-    return userTier === "creator" || userTier === "professional" || userTier === "enterprise";
-  };
 
   // Fetch custom prompt chains on mount
   useEffect(() => {
@@ -346,57 +338,6 @@ const PromptLibrary = () => {
               </div>
             </div>
 
-            {/* Make Your Own Prompt Chain Card */}
-            <div className="mb-6 sm:mb-8">
-              <Card className="glass-card border-2 border-dashed hover:border-solid hover:shadow-lg transition-all relative overflow-hidden">
-                {!canCreatePromptChain() && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 flex items-center gap-1 shadow-sm">
-                      <Sparkles className="w-3 h-3" />
-                      Premium
-                    </Badge>
-                  </div>
-                )}
-                <CardContent className="p-6 sm:p-8">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                    <div className="flex items-center gap-4 sm:gap-5 flex-1 w-full sm:w-auto">
-                      <div className="p-3 sm:p-4 rounded-lg bg-primary/10 flex-shrink-0">
-                        <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <h3 className="text-lg sm:text-xl font-semibold">Make Your Own Prompt Chain</h3>
-                          {canCreatePromptChain() && (
-                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 flex-shrink-0">
-                              Available
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                          {canCreatePromptChain() 
-                            ? "Create and publish your custom 7-step business idea prompt chain. Once published, it will be discoverable by all users in the Prompt Library with your Account name as the author."
-                            : "This premium feature is exclusively available for Creator and Professional plans. Upgrade to create and publish custom prompt chains that will be discoverable by all users."}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0 w-full sm:w-auto">
-                      {canCreatePromptChain() ? (
-                        <Button onClick={() => setShowCreator(true)} className="gap-2 w-full sm:w-auto">
-                          <Plus className="w-4 h-4" />
-                          Create Prompt Chain
-                        </Button>
-                      ) : (
-                        <Button onClick={() => setShowUpgradeModal(true)} variant="outline" className="gap-2 w-full sm:w-auto">
-                          <Lock className="w-4 h-4" />
-                          Upgrade to Unlock
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {filteredPrompts.map((prompt) => (
                 <Card key={prompt.id} className="glass-card hover:shadow-lg transition-shadow">
@@ -497,78 +438,6 @@ const PromptLibrary = () => {
         </div>
       </div>
       <Footer />
-
-      {/* Custom Prompt Chain Creator Modal */}
-      {showCreator && (
-        <CustomPromptChainCreator
-          onClose={() => setShowCreator(false)}
-          onSuccess={() => {
-            fetchPublishedChains();
-            setShowCreator(false);
-          }}
-        />
-      )}
-
-      {/* Upgrade Modal for Free Users */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="w-5 h-5 text-primary" />
-                Premium Feature - Upgrade Required
-              </CardTitle>
-              <CardDescription>
-                Creating custom prompt chains is exclusively available for Creator and Professional plans. This feature is not available on the free plan.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-primary/5 rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
-                  <h4 className="font-semibold">Creator Plan</h4>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-amber-600" />
-                  <h4 className="font-semibold">Professional Plan</h4>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-semibold">With Creator or Professional plan, you can:</h4>
-                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                  <li>Create custom 7-step business idea prompt chains</li>
-                  <li>Publish your prompt chains to the Prompt Library</li>
-                  <li>Get attribution with your Account name on published chains</li>
-                  <li>Help other entrepreneurs discover and use your prompt chains</li>
-                  <li>Share your expertise with the community</li>
-                </ul>
-              </div>
-              <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
-                <p className="font-medium mb-1">What happens when you publish?</p>
-                <p>Your prompt chain will be immediately visible to all users in the Prompt Library, discoverable through search and category filters. Your Account name will be displayed as the author.</p>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowUpgradeModal(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowUpgradeModal(false);
-                    window.location.href = "/pricing";
-                  }}
-                  className="flex-1"
-                >
-                  View Pricing Plans
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };
