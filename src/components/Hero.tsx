@@ -165,7 +165,7 @@ const Hero = () => {
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">AI-Powered</span>
+              <span className="text-muted-foreground">AI-Powered Business Planning</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <DollarSign className="w-4 h-4 text-primary" />
