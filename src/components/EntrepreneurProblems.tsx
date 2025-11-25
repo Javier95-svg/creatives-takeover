@@ -18,37 +18,73 @@ const EntrepreneurProblems = () => {
     {
       icon: <Search className="w-8 h-8 text-red-500" />,
       problem: "Building Without Validating Problem-Solution Fit",
-      description: "You have spent months building your MVP, but you still are not sure anyone genuinely needs it. Most days you are guessing, trying to figure out whether people will ever pay for it or whether you are just polishing a product that does not really solve a painful problem. Each time a potential customer says \"no,\" it hits you personally, like a judgment on your skills and your idea, and the more it happens the harder it becomes to stay confident. Meanwhile your runway is shrinking, your savings are disappearing, and the pressure to choose the right next move is increasing, even though you still do not have clear data to guide a pivot.",
+      description: [
+        "Spent months building MVP without validating if anyone genuinely needs it",
+        "Constantly guessing whether people will ever pay for it",
+        "Each 'no' feels like a personal judgment on your skills and ideas",
+        "Runway shrinking and savings disappearing with no clear direction",
+        "No clear data to guide pivots or next moves"
+      ],
       solution: "Use BizMap AI to validate your idea with a structured 7-question framework that tests problem-solution fit before you burn months building. Get real feedback and validate demand before committing to a full build.",
     },
     {
       icon: <Users className="w-8 h-8 text-red-500" />,
       problem: "Team Building and Equity Division Nightmares",
-      description: "You need a co-founder or early team members, but how do you split equity fairly? Should your technical co-founder get 50%? What about the advisor who's helping with connections? You're paralyzed by the fear of making the wrong decision and creating resentment down the line.",
+      description: [
+        "Need co-founders or early team members but unsure how to proceed",
+        "Uncertain about fair equity splits (should technical co-founder get 50%?)",
+        "Confused about advisor equity for connections and help",
+        "Paralyzed by fear of making the wrong decision",
+        "Worried about creating resentment down the line"
+      ],
       solution: "Connect with potential co-founders and advisors in our Community who've navigated these decisions. Get real advice on equity splits and co-founder agreements from founders who've been there."
     },
     {
       icon: <DollarSign className="w-8 h-8 text-red-500" />,
       problem: "Raising Your First Capital Feels Impossible",
-      description: "Friends and family are skeptical. Angels want traction you don't have yet. Pre-seed funds want a team you're still building. You're stuck in the 'need money to get money' trap, and every rejection makes you question if your idea is even worth pursuing.",
+      description: [
+        "Friends and family are skeptical about your idea",
+        "Angels want traction you don't have yet",
+        "Pre-seed funds want a team you're still building",
+        "Stuck in the 'need money to get money' trap",
+        "Every rejection makes you question if your idea is worth pursuing"
+      ],
       solution: "Use Insighta to research investors, understand their thesis, and identify the right fit for your startup. Get real-time data on which investors are active in your space and how to position your pitch."
     },
     {
       icon: <Map className="w-8 h-8 text-red-500" />,
       problem: "Go-to-Market Strategy Confusion and Unclear ICP",
-      description: "You know you need to 'go to market,' but what does that actually mean? Who exactly is your ideal customer? Should you focus on B2B or B2C? Direct sales or inbound marketing? You're throwing darts in the dark, wasting time and money on channels that don't convert.",
+      description: [
+        "Know you need to 'go to market' but unclear what that actually means",
+        "Don't know who your ideal customer is",
+        "Unsure whether to focus on B2B or B2C",
+        "Confused about direct sales vs inbound marketing",
+        "Wasting time and money on channels that don't convert"
+      ],
       solution: "Use BizMap AI to build a comprehensive go-to-market strategy tailored to your startup. Define your ideal customer profile and get step-by-step frameworks for customer discovery and channel selection."
     },
     {
       icon: <AlertCircle className="w-8 h-8 text-red-500" />,
       problem: "Weak Execution Habits and Lack of Focus",
-      description: "You start each week with big plans, but by Wednesday you're distracted by shiny new ideas. You're juggling product development, customer calls, fundraising prep, and marketing but nothing feels like it's moving forward. You're busy, but not productive.",
+      description: [
+        "Start each week with big plans but get distracted by Wednesday",
+        "Constantly distracted by shiny new ideas",
+        "Juggling too many things at once (product, calls, fundraising, marketing)",
+        "Nothing feels like it's moving forward",
+        "Busy but not productive"
+      ],
       solution: "Your Dashboard keeps you focused on what matters with clear priorities, progress tracking, and weekly sprint planning. Build execution systems that help you ship consistently instead of spinning in circles."
     },
     {
       icon: <Flame className="w-8 h-8 text-red-500" />,
       problem: "Early Burnout and Losing Momentum",
-      description: "You were so excited three months ago, but now you're exhausted. The late nights, the constant rejection, the uncertainty—it's wearing you down. You're questioning if you have what it takes, and the initial fire is starting to fade. You need to find a sustainable pace, but you don't know how.",
+      description: [
+        "Initial excitement has faded after three months",
+        "Exhausted from late nights, constant rejection, and uncertainty",
+        "Questioning if you have what it takes",
+        "The initial fire is starting to fade",
+        "Need to find a sustainable pace but don't know how"
+      ],
       solution: "Connect with founders in our Community who understand the emotional rollercoaster and can help you maintain momentum. Get strategies for managing energy and building sustainable founder habits that prevent burnout."
     }
   ];
@@ -119,7 +155,11 @@ const EntrepreneurProblems = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg sm:text-xl font-bold mb-2 text-red-600">{item.problem}</h3>
-                    <p className="text-sm sm:text-base text-muted-foreground mb-4">{item.description}</p>
+                    <ul className="text-sm sm:text-base text-muted-foreground mb-4 list-disc list-inside space-y-1">
+                      {item.description.map((point, idx) => (
+                        <li key={idx}>{point}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
                 
