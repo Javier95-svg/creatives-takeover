@@ -83,18 +83,32 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
       newErrors.category = 'Category is required';
     }
 
+    // Validate that exactly 7 steps exist
+    if (formData.steps.length !== 7) {
+      toast.error('Prompt chain must have exactly 7 steps');
+      return false;
+    }
+
     // Validate all 7 steps are filled
+    let incompleteSteps = 0;
     formData.steps.forEach((step, index) => {
       if (!step.title.trim()) {
         newErrors[`step${index}_title`] = `Step ${index + 1} title is required`;
+        incompleteSteps++;
       }
       if (!step.dayRange.trim()) {
         newErrors[`step${index}_dayRange`] = `Step ${index + 1} day range is required`;
+        incompleteSteps++;
       }
       if (!step.prompt.trim()) {
-        newErrors[`step${index}_prompt`] = `Step ${index + 1} prompt is required`;
+        newErrors[`step${index}_prompt`] = `Step ${index + 1} prompt text is required`;
+        incompleteSteps++;
       }
     });
+
+    if (incompleteSteps > 0) {
+      toast.error(`Please complete all 7 steps. ${incompleteSteps} field(s) are missing.`);
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -173,6 +187,8 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
         await publishChain(chainId);
       }
       
+      // Success message is handled in the hook
+      // Refresh the library to show the new published chain
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -214,7 +230,7 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                 {editingChain ? 'Edit Prompt Chain' : 'Create Your Own Prompt Chain'}
               </CardTitle>
               <CardDescription className="mt-2">
-                Create a custom 7-step business idea prompt chain. All 7 prompts are required.
+                Create a custom 7-step business idea prompt chain. <strong>Exactly 7 prompts are required</strong> - one for each step of the business journey. Once published, your chain will be discoverable by all users in the Prompt Library.
               </CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -364,16 +380,30 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
 
           {/* 7 Prompt Steps */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">7 Prompt Steps *</h3>
-            <p className="text-sm text-muted-foreground">
-              Each step must have a title, day range, and prompt text. All 7 steps are required.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">7 Prompt Steps *</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Each step must have a title, day range, and prompt text. <strong>Exactly 7 steps are required</strong> - no more, no less.
+                </p>
+              </div>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                {formData.steps.filter(s => s.title.trim() && s.dayRange.trim() && s.prompt.trim()).length} / 7 Complete
+              </Badge>
+            </div>
 
-            {formData.steps.map((step, index) => (
-              <Card key={index} className="p-4">
+            {formData.steps.map((step, index) => {
+              const isStepComplete = step.title.trim() && step.dayRange.trim() && step.prompt.trim();
+              return (
+              <Card key={index} className={`p-4 ${isStepComplete ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="outline">Step {step.step}</Badge>
+                    {isStepComplete && (
+                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 text-xs">
+                        ✓ Complete
+                      </Badge>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -422,7 +452,8 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
                   </div>
                 </div>
               </Card>
-            ))}
+            );
+            })}
           </div>
 
           {/* Action Buttons */}

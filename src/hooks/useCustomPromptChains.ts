@@ -113,14 +113,16 @@ export function useCustomPromptChains() {
     setLoading(true);
     setError(null);
     try {
-      // Get user's full name from profile
+      // Get user's full name from profile (Account name)
+      // This will be displayed as the author attribution in published chains
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
         .single();
 
-      const authorName = profile?.full_name || 'Anonymous';
+      // Use full_name from profile (Account name) or fallback to 'Anonymous'
+      const authorName = profile?.full_name?.trim() || user.user_metadata?.full_name?.trim() || 'Anonymous';
 
       // Validate that steps array has exactly 7 steps
       if (!chainData.steps || chainData.steps.length !== 7) {
@@ -211,14 +213,16 @@ export function useCustomPromptChains() {
     setLoading(true);
     setError(null);
     try {
-      // Get user's full name from profile (in case it changed)
+      // Get user's full name from profile (Account name) - refresh in case it changed
+      // This will be displayed as the author attribution in published chains
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user.id)
         .single();
 
-      const authorName = profile?.full_name || 'Anonymous';
+      // Use full_name from profile (Account name) or fallback to 'Anonymous'
+      const authorName = profile?.full_name?.trim() || user.user_metadata?.full_name?.trim() || 'Anonymous';
 
       const { data, error: publishError } = await supabase
         .from('custom_prompt_chains')
@@ -233,7 +237,9 @@ export function useCustomPromptChains() {
 
       if (publishError) throw publishError;
 
-      toast.success('Prompt chain published successfully! It is now visible to all users.');
+      toast.success(`Prompt chain published successfully! It is now discoverable in the Prompt Library with your Account name (${authorName}) as the author.`, {
+        duration: 5000,
+      });
       return data as CustomPromptChain;
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to publish prompt chain';
