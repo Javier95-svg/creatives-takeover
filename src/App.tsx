@@ -25,6 +25,7 @@ import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import AuthLanding from "./pages/AuthLanding";
 import PromptLibrary from "./pages/PromptLibrary";
 import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
@@ -78,6 +79,7 @@ function App() {
                   <Route path="/bizmap-ai" element={<Dream2Plan />} />
                   
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth-landing" element={<AuthLanding />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/onboarding" element={<Onboarding />} />
