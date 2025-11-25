@@ -199,11 +199,12 @@ const Hero = () => {
               size="lg" 
               variant="outline" 
               className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
-              aria-label="See How It Works"
+              aria-label="Go to Dashboard"
               asChild
             >
-              <Link to="/bizmap-ai">
-                <span>See How It Works</span>
+              <Link to="/dashboard">
+                <LayoutDashboard className="mr-2 w-4 sm:w-5 h-4 sm:h-5" />
+                <span>Go to Dashboard</span>
               </Link>
             </Button>
           </div>
