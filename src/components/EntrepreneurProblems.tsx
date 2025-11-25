@@ -19,11 +19,9 @@ const EntrepreneurProblems = () => {
       icon: <Search className="w-8 h-8 text-red-500" />,
       problem: "Building Without Validating Problem-Solution Fit",
       description: [
-        "Spent months building MVP without validating if anyone genuinely needs it",
-        "Constantly guessing whether people will ever pay for it",
-        "Each 'no' feels like a personal judgment on your skills and ideas",
-        "Runway shrinking and savings disappearing with no clear direction",
-        "No clear data to guide pivots or next moves"
+        "You've spent months building your MVP without validating if anyone genuinely needs it, constantly guessing whether people will ever pay for it while each rejection feels like a personal judgment on your skills and ideas",
+        "Your runway is shrinking and savings are disappearing with no clear direction, leaving you paralyzed by the pressure to choose the right next move",
+        "You lack clear data to guide pivots or strategic decisions, making it impossible to know if you're polishing a product that doesn't solve a painful problem"
       ],
       solution: "Use BizMap AI to validate your idea with a structured 7-question framework that tests problem-solution fit before you burn months building. Get real feedback and validate demand before committing to a full build.",
     },
@@ -31,11 +29,9 @@ const EntrepreneurProblems = () => {
       icon: <Users className="w-8 h-8 text-red-500" />,
       problem: "Team Building and Equity Division Nightmares",
       description: [
-        "Need co-founders or early team members but unsure how to proceed",
-        "Uncertain about fair equity splits (should technical co-founder get 50%?)",
-        "Confused about advisor equity for connections and help",
-        "Paralyzed by fear of making the wrong decision",
-        "Worried about creating resentment down the line"
+        "You need co-founders or early team members but are paralyzed by uncertainty about fair equity splits—should your technical co-founder get 50%? What about advisors helping with connections?",
+        "The fear of making the wrong decision and creating resentment down the line keeps you stuck, unable to move forward with team building",
+        "Without clear frameworks or guidance, you're left guessing at critical decisions that will impact your startup's future and founder relationships"
       ],
       solution: "Connect with potential co-founders and advisors in our Community who've navigated these decisions. Get real advice on equity splits and co-founder agreements from founders who've been there."
     },
@@ -43,11 +39,9 @@ const EntrepreneurProblems = () => {
       icon: <DollarSign className="w-8 h-8 text-red-500" />,
       problem: "Raising Your First Capital Feels Impossible",
       description: [
-        "Friends and family are skeptical about your idea",
-        "Angels want traction you don't have yet",
-        "Pre-seed funds want a team you're still building",
-        "Stuck in the 'need money to get money' trap",
-        "Every rejection makes you question if your idea is worth pursuing"
+        "You're stuck in the 'need money to get money' trap—friends and family are skeptical, angels want traction you don't have, and pre-seed funds want a team you're still building",
+        "Every rejection makes you question if your idea is even worth pursuing, creating a cycle of self-doubt that undermines your confidence and momentum",
+        "Without understanding investor theses or knowing which investors are actually active in your space, you're wasting time pitching to the wrong people"
       ],
       solution: "Use Insighta to research investors, understand their thesis, and identify the right fit for your startup. Get real-time data on which investors are active in your space and how to position your pitch."
     },
@@ -55,11 +49,9 @@ const EntrepreneurProblems = () => {
       icon: <Map className="w-8 h-8 text-red-500" />,
       problem: "Go-to-Market Strategy Confusion and Unclear ICP",
       description: [
-        "Know you need to 'go to market' but unclear what that actually means",
-        "Don't know who your ideal customer is",
-        "Unsure whether to focus on B2B or B2C",
-        "Confused about direct sales vs inbound marketing",
-        "Wasting time and money on channels that don't convert"
+        "You know you need to 'go to market' but have no clear understanding of what that means or who your ideal customer actually is, leaving you unable to make strategic decisions",
+        "You're paralyzed by fundamental questions—should you focus on B2B or B2C? Direct sales or inbound marketing?—with no framework to guide your choices",
+        "You're throwing darts in the dark, wasting precious time and money on channels that don't convert because you lack a structured approach to customer discovery and channel selection"
       ],
       solution: "Use BizMap AI to build a comprehensive go-to-market strategy tailored to your startup. Define your ideal customer profile and get step-by-step frameworks for customer discovery and channel selection."
     },
@@ -67,11 +59,9 @@ const EntrepreneurProblems = () => {
       icon: <AlertCircle className="w-8 h-8 text-red-500" />,
       problem: "Weak Execution Habits and Lack of Focus",
       description: [
-        "Start each week with big plans but get distracted by Wednesday",
-        "Constantly distracted by shiny new ideas",
-        "Juggling too many things at once (product, calls, fundraising, marketing)",
-        "Nothing feels like it's moving forward",
-        "Busy but not productive"
+        "You start each week with big plans but get distracted by Wednesday, constantly pulled toward shiny new ideas instead of executing on your core priorities",
+        "You're juggling too many things at once—product development, customer calls, fundraising prep, and marketing—but nothing feels like it's moving forward despite being constantly busy",
+        "Without clear priorities, progress tracking, or execution systems, you're spinning in circles, feeling productive but actually making little meaningful progress toward your goals"
       ],
       solution: "Your Dashboard keeps you focused on what matters with clear priorities, progress tracking, and weekly sprint planning. Build execution systems that help you ship consistently instead of spinning in circles."
     },
@@ -79,11 +69,9 @@ const EntrepreneurProblems = () => {
       icon: <Flame className="w-8 h-8 text-red-500" />,
       problem: "Early Burnout and Losing Momentum",
       description: [
-        "Initial excitement has faded after three months",
-        "Exhausted from late nights, constant rejection, and uncertainty",
-        "Questioning if you have what it takes",
-        "The initial fire is starting to fade",
-        "Need to find a sustainable pace but don't know how"
+        "The initial excitement that drove you three months ago has faded, replaced by exhaustion from late nights, constant rejection, and the relentless uncertainty of the startup journey",
+        "You're questioning if you have what it takes, watching the initial fire fade as the emotional weight of the rollercoaster wears you down day by day",
+        "You desperately need to find a sustainable pace and maintain momentum, but you don't know how to manage your energy or build founder habits that prevent burnout"
       ],
       solution: "Connect with founders in our Community who understand the emotional rollercoaster and can help you maintain momentum. Get strategies for managing energy and building sustainable founder habits that prevent burnout."
     }
