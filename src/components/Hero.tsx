@@ -211,7 +211,7 @@ const Hero = () => {
           {/* Trust Element near CTA */}
           <div className="mb-12 sm:mb-16 px-4">
             <p className="text-xs sm:text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Free to start</span> • No credit card required • Takes 2 minutes
+              <span className="font-semibold text-foreground">Free to start</span>
             </p>
           </div>
 
