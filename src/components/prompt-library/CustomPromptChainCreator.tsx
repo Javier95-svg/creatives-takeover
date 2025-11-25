@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Save, Send } from 'lucide-react';
+import { X, Plus, Save, Send, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCustomPromptChains, CustomPromptChain } from '@/hooks/useCustomPromptChains';
 import { toast } from 'sonner';
 
@@ -67,6 +67,7 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
 
   const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showTips, setShowTips] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -240,6 +241,49 @@ export default function CustomPromptChainCreator({ onClose, onSuccess, editingCh
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
+          {/* Tips Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <button
+              type="button"
+              onClick={() => setShowTips(!showTips)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <div className="flex items-center gap-2">
+                <Info className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-blue-900">Tips for Creating Effective Prompt Chains</h3>
+              </div>
+              {showTips ? (
+                <ChevronUp className="w-4 h-4 text-blue-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-blue-600" />
+              )}
+            </button>
+            {showTips && (
+              <div className="mt-4 space-y-3 text-sm text-blue-800">
+                <div>
+                  <p className="font-medium mb-1">✓ Make prompts specific and actionable</p>
+                  <p className="text-blue-700">Each prompt should guide users through a clear, actionable step in their business journey.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">✓ Use clear, concise language</p>
+                  <p className="text-blue-700">Write prompts that are easy to understand and follow, avoiding jargon when possible.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">✓ Ensure logical progression</p>
+                  <p className="text-blue-700">Each step should build naturally on the previous one, creating a cohesive 30-day journey.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">✓ Add relevant tags</p>
+                  <p className="text-blue-700">Tags help users discover your prompt chain. Use 3-5 relevant keywords that describe your business concept.</p>
+                </div>
+                <div className="pt-2 border-t border-blue-200">
+                  <p className="font-medium text-blue-900">💡 Remember:</p>
+                  <p className="text-blue-700">Your Account name will be displayed as the author, so create something you're proud to share with the community!</p>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Basic Information</h3>
