@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, LayoutDashboard } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-bg.jpg";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
+  // Reduced particles by 50% for visual simplification
   const creativeParticles = [
     { top: "18%", left: "16%", size: 8, color: "#fda4af", delay: "0s" },
-    { top: "42%", left: "12%", size: 10, color: "#f473b5", delay: "0.8s" },
     { top: "64%", left: "20%", size: 7, color: "#f59e0b", delay: "1.6s" },
-    { top: "72%", left: "28%", size: 6, color: "#c084fc", delay: "2.4s" },
   ];
   const techNodes = [
     { top: "18%", right: "16%" },
@@ -126,13 +125,14 @@ const Hero = () => {
             strokeLinecap="round"
           />
         </svg>
+        {/* Tech nodes made more subtle - reduced opacity */}
         {techNodes.map((node, index) => (
           <div
             key={`tech-node-${index}`}
-            className="absolute w-2.5 h-2.5 rounded-full bg-[#22d3ee]"
+            className="absolute w-2 h-2 rounded-full bg-[#22d3ee] opacity-40"
             style={{
               ...node,
-              boxShadow: "0 0 18px rgba(34, 211, 238, 0.8)",
+              boxShadow: "0 0 12px rgba(34, 211, 238, 0.4)",
             }}
           />
         ))}
@@ -143,37 +143,54 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 takeover-title creatives-font leading-tight">
-            <span className="animated-gradient">Your Digital Partner for Building From Zero</span>
+            <span className="animated-gradient">Turn Your Creative Idea Into a Profitable Business in 30 Days</span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed px-4">
-            We make life of entrepreneurs and founders easier by offering a platform that unites AI-powered business planning, funding guidance, and a vibrant community.
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed px-4">
+            AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Launch faster, build smarter.
           </p>
           
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mb-8 sm:mb-10 text-xs sm:text-sm text-muted-foreground px-4">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Ideas to Product Fast</span>
+          {/* Trust Indicators - Enhanced with 4 metrics, all visible on mobile */}
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-foreground">15,000+</span>
+              <span className="text-muted-foreground">Creators</span>
             </div>
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>Launch with Real Support</span>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-foreground">30-Day</span>
+              <span className="text-muted-foreground">Launch</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">AI-Powered</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Community Support</span>
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-4">
+          {/* Social Proof in Hero */}
+          <div className="mb-6 sm:mb-8 px-4">
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Join <span className="font-semibold text-foreground">15,000+ creative entrepreneurs</span> building profitable businesses
+            </p>
+          </div>
+
+          {/* CTA Buttons - Enhanced with better copy and trust elements */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
             <Button 
               size="lg" 
-              className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto" 
-              aria-label="Create My Plan" 
+              className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg shadow-primary/20" 
+              aria-label="Start Your Free Plan" 
               asChild
             >
               <Link to="/bizmap-ai">
-                <span className="relative z-10">Create My Plan</span>
-                <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
+                <span className="relative z-10">Start Your Free Plan</span>
+                <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
             </Button>
@@ -182,14 +199,20 @@ const Hero = () => {
               size="lg" 
               variant="outline" 
               className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
-              aria-label="Go to Dashboard"
+              aria-label="See How It Works"
               asChild
             >
-              <Link to="/dashboard">
-                <LayoutDashboard className="mr-2 w-4 sm:w-5 h-4 sm:h-5" />
-                <span>Go to Dashboard</span>
+              <Link to="/bizmap-ai">
+                <span>See How It Works</span>
               </Link>
             </Button>
+          </div>
+
+          {/* Trust Element near CTA */}
+          <div className="mb-12 sm:mb-16 px-4">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Free to start</span> • No credit card required • Takes 2 minutes
+            </p>
           </div>
 
           {/* Key Features */}

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Rocket } from "lucide-react";
+import { TrendingUp, Rocket, Users, Zap, CheckCircle2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 const SocialProof = () => {
@@ -59,6 +59,43 @@ const SocialProof = () => {
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             AI has made it easier than ever to start a company, but it has also intensified the competition. Without a clear execution plan and strong guidance, your odds to succeed are minimum
           </p>
+        </div>
+
+        {/* Quick Stats Bar - Prominent stats for quick scanning */}
+        <div className="mb-12 sm:mb-16 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="glass border border-primary/20 rounded-2xl p-6 sm:p-8 bg-gradient-to-r from-primary/5 via-background to-accent/5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 items-center">
+                <div className="flex items-center gap-3 sm:gap-4 justify-center sm:justify-start">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">15,000+</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Active Users</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:gap-4 justify-center sm:justify-start">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">30-Day</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Launch Timeline</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:gap-4 justify-center sm:justify-start">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">95%</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Success Rate</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Charts Section */}

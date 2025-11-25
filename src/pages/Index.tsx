@@ -5,6 +5,7 @@ import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
+import StickyMobileCTA from "@/components/StickyMobileCTA";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -47,7 +48,7 @@ const Index = () => {
         // googleSiteVerification="paste-your-verification-code-here"
       />
       <Navigation />
-      <main>
+      <main className="pb-20 md:pb-0">
         <Hero />
         <EntrepreneurProblems />
         
@@ -65,6 +66,9 @@ const Index = () => {
         </Suspense>
       </main>
       <Footer />
+      
+      {/* Sticky Mobile CTA - appears after scroll on mobile */}
+      <StickyMobileCTA />
       
       {/* Enhanced Quiz Popup - Only popup to avoid overwhelming visitors */}
       <CreditCampaignPopup trigger="time" delay={20000} />
