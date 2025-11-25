@@ -185,11 +185,11 @@ const Hero = () => {
             <Button 
               size="lg" 
               className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg shadow-primary/20" 
-              aria-label="Start Your Free Plan" 
+              aria-label="Start Here" 
               asChild
             >
               <Link to="/bizmap-ai">
-                <span className="relative z-10">Start Your Free Plan</span>
+                <span className="relative z-10">Start Here</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
