@@ -102,7 +102,7 @@ const ValuePropositionCards = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-8 sm:mb-12 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">
             Everything You Need to Launch
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -132,7 +132,7 @@ const ValuePropositionCards = () => {
                 </div>
                 
                 <Link to={card.link} className="block h-full">
-                  <CardContent className="relative p-6 md:p-8 flex flex-col h-full items-center text-center">
+                  <CardContent className="relative p-6 md:p-8 flex flex-col h-full items-center">
                     {/* Icon with enhanced animations */}
                     <div className="mb-4">
                       <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:bg-primary/20 group-hover:shadow-lg group-hover:shadow-primary/50">
@@ -141,7 +141,7 @@ const ValuePropositionCards = () => {
                     </div>
 
                     {/* Title with fade-in animation */}
-                    <div className="mb-3 transform group-hover:scale-105 transition-transform duration-300">
+                    <div className="mb-3 transform group-hover:scale-105 transition-transform duration-300 text-center">
                       <div className="text-sm font-bold text-primary mb-1 group-hover:text-primary/90 transition-colors">
                         {card.title}
                       </div>
@@ -153,8 +153,8 @@ const ValuePropositionCards = () => {
                       )}
                     </div>
 
-                    {/* Description with subtle animation */}
-                    <p className="text-sm text-muted-foreground mb-6 flex-grow group-hover:text-foreground/80 transition-colors duration-300 leading-relaxed">
+                    {/* Description with subtle animation - left aligned */}
+                    <p className="text-sm text-muted-foreground mb-6 flex-grow group-hover:text-foreground/80 transition-colors duration-300 leading-relaxed text-left w-full">
                       {card.description}
                     </p>
 
@@ -196,7 +196,7 @@ const ValuePropositionCards = () => {
                 </div>
                 
                 <Link to={card.link} className="block h-full">
-                  <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center text-center">
+                  <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center">
                     {/* Icon with enhanced animations */}
                     <div className="mb-3">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:bg-primary/20 group-hover:shadow-lg group-hover:shadow-primary/50">
@@ -205,7 +205,7 @@ const ValuePropositionCards = () => {
                     </div>
 
                     {/* Title with fade-in animation */}
-                    <div className="mb-2 transform group-hover:scale-105 transition-transform duration-300">
+                    <div className="mb-2 transform group-hover:scale-105 transition-transform duration-300 text-center">
                       <div className="text-sm font-bold text-primary mb-1 group-hover:text-primary/90 transition-colors">
                         {card.title}
                       </div>
@@ -214,8 +214,8 @@ const ValuePropositionCards = () => {
                       </h3>
                     </div>
 
-                    {/* Description with subtle animation */}
-                    <p className="text-sm text-muted-foreground mb-5 flex-grow group-hover:text-foreground/80 transition-colors duration-300 leading-relaxed">
+                    {/* Description with subtle animation - left aligned */}
+                    <p className="text-sm text-muted-foreground mb-5 flex-grow group-hover:text-foreground/80 transition-colors duration-300 leading-relaxed text-left w-full">
                       {card.description}
                     </p>
 
