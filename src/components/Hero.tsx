@@ -176,7 +176,7 @@ const Hero = () => {
           {/* Social Proof in Hero */}
           <div className="mb-6 sm:mb-8 px-4">
             <p className="text-sm sm:text-base text-muted-foreground">
-              Join <span className="font-semibold text-foreground">creative entrepreneurs</span> building profitable businesses
+              Join <span className="font-semibold text-foreground">creative entrepreneurs</span> building our future
             </p>
           </div>
 
@@ -206,13 +206,6 @@ const Hero = () => {
                 <span>See How It Works</span>
               </Link>
             </Button>
-          </div>
-
-          {/* Trust Element near CTA */}
-          <div className="mb-12 sm:mb-16 px-4">
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Free to start</span>
-            </p>
           </div>
 
           {/* Key Features */}
