@@ -57,7 +57,7 @@ const SocialProof = () => {
             <span className="gradient-text">AI Is Lowering the Barrier to Launch a Startup</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Startup creation is exploding. Global Entrepreneurship Monitor and Crunchbase data show a record surge in new business formation.
+            AI has made it easier than ever to start a company, but it has also intensified the competition. Without a clear execution plan and strong guidance, your odds to succeed are minimum
           </p>
         </div>
 
