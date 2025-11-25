@@ -71,8 +71,8 @@ const SocialProof = () => {
                     <Users className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-foreground">15,000+</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Active Users</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">Growing</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Community</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4 justify-center sm:justify-start">

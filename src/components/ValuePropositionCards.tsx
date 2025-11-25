@@ -24,7 +24,7 @@ const ValuePropositionCards = () => {
       cta: "Join Community",
       link: "/community",
       gradient: "from-secondary/20 to-secondary/5",
-      metric: "15,000+ members"
+      metric: "Active community"
     },
     {
       icon: LayoutDashboard,

@@ -155,8 +155,8 @@ const Hero = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-foreground">15,000+</span>
-              <span className="text-muted-foreground">Creators</span>
+              <span className="text-muted-foreground">Growing</span>
+              <span className="font-semibold text-foreground">Community</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Zap className="w-4 h-4 text-primary" />
@@ -176,7 +176,7 @@ const Hero = () => {
           {/* Social Proof in Hero */}
           <div className="mb-6 sm:mb-8 px-4">
             <p className="text-sm sm:text-base text-muted-foreground">
-              Join <span className="font-semibold text-foreground">15,000+ creative entrepreneurs</span> building profitable businesses
+              Join <span className="font-semibold text-foreground">creative entrepreneurs</span> building profitable businesses
             </p>
           </div>
 
