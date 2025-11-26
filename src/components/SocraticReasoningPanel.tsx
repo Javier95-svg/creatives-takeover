@@ -39,16 +39,16 @@ const SocraticReasoningPanel: React.FC<SocraticReasoningPanelProps> = ({
   };
 
   const getConfidenceColor = (confidence: number): string => {
-    if (confidence >= 0.8) return 'text-green-600 bg-green-50';
+    if (confidence >= 0.8) return 'text-[hsl(var(--green-primary))] bg-[hsl(var(--green-primary))]/10';
     if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    return 'text-[hsl(var(--red-primary))] bg-[hsl(var(--red-primary))]/10';
   };
 
   const getImpactColor = (impact: 'low' | 'medium' | 'high'): string => {
     const colors = {
-      'low': 'text-green-600 bg-green-50',
+      'low': 'text-[hsl(var(--green-primary))] bg-[hsl(var(--green-primary))]/10',
       'medium': 'text-yellow-600 bg-yellow-50',
-      'high': 'text-red-600 bg-red-50'
+      'high': 'text-[hsl(var(--red-primary))] bg-[hsl(var(--red-primary))]/10'
     };
     return colors[impact];
   };

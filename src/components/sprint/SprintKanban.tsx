@@ -83,8 +83,8 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
 
   const getStatusColor = (status: Sprint['status']) => {
     switch (status) {
-      case 'planning': return 'bg-blue-500';
-      case 'active': return 'bg-green-500';
+      case 'planning': return 'bg-[hsl(var(--blue-primary))]';
+      case 'active': return 'bg-[hsl(var(--green-primary))]';
       case 'completed': return 'bg-purple-500';
       case 'paused': return 'bg-orange-500';
       default: return 'bg-gray-500';

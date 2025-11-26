@@ -72,7 +72,7 @@ const CommitmentFeed: React.FC = () => {
                   {stats.total > 0 ? Math.round((stats.achieved / stats.total) * 100) : 0}%
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 text-blue-500 opacity-20" />
+              <TrendingUp className="w-8 h-8 text-[hsl(var(--blue-primary))] opacity-20" />
             </div>
           </CardContent>
         </Card>

@@ -145,7 +145,7 @@ const CommitmentCreator: React.FC<CommitmentCreatorProps> = ({
                 <TrendingUp className="w-3 h-3" />
                 Potential Return
               </div>
-              <div className="text-lg font-bold text-green-500">+{potentialReturn}</div>
+              <div className="text-lg font-bold text-[hsl(var(--green-primary))]">+{potentialReturn}</div>
               <div className="text-xs text-muted-foreground">+{Math.floor((potentialReturn - creditsStaked[0]) / creditsStaked[0] * 100)}% bonus</div>
             </div>
             <div className="space-y-1">
@@ -153,7 +153,7 @@ const CommitmentCreator: React.FC<CommitmentCreatorProps> = ({
                 <Target className="w-3 h-3" />
                 Risk
               </div>
-              <div className="text-lg font-bold text-red-500">-{potentialLoss}</div>
+              <div className="text-lg font-bold text-[hsl(var(--red-primary))]">-{potentialLoss}</div>
               <div className="text-xs text-muted-foreground">if failed</div>
             </div>
           </div>
@@ -239,7 +239,7 @@ const CommitmentCreator: React.FC<CommitmentCreatorProps> = ({
         </div>
 
         {balance < 3 && (
-          <p className="text-sm text-red-500 text-center">
+          <p className="text-sm text-[hsl(var(--red-primary))] text-center">
             Insufficient credits. Minimum stake is 3 credits.
           </p>
         )}

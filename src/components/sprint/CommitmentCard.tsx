@@ -43,9 +43,9 @@ const CommitmentCard = React.memo<CommitmentCardProps>(({
     (Date.now() - new Date(commitment.created_at).getTime()) < 24 * 60 * 60 * 1000;
 
   const statusConfig = {
-    active: { color: 'bg-blue-500', icon: Target, text: 'Active' },
-    achieved: { color: 'bg-green-500', icon: CheckCircle2, text: 'Achieved' },
-    failed: { color: 'bg-red-500', icon: XCircle, text: 'Failed' },
+    active: { color: 'bg-[hsl(var(--blue-primary))]', icon: Target, text: 'Active' },
+    achieved: { color: 'bg-[hsl(var(--green-primary))]', icon: CheckCircle2, text: 'Achieved' },
+    failed: { color: 'bg-[hsl(var(--red-primary))]', icon: XCircle, text: 'Failed' },
     cancelled: { color: 'bg-gray-500', icon: AlertCircle, text: 'Cancelled' }
   };
 

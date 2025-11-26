@@ -29,20 +29,20 @@ export const CustomerNeedsAnalysis = ({ validation }: CustomerNeedsAnalysisProps
   const getSeverityColor = (severity: 'high' | 'medium' | 'low') => {
     switch (severity) {
       case 'high':
-        return 'text-red-600 bg-red-500/10 border-red-500/20';
+        return 'text-[hsl(var(--red-primary))] bg-[hsl(var(--red-primary))]/10 border-[hsl(var(--red-primary))]/20';
       case 'medium':
         return 'text-yellow-600 bg-yellow-500/10 border-yellow-500/20';
       case 'low':
-        return 'text-blue-600 bg-blue-500/10 border-blue-500/20';
+        return 'text-[hsl(var(--blue-primary))] bg-[hsl(var(--blue-primary))]/10 border-[hsl(var(--blue-primary))]/20';
       default:
         return 'text-muted-foreground bg-muted';
     }
   };
 
   const getImportanceColor = (importance: number) => {
-    if (importance >= 70) return 'text-green-600 bg-green-500/10';
+    if (importance >= 70) return 'text-[hsl(var(--green-primary))] bg-[hsl(var(--green-primary))]/10';
     if (importance >= 40) return 'text-yellow-600 bg-yellow-500/10';
-    return 'text-blue-600 bg-blue-500/10';
+    return 'text-[hsl(var(--blue-primary))] bg-[hsl(var(--blue-primary))]/10';
   };
 
   return (

@@ -11,21 +11,21 @@ interface ValidationScoreCardProps {
 
 export const ValidationScoreCard = ({ validation, showDetails = true }: ValidationScoreCardProps) => {
   const getScoreColor = (score: number) => {
-    if (score >= 75) return 'text-green-500';
+    if (score >= 75) return 'text-[hsl(var(--green-primary))]';
     if (score >= 50) return 'text-yellow-500';
-    return 'text-red-500';
+    return 'text-[hsl(var(--red-primary))]';
   };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 75) return 'bg-green-500/10';
+    if (score >= 75) return 'bg-[hsl(var(--green-primary))]/10';
     if (score >= 50) return 'bg-yellow-500/10';
-    return 'bg-red-500/10';
+    return 'bg-[hsl(var(--red-primary))]/10';
   };
 
   const getValidationLevel = (score: number) => {
-    if (score >= 75) return { text: 'Strong Validation', icon: CheckCircle2, color: 'text-green-500' };
+    if (score >= 75) return { text: 'Strong Validation', icon: CheckCircle2, color: 'text-[hsl(var(--green-primary))]' };
     if (score >= 50) return { text: 'Moderate Validation', icon: AlertCircle, color: 'text-yellow-500' };
-    return { text: 'Needs Improvement', icon: AlertCircle, color: 'text-red-500' };
+    return { text: 'Needs Improvement', icon: AlertCircle, color: 'text-[hsl(var(--red-primary))]' };
   };
 
   const level = getValidationLevel(validation.overall_validation_score);
@@ -75,7 +75,7 @@ export const ValidationScoreCard = ({ validation, showDetails = true }: Validati
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
+                    <TrendingUp className="h-4 w-4 text-[hsl(var(--blue-primary))]" />
                     Market Size
                   </span>
                   <span className={`font-semibold ${getScoreColor(validation.market_size_score)}`}>
@@ -106,7 +106,7 @@ export const ValidationScoreCard = ({ validation, showDetails = true }: Validati
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-[hsl(var(--green-primary))]" />
                     Market Demand
                   </span>
                   <span className={`font-semibold ${getScoreColor(validation.demand_score)}`}>

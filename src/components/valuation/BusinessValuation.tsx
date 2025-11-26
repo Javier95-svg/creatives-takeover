@@ -203,10 +203,10 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
   };
 
   const getReadinessColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-blue-600";
+    if (score >= 80) return "text-[hsl(var(--green-primary))]";
+    if (score >= 60) return "text-[hsl(var(--blue-primary))]";
     if (score >= 40) return "text-orange-600";
-    return "text-red-600";
+    return "text-[hsl(var(--red-primary))]";
   };
 
   const getReadinessLabel = (score: number) => {
@@ -257,7 +257,7 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
                     {results.investmentReadiness}%
                   </p>
                 </div>
-                <Target className="w-8 h-8 text-blue-600" />
+                <Target className="w-8 h-8 text-[hsl(var(--blue-primary))]" />
               </div>
               <Badge className={getReadinessColor(results.investmentReadiness)}>
                 {getReadinessLabel(results.investmentReadiness)}
@@ -270,11 +270,11 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Revenue Multiple</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-[hsl(var(--green-primary))]">
                     ${results.revenueMultiple.toLocaleString()}
                   </p>
                 </div>
-                <BarChart3 className="w-8 h-8 text-green-600" />
+                <BarChart3 className="w-8 h-8 text-[hsl(var(--green-primary))]" />
               </div>
               <p className="text-xs text-muted-foreground">
                 Industry-adjusted revenue multiplier
@@ -427,7 +427,7 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="glass-card">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-600">
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--green-primary))]">
                       <CheckCircle className="w-5 h-5" />
                       Key Strengths
                     </CardTitle>
@@ -437,7 +437,7 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
                       {results.keyStrengths.length > 0 ? (
                         results.keyStrengths.map((strength, index) => (
                           <div key={index} className="flex items-start gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div className="w-2 h-2 bg-[hsl(var(--green-primary))] rounded-full mt-2 flex-shrink-0"></div>
                             <p className="text-sm">{strength}</p>
                           </div>
                         ))
@@ -452,7 +452,7 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
 
                 <Card className="glass-card">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-red-600">
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--red-primary))]">
                       <AlertCircle className="w-5 h-5" />
                       Risk Factors
                     </CardTitle>
@@ -462,12 +462,12 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
                       {results.riskFactors.length > 0 ? (
                         results.riskFactors.map((risk, index) => (
                           <div key={index} className="flex items-start gap-2">
-                            <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div className="w-2 h-2 bg-[hsl(var(--red-primary))] rounded-full mt-2 flex-shrink-0"></div>
                             <p className="text-sm">{risk}</p>
                           </div>
                         ))
                       ) : (
-                        <p className="text-sm text-muted-foreground text-green-600">
+                        <p className="text-sm text-muted-foreground text-[hsl(var(--green-primary))]">
                           ✓ No major risk factors identified
                         </p>
                       )}
@@ -489,12 +489,12 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
                     {results.recommendations.length > 0 ? (
                       results.recommendations.map((recommendation, index) => (
                         <div key={index} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="w-2 h-2 bg-[hsl(var(--blue-primary))] rounded-full mt-2 flex-shrink-0"></div>
                           <p className="text-sm">{recommendation}</p>
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-[hsl(var(--green-primary))]">
                         ✓ Business metrics are strong. Focus on execution and growth.
                       </p>
                     )}
