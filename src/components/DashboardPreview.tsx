@@ -19,6 +19,7 @@ import {
   CheckSquare
 } from "lucide-react";
 
+const DashboardPreview = () => {
   return (
     <div className="min-h-screen relative overflow-hidden py-12 px-4">
       {/* Tech Background Base - matching PersonalizedDashboard */}
