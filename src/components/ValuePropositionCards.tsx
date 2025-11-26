@@ -61,8 +61,8 @@ const ValuePropositionCards = () => {
       {/* RGB gradient overlay */}
       <div className="absolute inset-0 bg-gradient-rgb-soft opacity-30" />
       
-      {/* Subtle grid pattern for light theme */}
-      <div className="absolute inset-0 opacity-[0.02]">
+      {/* Subtle grid pattern - adjusts for theme */}
+      <div className="absolute inset-0 dark:opacity-[0.04] opacity-[0.02]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
             linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),

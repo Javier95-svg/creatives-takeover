@@ -4,8 +4,29 @@ import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
 import './index.css'
 import posthog from 'posthog-js'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 const helmetContext = {};
+
+// Prevent FOUC by setting theme before render
+const getInitialTheme = (): 'light' | 'dark' => {
+  const stored = localStorage.getItem('theme-preference') as 'light' | 'dark' | null;
+  if (stored === 'light' || stored === 'dark') {
+    return stored;
+  }
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'light';
+};
+
+// Set initial theme class immediately to prevent FOUC
+const initialTheme = getInitialTheme();
+if (initialTheme === 'dark') {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
 
 // Initialize PostHog if a public key is provided via Vite env vars.
 // Uses VITE_POSTHOG_API_KEY (public key) and optional VITE_POSTHOG_API_HOST.
@@ -35,8 +56,10 @@ if (import.meta.env.VITE_POSTHOG_API_KEY) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <HelmetProvider context={helmetContext}>
-      <App />
-    </HelmetProvider>
+    <ThemeProvider>
+      <HelmetProvider context={helmetContext}>
+        <App />
+      </HelmetProvider>
+    </ThemeProvider>
   </StrictMode>
 );

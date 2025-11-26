@@ -153,7 +153,7 @@ const Footer = () => {
                 <img 
                   src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1025583&theme=light&t=1760234587519" 
                   alt="Creatives Takeover - AI Platform for Creators & Entrepreneurs | Product Hunt" 
-                  className="hover:opacity-80 transition-opacity" 
+                  className="hover:opacity-80 transition-opacity dark:invert dark:opacity-90" 
                   style={{ width: '250px', height: '54px' }} 
                   width="250" 
                   height="54" 

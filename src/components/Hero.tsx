@@ -26,16 +26,16 @@ const Hero = () => {
       className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30 bg-gradient-rgb-subtle"
     >
       <div className="absolute inset-0 pointer-events-none">
-        {/* Subtle grid pattern for light theme */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+        {/* Subtle grid pattern - adjusts for theme */}
+        <div className="absolute inset-0 dark:opacity-[0.05] opacity-[0.03]" style={{
           backgroundImage: `
             linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
             linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
           `,
           backgroundSize: "80px 80px, 80px 80px",
         }} />
-        {/* RGB gradient accent lines */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-15">
+        {/* RGB gradient accent lines - more visible in dark mode */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none dark:opacity-20 opacity-15">
           <div
             className="absolute left-1/2 w-full h-px"
             style={{ 

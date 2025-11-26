@@ -23,15 +23,15 @@ All colors MUST be HSL.
     --primary: 217 91% 60%; /* #3B82F6 - Professional blue */
     --primary-foreground: 0 0% 100%;
 
-    /* Red - Secondary/Accent (for warnings, highlights, secondary actions) */
-    --secondary: 0 84.2% 60.2%; /* #EF4444 - Professional red */
+    /* Secondary - Gray tones for secondary actions */
+    --secondary: 215 16% 47%; /* Medium gray for secondary actions */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    /* Red as accent for highlights */
-    --accent: 0 84.2% 60.2%; /* #EF4444 - Red accent */
+    /* Accent - Medium blue for highlights */
+    --accent: 217 91% 50%; /* Medium blue accent */
     --accent-foreground: 0 0% 100%;
 
     /* Red for destructive actions */
@@ -114,7 +114,7 @@ All colors MUST be HSL.
     --gradient-subtle: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%));
 
     /* Glass Effects for Light Theme */
-    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-border-color: rgba(214.3, 31.8%, 91.4%, 0.5);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 
@@ -140,59 +140,120 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode support - keeping for accessibility with RGB colors */
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Cool Slate Dark Mode - Option 3 */
+    /* Deep slate-blue background */
+    --background: 222 15% 9%;
+    /* Soft off-white text */
+    --foreground: 210 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Subtle elevation for cards */
+    --card: 222 15% 12%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 15% 12%;
+    --popover-foreground: 210 20% 95%;
 
-    /* RGB colors for dark mode */
-    --primary: 217 91% 60%; /* Blue */
+    /* Brighter blue for visibility in dark mode */
+    --primary: 217 92% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 84.2% 60.2%; /* Red */
+    /* Light gray for secondary actions */
+    --secondary: 215 20% 65%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Background variations */
+    --muted: 222 12% 18%;
+    --muted-foreground: 215 15% 65%;
 
-    --accent: 0 84.2% 60.2%; /* Red accent */
+    /* Medium blue accent */
+    --accent: 217 92% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72.2% 50.6%; /* Red for errors */
+    /* Brighter red for errors */
+    --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%; /* Blue focus ring */
+    /* Visible borders */
+    --border: 222 15% 25%;
+    --input: 222 15% 18%;
+    --ring: 217 92% 65%; /* Brighter blue focus ring */
     
-    /* RGB custom colors for dark mode */
-    --success: 142 76% 36%; /* Green */
+    /* Success color - brighter for visibility */
+    --success: 142 72% 45%;
     --success-foreground: 0 0% 100%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 217 91% 60%;
+    
+    /* RGB Color Variants for Dark Mode (brighter for visibility) */
+    --blue-primary: 217 92% 65%;
+    --blue-dark: 217 92% 55%;
+    --blue-light: 217 92% 75%;
+    
+    --red-primary: 0 85% 65%;
+    --red-dark: 0 75% 55%;
+    --red-light: 0 85% 75%;
+    
+    --green-primary: 142 72% 45%;
+    --green-dark: 142 68% 38%;
+    --green-light: 142 72% 52%;
+    
+    --neutral-gray: 215 15% 65%;
+    --neutral-gray-light: 215 20% 75%;
+    
+    /* Sidebar colors for dark mode */
+    --sidebar-background: 222 15% 11%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 217 92% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 222 12% 20%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 222 15% 25%;
+    --sidebar-ring: 217 92% 65%;
+    
+    /* Dark Mode Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 92% 65%), hsl(217 92% 55%));
+    --gradient-hero: linear-gradient(180deg, hsl(222 15% 9%), hsl(222 15% 12%));
+    --gradient-rgb: linear-gradient(135deg, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
+    --gradient-rgb-vertical: linear-gradient(180deg, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
+    --gradient-rgb-horizontal: linear-gradient(90deg, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
+    --gradient-rgb-radial: radial-gradient(circle, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
+    
+    /* Dark Mode Subtle Background Gradients */
+    --gradient-rgb-subtle: linear-gradient(135deg, 
+      hsl(217 92% 65% / 0.12), 
+      hsl(0 85% 65% / 0.10), 
+      hsl(142 72% 45% / 0.12));
+    --gradient-rgb-soft: linear-gradient(135deg, 
+      hsl(217 92% 65% / 0.15), 
+      hsl(0 85% 65% / 0.12), 
+      hsl(142 72% 45% / 0.15));
+    
+    /* Dark Mode Glass Morphism */
+    --glass-bg: rgba(18, 20, 26, 0.75);
+    --glass-border-color: rgba(96, 165, 250, 0.2);
+    --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --gradient-glass-rgb: linear-gradient(135deg, 
+      rgba(96, 165, 250, 0.12), 
+      rgba(248, 113, 113, 0.10), 
+      rgba(74, 222, 128, 0.12));
+    --gradient-glass-blue: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.08));
+    --gradient-glass-red: linear-gradient(135deg, rgba(248, 113, 113, 0.15), rgba(248, 113, 113, 0.08));
+    --gradient-glass-green: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.08));
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    /* Smooth theme transitions for theme-aware properties */
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 0.3s;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
+  
 }
 
 /* Visible, consistent keyboard focus styles */
@@ -303,31 +364,31 @@ All colors MUST be HSL.
     background: var(--gradient-growth);
   }
   
-  /* RGB Gradient Border Utilities */
+  /* RGB Gradient Border Utilities - Theme-aware */
   .border-gradient-rgb {
     border: 2px solid transparent;
-    background-image: linear-gradient(white, white), var(--gradient-rgb);
+    background-image: linear-gradient(hsl(var(--card)), hsl(var(--card))), var(--gradient-rgb);
     background-origin: border-box;
     background-clip: padding-box, border-box;
   }
   
   .border-gradient-planning {
     border: 2px solid transparent;
-    background-image: linear-gradient(white, white), var(--gradient-planning);
+    background-image: linear-gradient(hsl(var(--card)), hsl(var(--card))), var(--gradient-planning);
     background-origin: border-box;
     background-clip: padding-box, border-box;
   }
   
   .border-gradient-action {
     border: 2px solid transparent;
-    background-image: linear-gradient(white, white), var(--gradient-action);
+    background-image: linear-gradient(hsl(var(--card)), hsl(var(--card))), var(--gradient-action);
     background-origin: border-box;
     background-clip: padding-box, border-box;
   }
   
   .border-gradient-growth {
     border: 2px solid transparent;
-    background-image: linear-gradient(white, white), var(--gradient-growth);
+    background-image: linear-gradient(hsl(var(--card)), hsl(var(--card))), var(--gradient-growth);
     background-origin: border-box;
     background-clip: padding-box, border-box;
   }
@@ -370,7 +431,7 @@ All colors MUST be HSL.
     background-clip: padding-box, border-box;
     box-shadow: var(--glass-shadow);
   }
-  
+
   .glass-blue {
     background: var(--gradient-glass-blue);
     backdrop-filter: blur(10px);
@@ -390,6 +451,36 @@ All colors MUST be HSL.
     backdrop-filter: blur(10px);
     border: 1px solid hsl(var(--green-primary) / 0.2);
     box-shadow: 0 4px 16px hsl(var(--green-primary) / 0.1);
+  }
+  
+  /* Dark mode specific shadow enhancements */
+  .dark .rgb-glow {
+    box-shadow: 0 0 30px hsl(var(--blue-primary) / 0.4),
+                0 0 50px hsl(var(--red-primary) / 0.3),
+                0 0 70px hsl(var(--green-primary) / 0.2);
+  }
+  
+  .dark .rgb-glow-subtle {
+    box-shadow: 0 4px 20px hsl(var(--blue-primary) / 0.15),
+                0 2px 10px hsl(var(--red-primary) / 0.12),
+                0 1px 5px hsl(var(--green-primary) / 0.1);
+  }
+  
+  /* Shadow utilities for both modes */
+  .shadow-light {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  
+  .dark .shadow-light {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  .shadow-colored {
+    box-shadow: 0 4px 16px hsl(var(--primary) / 0.15);
+  }
+  
+  .dark .shadow-colored {
+    box-shadow: 0 4px 20px hsl(var(--primary) / 0.25);
   }
   
   /* RGB Semantic Color Utilities */

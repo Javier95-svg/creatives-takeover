@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ThemeToggle from "@/components/ThemeToggle";
 import ctLogo from "@/assets/ct-logo.png";
 
 const Navigation = () => {
@@ -86,7 +87,9 @@ const Navigation = () => {
       style={scrolled ? {
         borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
         borderImageSlice: 1
-      } : {}}
+      } : {
+        borderColor: 'hsl(var(--border))'
+      }}
       >
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 border-0">
@@ -172,6 +175,7 @@ const Navigation = () => {
                   </Link>
                 </Button>
                 <NotificationBell />
+                <ThemeToggle />
                 <Link to="/account" className="cursor-pointer">
                   <Avatar className="h-8 w-8 hover:ring-2 hover:ring-primary transition-all">
                     <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
@@ -192,6 +196,7 @@ const Navigation = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
+                <ThemeToggle />
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/login" className="flex items-center gap-2">
                     <LogIn className="w-4 h-4" />
@@ -219,6 +224,13 @@ const Navigation = () => {
         {isOpen && (
           <div className="md:hidden bg-background border-t border-border animate-slide-in-right">
             <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* Theme Toggle at top of mobile menu */}
+              <div className="px-4 py-3 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Theme</span>
+                  <ThemeToggle />
+                </div>
+              </div>
               {navItems.map((item) => (
                 <Link
                   key={item.name}
