@@ -93,13 +93,13 @@ const Navigation = () => {
       >
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 border-0">
-            {/* Logo with Flickering Glow */}
+            {/* Logo with Alive Animation - Slow Rotation + Pulsing RGB Glow */}
             <div className="flex items-center border-0">
               <Link to="/" className="flex items-center" aria-label="Home">
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-12 w-auto lightbulb-glow cursor-pointer transition-transform duration-300 hover:scale-105" 
+                  className="h-12 w-auto lightbulb-glow cursor-pointer" 
                 />
               </Link>
             </div>
