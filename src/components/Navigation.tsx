@@ -96,7 +96,7 @@ const Navigation = () => {
                 <img 
                   src={ctLogo} 
                   alt="Logo" 
-                  className="h-12 w-auto animate-fade-in hover:scale-110 transition-all duration-300 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] hover:drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]" 
+                  className="h-12 w-auto animate-fade-in hover:scale-110 transition-all duration-300 lightbulb-glow" 
                 />
               </Link>
             </div>

@@ -397,6 +397,16 @@ export default {
 					'33%': { filter: 'hue-rotate(120deg)' },
 					'66%': { filter: 'hue-rotate(240deg)' },
 					'100%': { filter: 'hue-rotate(360deg)' }
+				},
+				'lightbulb-shine': {
+					'0%, 100%': {
+						filter: 'brightness(1.2) contrast(1.1)',
+						boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.4), 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(59, 130, 246, 0.5), 0 0 45px rgba(239, 68, 68, 0.3), 0 0 60px rgba(16, 185, 129, 0.2), 0 0 80px rgba(59, 130, 246, 0.4), 0 0 100px rgba(255, 255, 255, 0.2)'
+					},
+					'50%': {
+						filter: 'brightness(1.4) contrast(1.15)',
+						boxShadow: 'inset 0 0 25px rgba(255, 255, 255, 0.4), inset 0 0 15px rgba(59, 130, 246, 0.5), 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(59, 130, 246, 0.7), 0 0 60px rgba(239, 68, 68, 0.5), 0 0 80px rgba(16, 185, 129, 0.4), 0 0 100px rgba(59, 130, 246, 0.6), 0 0 120px rgba(255, 255, 255, 0.3)'
+					}
 				}
 			},
 			animation: {
@@ -422,7 +432,8 @@ export default {
 				'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
 				'rgb-gradient-flow': 'rgb-gradient-flow 3s ease infinite',
 				'rgb-pulse': 'rgb-pulse 3s ease-in-out infinite',
-				'rgb-glow-rotate': 'rgb-glow-rotate 6s linear infinite'
+				'rgb-glow-rotate': 'rgb-glow-rotate 6s linear infinite',
+				'lightbulb-shine': 'lightbulb-shine 3s ease-in-out infinite'
 			}
 		}
 	},
