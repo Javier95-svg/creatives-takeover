@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Lightbulb } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ThemeToggle from "@/components/ThemeToggle";
+import ctLogo from "@/assets/ct-logo.png";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,12 +93,13 @@ const Navigation = () => {
       >
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 border-0">
-            {/* Lightbulb Logo */}
+            {/* Logo with Flickering Glow */}
             <div className="flex items-center border-0">
               <Link to="/" className="flex items-center" aria-label="Home">
-                <Lightbulb 
-                  className="h-8 w-8 lightbulb-glow cursor-pointer" 
-                  aria-hidden="true"
+                <img 
+                  src={ctLogo} 
+                  alt="Creatives Takeover Logo" 
+                  className="h-12 w-auto lightbulb-glow cursor-pointer transition-transform duration-300 hover:scale-105" 
                 />
               </Link>
             </div>
