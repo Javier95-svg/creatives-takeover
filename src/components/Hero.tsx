@@ -6,10 +6,11 @@ import heroImage from "@/assets/hero-bg.jpg";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
-  // Reduced particles by 50% for visual simplification
+  // RGB colored particles for brand identity
   const creativeParticles = [
-    { top: "18%", left: "16%", size: 8, color: "#fda4af", delay: "0s" },
-    { top: "64%", left: "20%", size: 7, color: "#f59e0b", delay: "1.6s" },
+    { top: "18%", left: "16%", size: 8, color: "hsl(var(--blue-primary))", delay: "0s" },
+    { top: "64%", left: "20%", size: 7, color: "hsl(var(--red-primary))", delay: "1.6s" },
+    { top: "42%", left: "75%", size: 6, color: "hsl(var(--green-primary))", delay: "2.4s" },
   ];
   const techNodes = [
     { top: "18%", right: "16%" },
@@ -22,7 +23,7 @@ const Hero = () => {
   return (
     <section
       id="overview"
-      className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30"
+      className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30 bg-gradient-rgb-subtle"
     >
       <div className="absolute inset-0 pointer-events-none">
         {/* Subtle grid pattern for light theme */}
@@ -33,15 +34,21 @@ const Hero = () => {
           `,
           backgroundSize: "80px 80px, 80px 80px",
         }} />
-        {/* Subtle accent lines */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+        {/* RGB gradient accent lines */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-15">
           <div
-            className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
-            style={{ top: "32%" }}
+            className="absolute left-1/2 w-full h-px"
+            style={{ 
+              top: "32%",
+              background: "linear-gradient(to right, transparent, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)), transparent)"
+            }}
           />
           <div
-            className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
-            style={{ top: "68%" }}
+            className="absolute left-1/2 w-full h-px"
+            style={{ 
+              top: "68%",
+              background: "linear-gradient(to right, transparent, hsl(var(--green-primary)), hsl(var(--red-primary)), hsl(var(--blue-primary)), transparent)"
+            }}
           />
         </div>
         {creativeParticles.map((particle, index) => (
@@ -93,7 +100,7 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
-            <span className="text-foreground">Your Digital Partner for Building From Zero</span>
+            <span className="gradient-rgb">Your Digital Partner for Building From Zero</span>
           </h1>
 
           {/* Subheadline */}
@@ -104,21 +111,21 @@ const Hero = () => {
           {/* Trust Indicators - Enhanced with 4 metrics, all visible on mobile */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
             <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <Users className="w-4 h-4 text-primary" />
+              <Users className="w-4 h-4 text-growth" />
               <span className="text-muted-foreground">Growing</span>
               <span className="font-semibold text-foreground">Community</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <Zap className="w-4 h-4 text-primary" />
+              <Zap className="w-4 h-4 text-action" />
               <span className="font-semibold text-foreground">30-Day</span>
               <span className="text-muted-foreground">Launch</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <Sparkles className="w-4 h-4 text-primary" />
+              <Sparkles className="w-4 h-4 text-planning" />
               <span className="text-muted-foreground">AI-Powered Business Planning</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <DollarSign className="w-4 h-4 text-primary" />
+              <DollarSign className="w-4 h-4 text-growth" />
               <span className="text-muted-foreground">Fundraising Guidance</span>
             </div>
           </div>
@@ -134,14 +141,14 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
             <Button 
               size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-md hover:shadow-lg" 
+              className="bg-gradient-rgb hover:opacity-90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg hover:shadow-xl rgb-glow-subtle hover:rgb-glow transition-all duration-300" 
               aria-label="Start Here" 
               asChild
             >
               <Link to="/bizmap-ai">
                 <span className="relative z-10">Start Here</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-[hsl(var(--green-primary))] opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-rgb opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
               </Link>
             </Button>
             
@@ -161,23 +168,23 @@ const Hero = () => {
 
           {/* Key Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
-            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-[hsl(var(--blue-primary))]/20 hover:border-[hsl(var(--blue-primary))]/40">
+            <div className="glass-blue btn-magnetic p-4 sm:p-6 bg-card border-2 border-planning/30 hover:border-planning/60 transition-all duration-300 hover:shadow-lg hover:shadow-blue/20">
               <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-[hsl(var(--blue-primary))]" />
+                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-planning" />
               </div>
               <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Launch in 30 Days</div>
               <div className="text-muted-foreground text-xs sm:text-sm">Sprint-based roadmap gets you from idea to first customer fast</div>
             </div>
-            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-[hsl(var(--red-primary))]/20 hover:border-[hsl(var(--red-primary))]/40">
+            <div className="glass-red btn-magnetic p-4 sm:p-6 bg-card border-2 border-action/30 hover:border-action/60 transition-all duration-300 hover:shadow-lg hover:shadow-red/20">
               <div className="flex justify-center mb-3">
-                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-[hsl(var(--red-primary))]" />
+                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-action" />
               </div>
               <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Creative-First Intelligence</div>
               <div className="text-muted-foreground text-xs sm:text-sm">AI trained on creative business models, not corporate playbooks</div>
             </div>
-            <div className="glass-card btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-card border border-[hsl(var(--green-primary))]/20 hover:border-[hsl(var(--green-primary))]/40">
+            <div className="glass-green btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-card border-2 border-growth/30 hover:border-growth/60 transition-all duration-300 hover:shadow-lg hover:shadow-green/20">
               <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-[hsl(var(--green-primary))]" />
+                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-growth" />
               </div>
               <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Accountability Partners</div>
               <div className="text-muted-foreground text-xs sm:text-sm">Match with fellow creatives for daily check-ins and demo days</div>

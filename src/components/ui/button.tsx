@@ -18,6 +18,10 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        "rgb-gradient": "bg-gradient-rgb text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl rgb-glow-subtle hover:rgb-glow transition-all duration-300",
+        "rgb-planning": "bg-gradient-planning text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl hover:shadow-blue/30 transition-all duration-300",
+        "rgb-action": "bg-gradient-action text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl hover:shadow-red/30 transition-all duration-300",
+        "rgb-growth": "bg-gradient-growth text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl hover:shadow-green/30 transition-all duration-300",
       },
       size: {
         default: "h-12 px-4 py-2",

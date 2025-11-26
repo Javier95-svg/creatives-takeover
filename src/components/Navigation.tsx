@@ -78,43 +78,66 @@ const Navigation = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-border transition-all ${scrolled ? 'backdrop-blur-md bg-background/95 shadow-sm' : 'bg-background/80'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b-2 transition-all ${
+        scrolled 
+          ? 'backdrop-blur-md bg-background/95 shadow-sm' 
+          : 'bg-background/80 border-border'
+      }`}
+      style={scrolled ? {
+        borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
+        borderImageSlice: 1
+      } : {}}
+      >
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 border-0">
             {/* Logo */}
             <div className="flex items-center border-0">
               <Link to="/" className="flex items-center">
-                <img src={ctLogo} alt="Logo" className="h-12 w-auto animate-fade-in animate-glow hover:scale-110 transition-transform duration-300" />
+                <img src={ctLogo} alt="Logo" className="h-12 w-auto animate-fade-in hover:scale-110 transition-transform duration-300 hover:rgb-glow-subtle" />
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
-              {navItems.map((item) => (
-                <Tooltip key={item.name}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      to={item.href}
-                      onClick={() => trackClick(item.name, 'Navigation')}
-                      className={`text-muted-foreground hover:text-foreground transition-colors animated-underline whitespace-nowrap ${
-                        item.name === 'BizMap AI' ? 'relative' : ''
-                      }`}
-                      onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
-                      onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
-                    >
-                      {item.name}
-                      {item.name === 'BizMap AI' && (
-                        <div className="absolute -top-1 -right-2 flex items-center">
-                          <Gift className="w-3 h-3 text-primary animate-bounce" />
-                        </div>
-                      )}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{item.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
+              {navItems.map((item) => {
+                // Color-code navigation items semantically
+                let colorClass = '';
+                if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
+                  colorClass = 'hover:text-planning animated-underline-rgb';
+                } else if (item.name === 'Community' || item.name === 'About Us') {
+                  colorClass = 'hover:text-action';
+                } else if (item.name === 'Insighta' || item.name === 'Pricing') {
+                  colorClass = 'hover:text-growth';
+                } else {
+                  colorClass = 'animated-underline';
+                }
+                
+                return (
+                  <Tooltip key={item.name}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        to={item.href}
+                        onClick={() => trackClick(item.name, 'Navigation')}
+                        className={`text-muted-foreground hover:text-foreground transition-all duration-300 whitespace-nowrap ${colorClass} ${
+                          item.name === 'BizMap AI' ? 'relative' : ''
+                        }`}
+                        onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
+                        onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
+                      >
+                        {item.name}
+                        {item.name === 'BizMap AI' && (
+                          <div className="absolute -top-1 -right-2 flex items-center">
+                            <Gift className="w-3 h-3 text-planning animate-bounce" />
+                          </div>
+                        )}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{item.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
             </div>
 
           {/* Desktop CTA */}
@@ -175,7 +198,7 @@ const Navigation = () => {
                     Sign In
                   </Link>
                 </Button>
-                <Button size="sm" className="glass bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
+                <Button size="sm" className="bg-gradient-rgb hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" asChild>
                   <Link to="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -280,7 +303,7 @@ const Navigation = () => {
                         Sign In
                       </Link>
                     </Button>
-                    <Button size="sm" className="w-full glass bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setIsOpen(false)} asChild>
+                    <Button size="sm" className="w-full bg-gradient-rgb hover:opacity-90 text-primary-foreground shadow-lg" onClick={() => setIsOpen(false)} asChild>
                       <Link to="/signup">Sign Up</Link>
                     </Button>
                   </div>

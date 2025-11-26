@@ -4,11 +4,19 @@ import { Mail, Linkedin, Instagram, Twitter, Youtube } from "lucide-react";
 const Footer = () => {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t bg-background">
-      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <footer className="relative bg-background border-t-2" style={{
+      borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
+      borderImageSlice: 1
+    }}>
+      {/* RGB gradient top border */}
+      <div className="absolute top-0 left-0 right-0 h-px" style={{
+        background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)))'
+      }} />
+      
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
         <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <section aria-labelledby="footer-address">
-            <h2 id="footer-address" className="text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
+            <h2 id="footer-address" className="text-sm font-semibold tracking-wide gradient-rgb">Registered Office</h2>
             <address className="mt-3 text-sm text-muted-foreground not-italic">
               <strong>Creatives Takeover Ltd</strong><br />
               71-75, Shelton Street<br />
@@ -19,7 +27,7 @@ const Footer = () => {
           </section>
 
           <section aria-labelledby="footer-contact">
-            <h2 id="footer-contact" className="text-sm font-semibold tracking-wide text-foreground">Contact</h2>
+            <h2 id="footer-contact" className="text-sm font-semibold tracking-wide gradient-rgb">Contact</h2>
             <p className="mt-3 text-sm text-muted-foreground">Questions or feedback? We’d love to hear from you.</p>
             <a
               href="mailto:admin@creatives-takeover.com"
@@ -31,7 +39,7 @@ const Footer = () => {
           </section>
 
           <nav aria-labelledby="footer-legal">
-            <h2 id="footer-legal" className="text-sm font-semibold tracking-wide text-foreground">Legal</h2>
+            <h2 id="footer-legal" className="text-sm font-semibold tracking-wide gradient-rgb">Legal</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <Link className="hover:underline underline-offset-4" to="/privacy-policy">
@@ -47,7 +55,7 @@ const Footer = () => {
           </nav>
 
           <nav aria-labelledby="footer-social">
-            <h2 id="footer-social" className="text-sm font-semibold tracking-wide text-foreground">Follow Us</h2>
+            <h2 id="footer-social" className="text-sm font-semibold tracking-wide gradient-rgb">Follow Us</h2>
             <ul className="mt-3 flex flex-wrap items-center gap-4">
               {/* Instagram */}
               <li className="flex items-center">
@@ -86,7 +94,7 @@ const Footer = () => {
                   aria-label="LinkedIn"
                   className="flex items-center justify-center"
                 >
-                  <Linkedin className="h-5 w-5 text-blue-600 hover:text-blue-500 transition-colors" />
+                  <Linkedin className="h-5 w-5 text-planning hover:text-planning/80 transition-colors" />
                 </a>
               </li>
               
@@ -113,7 +121,7 @@ const Footer = () => {
                   aria-label="YouTube"
                   className="flex items-center justify-center"
                 >
-                  <Youtube className="h-5 w-5 text-red-600 hover:text-red-500 transition-colors" />
+                  <Youtube className="h-5 w-5 text-action hover:text-action/80 transition-colors" />
                 </a>
               </li>
               
@@ -205,8 +213,13 @@ const Footer = () => {
           </nav>
         </div>
 
-        <div className="mt-8 text-xs text-muted-foreground">
-          &copy; {year} Creatives Takeover Ltd. All rights reserved.
+        {/* RGB gradient divider */}
+        <div className="mt-8 pt-8 border-t" style={{
+          borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
+          borderImageSlice: 1
+        }} />
+        <div className="mt-6 text-xs text-muted-foreground text-center">
+          <span className="gradient-rgb font-semibold">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
         </div>
       </div>
     </footer>

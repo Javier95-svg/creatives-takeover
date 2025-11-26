@@ -72,12 +72,46 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
     --gradient-glass: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(239, 68, 68, 0.02));
     
-    /* RGB Color Combinations */
+    /* RGB Color Combinations - Enhanced Gradients */
     --gradient-rgb: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
+    --gradient-rgb-vertical: linear-gradient(180deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
+    --gradient-rgb-horizontal: linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
+    --gradient-rgb-radial: radial-gradient(circle, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
+    
+    /* RGB Two-Color Combinations */
     --gradient-blue-green: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--green-primary)));
+    --gradient-blue-red: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--red-primary)));
+    --gradient-red-green: linear-gradient(135deg, hsl(var(--red-primary)), hsl(var(--green-primary)));
+    --gradient-green-blue: linear-gradient(135deg, hsl(var(--green-primary)), hsl(var(--blue-primary)));
     --gradient-red-blue: linear-gradient(135deg, hsl(var(--red-primary)), hsl(var(--blue-primary)));
-    --gradient-subtle: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%));
+    --gradient-green-red: linear-gradient(135deg, hsl(var(--green-primary)), hsl(var(--red-primary)));
+    
+    /* RGB Semantic Gradients */
+    --gradient-planning: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--blue-dark))); /* Blue for planning/trust */
+    --gradient-action: linear-gradient(135deg, hsl(var(--red-primary)), hsl(var(--red-dark))); /* Red for action/urgency */
+    --gradient-growth: linear-gradient(135deg, hsl(var(--green-primary)), hsl(var(--green-dark))); /* Green for growth/success */
     --gradient-accent: linear-gradient(135deg, hsl(var(--red-primary)), hsl(var(--red-dark)));
+    
+    /* RGB Subtle Background Gradients */
+    --gradient-rgb-subtle: linear-gradient(135deg, 
+      hsl(var(--blue-primary) / 0.08), 
+      hsl(var(--red-primary) / 0.06), 
+      hsl(var(--green-primary) / 0.08));
+    --gradient-rgb-soft: linear-gradient(135deg, 
+      hsl(var(--blue-primary) / 0.12), 
+      hsl(var(--red-primary) / 0.10), 
+      hsl(var(--green-primary) / 0.12));
+    
+    /* RGB Glass Morphism with Colors */
+    --gradient-glass-rgb: linear-gradient(135deg, 
+      rgba(59, 130, 246, 0.08), 
+      rgba(239, 68, 68, 0.06), 
+      rgba(16, 185, 129, 0.08));
+    --gradient-glass-blue: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+    --gradient-glass-red: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+    --gradient-glass-green: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    
+    --gradient-subtle: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%));
 
     /* Glass Effects for Light Theme */
     --glass-bg: rgba(255, 255, 255, 0.8);
@@ -200,12 +234,199 @@ All colors MUST be HSL.
     display: inline-block;
   }
   
+  .gradient-rgb-vertical {
+    background: var(--gradient-rgb-vertical);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+  
   .gradient-blue-green {
     background: var(--gradient-blue-green);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: inline-block;
+  }
+  
+  .gradient-blue-red {
+    background: var(--gradient-blue-red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+  
+  .gradient-red-green {
+    background: var(--gradient-red-green);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+  
+  /* RGB Gradient Background Utilities */
+  .bg-gradient-rgb {
+    background: var(--gradient-rgb);
+  }
+  
+  .bg-gradient-rgb-vertical {
+    background: var(--gradient-rgb-vertical);
+  }
+  
+  .bg-gradient-rgb-horizontal {
+    background: var(--gradient-rgb-horizontal);
+  }
+  
+  .bg-gradient-rgb-radial {
+    background: var(--gradient-rgb-radial);
+  }
+  
+  .bg-gradient-rgb-subtle {
+    background: var(--gradient-rgb-subtle);
+  }
+  
+  .bg-gradient-rgb-soft {
+    background: var(--gradient-rgb-soft);
+  }
+  
+  .bg-gradient-planning {
+    background: var(--gradient-planning);
+  }
+  
+  .bg-gradient-action {
+    background: var(--gradient-action);
+  }
+  
+  .bg-gradient-growth {
+    background: var(--gradient-growth);
+  }
+  
+  /* RGB Gradient Border Utilities */
+  .border-gradient-rgb {
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), var(--gradient-rgb);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  .border-gradient-planning {
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), var(--gradient-planning);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  .border-gradient-action {
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), var(--gradient-action);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  .border-gradient-growth {
+    border: 2px solid transparent;
+    background-image: linear-gradient(white, white), var(--gradient-growth);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  /* RGB Glow Effects */
+  .rgb-glow {
+    box-shadow: 0 0 20px hsl(var(--blue-primary) / 0.3),
+                0 0 40px hsl(var(--red-primary) / 0.2),
+                0 0 60px hsl(var(--green-primary) / 0.1);
+  }
+  
+  .rgb-glow-blue {
+    box-shadow: 0 0 20px hsl(var(--blue-primary) / 0.4),
+                0 0 40px hsl(var(--blue-primary) / 0.2);
+  }
+  
+  .rgb-glow-red {
+    box-shadow: 0 0 20px hsl(var(--red-primary) / 0.4),
+                0 0 40px hsl(var(--red-primary) / 0.2);
+  }
+  
+  .rgb-glow-green {
+    box-shadow: 0 0 20px hsl(var(--green-primary) / 0.4),
+                0 0 40px hsl(var(--green-primary) / 0.2);
+  }
+  
+  .rgb-glow-subtle {
+    box-shadow: 0 4px 16px hsl(var(--blue-primary) / 0.1),
+                0 2px 8px hsl(var(--red-primary) / 0.08),
+                0 1px 4px hsl(var(--green-primary) / 0.06);
+  }
+  
+  /* Enhanced Glass Morphism with RGB Colors */
+  .glass-rgb {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
+    background-image: linear-gradient(var(--glass-bg), var(--glass-bg)), var(--gradient-glass-rgb);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    box-shadow: var(--glass-shadow);
+  }
+  
+  .glass-blue {
+    background: var(--gradient-glass-blue);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--blue-primary) / 0.2);
+    box-shadow: 0 4px 16px hsl(var(--blue-primary) / 0.1);
+  }
+  
+  .glass-red {
+    background: var(--gradient-glass-red);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--red-primary) / 0.2);
+    box-shadow: 0 4px 16px hsl(var(--red-primary) / 0.1);
+  }
+  
+  .glass-green {
+    background: var(--gradient-glass-green);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--green-primary) / 0.2);
+    box-shadow: 0 4px 16px hsl(var(--green-primary) / 0.1);
+  }
+  
+  /* RGB Semantic Color Utilities */
+  .text-planning {
+    color: hsl(var(--blue-primary));
+  }
+  
+  .text-action {
+    color: hsl(var(--red-primary));
+  }
+  
+  .text-growth {
+    color: hsl(var(--green-primary));
+  }
+  
+  .bg-planning {
+    background-color: hsl(var(--blue-primary));
+  }
+  
+  .bg-action {
+    background-color: hsl(var(--red-primary));
+  }
+  
+  .bg-growth {
+    background-color: hsl(var(--green-primary));
+  }
+  
+  .border-planning {
+    border-color: hsl(var(--blue-primary));
+  }
+  
+  .border-action {
+    border-color: hsl(var(--red-primary));
+  }
+  
+  .border-growth {
+    border-color: hsl(var(--green-primary));
   }
 
   /* BizMap Chat Celebration Wallpaper */
@@ -347,6 +568,31 @@ All colors MUST be HSL.
   }
   
   .animated-underline:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+  
+  /* RGB Animated underline */
+  .animated-underline-rgb {
+    position: relative;
+  }
+  
+  .animated-underline-rgb::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background: var(--gradient-rgb);
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.3s ease;
+    background-size: 200% 100%;
+    animation: gradient-flow 3s ease infinite;
+  }
+  
+  .animated-underline-rgb:hover::after {
     transform: scaleX(1);
     transform-origin: bottom left;
   }
@@ -865,6 +1111,41 @@ All colors MUST be HSL.
 @keyframes gradient-flow {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+
+/* RGB Gradient Animations */
+@keyframes rgb-gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes rgb-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--blue-primary) / 0.3),
+                0 0 40px hsl(var(--red-primary) / 0.2),
+                0 0 60px hsl(var(--green-primary) / 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--blue-primary) / 0.5),
+                0 0 60px hsl(var(--red-primary) / 0.4),
+                0 0 90px hsl(var(--green-primary) / 0.3);
+  }
+}
+
+@keyframes rgb-glow-rotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  33% {
+    filter: hue-rotate(120deg);
+  }
+  66% {
+    filter: hue-rotate(240deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
 }
 
 @keyframes gradient-shift {

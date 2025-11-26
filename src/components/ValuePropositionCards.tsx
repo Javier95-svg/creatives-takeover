@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const ValuePropositionCards = () => {
-  // All cards in a single row
+  // All cards in a single row with semantic RGB color assignments
   const allCards = [
     {
       icon: Lightbulb,
@@ -13,7 +13,7 @@ const ValuePropositionCards = () => {
       description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
       cta: "Start Planning",
       link: "/bizmap-ai",
-      gradient: "from-primary/20 to-primary/5",
+      color: "planning", // Blue for planning/trust
       metric: "30-day launch"
     },
     {
@@ -23,7 +23,7 @@ const ValuePropositionCards = () => {
       description: "Join creative entrepreneurs who get it. Share your journey, celebrate wins, get honest feedback, and find accountability partners who'll keep you moving forward.",
       cta: "Join Community",
       link: "/community",
-      gradient: "from-secondary/20 to-secondary/5",
+      color: "action", // Red for action/urgency
       metric: "Active community"
     },
     {
@@ -33,7 +33,7 @@ const ValuePropositionCards = () => {
       description: "Your command center for tracking progress, managing tasks, and monitoring your business progress. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
       cta: "View Dashboard",
       link: "/dashboard",
-      gradient: "from-[hsl(var(--green-primary))]/20 to-[hsl(var(--green-primary))]/5",
+      color: "growth", // Green for growth/success
       metric: "Track progress"
     },
     {
@@ -43,7 +43,7 @@ const ValuePropositionCards = () => {
       description: "Discover tested prompt-chains from uprising industries. Jumpstart your business planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to be used at BizMap AI.",
       cta: "Learn Prompts",
       link: "/prompt-library",
-      gradient: "from-[hsl(var(--blue-primary))]/20 to-[hsl(var(--blue-primary))]/5"
+      color: "planning" // Blue for planning/exploration
     },
     {
       icon: Rocket,
@@ -52,12 +52,15 @@ const ValuePropositionCards = () => {
       description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
       cta: "Explore Insighta",
       link: "/insighta",
-      gradient: "from-accent/20 to-accent/5"
+      color: "growth" // Green for growth/fundraising success
     }
   ];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden">
+    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle">
+      {/* RGB gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-rgb-soft opacity-30" />
+      
       {/* Subtle grid pattern for light theme */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -72,7 +75,7 @@ const ValuePropositionCards = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
-          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 pb-2 text-foreground">
+          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 pb-2 gradient-rgb">
             Here's What You Get
           </h2>
           <p className="text-body sm:text-body-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -84,17 +87,51 @@ const ValuePropositionCards = () => {
         <div className="flex flex-row gap-4 md:gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
           {allCards.map((card, index) => {
             const Icon = card.icon;
+            const colorClasses = {
+              planning: {
+                border: 'border-planning/30 hover:border-planning/60',
+                bg: 'bg-planning/10 group-hover:bg-planning/20',
+                text: 'text-planning',
+                textHover: 'text-planning group-hover:text-planning/90',
+                metric: 'text-planning/80',
+                gradient: 'bg-gradient-planning',
+                glass: 'glass-blue',
+                shadow: 'hover:shadow-planning/20'
+              },
+              action: {
+                border: 'border-action/30 hover:border-action/60',
+                bg: 'bg-action/10 group-hover:bg-action/20',
+                text: 'text-action',
+                textHover: 'text-action group-hover:text-action/90',
+                metric: 'text-action/80',
+                gradient: 'bg-gradient-action',
+                glass: 'glass-red',
+                shadow: 'hover:shadow-action/20'
+              },
+              growth: {
+                border: 'border-growth/30 hover:border-growth/60',
+                bg: 'bg-growth/10 group-hover:bg-growth/20',
+                text: 'text-growth',
+                textHover: 'text-growth group-hover:text-growth/90',
+                metric: 'text-growth/80',
+                gradient: 'bg-gradient-growth',
+                glass: 'glass-green',
+                shadow: 'hover:shadow-growth/20'
+              }
+            };
+            const colors = colorClasses[card.color as keyof typeof colorClasses];
+            
             return (
               <Card 
                 key={index} 
-                className="relative overflow-hidden group hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 border-2 hover:border-primary/50 animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px] flex-1"
+                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px] flex-1`}
                 style={{ 
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'both'
                 }}
               >
-                {/* Animated gradient background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-50 group-hover:opacity-80 transition-opacity duration-500`} />
+                {/* RGB gradient background overlay */}
+                <div className={`absolute inset-0 ${colors.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
                 
                 {/* Shimmer effect on hover */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -105,45 +142,21 @@ const ValuePropositionCards = () => {
                   <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center">
                     {/* Icon with enhanced animations */}
                     <div className="mb-3">
-                      <div className={`w-10 h-10 rounded-lg ${
-                        card.title === 'PLAN' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover:bg-[hsl(var(--blue-primary))]/20' :
-                        card.title === 'SHARE' ? 'bg-[hsl(var(--red-primary))]/10 group-hover:bg-[hsl(var(--red-primary))]/20' :
-                        card.title === 'EXECUTE' ? 'bg-[hsl(var(--green-primary))]/10 group-hover:bg-[hsl(var(--green-primary))]/20' :
-                        card.title === 'EXPLORE' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover:bg-[hsl(var(--blue-primary))]/20' :
-                        'bg-[hsl(var(--red-primary))]/10 group-hover:bg-[hsl(var(--red-primary))]/20'
-                      } flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-lg`}>
-                        <Icon className={`w-5 h-5 ${
-                          card.title === 'PLAN' ? 'text-[hsl(var(--blue-primary))]' :
-                          card.title === 'SHARE' ? 'text-[hsl(var(--red-primary))]' :
-                          card.title === 'EXECUTE' ? 'text-[hsl(var(--green-primary))]' :
-                          card.title === 'EXPLORE' ? 'text-[hsl(var(--blue-primary))]' :
-                          'text-[hsl(var(--red-primary))]'
-                        } group-hover:scale-110 transition-transform duration-500`} />
+                      <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-lg`}>
+                        <Icon className={`w-5 h-5 ${colors.text} group-hover:scale-110 transition-transform duration-500`} />
                       </div>
                     </div>
 
                     {/* Title with fade-in animation */}
                     <div className="mb-2 transform group-hover:scale-105 transition-transform duration-300 text-center">
-                      <div className={`text-xs font-bold mb-1 transition-colors ${
-                        card.title === 'PLAN' ? 'text-[hsl(var(--blue-primary))] group-hover:text-[hsl(var(--blue-primary))]/90' :
-                        card.title === 'SHARE' ? 'text-[hsl(var(--red-primary))] group-hover:text-[hsl(var(--red-primary))]/90' :
-                        card.title === 'EXECUTE' ? 'text-[hsl(var(--green-primary))] group-hover:text-[hsl(var(--green-primary))]/90' :
-                        card.title === 'EXPLORE' ? 'text-[hsl(var(--blue-primary))] group-hover:text-[hsl(var(--blue-primary))]/90' :
-                        'text-[hsl(var(--red-primary))] group-hover:text-[hsl(var(--red-primary))]/90'
-                      }`}>
+                      <div className={`text-xs font-bold mb-1 transition-colors ${colors.textHover}`}>
                         {card.title}
                       </div>
                       <h3 className="text-base font-semibold group-hover:text-foreground transition-colors mb-1">
                         {card.subtitle}
                       </h3>
                       {card.metric && (
-                        <p className={`text-xs font-semibold ${
-                          card.title === 'PLAN' ? 'text-[hsl(var(--blue-primary))]/80' :
-                          card.title === 'SHARE' ? 'text-[hsl(var(--red-primary))]/80' :
-                          card.title === 'EXECUTE' ? 'text-[hsl(var(--green-primary))]/80' :
-                          card.title === 'EXPLORE' ? 'text-[hsl(var(--blue-primary))]/80' :
-                          'text-[hsl(var(--red-primary))]/80'
-                        }`}>{card.metric}</p>
+                        <p className={`text-xs font-semibold ${colors.metric}`}>{card.metric}</p>
                       )}
                     </div>
 
@@ -152,11 +165,26 @@ const ValuePropositionCards = () => {
                       {card.description}
                     </p>
 
-                    {/* CTA Button with enhanced animations */}
+                    {/* CTA Button with RGB gradient on hover */}
                     <div className="w-full">
                       <Button 
                         variant="outline" 
-                        className="w-full text-xs group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden min-h-[40px]"
+                        className={`w-full text-xs group-hover:text-primary-foreground group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden min-h-[40px] border-2 ${colors.border}`}
+                        style={{
+                          background: 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (card.color === 'planning') {
+                            e.currentTarget.style.background = 'var(--gradient-planning)';
+                          } else if (card.color === 'action') {
+                            e.currentTarget.style.background = 'var(--gradient-action)';
+                          } else if (card.color === 'growth') {
+                            e.currentTarget.style.background = 'var(--gradient-growth)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
                       >
                         <span className="relative z-10">{card.cta}</span>
                       </Button>
