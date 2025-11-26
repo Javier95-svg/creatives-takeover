@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TrendingUp, Rocket, Bot, Users, LayoutDashboard, TrendingDown, ArrowRight, Lightbulb, Target, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { TrendingUp, Rocket, TrendingDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -11,16 +9,15 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 const SocialProof = () => {
   const [chartVisible, setChartVisible] = useState(false);
 
-  // Animated counters
-  const { count: startups2025Count, ref: startups2025Ref } = useCountUp(3.1, 2000);
-  const { count: creative2025Count, ref: creative2025Ref } = useCountUp(2.0, 2000);
-  const { count: monthlyStartupsCount, ref: monthlyStartupsRef } = useCountUp(390, 2000);
-  const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000);
+  // Animated counters - Evidence-based statistics
+  const { count: startups2025Count, ref: startups2025Ref } = useCountUp(3.1, 2000); // Projected based on GEM trends
+  const { count: marketNeedFailureCount, ref: marketNeedFailureRef } = useCountUp(42, 2000); // 42% fail due to lack of market need (DemandSage, 2024)
+  const { count: monthlyStartupsCount, ref: monthlyStartupsRef } = useCountUp(430, 2000); // U.S. averaged 430K new business applications/month in 2024 (Reuters)
+  const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000); // Creative startups growth rate
 
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
   const { ref: statsAnimationRef, isVisible: statsIsVisible } = useScrollAnimation(100);
-  const { ref: featuresAnimationRef, isVisible: featuresIsVisible } = useScrollAnimation(150);
 
   useEffect(() => {
     if (chartIsVisible && !chartVisible) {
@@ -57,59 +54,6 @@ const SocialProof = () => {
     { month: 'Feb 2025', startups: 390 },
   ];
 
-  // Feature connection data
-  const featureConnections = [
-    {
-      icon: Bot,
-      title: "BizMap AI",
-      dataPoint: "3.1M startups in 2025",
-      connection: "Validate your idea before joining millions of startups",
-      description: "Use our AI-powered 7-step framework to test problem-solution fit before building",
-      link: "/bizmap-ai",
-      color: "from-primary/20 to-primary/5",
-      iconColor: "text-primary"
-    },
-    {
-      icon: Users,
-      title: "Community",
-      dataPoint: "67% faster growth",
-      connection: "Join 15K+ founders growing faster than the market",
-      description: "Get accountability, feedback, and support from creative entrepreneurs",
-      link: "/community",
-      color: "from-secondary/20 to-secondary/5",
-      iconColor: "text-secondary"
-    },
-    {
-      icon: LayoutDashboard,
-      title: "Dashboard",
-      dataPoint: "390K+ startups monthly",
-      connection: "Track progress like successful founders launching today",
-      description: "Maintain focus with clear priorities, progress tracking, and execution systems",
-      link: "/dashboard",
-      color: "from-green-500/20 to-green-500/5",
-      iconColor: "text-green-500"
-    },
-    {
-      icon: TrendingUp,
-      title: "Insighta",
-      dataPoint: "Intensified competition",
-      connection: "Stay ahead with real-time market intelligence",
-      description: "Research investors, discover funding opportunities, and track industry trends",
-      link: "/insighta",
-      color: "from-accent/20 to-accent/5",
-      iconColor: "text-accent"
-    },
-    {
-      icon: Lightbulb,
-      title: "Prompt Library",
-      dataPoint: "Need execution plan",
-      connection: "Use proven frameworks from successful startups",
-      description: "30+ battle-tested prompts for AI, E-commerce, SaaS, and creative businesses",
-      link: "/prompt-library",
-      color: "from-purple-500/20 to-purple-500/5",
-      iconColor: "text-purple-500"
-    }
-  ];
 
 
   return (
@@ -174,13 +118,13 @@ const SocialProof = () => {
           </Card>
           <Card className={`border-border bg-gradient-to-br from-secondary/10 to-secondary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-4 text-center">
-              <div ref={creative2025Ref} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
-                {creative2025Count.toFixed(1)}M
+              <div ref={marketNeedFailureRef} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
+                {marketNeedFailureCount}%
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Creative Startups</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Fail - No Market Need</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingUp className="w-3 h-3 text-green-500" />
-                <span className="text-xs text-green-500">+{growthRateCount}% faster</span>
+                <TrendingDown className="w-3 h-3 text-red-500" />
+                <span className="text-xs text-red-500">Top failure reason</span>
               </div>
             </CardContent>
           </Card>
@@ -189,7 +133,7 @@ const SocialProof = () => {
               <div ref={monthlyStartupsRef} className="text-2xl md:text-3xl font-bold text-accent mb-1">
                 {monthlyStartupsCount}K+
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Monthly Launches</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Monthly Applications (U.S.)</div>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <Rocket className="w-3 h-3 text-primary" />
                 <span className="text-xs text-primary">Growing</span>
@@ -311,7 +255,7 @@ const SocialProof = () => {
                   Creative startups growing <span className="font-semibold text-foreground">67% faster</span> than overall market
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Data sources: Global Entrepreneurship Monitor, Crunchbase, Statista
+                  Data sources: Global Entrepreneurship Monitor, Crunchbase, Statista, Reuters, DemandSage
                 </p>
               </div>
             </CardContent>
@@ -405,118 +349,16 @@ const SocialProof = () => {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  New startups launching in February 2025
+                  New business applications per month (U.S., 2024)
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Based on Global Entrepreneurship Monitor 2024 trends and Crunchbase data
+                  Source: Reuters, U.S. Treasury Report 2024 - 50% increase from 2019
                 </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Feature Connection Section */}
-        <div ref={featuresAnimationRef} className="mt-16">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl sm:text-3xl font-bold mb-3">
-              How We Help You Succeed
-            </h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Connect market insights to actionable tools that help you build faster and smarter
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featureConnections.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={feature.title}
-                  className={`border-border bg-gradient-to-br ${feature.color} hover:shadow-xl transition-all duration-500 group hover:scale-105 overflow-hidden ${featuresIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
-                  style={{ animationDelay: `${0.1 + index * 0.1}s` }}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className={`p-3 rounded-lg bg-background/50 ${feature.iconColor} transition-all duration-300 group-hover:scale-110 group-hover:rotate-3`}>
-                        <Icon className={`w-6 h-6 ${feature.iconColor}`} />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
-                          {feature.title}
-                        </h4>
-                        <Badge variant="outline" className="text-xs mb-2">
-                          {feature.dataPoint}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm font-semibold text-foreground mb-2">
-                      {feature.connection}
-                    </p>
-                    
-                    <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                      {feature.description}
-                    </p>
-
-                    <Link to={feature.link}>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300"
-                      >
-                        Learn More
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className={`mt-16 text-center ${featuresIsVisible ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-8">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h3 className="text-2xl font-bold">Ready to Build Your Startup?</h3>
-              </div>
-              <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Join thousands of founders using our platform to validate ideas, track progress, and launch faster. 
-                Don't become part of the 90% failure rate—get the tools and support you need to succeed.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/signup">
-                  <Button size="lg" className="w-full sm:w-auto">
-                    Start Building Today
-                    <Rocket className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                <Link to="/features">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                    Explore Features
-                  </Button>
-                </Link>
-              </div>
-              <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  <span>15,000+ Founders</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>67% Faster Growth</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  <span>92% Launch Success</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
       </div>
     </section>
