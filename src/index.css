@@ -421,35 +421,38 @@ All colors MUST be HSL.
                 0 1px 4px hsl(var(--green-primary) / 0.06);
   }
   
-  /* Lightbulb Glow Effect - Bright, Shiny, Glass-like */
+  /* Lightbulb Glow Effect - Soft, Flickering, Theme-aware */
   .lightbulb-glow {
-    filter: brightness(1.2) contrast(1.1);
-    box-shadow: 
-      /* Inner glow - light from within */
-      inset 0 0 20px rgba(255, 255, 255, 0.3),
-      inset 0 0 10px rgba(59, 130, 246, 0.4),
-      /* Soft highlights and reflections */
-      0 0 15px rgba(255, 255, 255, 0.6),
-      0 0 30px rgba(59, 130, 246, 0.5),
-      0 0 45px rgba(239, 68, 68, 0.3),
-      0 0 60px rgba(16, 185, 129, 0.2),
-      /* Outer glow - emitting light */
-      0 0 80px rgba(59, 130, 246, 0.4),
-      0 0 100px rgba(255, 255, 255, 0.2);
-    animation: lightbulb-shine 3s ease-in-out infinite;
+    color: hsl(var(--primary));
+    animation: lightbulb-flicker 4s ease-in-out infinite;
+    transition: all 0.3s ease;
+    /* Light mode glow */
+    filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.5)) 
+            drop-shadow(0 0 8px hsl(var(--primary) / 0.3))
+            brightness(1.1);
   }
   
   .lightbulb-glow:hover {
-    filter: brightness(1.4) contrast(1.2);
-    box-shadow: 
-      inset 0 0 30px rgba(255, 255, 255, 0.5),
-      inset 0 0 15px rgba(59, 130, 246, 0.6),
-      0 0 20px rgba(255, 255, 255, 0.8),
-      0 0 40px rgba(59, 130, 246, 0.7),
-      0 0 60px rgba(239, 68, 68, 0.5),
-      0 0 80px rgba(16, 185, 129, 0.4),
-      0 0 120px rgba(59, 130, 246, 0.6),
-      0 0 150px rgba(255, 255, 255, 0.3);
+    animation-duration: 3s;
+    filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.6)) 
+            drop-shadow(0 0 12px hsl(var(--primary) / 0.4))
+            brightness(1.2);
+  }
+  
+  /* Dark mode - brighter glow for visibility */
+  .dark .lightbulb-glow {
+    filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.7)) 
+            drop-shadow(0 0 12px hsl(var(--primary) / 0.5))
+            drop-shadow(0 0 18px hsl(var(--primary) / 0.3))
+            brightness(1.15);
+    color: hsl(var(--primary));
+  }
+  
+  .dark .lightbulb-glow:hover {
+    filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.8)) 
+            drop-shadow(0 0 16px hsl(var(--primary) / 0.6))
+            drop-shadow(0 0 24px hsl(var(--primary) / 0.4))
+            brightness(1.25);
   }
   
   /* Enhanced Glass Morphism with RGB Colors */
@@ -1593,5 +1596,57 @@ All colors MUST be HSL.
   }
   100% {
     transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+/* Lightbulb Flickering Animation - Soft, Natural Glow */
+@keyframes lightbulb-flicker {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.1) drop-shadow(0 0 4px hsl(var(--primary) / 0.5)) drop-shadow(0 0 8px hsl(var(--primary) / 0.3));
+  }
+  2% {
+    opacity: 0.95;
+    filter: brightness(1.05) drop-shadow(0 0 3px hsl(var(--primary) / 0.4)) drop-shadow(0 0 6px hsl(var(--primary) / 0.25));
+  }
+  4% {
+    opacity: 1;
+    filter: brightness(1.15) drop-shadow(0 0 5px hsl(var(--primary) / 0.6)) drop-shadow(0 0 10px hsl(var(--primary) / 0.35));
+  }
+  6% {
+    opacity: 0.98;
+    filter: brightness(1.08) drop-shadow(0 0 4px hsl(var(--primary) / 0.5)) drop-shadow(0 0 8px hsl(var(--primary) / 0.3));
+  }
+  8% {
+    opacity: 1;
+    filter: brightness(1.12) drop-shadow(0 0 5px hsl(var(--primary) / 0.55)) drop-shadow(0 0 9px hsl(var(--primary) / 0.32));
+  }
+  10%, 45% {
+    opacity: 1;
+    filter: brightness(1.1) drop-shadow(0 0 4px hsl(var(--primary) / 0.5)) drop-shadow(0 0 8px hsl(var(--primary) / 0.3));
+  }
+  47% {
+    opacity: 0.92;
+    filter: brightness(1.03) drop-shadow(0 0 3px hsl(var(--primary) / 0.4)) drop-shadow(0 0 6px hsl(var(--primary) / 0.25));
+  }
+  49% {
+    opacity: 1.05;
+    filter: brightness(1.18) drop-shadow(0 0 6px hsl(var(--primary) / 0.65)) drop-shadow(0 0 11px hsl(var(--primary) / 0.38));
+  }
+  51%, 90% {
+    opacity: 1;
+    filter: brightness(1.1) drop-shadow(0 0 4px hsl(var(--primary) / 0.5)) drop-shadow(0 0 8px hsl(var(--primary) / 0.3));
+  }
+  92% {
+    opacity: 0.94;
+    filter: brightness(1.06) drop-shadow(0 0 3px hsl(var(--primary) / 0.45)) drop-shadow(0 0 7px hsl(var(--primary) / 0.28));
+  }
+  94% {
+    opacity: 1.02;
+    filter: brightness(1.13) drop-shadow(0 0 5px hsl(var(--primary) / 0.58)) drop-shadow(0 0 9px hsl(var(--primary) / 0.33));
+  }
+  96% {
+    opacity: 1;
+    filter: brightness(1.1) drop-shadow(0 0 4px hsl(var(--primary) / 0.5)) drop-shadow(0 0 8px hsl(var(--primary) / 0.3));
   }
 }
