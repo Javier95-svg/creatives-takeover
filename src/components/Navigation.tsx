@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ctLogo from "@/assets/ct-logo.png";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,7 +84,7 @@ const Navigation = () => {
             {/* Logo */}
             <div className="flex items-center border-0">
               <Link to="/" className="flex items-center">
-                <img src="/lovable-uploads/2ae69f5c-24f2-4a91-ae89-df8696970fd3.png" alt="Logo" className="h-12 w-auto animate-fade-in animate-glow hover:scale-110 transition-transform duration-300" />
+                <img src={ctLogo} alt="Logo" className="h-12 w-auto animate-fade-in animate-glow hover:scale-110 transition-transform duration-300" />
               </Link>
             </div>
 
