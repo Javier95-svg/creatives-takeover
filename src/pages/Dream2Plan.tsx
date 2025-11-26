@@ -24,10 +24,8 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import SuccessScore from "@/components/SuccessScore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SprintPlannerComponent from "@/components/sprint/SprintPlanner";
-import SprintKanban from "@/components/sprint/SprintKanban";
-import { useSprints } from "@/hooks/useSprints";
-import { ArrowLeft, Zap } from "lucide-react";
+import ProductMarketFitLab from "@/components/pmf/ProductMarketFitLab";
+import { ArrowLeft, FlaskConical } from "lucide-react";
 import PDFGenerator from "@/components/PDFGenerator";
 
 import { BizMapChat } from "@/components/BizMapChat";
@@ -69,9 +67,7 @@ const BizMapAI = () => {
 
   const { user, isAuthenticated } = useAuth();
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
-  const { sprints, currentSprint, setCurrentSprint, fetchSprints } = useSprints();
   const { generateReport } = useChatBotStore();
-  const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   
@@ -85,29 +81,27 @@ const BizMapAI = () => {
     generateRoadmap
   } = useFounderOSIntegration();
   
-  // Sprint Planner handlers
-  const handleSprintCreated = async (sprintId: string) => {
-    // Refresh sprints to get the latest data
-    await fetchSprints();
-    // Use a small delay to ensure state is updated
-    setTimeout(() => {
-      // Find the sprint after refresh - sprints state should be updated by now
-      const sprint = sprints.find(s => s.id === sprintId);
-      if (sprint) {
-        setCurrentSprint(sprint);
-        setActiveSprintId(sprintId);
-        setActiveTab("sprint");
-      } else {
-        // Fallback: set the sprint ID directly and let the component handle it
-        setActiveSprintId(sprintId);
-        setActiveTab("sprint");
-      }
-    }, 100);
+  // PMF Lab data export handler
+  const handlePMFDataExport = (data: {
+    selectedSegment?: string;
+    refinedProblem?: string;
+    pmfScore?: number;
+    experiments?: any[];
+  }) => {
+    // Update userAnswers with refined PMF data
+    if (data.selectedSegment || data.refinedProblem) {
+      setUserAnswers(prev => ({
+        ...prev,
+        market: data.selectedSegment || prev.market,
+        problem: data.refinedProblem || prev.problem,
+      }));
+    }
+    
+    // Could also update launchReport or successScore with PMF insights
+    if (data.pmfScore) {
+      toast.success(`PMF data exported! Your PMF score: ${data.pmfScore}/100`);
+    }
   };
-
-  const activeSprint = activeSprintId 
-    ? sprints.find(s => s.id === activeSprintId) 
-    : currentSprint;
 
   // Define wizardSteps before using it in hooks
   const wizardSteps = [
@@ -1219,12 +1213,12 @@ Subject: "Quick question about [their pain point]"
                     <span className="sm:hidden">Planning</span>
                   </TabsTrigger>
                   <TabsTrigger 
-                    value="sprint" 
+                    value="pmf" 
                     className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/20 data-[state=active]:to-secondary/10 data-[state=active]:text-secondary transition-all duration-300 hover:bg-secondary/5 rounded-lg font-medium text-xs sm:text-sm"
                   >
-                    <Target className="w-4 sm:w-5 h-4 sm:h-5" />
-                    <span className="hidden sm:inline">Sprint Planner</span>
-                    <span className="sm:hidden">Sprint</span>
+                    <FlaskConical className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <span className="hidden sm:inline">Product Market Fit Lab</span>
+                    <span className="sm:hidden">PMF Lab</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -1591,7 +1585,7 @@ Subject: "Quick question about [their pain point]"
                 )}
               </TabsContent>
 
-              <TabsContent value="sprint">
+              <TabsContent value="pmf">
                 <div className="flex items-center gap-4 mb-6">
                   <Button
                     variant="ghost"
@@ -1603,68 +1597,19 @@ Subject: "Quick question about [their pain point]"
                     Back to BizMap
                   </Button>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold">Sprint Planning</h2>
-                    <p className="text-muted-foreground">Turn your validated idea into actionable 30-day sprints</p>
+                    <h2 className="text-2xl font-bold">Product Market Fit Lab</h2>
+                    <p className="text-muted-foreground">Validate your product in the market and discover if there's real demand</p>
                   </div>
                 </div>
                 
-                {!activeSprint ? (
-                  <SprintPlannerComponent 
-                    onSprintCreated={handleSprintCreated}
-                    businessPlanData={launchReport ? {
-                      answers: userAnswers,
-                      launchReport: launchReport,
-                      successScore: successScore
-                    } : undefined}
-                  />
-                ) : (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-bold creatives-font">Sprint Dashboard</h2>
-                        <p className="text-muted-foreground">Track your progress and stay accountable</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setActiveSprintId(null);
-                          setCurrentSprint(null);
-                        }}
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Create New Sprint
-                      </Button>
-                    </div>
-                    
-                    {activeSprint ? (
-                      <SprintKanban 
-                        sprint={activeSprint} 
-                        onStatusChange={(status) => {
-                          if (activeSprint) {
-                            setCurrentSprint({ ...activeSprint, status });
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                          <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
-                          <h3 className="text-lg font-semibold mb-2">No Sprint Selected</h3>
-                          <p className="text-muted-foreground mb-4 max-w-md">
-                            Create a new sprint to start planning your 30-day launch journey.
-                          </p>
-                          <Button onClick={() => {
-                            setActiveSprintId(null);
-                            setCurrentSprint(null);
-                          }}>
-                            <Zap className="w-4 h-4 mr-2" />
-                            Create Your First Sprint
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-                )}
+                <ProductMarketFitLab
+                  businessPlanData={launchReport ? {
+                    answers: userAnswers,
+                    launchReport: launchReport,
+                    successScore: successScore
+                  } : undefined}
+                  onDataExport={handlePMFDataExport}
+                />
               </TabsContent>
             </Tabs>
           </div>
