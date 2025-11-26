@@ -13,7 +13,8 @@ import {
   Calendar,
   Users,
   TrendingUp,
-  Video
+  Video,
+  Loader2
 } from 'lucide-react';
 import { Sprint, SprintTask, useSprints } from '@/hooks/useSprints';
 import { format } from 'date-fns';
@@ -37,10 +38,12 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
     fetchSprintTasks, 
     fetchSprintComments,
     updateTaskStatus,
-    updateSprintStatus 
+    updateSprintStatus,
+    loading
   } = useSprints();
   
   const [showComments, setShowComments] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [taskStats, setTaskStats] = useState({
     todo: 0,
     in_progress: 0,
@@ -55,7 +58,7 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
       fetchSprintTasks(sprint.id);
       fetchSprintComments(sprint.id);
     }
-  }, [sprint.id]);
+  }, [sprint.id, fetchSprintTasks, fetchSprintComments]);
 
   useEffect(() => {
     const stats = sprintTasks.reduce((acc, task) => {
@@ -77,8 +80,13 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
   }, [sprintTasks]);
 
   const handleStatusChange = async (newStatus: Sprint['status']) => {
-    await updateSprintStatus(sprint.id, newStatus);
-    onStatusChange?.(newStatus);
+    setIsUpdatingStatus(true);
+    try {
+      await updateSprintStatus(sprint.id, newStatus);
+      onStatusChange?.(newStatus);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   const getStatusColor = (status: Sprint['status']) => {
@@ -95,7 +103,7 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
     return sprintTasks.filter(task => task.status === status);
   };
 
-  const progressPercentage = taskStats.totalHours > 0 
+  const progressPercentage = sprintTasks.length > 0 
     ? Math.round((taskStats.done / sprintTasks.length) * 100) 
     : 0;
 
@@ -149,26 +157,42 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
 
             <div className="flex items-center gap-2">
               {sprint.status === 'planning' && (
-                <Button onClick={() => handleStatusChange('active')} size="sm">
-                  <Play className="w-4 h-4 mr-1" />
+                <Button onClick={() => handleStatusChange('active')} size="sm" disabled={isUpdatingStatus}>
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4 mr-1" />
+                  )}
                   Start Sprint
                 </Button>
               )}
               {sprint.status === 'active' && (
                 <>
-                  <Button onClick={() => handleStatusChange('paused')} variant="outline" size="sm">
-                    <Pause className="w-4 h-4 mr-1" />
+                  <Button onClick={() => handleStatusChange('paused')} variant="outline" size="sm" disabled={isUpdatingStatus}>
+                    {isUpdatingStatus ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Pause className="w-4 h-4 mr-1" />
+                    )}
                     Pause
                   </Button>
-                  <Button onClick={() => handleStatusChange('completed')} variant="outline" size="sm">
-                    <CheckCircle className="w-4 h-4 mr-1" />
+                  <Button onClick={() => handleStatusChange('completed')} variant="outline" size="sm" disabled={isUpdatingStatus}>
+                    {isUpdatingStatus ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                    )}
                     Complete
                   </Button>
                 </>
               )}
               {sprint.status === 'paused' && (
-                <Button onClick={() => handleStatusChange('active')} variant="outline" size="sm">
-                  <Play className="w-4 h-4 mr-1" />
+                <Button onClick={() => handleStatusChange('active')} variant="outline" size="sm" disabled={isUpdatingStatus}>
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4 mr-1" />
+                  )}
                   Resume
                 </Button>
               )}
@@ -195,7 +219,11 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-1">
               <span>Sprint Progress</span>
-              <span>{taskStats.done} of {sprintTasks.length} tasks completed</span>
+              <span>
+                {sprintTasks.length > 0 
+                  ? `${taskStats.done} of ${sprintTasks.length} tasks completed`
+                  : 'No tasks yet'}
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
@@ -230,45 +258,58 @@ const SprintKanban: React.FC<SprintKanbanProps> = ({ sprint, onStatusChange }) =
       )}
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {columns.map((column) => {
-          const tasks = getTasksByStatus(column.status);
-          const Icon = column.icon;
-          
-          return (
-            <Card key={column.id} className={`${column.color} border-2`}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    {column.title}
-                  </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {tasks.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {tasks.length === 0 ? (
-                  <div className="text-center text-muted-foreground text-sm py-8">
-                    No tasks yet
-                  </div>
-                ) : (
-                  tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onStatusChange={(newStatus, actualHours) => 
-                        updateTaskStatus(task.id, newStatus, actualHours)
-                      }
-                    />
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {loading ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading tasks...</span>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {columns.map((column) => {
+            const tasks = getTasksByStatus(column.status);
+            const Icon = column.icon;
+            
+            return (
+              <Card key={column.id} className={`${column.color} border-2`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      {column.title}
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {tasks.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {tasks.length === 0 ? (
+                    <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed rounded-lg">
+                      <Icon className="w-6 h-6 mx-auto mb-2 opacity-30" />
+                      <p>No tasks in {column.title.toLowerCase()}</p>
+                      {column.status === 'todo' && (
+                        <p className="text-xs mt-1">Generate tasks to get started</p>
+                      )}
+                    </div>
+                  ) : (
+                    tasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onStatusChange={(newStatus, actualHours) => 
+                          updateTaskStatus(task.id, newStatus, actualHours)
+                        }
+                      />
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

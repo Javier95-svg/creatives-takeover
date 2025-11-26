@@ -62,15 +62,19 @@ export const useSprints = () => {
       const { data, error } = await supabase
         .from('sprints')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       setSprints((data || []) as Sprint[]);
     } catch (error) {
       console.error('Error fetching sprints:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load your sprints";
       toast({
         title: "Error",
-        description: "Failed to load your sprints",
+        description: errorMessage.includes('fetch') || errorMessage.includes('network')
+          ? "Network error. Please check your connection and try again."
+          : errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -81,6 +85,7 @@ export const useSprints = () => {
   // Fetch sprint tasks
   const fetchSprintTasks = async (sprintId: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('sprint_tasks')
         .select('*')
@@ -91,11 +96,16 @@ export const useSprints = () => {
       setSprintTasks((data || []) as SprintTask[]);
     } catch (error) {
       console.error('Error fetching sprint tasks:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load sprint tasks";
       toast({
         title: "Error",
-        description: "Failed to load sprint tasks",
+        description: errorMessage.includes('fetch') || errorMessage.includes('network') 
+          ? "Network error. Please check your connection and try again."
+          : errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -327,6 +337,7 @@ export const useSprints = () => {
     if (user) {
       fetchSprints();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return {

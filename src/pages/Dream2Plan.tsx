@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Target } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles, Compass, MessageSquare, Package, RefreshCw, Brain, ArrowRight, TrendingUp } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -68,7 +69,7 @@ const BizMapAI = () => {
 
   const { user, isAuthenticated } = useAuth();
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
-  const { sprints, currentSprint, setCurrentSprint } = useSprints();
+  const { sprints, currentSprint, setCurrentSprint, fetchSprints } = useSprints();
   const { generateReport } = useChatBotStore();
   const [activeSprintId, setActiveSprintId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("bizmap");
@@ -85,13 +86,23 @@ const BizMapAI = () => {
   } = useFounderOSIntegration();
   
   // Sprint Planner handlers
-  const handleSprintCreated = (sprintId: string) => {
-    const sprint = sprints.find(s => s.id === sprintId);
-    if (sprint) {
-      setCurrentSprint(sprint);
-      setActiveSprintId(sprintId);
-      setActiveTab("sprint");
-    }
+  const handleSprintCreated = async (sprintId: string) => {
+    // Refresh sprints to get the latest data
+    await fetchSprints();
+    // Use a small delay to ensure state is updated
+    setTimeout(() => {
+      // Find the sprint after refresh - sprints state should be updated by now
+      const sprint = sprints.find(s => s.id === sprintId);
+      if (sprint) {
+        setCurrentSprint(sprint);
+        setActiveSprintId(sprintId);
+        setActiveTab("sprint");
+      } else {
+        // Fallback: set the sprint ID directly and let the component handle it
+        setActiveSprintId(sprintId);
+        setActiveTab("sprint");
+      }
+    }, 100);
   };
 
   const activeSprint = activeSprintId 
@@ -1625,14 +1636,33 @@ Subject: "Quick question about [their pain point]"
                       </Button>
                     </div>
                     
-                    <SprintKanban 
-                      sprint={activeSprint} 
-                      onStatusChange={(status) => {
-                        if (activeSprint) {
-                          setCurrentSprint({ ...activeSprint, status });
-                        }
-                      }}
-                    />
+                    {activeSprint ? (
+                      <SprintKanban 
+                        sprint={activeSprint} 
+                        onStatusChange={(status) => {
+                          if (activeSprint) {
+                            setCurrentSprint({ ...activeSprint, status });
+                          }
+                        }}
+                      />
+                    ) : (
+                      <Card>
+                        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                          <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                          <h3 className="text-lg font-semibold mb-2">No Sprint Selected</h3>
+                          <p className="text-muted-foreground mb-4 max-w-md">
+                            Create a new sprint to start planning your 30-day launch journey.
+                          </p>
+                          <Button onClick={() => {
+                            setActiveSprintId(null);
+                            setCurrentSprint(null);
+                          }}>
+                            <Zap className="w-4 h-4 mr-2" />
+                            Create Your First Sprint
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 )}
               </TabsContent>

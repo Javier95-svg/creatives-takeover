@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Zap, Users, Target, CheckCircle2, ArrowDown } from 'lucide-react';
+import { CalendarIcon, Zap, Users, Target, CheckCircle2, ArrowDown, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format, addDays } from 'date-fns';
 import { useSprints } from '@/hooks/useSprints';
@@ -35,7 +36,7 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
   const { user } = useAuth();
   const { toast } = useToast();
   const { hasCredits } = useCredits();
-  const { createSprint, createSprintTasks, sprints } = useSprints();
+  const { createSprint, createSprintTasks, sprints, fetchSprints } = useSprints();
   const { checkFeatureAccess } = useFeatureGating();
   const { 
     userActiveCommitments, 
@@ -46,8 +47,10 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
   } = useCommitments();
   
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [showCommitmentCreator, setShowCommitmentCreator] = useState(false);
   const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: businessPlanData?.answers?.overview ? 
       `Launch: ${businessPlanData.answers.overview.split(' ').slice(0, 6).join(' ')}...` : '',
@@ -158,6 +161,17 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
       return;
     }
 
+    // Validate dates
+    if (formData.endDate < formData.startDate) {
+      setDateError("End date must be after start date");
+      toast({
+        title: "Invalid Dates",
+        description: "End date must be after start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check for unlimited sprints access
     const unlimitedAccess = checkFeatureAccess('unlimited_sprints');
     if (!unlimitedAccess.hasAccess) {
@@ -178,6 +192,7 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
     }
 
     try {
+      setIsCreating(true);
       const sprint = await createSprint({
         title: formData.title,
         description: formData.description,
@@ -205,6 +220,9 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
       });
       setGeneratedTasks([]);
 
+      // Refresh sprints list
+      await fetchSprints();
+
       toast({
         title: "Sprint Created!",
         description: "Your sprint is ready. Time to start shipping!",
@@ -213,6 +231,13 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
       onSprintCreated?.(sprint.id);
     } catch (error) {
       console.error('Error creating sprint:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create sprint. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -297,7 +322,20 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
                     <Calendar
                       mode="single"
                       selected={formData.startDate}
-                      onSelect={(date) => date && setFormData(prev => ({ ...prev, startDate: date }))}
+                      onSelect={(date) => {
+                        if (date) {
+                          setFormData(prev => {
+                            const newStartDate = date;
+                            let newEndDate = prev.endDate;
+                            // If new start date is after end date, adjust end date
+                            if (newStartDate > prev.endDate) {
+                              newEndDate = addDays(newStartDate, 14);
+                            }
+                            setDateError(null);
+                            return { ...prev, startDate: newStartDate, endDate: newEndDate };
+                          });
+                        }
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
@@ -317,13 +355,31 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
                     <Calendar
                       mode="single"
                       selected={formData.endDate}
-                      onSelect={(date) => date && setFormData(prev => ({ ...prev, endDate: date }))}
+                      onSelect={(date) => {
+                        if (date) {
+                          setFormData(prev => {
+                            if (date < prev.startDate) {
+                              setDateError("End date must be after start date");
+                              return prev;
+                            }
+                            setDateError(null);
+                            return { ...prev, endDate: date };
+                          });
+                        }
+                      }}
                       initialFocus
+                      disabled={(date) => date < formData.startDate}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
             </div>
+
+            {dateError && (
+              <div className="text-sm text-destructive bg-destructive/10 p-2 rounded-md border border-destructive/20">
+                {dateError}
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -395,14 +451,13 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
                 onChange={(e) => setFormData(prev => ({ ...prev, fuzzyIdea: e.target.value }))}
                 rows={6}
                 className="resize-none"
-                readOnly={businessPlanData ? true : false}
               />
             </div>
             
             {businessPlanData && (
               <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border-l-4 border-primary">
                 <p className="font-medium text-primary mb-1">✓ Business Plan Integrated</p>
-                <p>Your comprehensive business plan has been automatically loaded to generate highly targeted sprint tasks.</p>
+                <p>Your comprehensive business plan has been automatically loaded. You can edit or add more context to refine the task generation.</p>
               </div>
             )}
 
@@ -426,19 +481,46 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
             </Button>
 
             {generatedTasks.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-green-600 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Generated {generatedTasks.length} Tasks
-                </Label>
-                <div className="max-h-64 overflow-y-auto space-y-1">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Generated {generatedTasks.length} Tasks
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setGeneratedTasks([])}
+                    className="text-xs h-7"
+                  >
+                    Clear
+                  </Button>
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-2 border rounded-lg p-3 bg-muted/30">
                   {generatedTasks.map((task, index) => (
-                    <div key={index} className="text-xs p-2 bg-muted rounded border-l-2 border-primary">
-                      <div className="font-medium">{task.title}</div>
-                      <div className="text-muted-foreground">{task.estimated_hours}h • {task.priority}</div>
+                    <div key={index} className="text-sm p-3 bg-background rounded border border-border hover:border-primary/50 transition-colors">
+                      <div className="font-medium mb-1">{task.title}</div>
+                      {task.description && (
+                        <div className="text-xs text-muted-foreground mb-2 line-clamp-2">{task.description}</div>
+                      )}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {task.estimated_hours}h
+                        </span>
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {task.priority}
+                        </Badge>
+                        {task.tags && task.tags.length > 0 && (
+                          <span className="text-xs">Tags: {task.tags.slice(0, 2).join(', ')}</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  ✓ Tasks are ready to be added to your sprint. You can create the sprint now or generate more tasks.
+                </p>
               </div>
             )}
           </CardContent>
@@ -540,12 +622,21 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
             </div>
             <Button
               onClick={handleCreateSprint}
-              disabled={!formData.title.trim()}
+              disabled={!formData.title.trim() || isCreating || !!dateError}
               size="lg"
               className="w-full max-w-md mx-auto text-lg h-14"
             >
-              <Users className="w-5 h-5 mr-2" />
-              Create Sprint & Start Shipping
+              {isCreating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Creating Sprint...
+                </>
+              ) : (
+                <>
+                  <Users className="w-5 h-5 mr-2" />
+                  Create Sprint & Start Shipping
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
