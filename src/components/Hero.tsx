@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign } from "l
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-bg.jpg";
+import HeroSnippets from "@/components/HeroSnippets";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
@@ -166,30 +167,8 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Key Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
-            <div className="glass-blue btn-magnetic p-4 sm:p-6 bg-card border-2 border-planning/30 hover:border-planning/60 transition-all duration-300 hover:shadow-lg hover:shadow-blue/20">
-              <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-planning" />
-              </div>
-              <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Launch in 30 Days</div>
-              <div className="text-muted-foreground text-xs sm:text-sm">Sprint-based roadmap gets you from idea to first customer fast</div>
-            </div>
-            <div className="glass-red btn-magnetic p-4 sm:p-6 bg-card border-2 border-action/30 hover:border-action/60 transition-all duration-300 hover:shadow-lg hover:shadow-red/20">
-              <div className="flex justify-center mb-3">
-                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-action" />
-              </div>
-              <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Creative-First Intelligence</div>
-              <div className="text-muted-foreground text-xs sm:text-sm">AI trained on creative business models, not corporate playbooks</div>
-            </div>
-            <div className="glass-green btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-card border-2 border-growth/30 hover:border-growth/60 transition-all duration-300 hover:shadow-lg hover:shadow-green/20">
-              <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-growth" />
-              </div>
-              <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Accountability Partners</div>
-              <div className="text-muted-foreground text-xs sm:text-sm">Match with fellow creatives for daily check-ins and demo days</div>
-            </div>
-          </div>
+          {/* Platform Snippets - Horizontal Scrollable */}
+          <HeroSnippets />
 
         </div>
       </div>
