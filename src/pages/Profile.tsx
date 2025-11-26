@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import ProfileWallpaper from "@/components/wallpapers/ProfileWallpaper";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -239,7 +239,7 @@ const Profile = () => {
           <title>Creatives Takeover</title>
         </Helmet>
         <div className="relative min-h-screen overflow-hidden">
-          <AnimatedBackground />
+          <ProfileWallpaper />
           <div className="relative z-10">
             <Navigation />
             <main className="container mx-auto px-4 py-20">
@@ -264,7 +264,7 @@ const Profile = () => {
           <title>Creatives Takeover</title>
         </Helmet>
         <div className="relative min-h-screen overflow-hidden">
-          <AnimatedBackground />
+          <ProfileWallpaper />
           <div className="relative z-10">
             <Navigation />
             <main className="container mx-auto px-4 py-20">
@@ -292,7 +292,7 @@ const Profile = () => {
         <meta name="description" content={`View ${profile.full_name || 'user'}'s profile and posts`} />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
-        <AnimatedBackground />
+        <ProfileWallpaper />
         <div className="relative z-10">
           <Navigation />
           <main className="container mx-auto px-4 py-8">
