@@ -68,8 +68,6 @@ const SocialProof = () => {
           backgroundSize: '50px 50px'
         }} />
       </div>
-        <div className="absolute bottom-48 right-16 text-blue-400 text-3xl animate-pulse" style={{ animationDelay: '1.5s' }}>💡</div>
-      </div>
       
       {/* Floating data visualization icons */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
