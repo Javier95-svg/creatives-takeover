@@ -1,41 +1,22 @@
 import SEO, { createBreadcrumbSchema } from "@/components/SEO";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import BlogHero from "@/components/blog/BlogHero";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import FundraisingReadinessToolkit from "@/components/blog/FundraisingReadinessToolkit";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { FundingFilters } from "@/types/funding";
 
 const Blog = () => {
   const { trackPageVisit } = useReadingAnalytics();
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showStickyNav, setShowStickyNav] = useState(false);
   const [fundingFilters, setFundingFilters] = useState<FundingFilters>({});
-  const heroRef = useRef<HTMLDivElement>(null);
 
   // Track page visit when component mounts
   useEffect(() => {
     trackPageVisit('Insighta Blog');
   }, [trackPageVisit]);
-
-  // Show sticky nav after scrolling past hero
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowStickyNav(!entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-
-    if (heroRef.current) {
-      observer.observe(heroRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
 
   // Structured data for blog page
   const structuredData = [
@@ -71,18 +52,7 @@ const Blog = () => {
       />
       <Navigation />
       
-      {/* Sticky Navigation - shows after scrolling past hero */}
-      {showStickyNav && (
-        <BlogStickyNav
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
-      )}
-      
       <main>
-        <div ref={heroRef}>
-          <BlogHero />
-        </div>
         <FundraisingReadinessToolkit />
         <FundingOpportunitiesSection 
           filters={fundingFilters}
