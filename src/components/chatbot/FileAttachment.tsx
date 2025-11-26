@@ -156,7 +156,7 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
           {isUploading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Paperclip className="w-4 h-4" />
+            <Paperclip className="w-4 h-4 dark:text-muted-foreground text-black" />
           )}
           {!iconOnly && (
             <span className="ml-1 text-xs">

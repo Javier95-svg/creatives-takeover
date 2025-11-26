@@ -651,6 +651,11 @@ All colors MUST be HSL.
     background: #0e121f;
   }
 
+  /* Light mode: Gray gradient background */
+  :root:not(.dark) .bizmap-chat-shell {
+    background: linear-gradient(135deg, hsl(210 40% 96%), hsl(210 40% 94%), hsl(215 20% 92%));
+  }
+
   .bizmap-chat-ambient {
     position: absolute;
     inset: 0;
@@ -660,6 +665,14 @@ All colors MUST be HSL.
     background:
       radial-gradient(120% 150% at 20% 10%, rgba(35, 199, 189, 0.12), transparent 55%),
       radial-gradient(130% 160% at 80% 120%, rgba(14, 18, 31, 0.65), #0b0f1a 95%);
+  }
+
+  /* Light mode: Gray gradient ambient background */
+  :root:not(.dark) .bizmap-chat-ambient {
+    background: linear-gradient(135deg, 
+      hsl(210 40% 96% / 0.8), 
+      hsl(210 40% 94% / 0.9), 
+      hsl(215 20% 92% / 0.85));
   }
 
   .bizmap-chat-pattern {
