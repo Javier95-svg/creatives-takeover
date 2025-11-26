@@ -120,12 +120,12 @@ const EntrepreneurProblems = () => {
       {/* Scattered Problem Icons Background */}
       <div className="absolute inset-0 opacity-5">
         {/* Scattered X marks representing problems */}
-        <div className="absolute top-20 left-20 text-red-500 text-4xl font-bold">✕</div>
-        <div className="absolute top-40 right-32 text-red-500 text-3xl font-bold">✕</div>
-        <div className="absolute bottom-32 left-40 text-red-500 text-5xl font-bold">✕</div>
-        <div className="absolute bottom-48 right-20 text-red-500 text-2xl font-bold">✕</div>
-        <div className="absolute top-1/2 left-1/3 text-red-500 text-6xl font-bold">✕</div>
-        <div className="absolute top-1/3 right-1/4 text-red-500 text-3xl font-bold">✕</div>
+        <div className="absolute top-20 left-20 text-[hsl(var(--red-primary))] text-4xl font-bold">✕</div>
+        <div className="absolute top-40 right-32 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
+        <div className="absolute bottom-32 left-40 text-[hsl(var(--red-primary))] text-5xl font-bold">✕</div>
+        <div className="absolute bottom-48 right-20 text-[hsl(var(--red-primary))] text-2xl font-bold">✕</div>
+        <div className="absolute top-1/2 left-1/3 text-[hsl(var(--red-primary))] text-6xl font-bold">✕</div>
+        <div className="absolute top-1/3 right-1/4 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
       </div>
       
       {/* Warning Stripes */}
@@ -133,7 +133,7 @@ const EntrepreneurProblems = () => {
       <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent" />
       
       {/* Glitch Effect Elements */}
-      <div className="absolute top-1/4 left-1/5 w-32 h-1 bg-red-500/30 animate-pulse" />
+      <div className="absolute top-1/4 left-1/5 w-32 h-1 bg-[hsl(var(--red-primary))]/30 animate-pulse" />
       <div className="absolute bottom-1/3 right-1/5 w-24 h-1 bg-orange-500/30 animate-pulse" style={{ animationDelay: '1s' }} />
       
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -170,13 +170,13 @@ const EntrepreneurProblems = () => {
                   {/* Before Section - Red/Warning */}
                   <div className="bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-4 sm:p-5 border-b-2 border-red-500/20 transition-all duration-300 group-hover:from-red-500/15 group-hover:via-red-500/10">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-red-500/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-red-500/30">
-                        <BeforeIcon className="w-5 h-5 text-red-500 transition-transform duration-300 group-hover:scale-110" />
+                      <div className="p-2 rounded-lg bg-[hsl(var(--red-primary))]/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-[hsl(var(--red-primary))]/30">
+                        <BeforeIcon className="w-5 h-5 text-[hsl(var(--red-primary))] transition-transform duration-300 group-hover:scale-110" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <X className="w-4 h-4 text-red-500 flex-shrink-0" />
-                          <h3 className="text-sm sm:text-base font-bold text-red-600">{item.problem}</h3>
+                          <X className="w-4 h-4 text-[hsl(var(--red-primary))] flex-shrink-0" />
+                          <h3 className="text-sm sm:text-base font-bold text-[hsl(var(--red-primary))]">{item.problem}</h3>
                         </div>
                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.beforeText}</p>
                       </div>
@@ -185,8 +185,8 @@ const EntrepreneurProblems = () => {
                     {/* Stat Badge */}
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-red-500/10">
                       <div className="flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
-                        <TrendingDown className="w-4 h-4 text-red-500 transition-transform duration-300 group-hover:animate-bounce" />
-                        <span className="text-lg font-bold text-red-500 transition-colors duration-300 group-hover:text-red-600">{item.stat}</span>
+                        <TrendingDown className="w-4 h-4 text-[hsl(var(--red-primary))] transition-transform duration-300 group-hover:animate-bounce" />
+                        <span className="text-lg font-bold text-[hsl(var(--red-primary))] transition-colors duration-300 group-hover:text-[hsl(var(--red-dark))]">{item.stat}</span>
                       </div>
                       <span className="text-xs text-muted-foreground transition-colors duration-300 group-hover:text-foreground/80">{item.statLabel}</span>
                     </div>
@@ -204,13 +204,13 @@ const EntrepreneurProblems = () => {
                   {/* After Section - Green/Success */}
                   <div className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent p-4 sm:p-5 transition-all duration-300 group-hover:from-green-500/15 group-hover:via-green-500/10">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-green-500/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-green-500/30">
-                        <AfterIcon className="w-5 h-5 text-green-600 transition-transform duration-300 group-hover:scale-110" />
+                      <div className="p-2 rounded-lg bg-[hsl(var(--green-primary))]/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-[hsl(var(--green-primary))]/30">
+                        <AfterIcon className="w-5 h-5 text-[hsl(var(--green-primary))] transition-transform duration-300 group-hover:scale-110" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          <h4 className="text-xs sm:text-sm font-semibold text-green-700 dark:text-green-400">Solution</h4>
+                          <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))] flex-shrink-0" />
+                          <h4 className="text-xs sm:text-sm font-semibold text-[hsl(var(--green-primary))]">Solution</h4>
                         </div>
                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.afterText}</p>
                       </div>
@@ -219,8 +219,8 @@ const EntrepreneurProblems = () => {
                     {/* Success Indicator */}
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-green-500/10">
                       <div className="flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
-                        <TrendingUp className="w-4 h-4 text-green-600 transition-transform duration-300 group-hover:animate-bounce" />
-                        <span className="text-xs font-semibold text-green-700 dark:text-green-400 transition-colors duration-300 group-hover:text-green-800 dark:group-hover:text-green-300">Avoid this failure</span>
+                        <TrendingUp className="w-4 h-4 text-[hsl(var(--green-primary))] transition-transform duration-300 group-hover:animate-bounce" />
+                        <span className="text-xs font-semibold text-[hsl(var(--green-primary))] transition-colors duration-300 group-hover:text-[hsl(var(--green-dark))]">Avoid this failure</span>
                       </div>
                     </div>
                   </div>
@@ -230,11 +230,11 @@ const EntrepreneurProblems = () => {
                     <div className="p-4 sm:p-5 bg-muted/30 border-t border-border/50 animate-in slide-in-from-top-2">
                       <div className="space-y-3">
                         <div>
-                          <h5 className="text-xs font-semibold text-red-600 mb-1.5">The Problem:</h5>
+                          <h5 className="text-xs font-semibold text-[hsl(var(--red-primary))] mb-1.5">The Problem:</h5>
                           <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
                         </div>
                         <div>
-                          <h5 className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1.5">The Solution:</h5>
+                          <h5 className="text-xs font-semibold text-[hsl(var(--green-primary))] mb-1.5">The Solution:</h5>
                           <p className="text-xs text-muted-foreground leading-relaxed">{item.solution}</p>
                         </div>
                       </div>

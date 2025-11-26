@@ -107,15 +107,15 @@ const FinalCTA = () => {
           <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div className="flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
                 <span>Free to start</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
                 <span>First dollar guarantee</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
                 <span>Built FOR creatives BY creatives</span>
               </div>
             </div>

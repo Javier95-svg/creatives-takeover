@@ -79,7 +79,7 @@ const HowItWorks = () => {
       
       {/* Step Indicators */}
       <div className="absolute top-32 left-1/4 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-bold animate-pulse">1</div>
-      <div className="absolute top-48 left-2/4 w-8 h-8 bg-blue-400/10 rounded-full flex items-center justify-center text-blue-400 text-sm font-bold animate-pulse" style={{ animationDelay: '0.5s' }}>2</div>
+      <div className="absolute top-48 left-2/4 w-8 h-8 bg-[hsl(var(--blue-primary))]/10 rounded-full flex items-center justify-center text-[hsl(var(--blue-primary))] text-sm font-bold animate-pulse" style={{ animationDelay: '0.5s' }}>2</div>
       <div className="absolute top-32 left-3/4 w-8 h-8 bg-cyan-400/10 rounded-full flex items-center justify-center text-cyan-400 text-sm font-bold animate-pulse" style={{ animationDelay: '1s' }}>3</div>
       
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -111,7 +111,7 @@ const HowItWorks = () => {
               
               {/* Time Badge */}
               <div className="absolute -top-2 sm:-top-3 right-4 sm:right-6">
-                <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
+                <Badge className="bg-[hsl(var(--green-primary))]/10 text-[hsl(var(--green-primary))] border-[hsl(var(--green-primary))]/20 text-xs">
                   <Clock className="w-3 h-3 mr-1" />
                   {step.time}
                 </Badge>

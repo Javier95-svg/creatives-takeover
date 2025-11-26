@@ -283,7 +283,7 @@ const DashboardPreview = () => {
                     <div className="text-xs text-muted-foreground">Track goals</div>
                   </div>
                   <div className="p-4 bg-muted/30 rounded-lg text-center border border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
-                    <TrendingUp className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                    <TrendingUp className="w-6 h-6 text-[hsl(var(--green-primary))] mx-auto mb-2" />
                     <div className="text-sm font-semibold mb-1">Analytics</div>
                     <div className="text-xs text-muted-foreground">Progress insights</div>
                   </div>
@@ -337,7 +337,7 @@ const DashboardPreview = () => {
                   <span>15,000+ Active Users</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-500" />
+                  <TrendingUp className="w-4 h-4 text-[hsl(var(--green-primary))]" />
                   <span>92% Success Rate</span>
                 </div>
                 <div className="flex items-center gap-2">

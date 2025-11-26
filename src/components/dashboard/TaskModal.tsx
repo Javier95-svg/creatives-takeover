@@ -139,7 +139,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="low" id="low" />
                 <Label htmlFor="low" className="cursor-pointer font-normal">
-                  <span className="text-blue-500">●</span> Low
+                  <span className="text-[hsl(var(--blue-primary))]">●</span> Low
                 </Label>
               </div>
               <div className="flex items-center space-x-2">

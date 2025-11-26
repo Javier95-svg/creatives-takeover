@@ -78,7 +78,7 @@ const SocialProof = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
-          <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
+          <Badge variant="secondary" className="bg-[hsl(var(--blue-primary))]/10 text-[hsl(var(--blue-primary))] border-[hsl(var(--blue-primary))]/20 mb-4 sm:mb-6 text-xs sm:text-sm">
             <TrendingUp className="w-3 h-3 mr-1" />
             Market Trends
           </Badge>
@@ -99,8 +99,8 @@ const SocialProof = () => {
               </div>
               <div className="text-xs md:text-sm text-muted-foreground">Startups in 2025</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingUp className="w-3 h-3 text-green-500" />
-                <span className="text-xs text-green-500">+158%</span>
+                <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
+                <span className="text-xs text-[hsl(var(--green-primary))]">+158%</span>
               </div>
             </CardContent>
           </Card>
@@ -111,8 +111,8 @@ const SocialProof = () => {
               </div>
               <div className="text-xs md:text-sm text-muted-foreground">Fail - No Market Need</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingDown className="w-3 h-3 text-red-500" />
-                <span className="text-xs text-red-500">Top failure reason</span>
+                <TrendingDown className="w-3 h-3 text-[hsl(var(--red-primary))]" />
+                <span className="text-xs text-[hsl(var(--red-primary))]">Top failure reason</span>
               </div>
             </CardContent>
           </Card>
@@ -128,15 +128,15 @@ const SocialProof = () => {
               </div>
             </CardContent>
           </Card>
-          <Card className={`border-border bg-gradient-to-br from-green-500/10 to-green-500/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+          <Card className={`border-border bg-gradient-to-br from-[hsl(var(--green-primary))]/10 to-[hsl(var(--green-primary))]/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-green-500 mb-1">
+              <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--green-primary))] mb-1">
                 90%
               </div>
               <div className="text-xs md:text-sm text-muted-foreground">Fail Rate</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingDown className="w-3 h-3 text-red-500" />
-                <span className="text-xs text-red-500">Need help</span>
+                <TrendingDown className="w-3 h-3 text-[hsl(var(--red-primary))]" />
+                <span className="text-xs text-[hsl(var(--red-primary))]">Need help</span>
               </div>
             </CardContent>
           </Card>
@@ -234,7 +234,7 @@ const SocialProof = () => {
               </ResponsiveContainer>
               <div className={`mt-4 text-center ${chartIsVisible ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '1.8s' }}>
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+                  <Badge variant="secondary" className="bg-[hsl(var(--green-primary))]/10 text-[hsl(var(--green-primary))] border-[hsl(var(--green-primary))]/20">
                     <TrendingUp className="w-3 h-3 mr-1" />
                     {growthRateCount}% Faster Growth
                   </Badge>

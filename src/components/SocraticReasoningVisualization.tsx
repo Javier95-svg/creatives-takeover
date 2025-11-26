@@ -26,28 +26,28 @@ const SocraticReasoningVisualization: React.FC<SocraticReasoningVisualizationPro
 
   const getReasoningTypeColor = (type: ReasoningType): string => {
     const colors = {
-      'problem_solution_fit': 'bg-blue-100 text-blue-800',
-      'market_validation': 'bg-green-100 text-green-800',
+      'problem_solution_fit': 'bg-[hsl(var(--blue-primary))]/10 text-[hsl(var(--blue-primary))]',
+      'market_validation': 'bg-[hsl(var(--green-primary))]/10 text-[hsl(var(--green-primary))]',
       'financial_modeling': 'bg-yellow-100 text-yellow-800',
-      'competitive_analysis': 'bg-purple-100 text-purple-800',
-      'growth_strategy': 'bg-pink-100 text-pink-800',
-      'risk_assessment': 'bg-red-100 text-red-800',
+      'competitive_analysis': 'bg-[hsl(var(--blue-primary))]/10 text-[hsl(var(--blue-primary))]',
+      'growth_strategy': 'bg-[hsl(var(--red-primary))]/10 text-[hsl(var(--red-primary))]',
+      'risk_assessment': 'bg-[hsl(var(--red-primary))]/10 text-[hsl(var(--red-primary))]',
       'decision_making': 'bg-gray-100 text-gray-800'
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
   };
 
   const getConfidenceColor = (confidence: number): string => {
-    if (confidence >= 0.8) return 'text-green-600';
+    if (confidence >= 0.8) return 'text-[hsl(var(--green-primary))]';
     if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+    return 'text-[hsl(var(--red-primary))]';
   };
 
   const getImpactColor = (impact: 'low' | 'medium' | 'high'): string => {
     const colors = {
-      'low': 'bg-green-100 text-green-800',
+      'low': 'bg-[hsl(var(--green-primary))]/10 text-[hsl(var(--green-primary))]',
       'medium': 'bg-yellow-100 text-yellow-800',
-      'high': 'bg-red-100 text-red-800'
+      'high': 'bg-[hsl(var(--red-primary))]/10 text-[hsl(var(--red-primary))]'
     };
     return colors[impact];
   };

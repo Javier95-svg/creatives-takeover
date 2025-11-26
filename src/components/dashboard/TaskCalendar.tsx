@@ -202,7 +202,7 @@ export const TaskCalendar = () => {
               <span>Check-in</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="w-2 h-2 rounded-full bg-[hsl(var(--green-primary))]" />
               <span>Completed</span>
             </div>
             <div className="flex items-center gap-1.5">
