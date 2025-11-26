@@ -78,7 +78,7 @@ const ValuePropositionCards = () => {
           <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 pb-2 gradient-rgb">
             Here's What You Get
           </h2>
-          <p className="text-body sm:text-body-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-body sm:text-body-lg text-foreground/85 max-w-3xl mx-auto leading-relaxed">
             Transform your idea into an investable, revenue-driving business. The perfect ecosystem for early-stage founders and entrepreneurs serious about building a lasting venture.
           </p>
         </div>

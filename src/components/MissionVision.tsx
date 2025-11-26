@@ -103,7 +103,7 @@ const MissionVision = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center mb-16 animate-slide-up">
           <h2 className="text-5xl font-bold mb-6 gradient-text animate-text-shimmer">Mission + Vision</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <p className="text-lg text-foreground/85 leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             Driven by purpose and guided by vision; discover what makes Creatives Takeover unique
           </p>
         </div>
@@ -130,14 +130,14 @@ const MissionVision = () => {
                         </div>
                         <h3 className="text-2xl font-bold">Our Mission</h3>
                       </div>
-                      <div className="space-y-4 text-muted-foreground">
+                      <div className="space-y-4">
                         <p className="text-base leading-relaxed text-foreground/90">
                           Our mission is to empower anyone, anywhere, to launch their own startup by making advanced AI automation tools accessible, affordable, and easy to use.
                         </p>
-                        <p className="text-base leading-relaxed">
+                        <p className="text-base leading-relaxed text-foreground/85">
                           We believe entrepreneurship should not be limited by technical skills, financial barriers, or location. By combining cutting-edge AI with intuitive workflows, we aim to streamline every stage of the startup journey, from idea validation and market research to branding, product development, and launch, so individuals can focus on innovation and creativity.
                         </p>
-                        <p className="text-base leading-relaxed">
+                        <p className="text-base leading-relaxed text-foreground/85">
                           We envision a world where any person with an idea can bring it to life in record time, supported by intelligent automation that reduces costs, accelerates progress, and removes complexity. Through our platform, we strive to democratize startup creation and ignite a new wave of diverse, AI-powered businesses that drive economic growth and positive change.
                         </p>
                       </div>
@@ -165,14 +165,14 @@ const MissionVision = () => {
                         </div>
                         <h3 className="text-2xl font-bold">Our Vision</h3>
                       </div>
-                      <div className="space-y-4 text-muted-foreground">
-                        <p className="text-base leading-relaxed">
+                      <div className="space-y-4">
+                        <p className="text-base leading-relaxed text-foreground/85">
                           Today, entrepreneurship is undergoing a fundamental shift driven by the rapid rise of AI. Recent advancements in generative AI, automation, and no-code tools are enabling founders to validate ideas, create products, and reach global markets at unprecedented speed and scale.
                         </p>
                         <p className="text-base leading-relaxed text-foreground/90">
                           This evolution is dismantling the old barriers to entry and creating a new era where innovation is limited only by imagination, not resources.
                         </p>
-                        <p className="text-base leading-relaxed">
+                        <p className="text-base leading-relaxed text-foreground/85">
                           We envision a future where entrepreneurship is as universal as ambition where anyone with an idea, regardless of background, education, or resources, can turn it into a thriving business. By fully unlocking the potential of AI automation, we aim to remove the barriers that have traditionally limited startup creation: high costs, technical complexity, and access to expert knowledge.
                         </p>
                       </div>

@@ -28,7 +28,7 @@ All colors MUST be HSL.
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 16% 52%;
 
     /* Accent - Medium blue for highlights */
     --accent: 217 91% 50%; /* Medium blue accent */
@@ -67,8 +67,8 @@ All colors MUST be HSL.
     --neutral-gray: 215 16% 47%;
     --neutral-gray-light: 215 20% 65%;
 
-    /* RGB Gradients for Light Theme */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--blue-dark)));
+    /* RGB Gradients for Light Theme - Enhanced contrast */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--blue-dark)), hsl(217 91% 45%));
     --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
     --gradient-glass: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(239, 68, 68, 0.02));
     
@@ -276,7 +276,7 @@ All colors MUST be HSL.
     @apply glass rounded-lg p-6;
   }
 
-  /* RGB Gradient text effects */
+  /* RGB Gradient text effects - Enhanced for better contrast */
   .gradient-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -285,6 +285,16 @@ All colors MUST be HSL.
     display: inline-block;
     line-height: 1.1;
     font-weight: 700;
+    /* Fallback color for browsers that don't support background-clip */
+    color: hsl(var(--blue-dark));
+    /* Text shadow for better visibility in light mode */
+    filter: drop-shadow(0 1px 2px hsl(var(--foreground) / 0.08));
+  }
+  
+  /* Dark mode gradient-text - brighter for visibility */
+  .dark .gradient-text {
+    color: hsl(var(--blue-primary));
+    filter: drop-shadow(0 1px 3px hsl(var(--foreground) / 0.15));
   }
   
   .gradient-rgb {
@@ -293,6 +303,15 @@ All colors MUST be HSL.
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: inline-block;
+    /* Fallback color for browsers that don't support background-clip */
+    color: hsl(var(--foreground));
+    /* Subtle text shadow for better visibility in light mode */
+    filter: drop-shadow(0 1px 2px hsl(var(--foreground) / 0.06));
+  }
+  
+  /* Dark mode gradient-rgb - enhanced visibility */
+  .dark .gradient-rgb {
+    filter: drop-shadow(0 1px 3px hsl(var(--foreground) / 0.12));
   }
   
   .gradient-rgb-vertical {
@@ -524,6 +543,12 @@ All colors MUST be HSL.
   
   .dark .shadow-colored {
     box-shadow: 0 4px 20px hsl(var(--primary) / 0.25);
+  }
+  
+  /* High contrast text utility for critical headings */
+  .text-high-contrast {
+    color: hsl(var(--foreground));
+    font-weight: 700;
   }
   
   /* RGB Semantic Color Utilities */

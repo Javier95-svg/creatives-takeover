@@ -66,7 +66,7 @@ const MeetTheTeam = () => {
           <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in">
             Meet the Team
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-lg text-foreground/85 leading-relaxed">
             Our small team brings together tech, hustle, and a passion for helping others launch what matters. We believe in practical solutions, honest feedback, and building real community.
           </p>
         </div>
@@ -97,7 +97,7 @@ const MeetTheTeam = () => {
                   </p>
                 </div>
 
-                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                <p className="text-sm text-foreground/85 leading-relaxed flex-1">
                   {member.bio}
                 </p>
 

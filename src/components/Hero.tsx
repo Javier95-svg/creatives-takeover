@@ -104,7 +104,7 @@ const Hero = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-body sm:text-body-lg text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed px-4">
+          <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed px-4">
             AI-powered planning, community support, and fundraising tools designed for rookie founders. Launch faster, build smarter.
           </p>
           

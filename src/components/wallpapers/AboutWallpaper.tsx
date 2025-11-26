@@ -1,11 +1,11 @@
 const AboutWallpaper = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {/* Elegant gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#030610] via-[#070d1c] to-[#0e1a2e]" />
+      {/* Elegant gradient base - theme-aware */}
+      <div className="absolute inset-0 bg-gradient-to-br dark:from-[#030610] dark:via-[#070d1c] dark:to-[#0e1a2e] from-background via-muted/30 to-background" />
 
-      {/* Horizon glow */}
-      <div className="absolute inset-x-0 top-1/3 h-[420px] bg-gradient-to-b from-[#facc15]/10 via-transparent to-transparent blur-2xl opacity-70" />
+      {/* Horizon glow - theme-aware */}
+      <div className="absolute inset-x-0 top-1/3 h-[420px] bg-gradient-to-b dark:from-[#facc15]/10 from-primary/5 via-transparent to-transparent blur-2xl dark:opacity-70 opacity-50" />
 
       {/* Floating bands */}
       {[
@@ -64,8 +64,8 @@ const AboutWallpaper = () => {
         />
       ))}
 
-      {/* Subtle vertical gradient for readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/45 to-background/80" />
+      {/* Subtle vertical gradient for readability - enhanced for light mode */}
+      <div className="absolute inset-0 bg-gradient-to-b dark:from-background/75 dark:via-background/45 dark:to-background/80 from-background/90 via-background/95 to-background/90" />
     </div>
   );
 };
