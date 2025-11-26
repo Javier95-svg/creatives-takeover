@@ -72,6 +72,21 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
     --gradient-glass: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(239, 68, 68, 0.02));
     
+    /* Unified Theme-Adaptive Gradient - Works naturally in both light and dark modes */
+    /* Light mode: Creates a harmonious gradient from primary to accent with subtle hue shift */
+    --gradient-unified: linear-gradient(135deg, 
+      hsl(217 91% 55%), 
+      hsl(217 91% 60%), 
+      hsl(220 85% 58%));
+    --gradient-unified-vertical: linear-gradient(180deg, 
+      hsl(217 91% 55%), 
+      hsl(217 91% 60%), 
+      hsl(220 85% 58%));
+    --gradient-unified-horizontal: linear-gradient(90deg, 
+      hsl(217 91% 55%), 
+      hsl(217 91% 60%), 
+      hsl(220 85% 58%));
+    
     /* RGB Color Combinations - Enhanced Gradients */
     --gradient-rgb: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
     --gradient-rgb-vertical: linear-gradient(180deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
@@ -211,6 +226,21 @@ All colors MUST be HSL.
     /* Dark Mode Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(217 92% 65%), hsl(217 92% 55%));
     --gradient-hero: linear-gradient(180deg, hsl(222 15% 9%), hsl(222 15% 12%));
+    
+    /* Unified Theme-Adaptive Gradient - Dark mode: Brighter, more vibrant version */
+    --gradient-unified: linear-gradient(135deg, 
+      hsl(217 92% 70%), 
+      hsl(217 92% 65%), 
+      hsl(220 88% 68%));
+    --gradient-unified-vertical: linear-gradient(180deg, 
+      hsl(217 92% 70%), 
+      hsl(217 92% 65%), 
+      hsl(220 88% 68%));
+    --gradient-unified-horizontal: linear-gradient(90deg, 
+      hsl(217 92% 70%), 
+      hsl(217 92% 65%), 
+      hsl(220 88% 68%));
+    
     --gradient-rgb: linear-gradient(135deg, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
     --gradient-rgb-vertical: linear-gradient(180deg, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
     --gradient-rgb-horizontal: linear-gradient(90deg, hsl(217 92% 65%), hsl(0 85% 65%), hsl(142 72% 45%));
@@ -314,6 +344,24 @@ All colors MUST be HSL.
     filter: drop-shadow(0 1px 3px hsl(var(--foreground) / 0.12));
   }
   
+  /* Unified Theme-Adaptive Gradient - Text gradient */
+  .gradient-unified {
+    background: var(--gradient-unified);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+    /* Fallback color for browsers that don't support background-clip */
+    color: hsl(var(--primary));
+    /* Subtle text shadow for better visibility */
+    filter: drop-shadow(0 1px 2px hsl(var(--foreground) / 0.08));
+  }
+  
+  /* Dark mode gradient-unified - enhanced visibility */
+  .dark .gradient-unified {
+    filter: drop-shadow(0 1px 3px hsl(var(--foreground) / 0.15));
+  }
+  
   .gradient-rgb-vertical {
     background: var(--gradient-rgb-vertical);
     -webkit-background-clip: text;
@@ -344,6 +392,11 @@ All colors MUST be HSL.
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: inline-block;
+  }
+  
+  /* Unified Theme-Adaptive Gradient - Background gradient */
+  .bg-gradient-unified {
+    background: var(--gradient-unified);
   }
   
   /* RGB Gradient Background Utilities */

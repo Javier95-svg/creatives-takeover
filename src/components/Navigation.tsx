@@ -207,7 +207,7 @@ const Navigation = () => {
                     Sign In
                   </Link>
                 </Button>
-                <Button size="sm" className="bg-gradient-rgb hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl rgb-glow-subtle hover:rgb-glow transition-all duration-300 hover:scale-105" asChild>
+                <Button size="sm" className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" asChild>
                   <Link to="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -319,7 +319,7 @@ const Navigation = () => {
                         Sign In
                       </Link>
                     </Button>
-                    <Button size="sm" className="w-full bg-gradient-rgb hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl rgb-glow-subtle hover:rgb-glow transition-all duration-300" onClick={() => setIsOpen(false)} asChild>
+                    <Button size="sm" className="w-full bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => setIsOpen(false)} asChild>
                       <Link to="/signup">Sign Up</Link>
                     </Button>
                   </div>

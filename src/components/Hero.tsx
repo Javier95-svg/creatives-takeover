@@ -100,7 +100,7 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
           <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
-            <span className="gradient-rgb">Your Digital Partner for Building From Zero</span>
+            <span className="gradient-unified">Your Digital Partner for Building From Zero</span>
           </h1>
 
           {/* Subheadline */}
@@ -141,14 +141,14 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
             <Button 
               size="lg" 
-              className="bg-gradient-rgb hover:opacity-90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg hover:shadow-xl rgb-glow-subtle hover:rgb-glow transition-all duration-300" 
+              className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300" 
               aria-label="Start Here" 
               asChild
             >
               <Link to="/bizmap-ai">
                 <span className="relative z-10">Start Here</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
-                <div className="absolute inset-0 bg-gradient-rgb opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
               </Link>
             </Button>
             
