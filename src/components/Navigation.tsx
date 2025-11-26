@@ -96,7 +96,11 @@ const Navigation = () => {
             {/* Logo */}
             <div className="flex items-center border-0">
               <Link to="/" className="flex items-center">
-                <img src={ctLogo} alt="Logo" className="h-12 w-auto animate-fade-in hover:scale-110 transition-transform duration-300 hover:rgb-glow-subtle" />
+                <img 
+                  src={ctLogo} 
+                  alt="Logo" 
+                  className="h-12 w-auto animate-fade-in hover:scale-110 transition-all duration-300 lightbulb-glow" 
+                />
               </Link>
             </div>
 
