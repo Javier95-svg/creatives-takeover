@@ -159,13 +159,13 @@ export const TaskCalendar = () => {
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
                       task.is_completed 
-                        ? "bg-green-500/10 border-green-500/20" 
+                        ? "bg-[hsl(var(--green-primary))]/10 border-[hsl(var(--green-primary))]/20" 
                         : "bg-card hover:bg-accent/50"
                     )}
                     onClick={() => toggleTaskComplete(task.id, task.is_completed)}
                   >
                     {task.is_completed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-[hsl(var(--green-primary))] flex-shrink-0" />
                     ) : (
                       <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                     )}
@@ -179,9 +179,9 @@ export const TaskCalendar = () => {
                       variant="outline" 
                       className={cn(
                         "text-xs",
-                        task.priority === 'high' && "border-red-500/50 text-red-500",
+                        task.priority === 'high' && "border-[hsl(var(--red-primary))]/50 text-[hsl(var(--red-primary))]",
                         task.priority === 'medium' && "border-orange-500/50 text-orange-500",
-                        task.priority === 'low' && "border-blue-500/50 text-blue-500"
+                        task.priority === 'low' && "border-[hsl(var(--blue-primary))]/50 text-[hsl(var(--blue-primary))]"
                       )}
                     >
                       {task.priority}

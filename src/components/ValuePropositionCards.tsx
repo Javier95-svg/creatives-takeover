@@ -33,7 +33,7 @@ const ValuePropositionCards = () => {
       description: "Your command center for tracking progress, managing tasks, and monitoring your business progress. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
       cta: "View Dashboard",
       link: "/dashboard",
-      gradient: "from-green-500/20 to-green-500/5",
+      gradient: "from-[hsl(var(--green-primary))]/20 to-[hsl(var(--green-primary))]/5",
       metric: "Track progress"
     },
     {
@@ -43,7 +43,7 @@ const ValuePropositionCards = () => {
       description: "Discover tested prompt-chains from uprising industries. Jumpstart your business planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to be used at BizMap AI.",
       cta: "Learn Prompts",
       link: "/prompt-library",
-      gradient: "from-purple-500/20 to-purple-500/5"
+      gradient: "from-[hsl(var(--blue-primary))]/20 to-[hsl(var(--blue-primary))]/5"
     },
     {
       icon: Rocket,
@@ -105,21 +105,45 @@ const ValuePropositionCards = () => {
                   <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center">
                     {/* Icon with enhanced animations */}
                     <div className="mb-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:bg-primary/20 group-hover:shadow-lg group-hover:shadow-primary/50">
-                        <Icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-500" />
+                      <div className={`w-10 h-10 rounded-lg ${
+                        card.title === 'PLAN' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover:bg-[hsl(var(--blue-primary))]/20' :
+                        card.title === 'SHARE' ? 'bg-[hsl(var(--red-primary))]/10 group-hover:bg-[hsl(var(--red-primary))]/20' :
+                        card.title === 'EXECUTE' ? 'bg-[hsl(var(--green-primary))]/10 group-hover:bg-[hsl(var(--green-primary))]/20' :
+                        card.title === 'EXPLORE' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover:bg-[hsl(var(--blue-primary))]/20' :
+                        'bg-[hsl(var(--red-primary))]/10 group-hover:bg-[hsl(var(--red-primary))]/20'
+                      } flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-lg`}>
+                        <Icon className={`w-5 h-5 ${
+                          card.title === 'PLAN' ? 'text-[hsl(var(--blue-primary))]' :
+                          card.title === 'SHARE' ? 'text-[hsl(var(--red-primary))]' :
+                          card.title === 'EXECUTE' ? 'text-[hsl(var(--green-primary))]' :
+                          card.title === 'EXPLORE' ? 'text-[hsl(var(--blue-primary))]' :
+                          'text-[hsl(var(--red-primary))]'
+                        } group-hover:scale-110 transition-transform duration-500`} />
                       </div>
                     </div>
 
                     {/* Title with fade-in animation */}
                     <div className="mb-2 transform group-hover:scale-105 transition-transform duration-300 text-center">
-                      <div className="text-xs font-bold text-primary mb-1 group-hover:text-primary/90 transition-colors">
+                      <div className={`text-xs font-bold mb-1 transition-colors ${
+                        card.title === 'PLAN' ? 'text-[hsl(var(--blue-primary))] group-hover:text-[hsl(var(--blue-primary))]/90' :
+                        card.title === 'SHARE' ? 'text-[hsl(var(--red-primary))] group-hover:text-[hsl(var(--red-primary))]/90' :
+                        card.title === 'EXECUTE' ? 'text-[hsl(var(--green-primary))] group-hover:text-[hsl(var(--green-primary))]/90' :
+                        card.title === 'EXPLORE' ? 'text-[hsl(var(--blue-primary))] group-hover:text-[hsl(var(--blue-primary))]/90' :
+                        'text-[hsl(var(--red-primary))] group-hover:text-[hsl(var(--red-primary))]/90'
+                      }`}>
                         {card.title}
                       </div>
                       <h3 className="text-base font-semibold group-hover:text-foreground transition-colors mb-1">
                         {card.subtitle}
                       </h3>
                       {card.metric && (
-                        <p className="text-xs font-semibold text-primary/80">{card.metric}</p>
+                        <p className={`text-xs font-semibold ${
+                          card.title === 'PLAN' ? 'text-[hsl(var(--blue-primary))]/80' :
+                          card.title === 'SHARE' ? 'text-[hsl(var(--red-primary))]/80' :
+                          card.title === 'EXECUTE' ? 'text-[hsl(var(--green-primary))]/80' :
+                          card.title === 'EXPLORE' ? 'text-[hsl(var(--blue-primary))]/80' :
+                          'text-[hsl(var(--red-primary))]/80'
+                        }`}>{card.metric}</p>
                       )}
                     </div>
 

@@ -141,7 +141,7 @@ const Hero = () => {
               <Link to="/bizmap-ai">
                 <span className="relative z-10">Start Here</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-[hsl(var(--green-primary))] opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </Link>
             </Button>
             
@@ -161,23 +161,23 @@ const Hero = () => {
 
           {/* Key Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
-            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-border">
+            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-[hsl(var(--blue-primary))]/20 hover:border-[hsl(var(--blue-primary))]/40">
               <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
+                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-[hsl(var(--blue-primary))]" />
               </div>
               <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Launch in 30 Days</div>
               <div className="text-muted-foreground text-xs sm:text-sm">Sprint-based roadmap gets you from idea to first customer fast</div>
             </div>
-            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-border">
+            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-[hsl(var(--red-primary))]/20 hover:border-[hsl(var(--red-primary))]/40">
               <div className="flex justify-center mb-3">
-                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
+                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-[hsl(var(--red-primary))]" />
               </div>
               <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Creative-First Intelligence</div>
               <div className="text-muted-foreground text-xs sm:text-sm">AI trained on creative business models, not corporate playbooks</div>
             </div>
-            <div className="glass-card btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-card border border-border">
+            <div className="glass-card btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-card border border-[hsl(var(--green-primary))]/20 hover:border-[hsl(var(--green-primary))]/40">
               <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
+                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-[hsl(var(--green-primary))]" />
               </div>
               <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Accountability Partners</div>
               <div className="text-muted-foreground text-xs sm:text-sm">Match with fellow creatives for daily check-ins and demo days</div>

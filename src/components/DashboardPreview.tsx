@@ -76,7 +76,7 @@ const DashboardPreview = () => {
                     <div key={idx} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
                       <div className="mt-0.5">
                         {item.status === 'completed' ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
                         ) : (
                           <div className="w-4 h-4 rounded border-2 border-muted-foreground/30" />
                         )}
@@ -87,9 +87,9 @@ const DashboardPreview = () => {
                           <Badge 
                             variant="outline" 
                             className={`text-xs ${
-                              item.priority === 'High' ? 'border-red-500/50 text-red-500' :
-                              item.priority === 'Medium' ? 'border-yellow-500/50 text-yellow-500' :
-                              'border-blue-500/50 text-blue-500'
+                              item.priority === 'High' ? 'border-[hsl(var(--red-primary))]/50 text-[hsl(var(--red-primary))]' :
+                              item.priority === 'Medium' ? 'border-[hsl(var(--blue-primary))]/50 text-[hsl(var(--blue-primary))]' :
+                              'border-[hsl(var(--green-primary))]/50 text-[hsl(var(--green-primary))]'
                             }`}
                           >
                             {item.priority}
@@ -102,7 +102,7 @@ const DashboardPreview = () => {
                 <div className="pt-2 border-t border-border/50">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>4 tasks total</span>
-                    <span className="text-primary font-semibold">1 completed</span>
+                    <span className="text-[hsl(var(--green-primary))] font-semibold">1 completed</span>
                   </div>
                 </div>
               </div>
@@ -131,8 +131,8 @@ const DashboardPreview = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          item.status === 'completed' ? 'bg-green-500/20 text-green-500' :
-                          item.status === 'active' ? 'bg-primary/20 text-primary' :
+                          item.status === 'completed' ? 'bg-[hsl(var(--green-primary))]/20 text-[hsl(var(--green-primary))]' :
+                          item.status === 'active' ? 'bg-[hsl(var(--blue-primary))]/20 text-[hsl(var(--blue-primary))]' :
                           'bg-muted text-muted-foreground'
                         }`}>
                           {item.status === 'completed' ? (
@@ -175,23 +175,28 @@ const DashboardPreview = () => {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { name: "Project Templates", icon: FolderKanban, color: "text-primary" },
-                  { name: "Planning Guides", icon: BookOpen, color: "text-secondary" },
-                  { name: "Time Tracker", icon: Clock, color: "text-accent" },
-                  { name: "Task Manager", icon: CheckSquare, color: "text-green-500" }
+                  { name: "Project Templates", icon: FolderKanban, color: "text-[hsl(var(--blue-primary))]" },
+                  { name: "Planning Guides", icon: BookOpen, color: "text-[hsl(var(--red-primary))]" },
+                  { name: "Time Tracker", icon: Clock, color: "text-[hsl(var(--blue-primary))]" },
+                  { name: "Task Manager", icon: CheckSquare, color: "text-[hsl(var(--green-primary))]" }
                 ].map((resource, idx) => (
                   <div 
                     key={idx} 
                     className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/50 transition-all cursor-pointer group/item"
                   >
-                    <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/20 transition-colors ${resource.color}`}>
-                      <resource.icon className="w-5 h-5" />
+                    <div className={`w-10 h-10 rounded-lg ${
+                      resource.name === 'Project Templates' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover/item:bg-[hsl(var(--blue-primary))]/20' :
+                      resource.name === 'Planning Guides' ? 'bg-[hsl(var(--red-primary))]/10 group-hover/item:bg-[hsl(var(--red-primary))]/20' :
+                      resource.name === 'Time Tracker' ? 'bg-[hsl(var(--blue-primary))]/10 group-hover/item:bg-[hsl(var(--blue-primary))]/20' :
+                      'bg-[hsl(var(--green-primary))]/10 group-hover/item:bg-[hsl(var(--green-primary))]/20'
+                    } flex items-center justify-center transition-colors`}>
+                      <resource.icon className={`w-5 h-5 ${resource.color}`} />
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">{resource.name}</div>
                       <div className="text-xs text-muted-foreground">Quick access</div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover/item:text-primary transition-colors" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover/item:text-[hsl(var(--blue-primary))] transition-colors" />
                   </div>
                 ))}
               </div>

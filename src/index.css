@@ -18,41 +18,66 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 17%;
 
-    --primary: 217 91% 60%;
+    /* RGB Color Palette from Logo */
+    /* Blue - Primary (for CTAs, links, primary actions) */
+    --primary: 217 91% 60%; /* #3B82F6 - Professional blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 215 28% 17%;
+    /* Red - Secondary/Accent (for warnings, highlights, secondary actions) */
+    --secondary: 0 84.2% 60.2%; /* #EF4444 - Professional red */
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 217 91% 60%;
+    /* Red as accent for highlights */
+    --accent: 0 84.2% 60.2%; /* #EF4444 - Red accent */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Red for destructive actions */
+    --destructive: 0 72.2% 50.6%; /* #DC2626 - Deeper red for errors */
     --destructive-foreground: 0 0% 100%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --ring: 217 91% 60%; /* Blue for focus rings */
 
     --radius: 0.5rem;
 
-    /* Custom Design System Colors */
-    --success: 158 64% 52%;
+    /* RGB Custom Colors */
+    /* Green - Success (for positive actions, success states) */
+    --success: 142 76% 36%; /* #10B981 - Professional green */
     --success-foreground: 0 0% 100%;
+    
+    /* Blue variants */
+    --blue-primary: 217 91% 60%; /* #3B82F6 */
+    --blue-dark: 217 91% 50%; /* #2563EB */
+    --blue-light: 217 91% 70%; /* Lighter blue */
+    
+    /* Red variants */
+    --red-primary: 0 84.2% 60.2%; /* #EF4444 */
+    --red-dark: 0 72.2% 50.6%; /* #DC2626 */
+    --red-light: 0 84.2% 70%; /* Lighter red */
+    
+    /* Green variants */
+    --green-primary: 142 76% 36%; /* #10B981 */
+    --green-dark: 142 71% 29%; /* #059669 */
+    --green-light: 142 76% 45%; /* Lighter green */
+    
     --neutral-gray: 215 16% 47%;
     --neutral-gray-light: 215 20% 65%;
 
-    /* Professional Gradients for Light Theme */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 50%));
+    /* RGB Gradients for Light Theme */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--blue-dark)));
     --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
-    --gradient-glass: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(37, 99, 235, 0.02));
+    --gradient-glass: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(239, 68, 68, 0.02));
     
-    /* Subtle Gradients */
+    /* RGB Color Combinations */
+    --gradient-rgb: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
+    --gradient-blue-green: linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--green-primary)));
+    --gradient-red-blue: linear-gradient(135deg, hsl(var(--red-primary)), hsl(var(--blue-primary)));
     --gradient-subtle: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%));
-    --gradient-accent: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--red-primary)), hsl(var(--red-dark)));
 
     /* Glass Effects for Light Theme */
     --glass-bg: rgba(255, 255, 255, 0.8);
@@ -81,7 +106,7 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode support - keeping for accessibility */
+    /* Dark mode support - keeping for accessibility with RGB colors */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -91,24 +116,29 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
+    /* RGB colors for dark mode */
+    --primary: 217 91% 60%; /* Blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 84.2% 60.2%; /* Red */
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217 91% 60%;
+    --accent: 0 84.2% 60.2%; /* Red accent */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72.2% 50.6%; /* Red for errors */
+    --destructive-foreground: 0 0% 100%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
+    --ring: 217 91% 60%; /* Blue focus ring */
+    
+    /* RGB custom colors for dark mode */
+    --success: 142 76% 36%; /* Green */
+    --success-foreground: 0 0% 100%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 217 91% 60%;
@@ -151,7 +181,7 @@ All colors MUST be HSL.
     @apply glass rounded-lg p-6;
   }
 
-  /* Professional Gradient text effects */
+  /* RGB Gradient text effects */
   .gradient-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -160,6 +190,22 @@ All colors MUST be HSL.
     display: inline-block;
     line-height: 1.1;
     font-weight: 700;
+  }
+  
+  .gradient-rgb {
+    background: var(--gradient-rgb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+  
+  .gradient-blue-green {
+    background: var(--gradient-blue-green);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
   }
 
   /* BizMap Chat Celebration Wallpaper */

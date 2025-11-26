@@ -151,7 +151,7 @@ export const TaskModal = ({ open, onOpenChange, selectedDate, onTaskAdded }: Tas
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="high" id="high" />
                 <Label htmlFor="high" className="cursor-pointer font-normal">
-                  <span className="text-red-500">●</span> High
+                  <span className="text-[hsl(var(--red-primary))]">●</span> High
                 </Label>
               </div>
             </RadioGroup>
