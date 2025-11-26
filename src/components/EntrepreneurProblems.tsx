@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,69 +11,92 @@ import {
   AlertCircle,
   Flame,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  X,
+  TrendingDown,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 const EntrepreneurProblems = () => {
+  const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
+
+  const toggleExpand = (index: number) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedCards(newExpanded);
+  };
+
   const problems = [
     {
-      icon: <Search className="w-8 h-8 text-red-500" />,
-      problem: "Building Without Validating Problem-Solution Fit",
-      description: [
-        "You've spent months building your MVP without validating if anyone genuinely needs it, constantly guessing whether people will ever pay for it while each rejection feels like a personal judgment on your skills and ideas",
-        "Your runway is shrinking and savings are disappearing with no clear direction, leaving you paralyzed by the pressure to choose the right next move",
-        "You lack clear data to guide pivots or strategic decisions, making it impossible to know if you're polishing a product that doesn't solve a painful problem"
-      ],
+      beforeIcon: Search,
+      afterIcon: CheckCircle,
+      problem: "Building Without Validating",
+      beforeText: "Spending months building an MVP without validating demand, watching savings disappear with no clear direction.",
+      afterText: "Validate your idea with BizMap AI's 7-question framework before committing months to a build.",
+      stat: "72%",
+      statLabel: "fail without validation",
+      detail: "You've spent months building your MVP without validating if anyone genuinely needs it, constantly guessing whether people will ever pay for it while each rejection feels like a personal judgment on your skills and ideas. Your runway is shrinking and savings are disappearing with no clear direction, leaving you paralyzed by the pressure to choose the right next move.",
       solution: "Use BizMap AI to validate your idea with a structured 7-question framework that tests problem-solution fit before you burn months building. Get real feedback and validate demand before committing to a full build.",
     },
     {
-      icon: <Users className="w-8 h-8 text-red-500" />,
-      problem: "Team Building and Equity Division Nightmares",
-      description: [
-        "You need co-founders or early team members but are paralyzed by uncertainty about fair equity splits. Should your technical co-founder get 50%? What about advisors helping with connections?",
-        "The fear of making the wrong decision and creating resentment down the line keeps you stuck, unable to move forward with team building",
-        "Without clear frameworks or guidance, you're left guessing at critical decisions that will impact your startup's future and founder relationships"
-      ],
+      beforeIcon: Users,
+      afterIcon: CheckCircle,
+      problem: "Team Building Nightmares",
+      beforeText: "Paralyzed by equity split uncertainty, unable to move forward with team building decisions.",
+      afterText: "Connect with founders in our Community who've navigated equity splits and co-founder agreements.",
+      stat: "65%",
+      statLabel: "struggle with equity",
+      detail: "You need co-founders or early team members but are paralyzed by uncertainty about fair equity splits. Should your technical co-founder get 50%? What about advisors helping with connections? The fear of making the wrong decision and creating resentment down the line keeps you stuck, unable to move forward with team building.",
       solution: "Connect with potential co-founders and advisors in our Community who've navigated these decisions. Get real advice on equity splits and co-founder agreements from founders who've been there."
     },
     {
-      icon: <DollarSign className="w-8 h-8 text-red-500" />,
-      problem: "Raising Your First Capital Feels Impossible",
-      description: [
-        "You're stuck in the 'need money to get money' trap. Friends and family are skeptical, angels want traction you don't have, and pre-seed funds want a team you're still building",
-        "Every rejection makes you question if your idea is even worth pursuing, creating a cycle of self-doubt that undermines your confidence and momentum",
-        "Without understanding investor theses or knowing which investors are actually active in your space, you're wasting time pitching to the wrong people"
-      ],
+      beforeIcon: DollarSign,
+      afterIcon: CheckCircle,
+      problem: "Raising Capital Feels Impossible",
+      beforeText: "Stuck in the 'need money to get money' trap, wasting time pitching to the wrong investors.",
+      afterText: "Use Insighta to research investors, understand their thesis, and identify the right fit for your startup.",
+      stat: "80%",
+      statLabel: "fail to raise",
+      detail: "You're stuck in the 'need money to get money' trap. Friends and family are skeptical, angels want traction you don't have, and pre-seed funds want a team you're still building. Every rejection makes you question if your idea is even worth pursuing, creating a cycle of self-doubt that undermines your confidence and momentum.",
       solution: "Use Insighta to research investors, understand their thesis, and identify the right fit for your startup. Get real-time data on which investors are active in your space and how to position your pitch."
     },
     {
-      icon: <Map className="w-8 h-8 text-red-500" />,
-      problem: "Go-to-Market Strategy Confusion and Unclear ICP",
-      description: [
-        "You know you need to 'go to market' but have no clear understanding of what that means or who your ideal customer actually is, leaving you unable to make strategic decisions",
-        "You're paralyzed by fundamental questions like should you focus on B2B or B2C, or direct sales versus inbound marketing, with no framework to guide your choices",
-        "You're throwing darts in the dark, wasting precious time and money on channels that don't convert because you lack a structured approach to customer discovery and channel selection"
-      ],
+      beforeIcon: Map,
+      afterIcon: CheckCircle,
+      problem: "Go-to-Market Confusion",
+      beforeText: "No clear understanding of your ideal customer or which channels to focus on, wasting time and money.",
+      afterText: "Build a comprehensive go-to-market strategy with BizMap AI, defining your ICP and channel selection.",
+      stat: "68%",
+      statLabel: "lack GTM strategy",
+      detail: "You know you need to 'go to market' but have no clear understanding of what that means or who your ideal customer actually is, leaving you unable to make strategic decisions. You're paralyzed by fundamental questions like should you focus on B2B or B2C, or direct sales versus inbound marketing, with no framework to guide your choices.",
       solution: "Use BizMap AI to build a comprehensive go-to-market strategy tailored to your startup. Define your ideal customer profile and get step-by-step frameworks for customer discovery and channel selection."
     },
     {
-      icon: <AlertCircle className="w-8 h-8 text-red-500" />,
-      problem: "Weak Execution Habits and Lack of Focus",
-      description: [
-        "You start each week with big plans but get distracted by Wednesday, constantly pulled toward shiny new ideas instead of executing on your core priorities",
-        "You're juggling too many things at once including product development, customer calls, fundraising prep, and marketing, but nothing feels like it's moving forward despite being constantly busy",
-        "Without clear priorities, progress tracking, or execution systems, you're spinning in circles, feeling productive but actually making little meaningful progress toward your goals"
-      ],
+      beforeIcon: AlertCircle,
+      afterIcon: CheckCircle,
+      problem: "Weak Execution Habits",
+      beforeText: "Getting distracted by Wednesday, juggling too many priorities with no clear execution system.",
+      afterText: "Your Dashboard keeps you focused with clear priorities, progress tracking, and weekly sprint planning.",
+      stat: "75%",
+      statLabel: "lack focus",
+      detail: "You start each week with big plans but get distracted by Wednesday, constantly pulled toward shiny new ideas instead of executing on your core priorities. You're juggling too many things at once including product development, customer calls, fundraising prep, and marketing, but nothing feels like it's moving forward despite being constantly busy.",
       solution: "Your Dashboard keeps you focused on what matters with clear priorities, progress tracking, and weekly sprint planning. Build execution systems that help you ship consistently instead of spinning in circles."
     },
     {
-      icon: <Flame className="w-8 h-8 text-red-500" />,
-      problem: "Early Burnout and Losing Momentum",
-      description: [
-        "The initial excitement that drove you three months ago has faded, replaced by exhaustion from late nights, constant rejection, and the relentless uncertainty of the startup journey",
-        "You're questioning if you have what it takes, watching the initial fire fade as the emotional weight of the rollercoaster wears you down day by day",
-        "You desperately need to find a sustainable pace and maintain momentum, but you don't know how to manage your energy or build founder habits that prevent burnout"
-      ],
+      beforeIcon: Flame,
+      afterIcon: CheckCircle,
+      problem: "Early Burnout & Lost Momentum",
+      beforeText: "Initial excitement faded, replaced by exhaustion and uncertainty, questioning if you have what it takes.",
+      afterText: "Connect with founders in our Community who understand the emotional rollercoaster and help maintain momentum.",
+      stat: "70%",
+      statLabel: "experience burnout",
+      detail: "The initial excitement that drove you three months ago has faded, replaced by exhaustion from late nights, constant rejection, and the relentless uncertainty of the startup journey. You're questioning if you have what it takes, watching the initial fire fade as the emotional weight of the rollercoaster wears you down day by day.",
       solution: "Connect with founders in our Community who understand the emotional rollercoaster and can help you maintain momentum. Get strategies for managing energy and building sustainable founder habits that prevent burnout."
     }
   ];
@@ -121,51 +145,127 @@ const EntrepreneurProblems = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
             Why Most Pre-Seed Founders <span className="text-red-500">Fail</span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Most pre-seed founders fail because they're overwhelmed by complexity, not because their idea is bad. You're juggling validation, team building, fundraising, and product-market fit all at once, with limited resources and no playbook. Here's what actually kills pre-seed startups, and how to avoid it.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+            <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
+              <TrendingDown className="w-5 h-5 text-red-500" />
+              <span className="text-2xl sm:text-3xl font-bold text-red-500">90%</span>
+              <span className="text-sm sm:text-base text-muted-foreground">fail rate</span>
+            </div>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl px-4">
+              Overwhelmed by complexity, not bad ideas. Here's what kills startups and how to avoid it.
+            </p>
+          </div>
         </div>
 
-        {/* Problems Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
-          {problems.map((item, index) => (
-            <Card 
-              key={index} 
-              className="glass border-border hover:shadow-xl transition-all duration-500 hover-lift group" 
-              style={{ animationDelay: `${0.1 + index * 0.1}s` }}
-            >
-              <CardContent className="p-4 sm:p-6 lg:p-8">
-                <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-                  <div className="p-2 sm:p-3 rounded-xl bg-red-500/10 group-hover:bg-red-500/20 transition-colors flex-shrink-0">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 text-red-500">
-                      {item.icon}
+        {/* Problems Grid - 3 Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16 px-4">
+          {problems.map((item, index) => {
+            const BeforeIcon = item.beforeIcon;
+            const AfterIcon = item.afterIcon;
+            const isExpanded = expandedCards.has(index);
+            
+            return (
+              <Card 
+                key={index} 
+                className="glass border-border hover:shadow-xl transition-all duration-500 hover-lift group overflow-hidden" 
+                style={{ animationDelay: `${0.1 + index * 0.1}s` }}
+              >
+                <CardContent className="p-0">
+                  {/* Before Section - Red/Warning */}
+                  <div className="bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-4 sm:p-5 border-b-2 border-red-500/20">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-red-500/20 flex-shrink-0">
+                        <BeforeIcon className="w-5 h-5 text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                          <h3 className="text-sm sm:text-base font-bold text-red-600">{item.problem}</h3>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.beforeText}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Stat Badge */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-red-500/10">
+                      <div className="flex items-center gap-1.5">
+                        <TrendingDown className="w-4 h-4 text-red-500" />
+                        <span className="text-lg font-bold text-red-500">{item.stat}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{item.statLabel}</span>
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2 text-red-600">{item.problem}</h3>
-                    <ul className="text-sm sm:text-base text-muted-foreground mb-4 list-disc list-inside space-y-1">
-                      {item.description.map((point, idx) => (
-                        <li key={idx}>{point}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                
-                {/* Solution */}
-                <div className="border-t border-border/50 pt-4 sm:pt-6">
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                      <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-primary mb-2 text-sm sm:text-base">Our Solution:</h4>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{item.solution}</p>
+
+                  {/* Arrow Divider */}
+                  <div className="relative bg-gradient-to-r from-red-500/10 via-background to-green-500/10 py-2">
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-8 h-8 rounded-full bg-background border-2 border-primary/30 flex items-center justify-center">
+                        <ArrowRight className="w-4 h-4 text-primary" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                  {/* After Section - Green/Success */}
+                  <div className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent p-4 sm:p-5">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-green-500/20 flex-shrink-0">
+                        <AfterIcon className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                          <h4 className="text-xs sm:text-sm font-semibold text-green-700 dark:text-green-400">Solution</h4>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.afterText}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Success Indicator */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-green-500/10">
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        <span className="text-xs font-semibold text-green-700 dark:text-green-400">Avoid this failure</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expandable Detail Section */}
+                  {isExpanded && (
+                    <div className="p-4 sm:p-5 bg-muted/30 border-t border-border/50 animate-in slide-in-from-top-2">
+                      <div className="space-y-3">
+                        <div>
+                          <h5 className="text-xs font-semibold text-red-600 mb-1.5">The Problem:</h5>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1.5">The Solution:</h5>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{item.solution}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expand/Collapse Button */}
+                  <button
+                    onClick={() => toggleExpand(index)}
+                    className="w-full p-3 bg-muted/50 hover:bg-muted/70 transition-colors border-t border-border/50 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {isExpanded ? (
+                      <>
+                        <span>Show Less</span>
+                        <ChevronUp className="w-4 h-4" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Learn More</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>
