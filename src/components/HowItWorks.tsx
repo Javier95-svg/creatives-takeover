@@ -49,34 +49,24 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Process-Focused Blueprint Wallpaper */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-indigo-900/10 to-cyan-950/15" />
-      
-      {/* Blueprint Grid Pattern */}
-      <div className="absolute inset-0 opacity-10">
+    <section className="py-section-mobile lg:py-section-desktop relative overflow-hidden bg-background">
+      {/* Subtle grid pattern for light theme */}
+      <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-            linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
           `,
-          backgroundSize: '100px 100px, 100px 100px, 20px 20px, 20px 20px'
+          backgroundSize: '100px 100px, 100px 100px'
         }} />
       </div>
       
-      {/* Process Flow Lines */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* Subtle process flow lines */}
+      <div className="absolute inset-0 overflow-hidden opacity-5">
         {/* Horizontal flow lines */}
-        <div className="absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-pulse" />
-        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-3/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-pulse" style={{ animationDelay: '2s' }} />
-        
-        {/* Vertical connection lines */}
-        <div className="absolute top-0 left-1/4 w-0.5 h-full bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
-        <div className="absolute top-0 left-2/4 w-0.5 h-full bg-gradient-to-b from-transparent via-blue-400/20 to-transparent" />
-        <div className="absolute top-0 left-3/4 w-0.5 h-full bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent" />
+        <div className="absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="absolute top-3/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       </div>
       
       {/* Gear/Cog Elements */}

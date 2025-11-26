@@ -14,7 +14,7 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
-				'2xl': '1400px'
+				'2xl': '1200px'
 			}
 		},
     extend: {
@@ -35,8 +35,19 @@ export default {
         'no-touch': {'raw': '(hover: hover) and (pointer: fine)'},
       },
 			fontFamily: {
+				'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 				'poppins': ['Poppins', 'sans-serif'],
 				'space-grotesk': ['Space Grotesk', 'Poppins', 'sans-serif'],
+			},
+			fontSize: {
+				'headline-xl': ['64px', { lineHeight: '1.1', fontWeight: '700' }],
+				'headline-lg': ['48px', { lineHeight: '1.1', fontWeight: '700' }],
+				'subheading-xl': ['32px', { lineHeight: '1.3', fontWeight: '600' }],
+				'subheading-lg': ['24px', { lineHeight: '1.3', fontWeight: '600' }],
+				'body-lg': ['18px', { lineHeight: '1.6', fontWeight: '400' }],
+				'body': ['16px', { lineHeight: '1.6', fontWeight: '400' }],
+				'button': ['16px', { lineHeight: '1.5', fontWeight: '600' }],
+				'button-sm': ['15px', { lineHeight: '1.5', fontWeight: '600' }],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -84,9 +95,16 @@ export default {
 				}
 			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				lg: '0.5rem', // 8px for cards
+				md: '0.5rem',
+				sm: '0.375rem',
+				'button': '0.75rem', // 12px for buttons
+				'card': '0.5rem', // 8px for cards
+				'large': '1rem', // 16px for larger elements
+			},
+			spacing: {
+				'section-desktop': '80px',
+				'section-mobile': '60px',
 			},
 			keyframes: {
 				'accordion-down': {

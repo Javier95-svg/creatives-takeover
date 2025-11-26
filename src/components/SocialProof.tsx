@@ -57,27 +57,17 @@ const SocialProof = () => {
 
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 via-purple-950/10 to-green-950/10" />
-      
-      {/* Animated Grid Pattern */}
-      <div className="absolute inset-0 opacity-[0.03]">
+    <section className="py-section-mobile lg:py-section-desktop relative overflow-hidden bg-background">
+      {/* Subtle grid pattern for light theme */}
+      <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px),
-            linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
           `,
-          backgroundSize: '50px 50px',
-          animation: 'pulse 4s ease-in-out infinite'
+          backgroundSize: '50px 50px'
         }} />
       </div>
-      
-      {/* Animated background elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-16 text-blue-500 text-5xl animate-pulse">📈</div>
-        <div className="absolute top-40 right-24 text-purple-500 text-4xl animate-pulse" style={{ animationDelay: '0.5s' }}>🚀</div>
-        <div className="absolute bottom-32 left-32 text-green-400 text-6xl animate-pulse" style={{ animationDelay: '1s' }}>⚡</div>
         <div className="absolute bottom-48 right-16 text-blue-400 text-3xl animate-pulse" style={{ animationDelay: '1.5s' }}>💡</div>
       </div>
       

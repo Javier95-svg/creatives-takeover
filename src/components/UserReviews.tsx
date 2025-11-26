@@ -83,34 +83,22 @@ const UserReviews = () => {
   const duplicatedReviews = [...reviews, ...reviews];
 
   return (
-    <section className="py-20 lg:py-32 bg-background relative overflow-hidden">
-      {/* Animated Blue Neon Wallpaper - matching ValuePropositionCards style */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-background to-cyan-950/30" />
-      
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 opacity-10">
+    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden">
+      {/* Subtle grid pattern for light theme */}
+      <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-            linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
           `,
           backgroundSize: '50px 50px'
         }} />
       </div>
-      
-      {/* Animated Glow Orbs */}
-      <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-      
-      {/* Neon Light Streaks */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent animate-pulse" style={{ animationDelay: '1.5s' }} />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-6 sm:px-8 lg:px-12">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 lg:mb-10 bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] break-words">
+          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-6 sm:mb-8 lg:mb-10 text-foreground break-words">
             Write Your Own Story
           </h2>
         </div>

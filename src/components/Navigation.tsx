@@ -77,7 +77,7 @@ const Navigation = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 border-0 transition-all ${scrolled ? 'backdrop-blur bg-background/80 shadow-sm' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b border-border transition-all ${scrolled ? 'backdrop-blur-md bg-background/95 shadow-sm' : 'bg-background/80'}`}>
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 border-0">
             {/* Logo */}
@@ -193,7 +193,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden bg-black animate-slide-in-right !border-0">
+          <div className="md:hidden bg-background border-t border-border animate-slide-in-right">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navItems.map((item) => (
                 <Link

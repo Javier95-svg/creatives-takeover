@@ -22,75 +22,25 @@ const Hero = () => {
   return (
     <section
       id="overview"
-      className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6"
-      style={{
-        backgroundImage: `
-          linear-gradient(135deg, rgba(12, 18, 32, 0.94), rgba(17, 24, 39, 0.9)),
-          url(${heroImage})
-        `,
-        backgroundSize: "cover, cover",
-        backgroundPosition: "center, center",
-        backgroundBlendMode: "overlay, normal",
-        backgroundRepeat: "no-repeat",
-      }}
+      className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30"
     >
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-background/10 to-background/20 mix-blend-overlay" />
-        {/* Static gradient overlays – no animation on wallpaper */}
-        <div
-          className="absolute inset-y-0 left-0 w-1/2 opacity-60"
-          style={{
-            backgroundImage:
-              "linear-gradient(160deg, rgba(236,72,153,0.2) 0%, rgba(249,115,22,0.08) 60%, transparent 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-y-0 right-0 w-1/2 opacity-70"
-          style={{
-            backgroundImage:
-              "linear-gradient(210deg, rgba(59,130,246,0.18) 0%, rgba(14,165,233,0.12) 50%, transparent 100%)",
-          }}
-        />
-        <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
-          <defs>
-            <linearGradient id="fusion-lines" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ec4899" stopOpacity="0.75" />
-              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.65" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
-            </linearGradient>
-          </defs>
-          {/* Static fusion lines – animation removed */}
-          <path
-            d="M 180 260 Q 520 160 860 300 T 1420 320 Q 1780 280 2080 180"
-            fill="none"
-            stroke="url(#fusion-lines)"
-            strokeWidth="2"
-            strokeDasharray="12 18"
-          />
-          <path
-            d="M 200 1120 Q 580 980 960 1080 T 1540 1150 Q 1880 1120 2140 960"
-            fill="none"
-            stroke="url(#fusion-lines)"
-            strokeWidth="1.5"
-            strokeDasharray="10 16"
-          />
-        </svg>
-        <div className="absolute inset-0 opacity-20" style={{
+        {/* Subtle grid pattern for light theme */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: `
-            linear-gradient(90deg, rgba(6, 182, 212, 0.15) 1px, transparent 1px),
-            linear-gradient(0deg, rgba(59, 130, 246, 0.12) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
           `,
           backgroundSize: "80px 80px, 80px 80px",
-          mixBlendMode: "screen",
         }} />
-        {/* Static horizontal accent lines – glitch animation removed */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+        {/* Subtle accent lines */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
           <div
-            className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#06b6d4] to-transparent"
+            className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
             style={{ top: "32%" }}
           />
           <div
-            className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#8b5cf6] to-transparent"
+            className="absolute left-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
             style={{ top: "68%" }}
           />
         </div>
@@ -142,12 +92,12 @@ const Hero = () => {
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 takeover-title creatives-font leading-tight">
-            <span className="animated-gradient">Your Digital Partner for Building From Zero</span>
+          <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
+            <span className="text-foreground">Your Digital Partner for Building From Zero</span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed px-4">
+          <p className="text-body sm:text-body-lg text-muted-foreground mb-6 max-w-2xl mx-auto leading-relaxed px-4">
             AI-powered planning, community support, and fundraising tools designed for rookie founders. Launch faster, build smarter.
           </p>
           
@@ -184,7 +134,7 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
             <Button 
               size="lg" 
-              className="glass bg-primary hover:bg-primary/90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg shadow-primary/20" 
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-md hover:shadow-lg" 
               aria-label="Start Here" 
               asChild
             >
@@ -198,7 +148,7 @@ const Hero = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="glass border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
+              className="border-2 border-primary/50 hover:bg-primary/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg btn-magnetic relative overflow-hidden group w-full sm:w-auto" 
               aria-label="Go to Dashboard"
               asChild
             >
@@ -211,25 +161,25 @@ const Hero = () => {
 
           {/* Key Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 px-4">
-            <div className="glass-card btn-magnetic p-4 sm:p-6">
+            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-border">
               <div className="flex justify-center mb-3">
                 <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
               </div>
-              <div className="text-base sm:text-lg font-semibold takeover-gradient mb-2">Launch in 30 Days</div>
+              <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Launch in 30 Days</div>
               <div className="text-muted-foreground text-xs sm:text-sm">Sprint-based roadmap gets you from idea to first customer fast</div>
             </div>
-            <div className="glass-card btn-magnetic p-4 sm:p-6">
+            <div className="glass-card btn-magnetic p-4 sm:p-6 bg-card border border-border">
               <div className="flex justify-center mb-3">
-                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-secondary" />
+                <ArrowRight className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
               </div>
-              <div className="text-base sm:text-lg font-semibold animated-gradient mb-2">Creative-First Intelligence</div>
+              <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Creative-First Intelligence</div>
               <div className="text-muted-foreground text-xs sm:text-sm">AI trained on creative business models, not corporate playbooks</div>
             </div>
-            <div className="glass-card btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+            <div className="glass-card btn-magnetic p-4 sm:p-6 sm:col-span-2 lg:col-span-1 bg-card border border-border">
               <div className="flex justify-center mb-3">
-                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-accent" />
+                <Sparkles className="w-6 sm:w-8 h-6 sm:h-8 text-primary" />
               </div>
-              <div className="text-base sm:text-lg font-semibold reverse-gradient mb-2">Accountability Partners</div>
+              <div className="text-base sm:text-lg font-semibold text-foreground mb-2">Accountability Partners</div>
               <div className="text-muted-foreground text-xs sm:text-sm">Match with fellow creatives for daily check-ins and demo days</div>
             </div>
           </div>

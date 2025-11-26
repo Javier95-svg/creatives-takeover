@@ -20,55 +20,16 @@ import {
 } from "lucide-react";
 
   return (
-    <div className="min-h-screen relative overflow-hidden py-12 px-4">
-      {/* Tech Background Base - matching PersonalizedDashboard */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/30 via-blue-950/20 to-slate-900/40" />
-      
-      {/* Circuit Grid Pattern */}
-      <div className="absolute inset-0 opacity-[0.08]">
+    <div className="min-h-screen relative overflow-hidden py-12 px-4 bg-background">
+      {/* Subtle grid pattern for light theme */}
+      <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--primary) / 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--secondary) / 0.2) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
+            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
           `,
-          backgroundSize: '100px 100px, 100px 100px, 25px 25px, 25px 25px'
+          backgroundSize: '100px 100px, 100px 100px'
         }} />
-      </div>
-
-      {/* Animated Hexagons - Top Right */}
-      <div className="absolute top-20 right-20 opacity-20">
-        {[...Array(2)].map((_, i) => (
-          <div key={`hex-top-${i}`} className="absolute w-32 h-32" style={{ 
-            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-            border: '1px solid',
-            borderColor: `hsl(var(--primary) / ${0.4 - i * 0.15})`,
-            transform: `scale(${1 + i * 0.3})`,
-            animation: `spin ${30 - i * 5}s linear infinite ${i % 2 === 0 ? 'normal' : 'reverse'}`
-          }} />
-        ))}
-      </div>
-
-      {/* Animated Hexagons - Bottom Left */}
-      <div className="absolute bottom-20 left-20 opacity-15">
-        {[...Array(2)].map((_, i) => (
-          <div key={`hex-bottom-${i}`} className="absolute w-24 h-24" style={{ 
-            clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-            border: '1px solid',
-            borderColor: `hsl(var(--secondary) / ${0.3 - i * 0.1})`,
-            transform: `scale(${1 + i * 0.25})`,
-            animation: `spin ${25 - i * 4}s linear infinite reverse`
-          }} />
-        ))}
-      </div>
-
-      {/* Scanning Lines Animation */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" 
-             style={{ animation: 'slideDown 10s ease-in-out infinite' }} />
-        <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-transparent via-secondary/20 to-transparent" 
-             style={{ animation: 'slideRight 12s ease-in-out infinite', animationDelay: '2s' }} />
       </div>
 
       <div className="container mx-auto max-w-7xl relative z-10">
@@ -82,10 +43,10 @@ import {
 
         {/* Header Section */}
         <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 gradient-text">
+          <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-4 text-foreground">
             Your Founder Command Center
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-body sm:text-body-lg text-muted-foreground max-w-2xl mx-auto">
             Your strategic planning hub to organize, prioritize, and track projects—designed for founders who demand clarity and control
           </p>
         </div>
@@ -333,7 +294,7 @@ import {
 
         {/* CTA Section */}
         <div className="text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
-          <Card className="glass-card border-primary/20 bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-8">
+          <Card className="border-primary/20 bg-card p-8">
             <CardContent className="p-0 space-y-6">
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl font-bold">Ready to Access Your Command Center?</h2>
