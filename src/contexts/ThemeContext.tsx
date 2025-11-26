@@ -25,8 +25,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       return 'dark';
     }
     
-    // Default to light
-    return 'light';
+    // Default to dark mode
+    return 'dark';
   });
 
   const setTheme = (newTheme: Theme) => {

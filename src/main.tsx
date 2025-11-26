@@ -17,7 +17,8 @@ const getInitialTheme = (): 'light' | 'dark' => {
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
-  return 'light';
+  // Default to dark mode
+  return 'dark';
 };
 
 // Set initial theme class immediately to prevent FOUC

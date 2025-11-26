@@ -14,7 +14,7 @@ const ThemeToggle = () => {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="relative flex items-center justify-center gap-1.5 w-auto px-2"
+          className="relative flex items-center justify-center gap-4 w-auto px-4"
           aria-label={isDark ? "Currently in dark mode - Switch to light mode" : "Currently in light mode - Switch to dark mode"}
         >
           {/* Sun icon on the left - active in light mode */}
