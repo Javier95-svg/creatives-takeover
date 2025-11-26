@@ -1215,8 +1215,8 @@ Subject: "Quick question about [their pain point]"
                     className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm"
                   >
                     <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5" />
-                    <span className="hidden sm:inline">Idea Validation</span>
-                    <span className="sm:hidden">Validate</span>
+                    <span className="hidden sm:inline">Business Planning</span>
+                    <span className="sm:hidden">Planning</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sprint" 
