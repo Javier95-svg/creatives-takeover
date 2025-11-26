@@ -351,6 +351,9 @@ All colors MUST be HSL.
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: inline-block;
+    /* Prevent descender clipping */
+    padding-bottom: 0.15em;
+    overflow: visible;
     /* Fallback color for browsers that don't support background-clip */
     color: hsl(var(--primary));
     /* Subtle text shadow for better visibility */
