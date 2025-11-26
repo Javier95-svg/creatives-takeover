@@ -55,7 +55,7 @@ const Footer = () => {
           </nav>
 
           <nav aria-labelledby="footer-social">
-            <h2 id="footer-social" className="text-sm font-semibold tracking-wide gradient-rgb">Follow Us</h2>
+            <h2 id="footer-social" className="text-sm font-semibold tracking-wide text-foreground">Follow Us</h2>
             <ul className="mt-3 flex flex-wrap items-center gap-4">
               {/* Instagram */}
               <li className="flex items-center">
