@@ -16,7 +16,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
         <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <section aria-labelledby="footer-address">
-            <h2 id="footer-address" className="text-sm font-semibold tracking-wide gradient-rgb">Registered Office</h2>
+            <h2 id="footer-address" className="text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
             <address className="mt-3 text-sm text-muted-foreground not-italic">
               <strong>Creatives Takeover Ltd</strong><br />
               71-75, Shelton Street<br />
@@ -27,7 +27,7 @@ const Footer = () => {
           </section>
 
           <section aria-labelledby="footer-contact">
-            <h2 id="footer-contact" className="text-sm font-semibold tracking-wide gradient-rgb">Contact</h2>
+            <h2 id="footer-contact" className="text-sm font-semibold tracking-wide text-foreground">Contact</h2>
             <p className="mt-3 text-sm text-muted-foreground">Questions or feedback? We’d love to hear from you.</p>
             <a
               href="mailto:admin@creatives-takeover.com"
@@ -39,7 +39,7 @@ const Footer = () => {
           </section>
 
           <nav aria-labelledby="footer-legal">
-            <h2 id="footer-legal" className="text-sm font-semibold tracking-wide gradient-rgb">Legal</h2>
+            <h2 id="footer-legal" className="text-sm font-semibold tracking-wide text-foreground">Legal</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <Link className="hover:underline underline-offset-4" to="/privacy-policy">
