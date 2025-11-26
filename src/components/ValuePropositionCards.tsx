@@ -107,13 +107,13 @@ const ValuePropositionCards = () => {
         </div>
 
         {/* All Cards - Single Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
+        <div className="flex flex-row gap-4 md:gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
           {allCards.map((card, index) => {
             const Icon = card.icon;
             return (
               <Card 
                 key={index} 
-                className="relative overflow-hidden group hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 border-2 hover:border-primary/50 animate-fade-in hover:-translate-y-2 cursor-pointer"
+                className="relative overflow-hidden group hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 border-2 hover:border-primary/50 animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px] flex-1"
                 style={{ 
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'both'
