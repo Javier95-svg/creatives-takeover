@@ -145,16 +145,9 @@ const EntrepreneurProblems = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
             Why Most Pre-Seed Founders <span className="text-red-500">Fail</span>
           </h2>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-            <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
-              <TrendingDown className="w-5 h-5 text-red-500" />
-              <span className="text-2xl sm:text-3xl font-bold text-red-500">90%</span>
-              <span className="text-sm sm:text-base text-muted-foreground">fail rate</span>
-            </div>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl px-4">
-              Overwhelmed by complexity, not bad ideas. Here's what kills startups and how to avoid it.
-            </p>
-          </div>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+            Overwhelmed by complexity, not bad ideas. Here's what kills startups and how to avoid it.
+          </p>
         </div>
 
         {/* Problems Grid - 3 Column Layout */}
@@ -167,15 +160,18 @@ const EntrepreneurProblems = () => {
             return (
               <Card 
                 key={index} 
-                className="glass border-border hover:shadow-xl transition-all duration-500 hover-lift group overflow-hidden" 
-                style={{ animationDelay: `${0.1 + index * 0.1}s` }}
+                className="glass border-border hover:shadow-xl transition-all duration-500 hover:scale-105 hover:-translate-y-2 group overflow-hidden animate-fade-in-up" 
+                style={{ 
+                  animationDelay: `${0.1 + index * 0.1}s`,
+                  animationFillMode: 'both'
+                }}
               >
                 <CardContent className="p-0">
                   {/* Before Section - Red/Warning */}
-                  <div className="bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-4 sm:p-5 border-b-2 border-red-500/20">
+                  <div className="bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-4 sm:p-5 border-b-2 border-red-500/20 transition-all duration-300 group-hover:from-red-500/15 group-hover:via-red-500/10">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-red-500/20 flex-shrink-0">
-                        <BeforeIcon className="w-5 h-5 text-red-500" />
+                      <div className="p-2 rounded-lg bg-red-500/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-red-500/30">
+                        <BeforeIcon className="w-5 h-5 text-red-500 transition-transform duration-300 group-hover:scale-110" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
@@ -188,28 +184,28 @@ const EntrepreneurProblems = () => {
                     
                     {/* Stat Badge */}
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-red-500/10">
-                      <div className="flex items-center gap-1.5">
-                        <TrendingDown className="w-4 h-4 text-red-500" />
-                        <span className="text-lg font-bold text-red-500">{item.stat}</span>
+                      <div className="flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
+                        <TrendingDown className="w-4 h-4 text-red-500 transition-transform duration-300 group-hover:animate-bounce" />
+                        <span className="text-lg font-bold text-red-500 transition-colors duration-300 group-hover:text-red-600">{item.stat}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">{item.statLabel}</span>
+                      <span className="text-xs text-muted-foreground transition-colors duration-300 group-hover:text-foreground/80">{item.statLabel}</span>
                     </div>
                   </div>
 
                   {/* Arrow Divider */}
-                  <div className="relative bg-gradient-to-r from-red-500/10 via-background to-green-500/10 py-2">
+                  <div className="relative bg-gradient-to-r from-red-500/10 via-background to-green-500/10 py-2 transition-all duration-300 group-hover:from-red-500/15 group-hover:to-green-500/15">
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-8 h-8 rounded-full bg-background border-2 border-primary/30 flex items-center justify-center">
-                        <ArrowRight className="w-4 h-4 text-primary" />
+                      <div className="w-8 h-8 rounded-full bg-background border-2 border-primary/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-lg">
+                        <ArrowRight className="w-4 h-4 text-primary transition-transform duration-300 group-hover:translate-x-1" />
                       </div>
                     </div>
                   </div>
 
                   {/* After Section - Green/Success */}
-                  <div className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent p-4 sm:p-5">
+                  <div className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent p-4 sm:p-5 transition-all duration-300 group-hover:from-green-500/15 group-hover:via-green-500/10">
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-green-500/20 flex-shrink-0">
-                        <AfterIcon className="w-5 h-5 text-green-600" />
+                      <div className="p-2 rounded-lg bg-green-500/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-green-500/30">
+                        <AfterIcon className="w-5 h-5 text-green-600 transition-transform duration-300 group-hover:scale-110" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
@@ -222,9 +218,9 @@ const EntrepreneurProblems = () => {
                     
                     {/* Success Indicator */}
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-green-500/10">
-                      <div className="flex items-center gap-1.5">
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                        <span className="text-xs font-semibold text-green-700 dark:text-green-400">Avoid this failure</span>
+                      <div className="flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
+                        <TrendingUp className="w-4 h-4 text-green-600 transition-transform duration-300 group-hover:animate-bounce" />
+                        <span className="text-xs font-semibold text-green-700 dark:text-green-400 transition-colors duration-300 group-hover:text-green-800 dark:group-hover:text-green-300">Avoid this failure</span>
                       </div>
                     </div>
                   </div>
