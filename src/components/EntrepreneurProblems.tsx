@@ -103,15 +103,15 @@ const EntrepreneurProblems = () => {
 
   return (
     <section className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Problem-Focused Dark Wallpaper */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-950/30 via-gray-900/20 to-orange-950/20" />
+      {/* Problem-Focused Wallpaper - theme-aware */}
+      <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
       
-      {/* Circuit Board Pattern */}
-      <div className="absolute inset-0 opacity-5">
+      {/* Circuit Board Pattern - theme-aware */}
+      <div className="absolute inset-0 dark:opacity-5 opacity-3">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(90deg, rgba(239, 68, 68, 0.1) 1px, transparent 1px),
-            linear-gradient(rgba(239, 68, 68, 0.1) 1px, transparent 1px)
+            linear-gradient(90deg, hsl(var(--red-primary) / 0.1) 1px, transparent 1px),
+            linear-gradient(hsl(var(--red-primary) / 0.1) 1px, transparent 1px)
           `,
           backgroundSize: '50px 50px'
         }} />
@@ -128,13 +128,13 @@ const EntrepreneurProblems = () => {
         <div className="absolute top-1/3 right-1/4 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
       </div>
       
-      {/* Warning Stripes */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent" />
+      {/* Warning Stripes - theme-aware */}
+      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent dark:via-red-500/20 via-red-400/15 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent dark:via-orange-500/20 via-orange-400/15 to-transparent" />
       
-      {/* Glitch Effect Elements */}
-      <div className="absolute top-1/4 left-1/5 w-32 h-1 bg-[hsl(var(--red-primary))]/30 animate-pulse" />
-      <div className="absolute bottom-1/3 right-1/5 w-24 h-1 bg-orange-500/30 animate-pulse" style={{ animationDelay: '1s' }} />
+      {/* Glitch Effect Elements - theme-aware */}
+      <div className="absolute top-1/4 left-1/5 w-32 h-1 dark:bg-[hsl(var(--red-primary))]/30 bg-[hsl(var(--red-primary))]/20 animate-pulse" />
+      <div className="absolute bottom-1/3 right-1/5 w-24 h-1 dark:bg-orange-500/30 bg-orange-400/20 animate-pulse" style={{ animationDelay: '1s' }} />
       
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}

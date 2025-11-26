@@ -65,12 +65,12 @@ const Hero = () => {
             }}
           />
         ))}
-        <svg className="absolute inset-0 w-full h-full opacity-30 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full dark:opacity-30 opacity-15 pointer-events-none">
           <defs>
             <linearGradient id="tech-network" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
-              <stop offset="45%" stopColor="#22d3ee" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+              <stop offset="45%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
             </linearGradient>
           </defs>
           {/* Static tech network path – animation removed */}
@@ -82,19 +82,19 @@ const Hero = () => {
             strokeLinecap="round"
           />
         </svg>
-        {/* Tech nodes made more subtle - reduced opacity */}
+        {/* Tech nodes made more subtle - reduced opacity - theme-aware */}
         {techNodes.map((node, index) => (
           <div
             key={`tech-node-${index}`}
-            className="absolute w-2 h-2 rounded-full bg-[#22d3ee] opacity-40"
+            className="absolute w-2 h-2 rounded-full dark:bg-[#22d3ee] bg-primary/60 dark:opacity-40 opacity-30"
             style={{
               ...node,
-              boxShadow: "0 0 12px rgba(34, 211, 238, 0.4)",
+              boxShadow: "0 0 12px hsl(var(--primary) / 0.4)",
             }}
           />
         ))}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/35 to-background/75" />
+      <div className="absolute inset-0 bg-gradient-to-b dark:from-background/50 dark:via-background/35 dark:to-background/75 from-background/90 via-background/95 to-background/90" />
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
