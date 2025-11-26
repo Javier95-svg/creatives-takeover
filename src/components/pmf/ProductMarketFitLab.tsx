@@ -283,10 +283,10 @@ ${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="input">Input</TabsTrigger>
-              <TabsTrigger value="segments" disabled={!analysis}>Segments</TabsTrigger>
-              <TabsTrigger value="fit" disabled={!analysis}>Fit Analysis</TabsTrigger>
-              <TabsTrigger value="score" disabled={!analysis}>PMF Score</TabsTrigger>
-              <TabsTrigger value="experiments" disabled={!analysis}>Experiments</TabsTrigger>
+              <TabsTrigger value="segments">Segments</TabsTrigger>
+              <TabsTrigger value="fit">Fit Analysis</TabsTrigger>
+              <TabsTrigger value="score">PMF Score</TabsTrigger>
+              <TabsTrigger value="experiments">Experiments</TabsTrigger>
             </TabsList>
 
             <TabsContent value="input" className="space-y-4 mt-6">
@@ -378,17 +378,30 @@ ${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
             </TabsContent>
 
             <TabsContent value="segments" className="mt-6">
-              {analysis && (
+              {analysis ? (
                 <CustomerSegments
                   segments={analysis.customerSegments}
                   selectedSegment={selectedSegment}
                   onSelectSegment={setSelectedSegment}
                 />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md">
+                      Run a PMF analysis first to see your customer segments. Go to the Input tab and click "Analyze Product-Market Fit".
+                    </p>
+                    <Button onClick={() => setActiveTab('input')}>
+                      Go to Input
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
 
             <TabsContent value="fit" className="mt-6">
-              {analysis && (
+              {analysis ? (
                 <ProblemSolutionFit
                   fit={analysis.problemSolutionFit}
                   surveys={analysis.surveys}
@@ -396,23 +409,62 @@ ${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
                   onExportSurvey={handleExportSurvey}
                   onExportInterviewScript={handleExportInterviewScript}
                 />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md">
+                      Run a PMF analysis first to see problem-solution fit insights. Go to the Input tab and click "Analyze Product-Market Fit".
+                    </p>
+                    <Button onClick={() => setActiveTab('input')}>
+                      Go to Input
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
 
             <TabsContent value="score" className="mt-6">
-              {analysis && (
+              {analysis ? (
                 <PMFScore
                   score={analysis.pmfScore}
                   nextSteps={analysis.nextSteps}
                 />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md">
+                      Run a PMF analysis first to see your PMF score. Go to the Input tab and click "Analyze Product-Market Fit".
+                    </p>
+                    <Button onClick={() => setActiveTab('input')}>
+                      Go to Input
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
 
             <TabsContent value="experiments" className="mt-6">
-              {analysis && (
+              {analysis ? (
                 <ValidationExperiments
                   experiments={analysis.validationExperiments}
                 />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md">
+                      Run a PMF analysis first to see validation experiments. Go to the Input tab and click "Analyze Product-Market Fit".
+                    </p>
+                    <Button onClick={() => setActiveTab('input')}>
+                      Go to Input
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
           </Tabs>
