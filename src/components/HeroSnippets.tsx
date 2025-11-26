@@ -1,15 +1,11 @@
 import { Link } from "react-router-dom";
 import { 
-  LayoutDashboard, 
-  Bot, 
-  Lightbulb, 
-  FlaskConical, 
-  TrendingUp, 
-  Users, 
-  Info,
-  DollarSign,
+  Share2,
   Target,
-  MessageSquare
+  Rocket,
+  BarChart3,
+  MessageSquare,
+  DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
@@ -22,62 +18,49 @@ interface PlatformSnippet {
   color: 'planning' | 'action' | 'growth';
 }
 
+// Snippets based on the provided screenshots
 const platformSnippets: PlatformSnippet[] = [
   {
+    name: "Share Your Creative Work",
+    description: "Share your projects, progress, challenges, or insights with fellow creatives",
+    icon: Share2,
+    route: "/community",
+    color: "action"
+  },
+  {
     name: "Business Planning",
-    description: "7-step wizard to build your 30-day launch plan",
+    description: "7-step wizard to build your 30-day launch plan with BizMap AI",
     icon: Target,
     route: "/bizmap-ai",
     color: "planning"
   },
   {
-    name: "Dashboard",
-    description: "Market Validation, Task Calendar, Revenue Hub",
-    icon: LayoutDashboard,
+    name: "The Future Belongs to Founders",
+    description: "Transform raw thoughts into clear, actionable roadmaps",
+    icon: Rocket,
+    route: "/",
+    color: "growth"
+  },
+  {
+    name: "Market Validation",
+    description: "Validate your business idea by analyzing market size, competition, and demand",
+    icon: BarChart3,
     route: "/dashboard",
     color: "action"
   },
   {
     name: "BizMap AI Chat",
-    description: "AI-powered conversational business planning",
+    description: "AI-powered conversational business planning to build your launch plan",
     icon: MessageSquare,
     route: "/bizmap-ai",
     color: "growth"
   },
   {
     name: "Funding Opportunities",
-    description: "Find grants, accelerators, contests, and microfunds",
+    description: "Find grants, accelerators, contests, and microfunds for your project",
     icon: DollarSign,
     route: "/blog",
     color: "planning"
-  },
-  {
-    name: "Product Market Fit Lab",
-    description: "Validate your product in the market",
-    icon: FlaskConical,
-    route: "/bizmap-ai",
-    color: "action"
-  },
-  {
-    name: "Prompt Library",
-    description: "Pre-built AI prompts for pitches, emails, interviews",
-    icon: Lightbulb,
-    route: "/prompt-library",
-    color: "growth"
-  },
-  {
-    name: "Insighta",
-    description: "Curated news hub for funding and AI trends",
-    icon: TrendingUp,
-    route: "/insighta",
-    color: "planning"
-  },
-  {
-    name: "Community",
-    description: "Connect with founders, get feedback, demo days",
-    icon: Users,
-    route: "/community",
-    color: "action"
   }
 ];
 
@@ -86,10 +69,10 @@ const HeroSnippets = () => {
   const scrollContentRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const autoScrollRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
-  // Duplicate snippets to create seamless infinite loop
-  const duplicatedSnippets = [...platformSnippets, ...platformSnippets];
+  // Duplicate snippets multiple times to create seamless infinite loop
+  const duplicatedSnippets = [...platformSnippets, ...platformSnippets, ...platformSnippets];
 
   const getColorClasses = (color: 'planning' | 'action' | 'growth') => {
     const colorMap = {
@@ -115,41 +98,62 @@ const HeroSnippets = () => {
     return colorMap[color];
   };
 
+  // Initialize scroll position to start of second set for seamless loop
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const content = scrollContentRef.current;
+    if (!container || !content) return;
+
+    // Wait for layout to calculate proper widths
+    const initScroll = () => {
+      const singleSetWidth = content.scrollWidth / 3; // Since we have 3 sets
+      container.scrollLeft = singleSetWidth;
+    };
+
+    // Use setTimeout to ensure DOM is fully rendered
+    const timeoutId = setTimeout(initScroll, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   // Handle auto-scroll with infinite loop
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const scrollSpeed = 0.5; // pixels per frame (~30px per second at 60fps, ~40px at 80fps)
-    let lastScrollLeft = container.scrollLeft;
+    const scrollSpeed = 0.5; // pixels per frame
+    let lastTime = performance.now();
 
-    const autoScroll = () => {
+    const autoScroll = (currentTime: number) => {
       if (!container || isPaused || isUserInteracting) {
-        autoScrollRef.current = requestAnimationFrame(autoScroll);
+        animationFrameRef.current = requestAnimationFrame(autoScroll);
         return;
       }
 
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+      
+      // Normalize speed to be consistent regardless of frame rate
+      const normalizedSpeed = scrollSpeed * (deltaTime / 16.67); // 16.67ms = 60fps
+
       const currentScroll = container.scrollLeft;
       const scrollWidth = container.scrollWidth;
-      const clientWidth = container.clientWidth;
-      const halfWidth = scrollWidth / 2;
+      const singleSetWidth = scrollWidth / 3; // Since we have 3 sets
 
-      // Reset to beginning when we've scrolled past the first set
-      if (currentScroll >= halfWidth - clientWidth) {
-        container.scrollLeft = currentScroll - halfWidth;
+      // Reset to beginning of second set when we've scrolled past it
+      if (currentScroll >= singleSetWidth * 2 - container.clientWidth) {
+        container.scrollLeft = currentScroll - singleSetWidth;
       } else {
-        container.scrollLeft += scrollSpeed;
+        container.scrollLeft += normalizedSpeed;
       }
 
-      lastScrollLeft = container.scrollLeft;
-      autoScrollRef.current = requestAnimationFrame(autoScroll);
+      animationFrameRef.current = requestAnimationFrame(autoScroll);
     };
 
-    autoScrollRef.current = requestAnimationFrame(autoScroll);
+    animationFrameRef.current = requestAnimationFrame(autoScroll);
 
     return () => {
-      if (autoScrollRef.current) {
-        cancelAnimationFrame(autoScrollRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [isPaused, isUserInteracting]);
@@ -186,14 +190,23 @@ const HeroSnippets = () => {
       handleInteraction();
     };
 
-    container.addEventListener('scroll', handleScroll);
+    const handleWheel = (e: WheelEvent) => {
+      // Only pause if user is scrolling horizontally
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        handleInteraction();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
     container.addEventListener('mousedown', handleMouseDown);
-    container.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('wheel', handleWheel, { passive: true });
 
     return () => {
       container.removeEventListener('scroll', handleScroll);
       container.removeEventListener('mousedown', handleMouseDown);
       container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('wheel', handleWheel);
       clearTimeout(interactionTimeout);
     };
   }, []);
@@ -203,11 +216,11 @@ const HeroSnippets = () => {
       {/* Horizontal Scrollable Container */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+        className="overflow-x-auto scrollbar-hide"
         style={{
           scrollbarWidth: 'none', /* Firefox */
           msOverflowStyle: 'none', /* IE and Edge */
-          WebkitOverflowScrolling: 'touch' /* iOS smooth scrolling */
+          WebkitOverflowScrolling: 'touch', /* iOS smooth scrolling */
         }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -225,23 +238,25 @@ const HeroSnippets = () => {
                 key={`${snippet.name}-${index}`}
                 to={snippet.route}
                 className={cn(
-                  "btn-magnetic flex-shrink-0 w-[280px] sm:w-[300px]",
-                  "h-[200px] sm:h-[220px]",
+                  "btn-magnetic flex-shrink-0",
+                  // Consistent width and height for all cards
+                  "w-[280px] sm:w-[320px] lg:w-[360px]",
+                  "h-[200px] sm:h-[220px] lg:h-[240px]",
                   "p-4 sm:p-6 bg-card border-2 transition-all duration-300",
                   "flex flex-col items-center justify-center text-center",
+                  "rounded-lg",
                   colors.glass,
                   colors.border,
-                  colors.shadow,
-                  "snap-start"
+                  colors.shadow
                 )}
               >
-                <div className="flex justify-center mb-3">
-                  <Icon className={cn("w-6 sm:w-8 h-6 sm:h-8", colors.icon)} />
+                <div className="flex justify-center mb-3 sm:mb-4">
+                  <Icon className={cn("w-6 sm:w-8 lg:w-10 h-6 sm:h-8 lg:h-10", colors.icon)} />
                 </div>
-                <div className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                <div className="text-base sm:text-lg lg:text-xl font-semibold text-foreground mb-2 sm:mb-3 px-2">
                   {snippet.name}
                 </div>
-                <div className="text-muted-foreground text-xs sm:text-sm">
+                <div className="text-muted-foreground text-xs sm:text-sm lg:text-base px-2 line-clamp-3">
                   {snippet.description}
                 </div>
               </Link>
