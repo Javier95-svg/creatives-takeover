@@ -58,11 +58,11 @@ const WhyFoundersChooseUs = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <header className="text-center max-w-3xl mx-auto mb-16 animate-slide-up">
-          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in">
+          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2">
             Why Founders Choose Us
           </h2>
           <p className="text-lg text-foreground/85 leading-relaxed">
-            A concise rundown of the main reasons founders use Creatives Takeover—covering practical benefits, unique features, and the actual problems we solve.
+            A concise overview of why founders choose Creatives Takeover, highlighting practical benefits, standout features, and the real problems we help them solve.
           </p>
         </header>
 
