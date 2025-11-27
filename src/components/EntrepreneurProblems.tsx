@@ -143,7 +143,7 @@ const EntrepreneurProblems = () => {
             Proven Strategies for Success
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Your Path to Pre-Seed <span className="text-green-500">Success</span>
+            How Successful Pre-Seed Founders <span className="text-green-500">Succeed</span>
           </h2>
           <p className="text-base sm:text-lg text-foreground/85 max-w-2xl mx-auto px-4">
             Actionable strategies and proven tools to avoid common pitfalls. Learn how our platform helps founders validate, execute, and scale faster.
