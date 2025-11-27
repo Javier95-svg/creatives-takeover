@@ -89,53 +89,37 @@ const HeroSnippets = () => {
   // Duplicate snippets to create seamless infinite loop
   const duplicatedSnippets = [...platformSnippets, ...platformSnippets];
 
-  // Auto-scroll with smooth animation matching UserReviews (60s loop)
+  // Auto-scroll with smooth animation (60s loop)
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container) return;
+    if (!container || isUserInteracting) return;
 
-    // Wait for content to render and get dimensions
-    const initAutoScroll = () => {
-      // Calculate scroll speed to match 60s animation
-      // Total width is duplicated content, so we scroll through 50% (one full set)
-      const scrollSpeed = 0.5; // pixels per frame (~30px/s = ~1800px in 60s)
-      
-      const autoScroll = () => {
-        if (!container || isUserInteracting) {
-          autoScrollRef.current = requestAnimationFrame(autoScroll);
-          return;
-        }
-
-        const scrollWidth = container.scrollWidth;
-        const clientWidth = container.clientWidth;
-        
-        // Only auto-scroll if content is wider than container (with small buffer)
-        if (scrollWidth <= clientWidth + 10) {
-          autoScrollRef.current = requestAnimationFrame(autoScroll);
-          return;
-        }
-
-        const currentScroll = container.scrollLeft;
-        const halfWidth = scrollWidth / 2;
-
-        // Reset to beginning when we've scrolled past the first set for seamless loop
-        if (currentScroll >= halfWidth - 10) {
-          container.scrollLeft = currentScroll - halfWidth;
-        } else {
-          container.scrollLeft += scrollSpeed;
-        }
-
+    const scrollSpeed = 0.8; // pixels per frame for smooth scrolling
+    
+    const autoScroll = () => {
+      if (!container || isUserInteracting) {
         autoScrollRef.current = requestAnimationFrame(autoScroll);
-      };
+        return;
+      }
+
+      const scrollWidth = container.scrollWidth;
+      const clientWidth = container.clientWidth;
+      const currentScroll = container.scrollLeft;
+      const halfWidth = scrollWidth / 2;
+
+      // Reset to beginning seamlessly when reaching halfway
+      if (currentScroll >= halfWidth) {
+        container.scrollLeft = 0;
+      } else {
+        container.scrollLeft += scrollSpeed;
+      }
 
       autoScrollRef.current = requestAnimationFrame(autoScroll);
     };
 
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(initAutoScroll, 100);
+    autoScrollRef.current = requestAnimationFrame(autoScroll);
 
     return () => {
-      clearTimeout(timeoutId);
       if (autoScrollRef.current) {
         cancelAnimationFrame(autoScrollRef.current);
       }
