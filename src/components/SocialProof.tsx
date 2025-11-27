@@ -10,10 +10,10 @@ const SocialProof = () => {
   const [chartVisible, setChartVisible] = useState(false);
 
   // Animated counters - Evidence-based statistics
-  const { count: startups2025Count, ref: startups2025Ref } = useCountUp(3.1, 2000); // Projected based on GEM trends
-  const { count: marketNeedFailureCount, ref: marketNeedFailureRef } = useCountUp(42, 2000); // 42% fail due to lack of market need (DemandSage, 2024)
-  const { count: monthlyStartupsCount, ref: monthlyStartupsRef } = useCountUp(430, 2000); // U.S. averaged 430K new business applications/month in 2024 (Reuters)
-  const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000); // Creative startups growth rate
+  const { count: startups2025Count, ref: startups2025Ref } = useCountUp(3.1, 2000) as { count: number; ref: React.RefObject<HTMLDivElement> };
+  const { count: marketNeedFailureCount, ref: marketNeedFailureRef } = useCountUp(42, 2000) as { count: number; ref: React.RefObject<HTMLDivElement> };
+  const { count: monthlyStartupsCount, ref: monthlyStartupsRef } = useCountUp(430, 2000) as { count: number; ref: React.RefObject<HTMLDivElement> };
+  const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000) as { count: number; ref: React.RefObject<HTMLDivElement> };
 
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);

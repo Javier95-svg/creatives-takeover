@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Target } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Bot, User, Lightbulb, Target, Rocket, CheckCircle, Loader2, FileText, Sparkles, Compass, MessageSquare, Package, RefreshCw, Brain, ArrowRight, TrendingUp } from "lucide-react";
 import Navigation from "@/components/Navigation";
