@@ -72,10 +72,10 @@ const PricingComparison = () => {
           animated ? 'animate-scale-in' : ''
         }`} />
       ) : (
-        <X className="w-5 h-5 text-muted-foreground/40 mx-auto" />
+        <X className="w-5 h-5 text-gray-300 dark:text-muted-foreground/40 mx-auto" />
       );
     }
-    return <span className="text-sm font-medium text-center block">{value}</span>;
+    return <span className="text-sm font-medium text-center block text-gray-900 dark:text-foreground">{value}</span>;
   };
 
   const handleMobileNavigation = (direction: 'prev' | 'next') => {
@@ -86,7 +86,7 @@ const PricingComparison = () => {
     }
   };
   return (
-    <section className="py-20 lg:py-32 bg-muted/30">
+    <section className="py-20 lg:py-32 bg-gray-50/50 dark:bg-muted/30">
       <div className="container mx-auto px-6">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
@@ -130,9 +130,6 @@ const PricingComparison = () => {
             <CardHeader>
               <CardTitle className="text-center text-2xl gradient-text">
                 {plans[currentMobileIndex].name}
-                {plans[currentMobileIndex].isPopular && (
-                  <Badge className="ml-2 bg-primary text-white">Most Popular</Badge>
-                )}
               </CardTitle>
               <div className="text-center text-3xl font-bold mt-2">
                 {plans[currentMobileIndex].price}
@@ -178,31 +175,26 @@ const PricingComparison = () => {
 
         {/* Desktop comparison table with animations */}
         <div className="hidden lg:block">
-          <Card className="glass border-border overflow-hidden animate-fade-in">
+          <Card className="border border-gray-200 dark:border-border bg-white dark:bg-card shadow-sm dark:shadow-none overflow-hidden animate-fade-in">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="sticky left-0 z-10 bg-background text-center p-6 font-semibold min-w-[240px] border-r border-border">
+                  <tr className="border-b-2 border-gray-200 dark:border-border bg-gray-50 dark:bg-muted/50">
+                    <th className="sticky left-0 z-10 bg-gray-50 dark:bg-background text-center p-5 font-bold text-base text-gray-900 dark:text-foreground min-w-[240px] border-r border-gray-200 dark:border-border">
                       Plans
                     </th>
                     {plans.map((plan, index) => (
                       <th
                         key={plan.name}
                         style={{ animationDelay: `${index * 0.1}s` }}
-                        className={`text-center p-6 font-semibold text-lg min-w-[180px] relative animate-fade-in ${
-                          plan.isPopular ? 'bg-primary/5' : ''
+                        className={`text-center p-5 font-bold text-base text-gray-900 dark:text-foreground min-w-[180px] relative animate-fade-in border-r border-gray-200 dark:border-border last:border-r-0 ${
+                          plan.isPopular ? 'bg-blue-50 dark:bg-primary/5' : 'bg-gray-50 dark:bg-muted/50'
                         }`}
                       >
-                        {plan.isPopular && (
-                          <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs">
-                            Most Popular
-                          </Badge>
-                        )}
                         {plan.name}
-                        <div className="text-2xl font-bold mt-2">
+                        <div className="text-2xl font-bold mt-2 text-gray-900 dark:text-foreground">
                           {plan.price}
-                          <span className="text-sm font-normal text-muted-foreground">{plan.period}</span>
+                          <span className="text-sm font-normal text-gray-600 dark:text-muted-foreground">{plan.period}</span>
                         </div>
                       </th>
                     ))}
@@ -217,9 +209,9 @@ const PricingComparison = () => {
                       >
                         <td
                           colSpan={4}
-                          className="p-4 bg-muted/50 sticky left-0 z-10 text-center"
+                          className="p-4 bg-gray-100 dark:bg-muted/50 sticky left-0 z-10 text-center border-b border-gray-200 dark:border-border"
                         >
-                          <h4 className="font-semibold text-primary">{category.category}</h4>
+                          <h4 className="font-semibold text-base text-gray-900 dark:text-primary">{category.category}</h4>
                         </td>
                       </tr>
                       {category.items.map((item, index) => {
@@ -228,21 +220,21 @@ const PricingComparison = () => {
                           <tr 
                             key={item.feature}
                             style={{ animationDelay: `${(catIndex + 1) * 0.15 + (index + 1) * 0.05}s` }}
-                            className={`animate-fade-in cursor-pointer transition-all duration-300 ${
-                              index % 2 === 0 ? "bg-background" : "bg-muted/20"
+                            className={`animate-fade-in cursor-pointer transition-all duration-300 border-b border-gray-100 dark:border-border/50 ${
+                              index % 2 === 0 ? "bg-white dark:bg-background" : "bg-gray-50/50 dark:bg-muted/20"
                             } ${
-                              isHighlighted ? 'bg-primary/10 shadow-lg scale-[1.02]' : 'hover:bg-muted/40'
+                              isHighlighted ? 'bg-blue-50 dark:bg-primary/10 shadow-md scale-[1.01]' : 'hover:bg-gray-100 dark:hover:bg-muted/40'
                             }`}
                             onClick={() => setHighlightedRow(isHighlighted ? null : item.feature)}
                           >
-                            <td className={`sticky left-0 z-10 bg-inherit p-4 font-medium border-r border-border ${
-                              isHighlighted ? 'text-primary' : ''
+                            <td className={`sticky left-0 z-10 bg-inherit p-4 font-medium text-sm text-gray-900 dark:text-foreground border-r border-gray-200 dark:border-border ${
+                              isHighlighted ? 'text-blue-600 dark:text-primary' : ''
                             }`}>
                               {item.feature}
                             </td>
-                            <td className="p-4 text-center">{renderFeatureValue(item.free, isHighlighted)}</td>
-                            <td className="p-4 text-center">{renderFeatureValue(item.creator, isHighlighted)}</td>
-                            <td className="p-4 text-center bg-primary/5">{renderFeatureValue(item.professional, isHighlighted)}</td>
+                            <td className="p-4 text-center border-r border-gray-100 dark:border-border/50">{renderFeatureValue(item.free, isHighlighted)}</td>
+                            <td className="p-4 text-center border-r border-gray-100 dark:border-border/50">{renderFeatureValue(item.creator, isHighlighted)}</td>
+                            <td className="p-4 text-center bg-blue-50/50 dark:bg-primary/5">{renderFeatureValue(item.professional, isHighlighted)}</td>
                           </tr>
                         );
                       })}
