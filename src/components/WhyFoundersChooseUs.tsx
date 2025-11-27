@@ -4,7 +4,7 @@ import {
   Users, 
   Target, 
   Shield, 
-  Layers 
+  LayoutDashboard 
 } from "lucide-react";
 
 const reasons = [
@@ -34,8 +34,8 @@ const reasons = [
     description: "Connect with other creative entrepreneurs facing similar challenges. Get honest feedback and real support.",
   },
   {
-    icon: Layers,
-    title: "All-in-One Toolkit",
+    icon: LayoutDashboard,
+    title: "All-in-One Platform",
     description: "Planning, execution tracking, community, and funding resources in one place. Everything you need without the chaos.",
   },
 ];
