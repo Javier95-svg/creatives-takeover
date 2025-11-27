@@ -143,7 +143,7 @@ const EntrepreneurProblems = () => {
             Don't Repeat the Same Mistakes
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Why Most Pre-Seed Founders <span className="text-red-500">Fail</span>
+            How Successful Pre-Seed Founders <span className="text-primary">Succeed</span>
           </h2>
           <p className="text-base sm:text-lg text-foreground/85 max-w-2xl mx-auto px-4">
             Overwhelmed by complexity, not bad ideas. Here's what kills startups and how to avoid it.
