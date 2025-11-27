@@ -35,9 +35,11 @@ const CommunityFeed: React.FC = () => {
   const fetchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch posts from database
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (showLoading = true) => {
     console.log('🔍 STARTING TO FETCH POSTS...');
-    setLoading(true);
+    if (showLoading) {
+      setLoading(true);
+    }
     try {
       const { data, error } = await supabase
         .from('community_posts')
@@ -124,7 +126,9 @@ const CommunityFeed: React.FC = () => {
       toast.error('Failed to load posts');
     } finally {
       console.log('🏁 SETTING LOADING TO FALSE');
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, [user]);
 
@@ -142,9 +146,10 @@ const CommunityFeed: React.FC = () => {
     }
     
     // Debounce the fetch by 1 second
+    // Don't show loading state during debounced refetches to prevent component unmounting
     fetchDebounceTimerRef.current = setTimeout(() => {
       if (!isPublishingRef.current) {
-        fetchPosts();
+        fetchPosts(false);
       }
     }, 1000);
   }, [fetchPosts]);
@@ -317,8 +322,9 @@ const CommunityFeed: React.FC = () => {
       
       // Successfully published - now refetch posts manually after a short delay
       // This ensures the new post appears without triggering the real-time subscription
+      // Don't show loading state during this refetch to prevent PostComposer from unmounting
       setTimeout(() => {
-        fetchPosts().finally(() => {
+        fetchPosts(false).finally(() => {
           // Clear the publishing flag after refetch completes
           isPublishingRef.current = false;
         });

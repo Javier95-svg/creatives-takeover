@@ -22,7 +22,7 @@ export type ComposerPayload = {
 };
 
 interface PostComposerProps {
-  onPublish: (payload: ComposerPayload) => void;
+  onPublish: (payload: ComposerPayload) => void | Promise<void>;
   requireAuth?: boolean;
   reportData?: {
     title?: string;
@@ -144,8 +144,9 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     reader.readAsDataURL(file);
   };
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     
     if (requireAuth && !isAuthenticated) {
       // Track conversion trigger
@@ -178,9 +179,16 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     // Clear draft before publishing
     localStorage.removeItem(DRAFT_STORAGE_KEY);
     
-    onPublish(payload);
-    toast.success("Your story has been posted!");
-    reset();
+    try {
+      // Await the publish operation to complete
+      await onPublish(payload);
+      // Only reset and show success after publish succeeds
+      reset();
+      toast.success("Your story has been posted!");
+    } catch (error) {
+      // Error is already handled in handlePublish, just don't reset the form
+      console.error('Publish error:', error);
+    }
   };
 
   const handleSignIn = () => {
@@ -221,7 +229,7 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlePublish} className="space-y-4">
+          <form onSubmit={handlePublish} className="space-y-4" noValidate>
             <div>
               <Input
                 value={title}
