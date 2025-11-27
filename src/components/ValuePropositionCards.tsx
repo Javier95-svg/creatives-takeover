@@ -2,6 +2,7 @@ import { Lightbulb, Users, Rocket, Sparkles, LayoutDashboard } from "lucide-reac
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 
 const ValuePropositionCards = () => {
   // All cards in a single row with semantic RGB color assignments
@@ -56,6 +57,128 @@ const ValuePropositionCards = () => {
     }
   ];
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContentRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // Duplicate cards multiple times to create seamless infinite loop
+  const duplicatedCards = [...allCards, ...allCards, ...allCards];
+
+  // Initialize scroll position to start of second set for seamless loop
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const content = scrollContentRef.current;
+    if (!container || !content) return;
+
+    // Wait for layout to calculate proper widths
+    const initScroll = () => {
+      const singleSetWidth = content.scrollWidth / 3; // Since we have 3 sets
+      container.scrollLeft = singleSetWidth;
+    };
+
+    // Use setTimeout to ensure DOM is fully rendered
+    const timeoutId = setTimeout(initScroll, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Handle auto-scroll with infinite loop
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scrollSpeed = 0.3; // pixels per frame (slower for comfortable reading)
+    let lastTime = performance.now();
+
+    const autoScroll = (currentTime: number) => {
+      if (!container || isPaused || isUserInteracting) {
+        animationFrameRef.current = requestAnimationFrame(autoScroll);
+        return;
+      }
+
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+      
+      // Normalize speed to be consistent regardless of frame rate
+      const normalizedSpeed = scrollSpeed * (deltaTime / 16.67); // 16.67ms = 60fps
+
+      const currentScroll = container.scrollLeft;
+      const scrollWidth = container.scrollWidth;
+      const singleSetWidth = scrollWidth / 3; // Since we have 3 sets
+
+      // Reset to beginning of second set when we've scrolled past it
+      if (currentScroll >= singleSetWidth * 2 - container.clientWidth) {
+        container.scrollLeft = currentScroll - singleSetWidth;
+      } else {
+        container.scrollLeft += normalizedSpeed;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(autoScroll);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(autoScroll);
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPaused, isUserInteracting]);
+
+  // Detect user interaction
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let interactionTimeout: NodeJS.Timeout;
+    let isScrolling = false;
+
+    const handleInteraction = () => {
+      if (!isScrolling) {
+        setIsUserInteracting(true);
+        isScrolling = true;
+      }
+      clearTimeout(interactionTimeout);
+      interactionTimeout = setTimeout(() => {
+        setIsUserInteracting(false);
+        isScrolling = false;
+      }, 2000); // Resume auto-scroll after 2 seconds of no interaction
+    };
+
+    const handleScroll = () => {
+      handleInteraction();
+    };
+
+    const handleMouseDown = () => {
+      handleInteraction();
+    };
+
+    const handleTouchStart = () => {
+      handleInteraction();
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // Only pause if user is scrolling horizontally
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        handleInteraction();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('wheel', handleWheel, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('mousedown', handleMouseDown);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('wheel', handleWheel);
+      clearTimeout(interactionTimeout);
+    };
+  }, []);
+
   return (
     <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle">
       {/* RGB gradient overlay */}
@@ -83,9 +206,23 @@ const ValuePropositionCards = () => {
           </p>
         </div>
 
-        {/* All Cards - Single Row */}
-        <div className="flex flex-row gap-4 md:gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
-          {allCards.map((card, index) => {
+        {/* All Cards - Horizontal Auto-Scrolling Strip */}
+        <div 
+          ref={scrollContainerRef}
+          className="overflow-x-auto scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none', /* Firefox */
+            msOverflowStyle: 'none', /* IE and Edge */
+            WebkitOverflowScrolling: 'touch', /* iOS smooth scrolling */
+          }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          <div 
+            ref={scrollContentRef}
+            className="flex gap-4 md:gap-6 min-w-max pb-4"
+          >
+            {duplicatedCards.map((card, index) => {
             const Icon = card.icon;
             const colorClasses = {
               planning: {
@@ -123,10 +260,10 @@ const ValuePropositionCards = () => {
             
             return (
               <Card 
-                key={index} 
-                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px] flex-1`}
+                key={`${card.subtitle}-${index}`} 
+                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px]`}
                 style={{ 
-                  animationDelay: `${index * 0.1}s`,
+                  animationDelay: `${(index % allCards.length) * 0.1}s`,
                   animationFillMode: 'both'
                 }}
               >
