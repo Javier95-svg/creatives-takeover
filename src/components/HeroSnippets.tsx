@@ -1,60 +1,83 @@
 import { Link } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Bot, 
+  Lightbulb, 
+  FlaskConical, 
+  TrendingUp, 
+  Users, 
+  Info,
+  DollarSign,
+  Target,
+  MessageSquare
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
-import { LucideIcon, MessageSquare, Sparkles, Rocket, BarChart3, MessageCircle, TrendingUp } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface PlatformSnippet {
   name: string;
   description: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   route: string;
   color: 'planning' | 'action' | 'growth';
 }
 
-// Platform snippets with icons
 const platformSnippets: PlatformSnippet[] = [
   {
-    name: "Share Your Creative Work",
-    description: "Share your projects, progress, challenges, or insights with fellow creatives",
-    icon: MessageSquare,
-    route: "/community",
-    color: "action"
-  },
-  {
     name: "Business Planning",
-    description: "7-step wizard to build your 30-day launch plan with BizMap AI",
-    icon: Sparkles,
+    description: "7-step wizard to build your 30-day launch plan",
+    icon: Target,
     route: "/bizmap-ai",
     color: "planning"
   },
   {
-    name: "The Future Belongs to Founders",
-    description: "Transform raw thoughts into clear, actionable roadmaps",
-    icon: Rocket,
-    route: "/",
-    color: "growth"
-  },
-  {
-    name: "Market Validation",
-    description: "Validate your business idea by analyzing market size, competition, and demand",
-    icon: BarChart3,
+    name: "Dashboard",
+    description: "Market Validation, Task Calendar, Revenue Hub",
+    icon: LayoutDashboard,
     route: "/dashboard",
     color: "action"
   },
   {
     name: "BizMap AI Chat",
-    description: "AI-powered conversational business planning to build your launch plan",
-    icon: MessageCircle,
+    description: "AI-powered conversational business planning",
+    icon: MessageSquare,
     route: "/bizmap-ai",
     color: "growth"
   },
   {
     name: "Funding Opportunities",
-    description: "Find grants, accelerators, contests, and microfunds for your project",
-    icon: TrendingUp,
+    description: "Find grants, accelerators, contests, and microfunds",
+    icon: DollarSign,
     route: "/blog",
     color: "planning"
+  },
+  {
+    name: "Product Market Fit Lab",
+    description: "Validate your product in the market",
+    icon: FlaskConical,
+    route: "/bizmap-ai",
+    color: "action"
+  },
+  {
+    name: "Prompt Library",
+    description: "Pre-built AI prompts for pitches, emails, interviews",
+    icon: Lightbulb,
+    route: "/prompt-library",
+    color: "growth"
+  },
+  {
+    name: "Insighta",
+    description: "Curated news hub for funding and AI trends",
+    icon: TrendingUp,
+    route: "/insighta",
+    color: "planning"
+  },
+  {
+    name: "Community",
+    description: "Connect with founders, get feedback, demo days",
+    icon: Users,
+    route: "/community",
+    color: "action"
   }
 ];
 
@@ -63,10 +86,10 @@ const HeroSnippets = () => {
   const scrollContentRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const animationFrameRef = useRef<number | null>(null);
+  const autoScrollRef = useRef<number | null>(null);
 
-  // Duplicate snippets multiple times to create seamless infinite loop
-  const duplicatedSnippets = [...platformSnippets, ...platformSnippets, ...platformSnippets];
+  // Duplicate snippets to create seamless infinite loop
+  const duplicatedSnippets = [...platformSnippets, ...platformSnippets];
 
   const getColorClasses = (color: 'planning' | 'action' | 'growth') => {
     const colorMap = {
@@ -92,62 +115,41 @@ const HeroSnippets = () => {
     return colorMap[color];
   };
 
-  // Initialize scroll position to start of second set for seamless loop
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    const content = scrollContentRef.current;
-    if (!container || !content) return;
-
-    // Wait for layout to calculate proper widths
-    const initScroll = () => {
-      const singleSetWidth = content.scrollWidth / 3; // Since we have 3 sets
-      container.scrollLeft = singleSetWidth;
-    };
-
-    // Use setTimeout to ensure DOM is fully rendered
-    const timeoutId = setTimeout(initScroll, 100);
-    return () => clearTimeout(timeoutId);
-  }, []);
-
   // Handle auto-scroll with infinite loop
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const scrollSpeed = 0.5; // pixels per frame
-    let lastTime = performance.now();
+    const scrollSpeed = 0.5; // pixels per frame (~30px per second at 60fps, ~40px at 80fps)
+    let lastScrollLeft = container.scrollLeft;
 
-    const autoScroll = (currentTime: number) => {
+    const autoScroll = () => {
       if (!container || isPaused || isUserInteracting) {
-        animationFrameRef.current = requestAnimationFrame(autoScroll);
+        autoScrollRef.current = requestAnimationFrame(autoScroll);
         return;
       }
 
-      const deltaTime = currentTime - lastTime;
-      lastTime = currentTime;
-      
-      // Normalize speed to be consistent regardless of frame rate
-      const normalizedSpeed = scrollSpeed * (deltaTime / 16.67); // 16.67ms = 60fps
-
       const currentScroll = container.scrollLeft;
       const scrollWidth = container.scrollWidth;
-      const singleSetWidth = scrollWidth / 3; // Since we have 3 sets
+      const clientWidth = container.clientWidth;
+      const halfWidth = scrollWidth / 2;
 
-      // Reset to beginning of second set when we've scrolled past it
-      if (currentScroll >= singleSetWidth * 2 - container.clientWidth) {
-        container.scrollLeft = currentScroll - singleSetWidth;
+      // Reset to beginning when we've scrolled past the first set
+      if (currentScroll >= halfWidth - clientWidth) {
+        container.scrollLeft = currentScroll - halfWidth;
       } else {
-        container.scrollLeft += normalizedSpeed;
+        container.scrollLeft += scrollSpeed;
       }
 
-      animationFrameRef.current = requestAnimationFrame(autoScroll);
+      lastScrollLeft = container.scrollLeft;
+      autoScrollRef.current = requestAnimationFrame(autoScroll);
     };
 
-    animationFrameRef.current = requestAnimationFrame(autoScroll);
+    autoScrollRef.current = requestAnimationFrame(autoScroll);
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
       }
     };
   }, [isPaused, isUserInteracting]);
@@ -184,23 +186,14 @@ const HeroSnippets = () => {
       handleInteraction();
     };
 
-    const handleWheel = (e: WheelEvent) => {
-      // Only pause if user is scrolling horizontally
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        handleInteraction();
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    container.addEventListener('scroll', handleScroll);
     container.addEventListener('mousedown', handleMouseDown);
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('wheel', handleWheel, { passive: true });
+    container.addEventListener('touchstart', handleTouchStart);
 
     return () => {
       container.removeEventListener('scroll', handleScroll);
       container.removeEventListener('mousedown', handleMouseDown);
       container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('wheel', handleWheel);
       clearTimeout(interactionTimeout);
     };
   }, []);
@@ -210,11 +203,11 @@ const HeroSnippets = () => {
       {/* Horizontal Scrollable Container */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide"
+        className="overflow-x-auto scrollbar-hide snap-x snap-mandatory"
         style={{
           scrollbarWidth: 'none', /* Firefox */
           msOverflowStyle: 'none', /* IE and Edge */
-          WebkitOverflowScrolling: 'touch', /* iOS smooth scrolling */
+          WebkitOverflowScrolling: 'touch' /* iOS smooth scrolling */
         }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -224,68 +217,33 @@ const HeroSnippets = () => {
           className="flex gap-4 sm:gap-6 lg:gap-8 min-w-max pb-4"
         >
           {duplicatedSnippets.map((snippet, index) => {
-            const colors = getColorClasses(snippet.color);
             const Icon = snippet.icon;
-            
-            const colorClasses = {
-              planning: {
-                border: 'border-planning/30 hover:border-planning/60',
-                bg: 'bg-planning/10 group-hover:bg-planning/20',
-                text: 'text-planning',
-                shadow: 'hover:shadow-planning/20'
-              },
-              action: {
-                border: 'border-action/30 hover:border-action/60',
-                bg: 'bg-action/10 group-hover:bg-action/20',
-                text: 'text-action',
-                shadow: 'hover:shadow-action/20'
-              },
-              growth: {
-                border: 'border-growth/30 hover:border-growth/60',
-                bg: 'bg-growth/10 group-hover:bg-growth/20',
-                text: 'text-growth',
-                shadow: 'hover:shadow-growth/20'
-              }
-            };
-            const iconColors = colorClasses[snippet.color as keyof typeof colorClasses];
+            const colors = getColorClasses(snippet.color);
             
             return (
               <Link
                 key={`${snippet.name}-${index}`}
                 to={snippet.route}
                 className={cn(
-                  "btn-magnetic flex-shrink-0 group relative overflow-hidden",
-                  "w-[280px] sm:w-[320px] lg:w-[360px]",
-                  "bg-card border-2 transition-all duration-300",
-                  "rounded-lg hover:-translate-y-1",
+                  "btn-magnetic flex-shrink-0 w-[280px] sm:w-[300px]",
+                  "h-[200px] sm:h-[220px]",
+                  "p-4 sm:p-6 bg-card border-2 transition-all duration-300",
+                  "flex flex-col items-center justify-center text-center",
+                  colors.glass,
                   colors.border,
-                  colors.shadow
+                  colors.shadow,
+                  "snap-start"
                 )}
               >
-                <Card className="h-full border-0 shadow-none bg-transparent">
-                  <CardContent className="p-5 sm:p-6 flex flex-col h-full">
-                    {/* Icon */}
-                    <div className="mb-4">
-                      <div className={cn(
-                        "w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300",
-                        iconColors.bg,
-                        "group-hover:scale-110 group-hover:rotate-3"
-                      )}>
-                        <Icon className={cn("w-6 h-6", iconColors.text)} />
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg sm:text-xl font-semibold mb-2 group-hover:text-foreground transition-colors">
-                      {snippet.name}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm sm:text-base text-muted-foreground group-hover:text-foreground/80 transition-colors leading-relaxed">
-                      {snippet.description}
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="flex justify-center mb-3">
+                  <Icon className={cn("w-6 sm:w-8 h-6 sm:h-8", colors.icon)} />
+                </div>
+                <div className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                  {snippet.name}
+                </div>
+                <div className="text-muted-foreground text-xs sm:text-sm">
+                  {snippet.description}
+                </div>
               </Link>
             );
           })}
