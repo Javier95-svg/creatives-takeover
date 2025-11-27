@@ -98,8 +98,8 @@ const UserReviews = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-6 sm:px-8 lg:px-12">
-          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-6 sm:mb-8 lg:mb-10 text-foreground break-words">
-            Write Your Own Story
+          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-6 sm:mb-8 lg:mb-10 text-blue-600 dark:text-blue-400 break-words">
+            Shape With Us Your Future
           </h2>
         </div>
 
