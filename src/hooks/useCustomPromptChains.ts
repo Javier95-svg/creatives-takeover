@@ -84,7 +84,7 @@ export function useCustomPromptChains() {
 
       if (fetchError) throw fetchError;
 
-      setUserChains((data || []) as CustomPromptChain[]);
+      setUserChains((data || []) as unknown as CustomPromptChain[]);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch your prompt chains');
       console.error('Error fetching user chains:', err);
