@@ -331,6 +331,7 @@ const ValuePropositionCards = () => {
               </Card>
             );
           })}
+          </div>
         </div>
       </div>
     </section>
