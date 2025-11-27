@@ -94,34 +94,48 @@ const HeroSnippets = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    // Calculate scroll speed to match 60s animation
-    // Total width is duplicated content, so we scroll through 50% (one full set)
-    const scrollSpeed = 0.5; // pixels per frame (~30px/s = ~1800px in 60s)
-    
-    const autoScroll = () => {
-      if (!container || isUserInteracting) {
+    // Wait for content to render and get dimensions
+    const initAutoScroll = () => {
+      // Calculate scroll speed to match 60s animation
+      // Total width is duplicated content, so we scroll through 50% (one full set)
+      const scrollSpeed = 0.5; // pixels per frame (~30px/s = ~1800px in 60s)
+      
+      const autoScroll = () => {
+        if (!container || isUserInteracting) {
+          autoScrollRef.current = requestAnimationFrame(autoScroll);
+          return;
+        }
+
+        const scrollWidth = container.scrollWidth;
+        const clientWidth = container.clientWidth;
+        
+        // Only auto-scroll if content is wider than container (with small buffer)
+        if (scrollWidth <= clientWidth + 10) {
+          autoScrollRef.current = requestAnimationFrame(autoScroll);
+          return;
+        }
+
+        const currentScroll = container.scrollLeft;
+        const halfWidth = scrollWidth / 2;
+
+        // Reset to beginning when we've scrolled past the first set for seamless loop
+        if (currentScroll >= halfWidth - 10) {
+          container.scrollLeft = currentScroll - halfWidth;
+        } else {
+          container.scrollLeft += scrollSpeed;
+        }
+
         autoScrollRef.current = requestAnimationFrame(autoScroll);
-        return;
-      }
-
-      const currentScroll = container.scrollLeft;
-      const scrollWidth = container.scrollWidth;
-      const clientWidth = container.clientWidth;
-      const halfWidth = scrollWidth / 2;
-
-      // Reset to beginning when we've scrolled past the first set for seamless loop
-      if (currentScroll >= halfWidth - 10) {
-        container.scrollLeft = currentScroll - halfWidth;
-      } else {
-        container.scrollLeft += scrollSpeed;
-      }
+      };
 
       autoScrollRef.current = requestAnimationFrame(autoScroll);
     };
 
-    autoScrollRef.current = requestAnimationFrame(autoScroll);
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(initAutoScroll, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       if (autoScrollRef.current) {
         cancelAnimationFrame(autoScrollRef.current);
       }
@@ -199,11 +213,12 @@ const HeroSnippets = () => {
       {/* Horizontal Scrollable Container */}
       <div 
         ref={scrollContainerRef}
-        className="relative overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 scrollbar-hide"
+        className="overflow-x-auto scrollbar-hide relative w-full"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          maxWidth: '100%'
         }}
       >
         <div 
