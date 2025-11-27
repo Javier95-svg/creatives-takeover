@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInModal from "./SignInModal";
 import { useNavigate } from "react-router-dom";
+
+const DRAFT_STORAGE_KEY = 'community_post_draft';
 
 export type ComposerPayload = {
   title: string;
@@ -45,6 +47,52 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
   
   const isAIReport = !!reportData?.reportType;
 
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    // Only restore if there's no reportData (which would override the draft)
+    if (!reportData) {
+      try {
+        const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (savedDraft) {
+          const draft = JSON.parse(savedDraft);
+          if (draft.title || draft.content) {
+            setTitle(draft.title || "");
+            setContent(draft.content || "");
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring draft:', error);
+      }
+    }
+  }, [reportData]);
+
+  // Save draft to localStorage (debounced)
+  useEffect(() => {
+    // Don't save if it's an AI report (those have their own data)
+    if (isAIReport) return;
+
+    // Don't save empty drafts
+    if (!title.trim() && !content.trim()) {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      try {
+        const draft = {
+          title: title.trim(),
+          content: content.trim(),
+          timestamp: Date.now()
+        };
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      } catch (error) {
+        console.error('Error saving draft:', error);
+      }
+    }, 500); // Debounce by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [title, content, isAIReport]);
+
   const reset = () => {
     setTitle("");
     setContent("");
@@ -53,6 +101,8 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
     if (audioInputRef.current) audioInputRef.current.value = "";
+    // Clear draft from localStorage
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
   };
 
   const handleMediaPick = (type: 'image' | 'video' | 'audio') => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +175,9 @@ const PostComposer: React.FC<PostComposerProps> = ({ onPublish, requireAuth = fa
     if (mediaType === 'video') payload.video = mediaPreview;
     if (mediaType === 'audio') payload.audio = mediaPreview;
 
+    // Clear draft before publishing
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    
     onPublish(payload);
     toast.success("Your story has been posted!");
     reset();

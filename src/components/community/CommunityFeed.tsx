@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import PostComposer, { ComposerPayload } from "./PostComposer";
 import PostCard, { Post } from "./PostCard";
 import { ChatbotReportCard } from "./ChatbotReportCard";
@@ -29,9 +29,13 @@ const CommunityFeed: React.FC = () => {
   const [engagement, setEngagement] = useState("all");
   
   const postingAccess = checkFeatureAccess('community_posting');
+  
+  // Track if we're currently publishing to prevent real-time subscription from interfering
+  const isPublishingRef = useRef(false);
+  const fetchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch posts from database
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     console.log('🔍 STARTING TO FETCH POSTS...');
     setLoading(true);
     try {
@@ -122,8 +126,28 @@ const CommunityFeed: React.FC = () => {
       console.log('🏁 SETTING LOADING TO FALSE');
       setLoading(false);
     }
-  };
+  }, [user]);
 
+
+  // Debounced fetch function to prevent rapid refetches
+  const debouncedFetchPosts = useCallback(() => {
+    // Clear existing timer
+    if (fetchDebounceTimerRef.current) {
+      clearTimeout(fetchDebounceTimerRef.current);
+    }
+    
+    // Don't refetch if we're currently publishing (will refetch after publish completes)
+    if (isPublishingRef.current) {
+      return;
+    }
+    
+    // Debounce the fetch by 1 second
+    fetchDebounceTimerRef.current = setTimeout(() => {
+      if (!isPublishingRef.current) {
+        fetchPosts();
+      }
+    }, 1000);
+  }, [fetchPosts]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -137,7 +161,7 @@ const CommunityFeed: React.FC = () => {
         table: 'community_posts'
       }, () => {
         console.log('Posts changed, refetching...');
-        fetchPosts(); // Refetch posts when changes occur
+        debouncedFetchPosts(); // Debounced refetch posts when changes occur
       })
       .on('postgres_changes', {
         event: '*',
@@ -145,7 +169,7 @@ const CommunityFeed: React.FC = () => {
         table: 'post_comments'
       }, () => {
         console.log('Comments changed, refetching...');
-        fetchPosts(); // Refetch when comments change
+        debouncedFetchPosts(); // Debounced refetch when comments change
       })
       .on('postgres_changes', {
         event: '*',
@@ -153,14 +177,17 @@ const CommunityFeed: React.FC = () => {
         table: 'profiles'
       }, () => {
         console.log('Profiles changed, refetching...');
-        fetchPosts(); // Refetch when profiles change
+        debouncedFetchPosts(); // Debounced refetch when profiles change
       })
       .subscribe();
 
     return () => {
+      if (fetchDebounceTimerRef.current) {
+        clearTimeout(fetchDebounceTimerRef.current);
+      }
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchPosts, debouncedFetchPosts]);
 
   const allTags = useMemo(() => {
     // Diverse creative field tags
@@ -263,6 +290,9 @@ const CommunityFeed: React.FC = () => {
   }, [posts, search, sort, selectedTag, postType, engagement]);
 
   async function handlePublish(payload: ComposerPayload) {
+    // Set flag to prevent real-time subscription from interfering
+    isPublishingRef.current = true;
+    
     try {
       // Transform payload to match database schema
       const mediaUrls: string[] = [];
@@ -285,10 +315,21 @@ const CommunityFeed: React.FC = () => {
         throw error;
       }
       
+      // Successfully published - now refetch posts manually after a short delay
+      // This ensures the new post appears without triggering the real-time subscription
+      setTimeout(() => {
+        fetchPosts().finally(() => {
+          // Clear the publishing flag after refetch completes
+          isPublishingRef.current = false;
+        });
+      }, 500);
+      
       toast.success("Your story has been posted!");
     } catch (e: any) {
       console.error('Error posting:', e);
       toast.error(`Error sharing to community: ${e.message || 'Unknown error'}`);
+      // Clear the flag on error
+      isPublishingRef.current = false;
     }
   }
 
