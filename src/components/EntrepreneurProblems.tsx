@@ -146,7 +146,7 @@ const EntrepreneurProblems = () => {
             Common Roadblocks Pre-Seed Founders <span className="text-foreground">Face</span>
           </h2>
           <p className="text-base sm:text-lg text-foreground/85 max-w-2xl mx-auto px-4">
-            From validation gaps to execution challenges, pre-seed founders face predictable roadblocks. Discover how the right tools, frameworks, and community support help you navigate these obstacles and build with confidence.
+            Discover how the right tools, frameworks, and community support help you navigate these obstacles and build with confidence.
           </p>
         </div>
 
