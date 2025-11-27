@@ -96,8 +96,8 @@ const HeroSnippets = () => {
 
     // Wait for content to render and get dimensions
     const initAutoScroll = () => {
-      // Fast-paced auto-scroll speed
-      const scrollSpeed = 2; // pixels per frame for fast lateral scrolling
+      // Fast-paced auto-scroll speed for visible lateral movement
+      const scrollSpeed = 5; // pixels per frame (~300px/s, cycles through all boxes in ~10-15s)
       
       const autoScroll = () => {
         if (!container || isUserInteracting) {
