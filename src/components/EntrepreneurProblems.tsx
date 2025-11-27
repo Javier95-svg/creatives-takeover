@@ -16,7 +16,11 @@ import {
   TrendingDown,
   TrendingUp,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Rocket,
+  Target,
+  Brain,
+  Zap
 } from "lucide-react";
 
 const EntrepreneurProblems = () => {
@@ -139,14 +143,14 @@ const EntrepreneurProblems = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-          <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            Don't Repeat the Same Mistakes
+          <Badge className="bg-primary/10 text-primary border-primary/20 mb-4 sm:mb-6 text-xs sm:text-sm">
+            Build Your Success Path
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Why Most Pre-Seed Founders <span className="text-red-500">Fail</span>
+            How Smart Founders Avoid <span className="text-primary">Common Failures</span>
           </h2>
           <p className="text-base sm:text-lg text-foreground/85 max-w-2xl mx-auto px-4">
-            Overwhelmed by complexity, not bad ideas. Here's what kills startups and how to avoid it.
+            Learn from the mistakes others make. Get practical solutions, actionable advice, and the right tools to navigate your startup journey successfully.
           </p>
         </div>
 
