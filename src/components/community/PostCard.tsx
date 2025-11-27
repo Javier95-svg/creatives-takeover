@@ -145,23 +145,58 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   // Load comments
   const loadComments = async () => {
     try {
-      const { data, error } = await supabase
+      // First, fetch comments without profile join
+      const { data: commentsData, error: commentsError } = await supabase
         .from('post_comments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url,
-            username
-          )
-        `)
+        .select('*')
         .eq('post_id', post.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (commentsError) throw commentsError;
+
+      if (!commentsData || commentsData.length === 0) {
+        setComments([]);
+        return;
+      }
+
+      // Extract unique user IDs from comments
+      const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
+
+      // Fetch profiles for all comment authors in one query (if there are any user IDs)
+      let profilesData = null;
+      if (userIds.length > 0) {
+        const { data, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, username')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error loading profiles:', profilesError);
+          // Continue with comments even if profile fetch fails
+        } else {
+          profilesData = data;
+        }
+      }
+
+      // Create a map of user_id to profile for quick lookup
+      const profileMap = new Map(
+        (profilesData || []).map(profile => [profile.id, profile])
+      );
+
+      // Join comments with profiles
+      const commentsWithProfiles = commentsData.map(comment => ({
+        ...comment,
+        profiles: profileMap.get(comment.user_id) || {
+          full_name: 'Anonymous',
+          avatar_url: null,
+          username: null
+        }
+      }));
+
+      setComments(commentsWithProfiles);
     } catch (error) {
       console.error('Error loading comments:', error);
+      toast.error('Failed to load comments. Please try again.');
     }
   };
 
