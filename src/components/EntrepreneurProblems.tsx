@@ -140,7 +140,7 @@ const EntrepreneurProblems = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in">
           <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            How to Overcome Them
+            Big Challenges, Bold Solutions
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4 text-foreground">
             Common Roadblocks Pre-Seed Founders <span className="text-foreground">Face</span>
