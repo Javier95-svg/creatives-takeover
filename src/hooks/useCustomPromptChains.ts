@@ -39,7 +39,7 @@ export function useCustomPromptChains() {
     setError(null);
     try {
       const { data, error: fetchError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false });
@@ -47,7 +47,7 @@ export function useCustomPromptChains() {
       if (fetchError) throw fetchError;
 
       // Convert to MultiStepPrompt format
-      const convertedChains: MultiStepPrompt[] = (data || []).map((chain) => ({
+      const convertedChains: MultiStepPrompt[] = (data || []).map((chain: any) => ({
         id: chain.id,
         conceptTitle: chain.concept_title,
         category: chain.category,
