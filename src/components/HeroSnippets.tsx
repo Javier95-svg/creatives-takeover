@@ -1,51 +1,83 @@
 import { Link } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Bot, 
+  Lightbulb, 
+  FlaskConical, 
+  TrendingUp, 
+  Users, 
+  Info,
+  DollarSign,
+  Target,
+  MessageSquare
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
-// Import screenshots
-import bizmapAiChatImg from "@/assets/screenshots/bizmap-ai-chat.png";
-import promptChainImg from "@/assets/screenshots/prompt-chain.png";
-import fundingOpportunitiesImg from "@/assets/screenshots/funding-opportunities.png";
-import aboutFoundersImg from "@/assets/screenshots/about-founders.png";
-import marketValidationImg from "@/assets/screenshots/market-validation.png";
-import communityImg from "@/assets/screenshots/community.png";
-
 interface PlatformSnippet {
   name: string;
-  imagePath: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
   route: string;
+  color: 'planning' | 'action' | 'growth';
 }
 
 const platformSnippets: PlatformSnippet[] = [
   {
-    name: "BizMap AI Output",
-    imagePath: bizmapAiChatImg,
-    route: "/bizmap-ai"
+    name: "Business Planning",
+    description: "7-step wizard to build your 30-day launch plan",
+    icon: Target,
+    route: "/bizmap-ai",
+    color: "planning"
   },
   {
-    name: "Prompt Chain",
-    imagePath: promptChainImg,
-    route: "/prompt-library"
+    name: "Dashboard",
+    description: "Market Validation, Task Calendar, Revenue Hub",
+    icon: LayoutDashboard,
+    route: "/dashboard",
+    color: "action"
+  },
+  {
+    name: "BizMap AI Chat",
+    description: "AI-powered conversational business planning",
+    icon: MessageSquare,
+    route: "/bizmap-ai",
+    color: "growth"
   },
   {
     name: "Funding Opportunities",
-    imagePath: fundingOpportunitiesImg,
-    route: "/blog"
+    description: "Find grants, accelerators, contests, and microfunds",
+    icon: DollarSign,
+    route: "/blog",
+    color: "planning"
   },
   {
-    name: "About Founders",
-    imagePath: aboutFoundersImg,
-    route: "/about"
+    name: "Product Market Fit Lab",
+    description: "Validate your product in the market",
+    icon: FlaskConical,
+    route: "/bizmap-ai",
+    color: "action"
   },
   {
-    name: "Market Validation",
-    imagePath: marketValidationImg,
-    route: "/dashboard"
+    name: "Prompt Library",
+    description: "Pre-built AI prompts for pitches, emails, interviews",
+    icon: Lightbulb,
+    route: "/prompt-library",
+    color: "growth"
+  },
+  {
+    name: "Insighta",
+    description: "Curated news hub for funding and AI trends",
+    icon: TrendingUp,
+    route: "/insighta",
+    color: "planning"
   },
   {
     name: "Community",
-    imagePath: communityImg,
-    route: "/community"
+    description: "Connect with founders, get feedback, demo days",
+    icon: Users,
+    route: "/community",
+    color: "action"
   }
 ];
 
@@ -58,6 +90,30 @@ const HeroSnippets = () => {
 
   // Duplicate snippets to create seamless infinite loop
   const duplicatedSnippets = [...platformSnippets, ...platformSnippets];
+
+  const getColorClasses = (color: 'planning' | 'action' | 'growth') => {
+    const colorMap = {
+      planning: {
+        glass: 'glass-blue',
+        border: 'border-planning/30 hover:border-planning/60',
+        shadow: 'hover:shadow-lg hover:shadow-blue/20',
+        icon: 'text-planning'
+      },
+      action: {
+        glass: 'glass-red',
+        border: 'border-action/30 hover:border-action/60',
+        shadow: 'hover:shadow-lg hover:shadow-red/20',
+        icon: 'text-action'
+      },
+      growth: {
+        glass: 'glass-green',
+        border: 'border-growth/30 hover:border-growth/60',
+        shadow: 'hover:shadow-lg hover:shadow-green/20',
+        icon: 'text-growth'
+      }
+    };
+    return colorMap[color];
+  };
 
   // Handle auto-scroll with infinite loop
   useEffect(() => {
@@ -161,29 +217,32 @@ const HeroSnippets = () => {
           className="flex gap-4 sm:gap-6 lg:gap-8 min-w-max pb-4"
         >
           {duplicatedSnippets.map((snippet, index) => {
+            const Icon = snippet.icon;
+            const colors = getColorClasses(snippet.color);
+            
             return (
               <Link
                 key={`${snippet.name}-${index}`}
                 to={snippet.route}
                 className={cn(
-                  "flex-shrink-0 group relative overflow-hidden",
-                  "rounded-lg border-2 border-border/50",
-                  "transition-all duration-300",
-                  "hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20",
-                  "hover:scale-[1.02]",
+                  "btn-magnetic flex-shrink-0 w-[280px] sm:w-[300px]",
+                  "h-[200px] sm:h-[220px]",
+                  "p-4 sm:p-6 bg-card border-2 transition-all duration-300",
+                  "flex flex-col items-center justify-center text-center",
+                  colors.glass,
+                  colors.border,
+                  colors.shadow,
                   "snap-start"
                 )}
               >
-                <img 
-                  src={snippet.imagePath} 
-                  alt={snippet.name}
-                  className="w-[400px] h-[250px] object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <span className="text-sm font-semibold text-foreground bg-background/90 px-3 py-1 rounded-full inline-block">
-                    {snippet.name}
-                  </span>
+                <div className="flex justify-center mb-3">
+                  <Icon className={cn("w-6 sm:w-8 h-6 sm:h-8", colors.icon)} />
+                </div>
+                <div className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                  {snippet.name}
+                </div>
+                <div className="text-muted-foreground text-xs sm:text-sm">
+                  {snippet.description}
                 </div>
               </Link>
             );
