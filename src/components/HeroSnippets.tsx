@@ -96,9 +96,8 @@ const HeroSnippets = () => {
 
     // Wait for content to render and get dimensions
     const initAutoScroll = () => {
-      // Calculate scroll speed to match 60s animation
-      // Total width is duplicated content, so we scroll through 50% (one full set)
-      const scrollSpeed = 0.5; // pixels per frame (~30px/s = ~1800px in 60s)
+      // Fast-paced auto-scroll speed
+      const scrollSpeed = 2; // pixels per frame for fast lateral scrolling
       
       const autoScroll = () => {
         if (!container || isUserInteracting) {
