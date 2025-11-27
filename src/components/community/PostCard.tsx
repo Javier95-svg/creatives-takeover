@@ -559,8 +559,11 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
           <div className="mb-4">
             <h2 className="text-xl font-bold mb-3 text-foreground">{post.title}</h2>
             
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} className="text-foreground">
+            <div className="prose prose-sm max-w-none dark:prose-invert [&_p]:mb-4 [&_p]:mt-4 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_p]:leading-relaxed">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm, remarkBreaks]} 
+                className="text-foreground"
+              >
                 {post.content}
               </ReactMarkdown>
             </div>
