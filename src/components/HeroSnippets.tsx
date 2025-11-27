@@ -83,13 +83,92 @@ const platformSnippets: PlatformSnippet[] = [
 
 const HeroSnippets = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollContentRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
   const autoScrollRef = useRef<number | null>(null);
 
   // Duplicate snippets to create seamless infinite loop
   const duplicatedSnippets = [...platformSnippets, ...platformSnippets];
+
+  // Auto-scroll with smooth animation matching UserReviews (60s loop)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Calculate scroll speed to match 60s animation
+    // Total width is duplicated content, so we scroll through 50% (one full set)
+    const scrollSpeed = 0.5; // pixels per frame (~30px/s = ~1800px in 60s)
+    
+    const autoScroll = () => {
+      if (!container || isUserInteracting) {
+        autoScrollRef.current = requestAnimationFrame(autoScroll);
+        return;
+      }
+
+      const currentScroll = container.scrollLeft;
+      const scrollWidth = container.scrollWidth;
+      const clientWidth = container.clientWidth;
+      const halfWidth = scrollWidth / 2;
+
+      // Reset to beginning when we've scrolled past the first set for seamless loop
+      if (currentScroll >= halfWidth - 10) {
+        container.scrollLeft = currentScroll - halfWidth;
+      } else {
+        container.scrollLeft += scrollSpeed;
+      }
+
+      autoScrollRef.current = requestAnimationFrame(autoScroll);
+    };
+
+    autoScrollRef.current = requestAnimationFrame(autoScroll);
+
+    return () => {
+      if (autoScrollRef.current) {
+        cancelAnimationFrame(autoScrollRef.current);
+      }
+    };
+  }, [isUserInteracting]);
+
+  // Detect user interaction (scroll, mouse down, touch)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let interactionTimeout: NodeJS.Timeout;
+
+    const handleInteraction = () => {
+      setIsUserInteracting(true);
+      clearTimeout(interactionTimeout);
+      // Resume auto-scroll after 2 seconds of no interaction
+      interactionTimeout = setTimeout(() => {
+        setIsUserInteracting(false);
+      }, 2000);
+    };
+
+    const handleMouseEnter = () => {
+      setIsUserInteracting(true);
+    };
+
+    const handleMouseLeave = () => {
+      setIsUserInteracting(false);
+    };
+
+    container.addEventListener('scroll', handleInteraction, { passive: true });
+    container.addEventListener('mousedown', handleInteraction);
+    container.addEventListener('touchstart', handleInteraction, { passive: true });
+    container.addEventListener('wheel', handleInteraction, { passive: true });
+    container.addEventListener('mouseenter', handleMouseEnter);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      container.removeEventListener('scroll', handleInteraction);
+      container.removeEventListener('mousedown', handleInteraction);
+      container.removeEventListener('touchstart', handleInteraction);
+      container.removeEventListener('wheel', handleInteraction);
+      container.removeEventListener('mouseenter', handleMouseEnter);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+      clearTimeout(interactionTimeout);
+    };
+  }, []);
 
   const getColorClasses = (color: 'planning' | 'action' | 'growth') => {
     const colorMap = {
@@ -115,106 +194,21 @@ const HeroSnippets = () => {
     return colorMap[color];
   };
 
-  // Handle auto-scroll with infinite loop
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const scrollSpeed = 0.5; // pixels per frame (~30px per second at 60fps, ~40px at 80fps)
-    let lastScrollLeft = container.scrollLeft;
-
-    const autoScroll = () => {
-      if (!container || isPaused || isUserInteracting) {
-        autoScrollRef.current = requestAnimationFrame(autoScroll);
-        return;
-      }
-
-      const currentScroll = container.scrollLeft;
-      const scrollWidth = container.scrollWidth;
-      const clientWidth = container.clientWidth;
-      const halfWidth = scrollWidth / 2;
-
-      // Reset to beginning when we've scrolled past the first set
-      if (currentScroll >= halfWidth - clientWidth) {
-        container.scrollLeft = currentScroll - halfWidth;
-      } else {
-        container.scrollLeft += scrollSpeed;
-      }
-
-      lastScrollLeft = container.scrollLeft;
-      autoScrollRef.current = requestAnimationFrame(autoScroll);
-    };
-
-    autoScrollRef.current = requestAnimationFrame(autoScroll);
-
-    return () => {
-      if (autoScrollRef.current) {
-        cancelAnimationFrame(autoScrollRef.current);
-      }
-    };
-  }, [isPaused, isUserInteracting]);
-
-  // Detect user interaction
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    let interactionTimeout: NodeJS.Timeout;
-    let isScrolling = false;
-
-    const handleInteraction = () => {
-      if (!isScrolling) {
-        setIsUserInteracting(true);
-        isScrolling = true;
-      }
-      clearTimeout(interactionTimeout);
-      interactionTimeout = setTimeout(() => {
-        setIsUserInteracting(false);
-        isScrolling = false;
-      }, 2000); // Resume auto-scroll after 2 seconds of no interaction
-    };
-
-    const handleScroll = () => {
-      handleInteraction();
-    };
-
-    const handleMouseDown = () => {
-      handleInteraction();
-    };
-
-    const handleTouchStart = () => {
-      handleInteraction();
-    };
-
-    container.addEventListener('scroll', handleScroll);
-    container.addEventListener('mousedown', handleMouseDown);
-    container.addEventListener('touchstart', handleTouchStart);
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      container.removeEventListener('mousedown', handleMouseDown);
-      container.removeEventListener('touchstart', handleTouchStart);
-      clearTimeout(interactionTimeout);
-    };
-  }, []);
-
   return (
     <div className="w-full mb-12 sm:mb-16 px-4">
       {/* Horizontal Scrollable Container */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+        className="relative overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 scrollbar-hide"
         style={{
-          scrollbarWidth: 'none', /* Firefox */
-          msOverflowStyle: 'none', /* IE and Edge */
-          WebkitOverflowScrolling: 'touch' /* iOS smooth scrolling */
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch'
         }}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
       >
         <div 
-          ref={scrollContentRef}
-          className="flex gap-4 sm:gap-6 lg:gap-8 min-w-max pb-4"
+          className="flex gap-4 sm:gap-6 lg:gap-8"
+          style={{ width: 'max-content' }}
         >
           {duplicatedSnippets.map((snippet, index) => {
             const Icon = snippet.icon;
@@ -231,8 +225,7 @@ const HeroSnippets = () => {
                   "flex flex-col items-center justify-center text-center",
                   colors.glass,
                   colors.border,
-                  colors.shadow,
-                  "snap-start"
+                  colors.shadow
                 )}
               >
                 <div className="flex justify-center mb-3">
