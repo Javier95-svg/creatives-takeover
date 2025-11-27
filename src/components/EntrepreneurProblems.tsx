@@ -142,8 +142,8 @@ const EntrepreneurProblems = () => {
           <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
             How to Overcome Them
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4">
-            Common Roadblocks Pre-Seed Founders <span className="text-primary">Face</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4 text-foreground">
+            Common Roadblocks Pre-Seed Founders <span className="text-foreground">Face</span>
           </h2>
           <p className="text-base sm:text-lg text-foreground/85 max-w-2xl mx-auto px-4">
             Overwhelmed by complexity, not bad ideas. Here's what kills startups and how to avoid it.
