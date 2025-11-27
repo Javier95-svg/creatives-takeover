@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -559,7 +560,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
             <h2 className="text-xl font-bold mb-3 text-foreground">{post.title}</h2>
             
             <div className="prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} className="text-foreground">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} className="text-foreground">
                 {post.content}
               </ReactMarkdown>
             </div>
