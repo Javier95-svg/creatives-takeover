@@ -77,7 +77,7 @@ export function useCustomPromptChains() {
     setError(null);
     try {
       const { data, error: fetchError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -130,7 +130,7 @@ export function useCustomPromptChains() {
       }
 
       const { data, error: createError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .insert({
           user_id: user.id,
           concept_title: chainData.concept_title,
@@ -174,7 +174,7 @@ export function useCustomPromptChains() {
       }
 
       const { data, error: updateError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .update(updates)
         .eq('id', chainId)
         .eq('user_id', user.id)
@@ -225,7 +225,7 @@ export function useCustomPromptChains() {
       const authorName = profile?.full_name?.trim() || user.user_metadata?.full_name?.trim() || 'Anonymous';
 
       const { data, error: publishError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .update({
           published: true,
           author_name: authorName,
@@ -261,7 +261,7 @@ export function useCustomPromptChains() {
     setError(null);
     try {
       const { error: deleteError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .delete()
         .eq('id', chainId)
         .eq('user_id', user.id);

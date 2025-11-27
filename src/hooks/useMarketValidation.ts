@@ -27,7 +27,7 @@ export const useMarketValidation = () => {
       if (error) throw error;
       
       // Parse JSONB fields
-      return (data || []).map((score) => ({
+      return (data || []).map((score: any) => ({
         ...score,
         top_competitors: (score.top_competitors || []) as any[],
         demand_trends: (score.demand_trends || {}) as any,
