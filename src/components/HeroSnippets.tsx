@@ -1,65 +1,58 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
-
-// Import screenshot images - Update these paths when you add the actual screenshot files
-// Place your screenshot images in src/assets/hero-snippets/ directory
-import shareCreativeWorkImg from "@/assets/hero-snippets/share-creative-work.jpg";
-import businessPlanningImg from "@/assets/hero-snippets/business-planning.jpg";
-import futureFoundersImg from "@/assets/hero-snippets/future-founders.jpg";
-import marketValidationImg from "@/assets/hero-snippets/market-validation.jpg";
-import bizmapChatImg from "@/assets/hero-snippets/bizmap-chat.jpg";
-import fundingOpportunitiesImg from "@/assets/hero-snippets/funding-opportunities.jpg";
+import { LucideIcon, MessageSquare, Sparkles, Rocket, BarChart3, MessageCircle, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface PlatformSnippet {
   name: string;
   description: string;
-  image: string;
+  icon: LucideIcon;
   route: string;
   color: 'planning' | 'action' | 'growth';
 }
 
-// Snippets based on the provided screenshots
+// Platform snippets with icons
 const platformSnippets: PlatformSnippet[] = [
   {
     name: "Share Your Creative Work",
     description: "Share your projects, progress, challenges, or insights with fellow creatives",
-    image: shareCreativeWorkImg,
+    icon: MessageSquare,
     route: "/community",
     color: "action"
   },
   {
     name: "Business Planning",
     description: "7-step wizard to build your 30-day launch plan with BizMap AI",
-    image: businessPlanningImg,
+    icon: Sparkles,
     route: "/bizmap-ai",
     color: "planning"
   },
   {
     name: "The Future Belongs to Founders",
     description: "Transform raw thoughts into clear, actionable roadmaps",
-    image: futureFoundersImg,
+    icon: Rocket,
     route: "/",
     color: "growth"
   },
   {
     name: "Market Validation",
     description: "Validate your business idea by analyzing market size, competition, and demand",
-    image: marketValidationImg,
+    icon: BarChart3,
     route: "/dashboard",
     color: "action"
   },
   {
     name: "BizMap AI Chat",
     description: "AI-powered conversational business planning to build your launch plan",
-    image: bizmapChatImg,
+    icon: MessageCircle,
     route: "/bizmap-ai",
     color: "growth"
   },
   {
     name: "Funding Opportunities",
     description: "Find grants, accelerators, contests, and microfunds for your project",
-    image: fundingOpportunitiesImg,
+    icon: TrendingUp,
     route: "/blog",
     color: "planning"
   }
@@ -232,6 +225,29 @@ const HeroSnippets = () => {
         >
           {duplicatedSnippets.map((snippet, index) => {
             const colors = getColorClasses(snippet.color);
+            const Icon = snippet.icon;
+            
+            const colorClasses = {
+              planning: {
+                border: 'border-planning/30 hover:border-planning/60',
+                bg: 'bg-planning/10 group-hover:bg-planning/20',
+                text: 'text-planning',
+                shadow: 'hover:shadow-planning/20'
+              },
+              action: {
+                border: 'border-action/30 hover:border-action/60',
+                bg: 'bg-action/10 group-hover:bg-action/20',
+                text: 'text-action',
+                shadow: 'hover:shadow-action/20'
+              },
+              growth: {
+                border: 'border-growth/30 hover:border-growth/60',
+                bg: 'bg-growth/10 group-hover:bg-growth/20',
+                text: 'text-growth',
+                shadow: 'hover:shadow-growth/20'
+              }
+            };
+            const iconColors = colorClasses[snippet.color as keyof typeof colorClasses];
             
             return (
               <Link
@@ -239,36 +255,37 @@ const HeroSnippets = () => {
                 to={snippet.route}
                 className={cn(
                   "btn-magnetic flex-shrink-0 group relative overflow-hidden",
-                  // Consistent width and height for all cards
                   "w-[280px] sm:w-[320px] lg:w-[360px]",
-                  "h-[200px] sm:h-[220px] lg:h-[240px]",
                   "bg-card border-2 transition-all duration-300",
-                  "rounded-lg",
+                  "rounded-lg hover:-translate-y-1",
                   colors.border,
                   colors.shadow
                 )}
               >
-                {/* Screenshot Image */}
-                <div className="absolute inset-0">
-                  <img
-                    src={snippet.image}
-                    alt={snippet.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  {/* Gradient overlay for better text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
-                </div>
-                
-                {/* Content overlay */}
-                <div className="relative h-full flex flex-col justify-end p-4 sm:p-6">
-                  <div className="text-base sm:text-lg lg:text-xl font-semibold text-foreground mb-2 sm:mb-3">
-                    {snippet.name}
-                  </div>
-                  <div className="text-muted-foreground text-xs sm:text-sm lg:text-base line-clamp-2">
-                    {snippet.description}
-                  </div>
-                </div>
+                <Card className="h-full border-0 shadow-none bg-transparent">
+                  <CardContent className="p-5 sm:p-6 flex flex-col h-full">
+                    {/* Icon */}
+                    <div className="mb-4">
+                      <div className={cn(
+                        "w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300",
+                        iconColors.bg,
+                        "group-hover:scale-110 group-hover:rotate-3"
+                      )}>
+                        <Icon className={cn("w-6 h-6", iconColors.text)} />
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2 group-hover:text-foreground transition-colors">
+                      {snippet.name}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm sm:text-base text-muted-foreground group-hover:text-foreground/80 transition-colors leading-relaxed">
+                      {snippet.description}
+                    </p>
+                  </CardContent>
+                </Card>
               </Link>
             );
           })}
