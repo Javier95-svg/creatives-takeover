@@ -32,12 +32,20 @@ export const PersonalizedDashboard = () => {
   // Track if initial load has completed to prevent showing loading skeleton on subsequent refreshes
   const hasInitiallyLoaded = useRef(false);
 
-  // Track when initial load completes
+  // Track when initial load completes - set as soon as we have data or both loading states are false
+  // This ensures content never disappears after the initial load, even if loading becomes true again
   useEffect(() => {
-    if (!loading && !isInitializing && !hasInitiallyLoaded.current) {
+    // Mark as loaded if we have profile data (indicates data has loaded at least once)
+    // This is the primary indicator that we've successfully loaded data
+    if (data.profile !== null) {
+      hasInitiallyLoaded.current = true;
+      return;
+    }
+    // Also mark as loaded if both loading states are false (fallback for cases where profile might be null)
+    if (!loading && !isInitializing) {
       hasInitiallyLoaded.current = true;
     }
-  }, [loading, isInitializing]);
+  }, [loading, isInitializing, data.profile]);
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -105,6 +113,7 @@ export const PersonalizedDashboard = () => {
   }, [user, trackActivity]);
 
   // Only show loading skeleton on initial load, not on subsequent data refreshes
+  // Once hasInitiallyLoaded is true, never show skeleton again even if loading becomes true
   const showLoadingSkeleton = (loading || isInitializing) && !hasInitiallyLoaded.current;
 
   if (showLoadingSkeleton) {
