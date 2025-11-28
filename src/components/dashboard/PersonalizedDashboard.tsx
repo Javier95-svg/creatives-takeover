@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Flame } from 'lucide-react';
@@ -28,6 +28,16 @@ export const PersonalizedDashboard = () => {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
+  
+  // Track if initial load has completed to prevent showing loading skeleton on subsequent refreshes
+  const hasInitiallyLoaded = useRef(false);
+
+  // Track when initial load completes
+  useEffect(() => {
+    if (!loading && !isInitializing && !hasInitiallyLoaded.current) {
+      hasInitiallyLoaded.current = true;
+    }
+  }, [loading, isInitializing]);
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -88,11 +98,16 @@ export const PersonalizedDashboard = () => {
       }
     };
 
-    checkDailyCheckIn();
-    trackActivity('dashboard_view');
-  }, [user]);
+    if (user) {
+      checkDailyCheckIn();
+      trackActivity('dashboard_view');
+    }
+  }, [user, trackActivity]);
 
-  if (loading || isInitializing) {
+  // Only show loading skeleton on initial load, not on subsequent data refreshes
+  const showLoadingSkeleton = (loading || isInitializing) && !hasInitiallyLoaded.current;
+
+  if (showLoadingSkeleton) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-6">
