@@ -12,7 +12,6 @@ import {
   MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
 
 interface PlatformSnippet {
   name: string;
@@ -82,106 +81,8 @@ const platformSnippets: PlatformSnippet[] = [
 ];
 
 const HeroSnippets = () => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const autoScrollRef = useRef<number | null>(null);
-
   // Duplicate snippets to create seamless infinite loop
   const duplicatedSnippets = [...platformSnippets, ...platformSnippets];
-
-  // Auto-scroll with smooth animation matching UserReviews (60s loop)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    // Wait for content to render and get dimensions
-    const initAutoScroll = () => {
-      // Fast-paced auto-scroll speed for visible lateral movement
-      const scrollSpeed = 10; // pixels per frame (~600px/s, cycles through all boxes in ~10-12s for clear visibility)
-      
-      const autoScroll = () => {
-        if (!container || isUserInteracting) {
-          autoScrollRef.current = requestAnimationFrame(autoScroll);
-          return;
-        }
-
-        const scrollWidth = container.scrollWidth;
-        const clientWidth = container.clientWidth;
-        
-        // Only auto-scroll if content is wider than container (with small buffer)
-        if (scrollWidth <= clientWidth + 10) {
-          autoScrollRef.current = requestAnimationFrame(autoScroll);
-          return;
-        }
-
-        const currentScroll = container.scrollLeft;
-        const halfWidth = scrollWidth / 2;
-
-        // Reset to beginning when we've scrolled past the first set for seamless loop
-        if (currentScroll >= halfWidth - 10) {
-          container.scrollLeft = currentScroll - halfWidth;
-        } else {
-          container.scrollLeft += scrollSpeed;
-        }
-
-        autoScrollRef.current = requestAnimationFrame(autoScroll);
-      };
-
-      autoScrollRef.current = requestAnimationFrame(autoScroll);
-    };
-
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(initAutoScroll, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (autoScrollRef.current) {
-        cancelAnimationFrame(autoScrollRef.current);
-      }
-    };
-  }, [isUserInteracting]);
-
-  // Detect user interaction (scroll, mouse down, touch)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    let interactionTimeout: NodeJS.Timeout;
-
-    const handleInteraction = () => {
-      setIsUserInteracting(true);
-      clearTimeout(interactionTimeout);
-      // Resume auto-scroll after 2 seconds of no interaction
-      interactionTimeout = setTimeout(() => {
-        setIsUserInteracting(false);
-      }, 2000);
-    };
-
-    const handleMouseEnter = () => {
-      setIsUserInteracting(true);
-    };
-
-    const handleMouseLeave = () => {
-      setIsUserInteracting(false);
-    };
-
-    container.addEventListener('scroll', handleInteraction, { passive: true });
-    container.addEventListener('mousedown', handleInteraction);
-    container.addEventListener('touchstart', handleInteraction, { passive: true });
-    container.addEventListener('wheel', handleInteraction, { passive: true });
-    container.addEventListener('mouseenter', handleMouseEnter);
-    container.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      container.removeEventListener('scroll', handleInteraction);
-      container.removeEventListener('mousedown', handleInteraction);
-      container.removeEventListener('touchstart', handleInteraction);
-      container.removeEventListener('wheel', handleInteraction);
-      container.removeEventListener('mouseenter', handleMouseEnter);
-      container.removeEventListener('mouseleave', handleMouseLeave);
-      clearTimeout(interactionTimeout);
-    };
-  }, []);
 
   const getColorClasses = (color: 'planning' | 'action' | 'growth') => {
     const colorMap = {
@@ -209,19 +110,26 @@ const HeroSnippets = () => {
 
   return (
     <div className="w-full mb-12 sm:mb-16 px-4">
-      {/* Horizontal Scrollable Container */}
-      <div 
-        ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide relative w-full"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch',
-          maxWidth: '100%'
-        }}
-      >
+      {/* Auto-Scrolling Container with CSS Animation */}
+      <div className="relative overflow-hidden -mx-4 sm:-mx-6 px-4 sm:px-6">
+        <style>{`
+          @keyframes scroll {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(calc(-50% - 1rem));
+            }
+          }
+          .auto-scroll {
+            animation: scroll 60s linear infinite;
+          }
+          .auto-scroll:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
         <div 
-          className="flex gap-4 sm:gap-6 lg:gap-8"
+          className="flex gap-4 sm:gap-6 lg:gap-8 auto-scroll"
           style={{ width: 'max-content' }}
         >
           {duplicatedSnippets.map((snippet, index) => {
