@@ -384,7 +384,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        logError('Error during sign out', error);
+        throw error;
+      }
+      
+      // Explicitly clear state as a fallback in case auth state listener doesn't fire
+      // The listener should handle this, but this ensures state is cleared even if listener fails
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+      
+      logInfo('User signed out successfully');
+    } catch (error) {
+      logError('Failed to sign out', error);
+      // Still clear state even if signOut fails to prevent user from being stuck
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+      throw error;
+    }
   };
 
   const value = {
