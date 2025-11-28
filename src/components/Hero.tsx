@@ -134,7 +134,7 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 px-4">
             <Button 
               size="lg" 
@@ -142,9 +142,20 @@ const Hero = () => {
               asChild
             >
               <Link to="/bizmap-ai">
-                <span className="relative z-10">Start 30-Day Launch Plan</span>
+                <span className="relative z-10">Start Here</span>
                 <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              </Link>
+            </Button>
+            <Button 
+              variant="outline"
+              size="lg" 
+              className="border-2 hover:bg-primary/10 text-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" 
+              asChild
+            >
+              <Link to="/dashboard">
+                <LayoutDashboard className="mr-2 w-5 h-5" />
+                Go To Dashboard
               </Link>
             </Button>
           </div>
