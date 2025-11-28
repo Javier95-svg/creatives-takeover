@@ -161,6 +161,12 @@ const AdminStoryEditor = () => {
 
     if (result) {
       toast.success(publish ? "Story published!" : "Story saved as draft");
+      if (publish && formData.linkedin_post_url) {
+        toast.info(
+          "Remember to refresh LinkedIn's cache using Post Inspector: https://www.linkedin.com/post-inspector/",
+          { duration: 8000 }
+        );
+      }
       navigate(`/stories/${result.slug}`);
     }
   };
@@ -366,6 +372,18 @@ const AdminStoryEditor = () => {
                             />
                             <p className="text-xs text-muted-foreground">
                               Paste the URL of the LinkedIn post you want to embed. The post will be displayed as an embedded post on your Stories page.
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              <strong>Tip:</strong> After publishing, use{" "}
+                              <a
+                                href="https://www.linkedin.com/post-inspector/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                LinkedIn's Post Inspector
+                              </a>
+                              {" "}to refresh the cache and ensure the preview image displays correctly.
                             </p>
                             {formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url) && (
                               <p className="text-xs text-destructive">

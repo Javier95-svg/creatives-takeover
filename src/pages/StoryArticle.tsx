@@ -12,6 +12,7 @@ import { ArrowLeft, Calendar, Hash, Share2, Twitter, Linkedin, Facebook, Copy } 
 import { useStories, StoryArticle as StoryArticleType } from "@/hooks/useStories";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // LinkedIn Embed Component
 const LinkedInEmbed = ({ url }: { url: string }) => {
@@ -97,6 +98,7 @@ const StoryArticle = () => {
   const { fetchStoryBySlug } = useStories();
   const [article, setArticle] = useState<StoryArticleType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [linkedInOgImage, setLinkedInOgImage] = useState<string | null>(null);
 
   useEffect(() => {
     const loadArticle = async () => {
@@ -109,6 +111,23 @@ const StoryArticle = () => {
 
       if (!data) {
         navigate("/stories", { replace: true });
+        return;
+      }
+
+      // Fetch LinkedIn post metadata if LinkedIn URL exists
+      if (data.linkedin_post_url) {
+        try {
+          const { data: metadata, error } = await supabase.functions.invoke('fetch-linkedin-metadata', {
+            body: { linkedinUrl: data.linkedin_post_url },
+          });
+
+          if (!error && metadata?.ogImage) {
+            setLinkedInOgImage(metadata.ogImage);
+          }
+        } catch (error) {
+          console.error('Error fetching LinkedIn metadata:', error);
+          // Silently fail - will use fallback image
+        }
       }
     };
 
@@ -169,7 +188,11 @@ const StoryArticle = () => {
 
   const metaTitle = article.meta_title || article.title;
   const metaDescription = article.meta_description || article.excerpt || article.title;
-  const ogImage = article.banner_image_url || "";
+  
+  // Use LinkedIn OG image if available, otherwise fallback to banner or default
+  const ogImage = linkedInOgImage || article.banner_image_url || "";
+  const ogImageUrl = ogImage ? (ogImage.startsWith('http') ? ogImage : `${window.location.origin}${ogImage}`) : '';
+  const articleUrl = `${window.location.origin}/stories/${article.slug}`;
 
   return (
     <>
@@ -180,20 +203,38 @@ const StoryArticle = () => {
           <meta name="keywords" content={article.hashtags.map(t => t.replace('#', '')).join(', ')} />
         )}
 
-        {/* Open Graph */}
+        {/* Open Graph - Optimized for LinkedIn (1200x627 or 1920x1080) */}
+        <meta property="og:type" content="article" />
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
-        {ogImage && <meta property="og:image" content={ogImage} />}
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${window.location.origin}/stories/${article.slug}`} />
+        <meta property="og:url" content={articleUrl} />
+        {ogImageUrl && (
+          <>
+            <meta property="og:image" content={ogImageUrl} />
+            <meta property="og:image:secure_url" content={ogImageUrl} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="627" />
+            <meta property="og:image:alt" content={metaTitle} />
+            <meta property="og:image:type" content="image/jpeg" />
+          </>
+        )}
+        <meta property="og:site_name" content="Creatives Takeover" />
+        <meta property="og:locale" content="en_US" />
+        {article.published_at && (
+          <meta property="article:published_time" content={new Date(article.published_at).toISOString()} />
+        )}
+        {article.updated_at && (
+          <meta property="article:modified_time" content={new Date(article.updated_at).toISOString()} />
+        )}
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
-        {ogImage && <meta name="twitter:image" content={ogImage} />}
+        {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+        <meta name="twitter:image:alt" content={metaTitle} />
 
-        <link rel="canonical" href={`/stories/${article.slug}`} />
+        <link rel="canonical" href={articleUrl} />
       </Helmet>
 
       <div className="min-h-screen bg-background">
