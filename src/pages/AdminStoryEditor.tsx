@@ -116,38 +116,68 @@ const AdminStoryEditor = () => {
       return;
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image size must be less than 10MB");
+    // Validate file size (max 5MB - matches bucket limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error(`Image size must be less than 5MB (current: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+      return;
+    }
+
+    // Check allowed MIME types
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Image must be JPEG, PNG, WebP, or GIF");
       return;
     }
 
     setBannerFile(file);
     setUploadingBanner(true);
 
-    // Create preview
+    // Create preview first
     const reader = new FileReader();
     reader.onloadend = () => {
       setBannerPreview(reader.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Upload to storage
-    const url = await uploadBannerImage(file);
-    if (url) {
-      setFormData((prev) => ({
-        ...prev,
-        banner_image_url: url,
-      }));
-      setBannerPreview(url);
-      toast.success("Banner image uploaded");
-    } else {
-      toast.error("Failed to upload banner image");
+    try {
+      // Upload to storage
+      const url = await uploadBannerImage(file);
+      if (url) {
+        setFormData((prev) => ({
+          ...prev,
+          banner_image_url: url,
+        }));
+        // Keep the preview as the uploaded URL for consistency
+        setBannerPreview(url);
+        toast.success("Banner image uploaded successfully");
+        // Clear file input so same file can be selected again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        // uploadBannerImage returned null, but didn't throw - show generic error
+        toast.error("Failed to upload banner image. Please check your connection and try again.");
+        setBannerPreview(null);
+        setBannerFile(null);
+        // Clear file input on error
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    } catch (error: any) {
+      console.error("Banner upload error:", error);
+      // Error was thrown from uploadBannerImage with specific message
+      toast.error(error.message || "Failed to upload banner image");
       setBannerPreview(null);
       setBannerFile(null);
+      // Clear file input on error
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } finally {
+      setUploadingBanner(false);
     }
-
-    setUploadingBanner(false);
   };
 
   // Drag and drop handlers
@@ -591,7 +621,7 @@ const AdminStoryEditor = () => {
                                       </button>
                                     </p>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                      PNG, JPG, GIF up to 10MB
+                                      PNG, JPG, WebP, GIF up to 5MB
                                     </p>
                                   </div>
                                 </div>

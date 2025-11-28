@@ -255,11 +255,16 @@ export const useStories = () => {
     }
 
     try {
-      setLoading(true);
+      // Generate unique filename with safe characters
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 9);
+      const sanitizedName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, '_')
+        .substring(0, 50);
+      const fileName = `banners/${timestamp}-${randomStr}-${sanitizedName}.${fileExt}`;
 
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `banners/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      console.log('Uploading banner image:', { fileName, size: file.size, type: file.type });
 
       // Upload to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -267,22 +272,45 @@ export const useStories = () => {
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
+          contentType: file.type,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        // Provide more specific error messages
+        if (uploadError.message.includes('new row violates row-level security')) {
+          throw new Error('Permission denied. Make sure you are logged in as admin.');
+        } else if (uploadError.message.includes('already exists')) {
+          throw new Error('A file with this name already exists. Please try again.');
+        } else if (uploadError.message.includes('size')) {
+          throw new Error('File is too large. Maximum size is 5MB.');
+        } else {
+          throw new Error(uploadError.message || 'Upload failed. Please try again.');
+        }
+      }
+
+      if (!uploadData) {
+        throw new Error('Upload failed - no data returned');
+      }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('story-banners')
-        .getPublicUrl(fileName);
+        .getPublicUrl(uploadData.path);
 
-      return publicUrl;
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get image URL');
+      }
+
+      console.log('Banner image uploaded successfully:', urlData.publicUrl);
+      return urlData.publicUrl;
     } catch (error: any) {
       console.error('Error uploading banner image:', error);
-      toast.error(error.message || 'Failed to upload banner image');
-      return null;
-    } finally {
-      setLoading(false);
+      // Re-throw with a user-friendly message if it doesn't have one
+      if (error.message && !error.message.includes('Permission') && !error.message.includes('size') && !error.message.includes('already exists')) {
+        // Keep original error message if it's already user-friendly
+      }
+      throw error;
     }
   }, [isAdmin, user]);
 
