@@ -9,12 +9,15 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM auth.users
-    WHERE id = auth.uid()
-    AND LOWER(email) = 'admin@creatives-takeover.com'
-  )
+  SELECT CASE
+    WHEN auth.uid() IS NULL THEN false
+    ELSE EXISTS (
+      SELECT 1
+      FROM auth.users
+      WHERE id = auth.uid()
+      AND LOWER(email) = 'admin@creatives-takeover.com'
+    )
+  END
 $$;
 
 -- Grant execute permissions to authenticated and anon roles
