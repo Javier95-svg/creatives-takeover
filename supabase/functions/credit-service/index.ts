@@ -44,9 +44,12 @@ export class CreditService {
   }
 
   // Check if user has sufficient credits for an operation
+  // Checks both monthly_quota and balance (quota-first deduction strategy)
   async hasCredits(userId: string, requiredAmount: number): Promise<boolean> {
     const balance = await this.getBalance(userId);
-    return balance ? balance.balance >= requiredAmount : false;
+    if (!balance) return false;
+    const totalAvailable = (balance.balance || 0) + (balance.monthly_quota || 0);
+    return totalAvailable >= requiredAmount;
   }
 
   // Deduct credits for API operations
