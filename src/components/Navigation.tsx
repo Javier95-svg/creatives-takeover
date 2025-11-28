@@ -73,6 +73,7 @@ const Navigation = () => {
     { name: "Prompt Library", href: "/prompt-library", tooltip: "Ready-made prompts to grow your business" },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources" },
     { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs" },
+    { name: "Stories", href: "/stories", tooltip: "Read insights and articles about building your business" },
     { name: "About Us", href: "/about", tooltip: "Learn about our mission and team" },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options" }
   ];
@@ -111,7 +112,7 @@ const Navigation = () => {
                 let colorClass = '';
                 if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
                   colorClass = 'hover:text-planning animated-underline-rgb';
-                } else if (item.name === 'Community' || item.name === 'About Us') {
+                } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
                   colorClass = 'hover:text-action';
                 } else if (item.name === 'Insighta' || item.name === 'Pricing') {
                   colorClass = 'hover:text-growth';
@@ -188,6 +189,18 @@ const Navigation = () => {
                     </AvatarFallback>
                   </Avatar>
                 </Link>
+                {user?.email?.toLowerCase() === 'admin@creatives-takeover.com' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="flex items-center gap-2"
+                  >
+                    <Link to="/stories/admin/new">
+                      Create Story
+                    </Link>
+                  </Button>
+                )}
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -286,7 +299,7 @@ const Navigation = () => {
                         </Badge>
                       )}
                     </Button>
-                    <Button 
+                    <Button  
                       variant="ghost" 
                       size="sm" 
                       className="w-full justify-start" 
@@ -298,6 +311,20 @@ const Navigation = () => {
                         Account
                       </Link>
                     </Button>
+                    {user?.email?.toLowerCase() === 'admin@creatives-takeover.com' && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start" 
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/stories/admin/new" className="flex items-center">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Admin: Create Story
+                        </Link>
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="sm" 

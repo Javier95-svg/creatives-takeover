@@ -30,6 +30,9 @@ import ResetPassword from "./pages/ResetPassword";
 import PromptLibrary from "./pages/PromptLibrary";
 import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
+import Stories from "./pages/Stories";
+import StoryArticle from "./pages/StoryArticle";
+import AdminStoryEditor from "./pages/AdminStoryEditor";
 import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
@@ -73,6 +76,10 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/community" element={<CommunityPage />} />
+                  <Route path="/stories" element={<Stories />} />
+                  <Route path="/stories/:slug" element={<StoryArticle />} />
+                  <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
+                  <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
                   <Route path="/careers" element={<Careers />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
