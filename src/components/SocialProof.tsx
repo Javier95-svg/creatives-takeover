@@ -14,6 +14,7 @@ const SocialProof = () => {
   const { count: aiSuccessMultiplier, ref: aiSuccessMultiplierRef } = useCountUp(2.5, 2000); // 2.5x higher success rate with AI (Cubeo.ai 2024)
   const { count: positiveAIImpactCount, ref: positiveAIImpactRef } = useCountUp(86, 2000); // 86% report positive AI impact (VentureBeat/HubSpot 2024)
   const { count: newBusinessesAnnuallyCount, ref: newBusinessesAnnuallyRef } = useCountUp(50, 2000); // 50M+ new businesses annually (TechStartups.com 2025)
+  const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000); // Creative startups growth rate (67% faster than overall market)
 
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
