@@ -570,6 +570,77 @@ All colors MUST be HSL.
     border: 1px solid hsl(var(--green-primary) / 0.2);
     box-shadow: 0 4px 16px hsl(var(--green-primary) / 0.1);
   }
+
+  /* Hero Snippet Cards */
+  .hero-snippet-card {
+    position: relative;
+    filter: brightness(1);
+  }
+
+  .hero-snippet-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    filter: brightness(1.1);
+  }
+
+  .hero-snippet-card:active {
+    transform: scale(1.02);
+  }
+
+  .hero-snippet-card:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+  }
+
+  /* Mobile optimizations for hero snippet cards */
+  @media (max-width: 640px) {
+    .hero-snippet-card {
+      min-width: 260px;
+      width: 260px;
+      height: 130px;
+      padding: 12px;
+      gap: 12px;
+    }
+
+    .hero-snippet-card:hover {
+      transform: none; /* Disable scale on touch devices */
+    }
+
+    .hero-snippet-card .text-sm {
+      font-size: 12px;
+    }
+
+    .hero-snippet-card .text-xs {
+      font-size: 11px;
+    }
+  }
+
+  /* Entry animation for hero snippet cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  /* Smooth scroll snap for hero snippets */
+  .hero-snippets-container {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+  }
+
+  .hero-snippet-card {
+    scroll-snap-align: center;
+  }
   
   /* Dark mode specific shadow enhancements */
   .dark .rgb-glow {
