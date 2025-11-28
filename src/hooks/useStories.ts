@@ -41,7 +41,7 @@ export const useStories = () => {
   // Check if user is admin
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
-  // Fetch all published stories
+  // Fetch all published stories (prioritize LinkedIn posts)
   const fetchStories = useCallback(async (hashtag?: string): Promise<StoryArticle[]> => {
     try {
       setLoading(true);
@@ -50,6 +50,7 @@ export const useStories = () => {
         .from('stories_articles')
         .select('*')
         .eq('status', 'published')
+        .not('linkedin_post_url', 'is', null) // Only fetch stories with LinkedIn URLs
         .order('published_at', { ascending: false });
 
       if (hashtag) {
@@ -159,6 +160,12 @@ export const useStories = () => {
       return null;
     }
 
+    // Validate LinkedIn URL is required
+    if (!input.linkedin_post_url) {
+      toast.error('LinkedIn post URL is required');
+      return null;
+    }
+
     try {
       setLoading(true);
 
@@ -167,6 +174,9 @@ export const useStories = () => {
         author_id: user.id,
         status: input.status || 'draft',
         hashtags: input.hashtags || [],
+        linkedin_post_url: input.linkedin_post_url, // Required
+        banner_image_url: null, // Not used for LinkedIn posts
+        body_content: null, // Not used for LinkedIn posts
       };
 
       const { data, error } = await supabase
@@ -249,73 +259,6 @@ export const useStories = () => {
     }
   }, [isAdmin]);
 
-  // Upload banner image to Supabase Storage
-  const uploadBannerImage = useCallback(async (file: File): Promise<string | null> => {
-    if (!isAdmin || !user) {
-      toast.error('Only admins can upload banner images');
-      return null;
-    }
-
-    try {
-      // Generate unique filename with safe characters
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 9);
-      const sanitizedName = file.name
-        .replace(/[^a-zA-Z0-9.-]/g, '_')
-        .substring(0, 50);
-      const fileName = `banners/${timestamp}-${randomStr}-${sanitizedName}.${fileExt}`;
-
-      console.log('Uploading banner image:', { fileName, size: file.size, type: file.type });
-
-      // Upload to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('story-banners')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type,
-        });
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        // Provide more specific error messages
-        if (uploadError.message.includes('new row violates row-level security')) {
-          throw new Error('Permission denied. Make sure you are logged in as admin.');
-        } else if (uploadError.message.includes('already exists')) {
-          throw new Error('A file with this name already exists. Please try again.');
-        } else if (uploadError.message.includes('size')) {
-          throw new Error('File is too large. Maximum size is 5MB.');
-        } else {
-          throw new Error(uploadError.message || 'Upload failed. Please try again.');
-        }
-      }
-
-      if (!uploadData) {
-        throw new Error('Upload failed - no data returned');
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('story-banners')
-        .getPublicUrl(uploadData.path);
-
-      if (!urlData?.publicUrl) {
-        throw new Error('Failed to get image URL');
-      }
-
-      console.log('Banner image uploaded successfully:', urlData.publicUrl);
-      return urlData.publicUrl;
-    } catch (error: any) {
-      console.error('Error uploading banner image:', error);
-      // Re-throw with a user-friendly message if it doesn't have one
-      if (error.message && !error.message.includes('Permission') && !error.message.includes('size') && !error.message.includes('already exists')) {
-        // Keep original error message if it's already user-friendly
-      }
-      throw error;
-    }
-  }, [isAdmin, user]);
-
   return {
     loading,
     isAdmin,
@@ -326,7 +269,6 @@ export const useStories = () => {
     createStory,
     updateStory,
     deleteStory,
-    uploadBannerImage,
   };
 };
 

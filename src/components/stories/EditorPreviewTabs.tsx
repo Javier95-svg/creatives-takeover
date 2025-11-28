@@ -3,9 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Layout, FileText, Search } from "lucide-react";
 import { StoryCardPreview } from "./StoryCardPreview";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
+import { LinkedInPostEmbed } from "./LinkedInPostEmbed";
 
 interface EditorPreviewTabsProps {
   previewTab: string;
@@ -63,6 +61,7 @@ export const EditorPreviewTabs = ({
             hashtags={hashtagsArray}
             bodyContent={formData.body_content || ""}
             bannerImageUrl={formData.banner_image_url || undefined}
+            linkedinPostUrl={formData.linkedin_post_url}
             status={formData.status}
           />
         </div>
@@ -71,17 +70,6 @@ export const EditorPreviewTabs = ({
       {/* Article Preview */}
       <TabsContent value="article" className="mt-4">
         <div className="space-y-6">
-          {/* Banner */}
-          {bannerPreview && (
-            <div className="w-full h-64 overflow-hidden rounded-lg">
-              <img
-                src={bannerPreview}
-                alt="Banner preview"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-          
           {/* Title */}
           <div>
             <h1 className="text-4xl font-bold mb-4">
@@ -107,28 +95,17 @@ export const EditorPreviewTabs = ({
           <Separator />
           {formData.linkedin_post_url ? (
             <div className="my-8">
-              <div className="border rounded-lg p-6 text-center bg-muted/30">
-                <p className="text-sm text-muted-foreground mb-2">LinkedIn Post Preview</p>
-                <p className="text-xs text-muted-foreground mb-4 font-mono break-all">
-                  {formData.linkedin_post_url}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  The LinkedIn post will be embedded here when published.
-                </p>
-              </div>
-            </div>
-          ) : formData.body_content ? (
-            <div className="prose prose-lg max-w-none dark:prose-invert">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkBreaks]}
-              >
-                {formData.body_content}
-              </ReactMarkdown>
+              <LinkedInPostEmbed
+                url={formData.linkedin_post_url}
+                title={formData.title}
+                excerpt={formData.excerpt}
+                hashtags={hashtagsArray}
+              />
             </div>
           ) : (
             <div className="prose prose-lg max-w-none dark:prose-invert">
               <p className="text-muted-foreground italic">
-                *Add a LinkedIn post URL or start writing your article content...*
+                *Add a LinkedIn post URL to see the preview...*
               </p>
             </div>
           )}
@@ -171,13 +148,9 @@ export const EditorPreviewTabs = ({
           <div>
             <label className="text-sm font-medium">Open Graph Preview</label>
             <div className="mt-1 border rounded-lg overflow-hidden bg-background">
-              {bannerPreview && (
-                <img
-                  src={bannerPreview}
-                  alt="OG Image"
-                  className="w-full h-48 object-cover"
-                />
-              )}
+              <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">LinkedIn Post Preview</p>
+              </div>
               <div className="p-3">
                 <p className="text-xs text-muted-foreground uppercase mb-1">
                   Creatives Takeover

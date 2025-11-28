@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -14,14 +14,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useStories, StoryArticle } from "@/hooks/useStories";
 import { generateSlug } from "@/utils/slugGenerator";
 import { useAuth } from "@/contexts/AuthContext";
-import { Save, Eye, X, Upload, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Bold, Italic, Link, List, Type } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
+import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin } from "lucide-react";
 import { toast } from "sonner";
-import { StoryCardPreview } from "@/components/stories/StoryCardPreview";
 import { EditorPreviewTabs } from "@/components/stories/EditorPreviewTabs";
-import { generatePromoImageDataURL } from "@/utils/generatePromoImage";
 
 const AdminStoryEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +28,6 @@ const AdminStoryEditor = () => {
     createStory,
     updateStory,
     deleteStory,
-    uploadBannerImage,
     loading,
   } = useStories();
 
@@ -53,12 +47,6 @@ const AdminStoryEditor = () => {
     status: "draft" as "draft" | "published",
   });
 
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  const [uploadingBanner, setUploadingBanner] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const bodyContentRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -89,9 +77,6 @@ const AdminStoryEditor = () => {
         meta_description: found.meta_description || "",
         status: found.status,
       });
-      if (found.banner_image_url) {
-        setBannerPreview(found.banner_image_url);
-      }
     }
   };
 
@@ -111,218 +96,27 @@ const AdminStoryEditor = () => {
       .map((tag) => (tag.startsWith("#") ? tag : `#${tag}`));
   };
 
-  const handleBannerUpload = async (file: File) => {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please upload an image file");
-      return;
-    }
-
-    // Validate file size (max 5MB - matches bucket limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      toast.error(`Image size must be less than 5MB (current: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-      return;
-    }
-
-    // Check allowed MIME types
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Image must be JPEG, PNG, WebP, or GIF");
-      return;
-    }
-
-    setBannerFile(file);
-    setUploadingBanner(true);
-
-    // Create preview first
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setBannerPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    try {
-      // Upload to storage
-      const url = await uploadBannerImage(file);
-      if (url) {
-        setFormData((prev) => ({
-          ...prev,
-          banner_image_url: url,
-        }));
-        // Keep the preview as the uploaded URL for consistency
-        setBannerPreview(url);
-        toast.success("Banner image uploaded successfully");
-        // Clear file input so same file can be selected again
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      } else {
-        // uploadBannerImage returned null, but didn't throw - show generic error
-        toast.error("Failed to upload banner image. Please check your connection and try again.");
-        setBannerPreview(null);
-        setBannerFile(null);
-        // Clear file input on error
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
+  // Auto-generate title from LinkedIn URL if title is empty
+  const handleLinkedInUrlChange = (url: string) => {
+    const trimmedUrl = url.trim();
+    setFormData((prev) => {
+      const newData = { ...prev, linkedin_post_url: trimmedUrl };
+      
+      // Auto-generate title if empty and URL is valid
+      if (!prev.title && trimmedUrl && validateLinkedInUrl(trimmedUrl)) {
+        // Try to extract meaningful title from URL or use default
+        const urlParts = trimmedUrl.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        // Use a default title based on LinkedIn post
+        newData.title = "LinkedIn Post";
+        // Auto-generate slug if not set
+        if (!prev.slug) {
+          newData.slug = generateSlug("LinkedIn Post");
         }
       }
-    } catch (error: any) {
-      console.error("Banner upload error:", error);
-      // Error was thrown from uploadBannerImage with specific message
-      toast.error(error.message || "Failed to upload banner image");
-      setBannerPreview(null);
-      setBannerFile(null);
-      // Clear file input on error
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } finally {
-      setUploadingBanner(false);
-    }
-  };
-
-  // Drag and drop handlers
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleBannerUpload(file);
-    }
-  };
-
-  // Keyboard shortcuts for markdown formatting
-  const handleMarkdownShortcut = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const textarea = e.currentTarget;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = formData.body_content.substring(start, end);
-    const beforeText = formData.body_content.substring(0, start);
-    const afterText = formData.body_content.substring(end);
-
-    // Ctrl/Cmd + B for bold
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault();
-      const formattedText = selectedText 
-        ? `**${selectedText}**` 
-        : `**bold text**`;
-      const newContent = beforeText + formattedText + afterText;
-      setFormData((prev) => ({ ...prev, body_content: newContent }));
       
-      // Restore cursor position
-      setTimeout(() => {
-        const newPos = selectedText 
-          ? start + formattedText.length 
-          : start + formattedText.length - 11; // Position after "bold text"
-        textarea.setSelectionRange(newPos, newPos);
-        textarea.focus();
-      }, 0);
-    }
-
-    // Ctrl/Cmd + I for italic
-    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-      e.preventDefault();
-      const formattedText = selectedText 
-        ? `*${selectedText}*` 
-        : `*italic text*`;
-      const newContent = beforeText + formattedText + afterText;
-      setFormData((prev) => ({ ...prev, body_content: newContent }));
-      
-      setTimeout(() => {
-        const newPos = selectedText 
-          ? start + formattedText.length 
-          : start + formattedText.length - 11;
-        textarea.setSelectionRange(newPos, newPos);
-        textarea.focus();
-      }, 0);
-    }
-
-    // Ctrl/Cmd + K for link
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      const linkText = selectedText || 'link text';
-      const formattedText = `[${linkText}](url)`;
-      const newContent = beforeText + formattedText + afterText;
-      setFormData((prev) => ({ ...prev, body_content: newContent }));
-      
-      setTimeout(() => {
-        const newPos = start + formattedText.length - 4; // Position before "url"
-        textarea.setSelectionRange(newPos - 3, newPos);
-        textarea.focus();
-      }, 0);
-    }
-  };
-
-  // Markdown formatting button helpers
-  const insertMarkdownFormat = (format: 'bold' | 'italic' | 'link' | 'heading' | 'list') => {
-    const textarea = bodyContentRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = formData.body_content.substring(start, end);
-    const beforeText = formData.body_content.substring(0, start);
-    const afterText = formData.body_content.substring(end);
-
-    let formattedText = '';
-    let newCursorPos = start;
-
-    switch (format) {
-      case 'bold':
-        formattedText = selectedText ? `**${selectedText}**` : `**bold text**`;
-        newCursorPos = selectedText ? start + formattedText.length : start + formattedText.length - 11;
-        break;
-      case 'italic':
-        formattedText = selectedText ? `*${selectedText}*` : `*italic text*`;
-        newCursorPos = selectedText ? start + formattedText.length : start + formattedText.length - 11;
-        break;
-      case 'link':
-        formattedText = `[${selectedText || 'link text'}](url)`;
-        newCursorPos = start + formattedText.length - 4; // Before "url"
-        break;
-      case 'heading':
-        formattedText = selectedText ? `## ${selectedText}` : `## Heading`;
-        newCursorPos = selectedText ? start + formattedText.length : start + formattedText.length - 7;
-        break;
-      case 'list':
-        const lines = selectedText || 'List item';
-        const listItems = lines.split('\n').map(line => `- ${line.trim()}`).join('\n');
-        formattedText = listItems;
-        newCursorPos = start + formattedText.length;
-        break;
-    }
-
-    const newContent = beforeText + formattedText + afterText;
-    setFormData((prev) => ({ ...prev, body_content: newContent }));
-
-    setTimeout(() => {
-      if (format === 'link' && !selectedText) {
-        textarea.setSelectionRange(newCursorPos - 3, newCursorPos);
-      } else {
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-      }
-      textarea.focus();
-    }, 0);
+      return newData;
+    });
   };
 
   // Validate LinkedIn URL
@@ -338,15 +132,9 @@ const AdminStoryEditor = () => {
       return;
     }
 
-    // Validate LinkedIn URL if provided
-    if (formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url)) {
+    // Require LinkedIn URL
+    if (!formData.linkedin_post_url || !validateLinkedInUrl(formData.linkedin_post_url)) {
       toast.error("Please enter a valid LinkedIn post URL");
-      return;
-    }
-
-    // Require either LinkedIn URL or body content (for backward compatibility)
-    if (!formData.linkedin_post_url && !formData.body_content) {
-      toast.error("Please provide either a LinkedIn post URL or body content");
       return;
     }
 
@@ -354,11 +142,11 @@ const AdminStoryEditor = () => {
     const storyData = {
       slug: formData.slug,
       title: formData.title,
-      body_content: formData.body_content || null,
-      linkedin_post_url: formData.linkedin_post_url || null,
+      body_content: null, // Not used for LinkedIn posts
+      linkedin_post_url: formData.linkedin_post_url,
       excerpt: formData.excerpt || null,
       hashtags,
-      banner_image_url: formData.banner_image_url || null,
+      banner_image_url: null, // Not used for LinkedIn posts
       meta_title: formData.meta_title || null,
       meta_description: formData.meta_description || null,
       status: publish ? "published" : formData.status,
@@ -388,17 +176,6 @@ const AdminStoryEditor = () => {
     }
   };
 
-  // Generate promo image preview
-  const promoImagePreview = useMemo(() => {
-    if (bannerPreview) return null; // Don't show promo if banner exists
-    if (!formData.title) return null;
-    
-    return generatePromoImageDataURL({
-      title: formData.title,
-      excerpt: formData.excerpt || undefined,
-      hashtags: parseHashtags(formData.hashtags),
-    });
-  }, [formData.title, formData.excerpt, formData.hashtags, bannerPreview]);
 
   if (!isAdmin) {
     return null;
@@ -553,110 +330,6 @@ const AdminStoryEditor = () => {
                           </p>
                         </div>
 
-                        {/* Banner Image */}
-                        <div>
-                          <Label>Banner Image</Label>
-                          <div className="mt-2 space-y-3">
-                            {bannerPreview && (
-                              <div className="relative w-full h-48 rounded-lg overflow-hidden border">
-                                <img
-                                  src={bannerPreview}
-                                  alt="Banner preview"
-                                  className="w-full h-full object-cover"
-                                />
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  className="absolute top-2 right-2"
-                                  onClick={() => {
-                                    setBannerPreview(null);
-                                    setBannerFile(null);
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      banner_image_url: "",
-                                    }));
-                                  }}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
-                            
-                            {/* Promo Image Preview (if no banner) */}
-                            {!bannerPreview && promoImagePreview && (
-                              <div className="space-y-2">
-                                <p className="text-xs text-muted-foreground">
-                                  Auto-generated promotional preview (will be used if no banner uploaded):
-                                </p>
-                                <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-muted">
-                                  <img
-                                    src={promoImagePreview}
-                                    alt="Promo preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Drag and Drop Zone */}
-                            <div
-                              onDragEnter={handleDragEnter}
-                              onDragOver={handleDragOver}
-                              onDragLeave={handleDragLeave}
-                              onDrop={handleDrop}
-                              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                                isDragging
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:border-primary/50'
-                              }`}
-                            >
-                              <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    handleBannerUpload(file);
-                                  }
-                                }}
-                                disabled={uploadingBanner}
-                                className="hidden"
-                              />
-                              {uploadingBanner ? (
-                                <div className="flex flex-col items-center gap-2">
-                                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                  <p className="text-sm text-muted-foreground">Uploading...</p>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col items-center gap-2">
-                                  <Upload className="w-8 h-8 text-muted-foreground" />
-                                  <div>
-                                    <p className="text-sm font-medium">
-                                      Drag and drop an image here, or{' '}
-                                      <button
-                                        type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="text-primary hover:underline"
-                                      >
-                                        browse
-                                      </button>
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      PNG, JPG, WebP, GIF up to 5MB
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            {!bannerPreview && !uploadingBanner && (
-                              <p className="text-xs text-muted-foreground">
-                                Leave empty to use auto-generated promotional image
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
                         {/* Status */}
                         <div className="flex items-center gap-2 pt-2">
                           <Switch
@@ -675,53 +348,30 @@ const AdminStoryEditor = () => {
 
                     {/* Content */}
                     <AccordionItem value="content">
-                      <AccordionTrigger>Content</AccordionTrigger>
+                      <AccordionTrigger>LinkedIn Post</AccordionTrigger>
                       <AccordionContent className="pt-4">
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label htmlFor="linkedin_post_url">LinkedIn Post URL *</Label>
+                            <Label htmlFor="linkedin_post_url" className="flex items-center gap-2">
+                              <Linkedin className="w-4 h-4" />
+                              LinkedIn Post URL *
+                            </Label>
                             <Input
                               id="linkedin_post_url"
                               type="url"
                               value={formData.linkedin_post_url}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  linkedin_post_url: e.target.value.trim(),
-                                }))
-                              }
+                              onChange={(e) => handleLinkedInUrlChange(e.target.value)}
                               placeholder="https://www.linkedin.com/posts/username_activity-1234567890-abcdef"
                               className="font-mono text-sm"
                             />
                             <p className="text-xs text-muted-foreground">
-                              Paste the URL of the LinkedIn post you want to embed. The post will be displayed as an embedded iframe on your article page.
+                              Paste the URL of the LinkedIn post you want to embed. The post will be displayed as an embedded post on your Stories page.
                             </p>
                             {formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url) && (
                               <p className="text-xs text-destructive">
                                 Please enter a valid LinkedIn post URL (e.g., https://www.linkedin.com/posts/...)
                               </p>
                             )}
-                          </div>
-
-                          {/* Legacy body content field (hidden but kept for backward compatibility) */}
-                          <div className="space-y-2">
-                            <Label htmlFor="body_content">Body Content (Legacy - Optional)</Label>
-                            <Textarea
-                              id="body_content"
-                              value={formData.body_content}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  body_content: e.target.value,
-                                }))
-                              }
-                              placeholder="Legacy markdown content (only used if no LinkedIn URL is provided)..."
-                              rows={10}
-                              className="font-mono text-sm"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              This field is kept for backward compatibility. New articles should use LinkedIn URL above.
-                            </p>
                           </div>
                         </div>
                       </AccordionContent>
@@ -782,16 +432,16 @@ const AdminStoryEditor = () => {
                     formData={{
                       title: formData.title,
                       excerpt: formData.excerpt,
-                      body_content: formData.body_content,
+                      body_content: "",
                       linkedin_post_url: formData.linkedin_post_url,
                       hashtags: hashtagsArray,
-                      banner_image_url: formData.banner_image_url,
+                      banner_image_url: null,
                       meta_title: formData.meta_title,
                       meta_description: formData.meta_description,
                       status: formData.status,
                       slug: formData.slug,
                     }}
-                    bannerPreview={bannerPreview}
+                    bannerPreview={null}
                   />
                 </CardContent>
               </Card>

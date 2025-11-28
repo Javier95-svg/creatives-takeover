@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { StoryCard } from "@/components/stories/StoryCard";
+import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
@@ -121,33 +121,42 @@ const Stories = () => {
               )}
             </div>
 
-            {/* Stories Grid */}
+            {/* LinkedIn Posts Grid */}
             {loading ? (
               <div className="text-center py-16">
-                <p className="text-muted-foreground">Loading stories...</p>
+                <p className="text-muted-foreground">Loading LinkedIn posts...</p>
               </div>
             ) : stories.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-muted-foreground text-lg mb-4">
                   {selectedTag
-                    ? `No stories found with tag "${selectedTag}"`
-                    : "No stories published yet"}
+                    ? `No LinkedIn posts found with tag "${selectedTag}"`
+                    : "No LinkedIn posts published yet"}
                 </p>
                 {selectedTag && (
                   <Button variant="outline" onClick={clearTagFilter}>
                     Clear filter
                   </Button>
                 )}
+                {isAdmin && !selectedTag && (
+                  <Link to="/stories/admin/new">
+                    <Button className="mt-4">Create Your First Post</Button>
+                  </Link>
+                )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-                {stories.map((story, index) => (
-                  <StoryCard 
-                    key={story.id} 
-                    article={story} 
-                    featured={index === 0}
-                  />
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {stories
+                  .filter((story) => story.linkedin_post_url) // Only show stories with LinkedIn URLs
+                  .map((story) => (
+                    <LinkedInPostEmbed
+                      key={story.id}
+                      url={story.linkedin_post_url!}
+                      title={story.title}
+                      excerpt={story.excerpt || undefined}
+                      hashtags={story.hashtags}
+                    />
+                  ))}
               </div>
             )}
           </div>
