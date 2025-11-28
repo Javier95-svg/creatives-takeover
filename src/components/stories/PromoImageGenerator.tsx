@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { generatePromoImageDataURL } from '@/utils/generatePromoImage';
 import { StoryArticle } from '@/hooks/useStories';
 
@@ -19,21 +19,32 @@ export const PromoImageGenerator = ({
   height = 675,
   className = '' 
 }: PromoImageGeneratorProps) => {
+  const [imageError, setImageError] = useState(false);
+  
   const promoImageUrl = useMemo(() => {
-    // If banner exists, use it
-    if (article.banner_image_url) {
+    // If banner exists and hasn't errored, use it
+    if (article.banner_image_url && !imageError) {
       return article.banner_image_url;
     }
 
     // Otherwise generate promotional image
-    return generatePromoImageDataURL({
+    const generatedUrl = generatePromoImageDataURL({
       title: article.title,
       excerpt: article.excerpt || undefined,
       hashtags: article.hashtags || [],
       width,
       height,
     });
-  }, [article.banner_image_url, article.title, article.excerpt, article.hashtags, width, height]);
+    
+    return generatedUrl;
+  }, [article.banner_image_url, article.title, article.excerpt, article.hashtags, width, height, imageError]);
+
+  const handleError = () => {
+    // If uploaded banner fails, fall back to generated image
+    if (article.banner_image_url && !imageError) {
+      setImageError(true);
+    }
+  };
 
   return (
     <img
@@ -41,6 +52,7 @@ export const PromoImageGenerator = ({
       alt={article.title}
       className={className}
       loading="lazy"
+      onError={handleError}
     />
   );
 };

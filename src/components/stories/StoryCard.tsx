@@ -34,25 +34,25 @@ export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
   return (
     <Link 
       to={`/stories/${article.slug}`} 
-      className={`block group ${featured ? 'md:col-span-2' : ''}`}
+      className={`block group ${featured ? 'md:col-span-2 lg:col-span-2' : ''}`}
     >
       <Card className="overflow-hidden h-full hover:shadow-xl transition-all duration-300 hover-lift border-border bg-card">
         {/* Promotional Preview Image - Always shown */}
-        <div className="relative aspect-video overflow-hidden bg-muted">
+        <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
           <PromoImageGenerator 
             article={article}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           
           {/* Gradient Overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
           
           {/* Category Badge - Top Left */}
           {primaryTag && (
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-4 left-4 z-10">
               <Badge 
                 variant="secondary" 
-                className="bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30"
+                className="bg-white/25 backdrop-blur-md text-white border-white/40 hover:bg-white/35 shadow-lg"
               >
                 {primaryTag.toUpperCase()}
               </Badge>
@@ -60,9 +60,9 @@ export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
           )}
           
           {/* Title Overlay - Bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <h3 className={`font-bold text-white mb-2 group-hover:text-primary transition-colors ${
-              featured ? 'text-2xl md:text-3xl' : 'text-xl md:text-2xl'
+          <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+            <h3 className={`font-bold text-white mb-2 drop-shadow-lg group-hover:text-primary/90 transition-colors ${
+              featured ? 'text-2xl md:text-3xl lg:text-4xl' : 'text-xl md:text-2xl'
             }`}>
               {article.title}
             </h3>

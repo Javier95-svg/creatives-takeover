@@ -50,6 +50,18 @@ export function generatePromoImageDataURL(options: PromoImageOptions): string {
 }
 
 /**
+ * Escape XML/HTML special characters for SVG text content
+ */
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
  * Generate just the SVG string (for React components)
  */
 export function generatePromoImageSVGString(options: PromoImageOptions): string {
@@ -73,47 +85,38 @@ export function generatePromoImageSVGString(options: PromoImageOptions): string 
   const firstLine = titleWords.slice(0, Math.ceil(titleWords.length / 2)).join(' ');
   const secondLine = titleWords.slice(Math.ceil(titleWords.length / 2)).join(' ');
 
-  return `
-    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:${colors.primary};stop-opacity:1" />
-          <stop offset="100%" style="stop-color:${colors.secondary};stop-opacity:1" />
-        </linearGradient>
-        <filter id="shadow">
-          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
-        </filter>
-      </defs>
-      
-      <rect width="100%" height="100%" fill="url(#bgGradient)"/>
-      
-      <circle cx="${width * 0.85}" cy="${height * 0.15}" r="80" fill="white" opacity="0.1"/>
-      <circle cx="${width * 0.15}" cy="${height * 0.85}" r="120" fill="white" opacity="0.08"/>
-      
-      <rect x="40" y="40" width="120" height="32" rx="16" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-      <text x="100" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle" opacity="0.95">
-        ${category.toUpperCase()}
-      </text>
-      
-      <text x="${width / 2}" y="${height / 2 - 20}" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle" filter="url(#shadow)">
-        ${firstLine}
-      </text>
-      ${secondLine ? `
-      <text x="${width / 2}" y="${height / 2 + 40}" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle" filter="url(#shadow)">
-        ${secondLine}
-      </text>
-      ` : ''}
-      
-      ${excerpt && excerpt.length < 80 ? `
-      <text x="${width / 2}" y="${height / 2 + 100}" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="400" fill="rgba(255,255,255,0.9)" text-anchor="middle" opacity="0.9">
-        ${excerpt}
-      </text>
-      ` : ''}
-      
-      <text x="${width - 200}" y="${height - 40}" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="500" fill="rgba(255,255,255,0.6)" text-anchor="end">
-        Creatives Takeover
-      </text>
-    </svg>
-  `.trim();
+  // Escape text content
+  const escapedCategory = escapeXml(category.toUpperCase());
+  const escapedFirstLine = escapeXml(firstLine);
+  const escapedSecondLine = secondLine ? escapeXml(secondLine) : '';
+  const escapedExcerpt = excerpt && excerpt.length < 80 ? escapeXml(excerpt) : '';
+  const uniqueId = Math.random().toString(36).substring(7);
+
+  return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient${uniqueId}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:${colors.primary};stop-opacity:1" />
+      <stop offset="100%" style="stop-color:${colors.secondary};stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow${uniqueId}">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <rect width="100%" height="100%" fill="url(#bgGradient${uniqueId})"/>
+  
+  <circle cx="${width * 0.85}" cy="${height * 0.15}" r="80" fill="white" opacity="0.1"/>
+  <circle cx="${width * 0.15}" cy="${height * 0.85}" r="120" fill="white" opacity="0.08"/>
+  
+  <rect x="40" y="40" width="120" height="32" rx="16" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="100" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle" opacity="0.95">${escapedCategory}</text>
+  
+  <text x="${width / 2}" y="${height / 2 - 20}" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle" filter="url(#shadow${uniqueId})">${escapedFirstLine}</text>
+  ${secondLine ? `<text x="${width / 2}" y="${height / 2 + 40}" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle" filter="url(#shadow${uniqueId})">${escapedSecondLine}</text>` : ''}
+  
+  ${excerpt && excerpt.length < 80 ? `<text x="${width / 2}" y="${height / 2 + 100}" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="400" fill="rgba(255,255,255,0.9)" text-anchor="middle" opacity="0.9">${escapedExcerpt}</text>` : ''}
+  
+  <text x="${width - 200}" y="${height - 40}" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="500" fill="rgba(255,255,255,0.6)" text-anchor="end">Creatives Takeover</text>
+</svg>`.trim();
 }
 
