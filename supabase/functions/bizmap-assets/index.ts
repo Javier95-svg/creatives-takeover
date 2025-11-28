@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,61 +42,6 @@ function getInputQuality(answers: Record<string, string>) {
   return { quality, reasons };
 }
 
-// Credit cost for asset generation
-const ASSET_GENERATION_CREDIT_COST = 5;
-
-// Credit service helper
-async function deductCredits(userId: string, amount: number, feature: string, assetType: string) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-
-  try {
-    // Check current balance
-    const { data: credits, error: fetchError } = await supabase
-      .from('user_credits')
-      .select('balance')
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError || !credits) {
-      throw new Error('User credit record not found');
-    }
-
-    if (credits.balance < amount) {
-      throw new Error('Insufficient credits');
-    }
-
-    const newBalance = credits.balance - amount;
-
-    // Update balance
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({ balance: newBalance })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      throw new Error('Failed to update credit balance');
-    }
-
-    // Log transaction
-    await supabase
-      .from('credit_transactions')
-      .insert([{
-        user_id: userId,
-        amount: -amount,
-        tx_type: 'deduct',
-        reason: `Used ${amount} credits for ${feature}`,
-        feature,
-        metadata: { assetType }
-      }]);
-
-    return { success: true, newBalance };
-  } catch (error) {
-    console.error('Error deducting credits:', error);
-    throw error;
-  }
-}
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -131,19 +78,31 @@ serve(async (req) => {
     const { type, answers, stage = "Explore", region = "Global" }: BizMapAssetsRequest = await req.json();
 
     // Check and deduct credits BEFORE making the OpenAI call
-    try {
-      await deductCredits(userId, ASSET_GENERATION_CREDIT_COST, 'Asset Generation', type);
-    } catch (creditError) {
-      const errorMessage = creditError instanceof Error ? creditError.message : 'Credit deduction failed';
+    const creditCost = CREDIT_COSTS.ASSET_GENERATION;
+    const creditCheck = await checkAndDeductCredits(
+      userId,
+      creditCost,
+      'Asset Generation',
+      undefined, // sessionId not available in this context
+      { assetType: type }
+    );
+
+    if (!creditCheck.success) {
+      const errorMessage = creditCheck.errorCode === 'INSUFFICIENT_CREDITS'
+        ? `You don't have enough credits. You need ${creditCost} credits for asset generation.`
+        : creditCheck.error || 'Credit deduction failed';
       return new Response(JSON.stringify({ 
         error: errorMessage,
+        errorCode: creditCheck.errorCode,
         creditError: true,
-        requiredCredits: ASSET_GENERATION_CREDIT_COST
+        requiredCredits: creditCost
       }), {
         status: 402, // Payment Required
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
 
     const { quality, reasons } = getInputQuality(answers);
 

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -8,9 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Credit cost for sprint task generation - must match CREDIT_COSTS.SPRINT_TASK_GENERATION in constants.ts
-const SPRINT_TASK_GENERATION_CREDIT_COST = 2;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -45,9 +43,10 @@ serve(async (req) => {
     }
 
     // Check and deduct credits before processing
+    const creditCost = CREDIT_COSTS.SPRINT_TASK_GENERATION;
     const creditCheck = await checkAndDeductCredits(
       user.id,
-      SPRINT_TASK_GENERATION_CREDIT_COST,
+      creditCost,
       'Sprint Task Generation',
       undefined,
       { sprintTitle, sprintDuration }
@@ -57,7 +56,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: creditCheck.error || 'Insufficient credits',
-          required: SPRINT_TASK_GENERATION_CREDIT_COST
+          required: creditCost
         }),
         { 
           status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,

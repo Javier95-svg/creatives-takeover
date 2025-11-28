@@ -123,9 +123,11 @@ export function useCredits() {
     }
   };
 
-  // Check if user has sufficient credits
+  // Check if user has sufficient credits (quota + balance)
   const hasCredits = (requiredAmount: number): boolean => {
-    return balance ? balance.balance >= requiredAmount : false;
+    if (!balance) return false;
+    const totalAvailable = (balance.balance || 0) + (balance.monthly_quota || 0);
+    return totalAvailable >= requiredAmount;
   };
 
   // Deduct credits (handled by edge functions, this is for UI feedback)

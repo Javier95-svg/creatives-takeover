@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,6 +78,46 @@ serve(async (req) => {
 
       if (createError) throw createError;
       conversation = newConv;
+    }
+
+    // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users
+    // Tour-guide mode is free for everyone to encourage exploration and signups
+    const shouldChargeCredits = userId !== null && chatMode !== 'tour-guide';
+    
+    if (shouldChargeCredits) {
+      const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
+      const creditCheck = await checkAndDeductCredits(
+        userId,
+        creditCost,
+        'AI Chat Message',
+        conversation.id,
+        { chatMode, messageLength: message.length }
+      );
+
+      if (!creditCheck.success) {
+        console.log(`❌ Credit check failed: ${creditCheck.errorCode} - ${creditCheck.error}`);
+        
+        // Return error stream for insufficient credits
+        const errorStream = new ReadableStream({
+          start(controller) {
+            const errorMessage = creditCheck.errorCode === 'INSUFFICIENT_CREDITS'
+              ? `You don't have enough credits to send this message. You need ${creditCost} credit(s). Please upgrade your plan or purchase more credits.`
+              : 'Unable to process your message. Please try again or contact support.';
+            
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({ type: 'error', error: errorMessage, errorCode: creditCheck.errorCode })}\n\n`
+            ));
+            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+            controller.close();
+          }
+        });
+        
+        return new Response(errorStream, {
+          headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+        });
+      }
+      
+      console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
     }
 
     // Save user message in background (non-blocking)

@@ -4,14 +4,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { withErrorBoundary, logInfo } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Credit cost for PDF export - must match CREDIT_COSTS.PDF_EXPORT in constants.ts
-const PDF_EXPORT_CREDIT_COST = 3;
 
 interface PDFRequest {
   reportContent: string;
@@ -47,9 +45,10 @@ serve(withErrorBoundary(async (req: Request) => {
     }
 
     // Check and deduct credits before processing
+    const creditCost = CREDIT_COSTS.PDF_EXPORT;
     const creditCheck = await checkAndDeductCredits(
       user.id,
-      PDF_EXPORT_CREDIT_COST,
+      creditCost,
       'PDF Export'
     );
 
@@ -57,7 +56,7 @@ serve(withErrorBoundary(async (req: Request) => {
       return new Response(
         JSON.stringify({ 
           error: creditCheck.error || 'Insufficient credits',
-          required: PDF_EXPORT_CREDIT_COST
+          required: creditCost
         }),
         { 
           status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,

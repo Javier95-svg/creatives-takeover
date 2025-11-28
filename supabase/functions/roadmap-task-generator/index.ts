@@ -1,14 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Credit cost for roadmap generation - must match CREDIT_COSTS.ROADMAP_GENERATION in constants.ts
-const ROADMAP_GENERATION_CREDIT_COST = 5;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -40,9 +38,10 @@ serve(async (req) => {
     }
 
     // Check and deduct credits before processing
+    const creditCost = CREDIT_COSTS.ROADMAP_GENERATION;
     const creditCheck = await checkAndDeductCredits(
       user.id,
-      ROADMAP_GENERATION_CREDIT_COST,
+      creditCost,
       'Roadmap Generation',
       session_id,
       { business_idea, industry, user_experience_level }
@@ -52,7 +51,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: creditCheck.error || 'Insufficient credits',
-          required: ROADMAP_GENERATION_CREDIT_COST
+          required: creditCost
         }),
         { 
           status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,

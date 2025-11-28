@@ -1,14 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Credit cost for market validation - must match CREDIT_COSTS.MARKET_VALIDATION in constants.ts
-const MARKET_VALIDATION_CREDIT_COST = 10;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,9 +51,10 @@ serve(async (req) => {
     // Skip credit check for admin account
     if (!isAdmin) {
       // Check and deduct credits before processing
+      const creditCost = CREDIT_COSTS.MARKET_VALIDATION;
       const creditCheck = await checkAndDeductCredits(
         user.id,
-        MARKET_VALIDATION_CREDIT_COST,
+        creditCost,
         'Market Validation',
         session_id,
         { business_idea, industry, target_market }
@@ -65,7 +64,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: creditCheck.error || 'Insufficient credits',
-            required: MARKET_VALIDATION_CREDIT_COST
+            required: creditCost
           }),
           { 
             status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,

@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -241,24 +242,6 @@ export class CreditService {
     }
   }
 }
-
-// Credit costs configuration - must match src/config/constants.ts
-// This is kept here for edge function use, but constants.ts is the source of truth
-export const CREDIT_COSTS = {
-  LAUNCH_REPORT: 5,
-  ASSET_GENERATION: 5,
-  PREMIUM_FEATURE: 3,
-  AI_CHAT_MESSAGE: 1,
-  MARKET_RESEARCH: 10,
-  MARKET_VALIDATION: 10,
-  FINANCIAL_ANALYSIS: 8,
-  FUNDRAISING_READINESS_ANALYSIS: 8,
-  BUSINESS_INSIGHTS: 5,
-  SPRINT_TASK_GENERATION: 2,
-  ROADMAP_GENERATION: 5,
-  PDF_EXPORT: 3,
-  ADVANCED_ANALYTICS: 5,
-} as const;
 
 // Edge function for credit management operations
 export default withErrorBoundary(async function handler(req: Request) {

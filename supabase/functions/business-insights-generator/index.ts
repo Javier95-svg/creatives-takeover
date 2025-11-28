@@ -1,14 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Credit cost for business insights generation - must match CREDIT_COSTS.BUSINESS_INSIGHTS in constants.ts
-const BUSINESS_INSIGHTS_CREDIT_COST = 5;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -61,9 +59,10 @@ serve(async (req) => {
     }
 
     // Check and deduct credits before generating new insights
+    const creditCost = CREDIT_COSTS.BUSINESS_INSIGHTS;
     const creditCheck = await checkAndDeductCredits(
       user.id,
-      BUSINESS_INSIGHTS_CREDIT_COST,
+      creditCost,
       'Business Insights Generation',
       undefined,
       { industry, businessStage }
@@ -73,7 +72,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: creditCheck.error || 'Insufficient credits',
-          required: BUSINESS_INSIGHTS_CREDIT_COST
+          required: creditCost
         }),
         { 
           status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,

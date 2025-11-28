@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,9 +20,6 @@ interface PMFAnalysisRequest {
     launchReport?: string;
   };
 }
-
-// Credit cost for PMF analysis
-const PMF_ANALYSIS_CREDIT_COST = 8;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -58,9 +56,10 @@ serve(async (req) => {
     }
 
     // Check and deduct credits
+    const creditCost = CREDIT_COSTS.PMF_ANALYSIS;
     const creditResult = await checkAndDeductCredits(
       user.id,
-      PMF_ANALYSIS_CREDIT_COST,
+      creditCost,
       'PMF Analysis',
       undefined,
       { businessConcept: businessConcept.substring(0, 100) }
@@ -71,7 +70,7 @@ serve(async (req) => {
         error: creditResult.error || 'Credit deduction failed',
         creditError: true,
         errorCode: creditResult.errorCode,
-        requiredCredits: PMF_ANALYSIS_CREDIT_COST
+        requiredCredits: creditCost
       }), {
         status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -267,7 +266,7 @@ Return your analysis as a JSON object with this exact structure:
     return new Response(JSON.stringify({
       success: true,
       analysis: analysisResult,
-      creditsUsed: PMF_ANALYSIS_CREDIT_COST,
+      creditsUsed: creditCost,
       newBalance: creditResult.newBalance
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

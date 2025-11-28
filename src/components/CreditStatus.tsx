@@ -13,7 +13,9 @@ interface CreditStatusProps {
 }
 
 export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true }: CreditStatusProps) {
-  const { balance, hasCredits } = useCredits();
+  const { balance, monthlyQuota, hasCredits } = useCredits();
+  
+  const totalAvailable = balance + monthlyQuota;
 
   const getStatusInfo = () => {
     if (requiredCredits && !hasCredits(requiredCredits)) {
@@ -21,11 +23,11 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
         type: 'insufficient',
         icon: AlertTriangle,
         variant: 'destructive' as const,
-        message: `You need ${requiredCredits} credits to use ${feature || 'this feature'}, but you only have ${balance} credits.`
+        message: `You need ${requiredCredits} credits to use ${feature || 'this feature'}, but you only have ${totalAvailable} credits available (${monthlyQuota} monthly quota + ${balance} purchased).`
       };
     }
 
-    if (balance <= 0) {
+    if (totalAvailable <= 0) {
       return {
         type: 'empty',
         icon: AlertTriangle,
@@ -34,12 +36,12 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       };
     }
 
-    if (balance <= 5) {
+    if (totalAvailable <= 5) {
       return {
         type: 'low',
         icon: Info,
         variant: 'default' as const,
-        message: `You have ${balance} credits remaining. Consider purchasing more to avoid interruption.`
+        message: `You have ${totalAvailable} credits remaining (${monthlyQuota} monthly quota + ${balance} purchased). Consider purchasing more to avoid interruption.`
       };
     }
 
@@ -47,7 +49,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       type: 'sufficient',
       icon: CheckCircle,
       variant: 'default' as const,
-      message: `You have ${balance} credits available.`
+      message: `You have ${totalAvailable} credits available (${monthlyQuota} monthly quota + ${balance} purchased).`
     };
   };
 
@@ -97,17 +99,44 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
 
   return (
     <div className="space-y-3">
-      {/* Current Balance */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Coins className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Credit Balance:</span>
+      {/* Credit Breakdown */}
+      <div className="space-y-2">
+        {/* Monthly Quota */}
+        {monthlyQuota > 0 && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Coins className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Monthly Quota:</span>
+            </div>
+            <Badge variant="outline">
+              {monthlyQuota} credits
+            </Badge>
+          </div>
+        )}
+        
+        {/* Purchased Balance */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Purchased Balance:</span>
+          </div>
+          <Badge variant="outline">
+            {balance} credits
+          </Badge>
         </div>
-        <Badge 
-          variant={balance <= 0 ? 'destructive' : balance <= 5 ? 'secondary' : 'default'}
-        >
-          {balance} credits
-        </Badge>
+        
+        {/* Total Available */}
+        <div className="flex items-center justify-between pt-2 border-t">
+          <div className="flex items-center gap-2">
+            <Coins className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Total Available:</span>
+          </div>
+          <Badge 
+            variant={totalAvailable <= 0 ? 'destructive' : totalAvailable <= 5 ? 'secondary' : 'default'}
+          >
+            {totalAvailable} credits
+          </Badge>
+        </div>
       </div>
 
       {/* Status Alert */}

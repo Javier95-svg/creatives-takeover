@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
+import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,6 +74,38 @@ serve(async (req) => {
       conversation = newConv;
     } else if (convError) {
       throw convError;
+    }
+
+    // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users
+    // Tour-guide mode is free for everyone to encourage exploration and signups
+    const shouldChargeCredits = userId !== null && chatMode !== 'tour-guide';
+    
+    if (shouldChargeCredits) {
+      const creditCost = CREDIT_COSTS.AI_CHAT_MESSAGE;
+      const creditCheck = await checkAndDeductCredits(
+        userId,
+        creditCost,
+        'AI Chat Message',
+        conversation.id,
+        { chatMode, messageLength: message.length }
+      );
+
+      if (!creditCheck.success) {
+        console.log(`❌ Credit check failed: ${creditCheck.errorCode} - ${creditCheck.error}`);
+        
+        return new Response(JSON.stringify({
+          error: creditCheck.errorCode === 'INSUFFICIENT_CREDITS'
+            ? `You don't have enough credits to send this message. You need ${creditCost} credit(s). Please upgrade your plan or purchase more credits.`
+            : 'Unable to process your message. Please try again or contact support.',
+          errorCode: creditCheck.errorCode,
+          fallbackMessage: "I'm experiencing some technical difficulties. Let me help you with your business planning needs. What specific challenge are you facing today?"
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
     }
 
     // Load enriched context for freeform mode
