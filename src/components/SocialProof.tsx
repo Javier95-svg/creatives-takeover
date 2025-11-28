@@ -92,8 +92,8 @@ const SocialProof = () => {
 
         {/* Animated Stat Cards */}
         <div ref={statsAnimationRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <Card className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.1s' }}>
-            <CardContent className="p-4 text-center">
+          <Card className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.1s' }}>
+            <CardContent className="p-4 text-center min-h-[120px]">
               <div ref={startups2025Ref} className="text-2xl md:text-3xl font-bold text-primary mb-1">
                 {startups2025Count.toFixed(1)}M
               </div>
@@ -104,8 +104,8 @@ const SocialProof = () => {
               </div>
             </CardContent>
           </Card>
-          <Card className={`border-border bg-gradient-to-br from-secondary/10 to-secondary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-            <CardContent className="p-4 text-center">
+          <Card className={`border-border bg-gradient-to-br from-secondary/10 to-secondary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.2s' }}>
+            <CardContent className="p-4 text-center min-h-[120px]">
               <div ref={marketNeedFailureRef} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
                 {marketNeedFailureCount}%
               </div>
@@ -116,8 +116,8 @@ const SocialProof = () => {
               </div>
             </CardContent>
           </Card>
-          <Card className={`border-border bg-gradient-to-br from-accent/10 to-accent/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.3s' }}>
-            <CardContent className="p-4 text-center">
+          <Card className={`border-border bg-gradient-to-br from-accent/10 to-accent/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.3s' }}>
+            <CardContent className="p-4 text-center min-h-[120px]">
               <div ref={monthlyStartupsRef} className="text-2xl md:text-3xl font-bold text-accent mb-1">
                 {monthlyStartupsCount}K+
               </div>
@@ -128,8 +128,8 @@ const SocialProof = () => {
               </div>
             </CardContent>
           </Card>
-          <Card className={`border-border bg-gradient-to-br from-[hsl(var(--green-primary))]/10 to-[hsl(var(--green-primary))]/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <CardContent className="p-4 text-center">
+          <Card className={`border-border bg-gradient-to-br from-[hsl(var(--green-primary))]/10 to-[hsl(var(--green-primary))]/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.4s' }}>
+            <CardContent className="p-4 text-center min-h-[120px]">
               <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--green-primary))] mb-1">
                 90%
               </div>
