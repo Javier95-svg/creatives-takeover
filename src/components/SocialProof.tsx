@@ -145,14 +145,14 @@ const SocialProof = () => {
         {/* Charts Section */}
         <div ref={chartAnimationRef} className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Startup Growth Chart */}
-          <Card className={`border-border hover:shadow-xl transition-all duration-500 group hover:scale-[1.02] ${chartIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
+          <Card className={`border-border hover:shadow-xl transition-all duration-500 group hover:scale-[1.02] ${chartIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.2s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary animate-pulse group-hover:scale-110 transition-transform duration-300" />
                 Startup Creation Growth
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-h-[300px]">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={startupGrowthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                   <defs>
@@ -231,14 +231,14 @@ const SocialProof = () => {
           </Card>
 
           {/* Monthly Growth Trend */}
-          <Card className={`border-border hover:shadow-xl transition-all duration-500 group hover:scale-[1.02] ${chartIsVisible ? 'animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
+          <Card className={`border-border hover:shadow-xl transition-all duration-500 group hover:scale-[1.02] ${chartIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.4s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-primary animate-bounce group-hover:scale-110 transition-transform duration-300" style={{ animationDuration: '2s', animationIterationCount: 'infinite' }} />
                 Monthly Startup Creation (2024-2025)
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-h-[300px]">
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={monthlyGrowthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                   <defs>
