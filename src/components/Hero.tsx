@@ -160,13 +160,6 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Social Proof */}
-          <div className="mb-8 sm:mb-12 px-4 animate-fade-in">
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Help shape the future as one of our founding members.
-            </p>
-          </div>
-
           {/* Platform Snippets - Horizontal Scrollable */}
           <HeroSnippets />
 
