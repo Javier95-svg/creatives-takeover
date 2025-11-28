@@ -18,7 +18,8 @@ import {
   MapPin, 
   MoreHorizontal,
   Send,
-  MoreVertical
+  MoreVertical,
+  Bookmark
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -51,6 +52,7 @@ export interface Post {
   commentsCount: number;
   repostCount?: number;
   shareCount?: number;
+  media_urls?: string[];
   aiSummary?: string;
   aiInsights?: string[];
   aiRelatedTopics?: string[];
@@ -88,6 +90,8 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
   const [localComments, setLocalComments] = useState(post.commentsCount);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const timeAgo = (dateString: string) => {
     const now = new Date();
@@ -304,6 +308,43 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
       toast.error('Failed to copy link');
     }
   };
+
+  const handleBookmark = async () => {
+    if (!isAuthenticated || !user) {
+      setSignInTriggerAction('comment'); // Reuse sign-in modal
+      setShowSignInModal(true);
+      return;
+    }
+
+    try {
+      // TODO: Implement bookmark functionality when bookmark table exists
+      setIsBookmarked(!isBookmarked);
+      toast.success(isBookmarked ? 'Bookmark removed' : 'Bookmarked!');
+    } catch (error) {
+      console.error('Error bookmarking:', error);
+      toast.error('Failed to bookmark');
+    }
+  };
+
+  // Helper to detect media type from URL
+  const getMediaType = (url: string): 'image' | 'video' | 'audio' => {
+    const urlLower = url.toLowerCase();
+    if (urlLower.includes('comment-videos') || /\.(mp4|webm|ogg|mov)(\?|$)/.test(urlLower)) {
+      return 'video';
+    }
+    if (urlLower.includes('comment-audio') || /\.(mp3|wav|ogg|m4a|aac)(\?|$)/.test(urlLower)) {
+      return 'audio';
+    }
+    return 'image';
+  };
+
+  // Get first media URL from media_urls array
+  const featuredMedia = post.media_urls && post.media_urls.length > 0 ? post.media_urls[0] : null;
+  const featuredMediaType = featuredMedia ? getMediaType(featuredMedia) : null;
+
+  // Content truncation logic
+  const MAX_DESCRIPTION_LENGTH = 200;
+  const shouldTruncate = !isExpanded && post.content.length > MAX_DESCRIPTION_LENGTH;
 
 
   const handleEditComment = (commentId: string, currentContent: string, imageUrl?: string | null) => {
@@ -528,53 +569,45 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
 
   return (
     <>
-      <Card className="w-full hover:shadow-md transition-all duration-200 border-border/50">
-        <CardContent className="p-6">
-          {/* Post Header */}
+      <Card className="w-full max-w-[600px] mx-3 sm:mx-auto my-3 sm:my-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 border-border/50">
+        <CardContent className="p-4 sm:p-5">
+          {/* CARD HEADER */}
           <div className="flex items-start gap-3 mb-4">
-            <Avatar className="h-12 w-12">
+            <Avatar className="h-10 w-10 flex-shrink-0">
               {post.author.avatar && (
                 <AvatarImage src={post.author.avatar} alt={post.author.name} />
               )}
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary/20 text-sm">
                 {avatarFallback}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Link 
                   to={getProfileUrl(post.author.username, post.author.name)}
-                  className="font-semibold text-foreground hover:text-primary transition-colors"
+                  className="font-semibold text-foreground hover:text-primary transition-colors text-sm sm:text-base"
                 >
                   {post.author.name}
                 </Link>
+                {post.author.username && (
+                  <>
+                    <span className="text-muted-foreground text-sm">|</span>
+                    <span className="text-muted-foreground text-sm">@{post.author.username}</span>
+                  </>
+                )}
                 {post.user_id && (
                   <ReputationBadge userId={post.user_id} compact showPoints={false} />
                 )}
-                {isAuthenticated && user && post.user_id !== user.id && post.user_id && (
-                  <SocialButtons 
-                    userId={post.user_id} 
-                    userName={post.author.name}
-                    compact={true}
-                  />
-                )}
                 <span className="text-muted-foreground text-sm">•</span>
-                <span className="text-muted-foreground text-sm">{timeAgo(post.createdAt)}</span>
+                <span className="text-muted-foreground text-sm">Posted {timeAgo(post.createdAt)}</span>
               </div>
-              
-              {post.location && (
-                <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
-                  <MapPin className="h-3 w-3" />
-                  <span>{displayLocation(post.location)}</span>
-                </div>
-              )}
             </div>
             
             {isAuthenticated && user && post.user_id === user.id && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full flex-shrink-0" aria-label="Post menu">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -590,98 +623,159 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
             )}
           </div>
           
-          {/* Post Content */}
-          <div className="mb-4">
-            <h2 className="text-xl font-bold mb-3 text-foreground">{post.title}</h2>
+          {/* CARD BODY */}
+          <div className="mb-4 space-y-3">
+            {/* Title */}
+            <h2 className="text-lg font-bold text-foreground leading-tight">{post.title}</h2>
             
-            <div className="prose prose-sm max-w-none dark:prose-invert [&_p]:mb-4 [&_p]:mt-4 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_p]:leading-relaxed">
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm, remarkBreaks]} 
-                className="text-foreground"
-              >
-                {post.content}
-              </ReactMarkdown>
+            {/* Description */}
+            <div className="text-base" style={{ lineHeight: '1.6' }}>
+              {shouldTruncate ? (
+                <>
+                  <div className="text-foreground/90 prose prose-sm max-w-none dark:prose-invert [&_p]:mb-2 [&_p]:mt-0 [&_p]:leading-relaxed line-clamp-3">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm, remarkBreaks]} 
+                    >
+                      {post.content}
+                    </ReactMarkdown>
+                  </div>
+                  <button
+                    onClick={() => setIsExpanded(true)}
+                    className="text-primary hover:text-primary/80 text-sm font-medium mt-2 inline-block"
+                  >
+                    Read more
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-foreground/90 prose prose-sm max-w-none dark:prose-invert [&_p]:mb-2 [&_p]:mt-0 [&_p]:leading-relaxed">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm, remarkBreaks]} 
+                    >
+                      {post.content}
+                    </ReactMarkdown>
+                  </div>
+                  {post.content.length > MAX_DESCRIPTION_LENGTH && (
+                    <button
+                      onClick={() => setIsExpanded(false)}
+                      className="text-primary hover:text-primary/80 text-sm font-medium mt-2 inline-block"
+                    >
+                      Show less
+                    </button>
+                  )}
+                </>
+              )}
             </div>
+
+            {/* Featured Media Preview */}
+            {featuredMedia && (
+              <div className="w-full rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                {featuredMediaType === 'video' ? (
+                  <video
+                    src={featuredMedia}
+                    controls
+                    className="w-full h-full object-cover"
+                  >
+                    Your browser does not support video playback.
+                  </video>
+                ) : featuredMediaType === 'audio' ? (
+                  <div className="w-full h-full flex items-center justify-center bg-muted p-4">
+                    <audio src={featuredMedia} controls className="w-full">
+                      Your browser does not support audio playback.
+                    </audio>
+                  </div>
+                ) : (
+                  <img
+                    src={featuredMedia}
+                    alt="Post media"
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => window.open(featuredMedia, '_blank')}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Tags - Inline */}
+            {post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 text-sm">
+                {post.tags.map((tag, index) => (
+                  <span key={index} className="text-primary hover:text-primary/80 font-medium">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           
-          {/* Tags */}
-          {post.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {post.tags.map((tag, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary" 
-                  className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
-                >
-                  #{tag}
-                </Badge>
-              ))}
+          {/* CARD FOOTER */}
+          <div className="pt-4 border-t border-border/50 space-y-3">
+            {/* Engagement Metrics Row */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>❤️ {localLikes}</span>
+              <span>💬 {localComments}</span>
+              <span>⤴️ {post.shareCount || 0}</span>
             </div>
-          )}
-          
-          {/* Social Media Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-border/50">
-            <div className="flex items-center gap-6">
-              {/* Like Button */}
+
+            {/* Action Buttons Row */}
+            <div className="flex items-center justify-between gap-1 sm:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLike}
-                className={`flex items-center gap-2 rounded-full px-3 py-2 ${
+                className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
                   isLiked 
                     ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" 
                     : "text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                 }`}
+                aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
               >
                 <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-                <span className="text-sm font-medium">{localLikes}</span>
+                <span className="hidden sm:inline text-sm font-medium">{localLikes}</span>
               </Button>
               
-              {/* Comment Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Comment button clicked. Current showComments:', showComments);
                   const newShowComments = !showComments;
                   setShowComments(newShowComments);
                   if (newShowComments) {
-                    console.log('Loading comments for post:', post.id);
                     loadComments();
                   }
                 }}
-                className="flex items-center gap-2 rounded-full px-3 py-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                aria-label="Comment on this post"
               >
                 <MessageCircle className="h-5 w-5" />
-                <span className="text-sm font-medium">{localComments}</span>
+                <span className="hidden sm:inline text-sm font-medium">{localComments}</span>
               </Button>
               
-              {/* Repost Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRepost}
-                className={`flex items-center gap-2 rounded-full px-3 py-2 ${
-                  isReposted 
-                    ? "text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20" 
-                    : "text-muted-foreground hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
-                }`}
-              >
-                <Repeat2 className="h-5 w-5" />
-                <span className="text-sm font-medium">{localReposts}</span>
-              </Button>
-              
-              {/* Share Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleShare}
-                className="flex items-center gap-2 rounded-full px-3 py-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                className="flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                aria-label="Share this post"
               >
                 <Share2 className="h-5 w-5" />
-                <span className="text-sm font-medium">{post.shareCount || 0}</span>
+                <span className="hidden sm:inline text-sm font-medium">Share</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBookmark}
+                className={`flex items-center justify-center gap-2 h-11 w-11 sm:h-10 sm:w-auto sm:px-4 rounded-lg min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 ${
+                  isBookmarked 
+                    ? "text-primary hover:text-primary/80 hover:bg-primary/10" 
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                }`}
+                aria-label={`${isBookmarked ? 'Remove bookmark' : 'Bookmark'} this post`}
+              >
+                <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
+                <span className="hidden sm:inline text-sm font-medium">Save</span>
               </Button>
             </div>
           </div>

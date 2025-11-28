@@ -99,6 +99,7 @@ const CommunityFeed: React.FC = () => {
           commentsCount: post.comment_count || 0,
           repostCount: post.repost_count || 0,
           shareCount: post.share_count || 0,
+          media_urls: post.media_urls || [],
           aiSummary: post.ai_summary,
           aiInsights: post.ai_insights,
           aiRelatedTopics: post.ai_related_topics,
