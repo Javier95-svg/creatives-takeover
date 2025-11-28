@@ -109,7 +109,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in">
-            Turn your creative idea into a thriving project. Get AI-powered planning, community support, and funding resources designed to guide pre-seed founders and entrepreneurs throughout their journey.
+            Turn your creative idea into a thriving project. Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders and entrepreneurs throughout their journey.
           </p>
           
           {/* Trust Indicators */}
