@@ -48,7 +48,7 @@ const DashboardPreview = () => {
             Your Founder Command Center
           </h1>
           <p className="text-body sm:text-body-lg text-muted-foreground max-w-2xl mx-auto">
-            Your strategic planning hub to organize, prioritize, and track projects—designed for founders who demand clarity and control
+            Your strategic planning hub to organize, prioritize, and track projects designed for founders who demand clarity and control.
           </p>
         </div>
 
