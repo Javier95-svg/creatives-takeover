@@ -9,11 +9,11 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 const SocialProof = () => {
   const [chartVisible, setChartVisible] = useState(false);
 
-  // Animated counters - Evidence-based statistics
-  const { count: startups2025Count, ref: startups2025Ref } = useCountUp(3.1, 2000); // Projected based on GEM trends
-  const { count: marketNeedFailureCount, ref: marketNeedFailureRef } = useCountUp(42, 2000); // 42% fail due to lack of market need (DemandSage, 2024)
-  const { count: monthlyStartupsCount, ref: monthlyStartupsRef } = useCountUp(430, 2000); // U.S. averaged 430K new business applications/month in 2024 (Reuters)
-  const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000); // Creative startups growth rate
+  // Animated counters - Evidence-based statistics (2024-2025, globally-focused)
+  const { count: globalEntrepreneursCount, ref: globalEntrepreneursRef } = useCountUp(665, 2000); // 665M+ global entrepreneurs (Hostinger.com 2025)
+  const { count: aiSuccessMultiplier, ref: aiSuccessMultiplierRef } = useCountUp(2.5, 2000); // 2.5x higher success rate with AI (Cubeo.ai 2024)
+  const { count: positiveAIImpactCount, ref: positiveAIImpactRef } = useCountUp(86, 2000); // 86% report positive AI impact (VentureBeat/HubSpot 2024)
+  const { count: newBusinessesAnnuallyCount, ref: newBusinessesAnnuallyRef } = useCountUp(50, 2000); // 50M+ new businesses annually (TechStartups.com 2025)
 
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
@@ -94,49 +94,49 @@ const SocialProof = () => {
         <div ref={statsAnimationRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           <Card className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.1s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div ref={startups2025Ref} className="text-2xl md:text-3xl font-bold text-primary mb-1">
-                {startups2025Count.toFixed(1)}M
+              <div ref={globalEntrepreneursRef} className="text-2xl md:text-3xl font-bold text-primary mb-1">
+                {globalEntrepreneursCount.toFixed(0)}M+
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Startups in 2025</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Global Entrepreneurs</div>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
-                <span className="text-xs text-[hsl(var(--green-primary))]">+158%</span>
+                <span className="text-xs text-[hsl(var(--green-primary))]">Global movement</span>
               </div>
             </CardContent>
           </Card>
           <Card className={`border-border bg-gradient-to-br from-secondary/10 to-secondary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div ref={marketNeedFailureRef} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
-                {marketNeedFailureCount}%
+              <div ref={aiSuccessMultiplierRef} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
+                {aiSuccessMultiplier.toFixed(1)}x
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Fail - No Market Need</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Higher Success with AI</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingDown className="w-3 h-3 text-[hsl(var(--red-primary))]" />
-                <span className="text-xs text-[hsl(var(--red-primary))]">Top failure reason</span>
+                <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
+                <span className="text-xs text-[hsl(var(--green-primary))]">AI advantage</span>
               </div>
             </CardContent>
           </Card>
           <Card className={`border-border bg-gradient-to-br from-accent/10 to-accent/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.3s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div ref={monthlyStartupsRef} className="text-2xl md:text-3xl font-bold text-accent mb-1">
-                {monthlyStartupsCount}K+
+              <div ref={positiveAIImpactRef} className="text-2xl md:text-3xl font-bold text-accent mb-1">
+                {positiveAIImpactCount}%
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Monthly Applications (U.S.)</div>
+              <div className="text-xs md:text-sm text-muted-foreground">Positive AI Impact</div>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <Rocket className="w-3 h-3 text-primary" />
-                <span className="text-xs text-primary">Growing</span>
+                <span className="text-xs text-primary">AI-powered works</span>
               </div>
             </CardContent>
           </Card>
           <Card className={`border-border bg-gradient-to-br from-[hsl(var(--green-primary))]/10 to-[hsl(var(--green-primary))]/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.4s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--green-primary))] mb-1">
-                90%
+              <div ref={newBusinessesAnnuallyRef} className="text-2xl md:text-3xl font-bold text-[hsl(var(--green-primary))] mb-1">
+                {newBusinessesAnnuallyCount.toFixed(0)}M+
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Fail Rate</div>
+              <div className="text-xs md:text-sm text-muted-foreground">New Businesses Annually</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingDown className="w-3 h-3 text-[hsl(var(--red-primary))]" />
-                <span className="text-xs text-[hsl(var(--red-primary))]">Need help</span>
+                <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
+                <span className="text-xs text-[hsl(var(--green-primary))]">Growing wave</span>
               </div>
             </CardContent>
           </Card>
@@ -314,7 +314,7 @@ const SocialProof = () => {
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                     <Rocket className="w-3 h-3 mr-1 animate-bounce" style={{ animationDuration: '2s' }} />
-                    Projected {monthlyStartupsCount}K+
+                    Projected {monthlyGrowthData[monthlyGrowthData.length - 1].startups}K+
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
