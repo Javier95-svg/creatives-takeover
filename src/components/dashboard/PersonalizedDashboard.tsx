@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Flame } from 'lucide-react';
@@ -28,24 +28,6 @@ export const PersonalizedDashboard = () => {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
-  
-  // Track if initial load has completed to prevent showing loading skeleton on subsequent refreshes
-  const hasInitiallyLoaded = useRef(false);
-
-  // Track when initial load completes - set as soon as we have data or both loading states are false
-  // This ensures content never disappears after the initial load, even if loading becomes true again
-  useEffect(() => {
-    // Mark as loaded if we have profile data (indicates data has loaded at least once)
-    // This is the primary indicator that we've successfully loaded data
-    if (data.profile !== null) {
-      hasInitiallyLoaded.current = true;
-      return;
-    }
-    // Also mark as loaded if both loading states are false (fallback for cases where profile might be null)
-    if (!loading && !isInitializing) {
-      hasInitiallyLoaded.current = true;
-    }
-  }, [loading, isInitializing, data.profile]);
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
@@ -106,17 +88,11 @@ export const PersonalizedDashboard = () => {
       }
     };
 
-    if (user) {
-      checkDailyCheckIn();
-      trackActivity('dashboard_view');
-    }
-  }, [user, trackActivity]);
+    checkDailyCheckIn();
+    trackActivity('dashboard_view');
+  }, [user]);
 
-  // Only show loading skeleton on initial load, not on subsequent data refreshes
-  // Once hasInitiallyLoaded is true, never show skeleton again even if loading becomes true
-  const showLoadingSkeleton = (loading || isInitializing) && !hasInitiallyLoaded.current;
-
-  if (showLoadingSkeleton) {
+  if (loading || isInitializing) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-6">

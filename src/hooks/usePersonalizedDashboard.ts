@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -62,18 +62,12 @@ export const usePersonalizedDashboard = () => {
     }
   });
   const [loading, setLoading] = useState(true);
-  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (user) {
-      // Only load data once per user, but reload if user changes
-      if (lastUserIdRef.current !== user.id) {
-        lastUserIdRef.current = user.id;
-        loadDashboardData();
-      }
+      loadDashboardData();
     } else {
       setLoading(false);
-      lastUserIdRef.current = null;
     }
   }, [user]);
 
