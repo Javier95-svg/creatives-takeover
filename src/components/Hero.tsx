@@ -155,7 +155,7 @@ const Hero = () => {
             >
               <Link to="/dashboard">
                 <LayoutDashboard className="mr-2 w-5 h-5" />
-                Go To Dashboard
+                Go to Dashboard
               </Link>
             </Button>
           </div>
