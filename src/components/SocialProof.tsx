@@ -10,9 +10,10 @@ const SocialProof = () => {
   const [chartVisible, setChartVisible] = useState(false);
 
   // Animated counters - Evidence-based statistics
-  const { count: startups2025Count, ref: startups2025Ref } = useCountUp(3.1, 2000); // Projected based on GEM trends
-  const { count: marketNeedFailureCount, ref: marketNeedFailureRef } = useCountUp(42, 2000); // 42% fail due to lack of market need (DemandSage, 2024)
-  const { count: monthlyStartupsCount, ref: monthlyStartupsRef } = useCountUp(430, 2000); // U.S. averaged 430K new business applications/month in 2024 (Reuters)
+  const { count: entrepreneursCount, ref: entrepreneursRef } = useCountUp(594, 2000); // 594M+ entrepreneurs worldwide
+  const { count: highEarnersCount, ref: highEarnersRef } = useCountUp(20, 2000); // 20% earn $100K-$300K/year solo
+  const { count: profitableYear1Count, ref: profitableYear1Ref } = useCountUp(75, 2000); // 75%+ profitable in year 1
+  const { count: validationSuccessCount, ref: validationSuccessRef } = useCountUp(30, 2000); // 30% higher success rate with validation
   const { count: growthRateCount, ref: growthRateRef } = useCountUp(67, 2000); // Creative startups growth rate
 
   // Scroll-triggered animations
@@ -94,49 +95,49 @@ const SocialProof = () => {
         <div ref={statsAnimationRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           <Card className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.1s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div ref={startups2025Ref} className="text-2xl md:text-3xl font-bold text-primary mb-1">
-                {startups2025Count.toFixed(1)}M
+              <div ref={entrepreneursRef} className="text-2xl md:text-3xl font-bold text-primary mb-1">
+                {entrepreneursCount}M+
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Startups in 2025</div>
+              <div className="text-xs md:text-sm text-muted-foreground">entrepreneurs worldwide</div>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
-                <span className="text-xs text-[hsl(var(--green-primary))]">+158%</span>
+                <span className="text-xs text-[hsl(var(--green-primary))]">Global opportunity</span>
               </div>
             </CardContent>
           </Card>
           <Card className={`border-border bg-gradient-to-br from-secondary/10 to-secondary/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div ref={marketNeedFailureRef} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
-                {marketNeedFailureCount}%
+              <div ref={highEarnersRef} className="text-2xl md:text-3xl font-bold text-secondary mb-1">
+                {highEarnersCount}%
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Fail - No Market Need</div>
+              <div className="text-xs md:text-sm text-muted-foreground">earn $100K-$300K/year solo</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingDown className="w-3 h-3 text-[hsl(var(--red-primary))]" />
-                <span className="text-xs text-[hsl(var(--red-primary))]">Top failure reason</span>
+                <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
+                <span className="text-xs text-[hsl(var(--green-primary))]">High earning potential</span>
               </div>
             </CardContent>
           </Card>
           <Card className={`border-border bg-gradient-to-br from-accent/10 to-accent/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.3s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div ref={monthlyStartupsRef} className="text-2xl md:text-3xl font-bold text-accent mb-1">
-                {monthlyStartupsCount}K+
+              <div ref={profitableYear1Ref} className="text-2xl md:text-3xl font-bold text-accent mb-1">
+                {profitableYear1Count}%+
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Monthly Applications (U.S.)</div>
+              <div className="text-xs md:text-sm text-muted-foreground">profitable in year 1</div>
               <div className="flex items-center justify-center gap-1 mt-2">
                 <Rocket className="w-3 h-3 text-primary" />
-                <span className="text-xs text-primary">Growing</span>
+                <span className="text-xs text-primary">Early success</span>
               </div>
             </CardContent>
           </Card>
           <Card className={`border-border bg-gradient-to-br from-[hsl(var(--green-primary))]/10 to-[hsl(var(--green-primary))]/5 transition-all duration-500 ${statsIsVisible ? 'animate-fade-in-up opacity-100 visible' : 'opacity-0 invisible'}`} style={{ animationDelay: '0.4s' }}>
             <CardContent className="p-4 text-center min-h-[120px]">
-              <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--green-primary))] mb-1">
-                90%
+              <div ref={validationSuccessRef} className="text-2xl md:text-3xl font-bold text-[hsl(var(--green-primary))] mb-1">
+                {validationSuccessCount}%
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground">Fail Rate</div>
+              <div className="text-xs md:text-sm text-muted-foreground">higher success rate with validation</div>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <TrendingDown className="w-3 h-3 text-[hsl(var(--red-primary))]" />
-                <span className="text-xs text-[hsl(var(--red-primary))]">Need help</span>
+                <TrendingUp className="w-3 h-3 text-[hsl(var(--green-primary))]" />
+                <span className="text-xs text-[hsl(var(--green-primary))]">Validation matters</span>
               </div>
             </CardContent>
           </Card>
