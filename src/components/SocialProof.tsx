@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Rocket, TrendingDown } from "lucide-react";
@@ -201,15 +201,6 @@ const SocialProof = () => {
                     animationBegin={chartVisible ? 0 : 1000}
                     animationDuration={2000}
                     animationEasing="ease-out"
-                    className="hover:opacity-80 transition-all duration-300 hover:scale-y-105"
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '0.9';
-                      e.currentTarget.style.transform = 'scaleY(1.05)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '1';
-                      e.currentTarget.style.transform = 'scaleY(1)';
-                    }}
                   />
                   <Bar 
                     dataKey="creative" 
@@ -219,16 +210,6 @@ const SocialProof = () => {
                     animationBegin={chartVisible ? 500 : 1500}
                     animationDuration={2000}
                     animationEasing="ease-out"
-                    className="hover:opacity-80 transition-all duration-300 hover:scale-y-105 animate-pulse"
-                    style={{ animationDuration: '3s' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '0.9';
-                      e.currentTarget.style.transform = 'scaleY(1.05)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '1';
-                      e.currentTarget.style.transform = 'scaleY(1)';
-                    }}
                   />
                 </BarChart>
               </ResponsiveContainer>
