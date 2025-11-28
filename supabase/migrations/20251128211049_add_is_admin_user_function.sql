@@ -4,51 +4,20 @@
 
 CREATE OR REPLACE FUNCTION public.is_admin_user()
 RETURNS BOOLEAN
-LANGUAGE plpgsql
+LANGUAGE SQL
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  user_email TEXT;
-BEGIN
-  -- Return false if no user is authenticated
-  IF auth.uid() IS NULL THEN
-    RETURN false;
-  END IF;
-  
-  -- Try to get email from auth.users (this requires SECURITY DEFINER)
-  SELECT email INTO user_email
-  FROM auth.users
-  WHERE id = auth.uid();
-  
-  -- Check if email matches admin email
-  IF user_email IS NOT NULL AND LOWER(user_email) = 'admin@creatives-takeover.com' THEN
-    RETURN true;
-  END IF;
-  
-  -- Fallback: check if user has professional tier in profiles (admin should have this)
-  -- This is less secure but works as a fallback if auth.users access fails
-  IF EXISTS (
-    SELECT 1
-    FROM public.profiles
-    WHERE id = auth.uid()
-    AND subscription_tier = 'professional'
-  ) THEN
-    -- Double-check through subscribers table for additional security
-    IF EXISTS (
+  SELECT COALESCE(
+    EXISTS (
       SELECT 1
-      FROM public.subscribers
-      WHERE user_id = auth.uid()
+      FROM auth.users
+      WHERE id = auth.uid()
       AND LOWER(email) = 'admin@creatives-takeover.com'
-      AND subscription_tier = 'professional'
-    ) THEN
-      RETURN true;
-    END IF;
-  END IF;
-  
-  RETURN false;
-END;
+    ),
+    false
+  )
 $$;
 
 -- Grant execute permissions to authenticated and anon roles
