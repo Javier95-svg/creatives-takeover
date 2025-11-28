@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import ReactMarkdown from "react-markdown";
@@ -12,6 +12,84 @@ import { ArrowLeft, Calendar, Hash, Share2, Twitter, Linkedin, Facebook, Copy } 
 import { useStories, StoryArticle as StoryArticleType } from "@/hooks/useStories";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+
+// LinkedIn Embed Component
+const LinkedInEmbed = ({ url }: { url: string }) => {
+  const embedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Load LinkedIn embed script
+    const existingScript = document.querySelector('script[src="https://platform.linkedin.com/in.js"]');
+    
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://platform.linkedin.com/in.js';
+      script.type = 'text/javascript';
+      script.async = true;
+      script.innerHTML = 'lang: en_US';
+      document.body.appendChild(script);
+    }
+
+    // Create embed script after LinkedIn script loads
+    const timer = setTimeout(() => {
+      if (embedRef.current) {
+        // Clear any existing content
+        embedRef.current.innerHTML = '';
+        
+        // Create the LinkedIn share embed script
+        const embedScript = document.createElement('script');
+        embedScript.type = 'IN/Share';
+        embedScript.setAttribute('data-url', url);
+        embedScript.setAttribute('data-counter', 'right');
+        embedRef.current.appendChild(embedScript);
+      }
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [url]);
+
+  return (
+    <div className="flex justify-center my-8">
+      <div 
+        className="linkedin-post-container w-full max-w-4xl"
+        style={{ minHeight: '400px' }}
+      >
+        {/* LinkedIn Embed */}
+        <div 
+          className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900"
+          style={{ 
+            border: '1px solid #e0e0e0',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}
+        >
+          <div ref={embedRef} className="min-h-[300px] flex items-center justify-center">
+            {/* Fallback while loading */}
+            <div className="p-8 text-center">
+              <Linkedin className="w-16 h-16 mb-4 text-[#0077b5] mx-auto" />
+              <h3 className="text-lg font-semibold mb-2">LinkedIn Post</h3>
+              <p className="text-sm text-muted-foreground mb-4 max-w-md break-all">
+                {url}
+              </p>
+              <Button asChild variant="default" size="lg">
+                <a 
+                  href={url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Linkedin className="w-4 h-4" />
+                  View on LinkedIn
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StoryArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -226,31 +304,41 @@ const StoryArticle = () => {
               </div>
             </header>
 
-            {/* Article Body - Markdown */}
-            <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkBreaks]}
-                components={{
-                  img: ({ node, ...props }) => (
-                    <img
-                      {...props}
-                      className="rounded-lg my-4 max-w-full h-auto"
-                      alt={props.alt || ""}
-                    />
-                  ),
-                  a: ({ node, ...props }) => (
-                    <a
-                      {...props}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    />
-                  ),
-                }}
-              >
-                {article.body_content}
-              </ReactMarkdown>
-            </div>
+            {/* Article Body - LinkedIn Embed or Markdown */}
+            {article.linkedin_post_url ? (
+              <div className="my-8">
+                <LinkedInEmbed url={article.linkedin_post_url} />
+              </div>
+            ) : article.body_content ? (
+              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={{
+                    img: ({ node, ...props }) => (
+                      <img
+                        {...props}
+                        className="rounded-lg my-4 max-w-full h-auto"
+                        alt={props.alt || ""}
+                      />
+                    ),
+                    a: ({ node, ...props }) => (
+                      <a
+                        {...props}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      />
+                    ),
+                  }}
+                >
+                  {article.body_content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className="my-8 p-8 border border-dashed rounded-lg text-center text-muted-foreground">
+                <p>No content available for this article.</p>
+              </div>
+            )}
           </article>
         </main>
 

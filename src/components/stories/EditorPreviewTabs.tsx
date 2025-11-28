@@ -14,6 +14,7 @@ interface EditorPreviewTabsProps {
     title: string;
     excerpt: string;
     body_content: string;
+    linkedin_post_url?: string;
     hashtags: string[];
     banner_image_url?: string;
     meta_title: string;
@@ -104,13 +105,33 @@ export const EditorPreviewTabs = ({
           
           {/* Content */}
           <Separator />
-          <div className="prose prose-lg max-w-none dark:prose-invert">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkBreaks]}
-            >
-              {formData.body_content || "*Start writing your article content...*"}
-            </ReactMarkdown>
-          </div>
+          {formData.linkedin_post_url ? (
+            <div className="my-8">
+              <div className="border rounded-lg p-6 text-center bg-muted/30">
+                <p className="text-sm text-muted-foreground mb-2">LinkedIn Post Preview</p>
+                <p className="text-xs text-muted-foreground mb-4 font-mono break-all">
+                  {formData.linkedin_post_url}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  The LinkedIn post will be embedded here when published.
+                </p>
+              </div>
+            </div>
+          ) : formData.body_content ? (
+            <div className="prose prose-lg max-w-none dark:prose-invert">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+              >
+                {formData.body_content}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <div className="prose prose-lg max-w-none dark:prose-invert">
+              <p className="text-muted-foreground italic">
+                *Add a LinkedIn post URL or start writing your article content...*
+              </p>
+            </div>
+          )}
         </div>
       </TabsContent>
 

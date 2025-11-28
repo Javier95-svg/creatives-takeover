@@ -8,7 +8,8 @@ export interface StoryArticle {
   slug: string;
   title: string;
   banner_image_url: string | null;
-  body_content: string;
+  body_content: string | null;
+  linkedin_post_url: string | null;
   excerpt: string | null;
   hashtags: string[];
   author_id: string;
@@ -24,7 +25,8 @@ export interface CreateStoryInput {
   slug: string;
   title: string;
   banner_image_url?: string | null;
-  body_content: string;
+  body_content?: string | null;
+  linkedin_post_url?: string | null;
   excerpt?: string | null;
   hashtags?: string[];
   meta_title?: string | null;

@@ -44,6 +44,7 @@ const AdminStoryEditor = () => {
     title: "",
     slug: "",
     body_content: "",
+    linkedin_post_url: "",
     excerpt: "",
     hashtags: "",
     banner_image_url: "",
@@ -79,7 +80,8 @@ const AdminStoryEditor = () => {
       setFormData({
         title: found.title,
         slug: found.slug,
-        body_content: found.body_content,
+        body_content: found.body_content || "",
+        linkedin_post_url: found.linkedin_post_url || "",
         excerpt: found.excerpt || "",
         hashtags: found.hashtags?.join(", ") || "",
         banner_image_url: found.banner_image_url || "",
@@ -323,9 +325,28 @@ const AdminStoryEditor = () => {
     }, 0);
   };
 
+  // Validate LinkedIn URL
+  const validateLinkedInUrl = (url: string): boolean => {
+    if (!url.trim()) return false;
+    const linkedinPattern = /^https?:\/\/(www\.)?linkedin\.com\/(posts|feed\/update|pulse)\/.+/i;
+    return linkedinPattern.test(url.trim());
+  };
+
   const handleSave = async (publish = false) => {
-    if (!formData.title || !formData.body_content || !formData.slug) {
-      toast.error("Please fill in title, slug, and body content");
+    if (!formData.title || !formData.slug) {
+      toast.error("Please fill in title and slug");
+      return;
+    }
+
+    // Validate LinkedIn URL if provided
+    if (formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url)) {
+      toast.error("Please enter a valid LinkedIn post URL");
+      return;
+    }
+
+    // Require either LinkedIn URL or body content (for backward compatibility)
+    if (!formData.linkedin_post_url && !formData.body_content) {
+      toast.error("Please provide either a LinkedIn post URL or body content");
       return;
     }
 
@@ -333,7 +354,8 @@ const AdminStoryEditor = () => {
     const storyData = {
       slug: formData.slug,
       title: formData.title,
-      body_content: formData.body_content,
+      body_content: formData.body_content || null,
+      linkedin_post_url: formData.linkedin_post_url || null,
       excerpt: formData.excerpt || null,
       hashtags,
       banner_image_url: formData.banner_image_url || null,
@@ -655,87 +677,52 @@ const AdminStoryEditor = () => {
                     <AccordionItem value="content">
                       <AccordionTrigger>Content</AccordionTrigger>
                       <AccordionContent className="pt-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="body_content">Body Content (Markdown) *</Label>
-                            <span className="text-xs text-muted-foreground">
-                              {formData.body_content.split(/\s+/).length} words
-                            </span>
-                          </div>
-                          
-                          {/* Markdown Formatting Toolbar */}
-                          <div className="flex items-center gap-1 p-2 border rounded-md bg-muted/30">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => insertMarkdownFormat('bold')}
-                              title="Bold (Ctrl+B)"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Bold className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => insertMarkdownFormat('italic')}
-                              title="Italic (Ctrl+I)"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Italic className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => insertMarkdownFormat('link')}
-                              title="Link (Ctrl+K)"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Link className="h-4 w-4" />
-                            </Button>
-                            <Separator orientation="vertical" className="h-6" />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => insertMarkdownFormat('heading')}
-                              title="Heading"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Type className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => insertMarkdownFormat('list')}
-                              title="List"
-                              className="h-8 w-8 p-0"
-                            >
-                              <List className="h-4 w-4" />
-                            </Button>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="linkedin_post_url">LinkedIn Post URL *</Label>
+                            <Input
+                              id="linkedin_post_url"
+                              type="url"
+                              value={formData.linkedin_post_url}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  linkedin_post_url: e.target.value.trim(),
+                                }))
+                              }
+                              placeholder="https://www.linkedin.com/posts/username_activity-1234567890-abcdef"
+                              className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Paste the URL of the LinkedIn post you want to embed. The post will be displayed as an embedded iframe on your article page.
+                            </p>
+                            {formData.linkedin_post_url && !validateLinkedInUrl(formData.linkedin_post_url) && (
+                              <p className="text-xs text-destructive">
+                                Please enter a valid LinkedIn post URL (e.g., https://www.linkedin.com/posts/...)
+                              </p>
+                            )}
                           </div>
 
-                          <Textarea
-                            ref={bodyContentRef}
-                            id="body_content"
-                            value={formData.body_content}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                body_content: e.target.value,
-                              }))
-                            }
-                            onKeyDown={handleMarkdownShortcut}
-                            placeholder="Write your article content in Markdown..."
-                            rows={20}
-                            className="font-mono text-sm"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Keyboard shortcuts: <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded">Ctrl+B</kbd> bold, <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded">Ctrl+I</kbd> italic, <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded">Ctrl+K</kbd> link
-                          </p>
+                          {/* Legacy body content field (hidden but kept for backward compatibility) */}
+                          <div className="space-y-2">
+                            <Label htmlFor="body_content">Body Content (Legacy - Optional)</Label>
+                            <Textarea
+                              id="body_content"
+                              value={formData.body_content}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  body_content: e.target.value,
+                                }))
+                              }
+                              placeholder="Legacy markdown content (only used if no LinkedIn URL is provided)..."
+                              rows={10}
+                              className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              This field is kept for backward compatibility. New articles should use LinkedIn URL above.
+                            </p>
+                          </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -796,6 +783,7 @@ const AdminStoryEditor = () => {
                       title: formData.title,
                       excerpt: formData.excerpt,
                       body_content: formData.body_content,
+                      linkedin_post_url: formData.linkedin_post_url,
                       hashtags: hashtagsArray,
                       banner_image_url: formData.banner_image_url,
                       meta_title: formData.meta_title,
