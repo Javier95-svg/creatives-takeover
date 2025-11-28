@@ -17,3 +17,7 @@ AS $$
   )
 $$;
 
+-- Grant execute permissions to authenticated and anon roles
+-- This is required for the function to be usable in storage RLS policies
+GRANT EXECUTE ON FUNCTION public.is_admin_user() TO authenticated, anon;
+
