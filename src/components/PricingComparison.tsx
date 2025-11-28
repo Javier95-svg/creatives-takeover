@@ -34,12 +34,35 @@ const PricingComparison = () => {
       ]
     },
     {
+      category: "Funding & Opportunities",
+      items: [
+        { feature: "Funding Opportunities", free: "View only", creator: "View & bookmark", professional: "View & bookmark" },
+        { feature: "Job Board Access", free: "View only", creator: "View & apply", professional: "View & apply" }
+      ]
+    },
+    {
+      category: "Networking & Accountability",
+      items: [
+        { feature: "Accountability Partnerships", free: false, creator: true, professional: true },
+        { feature: "Reputation System", free: "Basic", creator: "Full access", professional: "Full access" }
+      ]
+    },
+    {
       category: "Business Tools",
       items: [
         { feature: "Market Intelligence", free: false, creator: "10 queries/month", professional: "Unlimited" },
         { feature: "Report Generation", free: false, creator: "5/month", professional: "Unlimited" },
         { feature: "PDF Export", free: false, creator: false, professional: true },
-        { feature: "Success Score Analytics", free: false, creator: false, professional: true }
+        { feature: "Success Score Analytics", free: false, creator: false, professional: true },
+        { feature: "Financial Dashboard", free: false, creator: true, professional: true },
+        { feature: "Budget Management", free: false, creator: "Basic", professional: "Advanced" },
+        { feature: "Custom Prompt Chains", free: false, creator: true, professional: true }
+      ]
+    },
+    {
+      category: "Outreach & Marketing",
+      items: [
+        { feature: "Outreach Campaigns", free: false, creator: false, professional: true }
       ]
     },
     {
