@@ -12,7 +12,7 @@ const HomeFAQ = () => {
   const faqs = [
     {
       question: "What is Creatives Takeover?",
-      answer: "Creatives Takeover is your AI co-founder for turning ideas into revenue in 30 days. We combine three powerful elements to support your journey: BizMap AI for conversational business planning that feels like talking to a mentor instead of filling corporate templates, sprint-based accountability with daily check-ins and matched accountability partners, and a thriving 15,000+ member community built on collaboration over competition. From scattered thoughts to your first dollar, we guide you through the actual journey, not just theory."
+      answer: "Creatives Takeover is an AI powered platform built to help founders and creatives turn ideas into real, structured, launchable projects. It gives you a clear space to think, test, and build without the usual overwhelm of trying to figure everything out on your own. Instead of leaving you with scattered notes and half formed concepts, the platform guides you through a focused process that shows you what to build, how to build it, and what to do next.\n\n\n\nCreatives Takeover is designed for people who want to build something meaningful without needing a business background. Whether you're starting a side project, exploring a new venture, or trying to turn a creative skill into a real product, the platform gives you tools, guidance, and clarity so you can move from \"idea\" to \"built\" in a much more intuitive way."
     },
     {
       question: "How does BizMap AI help me build a business plan?",
