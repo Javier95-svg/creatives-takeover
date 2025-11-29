@@ -569,7 +569,7 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
 
   return (
     <>
-      <Card className="w-full max-w-[600px] mx-3 sm:mx-auto my-3 sm:my-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 border-border/50">
+      <Card className="w-full my-3 sm:my-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 border-border/50">
         <CardContent className="p-4 sm:p-5">
           {/* CARD HEADER */}
           <div className="flex items-start gap-3 mb-4">
