@@ -8,8 +8,9 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Hash, Share2, Twitter, Linkedin, Facebook, Copy } from "lucide-react";
+import { ArrowLeft, Calendar, Hash, Share2, Twitter, Linkedin, Facebook, Copy, Edit } from "lucide-react";
 import { useStories, StoryArticle as StoryArticleType } from "@/hooks/useStories";
+import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,6 +97,7 @@ const StoryArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { fetchStoryBySlug } = useStories();
+  const { user } = useAuth();
   const [article, setArticle] = useState<StoryArticleType | null>(null);
   const [loading, setLoading] = useState(true);
   const [linkedInOgImage, setLinkedInOgImage] = useState<string | null>(null);
@@ -259,14 +261,24 @@ const StoryArticle = () => {
 
           {/* Article Content - Centered */}
           <article className="container mx-auto px-6 max-w-4xl py-8">
-            {/* Back Button */}
-            <div className="mb-6">
+            {/* Back Button and Admin Edit Button */}
+            <div className="mb-6 flex items-center justify-between">
               <Button variant="ghost" asChild>
                 <Link to="/stories" className="flex items-center gap-2">
                   <ArrowLeft className="w-4 h-4" />
                   Back to Stories
                 </Link>
               </Button>
+              {user?.email?.toLowerCase() === "admin@creatives-takeover.com" && article && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/stories/admin/edit/${article.id}`)}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Article
+                </Button>
+              )}
             </div>
 
             {/* Article Header */}

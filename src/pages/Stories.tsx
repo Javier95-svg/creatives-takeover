@@ -257,22 +257,40 @@ const Stories = () => {
                   {stories
                     .filter((story) => story.linkedin_post_url) // Only show stories with LinkedIn URLs
                     .map((story) => (
-                      <a
-                        key={story.id}
-                        href={story.linkedin_post_url!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block cursor-pointer group hover:scale-[1.02] transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
-                        aria-label={`View ${story.title} on LinkedIn`}
-                      >
-                        <LinkedInPostEmbed
-                          url={story.linkedin_post_url!}
-                          title={story.title}
-                          excerpt={story.excerpt || undefined}
-                          hashtags={story.hashtags}
-                          clickable={true}
-                        />
-                      </a>
+                      <div key={story.id} className="relative group">
+                        <a
+                          href={story.linkedin_post_url!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block cursor-pointer hover:scale-[1.02] transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
+                          aria-label={`View ${story.title} on LinkedIn`}
+                        >
+                          <LinkedInPostEmbed
+                            url={story.linkedin_post_url!}
+                            title={story.title}
+                            excerpt={story.excerpt || undefined}
+                            hashtags={story.hashtags}
+                            clickable={true}
+                          />
+                        </a>
+                        {/* Admin Edit Button - Overlay */}
+                        {isAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate(`/stories/admin/edit/${story.id}`);
+                            }}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm hover:bg-background z-10"
+                            aria-label={`Edit ${story.title}`}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
                     ))}
                 </div>
               )
