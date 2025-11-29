@@ -254,13 +254,22 @@ const Stories = () => {
                   {stories
                     .filter((story) => story.linkedin_post_url) // Only show stories with LinkedIn URLs
                     .map((story) => (
-                      <LinkedInPostEmbed
+                      <a
                         key={story.id}
-                        url={story.linkedin_post_url!}
-                        title={story.title}
-                        excerpt={story.excerpt || undefined}
-                        hashtags={story.hashtags}
-                      />
+                        href={story.linkedin_post_url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block cursor-pointer group hover:scale-[1.02] transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
+                        aria-label={`View ${story.title} on LinkedIn`}
+                      >
+                        <LinkedInPostEmbed
+                          url={story.linkedin_post_url!}
+                          title={story.title}
+                          excerpt={story.excerpt || undefined}
+                          hashtags={story.hashtags}
+                          clickable={true}
+                        />
+                      </a>
                     ))}
                 </div>
               )
