@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Hash, Linkedin } from "lucide-react";
-import { LinkedInPostEmbed } from "./LinkedInPostEmbed";
+import { Hash } from "lucide-react";
 
 interface StoryCardPreviewProps {
   title: string;
@@ -28,58 +27,60 @@ export const StoryCardPreview = ({
   featured = false,
   status = 'draft',
 }: StoryCardPreviewProps) => {
-  const publishedDate = new Date();
-  const fullDate = publishedDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
   return (
     <div className="w-full">
-      <Card className="overflow-hidden h-full border-border bg-card">
-        {/* LinkedIn Embed Preview */}
-        {linkedinPostUrl ? (
-          <LinkedInPostEmbed
-            url={linkedinPostUrl}
-            title={title}
-            excerpt={excerpt}
-            hashtags={hashtags}
-          />
-        ) : (
-          <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <div className="text-center p-6">
-              <Linkedin className="w-12 h-12 mx-auto mb-4 text-[#0077b5]" />
-              <h3 className="font-bold text-lg mb-2">{title || 'Untitled Article'}</h3>
-              {excerpt && (
-                <p className="text-sm text-muted-foreground">{excerpt}</p>
-              )}
-              <p className="text-xs text-muted-foreground mt-4">
-                Add a LinkedIn post URL to see the preview
-              </p>
-            </div>
-          </div>
-        )}
-        
-        <CardContent className="p-6">
-          {/* Metadata Row */}
-          <div className="flex items-center justify-between flex-wrap gap-3 text-sm text-muted-foreground mb-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                <span>{fullDate}</span>
+      <Card className="overflow-hidden h-full border-border bg-card rounded-lg">
+        {/* Banner Image Section - Full Width at Top */}
+        <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+          {bannerImageUrl ? (
+            <img
+              src={bannerImageUrl}
+              alt={title || 'Article preview'}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Hash className="w-8 h-8 text-primary/50" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {bannerImageUrl ? 'Banner image will appear here' : 'Upload a banner image'}
+                </p>
               </div>
-              {status && (
-                <Badge variant={status === 'published' ? 'default' : 'secondary'}>
-                  {status === 'published' ? 'PUBLISHED' : 'DRAFT'}
-                </Badge>
-              )}
             </div>
-          </div>
+          )}
+        </div>
+        
+        {/* Card Body - Title, Excerpt, Hashtags */}
+        <CardContent className="p-6">
+          {/* Status Badge */}
+          {status && (
+            <Badge variant={status === 'published' ? 'default' : 'secondary'} className="mb-3">
+              {status === 'published' ? 'PUBLISHED' : 'DRAFT'}
+            </Badge>
+          )}
+          
+          {/* Title */}
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+            {title || 'Untitled Article'}
+          </h3>
+          
+          {/* Excerpt */}
+          {excerpt && (
+            <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+              {excerpt}
+            </p>
+          )}
           
           {/* Hashtags */}
           {hashtags && hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-border">
+            <div className="flex flex-wrap gap-2">
               {hashtags.slice(0, featured ? 4 : 3).map((tag, index) => (
                 <Badge
                   key={index}

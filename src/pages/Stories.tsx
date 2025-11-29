@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
+import { StoryCard } from "@/components/stories/StoryCard";
 import StoriesHero from "@/components/stories/StoriesHero";
 import StoriesWallpaper from "@/components/wallpapers/StoriesWallpaper";
 import { useStories } from "@/hooks/useStories";
@@ -258,21 +258,7 @@ const Stories = () => {
                     .filter((story) => story.linkedin_post_url) // Only show stories with LinkedIn URLs
                     .map((story) => (
                       <div key={story.id} className="relative group">
-                        <a
-                          href={story.linkedin_post_url!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block cursor-pointer hover:scale-[1.02] transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg"
-                          aria-label={`View ${story.title} on LinkedIn`}
-                        >
-                          <LinkedInPostEmbed
-                            url={story.linkedin_post_url!}
-                            title={story.title}
-                            excerpt={story.excerpt || undefined}
-                            hashtags={story.hashtags}
-                            clickable={true}
-                          />
-                        </a>
+                        <StoryCard article={story} />
                         {/* Admin Edit Button - Overlay */}
                         {isAdmin && (
                           <Button

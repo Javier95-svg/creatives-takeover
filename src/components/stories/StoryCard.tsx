@@ -1,10 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Calendar, Hash, Linkedin } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Hash } from "lucide-react";
 import { StoryArticle } from "@/hooks/useStories";
-import { LinkedInPostEmbed } from "./LinkedInPostEmbed";
 
 interface StoryCardProps {
   article: StoryArticle;
@@ -12,64 +10,53 @@ interface StoryCardProps {
 }
 
 export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
-  const publishedDate = article.published_at 
-    ? new Date(article.published_at) 
-    : new Date(article.created_at);
-  const timeAgo = formatDistanceToNow(publishedDate, { addSuffix: true });
-  const fullDate = publishedDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  // Get primary hashtag for category
-  const primaryTag = article.hashtags && article.hashtags.length > 0 
-    ? article.hashtags[0].replace('#', '') 
-    : null;
-
   return (
     <Link 
       to={`/stories/${article.slug}`} 
       className={`block group ${featured ? 'md:col-span-2 lg:col-span-2' : ''}`}
     >
-      <Card className="overflow-hidden h-full hover:shadow-xl transition-all duration-300 hover-lift border-border bg-card">
-        {/* LinkedIn Embed or Fallback */}
-        {article.linkedin_post_url ? (
-          <div className="relative">
-            <LinkedInPostEmbed
-              url={article.linkedin_post_url}
-              title={article.title}
-              excerpt={article.excerpt || undefined}
-              hashtags={article.hashtags}
+      <Card className="overflow-hidden h-full hover:shadow-md transition-all duration-300 hover:scale-[1.02] border-border bg-card rounded-lg">
+        {/* Banner Image Section - Full Width at Top */}
+        <div className="relative w-full h-48 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+          {article.banner_image_url ? (
+            <img
+              src={article.banner_image_url}
+              alt={article.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
             />
-          </div>
-        ) : (
-          <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <div className="text-center p-6">
-              <Linkedin className="w-12 h-12 mx-auto mb-4 text-[#0077b5]" />
-              <h3 className="font-bold text-lg mb-2">{article.title}</h3>
-              {article.excerpt && (
-                <p className="text-sm text-muted-foreground">{article.excerpt}</p>
-              )}
-            </div>
-          </div>
-        )}
-        
-        <CardContent className="p-6">
-          {/* Metadata Row */}
-          <div className="flex items-center justify-between flex-wrap gap-3 text-sm text-muted-foreground mb-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                <span>{fullDate}</span>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Hash className="w-8 h-8 text-primary/50" />
+                </div>
               </div>
             </div>
-            <span className="text-xs opacity-70">{timeAgo}</span>
-          </div>
+          )}
+        </div>
+        
+        {/* Card Body - Title, Excerpt, Hashtags */}
+        <CardContent className="p-6">
+          {/* Title */}
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {article.title}
+          </h3>
+          
+          {/* Excerpt */}
+          {article.excerpt && (
+            <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+              {article.excerpt}
+            </p>
+          )}
           
           {/* Hashtags */}
           {article.hashtags && article.hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-border">
+            <div className="flex flex-wrap gap-2">
               {article.hashtags.slice(0, featured ? 4 : 3).map((tag, index) => (
                 <Badge
                   key={index}
