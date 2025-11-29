@@ -1,6 +1,15 @@
 import { Linkedin, BookOpen, Sparkles, FileText } from "lucide-react";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const StoriesHero = () => {
+  const fullText = "Discover expert insights and curated articles on business development, AI, and entrepreneurship. Get actionable advice, explore real-world case studies, and stay updated with the latest trends shaping the future of work and innovation.";
+  
+  const { displayedText, isTyping } = useTypingAnimation({ 
+    text: fullText, 
+    speed: 20,
+    startDelay: 500
+  });
+
   return (
     <section className="relative py-20 lg:py-32 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
@@ -34,7 +43,8 @@ const StoriesHero = () => {
           {/* Description */}
           <div className="max-w-3xl mx-auto px-4">
             <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed">
-              Discover expert insights and curated articles on business development, AI, and entrepreneurship. Get actionable advice, explore real-world case studies, and stay updated with the latest trends shaping the future of work and innovation.
+              {displayedText}
+              {isTyping && <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />}
             </p>
           </div>
         </div>
