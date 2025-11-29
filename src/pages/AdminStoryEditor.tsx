@@ -14,9 +14,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useStories, StoryArticle } from "@/hooks/useStories";
 import { generateSlug } from "@/utils/slugGenerator";
 import { useAuth } from "@/contexts/AuthContext";
-import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin } from "lucide-react";
+import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin, Image, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EditorPreviewTabs } from "@/components/stories/EditorPreviewTabs";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminStoryEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,12 +29,15 @@ const AdminStoryEditor = () => {
     createStory,
     updateStory,
     deleteStory,
+    uploadBannerImage,
     loading,
   } = useStories();
 
   const [article, setArticle] = useState<StoryArticle | null>(null);
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split');
   const [previewTab, setPreviewTab] = useState('card');
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -126,6 +130,66 @@ const AdminStoryEditor = () => {
     return linkedinPattern.test(url.trim());
   };
 
+  // Handle banner image upload
+  const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
+      return;
+    }
+
+    // Validate file size (5MB = 5242880 bytes)
+    const maxSize = 5242880;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 5MB limit. Please upload a smaller image.');
+      return;
+    }
+
+    try {
+      setUploadingBanner(true);
+
+      // Show preview immediately
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to storage
+      const articleId = article?.id || 'temp';
+      const publicUrl = await uploadBannerImage(file, articleId);
+
+      if (publicUrl) {
+        setFormData((prev) => ({
+          ...prev,
+          banner_image_url: publicUrl,
+        }));
+        toast.success('Banner image uploaded successfully');
+      }
+    } catch (error: any) {
+      console.error('Error uploading banner:', error);
+      toast.error('Failed to upload banner image');
+    } finally {
+      setUploadingBanner(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
+  // Handle banner removal
+  const handleRemoveBanner = () => {
+    setFormData((prev) => ({
+      ...prev,
+      banner_image_url: '',
+    }));
+    setBannerPreview(null);
+    toast.success('Banner image removed');
+  };
+
   const handleSave = async (publish = false) => {
     if (!formData.title || !formData.slug) {
       toast.error("Please fill in title and slug");
@@ -138,16 +202,16 @@ const AdminStoryEditor = () => {
       return;
     }
 
-    const hashtags = parseHashtags(formData.hashtags);
-    const storyData = {
-      slug: formData.slug,
-      title: formData.title,
-      body_content: null, // Not used for LinkedIn posts
-      linkedin_post_url: formData.linkedin_post_url,
-      excerpt: formData.excerpt || null,
-      hashtags,
-      banner_image_url: null, // Not used for LinkedIn posts
-      meta_title: formData.meta_title || null,
+      const hashtags = parseHashtags(formData.hashtags);
+      const storyData = {
+        slug: formData.slug,
+        title: formData.title,
+        body_content: null, // Not used for LinkedIn posts
+        linkedin_post_url: formData.linkedin_post_url,
+        excerpt: formData.excerpt || null,
+        hashtags,
+        banner_image_url: formData.banner_image_url || null,
+        meta_title: formData.meta_title || null,
       meta_description: formData.meta_description || null,
       status: publish ? "published" : formData.status,
     };
@@ -395,6 +459,64 @@ const AdminStoryEditor = () => {
                       </AccordionContent>
                     </AccordionItem>
 
+                    {/* Banner Image */}
+                    <AccordionItem value="banner">
+                      <AccordionTrigger>Banner Image</AccordionTrigger>
+                      <AccordionContent className="pt-4">
+                        <div className="space-y-4">
+                          {/* Banner Preview */}
+                          {(formData.banner_image_url || bannerPreview) && (
+                            <div className="relative w-full h-48 rounded-lg overflow-hidden border bg-muted">
+                              <img
+                                src={bannerPreview || formData.banner_image_url}
+                                alt="Banner preview"
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2"
+                                onClick={handleRemoveBanner}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Remove
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Upload Input */}
+                          <div className="space-y-2">
+                            <Label htmlFor="banner_image" className="flex items-center gap-2">
+                              <Image className="w-4 h-4" />
+                              Banner Image
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="banner_image"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                onChange={handleBannerUpload}
+                                disabled={uploadingBanner}
+                                className="cursor-pointer"
+                              />
+                              {uploadingBanner && (
+                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Upload a banner image to display above the article title. Max file size: 5MB. Supported formats: JPEG, PNG, WebP, GIF.
+                            </p>
+                            {formData.banner_image_url && (
+                              <p className="text-xs text-muted-foreground">
+                                Current banner: <span className="font-mono text-xs break-all">{formData.banner_image_url}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
                     {/* SEO Settings */}
                     <AccordionItem value="seo">
                       <AccordionTrigger>SEO Settings</AccordionTrigger>
@@ -453,13 +575,13 @@ const AdminStoryEditor = () => {
                       body_content: "",
                       linkedin_post_url: formData.linkedin_post_url,
                       hashtags: hashtagsArray,
-                      banner_image_url: null,
+                      banner_image_url: formData.banner_image_url || undefined,
                       meta_title: formData.meta_title,
                       meta_description: formData.meta_description,
                       status: formData.status,
                       slug: formData.slug,
                     }}
-                    bannerPreview={null}
+                    bannerPreview={bannerPreview || formData.banner_image_url || null}
                   />
                 </CardContent>
               </Card>

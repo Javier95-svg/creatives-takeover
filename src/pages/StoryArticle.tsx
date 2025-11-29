@@ -241,13 +241,18 @@ const StoryArticle = () => {
         <Navigation />
 
         <main className="pt-16">
-          {/* Banner Image - LinkedIn Style */}
+          {/* Banner Image - Full Width Above Title */}
           {article.banner_image_url && (
-            <div className="w-full h-[400px] md:h-[500px] overflow-hidden bg-muted">
+            <div className="w-full h-[400px] md:h-[500px] overflow-hidden bg-muted relative">
               <img
                 src={article.banner_image_url}
                 alt={article.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
               />
             </div>
           )}

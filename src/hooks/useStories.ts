@@ -153,6 +153,63 @@ export const useStories = () => {
     }
   }, [isAdmin]);
 
+  // Upload banner image (admin only)
+  const uploadBannerImage = useCallback(async (
+    file: File,
+    articleId?: string
+  ): Promise<string | null> => {
+    if (!isAdmin) {
+      toast.error('Only admins can upload banner images');
+      return null;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
+      return null;
+    }
+
+    // Validate file size (5MB = 5242880 bytes)
+    const maxSize = 5242880;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 5MB limit. Please upload a smaller image.');
+      return null;
+    }
+
+    try {
+      setLoading(true);
+
+      // Generate file path: {article_id}/{timestamp}.{ext} or temp/{timestamp}.{ext}
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      const fileName = articleId 
+        ? `${articleId}/${timestamp}.${fileExt}`
+        : `temp/${timestamp}.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('story-banners')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('story-banners')
+        .getPublicUrl(fileName);
+
+      toast.success('Banner image uploaded successfully');
+      return publicUrl;
+    } catch (error: any) {
+      console.error('Error uploading banner image:', error);
+      toast.error(error.message || 'Failed to upload banner image');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [isAdmin]);
+
   // Create new story (admin only)
   const createStory = useCallback(async (input: CreateStoryInput): Promise<StoryArticle | null> => {
     if (!isAdmin || !user) {
@@ -175,7 +232,7 @@ export const useStories = () => {
         status: input.status || 'draft',
         hashtags: input.hashtags || [],
         linkedin_post_url: input.linkedin_post_url, // Required
-        banner_image_url: null, // Not used for LinkedIn posts
+        banner_image_url: input.banner_image_url || null,
         body_content: null, // Not used for LinkedIn posts
       };
 
@@ -269,6 +326,7 @@ export const useStories = () => {
     createStory,
     updateStory,
     deleteStory,
+    uploadBannerImage,
   };
 };
 
