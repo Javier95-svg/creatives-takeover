@@ -4,6 +4,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { LinkedInPostEmbed } from "@/components/stories/LinkedInPostEmbed";
+import StoriesHero from "@/components/stories/StoriesHero";
+import StoriesWallpaper from "@/components/wallpapers/StoriesWallpaper";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
@@ -81,17 +83,18 @@ const Stories = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
 
-        <main className="pt-24 pb-16">
-          <div className="container mx-auto px-6 max-w-7xl">
-            {/* Header */}
+        <main className="pb-16">
+          {/* Hero Section with Wallpaper */}
+          <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
+            <StoriesWallpaper />
+            <StoriesHero />
+          </section>
+
+          {/* Content Section */}
+          <div className="container mx-auto px-6 max-w-7xl relative z-10">
+            {/* Admin Controls */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-4xl md:text-5xl font-bold mb-2">Stories</h1>
-                  <p className="text-muted-foreground text-lg">
-                    Insights, tips, and stories about building and growing your business
-                  </p>
-                </div>
                 {isAdmin && (
                   <Link to="/stories/admin/new">
                     <Button>Create Story</Button>
