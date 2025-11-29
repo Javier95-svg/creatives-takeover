@@ -4304,6 +4304,60 @@ export type Database = {
         }
         Relationships: []
       }
+      stories_articles: {
+        Row: {
+          author_id: string
+          banner_image_url: string | null
+          body_content: string | null
+          created_at: string
+          excerpt: string | null
+          hashtags: string[] | null
+          id: string
+          linkedin_post_url: string | null
+          meta_description: string | null
+          meta_title: string | null
+          published_at: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          banner_image_url?: string | null
+          body_content?: string | null
+          created_at?: string
+          excerpt?: string | null
+          hashtags?: string[] | null
+          id?: string
+          linkedin_post_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          banner_image_url?: string | null
+          body_content?: string | null
+          created_at?: string
+          excerpt?: string | null
+          hashtags?: string[] | null
+          id?: string
+          linkedin_post_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stripe_connections: {
         Row: {
           access_token: string | null
@@ -5386,6 +5440,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_user: { Args: never; Returns: boolean }
       is_community_active: { Args: { profile_id: string }; Returns: boolean }
       is_following: {
         Args: { profile_id: string; viewer_id: string }
