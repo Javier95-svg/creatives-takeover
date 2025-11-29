@@ -709,13 +709,6 @@ const PostCard = React.memo<PostCardProps>(({ post }) => {
           
           {/* CARD FOOTER */}
           <div className="pt-4 border-t border-border/50 space-y-3">
-            {/* Engagement Metrics Row */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>❤️ {localLikes}</span>
-              <span>💬 {localComments}</span>
-              <span>⤴️ {post.shareCount || 0}</span>
-            </div>
-
             {/* Action Buttons Row */}
             <div className="flex items-center justify-between gap-1 sm:gap-2">
               <Button
