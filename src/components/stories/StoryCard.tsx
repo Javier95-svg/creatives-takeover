@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import { Hash } from "lucide-react";
 import { StoryArticle } from "@/hooks/useStories";
 
@@ -10,9 +9,15 @@ interface StoryCardProps {
 }
 
 export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
+  // Use LinkedIn URL if available, otherwise fallback to article detail page
+  const linkUrl = article.linkedin_post_url || `/stories/${article.slug}`;
+  const isExternalLink = !!article.linkedin_post_url;
+
   return (
-    <Link 
-      to={`/stories/${article.slug}`} 
+    <a
+      href={linkUrl}
+      target={isExternalLink ? "_blank" : undefined}
+      rel={isExternalLink ? "noopener noreferrer" : undefined}
       className={`block group ${featured ? 'md:col-span-2 lg:col-span-2' : ''}`}
     >
       <Card className="overflow-hidden h-full hover:shadow-md transition-all duration-300 hover:scale-[1.02] border-border bg-card rounded-lg">
@@ -81,6 +86,6 @@ export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
           )}
         </CardContent>
       </Card>
-    </Link>
+    </a>
   );
 };
