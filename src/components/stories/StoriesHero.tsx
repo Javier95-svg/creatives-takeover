@@ -10,11 +10,6 @@ const StoriesHero = () => {
             <span className="takeover-gradient">Stories</span>
           </h1>
           
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-4">
-            Insights, tips, and stories about building and growing your business
-          </p>
-
           {/* Value Proposition Badges */}
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 px-2">
             <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
