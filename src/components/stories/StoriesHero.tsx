@@ -30,15 +30,6 @@ const StoriesHero = () => {
               <span className="text-xs sm:text-sm font-medium">Latest Stories</span>
             </div>
           </div>
-
-          {/* Description */}
-          <div className="max-w-3xl mx-auto px-4">
-            <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed">
-              Discover curated articles and insights from our community of creative entrepreneurs. 
-              Learn from real experiences, get actionable advice, and stay updated with the latest trends 
-              in business, marketing, and entrepreneurship.
-            </p>
-          </div>
         </div>
       </div>
     </section>
