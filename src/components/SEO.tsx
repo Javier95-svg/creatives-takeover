@@ -151,31 +151,47 @@ export const createArticleSchema = (article: {
   publishedTime: string;
   modifiedTime?: string;
   url: string;
-}) => ({
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": article.title,
-  "description": article.description,
-  "image": article.image || "https://creatives-takeover.com/lovable-uploads/new-favicon.png",
-  "author": {
-    "@type": "Person",
-    "name": article.author
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Creatives Takeover",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://creatives-takeover.com/lovable-uploads/new-favicon.png"
+  keywords?: string[];
+  articleSection?: string;
+}) => {
+  const schema: any = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": article.title,
+    "description": article.description,
+    "image": article.image || "https://creatives-takeover.com/lovable-uploads/new-favicon.png",
+    "author": {
+      "@type": "Person",
+      "name": article.author
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Creatives Takeover",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://creatives-takeover.com/lovable-uploads/new-favicon.png"
+      }
+    },
+    "datePublished": article.publishedTime,
+    "dateModified": article.modifiedTime || article.publishedTime,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://creatives-takeover.com${article.url}`
     }
-  },
-  "datePublished": article.publishedTime,
-  "dateModified": article.modifiedTime || article.publishedTime,
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": `https://creatives-takeover.com${article.url}`
+  };
+
+  // Add keywords if provided (formatted without # prefix)
+  if (article.keywords && article.keywords.length > 0) {
+    schema.keywords = article.keywords.map(k => k.replace('#', '')).join(', ');
   }
-});
+
+  // Add articleSection if provided
+  if (article.articleSection) {
+    schema.articleSection = article.articleSection;
+  }
+
+  return schema;
+};
 
 // Helper function to create FAQPage schema
 export const createFAQSchema = (faqs: Array<{ question: string; answer: string }>) => ({

@@ -10,6 +10,17 @@ interface SitemapEntry {
   lastmod?: string;
 }
 
+export interface StorySitemapEntry {
+  slug: string;
+  published_at: string | null;
+  updated_at: string | null;
+}
+
+export interface TagSitemapEntry {
+  tag: string;
+  lastmod: string;
+}
+
 const routes: SitemapEntry[] = [
   // Homepage - Highest Priority
   { path: '/', priority: 1.0, changefreq: 'daily' },
@@ -63,10 +74,65 @@ const routes: SitemapEntry[] = [
   { path: '/admin/job-applications', priority: 0.3, changefreq: 'monthly' },
 ];
 
-export function generateSitemap(baseUrl: string = 'https://creatives-takeover.com'): string {
+/**
+ * Generate sitemap entries for story articles
+ */
+export function generateStoryEntries(
+  stories: StorySitemapEntry[],
+  baseUrl: string = 'https://creatives-takeover.com'
+): string {
+  return stories.map(story => {
+    const lastmod = story.updated_at || story.published_at || new Date().toISOString().split('T')[0];
+    const formattedLastmod = new Date(lastmod).toISOString().split('T')[0];
+    
+    return `  <url>
+    <loc>${baseUrl}/stories/${story.slug}</loc>
+    <lastmod>${formattedLastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+  }).join('\n');
+}
+
+/**
+ * Generate sitemap entries for tag archive pages
+ */
+export function generateTagEntries(
+  tags: TagSitemapEntry[],
+  baseUrl: string = 'https://creatives-takeover.com'
+): string {
+  // Import slugifyTag here to avoid circular dependencies
+  const slugifyTag = (tag: string): string => {
+    let slug = tag.replace(/^#+/, '').trim().toLowerCase();
+    slug = slug.replace(/[\s_]+/g, '-');
+    slug = slug.replace(/[^a-z0-9-]/g, '');
+    slug = slug.replace(/-+/g, '-');
+    slug = slug.replace(/^-+|-+$/g, '');
+    return slug;
+  };
+
+  return tags.map(tagEntry => {
+    const tagSlug = slugifyTag(tagEntry.tag);
+    const formattedLastmod = new Date(tagEntry.lastmod).toISOString().split('T')[0];
+    
+    return `  <url>
+    <loc>${baseUrl}/stories/tags/${tagSlug}</loc>
+    <lastmod>${formattedLastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+  }).join('\n');
+}
+
+export function generateSitemap(
+  baseUrl: string = 'https://creatives-takeover.com',
+  stories?: StorySitemapEntry[],
+  tags?: TagSitemapEntry[]
+): string {
   const now = new Date().toISOString().split('T')[0];
   
-  const urlEntries = routes.map(route => {
+  // Generate static route entries
+  const staticEntries = routes.map(route => {
     const lastmod = route.lastmod || now;
     
     return `  <url>
@@ -75,19 +141,108 @@ export function generateSitemap(baseUrl: string = 'https://creatives-takeover.co
     <changefreq>${route.changefreq}</changefreq>
     <priority>${route.priority.toFixed(1)}</priority>
   </url>`;
-  }).join('\n');
+  });
+
+  // Add Stories listing page
+  staticEntries.push(`  <url>
+    <loc>${baseUrl}/stories</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`);
+
+  // Generate dynamic story entries
+  const storyEntries = stories ? generateStoryEntries(stories, baseUrl) : '';
+  
+  // Generate dynamic tag entries
+  const tagEntries = tags ? generateTagEntries(tags, baseUrl) : '';
+
+  // Combine all entries
+  const allEntries = [
+    ...staticEntries,
+    ...(storyEntries ? [storyEntries] : []),
+    ...(tagEntries ? [tagEntries] : [])
+  ].filter(Boolean).join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urlEntries}
+${allEntries}
 </urlset>`;
 }
 
-export function saveSitemap(): void {
-  const sitemap = generateSitemap();
+export function saveSitemap(
+  stories?: StorySitemapEntry[],
+  tags?: TagSitemapEntry[]
+): void {
+  const sitemap = generateSitemap('https://creatives-takeover.com', stories, tags);
   console.log('Generated sitemap:');
   console.log(sitemap);
   console.log('\nTo save this sitemap, copy the above XML and save it to public/sitemap.xml');
+}
+
+/**
+ * Helper function to fetch stories and tags for sitemap generation
+ * This should be called server-side or during build time
+ */
+export async function fetchSitemapData(supabaseClient: any): Promise<{
+  stories: StorySitemapEntry[];
+  tags: TagSitemapEntry[];
+}> {
+  try {
+    // Fetch all published stories
+    const { data: stories, error: storiesError } = await supabaseClient
+      .from('stories_articles')
+      .select('slug, published_at, updated_at')
+      .eq('status', 'published')
+      .not('linkedin_post_url', 'is', null)
+      .order('published_at', { ascending: false });
+
+    if (storiesError) throw storiesError;
+
+    // Fetch all stories to extract unique hashtags with lastmod
+    const { data: allStories, error: allStoriesError } = await supabaseClient
+      .from('stories_articles')
+      .select('hashtags, published_at, updated_at')
+      .eq('status', 'published')
+      .not('linkedin_post_url', 'is', null);
+
+    if (allStoriesError) throw allStoriesError;
+
+    // Extract tags and find latest article date for each tag
+    const tagLastMod = new Map<string, string>();
+    
+    (allStories || []).forEach((story: any) => {
+      if (story.hashtags && Array.isArray(story.hashtags)) {
+        const lastmod = story.updated_at || story.published_at || new Date().toISOString();
+        
+        story.hashtags.forEach((tag: string) => {
+          const normalized = tag.toLowerCase().replace(/^#+/, '#');
+          const currentLastmod = tagLastMod.get(normalized);
+          
+          if (!currentLastmod || new Date(lastmod) > new Date(currentLastmod)) {
+            tagLastMod.set(normalized, lastmod);
+          }
+        });
+      }
+    });
+
+    const tags: TagSitemapEntry[] = Array.from(tagLastMod.entries()).map(([tag, lastmod]) => ({
+      tag,
+      lastmod: new Date(lastmod).toISOString().split('T')[0]
+    }));
+
+    return {
+      stories: (stories || []).map((s: any) => ({
+        slug: s.slug,
+        published_at: s.published_at,
+        updated_at: s.updated_at
+      })),
+      tags
+    };
+  } catch (error) {
+    console.error('Error fetching sitemap data:', error);
+    return { stories: [], tags: [] };
+  }
 }
 
 // Export route list for other utilities

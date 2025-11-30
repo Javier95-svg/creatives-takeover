@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
+import { slugifyTag } from "@/utils/hashtagUtils";
 
 const Stories = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,23 +29,35 @@ const Stories = () => {
   const [drafts, setDrafts] = useState<StoryArticle[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
 
+  // Redirect old query param URLs to clean URLs (backward compatibility)
+  useEffect(() => {
+    if (selectedTag && activeTab === "published") {
+      // Redirect to clean URL format
+      const tagSlug = slugifyTag(`#${selectedTag}`);
+      navigate(`/stories/tags/${tagSlug}`, { replace: true });
+    }
+  }, [selectedTag, activeTab, navigate]);
+
   useEffect(() => {
     const loadStories = async () => {
       if (activeTab === "drafts" && isAdmin) {
         const data = await fetchDrafts();
         setDrafts(data);
       } else {
-        const data = await fetchStories(selectedTag || undefined);
-        setStories(data);
-        
-        // Extract unique tags from all stories
-        const tagsSet = new Set<string>();
-        data.forEach((story) => {
-          story.hashtags?.forEach((tag) => {
-            tagsSet.add(tag);
+        // Only load stories if no tag is selected (otherwise redirect will handle it)
+        if (!selectedTag) {
+          const data = await fetchStories();
+          setStories(data);
+          
+          // Extract unique tags from all stories
+          const tagsSet = new Set<string>();
+          data.forEach((story) => {
+            story.hashtags?.forEach((tag) => {
+              tagsSet.add(tag);
+            });
           });
-        });
-        setAllTags(Array.from(tagsSet).sort());
+          setAllTags(Array.from(tagsSet).sort());
+        }
       }
     };
 
@@ -144,7 +157,10 @@ const Stories = () => {
                       key={tag}
                       variant="outline"
                       className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                      onClick={() => setSearchParams({ tag: tag.replace('#', ''), tab: 'published' })}
+                      onClick={() => {
+                        const tagSlug = slugifyTag(tag);
+                        navigate(`/stories/tags/${tagSlug}`);
+                      }}
                     >
                       <Hash className="w-3 h-3 mr-1" />
                       {tag.replace('#', '')}

@@ -14,6 +14,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
+import { slugifyTag } from "@/utils/hashtagUtils";
 
 // LinkedIn Embed Component
 const LinkedInEmbed = ({ url }: { url: string }) => {
@@ -228,6 +230,12 @@ const StoryArticle = () => {
         {article.updated_at && (
           <meta property="article:modified_time" content={new Date(article.updated_at).toISOString()} />
         )}
+        {/* Open Graph Article Tags - Add each hashtag as article:tag (up to 10 for optimal social sharing) */}
+        {article.hashtags && article.hashtags.length > 0 && (
+          article.hashtags.slice(0, 10).map((tag, index) => (
+            <meta key={index} property="article:tag" content={tag.replace('#', '')} />
+          ))
+        )}
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -237,6 +245,27 @@ const StoryArticle = () => {
         <meta name="twitter:image:alt" content={metaTitle} />
 
         <link rel="canonical" href={articleUrl} />
+
+        {/* Structured Data (JSON-LD) */}
+        <script type="application/ld+json">
+          {JSON.stringify([
+            createArticleSchema({
+              title: article.title,
+              description: metaDescription,
+              image: ogImageUrl || undefined,
+              author: "Creatives Takeover",
+              publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
+              modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
+              url: `/stories/${article.slug}`,
+              keywords: article.hashtags || [],
+            }),
+            createBreadcrumbSchema([
+              { name: 'Home', url: '/' },
+              { name: 'Stories', url: '/stories' },
+              { name: article.title, url: `/stories/${article.slug}` }
+            ])
+          ])}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -291,7 +320,10 @@ const StoryArticle = () => {
                       key={index}
                       variant="secondary"
                       className="cursor-pointer"
-                      onClick={() => navigate(`/stories?tag=${encodeURIComponent(tag.replace('#', ''))}`)}
+                      onClick={() => {
+                        const tagSlug = slugifyTag(tag);
+                        navigate(`/stories/tags/${tagSlug}`);
+                      }}
                     >
                       <Hash className="w-3 h-3 mr-1" />
                       {tag.replace('#', '')}

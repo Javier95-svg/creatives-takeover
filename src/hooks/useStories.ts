@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { normalizeHashtag } from '@/utils/hashtagUtils';
 
 export interface StoryArticle {
   id: string;
@@ -53,14 +54,24 @@ export const useStories = () => {
         .not('linkedin_post_url', 'is', null) // Only fetch stories with LinkedIn URLs
         .order('published_at', { ascending: false });
 
-      if (hashtag) {
-        query = query.contains('hashtags', [hashtag]);
-      }
-
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data || []) as StoryArticle[];
+      
+      let stories = (data || []) as StoryArticle[];
+
+      // Case-insensitive tag filtering (client-side for better compatibility)
+      if (hashtag) {
+        const normalizedTag = normalizeHashtag(hashtag).toLowerCase();
+        stories = stories.filter((story) => {
+          if (!story.hashtags || story.hashtags.length === 0) return false;
+          return story.hashtags.some((tag) => 
+            normalizeHashtag(tag).toLowerCase() === normalizedTag
+          );
+        });
+      }
+
+      return stories;
     } catch (error: any) {
       console.error('Error fetching stories:', error);
       toast.error('Failed to load stories');
@@ -316,6 +327,51 @@ export const useStories = () => {
     }
   }, [isAdmin]);
 
+  // Fetch all unique hashtags with counts
+  const fetchUniqueHashtags = useCallback(async (): Promise<Array<{ tag: string; count: number }>> => {
+    try {
+      setLoading(true);
+      
+      // Fetch all published stories
+      const { data, error } = await supabase
+        .from('stories_articles')
+        .select('hashtags')
+        .eq('status', 'published')
+        .not('linkedin_post_url', 'is', null);
+
+      if (error) throw error;
+
+      // Count hashtag occurrences
+      const tagCounts = new Map<string, number>();
+      
+      (data || []).forEach((story: { hashtags: string[] | null }) => {
+        if (story.hashtags && Array.isArray(story.hashtags)) {
+          story.hashtags.forEach((tag) => {
+            // Normalize tag for consistent counting
+            const normalized = normalizeHashtag(tag);
+            if (normalized) {
+              const currentCount = tagCounts.get(normalized) || 0;
+              tagCounts.set(normalized, currentCount + 1);
+            }
+          });
+        }
+      });
+
+      // Convert to array and sort by count (descending)
+      const tagArray = Array.from(tagCounts.entries())
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => b.count - a.count);
+
+      return tagArray;
+    } catch (error: any) {
+      console.error('Error fetching unique hashtags:', error);
+      toast.error('Failed to load hashtags');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     isAdmin,
@@ -327,6 +383,7 @@ export const useStories = () => {
     updateStory,
     deleteStory,
     uploadBannerImage,
+    fetchUniqueHashtags,
   };
 };
 

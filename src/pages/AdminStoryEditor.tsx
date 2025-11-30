@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useStories, StoryArticle } from "@/hooks/useStories";
 import { generateSlug } from "@/utils/slugGenerator";
+import { parseHashtags as parseHashtagsUtil } from "@/utils/hashtagUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Save, X, Loader2, ArrowLeft, Maximize2, Minimize2, Layout, Linkedin, Image, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -93,11 +94,7 @@ const AdminStoryEditor = () => {
   };
 
   const parseHashtags = (tagsString: string): string[] => {
-    return tagsString
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0)
-      .map((tag) => (tag.startsWith("#") ? tag : `#${tag}`));
+    return parseHashtagsUtil(tagsString);
   };
 
   // Auto-generate title from LinkedIn URL if title is empty

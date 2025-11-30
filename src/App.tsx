@@ -32,6 +32,7 @@ import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
 import Stories from "./pages/Stories";
 import StoryArticle from "./pages/StoryArticle";
+import StoryTagPage from "./pages/StoryTagPage";
 import AdminStoryEditor from "./pages/AdminStoryEditor";
 import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
@@ -77,6 +78,7 @@ function App() {
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/stories" element={<Stories />} />
+                  <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
                   <Route path="/stories/:slug" element={<StoryArticle />} />
                   <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
                   <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />

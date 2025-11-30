@@ -2,6 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Hash } from "lucide-react";
 import { StoryArticle } from "@/hooks/useStories";
+import { useNavigate } from "react-router-dom";
+import { slugifyTag } from "@/utils/hashtagUtils";
 
 interface StoryCardProps {
   article: StoryArticle;
@@ -9,6 +11,7 @@ interface StoryCardProps {
 }
 
 export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
+  const navigate = useNavigate();
   // Use LinkedIn URL if available, otherwise fallback to article detail page
   const linkUrl = article.linkedin_post_url || `/stories/${article.slug}`;
   const isExternalLink = !!article.linkedin_post_url;
@@ -70,7 +73,8 @@ export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    window.location.href = `/stories?tag=${encodeURIComponent(tag.replace('#', ''))}`;
+                    const tagSlug = slugifyTag(tag);
+                    navigate(`/stories/tags/${tagSlug}`);
                   }}
                 >
                   <Hash className="w-3 h-3 mr-1" />
