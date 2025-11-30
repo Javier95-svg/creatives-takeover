@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Hash } from "lucide-react";
@@ -10,7 +11,7 @@ interface StoryCardProps {
   featured?: boolean;
 }
 
-export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
+const StoryCardComponent = ({ article, featured = false }: StoryCardProps) => {
   const navigate = useNavigate();
   // Use LinkedIn URL if available, otherwise fallback to article detail page
   const linkUrl = article.linkedin_post_url || `/stories/${article.slug}`;
@@ -93,3 +94,5 @@ export const StoryCard = ({ article, featured = false }: StoryCardProps) => {
     </a>
   );
 };
+
+export const StoryCard = React.memo(StoryCardComponent);

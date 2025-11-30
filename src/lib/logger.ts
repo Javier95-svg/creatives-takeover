@@ -1,22 +1,3 @@
-const isProd = import.meta.env.MODE === 'production';
-
-export const log = (...args: unknown[]) => {
-  if (!isProd) console.log(...args);
-};
-
-export const warn = (...args: unknown[]) => {
-  console.warn(...args);
-};
-
-export const error = (...args: unknown[]) => {
-  console.error(...args);
-};
-
-export default {
-  log,
-  warn,
-  error,
-};
 /**
  * Centralized logging utility for frontend
  * Provides environment-aware logging with structured output
@@ -115,3 +96,28 @@ export const logError = (message: string, error?: Error | unknown, context?: Log
   logger.error(message, error, context);
 export const trackEvent = (eventName: string, properties?: Record<string, unknown>) => 
   logger.trackEvent(eventName, properties);
+
+// Legacy exports for backward compatibility
+export const log = (...args: unknown[]) => {
+  if (!isProduction) console.log(...args);
+};
+
+export const warn = (...args: unknown[]) => {
+  if (!isProduction) console.warn(...args);
+};
+
+export const error = (...args: unknown[]) => {
+  console.error(...args);
+};
+
+export default {
+  log,
+  warn,
+  error,
+  logger,
+  logDebug,
+  logInfo,
+  logWarn,
+  logError,
+  trackEvent,
+};

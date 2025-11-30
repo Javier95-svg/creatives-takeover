@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface CollaborationContextType {
   isCollaborating: boolean;
@@ -33,8 +34,10 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
   const [isCollaborating, setIsCollaborating] = useState(false);
   const [activeCollaborators, setActiveCollaborators] = useState(0);
   const [currentSession, setCurrentSession] = useState<string | null>(null);
+  const presenceChannelRef = useRef<RealtimeChannel | null>(null);
+  const currentSessionRef = useRef<string | null>(null);
 
-  const startCollaboration = async (resourceType: string, resourceId: string) => {
+  const startCollaboration = useCallback(async (resourceType: string, resourceId: string) => {
     if (!user) return;
 
     try {
@@ -76,6 +79,7 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
           last_seen_at: new Date().toISOString(),
         });
 
+      currentSessionRef.current = sessionId;
       setCurrentSession(sessionId);
       setIsCollaborating(true);
 
@@ -106,15 +110,17 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
         .subscribe();
 
       // Store channel reference for cleanup
-      (window as any).collaborationChannel = presenceChannel;
+      presenceChannelRef.current = presenceChannel;
+      currentSessionRef.current = sessionId;
 
     } catch (error) {
       console.error('Error starting collaboration:', error);
     }
-  };
+  }, [user]);
 
-  const stopCollaboration = async () => {
-    if (!user || !currentSession) return;
+  const stopCollaboration = useCallback(async () => {
+    const sessionId = currentSessionRef.current;
+    if (!user || !sessionId) return;
 
     try {
       // Update presence to inactive
@@ -124,32 +130,31 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
           is_active: false,
           last_seen_at: new Date().toISOString(),
         })
-        .eq('session_id', currentSession)
+        .eq('session_id', sessionId)
         .eq('user_id', user.id);
 
-      // Clean up
-      if ((window as any).collaborationChannel) {
-        supabase.removeChannel((window as any).collaborationChannel);
-        (window as any).collaborationChannel = null;
+      // Clean up channel
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+        presenceChannelRef.current = null;
       }
 
       setIsCollaborating(false);
       setActiveCollaborators(0);
       setCurrentSession(null);
+      currentSessionRef.current = null;
 
     } catch (error) {
       console.error('Error stopping collaboration:', error);
     }
-  };
+  }, [user]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (isCollaborating) {
-        stopCollaboration();
-      }
+      stopCollaboration();
     };
-  }, []);
+  }, [stopCollaboration]);
 
   // Update presence periodically
   useEffect(() => {

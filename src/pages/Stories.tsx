@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -28,6 +28,8 @@ const Stories = () => {
   const [stories, setStories] = useState<StoryArticle[]>([]);
   const [drafts, setDrafts] = useState<StoryArticle[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
   // Redirect old query param URLs to clean URLs (backward compatibility)
   useEffect(() => {
@@ -39,29 +41,57 @@ const Stories = () => {
   }, [selectedTag, activeTab, navigate]);
 
   useEffect(() => {
+    // Abort previous request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    isMountedRef.current = true;
+
     const loadStories = async () => {
-      if (activeTab === "drafts" && isAdmin) {
-        const data = await fetchDrafts();
-        setDrafts(data);
-      } else {
-        // Only load stories if no tag is selected (otherwise redirect will handle it)
-        if (!selectedTag) {
-          const data = await fetchStories();
-          setStories(data);
-          
-          // Extract unique tags from all stories
-          const tagsSet = new Set<string>();
-          data.forEach((story) => {
-            story.hashtags?.forEach((tag) => {
-              tagsSet.add(tag);
+      try {
+        if (signal.aborted || !isMountedRef.current) return;
+
+        if (activeTab === "drafts" && isAdmin) {
+          const data = await fetchDrafts();
+          if (signal.aborted || !isMountedRef.current) return;
+          setDrafts(data);
+        } else {
+          // Only load stories if no tag is selected (otherwise redirect will handle it)
+          if (!selectedTag) {
+            const data = await fetchStories();
+            if (signal.aborted || !isMountedRef.current) return;
+            
+            setStories(data);
+            
+            // Extract unique tags from all stories
+            const tagsSet = new Set<string>();
+            data.forEach((story) => {
+              story.hashtags?.forEach((tag) => {
+                tagsSet.add(tag);
+              });
             });
-          });
-          setAllTags(Array.from(tagsSet).sort());
+            setAllTags(Array.from(tagsSet).sort());
+          }
+        }
+      } catch (error) {
+        if (!signal.aborted && isMountedRef.current) {
+          console.error('Error loading stories:', error);
         }
       }
     };
 
     loadStories();
+
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [selectedTag, activeTab, fetchStories, fetchDrafts, isAdmin]);
 
   const clearTagFilter = () => {

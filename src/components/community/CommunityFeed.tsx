@@ -35,8 +35,7 @@ const CommunityFeed: React.FC = () => {
   const fetchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch posts from database
-  const fetchPosts = useCallback(async (showLoading = true) => {
-    console.log('🔍 STARTING TO FETCH POSTS...');
+  const fetchPosts = useCallback(async (showLoading = true, abortSignal?: AbortSignal) => {
     if (showLoading) {
       setLoading(true);
     }
@@ -46,41 +45,53 @@ const CommunityFeed: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      console.log('📊 RAW POSTS DATA:', data);
-      console.log('❌ POSTS ERROR:', error);
-
       if (error) {
         console.error('Error fetching posts:', error);
         toast.error('Failed to load posts');
         return;
       }
 
+      if (abortSignal?.aborted) return;
+
       if (!data || data.length === 0) {
-        console.log('⚠️ NO POSTS FOUND IN DATABASE');
         setPosts([]);
         return;
       }
 
-      // Fetch author information using secure function
-      const authorPromises = data.map(async (post) => {
-        const { data: authorData } = await supabase.rpc('get_post_author_info', {
-          author_user_id: post.user_id
-        });
-        return {
-          postId: post.id,
-          userId: post.user_id,
-          authorName: authorData?.[0]?.author_name || 'Anonymous',
-          authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
-          authorUsername: authorData?.[0]?.author_username
-        };
-      });
+      // Get unique user IDs from all posts
+      const uniqueUserIds = [...new Set(data.map(post => post.user_id).filter(Boolean))];
+      
+      // Batch fetch all author information using RPC calls in parallel
+      // Note: Each RPC call is still separate, but they run in parallel
+      // For true optimization, would need a batch RPC function that accepts array of IDs
+      const authorResults = await Promise.all(
+        uniqueUserIds.map(async (userId) => {
+          try {
+            const { data: authorData } = await supabase.rpc('get_post_author_info', {
+              author_user_id: userId
+            });
+            return {
+              userId,
+              authorName: authorData?.[0]?.author_name || 'Anonymous',
+              authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
+              authorUsername: authorData?.[0]?.author_username
+            };
+          } catch (err) {
+            return {
+              userId,
+              authorName: 'Anonymous',
+              authorAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
+              authorUsername: undefined
+            };
+          }
+        })
+      );
 
-      const authorResults = await Promise.all(authorPromises);
-      const authorMap = new Map(authorResults.map(result => [result.postId, result]));
+      // Create map of userId to author info for fast lookup
+      const authorMap = new Map(authorResults.map(result => [result.userId, result]));
 
       let formattedPosts: Post[] = data.map(post => {
-        const authorInfo = authorMap.get(post.id);
-        console.log(`🔧 FORMATTING POST ${post.id} for user ${post.user_id}:`, { post, authorInfo });
+        const authorInfo = authorMap.get(post.user_id);
         
         return {
           id: post.id,
@@ -94,7 +105,7 @@ const CommunityFeed: React.FC = () => {
             avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
             username: authorInfo?.authorUsername
           },
-          user_id: authorInfo?.userId,
+          user_id: post.user_id,
           votes: (post.upvotes || 0) - (post.downvotes || 0),
           commentsCount: post.comment_count || 0,
           repostCount: post.repost_count || 0,
@@ -113,25 +124,23 @@ const CommunityFeed: React.FC = () => {
         };
       });
 
-      console.log('✨ FORMATTED POSTS:', formattedPosts);
+      if (abortSignal?.aborted) return;
 
       // No filtering - show all posts
       const filtered = formattedPosts;
 
-      console.log('🎯 FILTERED POSTS:', filtered);
-      console.log(`📈 SETTING ${filtered.length} POSTS TO STATE`);
-
-      setPosts(filtered);
+      if (!abortSignal?.aborted) {
+        setPosts(filtered);
+      }
     } catch (error) {
-      console.error('💥 ERROR IN FETCHPOSTS:', error);
+      console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
     } finally {
-      console.log('🏁 SETTING LOADING TO FALSE');
       if (showLoading) {
         setLoading(false);
       }
     }
-  }, [user]);
+  }, []);
 
 
   // Debounced fetch function to prevent rapid refetches
@@ -157,7 +166,9 @@ const CommunityFeed: React.FC = () => {
 
   // Set up real-time subscription
   useEffect(() => {
-    fetchPosts();
+    const abortController = new AbortController();
+    
+    fetchPosts(true, abortController.signal);
 
     const channel = supabase
       .channel('community-posts-changes')
@@ -166,7 +177,6 @@ const CommunityFeed: React.FC = () => {
         schema: 'public',
         table: 'community_posts'
       }, () => {
-        console.log('Posts changed, refetching...');
         debouncedFetchPosts(); // Debounced refetch posts when changes occur
       })
       .on('postgres_changes', {
@@ -174,7 +184,6 @@ const CommunityFeed: React.FC = () => {
         schema: 'public',
         table: 'post_comments'
       }, () => {
-        console.log('Comments changed, refetching...');
         debouncedFetchPosts(); // Debounced refetch when comments change
       })
       .on('postgres_changes', {
@@ -182,12 +191,12 @@ const CommunityFeed: React.FC = () => {
         schema: 'public',
         table: 'profiles'
       }, () => {
-        console.log('Profiles changed, refetching...');
         debouncedFetchPosts(); // Debounced refetch when profiles change
       })
       .subscribe();
 
     return () => {
+      abortController.abort();
       if (fetchDebounceTimerRef.current) {
         clearTimeout(fetchDebounceTimerRef.current);
       }

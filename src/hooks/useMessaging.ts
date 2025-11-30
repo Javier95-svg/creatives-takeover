@@ -87,6 +87,8 @@ export const useMessaging = () => {
   useEffect(() => {
     if (!activeConversationId) return;
 
+    const abortController = new AbortController();
+
     const loadMessages = async () => {
       try {
         const { data, error } = await safe.select(async () =>
@@ -98,32 +100,52 @@ export const useMessaging = () => {
         );
 
         if (error) throw error;
+        if (abortController.signal.aborted) return;
 
-        // Get sender profiles for all messages
-        const messagesWithSenders = await Promise.all(
-          (data || []).map(async (message) => {
-            const { data: senderData } = await safe.select(async () =>
-              await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url')
-                .eq('id', message.sender_id)
-                .single()
-            );
-            
-            return {
-              ...message,
-              message_type: message.message_type as 'text' | 'image' | 'file',
-              sender: senderData
-            } as Message;
-          })
+        // Get unique sender IDs
+        const senderIds = [...new Set((data || []).map(msg => msg.sender_id))];
+        
+        if (senderIds.length === 0) {
+          setMessages(prev => ({
+            ...prev,
+            [activeConversationId]: []
+          }));
+          return;
+        }
+
+        // Batch fetch all sender profiles in a single query
+        const { data: profilesData, error: profilesError } = await safe.select(async () =>
+          await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', senderIds)
         );
 
-        setMessages(prev => ({
-          ...prev,
-          [activeConversationId]: messagesWithSenders
-        }));
+        if (profilesError) throw profilesError;
+        if (abortController.signal.aborted) return;
+
+        // Create a map of sender ID to profile data
+        const profilesMap = new Map(
+          (profilesData || []).map(profile => [profile.id, profile])
+        );
+
+        // Map messages with sender data
+        const messagesWithSenders = (data || []).map((message) => ({
+          ...message,
+          message_type: message.message_type as 'text' | 'image' | 'file',
+          sender: profilesMap.get(message.sender_id) || undefined
+        })) as Message[];
+
+        if (!abortController.signal.aborted) {
+          setMessages(prev => ({
+            ...prev,
+            [activeConversationId]: messagesWithSenders
+          }));
+        }
       } catch (error) {
-        console.error('Error loading messages:', error);
+        if (!abortController.signal.aborted) {
+          console.error('Error loading messages:', error);
+        }
       }
     };
 
@@ -140,12 +162,19 @@ export const useMessaging = () => {
           filter: `conversation_id=eq.${activeConversationId}`
         },
         async (payload) => {
-          // Get sender info for the new message
-          const { data: senderData } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .eq('id', payload.new.sender_id)
-            .single();
+          // Get sender info for the new message (cached if already loaded)
+          const existingMessages = messages[activeConversationId] || [];
+          const existingSender = existingMessages.find(m => m.sender_id === payload.new.sender_id)?.sender;
+          
+          let senderData = existingSender;
+          if (!senderData) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url')
+              .eq('id', payload.new.sender_id)
+              .single();
+            senderData = data || undefined;
+          }
 
           const newMessage: Message = {
             id: payload.new.id,
@@ -170,9 +199,10 @@ export const useMessaging = () => {
       .subscribe();
 
     return () => {
+      abortController.abort();
       supabase.removeChannel(messageSubscription);
     };
-  }, [activeConversationId]);
+  }, [activeConversationId, messages]);
 
   const startConversation = async (participantId: string): Promise<string | null> => {
     if (!user || loading) return null;

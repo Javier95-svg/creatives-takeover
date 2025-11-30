@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -80,7 +80,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
   const [activities, setActivities] = useState<CollaborationActivity[]>([]);
   const [activeCall, setActiveCall] = useState<CollaborationCall | null>(null);
   const [loading, setLoading] = useState(true);
-  const [realtimeChannels, setRealtimeChannels] = useState<RealtimeChannel[]>([]);
+  const realtimeChannelsRef = useRef<RealtimeChannel[]>([]);
 
   // Fetch messages
   const fetchMessages = useCallback(async () => {
@@ -390,13 +390,22 @@ export const useEnhancedCollaboration = (sessionId: string) => {
 
     channels.push(callsChannel);
 
-    setRealtimeChannels(channels);
+    // Clean up old channels before setting new ones
+    realtimeChannelsRef.current.forEach(channel => {
+      supabase.removeChannel(channel);
+    });
+    realtimeChannelsRef.current = channels;
   }, [sessionId, user, fetchMessages, fetchUserStatuses, fetchNotifications, fetchActivities, fetchActiveCall]);
 
   // Initialize
   useEffect(() => {
-    if (sessionId && user) {
-      const initializeData = async () => {
+    if (!sessionId || !user) return;
+
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    const initializeData = async () => {
+      try {
         setLoading(true);
         await Promise.all([
           fetchMessages(),
@@ -405,23 +414,32 @@ export const useEnhancedCollaboration = (sessionId: string) => {
           fetchActivities(),
           fetchActiveCall(),
         ]);
-        setLoading(false);
-      };
+        if (!signal.aborted) {
+          setLoading(false);
+        }
+      } catch (error) {
+        if (!signal.aborted) {
+          console.error('Error initializing collaboration:', error);
+          setLoading(false);
+        }
+      }
+    };
 
-      initializeData();
-      setupRealtimeSubscriptions();
+    initializeData();
+    setupRealtimeSubscriptions();
 
-      // Update user status to online
-      updateUserStatus('online');
+    // Update user status to online
+    updateUserStatus('online');
 
-      return () => {
-        // Clean up channels
-        realtimeChannels.forEach(channel => {
-          supabase.removeChannel(channel);
-        });
-      };
-    }
-  }, [sessionId, user]);
+    return () => {
+      abortController.abort();
+      // Clean up channels from ref
+      realtimeChannelsRef.current.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+      realtimeChannelsRef.current = [];
+    };
+  }, [sessionId, user, fetchMessages, fetchUserStatuses, fetchNotifications, fetchActivities, fetchActiveCall, setupRealtimeSubscriptions, updateUserStatus]);
 
   // Update activity on user interaction
   useEffect(() => {

@@ -10,6 +10,7 @@ import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import FloatingFeedbackWidget from "@/components/FloatingFeedbackWidget";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import PricingPage from "./pages/PricingPage";
@@ -59,7 +60,7 @@ function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
   return (
-    <>
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <UserProvider>
@@ -113,7 +114,7 @@ function App() {
       </AuthProvider>
       </QueryClientProvider>
       <Analytics />
-    </>
+    </ErrorBoundary>
   );
 };
 

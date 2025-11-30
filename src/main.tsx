@@ -5,6 +5,7 @@ import App from './App.tsx'
 import './index.css'
 import posthog from 'posthog-js'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { logError } from './lib/logger'
 
 const helmetContext = {};
 
@@ -28,6 +29,25 @@ if (initialTheme === 'dark') {
 } else {
   document.documentElement.classList.remove('dark');
 }
+
+// Global error handlers for unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  logError('Unhandled promise rejection', event.reason, {
+    type: 'unhandled_rejection',
+    promise: event.promise?.toString(),
+  });
+  // Prevent default browser console error (we've already logged it)
+  // event.preventDefault();
+});
+
+window.addEventListener('error', (event) => {
+  logError('Unhandled error', event.error || event.message, {
+    type: 'global_error',
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+  });
+});
 
 // Initialize PostHog if a public key is provided via Vite env vars.
 // Uses VITE_POSTHOG_API_KEY (public key) and optional VITE_POSTHOG_API_HOST.

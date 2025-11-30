@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
@@ -19,47 +19,75 @@ const StoryTagPage = () => {
   const [tagDisplay, setTagDisplay] = useState<string>("");
 
   useEffect(() => {
+    if (!tagSlug) {
+      navigate("/stories", { replace: true });
+      return;
+    }
+
+    // Create new AbortController for this effect
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     const loadStories = async () => {
-      if (!tagSlug) {
-        navigate("/stories", { replace: true });
-        return;
-      }
+      try {
+        // Try to reconstruct tag from slug - try multiple variations
+        const possibleTags = [
+          `#${tagSlug}`,
+          `#${tagSlug.replace(/-/g, '')}`,
+          tagSlug,
+          tagSlug.replace(/-/g, ''),
+        ].map(t => normalizeHashtag(t));
 
-      // Try to find the tag by matching slugified versions
-      // First, try the tagSlug as-is (without #)
-      // We need to find the actual hashtag format used in the database
-      let matchingTag = `#${tagSlug}`;
-      
-      // Fetch all stories to find the actual tag format
-      const allStories = await fetchStories();
-      const allTags = new Set<string>();
-      allStories.forEach((story) => {
-        story.hashtags?.forEach((tag) => {
-          allTags.add(tag);
-        });
-      });
+        // Fetch unique hashtags list (only fetches hashtags column, not full stories)
+        const allTagsData = await fetchUniqueHashtags();
+        
+        if (signal.aborted) return;
 
-      // Find the tag that matches our slug
-      const normalizedSlug = tagSlug.toLowerCase().replace(/-/g, '');
-      for (const tag of allTags) {
-        const tagSlugified = slugifyTag(tag);
-        if (tagSlugified === tagSlug || slugifyTag(tag).toLowerCase() === normalizedSlug) {
-          matchingTag = tag;
-          break;
+        // Find matching tag from the list
+        let matchingTag = possibleTags[0]; // Default fallback
+        
+        for (const tagData of allTagsData) {
+          const normalizedTag = normalizeHashtag(tagData.tag).toLowerCase();
+          const normalizedSlug = tagSlug.toLowerCase().replace(/-/g, '');
+          
+          // Check if tag matches slug
+          if (slugifyTag(tagData.tag) === tagSlug || 
+              normalizedTag === normalizedSlug ||
+              normalizedTag.replace(/^#+/, '') === normalizedSlug) {
+            matchingTag = tagData.tag;
+            break;
+          }
+        }
+
+        // Set display name (without #)
+        const displayName = matchingTag.replace(/^#+/, '');
+        if (!signal.aborted) {
+          setTagDisplay(displayName);
+        }
+
+        // Fetch stories with this tag directly
+        const tagWithoutHash = matchingTag.replace(/^#+/, '');
+        const filteredStories = await fetchStories(tagWithoutHash);
+        
+        if (!signal.aborted) {
+          setStories(filteredStories);
+        }
+      } catch (error) {
+        if (!signal.aborted) {
+          console.error('Error loading tag stories:', error);
+          navigate("/stories", { replace: true });
         }
       }
-
-      // Set display name (without #)
-      setTagDisplay(matchingTag.replace(/^#+/, ''));
-
-      // Fetch stories with this tag
-      const tagWithoutHash = matchingTag.replace(/^#+/, '');
-      const filteredStories = await fetchStories(tagWithoutHash);
-      setStories(filteredStories);
     };
 
     loadStories();
-  }, [tagSlug, fetchStories, navigate]);
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [tagSlug, fetchStories, fetchUniqueHashtags, navigate]);
 
   if (!tagSlug) {
     return null;

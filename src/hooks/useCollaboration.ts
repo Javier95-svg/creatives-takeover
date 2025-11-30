@@ -268,7 +268,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
     return () => {
       leaveCollaboration();
     };
-  }, [user, resourceType, resourceId]);
+  }, [user, resourceType, resourceId, startCollaboration, leaveCollaboration]);
 
   // Fetch initial data when session is established
   useEffect(() => {
@@ -276,7 +276,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       fetchActiveUsers(session.id);
       fetchComments(session.id);
     }
-  }, [session]);
+  }, [session, fetchActiveUsers, fetchComments]);
 
   return {
     session,
