@@ -38,18 +38,18 @@ const platformSnippets: PlatformSnippet[] = [
     color: "dashboard"
   },
   {
+    name: "Insighta",
+    description: "Assess your fundraising readiness, find matched investors, and discover funding opportunities",
+    icon: TrendingUp,
+    route: "/insighta",
+    color: "insighta"
+  },
+  {
     name: "BizMap AI Chat",
     description: "Get strategic business advice from your AI co-founder through conversation",
     icon: MessageSquare,
     route: "/bizmap-ai",
     color: "chat"
-  },
-  {
-    name: "Product Market Fit Lab",
-    description: "Validate your product-market fit with customer analysis and validation experiments",
-    icon: FlaskConical,
-    route: "/bizmap-ai",
-    color: "pmf"
   },
   {
     name: "Prompt Library",
@@ -59,11 +59,11 @@ const platformSnippets: PlatformSnippet[] = [
     color: "prompt"
   },
   {
-    name: "Insighta",
-    description: "Assess your fundraising readiness, find matched investors, and discover funding opportunities",
-    icon: TrendingUp,
-    route: "/insighta",
-    color: "insighta"
+    name: "Product Market Fit Lab",
+    description: "Validate your product-market fit with customer analysis and validation experiments",
+    icon: FlaskConical,
+    route: "/bizmap-ai",
+    color: "pmf"
   },
   {
     name: "Community",
