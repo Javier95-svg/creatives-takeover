@@ -89,7 +89,7 @@ const HeroSnippets = () => {
         colorName: 'blue'
       },
       dashboard: {
-        glass: 'glass-blue',
+        glass: 'glass-green',
         border: 'border-yellow-500/30 hover:border-yellow-500/60',
         shadow: 'hover:shadow-lg hover:shadow-yellow-500/20',
         icon: 'text-yellow-600 dark:text-yellow-400',
