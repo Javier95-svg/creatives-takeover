@@ -102,7 +102,7 @@ const EntrepreneurProblems = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 relative overflow-hidden">
+    <section className="py-20 lg:py-32 relative overflow-hidden">
       {/* Problem-Focused Wallpaper - theme-aware */}
       <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
       

@@ -4,8 +4,16 @@ import { Mail, Linkedin, Instagram, Twitter, Youtube } from "lucide-react";
 const Footer = () => {
   const year = new Date().getFullYear();
   return (
-    <footer className="relative bg-background border-t border-border">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 relative max-w-7xl">
+    <footer className="relative bg-background border-t-2" style={{
+      borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
+      borderImageSlice: 1
+    }}>
+      {/* RGB gradient top border */}
+      <div className="absolute top-0 left-0 right-0 h-px" style={{
+        background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)))'
+      }} />
+      
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
         <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <section aria-labelledby="footer-address">
             <h2 id="footer-address" className="text-sm font-semibold tracking-wide text-foreground">Registered Office</h2>
@@ -48,7 +56,7 @@ const Footer = () => {
 
           <nav aria-labelledby="footer-social">
             <h2 id="footer-social" className="text-sm font-semibold tracking-wide text-foreground">Follow Us</h2>
-            <ul className="mt-4 flex flex-wrap items-center gap-3">
+            <ul className="mt-3 flex flex-wrap items-center gap-4">
               {/* Instagram */}
               <li className="flex items-center">
                 <a
@@ -133,13 +141,85 @@ const Footer = () => {
                 </a>
               </li>
             </ul>
+            
+            {/* Product Hunt Badge */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <a 
+                href="https://www.producthunt.com/products/creatives-takeover?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-creatives-takeover" 
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Featured on Product Hunt"
+              >
+                <img 
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1025583&theme=light&t=1760234587519" 
+                  alt="Creatives Takeover - AI Platform for Creators & Entrepreneurs | Product Hunt" 
+                  className="hover:opacity-80 transition-opacity dark:invert dark:opacity-90" 
+                  style={{ width: '250px', height: '54px' }} 
+                  width="250" 
+                  height="54" 
+                />
+              </a>
+            </div>
+
+            {/* Peerpush Badge */}
+            <div className="mt-4">
+              <a 
+                href="https://peerpush.net/p/creatives-takeover" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Featured on Peerpush"
+              >
+                <img 
+                  src="https://peerpush.net/p/creatives-takeover/badge" 
+                  alt="Creatives Takeover badge" 
+                  className="hover:opacity-80 transition-opacity h-[60px]"
+                />
+              </a>
+            </div>
+
+            {/* SaaSHub Badge */}
+            <div className="mt-4">
+              <a 
+                href='https://www.saashub.com/creatives-takeover?utm_source=badge&utm_campaign=badge&utm_content=creatives-takeover&badge_variant=color&badge_kind=approved' 
+                target='_blank'
+                rel="noopener noreferrer"
+                aria-label="Approved on SaaSHub"
+              >
+                <img 
+                  src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1" 
+                  alt="Creatives Takeover badge" 
+                  className="hover:opacity-80 transition-opacity"
+                  style={{ maxWidth: '150px' }}
+                />
+              </a>
+            </div>
+
+            {/* Turbo0 Badge */}
+            <div className="mt-4">
+              <a 
+                href="https://turbo0.com/item/creatives-takeover" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Listed on Turbo0"
+              >
+                <img 
+                  src="https://img.turbo0.com/badge-listed-light.svg" 
+                  alt="Listed on Turbo0" 
+                  className="hover:opacity-80 transition-opacity"
+                  style={{ height: '54px', width: 'auto' }}
+                />
+              </a>
+            </div>
           </nav>
         </div>
 
-        {/* Divider */}
-        <div className="mt-12 pt-8 border-t border-border" />
-        <div className="mt-6 text-sm text-muted-foreground text-center">
-          <span className="font-medium">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
+        {/* RGB gradient divider */}
+        <div className="mt-8 pt-8 border-t" style={{
+          borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
+          borderImageSlice: 1
+        }} />
+        <div className="mt-6 text-xs text-muted-foreground text-center">
+          <span className="gradient-rgb font-semibold">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
         </div>
       </div>
     </footer>
