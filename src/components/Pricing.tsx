@@ -33,57 +33,33 @@ const Pricing = () => {
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [hasPrefilledAddress, setHasPrefilledAddress] = useState(false);
 
-  // Define flat feature list for each tier - simplified
+  // Define simplified feature list for each tier - keep it clear and concise
   const getFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
         "5 BizMap AI conversations per month",
-        "Prompt library (view only)",
         "Community read-only access",
-        "Reputation system (basic)",
         "1 active sprint",
-        "Basic Kanban board",
         "Funding opportunities (view only)",
         "Job board (view only)",
         "Community forum support"
       ],
       creator: [
         "50 BizMap AI conversations per month",
-        "Prompt library with copy/export functionality",
-        "Custom prompt chains creation",
         "Full community access (post, comment, vote)",
-        "Accountability partnerships",
-        "Reputation system (full access)",
         "Unlimited sprint planning & Kanban boards",
-        "Daily check-ins",
         "Market intelligence (10 queries/month)",
-        "Funding opportunities with bookmarks",
-        "Job board (view & apply)",
         "Financial dashboard access",
-        "Budget management (basic)",
-        "Basic reports (5/month)",
         "Basic collaboration tools (max 3 collaborators)",
         "Priority email support (48hr response)"
       ],
       professional: [
         "150 BizMap AI conversations per month",
-        "Prompt library with copy/export functionality",
-        "Custom prompt chains creation",
-        "AI-enhanced community (post insights, trending)",
-        "Accountability partnerships",
-        "Reputation system (full access)",
-        "Unlimited sprint planning & Kanban boards",
-        "Daily check-ins",
+        "AI-enhanced community features",
         "Unlimited market intelligence",
         "Unlimited custom reports + PDF export",
-        "Funding opportunities with bookmarks",
-        "Job board (view & apply)",
-        "Financial dashboard access",
-        "Budget management (advanced)",
+        "Advanced collaboration tools",
         "Advanced financial analytics",
-        "Success score analytics & tracking",
-        "Outreach campaigns (unlimited)",
-        "Advanced collaboration (whiteboarding, polls, video calls)",
         "Unlimited team members",
         "24hr priority support",
         "API access"
@@ -102,15 +78,7 @@ const Pricing = () => {
     return audiences[tierName] || "";
   };
 
-  // Get key benefits over the lower tier - simplified
-  const getUpgradeBenefits = (tierName: string): string => {
-    const benefits: Record<string, string> = {
-      free: "",
-      creator: "Upgrade from Free to get: 10x more AI conversations, full community participation, unlimited sprint planning, and market intelligence access.",
-      professional: "Upgrade from Creator to get: 3x more AI conversations, unlimited market intelligence, advanced collaboration tools, and 24hr priority support + API access."
-    };
-    return benefits[tierName] || "";
-  };
+  // Removed upgrade benefits text - keeping it simple and clear
 
   const getTitleAndCTA = (tierName: string) => {
     const details: Record<string, { title: string; cta: string }> = {
@@ -333,7 +301,6 @@ const Pricing = () => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
             const targetAudience = getTargetAudience(tier.tier_name);
-            const upgradeBenefits = getUpgradeBenefits(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'creator';
 
@@ -381,19 +348,10 @@ const Pricing = () => {
                     )}
                   </div>
                   {/* Target Audience - Simplified */}
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-muted-foreground mb-6">
                     {targetAudience}
                   </p>
                 </div>
-
-                {/* Upgrade Benefits Section - Simplified */}
-                {tier.tier_name !== 'free' && upgradeBenefits && (
-                  <div className="mb-6 pb-6 border-b border-border">
-                    <p className="text-sm text-muted-foreground">
-                      {upgradeBenefits}
-                    </p>
-                  </div>
-                )}
 
                 {/* Plan Highlights */}
                 <div className="mb-6 flex-grow">
