@@ -115,10 +115,10 @@ const UserReviews = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-6 sm:px-8 lg:px-12">
           <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 break-words">
-            <span className="gradient-unified">Trusted by Creative Entrepreneurs Worldwide</span>
+            <span className="gradient-unified">Helping Founders Succeed</span>
           </h2>
           <p className="text-body text-muted-foreground max-w-2xl mx-auto">
-            See how founders like you are turning ideas into launched businesses
+            See how founders like you are turning ideas into thriving projects
           </p>
         </div>
 
