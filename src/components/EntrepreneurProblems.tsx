@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { 
   Search,
   Users,
@@ -12,7 +10,6 @@ import {
   Flame,
   ArrowRight,
   CheckCircle,
-  X,
   TrendingDown,
   TrendingUp,
   ChevronDown,
@@ -102,56 +99,26 @@ const EntrepreneurProblems = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Problem-Focused Wallpaper - theme-aware */}
-      <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
-      
-      {/* Circuit Board Pattern - theme-aware */}
-      <div className="absolute inset-0 dark:opacity-5 opacity-3">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--red-primary) / 0.1) 1px, transparent 1px),
-            linear-gradient(hsl(var(--red-primary) / 0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-      </div>
-      
-      {/* Scattered Problem Icons Background */}
-      <div className="absolute inset-0 opacity-5">
-        {/* Scattered X marks representing problems */}
-        <div className="absolute top-20 left-20 text-[hsl(var(--red-primary))] text-4xl font-bold">✕</div>
-        <div className="absolute top-40 right-32 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
-        <div className="absolute bottom-32 left-40 text-[hsl(var(--red-primary))] text-5xl font-bold">✕</div>
-        <div className="absolute bottom-48 right-20 text-[hsl(var(--red-primary))] text-2xl font-bold">✕</div>
-        <div className="absolute top-1/2 left-1/3 text-[hsl(var(--red-primary))] text-6xl font-bold">✕</div>
-        <div className="absolute top-1/3 right-1/4 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
-      </div>
-      
-      {/* Warning Stripes - theme-aware */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent dark:via-red-500/20 via-red-400/15 to-transparent" />
-      <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent dark:via-orange-500/20 via-orange-400/15 to-transparent" />
-      
-      {/* Glitch Effect Elements - theme-aware */}
-      <div className="absolute top-1/4 left-1/5 w-32 h-1 dark:bg-[hsl(var(--red-primary))]/30 bg-[hsl(var(--red-primary))]/20 animate-pulse" />
-      <div className="absolute bottom-1/3 right-1/5 w-24 h-1 dark:bg-orange-500/30 bg-orange-400/20 animate-pulse" style={{ animationDelay: '1s' }} />
+    <section className="py-20 lg:py-32 relative">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-muted/20" />
       
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-          <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-4 sm:mb-6 text-xs sm:text-sm">
+        <div className="text-center mb-16">
+          <Badge variant="outline" className="mb-6 text-sm">
             Big Challenges, Bold Solutions
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-4 text-foreground">
-            Common Roadblocks Pre-Seed Founders <span className="text-foreground">Face</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-foreground">
+            Common Roadblocks Pre-Seed Founders Face
           </h2>
-          <p className="text-base sm:text-lg text-foreground/85 max-w-2xl mx-auto px-4">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Discover how the right tools, frameworks, and community support help you navigate these obstacles and build with confidence.
           </p>
         </div>
 
         {/* Problems Grid - 3 Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 mb-12 sm:mb-16 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {problems.map((item, index) => {
             const BeforeIcon = item.beforeIcon;
             const AfterIcon = item.afterIcon;
@@ -160,83 +127,79 @@ const EntrepreneurProblems = () => {
             return (
               <Card 
                 key={index} 
-                className="glass border-border hover:shadow-xl transition-all duration-500 hover:scale-105 hover:-translate-y-2 group overflow-hidden animate-fade-in-up" 
-                style={{ 
-                  animationDelay: `${0.1 + index * 0.1}s`,
-                  animationFillMode: 'both'
-                }}
+                className="border-border hover:shadow-lg transition-all duration-300 hover:scale-[1.02] flex flex-col h-full"
               >
-                <CardContent className="p-0">
-                  {/* Before Section - Red/Warning */}
-                  <div className="bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-4 sm:p-5 border-b-2 border-red-500/20 transition-all duration-300 group-hover:from-red-500/15 group-hover:via-red-500/10">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-[hsl(var(--red-primary))]/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-[hsl(var(--red-primary))]/30">
-                        <BeforeIcon className="w-5 h-5 text-[hsl(var(--red-primary))] transition-transform duration-300 group-hover:scale-110" />
+                <CardHeader className="pb-4">
+                  {/* Problem Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2.5 rounded-lg bg-muted flex-shrink-0">
+                        <BeforeIcon className="w-5 h-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <X className="w-4 h-4 text-[hsl(var(--red-primary))] flex-shrink-0" />
-                          <h3 className="text-sm sm:text-base font-bold text-[hsl(var(--red-primary))]">{item.problem}</h3>
-                        </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.beforeText}</p>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <CardTitle className="text-lg font-semibold leading-tight">
+                          {item.problem}
+                        </CardTitle>
+                        <CardDescription className="text-sm leading-relaxed">
+                          {item.beforeText}
+                        </CardDescription>
                       </div>
                     </div>
                     
                     {/* Stat Badge */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-red-500/10">
-                      <div className="flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
-                        <TrendingDown className="w-4 h-4 text-[hsl(var(--red-primary))] transition-transform duration-300 group-hover:animate-bounce" />
-                        <span className="text-lg font-bold text-[hsl(var(--red-primary))] transition-colors duration-300 group-hover:text-[hsl(var(--red-dark))]">{item.stat}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground transition-colors duration-300 group-hover:text-foreground/80">{item.statLabel}</span>
+                    <div className="flex items-center gap-2 pt-3 border-t border-border">
+                      <TrendingDown className="w-4 h-4 text-destructive" />
+                      <span className="text-sm font-semibold text-foreground">{item.stat}</span>
+                      <span className="text-xs text-muted-foreground">{item.statLabel}</span>
                     </div>
                   </div>
+                </CardHeader>
 
-                  {/* Arrow Divider */}
-                  <div className="relative bg-gradient-to-r from-red-500/10 via-background to-green-500/10 py-2 transition-all duration-300 group-hover:from-red-500/15 group-hover:to-green-500/15">
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-8 h-8 rounded-full bg-background border-2 border-primary/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-primary/50 group-hover:shadow-lg">
-                        <ArrowRight className="w-4 h-4 text-primary transition-transform duration-300 group-hover:translate-x-1" />
-                      </div>
+                {/* Arrow Divider */}
+                <div className="relative px-6">
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center">
+                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
+                  <div className="h-px bg-border" />
+                </div>
 
-                  {/* After Section - Green/Success */}
-                  <div className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent p-4 sm:p-5 transition-all duration-300 group-hover:from-green-500/15 group-hover:via-green-500/10">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-[hsl(var(--green-primary))]/20 flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-[hsl(var(--green-primary))]/30">
-                        <AfterIcon className="w-5 h-5 text-[hsl(var(--green-primary))] transition-transform duration-300 group-hover:scale-110" />
+                {/* Solution Section */}
+                <CardContent className="pt-6 flex-1 flex flex-col">
+                  <div className="space-y-4 flex-1">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
+                        <AfterIcon className="w-5 h-5 text-primary" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))] flex-shrink-0" />
-                          <h4 className="text-xs sm:text-sm font-semibold text-[hsl(var(--green-primary))]">Solution</h4>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                          <h4 className="text-sm font-semibold text-foreground">Solution</h4>
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.afterText}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {item.afterText}
+                        </p>
                       </div>
                     </div>
                     
                     {/* Success Indicator */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-green-500/10">
-                      <div className="flex items-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
-                        <TrendingUp className="w-4 h-4 text-[hsl(var(--green-primary))] transition-transform duration-300 group-hover:animate-bounce" />
-                        <span className="text-xs font-semibold text-[hsl(var(--green-primary))] transition-colors duration-300 group-hover:text-[hsl(var(--green-dark))]">Avoid this failure</span>
-                      </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-border">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">Avoid this failure</span>
                     </div>
                   </div>
 
                   {/* Expandable Detail Section */}
                   {isExpanded && (
-                    <div className="p-4 sm:p-5 bg-muted/30 border-t border-border/50 animate-in slide-in-from-top-2">
-                      <div className="space-y-3">
-                        <div>
-                          <h5 className="text-xs font-semibold text-[hsl(var(--red-primary))] mb-1.5">The Problem:</h5>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
-                        </div>
-                        <div>
-                          <h5 className="text-xs font-semibold text-[hsl(var(--green-primary))] mb-1.5">The Solution:</h5>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{item.solution}</p>
-                        </div>
+                    <div className="mt-6 pt-6 border-t border-border space-y-4">
+                      <div>
+                        <h5 className="text-sm font-semibold text-foreground mb-2">The Problem:</h5>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-semibold text-foreground mb-2">The Solution:</h5>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.solution}</p>
                       </div>
                     </div>
                   )}
@@ -244,7 +207,7 @@ const EntrepreneurProblems = () => {
                   {/* Expand/Collapse Button */}
                   <button
                     onClick={() => toggleExpand(index)}
-                    className="w-full p-3 bg-muted/50 hover:bg-muted/70 transition-colors border-t border-border/50 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+                    className="mt-6 w-full py-3 bg-muted/50 hover:bg-muted transition-colors rounded-md flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                   >
                     {isExpanded ? (
                       <>
