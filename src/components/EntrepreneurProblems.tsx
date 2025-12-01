@@ -108,6 +108,20 @@ const EntrepreneurProblems = () => {
         .animate-flicker {
           animation: flicker 2s ease-in-out infinite;
         }
+        @keyframes slideUpFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-card-entrance {
+          animation: slideUpFadeIn 0.6s ease-out forwards;
+          opacity: 0;
+        }
       `}</style>
       {/* Problem-Focused Wallpaper - theme-aware */}
       <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
@@ -166,7 +180,8 @@ const EntrepreneurProblems = () => {
             return (
               <Card 
                 key={index} 
-                className="border-l-4 border-red-500/50 hover:border-red-500/80 border-border hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden group"
+                className="border-l-4 border-red-500/50 hover:border-red-500/80 border-border hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden group animate-card-entrance"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Problem Section Background Gradient */}
                 <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/30 dark:from-red-950/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
