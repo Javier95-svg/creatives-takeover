@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin } from "lucide-react";
+import { Star, MapPin, CheckCircle2 } from "lucide-react";
 
 const UserReviews = () => {
   const reviews = [
@@ -12,7 +12,9 @@ const UserReviews = () => {
       location: "Mumbai, India",
       role: "Indie founder",
       rating: 5,
-      avatar: "https://ui-avatars.com/api/?name=Priya+Sharma&background=6366f1&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=Priya+Sharma&background=6366f1&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "Launched in 28 days"
     },
     {
       name: "James Mitchell",
@@ -21,7 +23,9 @@ const UserReviews = () => {
       location: "London, UK",
       role: "First-time creator",
       rating: 4.5,
-      avatar: "https://ui-avatars.com/api/?name=James+Mitchell&background=3b82f6&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=James+Mitchell&background=3b82f6&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "Accepted to accelerator"
     },
     {
       name: "Sofia Martinez",
@@ -30,7 +34,9 @@ const UserReviews = () => {
       location: "Barcelona, Spain",
       role: "Creative entrepreneur",
       rating: 4,
-      avatar: "https://ui-avatars.com/api/?name=Sofia+Martinez&background=ec4899&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=Sofia+Martinez&background=ec4899&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "30-day streak maintained"
     },
     {
       name: "David Kim",
@@ -39,7 +45,9 @@ const UserReviews = () => {
       location: "Seoul, South Korea",
       role: "Tech founder",
       rating: 4.5,
-      avatar: "https://ui-avatars.com/api/?name=David+Kim&background=10b981&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=David+Kim&background=10b981&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "Improved plan score by 25%"
     },
     {
       name: "Aisha Okafor",
@@ -48,7 +56,9 @@ const UserReviews = () => {
       location: "Lagos, Nigeria",
       role: "Startup founder",
       rating: 5,
-      avatar: "https://ui-avatars.com/api/?name=Aisha+Okafor&background=f59e0b&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=Aisha+Okafor&background=f59e0b&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "Connected with angel investor"
     },
     {
       name: "Lucas Anderson",
@@ -57,7 +67,9 @@ const UserReviews = () => {
       location: "Stockholm, Sweden",
       role: "Solo entrepreneur",
       rating: 4,
-      avatar: "https://ui-avatars.com/api/?name=Lucas+Anderson&background=8b5cf6&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=Lucas+Anderson&background=8b5cf6&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "Plan completed in 2 days"
     },
     {
       name: "Yuki Tanaka",
@@ -66,7 +78,9 @@ const UserReviews = () => {
       location: "Tokyo, Japan",
       role: "Indie developer",
       rating: 4.5,
-      avatar: "https://ui-avatars.com/api/?name=Yuki+Tanaka&background=ef4444&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=Yuki+Tanaka&background=ef4444&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "5x productivity increase"
     },
     {
       name: "Emma Thompson",
@@ -75,7 +89,9 @@ const UserReviews = () => {
       location: "Melbourne, Australia",
       role: "First-time creator",
       rating: 4,
-      avatar: "https://ui-avatars.com/api/?name=Emma+Thompson&background=06b6d4&color=fff&size=128&bold=true"
+      avatar: "https://ui-avatars.com/api/?name=Emma+Thompson&background=06b6d4&color=fff&size=128&bold=true",
+      verified: true,
+      outcome: "Secured co-founder alignment"
     }
   ];
 
@@ -98,9 +114,12 @@ const UserReviews = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16 animate-fade-in px-6 sm:px-8 lg:px-12">
-          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-6 sm:mb-8 lg:mb-10 break-words">
-            <span className="gradient-unified">Shape With Us Your Future</span>
+          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 break-words">
+            <span className="gradient-unified">Trusted by Creative Entrepreneurs Worldwide</span>
           </h2>
+          <p className="text-body text-muted-foreground max-w-2xl mx-auto">
+            See how founders like you are turning ideas into launched businesses
+          </p>
         </div>
 
         {/* Reviews Auto-Scrolling */}
@@ -115,7 +134,7 @@ const UserReviews = () => {
               }
             }
             .auto-scroll {
-              animation: scroll 60s linear infinite;
+              animation: scroll 90s linear infinite;
             }
             .auto-scroll:hover {
               animation-play-state: paused;
@@ -131,38 +150,55 @@ const UserReviews = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <CardContent className="relative p-6 md:p-8">
-                  {/* Rating Stars */}
-                  <div className="flex items-center mb-4 gap-0.5">
-                    {[...Array(5)].map((_, i) => {
-                      const rating = review.rating || 5;
-                      const starValue = i + 1;
-                      const isFullStar = starValue <= Math.floor(rating);
-                      const isHalfStar = !isFullStar && starValue === Math.ceil(rating) && rating % 1 !== 0;
-                      const isEmptyStar = starValue > Math.ceil(rating);
-                      
-                      return (
-                        <div key={i} className="relative inline-block w-4 h-4">
-                          {/* Empty star background */}
-                          <Star className="absolute inset-0 w-4 h-4 fill-gray-300 text-gray-300" />
-                          {/* Full star overlay */}
-                          {isFullStar && (
-                            <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          )}
-                          {/* Half star overlay */}
-                          {isHalfStar && (
-                            <div className="absolute inset-0 w-4 h-4" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}>
+                  {/* Rating Stars and Verification */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-0.5">
+                      {[...Array(5)].map((_, i) => {
+                        const rating = review.rating || 5;
+                        const starValue = i + 1;
+                        const isFullStar = starValue <= Math.floor(rating);
+                        const isHalfStar = !isFullStar && starValue === Math.ceil(rating) && rating % 1 !== 0;
+                        const isEmptyStar = starValue > Math.ceil(rating);
+                        
+                        return (
+                          <div key={i} className="relative inline-block w-4 h-4">
+                            {/* Empty star background */}
+                            <Star className="absolute inset-0 w-4 h-4 fill-gray-300 text-gray-300" />
+                            {/* Full star overlay */}
+                            {isFullStar && (
                               <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            )}
+                            {/* Half star overlay */}
+                            {isHalfStar && (
+                              <div className="absolute inset-0 w-4 h-4" style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}>
+                                <Star className="absolute inset-0 w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {review.verified && (
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Review Comment */}
-                  <p className="text-muted-foreground mb-6 leading-relaxed text-sm sm:text-base">
+                  <p className="text-muted-foreground mb-4 leading-relaxed text-sm sm:text-base">
                     "{review.comment}"
                   </p>
+                  
+                  {/* Outcome Badge */}
+                  {review.outcome && (
+                    <div className="mb-6">
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                        {review.outcome}
+                      </Badge>
+                    </div>
+                  )}
 
                   {/* User Info */}
                   <div className="pt-4 border-t border-border/50">

@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
@@ -12,7 +11,6 @@ import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 // Lazy load below-the-fold components for better performance
-const SocialProof = lazy(() => import("@/components/SocialProof"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
 const Index = () => {
@@ -52,11 +50,6 @@ const Index = () => {
         <Hero />
         <EntrepreneurProblems />
         
-        {/* Lazy-loaded below-the-fold components with loading fallback */}
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-          <SocialProof />
-        </Suspense>
-        
         <ValuePropositionCards />
         
         <UserReviews />
@@ -69,9 +62,6 @@ const Index = () => {
       
       {/* Sticky Mobile CTA - appears after scroll on mobile */}
       <StickyMobileCTA />
-      
-      {/* Enhanced Quiz Popup - Only popup to avoid overwhelming visitors */}
-      <CreditCampaignPopup trigger="time" delay={20000} />
       
     </div>
   );

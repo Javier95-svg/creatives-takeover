@@ -1,10 +1,10 @@
-import { Lightbulb, Users, Rocket, Sparkles, LayoutDashboard } from "lucide-react";
+import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const ValuePropositionCards = () => {
-  // All cards in a single row with semantic RGB color assignments
+  // Core value propositions - condensed to 4 essential offerings
   const allCards = [
     {
       icon: Lightbulb,
@@ -24,26 +24,17 @@ const ValuePropositionCards = () => {
       cta: "Join Community",
       link: "/community",
       color: "action", // Red for action/urgency
-      metric: "Active community"
+      metric: "1,000+ founders"
     },
     {
       icon: LayoutDashboard,
       title: "EXECUTE",
       subtitle: "Dashboard",
-      description: "Your command center for tracking progress, managing tasks, and monitoring your business progress. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
+      description: "Your command center for tracking progress, managing tasks, and monitoring your business growth. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
       cta: "View Dashboard",
       link: "/dashboard",
       color: "growth", // Green for growth/success
       metric: "Track progress"
-    },
-    {
-      icon: Sparkles,
-      title: "EXPLORE",
-      subtitle: "Prompt Library",
-      description: "Discover tested prompt-chains from uprising industries. Jumpstart your business planning with proven frameworks across AI, e-commerce, SaaS, and more, ready to be used at BizMap AI.",
-      cta: "Learn Prompts",
-      link: "/prompt-library",
-      color: "planning" // Blue for planning/exploration
     },
     {
       icon: Rocket,
@@ -52,7 +43,7 @@ const ValuePropositionCards = () => {
       description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
       cta: "Explore Insighta",
       link: "/insighta",
-      color: "growth" // Green for growth/fundraising success
+      color: "planning" // Blue for planning/fundraising
     }
   ];
 
@@ -79,12 +70,12 @@ const ValuePropositionCards = () => {
             <span className="gradient-unified">Here's What You Get</span>
           </h2>
           <p className="text-body sm:text-body-lg text-foreground/85 max-w-3xl mx-auto leading-relaxed">
-            Transform your idea into an investable, revenue-driving business. The perfect ecosystem for early-stage founders and entrepreneurs serious about building a lasting venture.
+            Everything you need to go from idea to launch. Four core tools designed for creative entrepreneurs who want to build real, sustainable businesses.
           </p>
         </div>
 
-        {/* All Cards - Single Row */}
-        <div className="flex flex-row gap-4 md:gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
+        {/* Core Value Props - Responsive Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {allCards.map((card, index) => {
             const Icon = card.icon;
             const colorClasses = {
@@ -124,7 +115,7 @@ const ValuePropositionCards = () => {
             return (
               <Card 
                 key={index} 
-                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px] flex-1`}
+                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer h-full`}
                 style={{ 
                   animationDelay: `${index * 0.1}s`,
                   animationFillMode: 'both'

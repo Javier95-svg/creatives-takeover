@@ -100,37 +100,39 @@ const Hero = () => {
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Main Headline */}
+          {/* Main Headline - Benefit-focused */}
           <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
             <span className="gradient-unified animate-fade-in">
-              Your Digital Partner for Building From Zero
+              Turn Your Creative Idea Into a Launch-Ready Business in 30 Days
             </span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in">
-            Turn your creative idea into a thriving project. Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders and entrepreneurs throughout their journey.
+            Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders from idea to launch. Join thousands of creative entrepreneurs building their businesses with confidence.
           </p>
           
-          {/* Trust Indicators */}
+          {/* Platform-Specific Trust Indicators */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4 text-growth" />
-              <span className="text-muted-foreground">Growing</span>
-              <span className="font-semibold text-foreground">Community</span>
+              <span className="font-semibold text-foreground">1,000+</span>
+              <span className="text-muted-foreground">Active Founders</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Zap className="w-4 h-4 text-action" />
               <span className="font-semibold text-foreground">30-Day</span>
-              <span className="text-muted-foreground">Launch</span>
+              <span className="text-muted-foreground">Launch Plan</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Sparkles className="w-4 h-4 text-planning" />
-              <span className="text-muted-foreground">AI-Powered Business Planning</span>
+              <span className="font-semibold text-foreground">3 Minutes</span>
+              <span className="text-muted-foreground">to Business Plan</span>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <DollarSign className="w-4 h-4 text-growth" />
-              <span className="text-muted-foreground">Fundraising Guidance</span>
+              <span className="font-semibold text-foreground">500+</span>
+              <span className="text-muted-foreground">Funding Opportunities</span>
             </div>
           </div>
 
