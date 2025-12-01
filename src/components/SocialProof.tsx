@@ -84,7 +84,7 @@ const SocialProof = () => {
             Market Trends
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-            <span className="gradient-text">The New Era of AI-Powered Entrepreneurship</span>
+            <span className="text-white dark:text-white">The New Era of AI-Powered Entrepreneurship</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             AI has made it easier than ever to start a company, but it has also intensified the competition. Without a clear execution plan and strong guidance, your odds to succeed are minimum
