@@ -1,229 +1,119 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCredits } from './useCredits';
 import { supabase } from '@/integrations/supabase/client';
-import { CREDIT_COSTS } from '@/config/constants';
+import { OutreachGenerationRequest, OutreachGenerationResponse, OutreachMaterial } from '@/types/outreach';
 import { toast } from 'sonner';
-import { MatchRequest } from '@/types/investor';
-
-type MaterialType = 'cold_email' | 'one_pager' | 'pitch_deck';
-
-interface OutreachRequest {
-  material_type: MaterialType;
-  investor_id?: string;
-  assessment_id?: string;
-  industry: string;
-  funding_amount: number;
-  business_stage?: string;
-  business_summary: string;
-  readiness_scores?: {
-    mvp: number;
-    feedback: number;
-    team: number;
-    runway: number;
-  };
-  strengths?: string[];
-  critical_gaps?: string[];
-  verdict?: string;
-  investor_name?: string;
-  investor_firm?: string;
-  investor_focus?: string[];
-  portfolio_companies?: string[];
-}
-
-interface GeneratedEmail {
-  subject: string;
-  subject_variations: string[];
-  body: string;
-}
-
-interface GeneratedMaterial {
-  type: MaterialType;
-  subject?: string;
-  subject_variations?: string[];
-  content: string;
-  content_json?: any;
-}
 
 export const useOutreachGenerator = () => {
-  const { user } = useAuth();
-  const { hasCredits, refreshBalance } = useCredits();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedMaterial, setGeneratedMaterial] = useState<OutreachGenerationResponse | null>(null);
 
   const generateMaterial = useCallback(async (
-    request: OutreachRequest
-  ): Promise<GeneratedMaterial | null> => {
-    if (!user) {
-      setError('Authentication required');
-      toast.error('Please sign in to generate outreach materials');
-      return null;
-    }
-
-    // Get credit cost
-    const creditCosts: Record<MaterialType, number> = {
-      cold_email: CREDIT_COSTS.COLD_EMAIL_GENERATION,
-      one_pager: CREDIT_COSTS.ONEPAGER_GENERATION,
-      pitch_deck: CREDIT_COSTS.PITCH_DECK_GENERATION
-    };
-
-    const requiredCredits = creditCosts[request.material_type];
-
-    // Check credits before proceeding
-    if (!hasCredits(requiredCredits)) {
-      const errorMsg = `Insufficient credits. ${request.material_type.replace('_', ' ')} generation requires ${requiredCredits} credits.`;
-      setError(errorMsg);
-      toast.error(errorMsg);
-      return null;
-    }
-
+    request: OutreachGenerationRequest
+  ): Promise<OutreachGenerationResponse | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      const { data, error: functionError } = await supabase.functions.invoke('outreach-generator', {
+      const { data, error: invokeError } = await supabase.functions.invoke('outreach-generator', {
         body: request
       });
 
-      if (functionError) {
+      if (invokeError) {
         // Handle credit errors specifically
-        if (functionError.status === 402 || (functionError.message && functionError.message.includes('credits'))) {
-          const errorMsg = `Insufficient credits. ${request.material_type.replace('_', ' ')} generation requires ${requiredCredits} credits.`;
+        if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
+          const errorMsg = 'Insufficient credits. Please purchase credits to use this feature.';
           setError(errorMsg);
-          toast.error(errorMsg);
-          return null;
+          throw new Error(errorMsg);
         }
-        throw functionError;
+        throw invokeError;
       }
 
       if (data?.error) {
         if (data.error.includes('credits') || data.required) {
-          const errorMsg = `Insufficient credits. ${request.material_type.replace('_', ' ')} generation requires ${data.required || requiredCredits} credits.`;
+          const errorMsg = 'Insufficient credits';
           setError(errorMsg);
-          toast.error(errorMsg);
-          return null;
+          throw new Error(errorMsg);
         }
         throw new Error(data.error);
       }
 
-      // Refresh credit balance
-      if (data.new_balance !== undefined) {
-        await refreshBalance();
-      }
-
-      const material: GeneratedMaterial = {
-        type: request.material_type,
-        subject: data.material?.subject,
-        subject_variations: data.material?.subject_variations,
-        content: data.material?.body || data.material?.content || '',
-        content_json: data.material?.content_json
-      };
-
-      toast.success(`${request.material_type.replace('_', ' ')} generated successfully!`);
-      return material;
-
-    } catch (err: any) {
-      const errorMessage = err?.message || `Failed to generate ${request.material_type.replace('_', ' ')}`;
+      const response: OutreachGenerationResponse = data as OutreachGenerationResponse;
+      setGeneratedMaterial(response);
+      toast.success(`Generated ${request.material_type.replace('_', ' ')} successfully!`);
+      return response;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate material. Please try again.';
       setError(errorMessage);
-      toast.error(errorMessage);
-      console.error(`Error generating ${request.material_type}:`, err);
-      return null;
+      console.error('Error generating material:', err);
+      if (!errorMessage.includes('credits')) {
+        toast.error(errorMessage);
+      }
+      throw err;
     } finally {
       setLoading(false);
     }
-  }, [user, hasCredits, refreshBalance]);
+  }, []);
 
-  const generateEmail = useCallback(async (
-    investorId: string,
-    matchRequest: MatchRequest,
-    investorData?: any
-  ): Promise<GeneratedEmail | null> => {
-    const request: OutreachRequest = {
-      material_type: 'cold_email',
-      investor_id: investorId,
-      assessment_id: matchRequest.assessment_id,
-      industry: matchRequest.industry,
-      funding_amount: matchRequest.funding_amount,
-      business_stage: matchRequest.business_stage,
-      business_summary: matchRequest.business_summary || '',
-      readiness_scores: matchRequest.readiness_scores,
-      strengths: matchRequest.strengths,
-      critical_gaps: matchRequest.critical_gaps,
-      verdict: matchRequest.verdict,
-      investor_name: investorData?.name,
-      investor_firm: investorData?.firm_name,
-      investor_focus: investorData?.industries,
-      portfolio_companies: investorData?.portfolio_companies?.map((c: any) => c.name)
-    };
+  const saveMaterial = useCallback(async (material: Partial<OutreachMaterial>): Promise<boolean> => {
+    try {
+      // Materials are already saved by the edge function
+      // This could be used for updating existing materials
+      return true;
+    } catch (err) {
+      console.error('Error saving material:', err);
+      return false;
+    }
+  }, []);
 
-    const result = await generateMaterial(request);
-    if (!result) return null;
+  const getMaterials = useCallback(async (investorId?: string) => {
+    try {
+      let query = supabase
+        .from('outreach_materials')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-    return {
-      subject: result.subject || 'Partnership Opportunity',
-      subject_variations: result.subject_variations || [result.subject || 'Partnership Opportunity'],
-      body: result.content
-    };
+      if (investorId) {
+        query = query.eq('investor_id', investorId);
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) throw fetchError;
+      return data as OutreachMaterial[] || [];
+    } catch (err) {
+      console.error('Error fetching materials:', err);
+      return [];
+    }
+  }, []);
+
+  const generatePitchDeck = useCallback(async (request: Omit<OutreachGenerationRequest, 'material_type'>) => {
+    return generateMaterial({ ...request, material_type: 'pitch_deck' });
   }, [generateMaterial]);
 
-  const generateOnePager = useCallback(async (
-    investorId: string,
-    matchRequest: MatchRequest,
-    investorData?: any
-  ): Promise<any | null> => {
-    const request: OutreachRequest = {
-      material_type: 'one_pager',
-      investor_id: investorId,
-      assessment_id: matchRequest.assessment_id,
-      industry: matchRequest.industry,
-      funding_amount: matchRequest.funding_amount,
-      business_stage: matchRequest.business_stage,
-      business_summary: matchRequest.business_summary || '',
-      readiness_scores: matchRequest.readiness_scores,
-      strengths: matchRequest.strengths,
-      critical_gaps: matchRequest.critical_gaps,
-      verdict: matchRequest.verdict,
-      investor_name: investorData?.name,
-      investor_firm: investorData?.firm_name,
-      investor_focus: investorData?.industries,
-      portfolio_companies: investorData?.portfolio_companies?.map((c: any) => c.name)
-    };
-
-    return await generateMaterial(request);
+  const generateColdEmail = useCallback(async (request: Omit<OutreachGenerationRequest, 'material_type'>) => {
+    return generateMaterial({ ...request, material_type: 'cold_email' });
   }, [generateMaterial]);
 
-  const generatePitchDeck = useCallback(async (
-    investorId: string,
-    matchRequest: MatchRequest,
-    investorData?: any
-  ): Promise<any | null> => {
-    const request: OutreachRequest = {
-      material_type: 'pitch_deck',
-      investor_id: investorId,
-      assessment_id: matchRequest.assessment_id,
-      industry: matchRequest.industry,
-      funding_amount: matchRequest.funding_amount,
-      business_stage: matchRequest.business_stage,
-      business_summary: matchRequest.business_summary || '',
-      readiness_scores: matchRequest.readiness_scores,
-      strengths: matchRequest.strengths,
-      critical_gaps: matchRequest.critical_gaps,
-      verdict: matchRequest.verdict,
-      investor_name: investorData?.name,
-      investor_firm: investorData?.firm_name,
-      investor_focus: investorData?.industries,
-      portfolio_companies: investorData?.portfolio_companies?.map((c: any) => c.name)
-    };
-
-    return await generateMaterial(request);
+  const generateOnePager = useCallback(async (request: Omit<OutreachGenerationRequest, 'material_type'>) => {
+    return generateMaterial({ ...request, material_type: 'one_pager' });
   }, [generateMaterial]);
 
   return {
     loading,
     error,
-    generateEmail,
-    generateOnePager,
+    generatedMaterial,
+    generateMaterial,
     generatePitchDeck,
-    generateMaterial
+    generateColdEmail,
+    generateOnePager,
+    saveMaterial,
+    getMaterials,
+    clearGenerated: () => {
+      setGeneratedMaterial(null);
+      setError(null);
+    }
   };
 };
+

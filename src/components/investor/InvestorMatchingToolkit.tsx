@@ -1,46 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Users, Search, ArrowRight, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Search, Hourglass, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MatchContextForm } from './MatchContextForm';
-import { InvestorMatchResults } from './InvestorMatchResults';
-import { initialInvestors } from '@/data/initialInvestors';
-import { findMatches, getTopMatches } from '@/utils/investorMatching';
-import { useInvestorMatching } from '@/hooks/useInvestorMatching';
-import { MatchRequest, InvestorMatch, ReadinessScores } from '@/types/investor';
-import { useAuth } from '@/contexts/AuthContext';
-
-type ViewState = 'intro' | 'form' | 'results';
+import { Button } from '@/components/ui/button';
 
 const InvestorMatchingToolkit = () => {
-  const { user } = useAuth();
-  const { matches: hookMatches, topMatches: hookTopMatches, loading: hookLoading, findMatches: hookFindMatches, error: hookError } = useInvestorMatching();
-  const [viewState, setViewState] = useState<ViewState>('intro');
-  const [matches, setMatches] = useState<InvestorMatch[]>([]);
-  const [topMatches, setTopMatches] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [useDatabase, setUseDatabase] = useState(true); // Try database first, fallback to client-side
-  const [lastMatchRequest, setLastMatchRequest] = useState<MatchRequest | undefined>(undefined);
-  const [readinessData, setReadinessData] = useState<{
-    scores?: ReadinessScores;
-    analysis?: any;
-  } | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     // Check if we should scroll here from readiness assessment
     const assessmentData = localStorage.getItem('ct_assessment_data');
     if (assessmentData) {
-      try {
-        const parsed = JSON.parse(assessmentData);
-        setReadinessData(parsed);
-        // Auto-open form if coming from assessment
-        setViewState('form');
-        // Clear the flag after a moment
-        setTimeout(() => {
-          localStorage.removeItem('ct_assessment_data');
-        }, 1000);
-      } catch (e) {
-        console.error('Failed to parse assessment data:', e);
-      }
+      setIsVisible(true);
+      // Clear the flag after a moment
+      setTimeout(() => {
+        localStorage.removeItem('ct_assessment_data');
+      }, 1000);
     }
   }, []);
 
@@ -123,153 +97,20 @@ const InvestorMatchingToolkit = () => {
               </div>
             </div>
 
-            {viewState === 'intro' && (
-              <div className="text-center pt-4">
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto"
-                  onClick={() => setViewState('form')}
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  Find My Investors
-                </Button>
-                <p className="text-sm text-muted-foreground mt-3">
-                  Get matched with investors based on your startup profile
-                </p>
-              </div>
-            )}
-
-            {viewState === 'form' && (
-              <div className="pt-4">
-                <MatchContextForm
-                  onSubmit={handleMatchRequest}
-                  initialData={getInitialFormData()}
-                  isLoading={isLoading || hookLoading}
-                />
-                {hookError && (
-                  <div className="mt-4 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                    {hookError}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {viewState === 'results' && (
-              <div className="pt-4">
-                <InvestorMatchResults
-                  matches={matches}
-                  topMatches={topMatches}
-                  onViewProfile={handleViewProfile}
-                  onExport={handleExport}
-                  matchRequest={lastMatchRequest}
-                />
-                <div className="mt-6 text-center">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setViewState('form');
-                      setMatches([]);
-                      setTopMatches([]);
-                    }}
-                  >
-                    Search Again
-                  </Button>
-                </div>
-              </div>
-            )}
+            <div className="text-center pt-4">
+              <Button size="lg" className="w-full sm:w-auto" disabled>
+                <Hourglass className="mr-2 h-5 w-5" />
+                Feature Coming Soon
+              </Button>
+              <p className="text-sm text-muted-foreground mt-3">
+                The full matching tool is currently being built. Check back soon!
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
     </section>
   );
-
-  async function handleMatchRequest(matchRequest: MatchRequest) {
-    setIsLoading(true);
-
-    // Prepare readiness scores if available
-    const readinessScores: ReadinessScores | undefined = readinessData?.scores || 
-      (readinessData?.analysis ? {
-        mvp: readinessData.analysis.scores?.mvp || 0,
-        feedback: readinessData.analysis.scores?.feedback || 0,
-        team: readinessData.analysis.scores?.team || 0,
-        runway: readinessData.analysis.scores?.runway || 0,
-        average: readinessData.analysis.average_score,
-        verdict: readinessData.analysis.verdict,
-        strengths: readinessData.analysis.strengths,
-        critical_gaps: readinessData.analysis.critical_gaps
-      } : undefined);
-
-    // Merge readiness data into match request
-    const enrichedRequest: MatchRequest = {
-      ...matchRequest,
-      readiness_scores: readinessScores,
-      verdict: readinessScores?.verdict,
-      strengths: readinessScores?.strengths,
-      critical_gaps: readinessScores?.critical_gaps
-    };
-
-    // Store match request for email generation
-    setLastMatchRequest(enrichedRequest);
-
-    // Try database-backed matching first (if user is authenticated)
-    if (useDatabase && user) {
-      try {
-        const results = await hookFindMatches(enrichedRequest);
-        if (results) {
-          setMatches(results.matches);
-          setTopMatches(results.top_matches);
-          setViewState('results');
-          setIsLoading(false);
-          return;
-        }
-        // If hook returns null (e.g., credit error), fall through to client-side
-      } catch (err) {
-        console.error('Database matching failed, falling back to client-side:', err);
-        setUseDatabase(false); // Disable database for this session
-      }
-    }
-
-    // Fallback to client-side matching
-    try {
-      const foundMatches = findMatches(initialInvestors, enrichedRequest, readinessScores, 15);
-      const top = getTopMatches(foundMatches);
-      
-      setMatches(foundMatches);
-      setTopMatches(top);
-      setViewState('results');
-    } catch (err) {
-      console.error('Client-side matching failed:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  function getInitialFormData(): Partial<MatchRequest> {
-    if (!readinessData) return {};
-
-    return {
-      readiness_scores: readinessData.scores || 
-        (readinessData.analysis?.scores ? {
-          mvp: readinessData.analysis.scores.mvp,
-          feedback: readinessData.analysis.scores.feedback,
-          team: readinessData.analysis.scores.team,
-          runway: readinessData.analysis.scores.runway
-        } : undefined),
-      verdict: readinessData.analysis?.verdict,
-      strengths: readinessData.analysis?.strengths,
-      critical_gaps: readinessData.analysis?.critical_gaps
-    };
-  }
-
-  function handleViewProfile(investorId: string) {
-    // TODO: Open investor profile modal in future steps
-    console.log('View profile for:', investorId);
-  }
-
-  function handleExport() {
-    // Export handled by InvestorMatchResults component
-    console.log('Export completed');
-  }
 };
 
 export default InvestorMatchingToolkit;
