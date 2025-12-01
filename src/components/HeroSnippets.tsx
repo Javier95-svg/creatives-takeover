@@ -7,7 +7,6 @@ import {
   TrendingUp, 
   Users, 
   Info,
-  DollarSign,
   Target,
   MessageSquare
 } from "lucide-react";
@@ -44,13 +43,6 @@ const platformSnippets: PlatformSnippet[] = [
     color: "growth"
   },
   {
-    name: "Funding Opportunities",
-    description: "Discover grants, accelerators, and funding programs matched to your startup",
-    icon: DollarSign,
-    route: "/blog",
-    color: "planning"
-  },
-  {
     name: "Product Market Fit Lab",
     description: "Validate your product-market fit with customer analysis and validation experiments",
     icon: FlaskConical,
@@ -66,7 +58,7 @@ const platformSnippets: PlatformSnippet[] = [
   },
   {
     name: "Insighta",
-    description: "Assess your fundraising readiness and find investors matched to your startup",
+    description: "Assess your fundraising readiness, find matched investors, and discover funding opportunities",
     icon: TrendingUp,
     route: "/insighta",
     color: "planning"
