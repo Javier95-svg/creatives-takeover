@@ -1192,7 +1192,7 @@ Subject: "Quick question about [their pain point]"
         <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8 sm:mb-12">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 takeover-gradient creatives-font animate-fade-in">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 takeover-gradient creatives-font animate-fade-in leading-tight pb-2 overflow-visible">
                 BizMap AI
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
@@ -1206,11 +1206,11 @@ Subject: "Quick question about [their pain point]"
                 <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-1 sm:p-2 animate-fade-in w-full sm:w-auto max-w-md sm:max-w-none" style={{ animationDelay: '0.5s' }}>
                   <TabsTrigger 
                     value="bizmap" 
-                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm"
+                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
                   >
-                    <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
                     <span className="hidden sm:inline">Business Planning</span>
-                    <span className="sm:hidden">Planning</span>
+                    <span className="sm:hidden leading-tight pb-0.5">Planning</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="pmf" 
