@@ -8,32 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Types (matching TypeScript interfaces)
+// Types
 type InvestmentStage = 'pre-seed' | 'seed' | 'series-a' | 'series-b' | 'series-c+';
-
-interface PortfolioCompany {
-  name: string;
-  website?: string;
-  industry?: string;
-  stage?: string;
-  description?: string;
-}
-
-interface Investor {
-  id: string;
-  name: string;
-  firm_name: string;
-  investment_stages: InvestmentStage[];
-  industries: string[];
-  geographic_focus: string[];
-  locations: string[];
-  remote_friendly: boolean;
-  typical_check_size_min?: number;
-  typical_check_size_max?: number;
-  portfolio_companies: PortfolioCompany[];
-  match_score_boost?: number;
-  [key: string]: any; // For other fields
-}
 
 interface MatchRequest {
   industry: string;
@@ -54,8 +30,20 @@ interface MatchRequest {
   critical_gaps?: string[];
 }
 
-interface ReadinessScores {
-  verdict?: 'Ready' | 'Not Ready' | 'Almost Ready';
+interface Investor {
+  id: string;
+  name: string;
+  firm_name: string;
+  industries: string[];
+  investment_stages: InvestmentStage[];
+  typical_check_size_min?: number;
+  typical_check_size_max?: number;
+  geographic_focus: string[];
+  locations: string[];
+  remote_friendly: boolean;
+  portfolio_companies: any[];
+  is_active: boolean;
+  match_score_boost?: number;
 }
 
 interface InvestorMatch {
@@ -71,52 +59,88 @@ interface InvestorMatch {
   };
 }
 
-// Matching Algorithm Helper Functions
+// Matching weights
+const WEIGHTS = {
+  stageAlignment: 0.40,
+  industryFocus: 0.25,
+  geographicPreference: 0.15,
+  checkSizeCompatibility: 0.10,
+  portfolioSimilarity: 0.10
+};
 
+// Matching algorithm functions (ported from client-side)
 function calculateStageAlignment(
   investorStages: InvestmentStage[],
   requestedStage: InvestmentStage | undefined,
-  readinessScores?: ReadinessScores
+  verdict?: string
 ): number {
-  if (!requestedStage) return 50; // Neutral if not specified
-  
-  // Exact match = 100
+  if (!requestedStage) return 50;
+
   if (investorStages.includes(requestedStage)) return 100;
-  
-  // Adjacent stages = 75
+
   const stageOrder: InvestmentStage[] = ['pre-seed', 'seed', 'series-a', 'series-b', 'series-c+'];
   const requestedIndex = stageOrder.indexOf(requestedStage);
+  
+  if (requestedIndex === -1) return 0;
+
   const hasAdjacent = investorStages.some(stage => {
     const stageIndex = stageOrder.indexOf(stage);
-    return Math.abs(stageIndex - requestedIndex) === 1;
+    return stageIndex !== -1 && Math.abs(stageIndex - requestedIndex) === 1;
   });
-  if (hasAdjacent) return 75;
   
-  // Adjust based on readiness verdict
-  if (readinessScores?.verdict === 'Not Ready') {
-    // Prefer investors who accept earlier stages
+  if (hasAdjacent) return 75;
+
+  if (verdict === 'Not Ready') {
     if (investorStages.includes('pre-seed')) return 60;
   }
+
+  const hasNearby = investorStages.some(stage => {
+    const stageIndex = stageOrder.indexOf(stage);
+    return stageIndex !== -1 && Math.abs(stageIndex - requestedIndex) === 2;
+  });
   
-  return 0; // No match
+  if (hasNearby) return 50;
+
+  return 0;
 }
 
 function calculateIndustryMatch(
   investorIndustries: string[],
   requestedIndustry: string
 ): number {
-  if (investorIndustries.length === 0) return 50; // Neutral if no industry specified
-  
-  // Exact match = 100
-  if (investorIndustries.includes(requestedIndustry)) return 100;
-  
-  // Partial match (case-insensitive) = 100
-  const requestedLower = requestedIndustry.toLowerCase();
-  if (investorIndustries.some(industry => 
-    industry.toLowerCase() === requestedLower
-  )) return 100;
-  
-  // Related industries (future: use industry taxonomy)
+  if (investorIndustries.length === 0) return 50;
+
+  const normalize = (str: string) => str.toLowerCase().trim();
+  const requestedNormalized = normalize(requestedIndustry);
+
+  if (investorIndustries.some(ind => normalize(ind) === requestedNormalized)) {
+    return 100;
+  }
+
+  const industryGroups: { [key: string]: string[] } = {
+    'saas': ['saas', 'b2b', 'enterprise software', 'software'],
+    'ai/ml': ['ai/ml', 'artificial intelligence', 'machine learning', 'ai', 'ml'],
+    'fintech': ['fintech', 'financial services', 'payments', 'banking'],
+    'e-commerce': ['e-commerce', 'ecommerce', 'retail', 'marketplace', 'd2c'],
+    'healthcare': ['healthcare', 'health tech', 'medtech', 'telemedicine'],
+    'technology': ['technology', 'tech', 'software', 'saas']
+  };
+
+  for (const [group, industries] of Object.entries(industryGroups)) {
+    const requestedInGroup = industries.some(ind => normalize(ind) === requestedNormalized);
+    const investorInGroup = investorIndustries.some(ind => 
+      industries.some(groupInd => normalize(groupInd) === normalize(ind))
+    );
+    
+    if (requestedInGroup && investorInGroup) {
+      return 80;
+    }
+  }
+
+  if (investorIndustries.length >= 5) {
+    return 60;
+  }
+
   return 0;
 }
 
@@ -127,68 +151,97 @@ function calculateGeographicMatch(
   requestedLocations?: string[]
 ): number {
   if (!requestedLocations || requestedLocations.length === 0) {
-    return remoteFriendly ? 75 : 50; // Prefer remote-friendly if no location specified
+    return remoteFriendly ? 75 : 50;
   }
-  
-  // Check if any requested location matches investor's focus
-  const hasMatch = requestedLocations.some(loc => 
-    geographicFocus.includes(loc) || locations.includes(loc)
+
+  const normalizeLocation = (loc: string) => loc.toLowerCase().trim();
+  const requestedNormalized = requestedLocations.map(normalizeLocation);
+  const focusNormalized = geographicFocus.map(normalizeLocation);
+  const locationsNormalized = locations.map(normalizeLocation);
+
+  const hasExactMatch = requestedNormalized.some(reqLoc =>
+    focusNormalized.includes(reqLoc) || locationsNormalized.includes(reqLoc)
   );
-  
-  if (hasMatch) return 100;
-  
-  // Remote-friendly investors get partial score
+
+  if (hasExactMatch) return 100;
+
+  const regionMap: { [key: string]: string[] } = {
+    'us': ['san francisco', 'new york', 'boston', 'los angeles', 'chicago', 'seattle', 'austin', 'miami'],
+    'europe': ['london', 'berlin', 'paris', 'amsterdam', 'barcelona'],
+    'global': ['remote', 'anywhere']
+  };
+
+  for (const [region, cities] of Object.entries(regionMap)) {
+    const requestedInRegion = requestedNormalized.some(reqLoc =>
+      cities.some(city => normalizeLocation(city) === reqLoc) || normalizeLocation(region) === reqLoc
+    );
+    const investorInRegion = focusNormalized.some(focLoc =>
+      cities.some(city => normalizeLocation(city) === focLoc) || 
+      normalizeLocation(region) === focLoc ||
+      normalizeLocation('global') === focLoc
+    );
+
+    if (requestedInRegion && investorInRegion) {
+      return 80;
+    }
+  }
+
   if (remoteFriendly) return 60;
-  
+
   return 0;
 }
 
 function calculateCheckSizeMatch(
-  minCheck: number | undefined,
-  maxCheck: number | undefined,
-  requestedAmount: number | undefined
+  minCheck?: number,
+  maxCheck?: number,
+  requestedAmount?: number
 ): number {
-  if (!requestedAmount || !minCheck) return 50; // Neutral if not specified
-  
-  // Exact match or within range = 100
+  if (!requestedAmount || !minCheck) return 50;
+
   if (maxCheck && requestedAmount >= minCheck && requestedAmount <= maxCheck) {
     return 100;
   }
-  
-  // Close match (±25%) = 75
-  const range = maxCheck ? maxCheck - minCheck : minCheck * 0.5;
+
   if (requestedAmount >= minCheck * 0.75 && requestedAmount <= (maxCheck || minCheck * 1.25)) {
     return 75;
   }
-  
-  // Within 2x range = 50
+
   if (requestedAmount >= minCheck * 0.5 && requestedAmount <= (maxCheck || minCheck) * 2) {
     return 50;
   }
-  
+
+  if (requestedAmount >= minCheck * 0.33 && requestedAmount <= (maxCheck || minCheck) * 3) {
+    return 25;
+  }
+
   return 0;
 }
 
 function calculatePortfolioSimilarity(
-  portfolio: PortfolioCompany[],
-  industry?: string,
-  businessSummary?: string
+  portfolio: any[],
+  industry?: string
 ): number {
-  if (portfolio.length === 0) return 50; // Neutral if no portfolio data
-  
-  // Count similar companies
+  if (portfolio.length === 0) return 50;
+
   let similarCount = 0;
   if (industry) {
-    similarCount = portfolio.filter(company => 
-      company.industry?.toLowerCase() === industry.toLowerCase()
-    ).length;
+    const normalize = (str: string) => str.toLowerCase().trim();
+    const requestedNormalized = normalize(industry);
+    
+    similarCount = portfolio.filter(company => {
+      if (!company.industry) return false;
+      return normalize(company.industry) === requestedNormalized;
+    }).length;
   }
-  
-  // Percentage of portfolio that's similar
+
   const similarityRatio = similarCount / portfolio.length;
-  
-  // Score: 0-100 based on similarity ratio
-  return Math.min(100, Math.round(similarityRatio * 100));
+
+  if (similarityRatio >= 0.5) return 100;
+  if (similarityRatio >= 0.25) return 75;
+  if (similarityRatio >= 0.1) return 50;
+  if (similarityRatio > 0) return 25;
+
+  return 0;
 }
 
 function generateMatchReasons(scores: {
@@ -199,7 +252,7 @@ function generateMatchReasons(scores: {
   portfolioScore: number;
 }): string[] {
   const reasons: string[] = [];
-  
+
   if (scores.stageScore >= 75) {
     reasons.push("Strong stage alignment with your funding needs");
   }
@@ -215,77 +268,58 @@ function generateMatchReasons(scores: {
   if (scores.portfolioScore >= 60) {
     reasons.push("Portfolio includes similar companies");
   }
-  
-  // Always return at least one reason
+
   if (reasons.length === 0) {
     reasons.push("Potential match based on investment profile");
   }
-  
-  return reasons.slice(0, 4); // Max 4 reasons
+
+  return reasons.slice(0, 4);
 }
 
 function calculateInvestorMatch(
   investor: Investor,
-  matchRequest: MatchRequest,
-  readinessScores?: ReadinessScores
+  matchRequest: MatchRequest
 ): InvestorMatch {
-  const weights = {
-    stageAlignment: 0.40,
-    industryFocus: 0.25,
-    geographicPreference: 0.15,
-    checkSizeCompatibility: 0.10,
-    portfolioSimilarity: 0.10
-  };
-  
-  // 1. Stage Alignment (40%)
+  let totalScore = 0;
+
   const stageScore = calculateStageAlignment(
     investor.investment_stages,
     matchRequest.business_stage,
-    readinessScores
+    matchRequest.verdict
   );
-  
-  // 2. Industry Focus (25%)
+  totalScore += stageScore * WEIGHTS.stageAlignment;
+
   const industryScore = calculateIndustryMatch(
     investor.industries,
     matchRequest.industry
   );
-  
-  // 3. Geographic Preference (15%)
+  totalScore += industryScore * WEIGHTS.industryFocus;
+
   const geoScore = calculateGeographicMatch(
     investor.geographic_focus,
     investor.locations,
     investor.remote_friendly,
     matchRequest.locations
   );
-  
-  // 4. Check Size Compatibility (10%)
+  totalScore += geoScore * WEIGHTS.geographicPreference;
+
   const checkSizeScore = calculateCheckSizeMatch(
     investor.typical_check_size_min,
     investor.typical_check_size_max,
     matchRequest.funding_amount
   );
-  
-  // 5. Portfolio Similarity (10%)
+  totalScore += checkSizeScore * WEIGHTS.checkSizeCompatibility;
+
   const portfolioScore = calculatePortfolioSimilarity(
-    investor.portfolio_companies || [],
-    matchRequest.industry,
-    matchRequest.business_summary
+    investor.portfolio_companies,
+    matchRequest.industry
   );
-  
-  // Calculate weighted total score
-  let totalScore = 
-    stageScore * weights.stageAlignment +
-    industryScore * weights.industryFocus +
-    geoScore * weights.geographicPreference +
-    checkSizeScore * weights.checkSizeCompatibility +
-    portfolioScore * weights.portfolioSimilarity;
-  
-  // Add manual boost if featured
+  totalScore += portfolioScore * WEIGHTS.portfolioSimilarity;
+
   if (investor.match_score_boost) {
     totalScore += investor.match_score_boost;
   }
-  
-  // Generate match reasons
+
   const reasons = generateMatchReasons({
     stageScore,
     industryScore,
@@ -293,17 +327,17 @@ function calculateInvestorMatch(
     checkSizeScore,
     portfolioScore
   });
-  
+
   return {
     investor,
     match_score: Math.min(100, Math.max(0, Math.round(totalScore))),
     match_reasons: reasons,
     match_breakdown: {
-      stage_alignment: stageScore,
-      industry_focus: industryScore,
-      geographic_preference: geoScore,
-      check_size_compatibility: checkSizeScore,
-      portfolio_similarity: portfolioScore
+      stage_alignment: Math.round(stageScore),
+      industry_focus: Math.round(industryScore),
+      geographic_preference: Math.round(geoScore),
+      check_size_compatibility: Math.round(checkSizeScore),
+      portfolio_similarity: Math.round(portfolioScore)
     }
   };
 }
@@ -314,22 +348,12 @@ serve(async (req) => {
   }
 
   try {
-    const requestData: MatchRequest = await req.json();
+    const matchRequest: MatchRequest = await req.json();
 
     // Validate required fields
-    if (!requestData.industry || typeof requestData.industry !== 'string') {
+    if (!matchRequest.industry || !matchRequest.funding_amount) {
       return new Response(
-        JSON.stringify({ error: 'Industry is required' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    if (!requestData.funding_amount || typeof requestData.funding_amount !== 'number' || requestData.funding_amount <= 0) {
-      return new Response(
-        JSON.stringify({ error: 'Valid funding amount is required' }),
+        JSON.stringify({ error: 'Industry and funding_amount are required' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -349,7 +373,7 @@ serve(async (req) => {
       );
     }
 
-    // Check and deduct credits before processing
+    // Check and deduct credits
     const creditCost = CREDIT_COSTS.INVESTOR_MATCHING;
     const creditCheck = await checkAndDeductCredits(
       user.id,
@@ -364,47 +388,52 @@ serve(async (req) => {
           required: creditCost
         }),
         { 
-          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
+          status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error('Supabase configuration missing');
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false }
+    });
 
     // Fetch readiness assessment if assessment_id provided
-    let readinessScores: ReadinessScores | undefined;
-    if (requestData.assessment_id) {
+    let readinessData = null;
+    if (matchRequest.assessment_id) {
       const { data: assessment } = await supabase
         .from('fundraising_readiness_assessments')
-        .select('verdict, mvp_score, feedback_score, team_score, runway_score, analysis_data')
-        .eq('id', requestData.assessment_id)
+        .select('*')
+        .eq('id', matchRequest.assessment_id)
         .eq('user_id', user.id)
         .single();
 
       if (assessment) {
-        readinessScores = {
-          verdict: assessment.verdict as 'Ready' | 'Not Ready' | 'Almost Ready'
-        };
-        
-        // Merge assessment data into request
-        if (assessment.analysis_data && typeof assessment.analysis_data === 'object') {
-          const analysis = assessment.analysis_data as any;
-          requestData.verdict = assessment.verdict as any;
-          requestData.strengths = analysis.strengths;
-          requestData.critical_gaps = analysis.critical_gaps;
-        }
-        
-        if (!requestData.readiness_scores) {
-          requestData.readiness_scores = {
+        readinessData = {
+          scores: {
             mvp: assessment.mvp_score,
             feedback: assessment.feedback_score,
             team: assessment.team_score,
             runway: assessment.runway_score
-          };
-        }
+          },
+          verdict: assessment.verdict,
+          strengths: assessment.analysis_data?.strengths || [],
+          critical_gaps: assessment.analysis_data?.critical_gaps || []
+        };
+
+        // Merge into match request
+        matchRequest.readiness_scores = readinessData.scores;
+        matchRequest.verdict = readinessData.verdict;
+        matchRequest.strengths = readinessData.strengths;
+        matchRequest.critical_gaps = readinessData.critical_gaps;
       }
     }
 
@@ -415,24 +444,15 @@ serve(async (req) => {
       .eq('is_active', true);
 
     if (investorsError) {
-      console.error('Error fetching investors:', investorsError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch investors' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      throw new Error(`Failed to fetch investors: ${investorsError.message}`);
     }
 
     if (!investors || investors.length === 0) {
       return new Response(
         JSON.stringify({ 
+          error: 'No investors found in database',
           matches: [],
-          top_matches: [],
-          match_request: requestData,
-          generated_at: new Date().toISOString(),
-          credits_used: creditCost
+          top_matches: []
         }),
         { 
           status: 200,
@@ -441,59 +461,61 @@ serve(async (req) => {
       );
     }
 
-    // Apply matching algorithm to each investor
-    const matches: InvestorMatch[] = investors
-      .map((investor: any) => calculateInvestorMatch(investor, requestData, readinessScores))
-      .filter(match => match.match_score > 0) // Only include matches with score > 0
-      .sort((a, b) => b.match_score - a.match_score) // Sort by score descending
-      .slice(0, 15); // Take top 15
+    // Calculate matches for all investors
+    const matches: InvestorMatch[] = investors.map((investor: any) =>
+      calculateInvestorMatch(investor, matchRequest)
+    );
 
-    // Get top 3 investor IDs
-    const topMatches = matches.slice(0, 3).map(m => m.investor.id);
+    // Sort by match score (descending)
+    matches.sort((a, b) => b.match_score - a.match_score);
 
-    // Prepare matched investors data for database
-    const matchedInvestorsData = matches.map(m => ({
-      investor_id: m.investor.id,
-      match_score: m.match_score,
-      match_reasons: m.match_reasons
+    // Take top 15
+    const topMatches = matches.slice(0, 15);
+
+    // Get top 3 IDs
+    const topMatchIds = topMatches.slice(0, 3).map(m => m.investor.id);
+
+    // Prepare match data for saving
+    const matchedInvestorsData = topMatches.map(match => ({
+      investor_id: match.investor.id,
+      match_score: match.match_score,
+      match_reasons: match.match_reasons,
+      match_breakdown: match.match_breakdown
     }));
 
     // Save matches to database (optional, non-blocking)
     try {
-      const { error: saveError } = await supabase
+      await supabase
         .from('investor_matches')
         .insert({
           user_id: user.id,
-          assessment_id: requestData.assessment_id || null,
-          industry: requestData.industry,
-          funding_amount: requestData.funding_amount,
-          locations: requestData.locations || [],
-          business_model: requestData.business_model || null,
-          business_stage: requestData.business_stage || null,
-          business_summary: requestData.business_summary || null,
+          assessment_id: matchRequest.assessment_id || null,
+          industry: matchRequest.industry,
+          funding_amount: matchRequest.funding_amount,
+          locations: matchRequest.locations || [],
+          business_model: matchRequest.business_model || null,
+          business_stage: matchRequest.business_stage || null,
+          business_summary: matchRequest.business_summary || null,
           matched_investors: matchedInvestorsData,
-          top_matches: topMatches,
+          top_matches: topMatchIds,
           status: 'active'
         });
-
-      if (saveError) {
-        console.error('Failed to save matches (non-critical):', saveError);
-      }
-    } catch (saveError) {
-      console.error('Error saving matches (non-critical):', saveError);
+    } catch (dbError) {
+      // Non-critical - log but don't fail
+      console.error('Failed to save matches:', dbError);
     }
 
-    // Return matches
+    // Return results
     return new Response(
       JSON.stringify({
-        matches,
-        top_matches: topMatches,
-        match_request: requestData,
+        matches: topMatches,
+        top_matches: topMatchIds,
+        match_request: matchRequest,
         generated_at: new Date().toISOString(),
-        credits_used: creditCost
+        credits_used: creditCost,
+        new_balance: creditCheck.newBalance
       }),
       { 
-        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
@@ -502,8 +524,7 @@ serve(async (req) => {
     console.error('Error in investor-matching:', error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'An unexpected error occurred',
-        details: error instanceof Error ? error.stack : undefined
+        error: error instanceof Error ? error.message : 'Internal server error'
       }),
       { 
         status: 500,
@@ -512,4 +533,3 @@ serve(async (req) => {
     );
   }
 });
-
