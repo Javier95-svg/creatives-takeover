@@ -85,49 +85,56 @@ const HeroSnippets = () => {
         border: 'border-blue-500/30 hover:border-blue-500/60',
         shadow: 'hover:shadow-lg hover:shadow-blue-500/20',
         icon: 'text-blue-600 dark:text-blue-400',
-        bg: 'bg-blue-500/10 hover:bg-blue-500/20'
+        bg: 'bg-blue-500/10 hover:bg-blue-500/20',
+        colorName: 'blue'
       },
       dashboard: {
         glass: 'glass-blue',
-        border: 'border-indigo-500/30 hover:border-indigo-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-indigo-500/20',
-        icon: 'text-indigo-600 dark:text-indigo-400',
-        bg: 'bg-indigo-500/10 hover:bg-indigo-500/20'
+        border: 'border-yellow-500/30 hover:border-yellow-500/60',
+        shadow: 'hover:shadow-lg hover:shadow-yellow-500/20',
+        icon: 'text-yellow-600 dark:text-yellow-400',
+        bg: 'bg-yellow-500/10 hover:bg-yellow-500/20',
+        colorName: 'yellow'
       },
       chat: {
         glass: 'glass-green',
-        border: 'border-teal-500/30 hover:border-teal-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-teal-500/20',
-        icon: 'text-teal-600 dark:text-teal-400',
-        bg: 'bg-teal-500/10 hover:bg-teal-500/20'
+        border: 'border-green-500/30 hover:border-green-500/60',
+        shadow: 'hover:shadow-lg hover:shadow-green-500/20',
+        icon: 'text-green-600 dark:text-green-400',
+        bg: 'bg-green-500/10 hover:bg-green-500/20',
+        colorName: 'green'
       },
       pmf: {
         glass: 'glass-red',
         border: 'border-orange-500/30 hover:border-orange-500/60',
         shadow: 'hover:shadow-lg hover:shadow-orange-500/20',
         icon: 'text-orange-600 dark:text-orange-400',
-        bg: 'bg-orange-500/10 hover:bg-orange-500/20'
+        bg: 'bg-orange-500/10 hover:bg-orange-500/20',
+        colorName: 'orange'
       },
       prompt: {
-        glass: 'glass-green',
-        border: 'border-amber-500/30 hover:border-amber-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-amber-500/20',
-        icon: 'text-amber-600 dark:text-amber-400',
-        bg: 'bg-amber-500/10 hover:bg-amber-500/20'
+        glass: 'glass-red',
+        border: 'border-red-500/30 hover:border-red-500/60',
+        shadow: 'hover:shadow-lg hover:shadow-red-500/20',
+        icon: 'text-red-600 dark:text-red-400',
+        bg: 'bg-red-500/10 hover:bg-red-500/20',
+        colorName: 'red'
       },
       insighta: {
         glass: 'glass-blue',
         border: 'border-purple-500/30 hover:border-purple-500/60',
         shadow: 'hover:shadow-lg hover:shadow-purple-500/20',
         icon: 'text-purple-600 dark:text-purple-400',
-        bg: 'bg-purple-500/10 hover:bg-purple-500/20'
+        bg: 'bg-purple-500/10 hover:bg-purple-500/20',
+        colorName: 'purple'
       },
       community: {
         glass: 'glass-red',
         border: 'border-pink-500/30 hover:border-pink-500/60',
         shadow: 'hover:shadow-lg hover:shadow-pink-500/20',
         icon: 'text-pink-600 dark:text-pink-400',
-        bg: 'bg-pink-500/10 hover:bg-pink-500/20'
+        bg: 'bg-pink-500/10 hover:bg-pink-500/20',
+        colorName: 'pink'
       }
     };
     return colorMap[color];
@@ -248,13 +255,13 @@ const HeroSnippets = () => {
                 
                 {/* Subtle glow effect on hover */}
                 <div className="absolute -inset-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-md -z-10" style={{
-                  background: colors.shadow.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
-                              colors.shadow.includes('indigo') ? 'rgba(99, 102, 241, 0.2)' :
-                              colors.shadow.includes('teal') ? 'rgba(20, 184, 166, 0.2)' :
-                              colors.shadow.includes('orange') ? 'rgba(249, 115, 22, 0.2)' :
-                              colors.shadow.includes('amber') ? 'rgba(245, 158, 11, 0.2)' :
-                              colors.shadow.includes('purple') ? 'rgba(168, 85, 247, 0.2)' :
-                              'rgba(236, 72, 153, 0.2)'
+                  background: colors.colorName === 'blue' ? 'rgba(59, 130, 246, 0.25)' :
+                              colors.colorName === 'yellow' ? 'rgba(234, 179, 8, 0.25)' :
+                              colors.colorName === 'green' ? 'rgba(34, 197, 94, 0.25)' :
+                              colors.colorName === 'orange' ? 'rgba(249, 115, 22, 0.25)' :
+                              colors.colorName === 'red' ? 'rgba(239, 68, 68, 0.25)' :
+                              colors.colorName === 'purple' ? 'rgba(168, 85, 247, 0.25)' :
+                              'rgba(236, 72, 153, 0.25)'
                 }} />
               </Link>
             );
