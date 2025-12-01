@@ -147,7 +147,7 @@ const EntrepreneurProblems = () => {
           </p>
         </div>
 
-        {/* Problems Grid - 3 Column Layout */}
+        {/* Problems Grid - 3 Column Layout with Better Spacing */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {problems.map((item, index) => {
             const BeforeIcon = item.beforeIcon;
@@ -157,55 +157,65 @@ const EntrepreneurProblems = () => {
             return (
               <Card 
                 key={index} 
-                className="border-border hover:shadow-lg transition-all duration-300 hover:scale-[1.02] flex flex-col h-full"
+                className="border-l-4 border-red-500/50 hover:border-red-500/80 border-border hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden group"
               >
-                <CardHeader className="pb-4">
+                {/* Problem Section Background Gradient */}
+                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/30 dark:from-red-950/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <CardHeader className="pb-6 p-8 relative z-10">
                   {/* Problem Section */}
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="flex items-start gap-4">
-                      <div className="p-2.5 rounded-lg bg-muted flex-shrink-0">
-                        <BeforeIcon className="w-5 h-5 text-muted-foreground" />
+                      <div className="p-4 rounded-xl bg-red-500/10 border-2 border-red-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+                        <BeforeIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
                       </div>
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <CardTitle className="text-lg font-semibold leading-tight">
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <CardTitle className="text-xl font-bold leading-tight text-red-600 dark:text-red-400">
                           {item.problem}
                         </CardTitle>
-                        <CardDescription className="text-sm leading-relaxed">
+                        <CardDescription className="text-sm leading-relaxed text-muted-foreground">
                           {item.beforeText}
                         </CardDescription>
                       </div>
                     </div>
                     
-                    {/* Stat Badge */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-border">
-                      <TrendingDown className="w-4 h-4 text-destructive" />
-                      <span className="text-sm font-semibold text-foreground">{item.stat}</span>
-                      <span className="text-xs text-muted-foreground">{item.statLabel}</span>
+                    {/* Stat Badge - More Prominent */}
+                    <div className="flex items-center gap-2 pt-4 border-t-2 border-red-200 dark:border-red-900/50">
+                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <TrendingDown className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-red-600 dark:text-red-400">{item.stat}</span>
+                        <span className="text-xs font-medium text-muted-foreground">{item.statLabel}</span>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
 
-                {/* Arrow Divider */}
-                <div className="relative px-6">
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center">
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                {/* Arrow Divider - More Prominent */}
+                <div className="relative px-8 py-4">
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/20 to-green-500/20 border-2 border-primary/30 flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                      <ArrowRight className="w-5 h-5 text-primary" />
                     </div>
                   </div>
-                  <div className="h-px bg-border" />
+                  <div className="h-0.5 bg-gradient-to-r from-red-200 via-primary/30 to-green-200 dark:from-red-900/50 dark:via-primary/20 dark:to-green-900/50" />
                 </div>
 
+                {/* Solution Section Background Gradient */}
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-tl from-green-50/30 dark:from-green-950/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
                 {/* Solution Section */}
-                <CardContent className="pt-6 flex-1 flex flex-col">
-                  <div className="space-y-4 flex-1">
+                <CardContent className="pt-6 pb-8 px-8 flex-1 flex flex-col relative z-10">
+                  <div className="space-y-6 flex-1">
                     <div className="flex items-start gap-4">
-                      <div className="p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
-                        <AfterIcon className="w-5 h-5 text-primary" />
+                      <div className="p-4 rounded-xl bg-green-500/10 border-2 border-green-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+                        <AfterIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
                       </div>
-                      <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex-1 min-w-0 space-y-3">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
-                          <h4 className="text-sm font-semibold text-foreground">Solution</h4>
+                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                          <h4 className="text-base font-semibold text-green-600 dark:text-green-400">Solution</h4>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                           {item.afterText}
@@ -213,41 +223,49 @@ const EntrepreneurProblems = () => {
                       </div>
                     </div>
                     
-                    {/* Success Indicator */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-border">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-medium text-muted-foreground">Avoid this failure</span>
+                    {/* Success Indicator - More Prominent */}
+                    <div className="flex items-center gap-2 pt-4 border-t-2 border-green-200 dark:border-green-900/50">
+                      <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <span className="text-sm font-semibold text-green-600 dark:text-green-400">Avoid this failure</span>
                     </div>
                   </div>
 
                   {/* Expandable Detail Section */}
                   {isExpanded && (
-                    <div className="mt-6 pt-6 border-t border-border space-y-4">
-                      <div>
-                        <h5 className="text-sm font-semibold text-foreground mb-2">The Problem:</h5>
+                    <div className="mt-6 pt-6 border-t-2 border-border space-y-6 animate-fade-in">
+                      <div className="p-4 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
+                        <h5 className="text-sm font-bold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4" />
+                          The Problem:
+                        </h5>
                         <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
                       </div>
-                      <div>
-                        <h5 className="text-sm font-semibold text-foreground mb-2">The Solution:</h5>
+                      <div className="p-4 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30">
+                        <h5 className="text-sm font-bold text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          The Solution:
+                        </h5>
                         <p className="text-sm text-muted-foreground leading-relaxed">{item.solution}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* Expand/Collapse Button */}
+                  {/* Expand/Collapse Button - More Prominent */}
                   <button
                     onClick={() => toggleExpand(index)}
-                    className="mt-6 w-full py-3 bg-muted/50 hover:bg-muted transition-colors rounded-md flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                    className="mt-6 w-full py-3.5 bg-primary/10 hover:bg-primary/20 border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:text-primary/90 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isExpanded ? (
                       <>
                         <span>Show Less</span>
-                        <ChevronUp className="w-4 h-4" />
+                        <ChevronUp className="w-4 h-4 transition-transform duration-300" />
                       </>
                     ) : (
                       <>
                         <span>Learn More</span>
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-1" />
                       </>
                     )}
                   </button>
