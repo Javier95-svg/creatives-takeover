@@ -100,6 +100,29 @@ const EntrepreneurProblems = () => {
 
   return (
     <section className="py-20 lg:py-32 relative overflow-hidden">
+      <style>{`
+        @keyframes flicker {
+          0%, 100% {
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+          }
+          25% {
+            opacity: 0.8;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+          }
+          50% {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+          }
+          75% {
+            opacity: 0.9;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.45);
+          }
+        }
+        .animate-flicker {
+          animation: flicker 2s ease-in-out infinite;
+        }
+      `}</style>
       {/* Problem-Focused Wallpaper - theme-aware */}
       <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
       
@@ -136,7 +159,7 @@ const EntrepreneurProblems = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-6 text-sm">
+          <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 mb-6 text-sm animate-flicker">
             Big Challenges, Bold Solutions
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
