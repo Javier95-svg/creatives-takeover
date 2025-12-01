@@ -33,7 +33,7 @@ const Phase4CollaborationDemo = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4">Phase 4 Collaboration Demo</h1>
+            <h1 className="text-hero font-bold mb-4">Phase 4 Collaboration Demo</h1>
             <p className="text-xl text-muted-foreground mb-6">
               Advanced real-time collaboration with video calls, activity feeds, and enhanced presence
             </p>

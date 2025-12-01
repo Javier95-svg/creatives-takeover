@@ -40,14 +40,20 @@ export default {
 				'space-grotesk': ['Space Grotesk', 'Poppins', 'sans-serif'],
 			},
 			fontSize: {
-				'headline-xl': ['64px', { lineHeight: '1.1', fontWeight: '700' }],
-				'headline-lg': ['48px', { lineHeight: '1.1', fontWeight: '700' }],
-				'subheading-xl': ['32px', { lineHeight: '1.3', fontWeight: '600' }],
-				'subheading-lg': ['24px', { lineHeight: '1.3', fontWeight: '600' }],
-				'body-lg': ['18px', { lineHeight: '1.6', fontWeight: '400' }],
-				'body': ['16px', { lineHeight: '1.6', fontWeight: '400' }],
-				'button': ['16px', { lineHeight: '1.5', fontWeight: '600' }],
-				'button-sm': ['15px', { lineHeight: '1.5', fontWeight: '600' }],
+				// Standardized Typography
+				'hero': ['3.5rem', { lineHeight: '1.2', fontWeight: '700' }], // 56px - Hero headings (h1)
+				'section': ['2.5rem', { lineHeight: '1.2', fontWeight: '600' }], // 40px - Section headings (h2)
+				'subheading': ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }], // 24px - Subheadings (h3)
+				'body': ['1rem', { lineHeight: '1.6', fontWeight: '400' }], // 16px - Body text
+				'small': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }], // 14px - Small text
+				// Legacy support (deprecated - use standardized classes above)
+				'headline-xl': ['3.5rem', { lineHeight: '1.2', fontWeight: '700' }],
+				'headline-lg': ['3.5rem', { lineHeight: '1.2', fontWeight: '700' }],
+				'subheading-xl': ['2.5rem', { lineHeight: '1.2', fontWeight: '600' }],
+				'subheading-lg': ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }],
+				'body-lg': ['1rem', { lineHeight: '1.6', fontWeight: '400' }],
+				'button': ['1rem', { lineHeight: '1.5', fontWeight: '600' }],
+				'button-sm': ['0.875rem', { lineHeight: '1.5', fontWeight: '600' }],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

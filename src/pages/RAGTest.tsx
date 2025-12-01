@@ -89,7 +89,7 @@ export default function RAGTest() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">RAG System Test Interface</h1>
+        <h1 className="text-hero font-bold mb-2">RAG System Test Interface</h1>
         <p className="text-muted-foreground">
           Test document ingestion and knowledge base queries
         </p>
