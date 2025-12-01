@@ -8,7 +8,6 @@ import UpgradeCheckoutDialog, {
 import { useSubscription, SubscriptionTier } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import TrustIndicators from "@/components/TrustIndicators";
 
 const BILLING_STORAGE_KEY = "ct_billing_details";
 
@@ -421,9 +420,6 @@ const Pricing = () => {
             );
           })}
         </div>
-
-        {/* Trust Indicators - Part of Hero Section */}
-        <TrustIndicators />
 
       </div>
     </section>
