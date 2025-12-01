@@ -23,8 +23,8 @@ const Messages = () => {
           <AnimatedBackground />
           <div className="relative z-10">
             <Navigation />
-            <main className="container mx-auto px-4 py-20">
-              <Card className="max-w-md mx-auto p-8 text-center">
+            <main className="container mx-auto px-4 py-12">
+              <Card className="max-w-md mx-auto p-6 text-center">
                 <MessageCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h2 className="text-2xl font-bold mb-4">Sign In Required</h2>
                 <p className="text-muted-foreground mb-6">

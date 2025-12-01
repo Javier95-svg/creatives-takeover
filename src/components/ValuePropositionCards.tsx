@@ -57,7 +57,7 @@ const ValuePropositionCards = () => {
   ];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle">
+    <section className="py-12 lg:py-16 bg-background relative overflow-hidden bg-gradient-rgb-subtle">
       {/* RGB gradient overlay */}
       <div className="absolute inset-0 bg-gradient-rgb-soft opacity-30" />
       
@@ -84,7 +84,7 @@ const ValuePropositionCards = () => {
         </div>
 
         {/* All Cards - Single Row */}
-        <div className="flex flex-row gap-4 md:gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
+        <div className="flex flex-row gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
           {allCards.map((card, index) => {
             const Icon = card.icon;
             const colorClasses = {
@@ -139,7 +139,7 @@ const ValuePropositionCards = () => {
                 </div>
                 
                 <Link to={card.link} className="block h-full">
-                  <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center">
+                  <CardContent className="relative p-6 flex flex-col h-full items-center">
                     {/* Icon with enhanced animations */}
                     <div className="mb-3">
                       <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-lg`}>

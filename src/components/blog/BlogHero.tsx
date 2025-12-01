@@ -11,7 +11,7 @@ const BlogHero = () => {
   });
 
   return (
-    <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
+    <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-16">
       {/* Stock-inspired animated wallpaper */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Gradient base */}

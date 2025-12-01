@@ -112,7 +112,7 @@ const PromptLibrary = () => {
         <PromptLibraryWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
+          <div className="pt-16 pb-12 sm:pb-16 px-4">
             <div className="max-w-5xl mx-auto">
               <Button
                 variant="outline"
@@ -421,7 +421,7 @@ const PromptLibrary = () => {
 
             <div className="mt-16 text-center">
               <Card className="glass-card max-w-2xl mx-auto">
-                <CardContent className="p-8">
+                <CardContent className="p-6">
                   <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
                   <h3 className="text-section font-bold mb-4">Ready to Build Your Business?</h3>
                   <p className="text-muted-foreground mb-6">

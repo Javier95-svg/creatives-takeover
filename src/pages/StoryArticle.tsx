@@ -70,7 +70,7 @@ const LinkedInEmbed = ({ url }: { url: string }) => {
         >
           <div ref={embedRef} className="min-h-[300px] flex items-center justify-center">
             {/* Fallback while loading */}
-            <div className="p-8 text-center">
+            <div className="p-6 text-center">
               <Linkedin className="w-16 h-16 mb-4 text-[#0077b5] mx-auto" />
               <h3 className="text-subheading font-semibold mb-2">LinkedIn Post</h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-md break-all">
@@ -164,7 +164,7 @@ const StoryArticle = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="pt-24 pb-16">
+        <main className="pt-16 pb-16">
           <div className="container mx-auto px-6 max-w-4xl">
             <div className="text-center py-16">
               <p className="text-muted-foreground">Loading article...</p>
@@ -425,7 +425,7 @@ const StoryArticle = () => {
                 </ReactMarkdown>
               </div>
             ) : (
-              <div className="my-8 p-8 border border-dashed rounded-lg text-center text-muted-foreground">
+              <div className="my-8 p-6 border border-dashed rounded-lg text-center text-muted-foreground">
                 <p>No content available for this article.</p>
               </div>
             )}

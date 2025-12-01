@@ -132,8 +132,9 @@ export default {
 				'large': '1rem', // 16px for larger elements
 			},
 			spacing: {
-				'section-desktop': '80px',
-				'section-mobile': '60px',
+				// Standardized 8px scale spacing
+				'section-desktop': '64px', // py-16
+				'section-mobile': '48px', // py-12
 			},
 			backgroundImage: {
 				'gradient-rgb': 'var(--gradient-rgb)',

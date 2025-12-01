@@ -302,7 +302,7 @@ const BusinessValuation = ({ businessPlan }: { businessPlan?: any }) => {
       )}
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Valuation Inputs */}
         <Card className="glass-card lg:col-span-1">
           <CardHeader>

@@ -7,12 +7,12 @@ import { ChevronDown } from "lucide-react";
 import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
 
 const AboutHero = () => {
-  return <section className="relative pt-32 pb-20 overflow-hidden">
+  return <section className="relative py-12 lg:py-16 overflow-hidden">
       <AboutWallpaper />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-6 items-center">
             {/* Text Content */}
           <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
             <div>

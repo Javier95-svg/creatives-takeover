@@ -242,7 +242,7 @@ const Profile = () => {
           <ProfileWallpaper />
           <div className="relative z-10">
             <Navigation />
-            <main className="container mx-auto px-4 py-20">
+            <main className="container mx-auto px-4 py-12">
               <div className="max-w-4xl mx-auto">
                 <div className="animate-pulse space-y-4">
                   <div className="h-32 bg-muted rounded-lg" />
@@ -267,8 +267,8 @@ const Profile = () => {
           <ProfileWallpaper />
           <div className="relative z-10">
             <Navigation />
-            <main className="container mx-auto px-4 py-20">
-              <Card className="max-w-md mx-auto p-8 text-center">
+            <main className="container mx-auto px-4 py-12">
+              <Card className="max-w-md mx-auto p-6 text-center">
                 <h2 className="text-section font-bold mb-4">Profile Not Found</h2>
                 <p className="text-muted-foreground mb-6">
                   The profile you're looking for doesn't exist.

@@ -11,7 +11,7 @@ const StoriesHero = () => {
   });
 
   return (
-    <section className="relative py-20 lg:py-32 overflow-hidden">
+    <section className="relative py-12 lg:py-16 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}

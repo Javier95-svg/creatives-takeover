@@ -17,7 +17,7 @@ const PrivacyPolicy = () => {
         <AnimatedBackground />
         <div className="relative z-10">
           <Navigation />
-          <main className="container mx-auto px-6 py-24">
+          <main className="container mx-auto px-6 py-12">
             <header className="mb-16 text-center">
               <h1 className="text-hero font-bold gradient-text creatives-font mb-6">
                 Privacy Policy

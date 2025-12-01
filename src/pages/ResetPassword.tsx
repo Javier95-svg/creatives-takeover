@@ -166,7 +166,7 @@ const ResetPassword = () => {
         <AuthWallpaper />
         <div className="w-full max-w-md relative z-10">
           <Card className="glass-card border-2 border-border/50 shadow-2xl">
-            <CardContent className="p-8 text-center">
+            <CardContent className="p-6 text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
@@ -189,7 +189,7 @@ const ResetPassword = () => {
         <AuthWallpaper />
         <div className="w-full max-w-md relative z-10">
           <Card className="glass-card border-2 border-border/50 shadow-2xl">
-            <CardContent className="p-8 text-center space-y-4">
+            <CardContent className="p-6 text-center space-y-4">
               <div className="flex justify-center">
                 <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
                   <AlertCircle className="w-8 h-8 text-red-500" />
