@@ -24,56 +24,56 @@ interface PlatformSnippet {
 const platformSnippets: PlatformSnippet[] = [
   {
     name: "Business Planning",
-    description: "7-step wizard to build your 30-day launch plan",
+    description: "Generate your complete business plan with market analysis in just 3 minutes",
     icon: Target,
     route: "/bizmap-ai",
     color: "planning"
   },
   {
     name: "Dashboard",
-    description: "Market Validation, Task Calendar, Revenue Hub",
+    description: "Track your progress, manage tasks, and monitor your business metrics in one place",
     icon: LayoutDashboard,
     route: "/dashboard",
     color: "action"
   },
   {
     name: "BizMap AI Chat",
-    description: "AI-powered conversational business planning",
+    description: "Get strategic business advice from your AI co-founder through conversation",
     icon: MessageSquare,
     route: "/bizmap-ai",
     color: "growth"
   },
   {
     name: "Funding Opportunities",
-    description: "Find grants, accelerators, contests, and microfunds",
+    description: "Discover grants, accelerators, and funding programs matched to your startup",
     icon: DollarSign,
     route: "/blog",
     color: "planning"
   },
   {
     name: "Product Market Fit Lab",
-    description: "Validate your product in the market",
+    description: "Validate your product-market fit with customer analysis and validation experiments",
     icon: FlaskConical,
     route: "/bizmap-ai",
     color: "action"
   },
   {
     name: "Prompt Library",
-    description: "Pre-built AI prompts for pitches, emails, interviews",
+    description: "Access ready-to-use AI prompts for pitches, emails, and customer interviews",
     icon: Lightbulb,
     route: "/prompt-library",
     color: "growth"
   },
   {
     name: "Insighta",
-    description: "Curated news hub for funding and AI trends",
+    description: "Assess your fundraising readiness and find investors matched to your startup",
     icon: TrendingUp,
     route: "/insighta",
     color: "planning"
   },
   {
     name: "Community",
-    description: "Connect with founders, get feedback, demo days",
+    description: "Connect with founders, get feedback, and find accountability partners",
     icon: Users,
     route: "/community",
     color: "action"
