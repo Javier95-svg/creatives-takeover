@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Crown, Check } from "lucide-react";
+import { Star, Crown, Check, Sparkles, Users, Target, BarChart3, UserPlus, HeadphonesIcon } from "lucide-react";
 import UpgradeCheckoutDialog, {
   CheckoutFormState,
 } from "@/components/UpgradeCheckoutDialog";
@@ -33,58 +33,172 @@ const Pricing = () => {
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [hasPrefilledAddress, setHasPrefilledAddress] = useState(false);
 
-  // Define feature sets for each tier - based on actual implemented features
-  const getFeatures = (tierName: string) => {
-    const featureMap: Record<string, string[]> = {
-      free: [
-        "5 BizMap AI conversations per month",
-        "Community read-only access",
-        "Prompt library (view only)",
-        "1 active sprint",
-        "Funding opportunities (view only)",
-        "Job board (view only)",
-        "Reputation system (basic)",
-        "Community forum support"
-      ],
-      creator: [
-        "50 BizMap AI conversations per month",
-        "Full community access (post, comment, vote)",
-        "Prompt library with copy/export functionality",
-        "Custom prompt chains creation",
-        "Unlimited sprint planning & Kanban boards",
-        "Market intelligence (10 queries/month)",
-        "Funding opportunities with bookmarks",
-        "Accountability partnerships",
-        "Financial dashboard access",
-        "Budget management (basic)",
-        "Basic collaboration tools (max 3 collaborators)",
-        "Basic reports (5/month)",
-        "Priority email support (48hr response)"
-      ],
-      professional: [
-        "150 BizMap AI conversations per month",
-        "AI-enhanced community (post insights, trending)",
-        "Unlimited market intelligence",
-        "Unlimited custom reports + PDF export",
-        "Budget management (advanced)",
-        "Outreach campaigns (unlimited)",
-        "Advanced financial analytics",
-        "Advanced collaboration (whiteboarding, polls, video calls)",
-        "Success score analytics & tracking",
-        "API access",
-        "24hr priority support"
-      ]
+  // Categorized feature structure
+  interface CategorizedFeatures {
+    aiPlanning: string[];
+    community: string[];
+    execution: string[];
+    intelligence: string[];
+    collaboration: string[];
+    support: string[];
+  }
+
+  // Category configuration
+  const categoryConfig = [
+    { key: 'aiPlanning' as keyof CategorizedFeatures, label: 'BizMap AI & Planning', icon: Sparkles, color: 'text-blue-600 dark:text-blue-400' },
+    { key: 'community' as keyof CategorizedFeatures, label: 'Community & Networking', icon: Users, color: 'text-purple-600 dark:text-purple-400' },
+    { key: 'execution' as keyof CategorizedFeatures, label: 'Execution Tools', icon: Target, color: 'text-green-600 dark:text-green-400' },
+    { key: 'intelligence' as keyof CategorizedFeatures, label: 'Business Intelligence', icon: BarChart3, color: 'text-orange-600 dark:text-orange-400' },
+    { key: 'collaboration' as keyof CategorizedFeatures, label: 'Collaboration', icon: UserPlus, color: 'text-pink-600 dark:text-pink-400' },
+    { key: 'support' as keyof CategorizedFeatures, label: 'Support', icon: HeadphonesIcon, color: 'text-cyan-600 dark:text-cyan-400' }
+  ];
+
+  // Define categorized features for each tier
+  const getCoreFeatures = (tierName: string): CategorizedFeatures => {
+    const featureMap: Record<string, CategorizedFeatures> = {
+      free: {
+        aiPlanning: [
+          "5 BizMap AI conversations per month",
+          "Prompt library (view only)"
+        ],
+        community: [
+          "Community read-only access",
+          "Reputation system (basic)"
+        ],
+        execution: [
+          "1 active sprint",
+          "Basic Kanban board"
+        ],
+        intelligence: [
+          "Funding opportunities (view only)",
+          "Job board (view only)"
+        ],
+        collaboration: [],
+        support: [
+          "Community forum support"
+        ]
+      },
+      creator: {
+        aiPlanning: [
+          "50 BizMap AI conversations per month",
+          "Prompt library with copy/export functionality",
+          "Custom prompt chains creation"
+        ],
+        community: [
+          "Full community access (post, comment, vote)",
+          "Accountability partnerships",
+          "Reputation system (full access)"
+        ],
+        execution: [
+          "Unlimited sprint planning & Kanban boards",
+          "Daily check-ins"
+        ],
+        intelligence: [
+          "Market intelligence (10 queries/month)",
+          "Funding opportunities with bookmarks",
+          "Job board (view & apply)",
+          "Financial dashboard access",
+          "Budget management (basic)",
+          "Basic reports (5/month)"
+        ],
+        collaboration: [
+          "Basic collaboration tools (max 3 collaborators)"
+        ],
+        support: [
+          "Priority email support (48hr response)"
+        ]
+      },
+      professional: {
+        aiPlanning: [
+          "150 BizMap AI conversations per month",
+          "Prompt library with copy/export functionality",
+          "Custom prompt chains creation"
+        ],
+        community: [
+          "AI-enhanced community (post insights, trending)",
+          "Accountability partnerships",
+          "Reputation system (full access)"
+        ],
+        execution: [
+          "Unlimited sprint planning & Kanban boards",
+          "Daily check-ins"
+        ],
+        intelligence: [
+          "Unlimited market intelligence",
+          "Unlimited custom reports + PDF export",
+          "Funding opportunities with bookmarks",
+          "Job board (view & apply)",
+          "Financial dashboard access",
+          "Budget management (advanced)",
+          "Advanced financial analytics",
+          "Success score analytics & tracking",
+          "Outreach campaigns (unlimited)"
+        ],
+        collaboration: [
+          "Advanced collaboration (whiteboarding, polls, video calls)",
+          "Unlimited team members"
+        ],
+        support: [
+          "24hr priority support",
+          "API access"
+        ]
+      }
     };
-    return featureMap[tierName] || [];
+    return featureMap[tierName] || {
+      aiPlanning: [],
+      community: [],
+      execution: [],
+      intelligence: [],
+      collaboration: [],
+      support: []
+    };
   };
 
-  const getDescription = (tierName: string) => {
-    const descriptions: Record<string, string> = {
-      free: "Try before you buy - explore our platform with limited access",
-      creator: "Build your business - perfect for active solopreneurs",
-      professional: "Scale & collaborate - for serious entrepreneurs and small teams"
+  // Get target audience description
+  const getTargetAudience = (tierName: string) => {
+    const audiences: Record<string, string> = {
+      free: "Perfect for exploring the platform and validating your business idea",
+      creator: "Ideal for active solopreneurs ready to build and execute their business plan",
+      professional: "Built for serious entrepreneurs and small teams scaling their operations"
     };
-    return descriptions[tierName] || "";
+    return audiences[tierName] || "";
+  };
+
+  // Get key benefits over the lower tier
+  const getUpgradeBenefits = (tierName: string): string[] => {
+    const benefits: Record<string, string[]> = {
+      free: [
+        "Start validating your business idea",
+        "Explore platform features",
+        "Join our community"
+      ],
+      creator: [
+        "10x more AI conversations (50 vs 5)",
+        "Full community participation",
+        "Unlimited sprint planning",
+        "Market intelligence access"
+      ],
+      professional: [
+        "3x more AI conversations (150 vs 50)",
+        "Unlimited market intelligence",
+        "Advanced collaboration tools",
+        "24hr priority support + API access"
+      ]
+    };
+    return benefits[tierName] || [];
+  };
+
+  // Legacy function for backwards compatibility (if needed elsewhere)
+  const getFeatures = (tierName: string) => {
+    const categorized = getCoreFeatures(tierName);
+    return [
+      ...categorized.aiPlanning,
+      ...categorized.community,
+      ...categorized.execution,
+      ...categorized.intelligence,
+      ...categorized.collaboration,
+      ...categorized.support
+    ];
   };
 
   const getTitleAndCTA = (tierName: string) => {
@@ -306,19 +420,11 @@ const Pricing = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto px-2 sm:px-0">
           {tiers.map((tier, index) => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
-            const features = getFeatures(tier.tier_name);
-            const description = getDescription(tier.tier_name);
+            const categorizedFeatures = getCoreFeatures(tier.tier_name);
+            const targetAudience = getTargetAudience(tier.tier_name);
+            const upgradeBenefits = getUpgradeBenefits(tier.tier_name);
             const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'creator';
-            
-            // Group features by category for better display
-            const groupedFeatures = (() => {
-              const allFeatures = features;
-              const core = allFeatures.slice(0, 2);
-              const tools = allFeatures.slice(2, -1);
-              const support = allFeatures.slice(-1);
-              return { core, tools, support };
-            })();
 
             return (
               <div
@@ -355,49 +461,125 @@ const Pricing = () => {
                   </div>
                 )}
 
-                <div className="text-center mb-6 sm:mb-8">
-                  <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 capitalize">{tier.tier_name}</h3>
-                  <p className="text-base sm:text-lg font-semibold text-primary mb-1 sm:mb-2">{title}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{description}</p>
-                </div>
-
+                {/* Plan Header */}
                 <div className="text-center mb-4 sm:mb-6">
-                  <div className="flex items-baseline justify-center gap-1 sm:gap-2">
-                    <span className="text-3xl sm:text-4xl font-bold">
-                      ${(tier.price_cents / 100).toFixed(2)}
-                    </span>
-                    {tier.price_cents > 0 && (
-                      <span className="text-muted-foreground text-sm sm:text-base">/month</span>
+                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 capitalize">{tier.tier_name}</h3>
+                  <div className="text-center mb-3 sm:mb-4">
+                    <div className="flex items-baseline justify-center gap-1 sm:gap-2">
+                      <span className="text-3xl sm:text-4xl lg:text-5xl font-bold">
+                        ${(tier.price_cents / 100).toFixed(2)}
+                      </span>
+                      {tier.price_cents > 0 && (
+                        <span className="text-muted-foreground text-sm sm:text-base lg:text-lg">/month</span>
+                      )}
+                    </div>
+                    {tier.monthly_credits > 0 && (
+                      <div className="text-xs sm:text-sm text-primary mt-2 font-medium">
+                        {tier.monthly_credits} credits/month
+                      </div>
                     )}
                   </div>
-                  {tier.monthly_credits > 0 && (
-                    <div className="text-xs sm:text-sm text-primary mt-2">
-                      {tier.monthly_credits} credits/month
-                    </div>
-                  )}
+                  {/* Target Audience */}
+                  <div className="mt-3 pt-3 border-t border-border/30">
+                    <p className="text-xs sm:text-sm font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">
+                      Who it's for
+                    </p>
+                    <p className="text-xs sm:text-sm lg:text-base text-foreground leading-relaxed">
+                      {targetAudience}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Features List */}
-                <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-3 flex-grow">
-                  {features.map((feature, featureIndex) => {
-                    // Highlight Professional-only features
-                    const isProOnly = tier.tier_name === 'professional' && (
-                      feature.includes('Unlimited') || 
-                      feature.includes('AI-enhanced') ||
-                      feature.includes('API access') ||
-                      feature.includes('24hr')
-                    );
+                {/* Upgrade Benefits Section */}
+                {tier.tier_name !== 'free' && upgradeBenefits.length > 0 && (
+                  <div className="mb-4 sm:mb-6 pt-4 border-t-2 border-primary/20 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent -mx-4 sm:-mx-5 lg:-mx-6 px-4 sm:px-5 lg:px-6 pb-3 rounded-lg">
+                    <p className="text-xs font-bold text-primary mb-3 uppercase tracking-wider flex items-center gap-2">
+                      <Star className="w-3 h-3 fill-primary flex-shrink-0" />
+                      <span>{tier.tier_name === 'creator' ? 'Upgrade from Free' : 'Upgrade from Creator'}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {upgradeBenefits.map((benefit, idx) => (
+                        <Badge 
+                          key={idx} 
+                          variant="secondary" 
+                          className="text-[10px] sm:text-xs bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 transition-colors font-medium px-2 py-0.5"
+                        >
+                          {benefit}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Free plan "Getting Started" benefits */}
+                {tier.tier_name === 'free' && upgradeBenefits.length > 0 && (
+                  <div className="mb-4 sm:mb-6 pt-4 border-t border-border/50">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                      What you get
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {upgradeBenefits.map((benefit, idx) => (
+                        <Badge 
+                          key={idx} 
+                          variant="outline" 
+                          className="text-[10px] sm:text-xs bg-muted/30 border-border/50 px-2 py-0.5"
+                        >
+                          {benefit}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Categorized Features */}
+                <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4 flex-grow max-h-[600px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
+                  {categoryConfig.map((category) => {
+                    const features = categorizedFeatures[category.key];
+                    if (features.length === 0) return null;
+
+                    const IconComponent = category.icon;
                     
                     return (
-                      <div key={featureIndex} className="flex items-start gap-2 sm:gap-3">
-                        <Check className={`w-3 sm:w-4 h-3 sm:h-4 mt-0.5 flex-shrink-0 ${
-                          isProOnly ? 'text-primary' : 'text-primary'
-                        }`} />
-                        <span className={`text-xs sm:text-sm leading-relaxed ${
-                          isProOnly ? 'text-primary font-medium' : 'text-muted-foreground'
-                        }`}>
-                          {feature}
-                        </span>
+                      <div key={category.key} className="space-y-2 pb-3 border-b border-border/30 last:border-b-0 last:pb-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`p-1.5 rounded-md flex-shrink-0 ${
+                            category.key === 'aiPlanning' ? 'bg-blue-500/10' :
+                            category.key === 'community' ? 'bg-purple-500/10' :
+                            category.key === 'execution' ? 'bg-green-500/10' :
+                            category.key === 'intelligence' ? 'bg-orange-500/10' :
+                            category.key === 'collaboration' ? 'bg-pink-500/10' :
+                            'bg-cyan-500/10'
+                          }`}>
+                            <IconComponent className={`w-3.5 h-3.5 ${category.color}`} />
+                          </div>
+                          <h4 className="text-[10px] sm:text-xs font-bold text-foreground uppercase tracking-wider">
+                            {category.label}
+                          </h4>
+                        </div>
+                        <div className="space-y-1.5 pl-8 sm:pl-9">
+                          {features.map((feature, featureIndex) => {
+                            const isProOnly = tier.tier_name === 'professional' && (
+                              feature.includes('Unlimited') || 
+                              feature.includes('AI-enhanced') ||
+                              feature.includes('API access') ||
+                              feature.includes('24hr') ||
+                              feature.includes('Advanced')
+                            );
+                            
+                            return (
+                              <div key={featureIndex} className="flex items-start gap-2 sm:gap-2.5">
+                                <Check className={`w-3 h-3 sm:w-3.5 sm:h-3.5 mt-0.5 flex-shrink-0 ${
+                                  isProOnly ? 'text-primary' : 'text-green-600 dark:text-green-400'
+                                }`} />
+                                <span className={`text-[11px] sm:text-xs lg:text-sm leading-relaxed ${
+                                  isProOnly ? 'text-primary font-medium' : 'text-muted-foreground'
+                                }`}>
+                                  {feature}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
