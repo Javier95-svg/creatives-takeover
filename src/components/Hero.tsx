@@ -100,16 +100,16 @@ const Hero = () => {
 
       <div className="container mx-auto relative z-20">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Main Headline - Benefit-focused */}
+          {/* Main Headline */}
           <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
             <span className="gradient-unified animate-fade-in">
-              Turn Your Creative Idea Into a Launch-Ready Business in 30 Days
+              Your Digital Partner for Building from Zero
             </span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in">
-            Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders from idea to launch. Join thousands of creative entrepreneurs building their businesses with confidence.
+            Turn your creative idea into a thriving project. Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders and entrepreneurs throughout their journey.
           </p>
           
           {/* Platform-Specific Trust Indicators */}
