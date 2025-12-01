@@ -118,7 +118,7 @@ const UserReviews = () => {
             <span className="gradient-unified">Helping Founders Succeed</span>
           </h2>
           <p className="text-body text-muted-foreground max-w-2xl mx-auto">
-            See how founders like you are turning ideas into thriving projects
+            See how founders are turning their ideas into thriving projects.
           </p>
         </div>
 
