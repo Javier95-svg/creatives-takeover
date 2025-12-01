@@ -86,8 +86,8 @@ const Demo = () => {
             <Navigation />
             
             {/* Hero Section with Story */}
-            <section className="container mx-auto px-4 py-12">
-              <div className="text-center max-w-5xl mx-auto mb-12 animate-fade-in">
+            <section className="container mx-auto px-4 py-20">
+              <div className="text-center max-w-5xl mx-auto mb-20 animate-fade-in">
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur-sm px-6 py-3 rounded-full mb-8 border border-primary/20 hover-scale">
                   <Sparkles className="w-5 h-5 text-primary animate-pulse" />
                   <span className="text-sm font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -160,7 +160,7 @@ const Demo = () => {
               <ServiceSelector onSelectService={handleServiceSelect} />
 
               {/* Testimonial Section */}
-              <div className="max-w-5xl mx-auto mt-12 p-6 rounded-3xl bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border border-primary/20 backdrop-blur-sm animate-fade-in">
+              <div className="max-w-5xl mx-auto mt-20 p-8 rounded-3xl bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border border-primary/20 backdrop-blur-sm animate-fade-in">
                 <div className="text-center mb-6">
                   <div className="text-5xl mb-4">💬</div>
                   <p className="text-xl md:text-2xl italic font-medium mb-4">
@@ -279,7 +279,7 @@ const Demo = () => {
               
               {/* Dynamic CTA based on progress */}
               {servicesExplored.length >= 2 && (
-                <div className="p-6 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/15 to-secondary/20 border-2 border-primary/30 backdrop-blur-sm relative overflow-hidden animate-scale-in">
+                <div className="p-8 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/15 to-secondary/20 border-2 border-primary/30 backdrop-blur-sm relative overflow-hidden animate-scale-in">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
                   

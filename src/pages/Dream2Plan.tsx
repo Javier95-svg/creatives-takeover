@@ -1393,7 +1393,7 @@ Subject: "Quick question about [their pain point]"
 
                       {/* FAQ-style container */}
                       <div className="max-w-4xl mx-auto px-4">
-                        <div className="backdrop-blur-sm bg-card/60 rounded-2xl border border-border/50 p-6 shadow-2xl">
+                        <div className="backdrop-blur-sm bg-card/60 rounded-2xl border border-border/50 p-5 sm:p-6 lg:p-8 shadow-2xl">
                           <div className="space-y-6 sm:space-y-7">
                             {/* Step 1 */}
                             <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">

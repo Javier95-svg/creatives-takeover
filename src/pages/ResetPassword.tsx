@@ -166,7 +166,7 @@ const ResetPassword = () => {
         <AuthWallpaper />
         <div className="w-full max-w-md relative z-10">
           <Card className="glass-card border-2 border-border/50 shadow-2xl">
-            <CardContent className="p-6 text-center">
+            <CardContent className="p-8 text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
@@ -189,14 +189,14 @@ const ResetPassword = () => {
         <AuthWallpaper />
         <div className="w-full max-w-md relative z-10">
           <Card className="glass-card border-2 border-border/50 shadow-2xl">
-            <CardContent className="p-6 text-center space-y-4">
+            <CardContent className="p-8 text-center space-y-4">
               <div className="flex justify-center">
                 <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
                   <AlertCircle className="w-8 h-8 text-red-500" />
                 </div>
               </div>
               <div className="space-y-2">
-                <h3 className="text-subheading font-semibold">Invalid or Expired Link</h3>
+                <h3 className="text-xl font-semibold">Invalid or Expired Link</h3>
                 <p className="text-muted-foreground">
                   This password reset link is invalid or has expired. Please request a new one.
                 </p>
@@ -243,7 +243,7 @@ const ResetPassword = () => {
             />
             Creatives Takeover
           </Link>
-          <h1 className="text-hero font-bold mt-4 mb-2">Set new password</h1>
+          <h1 className="text-3xl font-bold mt-4 mb-2">Set new password</h1>
           <p className="text-muted-foreground">
             Enter your new password below
           </p>
@@ -253,7 +253,7 @@ const ResetPassword = () => {
         <MobileFormOptimizer>
           <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
             <CardHeader className="space-y-1 pb-4">
-              <h2 className="text-section font-semibold text-center">Reset Password</h2>
+              <h2 className="text-xl font-semibold text-center">Reset Password</h2>
             </CardHeader>
             <CardContent>
               {isSuccess ? (
@@ -264,7 +264,7 @@ const ResetPassword = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-subheading font-semibold">Password reset successful!</h3>
+                    <h3 className="text-xl font-semibold">Password reset successful!</h3>
                     <p className="text-muted-foreground">
                       Your password has been updated. Redirecting to login...
                     </p>

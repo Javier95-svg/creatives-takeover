@@ -80,10 +80,20 @@ const Navigation = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all bg-[#111827] text-[#F3F4F6] shadow-[0_1px_3px_rgba(0,0,0,0.1)]`}
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b-2 transition-all ${
+        scrolled 
+          ? 'backdrop-blur-md bg-background/95 shadow-sm' 
+          : 'bg-background/80 border-border'
+      }`}
+      style={scrolled ? {
+        borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
+        borderImageSlice: 1
+      } : {
+        borderColor: 'hsl(var(--border))'
+      }}
       >
-        <div className="max-w-[1600px] mx-auto px-4 border-0">
-          <div className="flex items-center py-3 border-0">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
+          <div className="flex items-center h-16 border-0">
             {/* Logo with Breathing Pulse Animation */}
             <div className="flex items-center border-0">
               <Link to="/" className="flex items-center" aria-label="Home">
@@ -96,7 +106,7 @@ const Navigation = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center flex-1 gap-6 ml-6 !border-0">
+            <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
               {navItems.map((item) => {
                 // Color-code navigation items semantically
                 let colorClass = '';
@@ -116,7 +126,7 @@ const Navigation = () => {
                       <Link
                         to={item.href}
                         onClick={() => trackClick(item.name, 'Navigation')}
-                        className={`text-[#F3F4F6] hover:text-[#F3F4F6]/80 font-medium text-base transition-all duration-300 whitespace-nowrap ${colorClass} ${
+                        className={`text-muted-foreground hover:text-foreground transition-all duration-300 whitespace-nowrap ${colorClass} ${
                           item.name === 'BizMap AI' ? 'relative' : ''
                         }`}
                         onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
@@ -139,18 +149,18 @@ const Navigation = () => {
             </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-6 !border-0 ml-6">
+          <div className="hidden md:flex items-center space-x-4 !border-0">
             {loading ? (
               <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
             ) : user ? (
-              <div className="flex items-center gap-6">
+              <div className="flex items-center space-x-2">
                 <CreditDisplay variant="navigation" showPurchaseButton={true} />
                 <SubscriptionStatus variant="inline" />
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowFriendRequests(true)}
-                  className="relative text-[#F3F4F6] hover:text-[#F3F4F6]/80"
+                  className="relative"
                 >
                   <UserPlus className="w-4 h-4" />
                   {pendingFriendRequests.length > 0 && (
@@ -163,7 +173,7 @@ const Navigation = () => {
                   variant="ghost"
                   size="icon"
                   asChild
-                  className="relative text-[#F3F4F6] hover:text-[#F3F4F6]/80"
+                  className="relative"
                 >
                   <Link to="/messages">
                     <MessageCircle className="w-4 h-4" />
@@ -184,7 +194,7 @@ const Navigation = () => {
                     variant="ghost"
                     size="sm"
                     asChild
-                    className="flex items-center gap-2 text-[#F3F4F6] hover:text-[#F3F4F6]/80"
+                    className="flex items-center gap-2"
                   >
                     <Link to="/stories/admin/new">
                       Create Story
@@ -195,22 +205,22 @@ const Navigation = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 text-[#F3F4F6] hover:text-[#F3F4F6]/80"
+                  className="flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-6">
+              <div className="flex items-center space-x-4">
                 <ThemeToggle />
-                <Button variant="ghost" size="sm" asChild className="text-[#F3F4F6] hover:text-[#F3F4F6]/80">
+                <Button variant="ghost" size="sm" asChild>
                   <Link to="/login" className="flex items-center gap-2">
                     <LogIn className="w-4 h-4" />
                     Sign In
                   </Link>
                 </Button>
-                <Button size="sm" className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" asChild>
+                <Button size="sm" className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" asChild>
                   <Link to="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -219,7 +229,7 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0 text-[#F3F4F6]"
+            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Close menu" : "Open menu"}
           >
@@ -229,12 +239,12 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden bg-[#111827] border-t border-[#374151] animate-slide-in-right">
+          <div className="md:hidden bg-background border-t border-border animate-slide-in-right">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {/* Theme Toggle at top of mobile menu */}
-              <div className="px-4 py-3 border-b border-[#374151]">
+              <div className="px-4 py-3 border-b border-border">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-[#F3F4F6]">Theme</span>
+                  <span className="text-sm font-medium text-foreground">Theme</span>
                   <ThemeToggle />
                 </div>
               </div>
@@ -242,7 +252,7 @@ const Navigation = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="block px-4 py-4 text-[#F3F4F6] hover:text-[#F3F4F6]/80 font-medium text-base transition-colors min-h-[44px] touch-manipulation flex items-center"
+                  className="block px-4 py-4 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] touch-manipulation flex items-center"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -254,7 +264,7 @@ const Navigation = () => {
                 ) : user ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-3 py-2">
-                      <div className="flex items-center space-x-2 text-sm text-[#F3F4F6]">
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <User className="w-4 h-4" />
                         <span>{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
                       </div>
@@ -263,7 +273,7 @@ const Navigation = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start text-[#F3F4F6] hover:text-[#F3F4F6]/80" 
+                      className="w-full justify-start" 
                       onClick={() => setIsOpen(false)}
                       asChild
                     >
@@ -275,7 +285,7 @@ const Navigation = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start relative text-[#F3F4F6] hover:text-[#F3F4F6]/80" 
+                      className="w-full justify-start relative" 
                       onClick={() => {
                         setIsOpen(false);
                         setShowFriendRequests(true);
@@ -292,7 +302,7 @@ const Navigation = () => {
                     <Button  
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start text-[#F3F4F6] hover:text-[#F3F4F6]/80" 
+                      className="w-full justify-start" 
                       onClick={() => setIsOpen(false)}
                       asChild
                     >
@@ -305,7 +315,7 @@ const Navigation = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full justify-start text-[#F3F4F6] hover:text-[#F3F4F6]/80" 
+                        className="w-full justify-start" 
                         onClick={() => setIsOpen(false)}
                         asChild
                       >
@@ -318,7 +328,7 @@ const Navigation = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start text-[#F3F4F6] hover:text-[#F3F4F6]/80" 
+                      className="w-full justify-start" 
                       onClick={() => {
                         setIsOpen(false);
                         handleSignOut();
@@ -330,13 +340,13 @@ const Navigation = () => {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-[#F3F4F6] hover:text-[#F3F4F6]/80" onClick={() => setIsOpen(false)} asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)} asChild>
                       <Link to="/login" className="flex items-center">
                         <LogIn className="w-4 h-4 mr-2" />
                         Sign In
                       </Link>
                     </Button>
-                    <Button size="sm" className="w-full bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => setIsOpen(false)} asChild>
+                    <Button size="sm" className="w-full bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => setIsOpen(false)} asChild>
                       <Link to="/signup">Sign Up</Link>
                     </Button>
                   </div>

@@ -12,7 +12,7 @@ const IPPolicy = () => {
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="container mx-auto px-6 py-12">
+        <main className="container mx-auto px-6 py-24">
           <header className="mb-8">
             <h1 className="text-3xl md:text-5xl font-bold">Intellectual Property Policy</h1>
             <p className="mt-4 text-muted-foreground max-w-3xl">Information about content ownership, licensing, and takedown procedures. Placeholder content.</p>

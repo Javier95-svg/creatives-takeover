@@ -17,9 +17,9 @@ const Terms = () => {
         <AnimatedBackground />
         <div className="relative z-10">
           <Navigation />
-          <main className="container mx-auto px-6 py-12">
+          <main className="container mx-auto px-6 py-24">
             <header className="mb-16 text-center">
-              <h1 className="text-hero font-bold gradient-text creatives-font mb-6">
+              <h1 className="text-4xl md:text-6xl font-bold gradient-text creatives-font mb-6">
                 Terms of Service
               </h1>
               <div className="glass-card max-w-3xl mx-auto">
@@ -34,7 +34,7 @@ const Terms = () => {
 
             <div className="max-w-4xl mx-auto space-y-8">
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">1. Acceptance of Terms</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">1. Acceptance of Terms</h2>
                 <p className="text-foreground/90">
                   By accessing or using Creatives Takeover ("the Service"), you agree to be bound by these Terms of Service. 
                   If you do not agree to these terms, please do not use our Service.
@@ -42,7 +42,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">2. Description of Service</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">2. Description of Service</h2>
                 <p className="text-foreground/90">
                   Creatives Takeover provides business planning tools, AI-powered business mapping, community forums, 
                   educational resources, and software solutions designed to help entrepreneurs and creative professionals 
@@ -51,7 +51,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">3. User Accounts and Registration</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">3. User Accounts and Registration</h2>
                 <div className="text-foreground/90 space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-3">
@@ -67,7 +67,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">4. User Conduct and Content</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">4. User Conduct and Content</h2>
                 <div className="text-foreground/90 space-y-4">
                   <p><span className="text-primary font-medium">4.1.</span> You agree not to use the Service for any unlawful purpose or in any way that violates these Terms.</p>
                   <p><span className="text-primary font-medium">4.2.</span> You retain ownership of content you create, but grant us a license to use, display, and distribute it on the platform.</p>
@@ -83,7 +83,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">5. Intellectual Property Rights</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">5. Intellectual Property Rights</h2>
                 <div className="text-foreground/90 space-y-4">
                   <p><span className="text-primary font-medium">5.1.</span> The Service and its original content, features, and functionality are owned by Creatives Takeover and protected by copyright, trademark, and other laws.</p>
                   <p><span className="text-primary font-medium">5.2.</span> You may not use our trademarks, logos, or proprietary information without our written consent.</p>
@@ -92,7 +92,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">6. Privacy and Data Protection</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">6. Privacy and Data Protection</h2>
                 <p className="text-foreground/90">
                   Your privacy is important to us. Our Privacy Policy explains how we collect, use, and protect your information. 
                   By using the Service, you agree to the collection and use of information in accordance with our Privacy Policy.
@@ -100,7 +100,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">7. Payment and Billing</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">7. Payment and Billing</h2>
                 <div className="text-foreground/90 space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-3">
@@ -116,7 +116,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">8. Service Availability and Modifications</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">8. Service Availability and Modifications</h2>
                 <div className="text-foreground/90 space-y-4">
                   <p><span className="text-primary font-medium">8.1.</span> We strive to maintain the Service, but cannot guarantee 100% uptime.</p>
                   <p><span className="text-primary font-medium">8.2.</span> We reserve the right to modify, suspend, or discontinue the Service at any time.</p>
@@ -125,7 +125,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">9. Limitation of Liability</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">9. Limitation of Liability</h2>
                 <div className="text-foreground/90 space-y-4">
                   <p><span className="text-primary font-medium">9.1.</span> The Service is provided "as is" without warranties of any kind.</p>
                   <p><span className="text-primary font-medium">9.2.</span> We shall not be liable for any indirect, incidental, special, or consequential damages.</p>
@@ -135,7 +135,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">10. Termination</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">10. Termination</h2>
                 <div className="text-foreground/90 space-y-4">
                   <p><span className="text-primary font-medium">10.1.</span> You may terminate your account at any time by contacting us.</p>
                   <p><span className="text-primary font-medium">10.2.</span> We may terminate or suspend your access immediately for violations of these Terms.</p>
@@ -144,7 +144,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">11. Governing Law</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">11. Governing Law</h2>
                 <p className="text-foreground/90">
                   These Terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction]. 
                   Any disputes arising from these Terms shall be resolved in the courts of [Your Jurisdiction].
@@ -152,7 +152,7 @@ const Terms = () => {
               </section>
 
               <section className="glass-card hover-lift">
-                <h2 className="text-section font-semibold gradient-text mb-6">12. Contact Information</h2>
+                <h2 className="text-2xl font-semibold gradient-text mb-6">12. Contact Information</h2>
                 <div className="space-y-4 text-foreground/90">
                   <p>If you have any questions about these Terms of Service, please contact us:</p>
                   <div className="grid md:grid-cols-2 gap-4">

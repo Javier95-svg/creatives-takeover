@@ -12,9 +12,9 @@ const Software = () => {
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="container mx-auto px-6 py-12">
+        <main className="container mx-auto px-6 py-24">
           <header className="mb-8">
-            <h1 className="text-hero font-bold">Software</h1>
+            <h1 className="text-3xl md:text-5xl font-bold">Software</h1>
             <p className="mt-4 text-muted-foreground max-w-2xl">All-in-one platform for templates, AI operations, and project marketplace—built for creators and teams.</p>
           </header>
           {/* ... keep existing code (details and showcases will go here) */}

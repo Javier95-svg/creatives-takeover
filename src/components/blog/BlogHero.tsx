@@ -11,7 +11,7 @@ const BlogHero = () => {
   });
 
   return (
-    <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-16">
+    <section className="scroll-mt-24 relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden py-12 sm:py-0 pb-32">
       {/* Stock-inspired animated wallpaper */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Gradient base */}
@@ -92,7 +92,7 @@ const BlogHero = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}
-          <h1 className="text-5xl sm:text-6xl font-bold mb-4 sm:mb-6 takeover-title creatives-font">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 takeover-title creatives-font">
             <span className="takeover-gradient">Insighta</span>
           </h1>
           

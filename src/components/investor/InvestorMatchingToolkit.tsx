@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Hourglass, ArrowRight, Sparkles } from 'lucide-react';
+import { Users, Search, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -99,7 +99,7 @@ const InvestorMatchingToolkit = () => {
 
             <div className="text-center pt-4">
               <Button size="lg" className="w-full sm:w-auto" disabled>
-                <Hourglass className="mr-2 h-5 w-5" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Feature Coming Soon
               </Button>
               <p className="text-sm text-muted-foreground mt-3">

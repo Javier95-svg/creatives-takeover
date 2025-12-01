@@ -11,11 +11,11 @@ const StoriesHero = () => {
   });
 
   return (
-    <section className="relative py-12 lg:py-16 overflow-hidden">
+    <section className="relative py-20 lg:py-32 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 relative z-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Main Title */}
-          <h1 className="text-5xl sm:text-6xl font-bold mb-4 sm:mb-4 takeover-title creatives-font">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-4 takeover-title creatives-font">
             <span className="takeover-gradient">Stories</span>
           </h1>
 

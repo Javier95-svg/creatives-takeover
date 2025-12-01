@@ -70,9 +70,9 @@ const LinkedInEmbed = ({ url }: { url: string }) => {
         >
           <div ref={embedRef} className="min-h-[300px] flex items-center justify-center">
             {/* Fallback while loading */}
-            <div className="p-6 text-center">
+            <div className="p-8 text-center">
               <Linkedin className="w-16 h-16 mb-4 text-[#0077b5] mx-auto" />
-              <h3 className="text-subheading font-semibold mb-2">LinkedIn Post</h3>
+              <h3 className="text-lg font-semibold mb-2">LinkedIn Post</h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-md break-all">
                 {url}
               </p>
@@ -164,7 +164,7 @@ const StoryArticle = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="pt-16 pb-16">
+        <main className="pt-24 pb-16">
           <div className="container mx-auto px-6 max-w-4xl">
             <div className="text-center py-16">
               <p className="text-muted-foreground">Loading article...</p>
@@ -333,7 +333,7 @@ const StoryArticle = () => {
               )}
 
               {/* Title */}
-              <h1 className="text-hero font-bold mb-4">{article.title}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">{article.title}</h1>
 
               {/* Excerpt */}
               {article.excerpt && (
@@ -400,7 +400,7 @@ const StoryArticle = () => {
                 <LinkedInEmbed url={article.linkedin_post_url} />
               </div>
             ) : article.body_content ? (
-              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-5xl prose-h1:font-bold prose-h1:leading-[1.2] prose-h2:text-3xl prose-h2:font-semibold prose-h2:leading-[1.2] prose-h3:text-2xl prose-h3:font-semibold prose-h3:leading-[1.3] prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
+              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
@@ -425,7 +425,7 @@ const StoryArticle = () => {
                 </ReactMarkdown>
               </div>
             ) : (
-              <div className="my-8 p-6 border border-dashed rounded-lg text-center text-muted-foreground">
+              <div className="my-8 p-8 border border-dashed rounded-lg text-center text-muted-foreground">
                 <p>No content available for this article.</p>
               </div>
             )}

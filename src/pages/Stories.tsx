@@ -229,7 +229,7 @@ const Stories = () => {
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-subheading font-semibold">{draft.title || "Untitled Draft"}</h3>
+                                <h3 className="text-xl font-semibold">{draft.title || "Untitled Draft"}</h3>
                                 <Badge variant="secondary">Draft</Badge>
                               </div>
                               {draft.excerpt && (

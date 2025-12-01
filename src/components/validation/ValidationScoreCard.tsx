@@ -120,7 +120,7 @@ export const ValidationScoreCard = ({ validation, showDetails = true }: Validati
             {/* Market Size Display */}
             {validation.estimated_market_size_usd && (
               <div className="pt-4 border-t">
-                <div className="bg-muted/50 rounded-lg p-6">
+                <div className="bg-muted/50 rounded-lg p-4">
                   <div className="text-sm text-muted-foreground">Estimated Market Size</div>
                   <div className="text-2xl font-bold mt-1">
                     ${(validation.estimated_market_size_usd / 1_000_000_000).toFixed(1)}B

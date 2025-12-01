@@ -74,7 +74,7 @@ export default function SubscriptionSuccess() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h1 className="text-hero font-bold">Subscription Successful!</h1>
+              <h1 className="text-3xl font-bold">Subscription Successful!</h1>
               <p className="text-muted-foreground text-lg">
                 Welcome to BizMap AI {tierInfo.name}! Your subscription is now active.
               </p>

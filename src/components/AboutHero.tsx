@@ -7,19 +7,19 @@ import { ChevronDown } from "lucide-react";
 import AboutWallpaper from "@/components/wallpapers/AboutWallpaper";
 
 const AboutHero = () => {
-  return <section className="relative py-12 lg:py-16 overflow-hidden">
+  return <section className="relative pt-32 pb-20 overflow-hidden">
       <AboutWallpaper />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-6 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Text Content */}
           <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
             <div>
-              <h1 className="text-5xl sm:text-6xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 gradient-text leading-tight animate-text-shimmer text-foreground">
                 The Future Belongs to Founders
               </h1>
-              <p className="text-lg sm:text-xl text-foreground/90 leading-relaxed">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
+              <p className="text-lg sm:text-xl text-foreground/90 leading-relaxed font-poppins">We're entering a world where AI and automation will eliminate most traditional jobs but also unlock unprecedented entrepreneurial opportunities. Everyone will need to think and act like a founder, and we're here to make that transition possible.</p>
             </div>
               
             <div className="space-y-3 sm:space-y-4">

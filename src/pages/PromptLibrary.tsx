@@ -112,7 +112,7 @@ const PromptLibrary = () => {
         <PromptLibraryWallpaper />
         <div className="relative z-10">
           <Navigation />
-          <div className="pt-16 pb-12 sm:pb-16 px-4">
+          <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
             <div className="max-w-5xl mx-auto">
               <Button
                 variant="outline"
@@ -173,7 +173,7 @@ const PromptLibrary = () => {
                   {step && (
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-subheading font-semibold mb-2">
+                        <h3 className="text-xl font-semibold mb-2">
                           Step {step.step}: {step.title}
                         </h3>
                         <p className="text-sm text-muted-foreground mb-4">{step.dayRange}</p>
@@ -297,7 +297,7 @@ const PromptLibrary = () => {
         <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8 sm:mb-12">
-              <h1 className="text-hero font-bold mb-4 takeover-gradient creatives-font">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 takeover-gradient creatives-font">
                 Prompt Library
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
@@ -421,9 +421,9 @@ const PromptLibrary = () => {
 
             <div className="mt-16 text-center">
               <Card className="glass-card max-w-2xl mx-auto">
-                <CardContent className="p-6">
+                <CardContent className="p-8">
                   <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-section font-bold mb-4">Ready to Build Your Business?</h3>
+                  <h3 className="text-2xl font-bold mb-4">Ready to Build Your Business?</h3>
                   <p className="text-muted-foreground mb-6">
                     Each concept includes 7 detailed prompts to guide you through your complete 30-day launch journey with BizMap AI.
                   </p>

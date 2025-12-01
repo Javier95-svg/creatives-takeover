@@ -242,7 +242,7 @@ const Profile = () => {
           <ProfileWallpaper />
           <div className="relative z-10">
             <Navigation />
-            <main className="container mx-auto px-4 py-12">
+            <main className="container mx-auto px-4 py-20">
               <div className="max-w-4xl mx-auto">
                 <div className="animate-pulse space-y-4">
                   <div className="h-32 bg-muted rounded-lg" />
@@ -267,9 +267,9 @@ const Profile = () => {
           <ProfileWallpaper />
           <div className="relative z-10">
             <Navigation />
-            <main className="container mx-auto px-4 py-12">
-              <Card className="max-w-md mx-auto p-6 text-center">
-                <h2 className="text-section font-bold mb-4">Profile Not Found</h2>
+            <main className="container mx-auto px-4 py-20">
+              <Card className="max-w-md mx-auto p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
                 <p className="text-muted-foreground mb-6">
                   The profile you're looking for doesn't exist.
                 </p>
@@ -317,7 +317,7 @@ const Profile = () => {
                   <div className="flex-1">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                       <div>
-                        <h1 className="text-hero font-bold mb-1">
+                        <h1 className="text-2xl font-bold mb-1">
                           {profile.full_name || 'Anonymous User'}
                         </h1>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -439,7 +439,7 @@ const Profile = () => {
 
                 <TabsContent value="posts" className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-section font-bold flex items-center gap-2">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
                       <MessageCircle className="h-5 w-5" />
                       All Content
                     </h2>

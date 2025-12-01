@@ -283,7 +283,7 @@ const Signup = () => {
             />
             Creatives Takeover
           </Link>
-          <h1 className="text-hero font-bold mt-4 mb-2">Join us</h1>
+          <h1 className="text-3xl font-bold mt-4 mb-2">Join us</h1>
           <p className="text-muted-foreground">
             Start turning your creative ideas into reality
           </p>
@@ -292,7 +292,7 @@ const Signup = () => {
         {/* Signup Form */}
         <Card className="glass-card border-2 border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300">
           <CardHeader className="space-y-1 pb-4">
-            <h2 className="text-section font-semibold text-center">Create your account</h2>
+            <h2 className="text-xl font-semibold text-center">Create your account</h2>
             <p className="text-sm text-muted-foreground text-center">Get started with your free account today</p>
           </CardHeader>
           <CardContent>
