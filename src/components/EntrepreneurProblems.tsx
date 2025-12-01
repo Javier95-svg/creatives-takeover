@@ -139,7 +139,7 @@ const EntrepreneurProblems = () => {
           <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20 mb-6 text-sm">
             Big Challenges, Bold Solutions
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-foreground leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-gray-900 dark:text-gray-50">
             Common Roadblocks Pre-Seed Founders Face
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
