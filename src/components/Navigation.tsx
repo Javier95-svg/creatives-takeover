@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, UserPlus, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,10 +85,7 @@ const Navigation = () => {
           ? 'backdrop-blur-md bg-background/95 shadow-sm' 
           : 'bg-background/80 border-border'
       }`}
-      style={scrolled ? {
-        borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
-        borderImageSlice: 1
-      } : {
+      style={{
         borderColor: 'hsl(var(--border))'
       }}
       >
@@ -108,36 +105,17 @@ const Navigation = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
               {navItems.map((item) => {
-                // Color-code navigation items semantically
-                let colorClass = '';
-                if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-                  colorClass = 'hover:text-planning animated-underline-rgb';
-                } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-                  colorClass = 'hover:text-action';
-                } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-                  colorClass = 'hover:text-growth';
-                } else {
-                  colorClass = 'animated-underline';
-                }
-                
                 return (
                   <Tooltip key={item.name}>
                     <TooltipTrigger asChild>
                       <Link
                         to={item.href}
                         onClick={() => trackClick(item.name, 'Navigation')}
-                        className={`text-muted-foreground hover:text-foreground transition-all duration-300 whitespace-nowrap ${colorClass} ${
-                          item.name === 'BizMap AI' ? 'relative' : ''
-                        }`}
+                        className="text-muted-foreground hover:text-foreground transition-colors duration-200 whitespace-nowrap"
                         onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
                         onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
                       >
                         {item.name}
-                        {item.name === 'BizMap AI' && (
-                          <div className="absolute -top-1 -right-2 flex items-center">
-                            <Gift className="w-3 h-3 text-planning animate-bounce" />
-                          </div>
-                        )}
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>

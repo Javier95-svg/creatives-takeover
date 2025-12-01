@@ -4,14 +4,7 @@ import { Mail, Linkedin, Instagram, Twitter, Youtube } from "lucide-react";
 const Footer = () => {
   const year = new Date().getFullYear();
   return (
-    <footer className="relative bg-background border-t-2" style={{
-      borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
-      borderImageSlice: 1
-    }}>
-      {/* RGB gradient top border */}
-      <div className="absolute top-0 left-0 right-0 h-px" style={{
-        background: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)))'
-      }} />
+    <footer className="relative bg-background border-t border-border">
       
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
         <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -213,13 +206,10 @@ const Footer = () => {
           </nav>
         </div>
 
-        {/* RGB gradient divider */}
-        <div className="mt-8 pt-8 border-t" style={{
-          borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
-          borderImageSlice: 1
-        }} />
+        {/* Divider */}
+        <div className="mt-8 pt-8 border-t border-border" />
         <div className="mt-6 text-xs text-muted-foreground text-center">
-          <span className="gradient-rgb font-semibold">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
+          <span className="font-semibold">&copy; {year} Creatives Takeover Ltd.</span> All rights reserved.
         </div>
       </div>
     </footer>

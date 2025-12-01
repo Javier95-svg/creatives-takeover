@@ -5,23 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button text-button font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-manipulation min-h-[44px]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button text-button font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-manipulation min-h-[44px]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md transition-shadow",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-md",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-md transition-shadow",
         outline:
-          "border border-input bg-background hover:bg-muted hover:text-foreground",
+          "border border-input bg-background hover:bg-muted hover:text-foreground transition-colors",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors",
         ghost: "hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        "rgb-gradient": "bg-gradient-rgb text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl rgb-glow-subtle hover:rgb-glow transition-all duration-300",
-        "rgb-planning": "bg-gradient-planning text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl hover:shadow-blue/30 transition-all duration-300",
-        "rgb-action": "bg-gradient-action text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl hover:shadow-red/30 transition-all duration-300",
-        "rgb-growth": "bg-gradient-growth text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl hover:shadow-green/30 transition-all duration-300",
       },
       size: {
         default: "h-12 px-4 py-2",
