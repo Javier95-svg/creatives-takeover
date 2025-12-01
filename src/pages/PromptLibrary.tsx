@@ -93,6 +93,35 @@ const PromptLibrary = () => {
     }
   };
 
+  const getDifficultyGradient = (difficulty: string) => {
+    switch (difficulty) {
+      case "Hard":
+        return {
+          border: "border-l-4 border-red-500/50 hover:border-red-500/70",
+          background: "bg-gradient-to-br from-red-500/5 to-red-500/10 hover:from-red-500/10 hover:to-red-500/15",
+          shadow: "hover:shadow-red-500/20"
+        };
+      case "Medium":
+        return {
+          border: "border-l-4 border-amber-500/50 hover:border-amber-500/70",
+          background: "bg-gradient-to-br from-amber-500/5 to-amber-500/10 hover:from-amber-500/10 hover:to-amber-500/15",
+          shadow: "hover:shadow-amber-500/20"
+        };
+      case "Easy":
+        return {
+          border: "border-l-4 border-green-500/50 hover:border-green-500/70",
+          background: "bg-gradient-to-br from-green-500/5 to-green-500/10 hover:from-green-500/10 hover:to-green-500/15",
+          shadow: "hover:shadow-green-500/20"
+        };
+      default:
+        return {
+          border: "border-l-4 border-gray-500/30 hover:border-gray-500/50",
+          background: "bg-gradient-to-br from-gray-500/5 to-gray-500/10 hover:from-gray-500/10 hover:to-gray-500/15",
+          shadow: "hover:shadow-gray-500/20"
+        };
+    }
+  };
+
   if (selectedConcept) {
     const step = selectedConcept.steps.find(s => s.step === currentStep);
     const isStepLocked = !canAccessStep(selectedConcept, currentStep);
@@ -339,9 +368,16 @@ const PromptLibrary = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-              {filteredPrompts.map((prompt) => (
-                <Card key={prompt.id} className="glass-card hover:shadow-lg transition-shadow">
-                  <CardHeader className="p-4 sm:p-6">
+              {filteredPrompts.map((prompt) => {
+                const gradient = getDifficultyGradient(prompt.difficulty);
+                return (
+                <Card 
+                  key={prompt.id} 
+                  className={`glass-card hover:shadow-lg transition-all duration-300 relative overflow-hidden group ${gradient.border}`}
+                >
+                  {/* Gradient background overlay */}
+                  <div className={`absolute inset-0 ${gradient.background} pointer-events-none`} />
+                  <CardHeader className="p-4 sm:p-6 relative z-10">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 pr-2">
                         <CardTitle className="text-lg sm:text-xl mb-2 leading-tight flex items-center gap-2">
@@ -384,7 +420,7 @@ const PromptLibrary = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="p-4 sm:p-6 pt-0">
+                  <CardContent className="p-4 sm:p-6 pt-0 relative z-10">
                     <div className="bg-primary/5 rounded-lg p-3 mb-4">
                       <p className="text-sm font-medium mb-2">This Prompt Chain Include:</p>
                       <ul className="text-xs space-y-1 text-muted-foreground">
@@ -408,7 +444,8 @@ const PromptLibrary = () => {
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
 
             {filteredPrompts.length === 0 && (
