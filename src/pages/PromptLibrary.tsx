@@ -93,6 +93,83 @@ const PromptLibrary = () => {
     }
   };
 
+  // Generate concise business model description from prompt data
+  const getBusinessModelDescription = (prompt: MultiStepPrompt): string => {
+    // Use the first step's prompt to extract business model info
+    const step1Prompt = prompt.steps?.[0]?.prompt || "";
+    const lowerPrompt = step1Prompt.toLowerCase();
+    const lowerTitle = prompt.conceptTitle.toLowerCase();
+    const lowerDesc = prompt.description.toLowerCase();
+    
+    // Extract key value proposition elements
+    if (lowerPrompt.includes("reduce") || lowerPrompt.includes("cost")) {
+      const costMatch = step1Prompt.match(/reduce.*?costs?.*?(\d+%|\$\d+)/i);
+      if (costMatch) {
+        return `Reduces costs by ${costMatch[1]} through automation and efficiency`;
+      }
+      if (lowerPrompt.includes("support cost") || lowerPrompt.includes("agent")) {
+        return "Automates customer support to reduce operational costs by 60-80%";
+      }
+    }
+    
+    if (lowerPrompt.includes("marketplace") || lowerTitle.includes("marketplace")) {
+      return "Connects buyers and sellers in a curated marketplace, earning commission on transactions";
+    }
+    
+    if (lowerPrompt.includes("saas") || lowerTitle.includes("saas") || (lowerPrompt.includes("software") && !lowerPrompt.includes("mobile app"))) {
+      return "Subscription-based software that solves specific business problems with recurring revenue";
+    }
+    
+    if (lowerPrompt.includes("consulting") || lowerPrompt.includes("consultancy")) {
+      return "Expert advisory services that help businesses achieve specific goals through strategic guidance";
+    }
+    
+    if (lowerPrompt.includes("agency") || lowerTitle.includes("agency")) {
+      return "Full-service agency delivering specialized solutions for clients on a project basis";
+    }
+    
+    if (lowerPrompt.includes("app") && !lowerPrompt.includes("saas") && !lowerPrompt.includes("platform")) {
+      return "Mobile application solving everyday problems for target users";
+    }
+    
+    if (lowerPrompt.includes("subscription box") || lowerTitle.includes("subscription")) {
+      return "Recurring revenue model delivering curated products or services monthly to subscribers";
+    }
+    
+    if (lowerPrompt.includes("e-commerce") || lowerTitle.includes("store") || lowerTitle.includes("shop")) {
+      return "Online store selling products directly to consumers with digital marketing";
+    }
+    
+    if (lowerPrompt.includes("platform") && !lowerPrompt.includes("marketplace")) {
+      return "Digital platform connecting users and providing value through network effects";
+    }
+    
+    if (lowerPrompt.includes("service") && !lowerPrompt.includes("saas")) {
+      return "Service-based business delivering specialized solutions to customers";
+    }
+    
+    if (lowerPrompt.includes("course") || lowerTitle.includes("course") || lowerTitle.includes("bootcamp")) {
+      return "Educational service teaching specific skills through structured programs";
+    }
+    
+    if (lowerPrompt.includes("rental") || lowerTitle.includes("rental")) {
+      return "Rental platform providing access to products or services on a temporary basis";
+    }
+    
+    if (lowerPrompt.includes("monitoring") || lowerTitle.includes("monitoring")) {
+      return "Monitoring service that tracks and analyzes data to provide actionable insights";
+    }
+    
+    // Fallback: create description from conceptTitle and description
+    if (prompt.description) {
+      // Capitalize first letter and ensure it's a complete sentence
+      const desc = prompt.description.trim();
+      return desc.charAt(0).toLowerCase() + desc.slice(1);
+    }
+    
+    return "A business solution that creates value for customers";
+  };
+
   if (selectedConcept) {
     const step = selectedConcept.steps.find(s => s.step === currentStep);
     const isStepLocked = !canAccessStep(selectedConcept, currentStep);
@@ -338,60 +415,70 @@ const PromptLibrary = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
               {filteredPrompts.map((prompt) => (
-                <Card key={prompt.id} className="glass-card hover:shadow-lg transition-shadow">
-                  <CardHeader className="p-4 sm:p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 pr-2">
-                        <CardTitle className="text-lg sm:text-xl mb-2 leading-tight flex items-center gap-2">
+                <Card 
+                  key={prompt.id} 
+                  className="glass-card hover:shadow-xl hover:shadow-primary/10 border-2 border-transparent hover:border-primary/20 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 group"
+                >
+                  <CardHeader className="p-6 sm:p-8">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl sm:text-2xl font-bold mb-3 leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
                           <span className="flex-1">{prompt.conceptTitle}</span>
                           {prompt.requiredTier !== "free" && (
-                            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <Lock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                           )}
                         </CardTitle>
                         {prompt.is_custom && prompt.author_name && (
-                          <div className="mb-2">
+                          <div className="mb-3">
                             <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
                               <User className="w-3 h-3" />
                               Created by {prompt.author_name}
                             </Badge>
                           </div>
                         )}
-                        <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                        <p className="text-sm sm:text-base text-foreground/90 mb-4 leading-relaxed font-medium">
                           {prompt.description}
                         </p>
+                        
+                        {/* Business Model Description */}
+                        <div className="flex items-start gap-2 pt-3 border-t border-border/50">
+                          <Sparkles className="w-4 h-4 text-primary/60 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs sm:text-sm text-muted-foreground italic leading-relaxed">
+                            {getBusinessModelDescription(prompt)}
+                          </p>
+                        </div>
                       </div>
                       <Badge
                         variant="outline"
-                        className={"ml-2 text-xs whitespace-nowrap " + getDifficultyColor(prompt.difficulty)}
+                        className={"flex-shrink-0 text-xs whitespace-nowrap h-fit " + getDifficultyColor(prompt.difficulty)}
                       >
                         {prompt.difficulty}
                       </Badge>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-1 sm:gap-1.5">
-                      {prompt.tags.slice(0, 3).map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {prompt.tags.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{prompt.tags.length - 3}
-                        </Badge>
-                      )}
-                    </div>
                   </CardHeader>
                   
-                  <CardContent className="p-4 sm:p-6 pt-0">
-                    <div className="bg-primary/5 rounded-lg p-3 mb-4">
-                      <p className="text-sm font-medium mb-2">This Prompt Chain Include:</p>
-                      <ul className="text-xs space-y-1 text-muted-foreground">
-                        <li>✓ Business Concept (Days 1-2)</li>
-                        <li>✓ Target Customer (Days 3-4)</li>
-                        <li>✓ Validation Plan (Days 5-7)</li>
-                        <li>✓ And 4 more steps...</li>
+                  <CardContent className="p-6 sm:p-8 pt-0">
+                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 mb-5 transition-colors border border-primary/10">
+                      <p className="text-sm font-semibold mb-3 text-foreground">This Prompt Chain Includes:</p>
+                      <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <span>Business Concept (Days 1-2)</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <span>Target Customer (Days 3-4)</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <span>Validation Plan (Days 5-7)</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <span>And 4 more steps...</span>
+                        </li>
                       </ul>
                     </div>
                     
@@ -401,9 +488,9 @@ const PromptLibrary = () => {
                         setSelectedConcept(prompt);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="w-full h-9 sm:h-10 text-sm touch-manipulation"
+                      className="w-full h-10 sm:h-11 text-sm font-semibold touch-manipulation group/btn hover:scale-[1.02] transition-transform"
                     >
-                      <ArrowRight className="w-4 h-4 mr-2" />
+                      <ArrowRight className="w-4 h-4 mr-2 group-hover/btn:translate-x-1 transition-transform" />
                       View All 7 Prompts
                     </Button>
                   </CardContent>
