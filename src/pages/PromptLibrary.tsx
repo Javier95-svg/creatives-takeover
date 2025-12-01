@@ -415,68 +415,62 @@ const PromptLibrary = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
               {filteredPrompts.map((prompt) => (
                 <Card 
                   key={prompt.id} 
-                  className="glass-card hover:shadow-xl hover:shadow-primary/10 border-2 border-transparent hover:border-primary/20 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 group"
+                  className="glass-card hover:shadow-xl hover:shadow-primary/10 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5 group"
                 >
-                  <CardHeader className="p-6 sm:p-8">
-                    <div className="flex items-start justify-between gap-4 mb-4">
+                  <CardHeader className="p-5 sm:p-6 pb-4">
+                    <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-xl sm:text-2xl font-bold mb-3 leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
+                        <CardTitle className="text-lg sm:text-xl font-bold mb-2 leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
                           <span className="flex-1">{prompt.conceptTitle}</span>
                           {prompt.requiredTier !== "free" && (
-                            <Lock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                           )}
                         </CardTitle>
                         {prompt.is_custom && prompt.author_name && (
-                          <div className="mb-3">
+                          <div className="mb-2">
                             <Badge variant="outline" className="text-xs flex items-center gap-1 w-fit">
                               <User className="w-3 h-3" />
                               Created by {prompt.author_name}
                             </Badge>
                           </div>
                         )}
-                        <p className="text-sm sm:text-base text-foreground/90 mb-4 leading-relaxed font-medium">
+                        <p className="text-sm text-foreground/85 mb-2.5 leading-snug">
                           {prompt.description}
                         </p>
                         
                         {/* Business Model Description */}
-                        <div className="flex items-start gap-2 pt-3 border-t border-border/50">
-                          <Sparkles className="w-4 h-4 text-primary/60 flex-shrink-0 mt-0.5" />
-                          <p className="text-xs sm:text-sm text-muted-foreground italic leading-relaxed">
+                        <div className="flex items-start gap-2 pt-2 border-t border-border/40">
+                          <Sparkles className="w-3.5 h-3.5 text-primary/50 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-muted-foreground italic leading-snug">
                             {getBusinessModelDescription(prompt)}
                           </p>
                         </div>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={"flex-shrink-0 text-xs whitespace-nowrap h-fit " + getDifficultyColor(prompt.difficulty)}
-                      >
-                        {prompt.difficulty}
-                      </Badge>
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="p-6 sm:p-8 pt-0">
-                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-4 mb-5 transition-colors border border-primary/10">
-                      <p className="text-sm font-semibold mb-3 text-foreground">This Prompt Chain Includes:</p>
-                      <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <CardContent className="p-5 sm:p-6 pt-0">
+                    <div className="bg-primary/5 hover:bg-primary/10 rounded-lg p-3 mb-3.5 transition-colors border border-primary/10">
+                      <p className="text-xs font-semibold mb-2 text-foreground">This Prompt Chain Includes:</p>
+                      <ul className="text-xs space-y-1.5 text-muted-foreground">
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
                           <span>Business Concept (Days 1-2)</span>
                         </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
                           <span>Target Customer (Days 3-4)</span>
                         </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
                           <span>Validation Plan (Days 5-7)</span>
                         </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <li className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
                           <span>And 4 more steps...</span>
                         </li>
                       </ul>
@@ -488,7 +482,7 @@ const PromptLibrary = () => {
                         setSelectedConcept(prompt);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="w-full h-10 sm:h-11 text-sm font-semibold touch-manipulation group/btn hover:scale-[1.02] transition-transform"
+                      className="w-full h-9 text-sm font-medium touch-manipulation group/btn hover:scale-[1.01] transition-transform"
                     >
                       <ArrowRight className="w-4 h-4 mr-2 group-hover/btn:translate-x-1 transition-transform" />
                       View All 7 Prompts
