@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import FundraisingReadinessToolkit from "@/components/blog/FundraisingReadinessToolkit";
+import InvestorMatchingToolkit from "@/components/investor/InvestorMatchingToolkit";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { FundingFilters } from "@/types/funding";
@@ -54,6 +55,7 @@ const Blog = () => {
       
       <main>
         <FundraisingReadinessToolkit />
+        <InvestorMatchingToolkit />
         <FundingOpportunitiesSection 
           filters={fundingFilters}
           onFiltersChange={setFundingFilters}

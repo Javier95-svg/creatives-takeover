@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn } from "lucide-react";
+import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -636,6 +636,35 @@ const FundraisingReadinessToolkit = () => {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Find My Investors Button - appears after analysis */}
+        {aiAnalysis && (
+          <div className="mt-6 text-center">
+            <Button 
+              size="lg" 
+              className="w-full sm:w-auto"
+              onClick={() => {
+                // Scroll to investor matching section
+                const section = document.getElementById('investor-matching-section');
+                if (section) {
+                  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  // Store assessment data for the matching tool
+                  if (window.localStorage) {
+                    localStorage.setItem('ct_assessment_data', JSON.stringify({
+                      scores: scores,
+                      analysis: aiAnalysis,
+                      averageScore: averageScore
+                    }));
+                  }
+                }
+              }}
+            >
+              <Users className="mr-2 h-5 w-5" />
+              Find My Investors
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
 
