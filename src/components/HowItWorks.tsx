@@ -49,7 +49,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop relative overflow-hidden bg-background">
+    <section className="py-16 md:py-24 relative overflow-hidden bg-background">
       {/* Subtle grid pattern for light theme */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{

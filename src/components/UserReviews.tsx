@@ -83,7 +83,7 @@ const UserReviews = () => {
   const duplicatedReviews = [...reviews, ...reviews];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
       {/* Subtle grid pattern for light theme */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{

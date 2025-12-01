@@ -39,8 +39,16 @@ All colors MUST be HSL.
     --destructive-foreground: 0 0% 100%;
 
     --border: 214.3 31.8% 91.4%;
+    --border-subtle: 214.3 31.8% 91.4% / 0.2;
+    --border-medium: 214.3 31.8% 91.4% / 0.4;
+    --border-strong: 214.3 31.8% 91.4% / 0.6;
     --input: 214.3 31.8% 91.4%;
     --ring: 217 91% 60%; /* Blue for focus rings */
+    
+    /* Subtle background variations */
+    --muted-5: 210 40% 96% / 0.05;
+    --muted-10: 210 40% 96% / 0.10;
+    --muted-20: 210 40% 96% / 0.20;
 
     --radius: 0.5rem;
 
@@ -190,8 +198,16 @@ All colors MUST be HSL.
 
     /* Visible borders */
     --border: 222 15% 25%;
+    --border-subtle: 222 15% 25% / 0.2;
+    --border-medium: 222 15% 25% / 0.4;
+    --border-strong: 222 15% 25% / 0.6;
     --input: 222 15% 18%;
     --ring: 217 92% 65%; /* Brighter blue focus ring */
+    
+    /* Subtle background variations */
+    --muted-5: 222 12% 18% / 0.05;
+    --muted-10: 222 12% 18% / 0.10;
+    --muted-20: 222 12% 18% / 0.20;
     
     /* Success color - brighter for visibility */
     --success: 142 72% 45%;
@@ -283,6 +299,18 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
   
 }
 
@@ -313,8 +341,9 @@ All colors MUST be HSL.
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: inline-block;
-    line-height: 1.1;
+    line-height: 1.15;
     font-weight: 700;
+    letter-spacing: -0.02em;
     /* Fallback color for browsers that don't support background-clip */
     color: hsl(var(--blue-dark));
     /* Text shadow for better visibility in light mode */
@@ -715,6 +744,32 @@ All colors MUST be HSL.
     border-color: hsl(var(--green-primary));
   }
 
+  /* Subtle Background Utilities */
+  .bg-muted-5 {
+    background-color: hsl(var(--muted-5));
+  }
+
+  .bg-muted-10 {
+    background-color: hsl(var(--muted-10));
+  }
+
+  .bg-muted-20 {
+    background-color: hsl(var(--muted-20));
+  }
+
+  /* Border Color Utilities */
+  .border-subtle {
+    border-color: hsl(var(--border-subtle));
+  }
+
+  .border-medium {
+    border-color: hsl(var(--border-medium));
+  }
+
+  .border-strong {
+    border-color: hsl(var(--border-strong));
+  }
+
   /* BizMap Chat Celebration Wallpaper */
   .bizmap-chat-shell {
     position: relative;
@@ -836,16 +891,40 @@ All colors MUST be HSL.
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
-  /* Hover effects */
+  /* Text Color Hierarchy Utilities */
+  .text-foreground-primary {
+    color: hsl(var(--foreground));
+  }
+
+  .text-foreground-secondary {
+    color: hsl(var(--foreground) / 0.9);
+  }
+
+  .text-foreground-tertiary {
+    color: hsl(var(--foreground) / 0.7);
+  }
+
+  .text-foreground-muted {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Hover effects - simplified */
   .hover-lift {
-    transition: var(--transition-smooth);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   }
   
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hover-lift:hover {
+      transform: none;
+    }
   }
 
   /* Animated underline */
@@ -909,46 +988,42 @@ All colors MUST be HSL.
   .stagger-child:nth-child(5) { animation-delay: 0.5s; }
   .stagger-child:nth-child(6) { animation-delay: 0.6s; }
 
-  /* Enhanced button animations */
+  /* Simplified button animations */
   .btn-magnetic {
     position: relative;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   }
   
   .btn-magnetic:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
   }
   
   .btn-magnetic:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0);
   }
 
-  /* Start Creating Button Animation */
+  @media (prefers-reduced-motion: reduce) {
+    .btn-magnetic:hover {
+      transform: none;
+    }
+  }
+
+  /* Simplified button - removed excessive animations */
   .btn-start-creating {
     position: relative;
-    overflow: hidden;
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-  
-  .btn-start-creating::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-  }
-  
-  .btn-start-creating:hover::before {
-    left: 100%;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   }
   
   .btn-start-creating:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-start-creating:hover {
+      transform: none;
+    }
   }
 
   /* Custom Animation Classes */

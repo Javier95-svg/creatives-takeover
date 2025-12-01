@@ -80,17 +80,11 @@ const Navigation = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 border-b-2 transition-all ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b transition-all ${
         scrolled 
-          ? 'backdrop-blur-md bg-background/95 shadow-sm' 
-          : 'bg-background/80 border-border'
+          ? 'backdrop-blur-md bg-background/95 shadow-sm border-border' 
+          : 'bg-background/80 border-border/60'
       }`}
-      style={scrolled ? {
-        borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
-        borderImageSlice: 1
-      } : {
-        borderColor: 'hsl(var(--border))'
-      }}
       >
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 border-0">
@@ -100,7 +94,7 @@ const Navigation = () => {
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-12 w-auto lightbulb-glow cursor-pointer" 
+                  className="h-12 w-auto cursor-pointer transition-opacity hover:opacity-80" 
                 />
               </Link>
             </div>
@@ -108,25 +102,13 @@ const Navigation = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
               {navItems.map((item) => {
-                // Color-code navigation items semantically
-                let colorClass = '';
-                if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-                  colorClass = 'hover:text-planning animated-underline-rgb';
-                } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-                  colorClass = 'hover:text-action';
-                } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-                  colorClass = 'hover:text-growth';
-                } else {
-                  colorClass = 'animated-underline';
-                }
-                
                 return (
                   <Tooltip key={item.name}>
                     <TooltipTrigger asChild>
                       <Link
                         to={item.href}
                         onClick={() => trackClick(item.name, 'Navigation')}
-                        className={`text-muted-foreground hover:text-foreground transition-all duration-300 whitespace-nowrap ${colorClass} ${
+                        className={`text-muted-foreground hover:text-foreground transition-colors duration-200 whitespace-nowrap px-2 py-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                           item.name === 'BizMap AI' ? 'relative' : ''
                         }`}
                         onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
@@ -239,7 +221,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden bg-background border-t border-border animate-slide-in-right">
+          <div className="md:hidden bg-background border-t border-border transition-all duration-300">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {/* Theme Toggle at top of mobile menu */}
               <div className="px-4 py-3 border-b border-border">

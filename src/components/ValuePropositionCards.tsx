@@ -57,12 +57,9 @@ const ValuePropositionCards = () => {
   ];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle">
-      {/* RGB gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-rgb-soft opacity-30" />
-      
-      {/* Subtle grid pattern - adjusts for theme */}
-      <div className="absolute inset-0 dark:opacity-[0.04] opacity-[0.02]">
+    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
+      {/* Subtle grid pattern - reduced opacity */}
+      <div className="absolute inset-0 dark:opacity-[0.02] opacity-[0.01]">
         <div className="absolute inset-0" style={{
           backgroundImage: `
             linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
@@ -72,19 +69,19 @@ const ValuePropositionCards = () => {
         }} />
       </div>
       
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 max-w-7xl">
         {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
-          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 pb-2 gradient-rgb">
+        <div className="text-center mb-12 sm:mb-16 px-4">
+          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 gradient-unified">
             Here's What You Get
           </h2>
-          <p className="text-body sm:text-body-lg text-foreground/85 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-body sm:text-body-lg text-foreground/90 max-w-3xl mx-auto">
             Transform your idea into an investable, revenue-driving business. The perfect ecosystem for early-stage founders and entrepreneurs serious about building a lasting venture.
           </p>
         </div>
 
         {/* All Cards - Single Row */}
-        <div className="flex flex-row gap-4 md:gap-6 max-w-7xl mx-auto overflow-x-auto pb-4">
+        <div className="flex flex-row gap-4 md:gap-6 mx-auto overflow-x-auto pb-4">
           {allCards.map((card, index) => {
             const Icon = card.icon;
             const colorClasses = {
@@ -124,69 +121,59 @@ const ValuePropositionCards = () => {
             return (
               <Card 
                 key={index} 
-                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[220px] flex-1`}
-                style={{ 
-                  animationDelay: `${index * 0.1}s`,
-                  animationFillMode: 'both'
-                }}
+                className={`relative overflow-hidden group hover:shadow-lg transition-all duration-200 border ${colors.border} hover:-translate-y-1 cursor-pointer flex-shrink-0 min-w-[200px] md:min-w-[240px] flex-1`}
               >
-                {/* RGB gradient background overlay */}
-                <div className={`absolute inset-0 ${colors.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                
-                {/* Shimmer effect on hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                </div>
-                
                 <Link to={card.link} className="block h-full">
-                  <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center">
-                    {/* Icon with enhanced animations */}
-                    <div className="mb-3">
-                      <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-lg`}>
-                        <Icon className={`w-5 h-5 ${colors.text} group-hover:scale-110 transition-transform duration-500`} />
+                  <CardContent className="relative p-6 md:p-8 flex flex-col h-full items-center">
+                    {/* Icon - simplified */}
+                    <div className="mb-4">
+                      <div className={`w-12 h-12 rounded-lg ${colors.bg} flex items-center justify-center transition-transform duration-200 group-hover:scale-105`}>
+                        <Icon className={`w-6 h-6 ${colors.text}`} />
                       </div>
                     </div>
 
-                    {/* Title with fade-in animation */}
-                    <div className="mb-2 transform group-hover:scale-105 transition-transform duration-300 text-center">
-                      <div className={`text-xs font-bold mb-1 transition-colors ${colors.textHover}`}>
+                    {/* Title - simplified */}
+                    <div className="mb-3 text-center">
+                      <div className={`text-xs font-bold mb-1 ${colors.text}`}>
                         {card.title}
                       </div>
-                      <h3 className="text-base font-semibold group-hover:text-foreground transition-colors mb-1">
+                      <h3 className="text-base font-semibold mb-1">
                         {card.subtitle}
                       </h3>
                       {card.metric && (
-                        <p className={`text-xs font-semibold ${colors.metric}`}>{card.metric}</p>
+                        <p className={`text-xs font-medium ${colors.metric}`}>{card.metric}</p>
                       )}
                     </div>
 
-                    {/* Description with subtle animation - left aligned */}
-                    <p className="text-xs text-muted-foreground mb-4 flex-grow group-hover:text-foreground/80 transition-colors duration-300 leading-relaxed text-left w-full">
+                    {/* Description */}
+                    <p className="text-sm text-foreground/80 mb-6 flex-grow leading-relaxed text-left w-full">
                       {card.description}
                     </p>
 
-                    {/* CTA Button with RGB gradient on hover */}
+                    {/* CTA Button - simplified */}
                     <div className="w-full">
                       <Button 
                         variant="outline" 
-                        className={`w-full text-xs group-hover:text-primary-foreground group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 relative overflow-hidden min-h-[40px] border-2 ${colors.border}`}
+                        className={`w-full text-sm border ${colors.border} transition-colors duration-200`}
                         style={{
-                          background: 'transparent'
+                          ...(card.color === 'planning' && { '--hover-bg': 'hsl(var(--blue-primary) / 0.1)' }),
+                          ...(card.color === 'action' && { '--hover-bg': 'hsl(var(--red-primary) / 0.1)' }),
+                          ...(card.color === 'growth' && { '--hover-bg': 'hsl(var(--green-primary) / 0.1)' }),
                         }}
                         onMouseEnter={(e) => {
                           if (card.color === 'planning') {
-                            e.currentTarget.style.background = 'var(--gradient-planning)';
+                            e.currentTarget.style.backgroundColor = 'hsl(var(--blue-primary) / 0.1)';
                           } else if (card.color === 'action') {
-                            e.currentTarget.style.background = 'var(--gradient-action)';
+                            e.currentTarget.style.backgroundColor = 'hsl(var(--red-primary) / 0.1)';
                           } else if (card.color === 'growth') {
-                            e.currentTarget.style.background = 'var(--gradient-growth)';
+                            e.currentTarget.style.backgroundColor = 'hsl(var(--green-primary) / 0.1)';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.backgroundColor = '';
                         }}
                       >
-                        <span className="relative z-10">{card.cta}</span>
+                        {card.cta}
                       </Button>
                     </div>
                   </CardContent>
