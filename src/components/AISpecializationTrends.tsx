@@ -110,7 +110,7 @@ const AISpecializationTrends = () => {
         <div className="text-center mb-12 sm:mb-16">
           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-4 sm:mb-6 text-xs sm:text-sm">
             <TrendingUp className="w-3 h-3 mr-1" />
-            AI Specialization Trend
+            How the Market is Evolving
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
             <span className="gradient-unified">The Explosion of Niche AI Startups</span>
