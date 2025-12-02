@@ -201,6 +201,9 @@ const AISpecializationTrends = () => {
                       strokeWidth={3}
                       dot={{ fill: 'hsl(var(--primary))', r: 4 }}
                       name="Niche AI Tools"
+                      animationBegin={0}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
                     />
                     <Line 
                       type="monotone" 
@@ -210,6 +213,9 @@ const AISpecializationTrends = () => {
                       strokeDasharray="5 5"
                       dot={{ fill: 'hsl(var(--muted-foreground))', r: 3 }}
                       name="General AI Tools"
+                      animationBegin={300}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -259,6 +265,9 @@ const AISpecializationTrends = () => {
                       fill="hsl(var(--primary))" 
                       fillOpacity={0.6}
                       name="Specialized AI"
+                      animationBegin={0}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
                     />
                     <Area 
                       type="monotone" 
@@ -268,6 +277,9 @@ const AISpecializationTrends = () => {
                       fill="hsl(var(--muted-foreground))" 
                       fillOpacity={0.3}
                       name="General AI"
+                      animationBegin={300}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -288,38 +300,41 @@ const AISpecializationTrends = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {chartVisible && (
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={categoryExplosionData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    type="number"
-                    stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: '12px' }}
-                  />
-                  <YAxis 
-                    type="category" 
-                    dataKey="category" 
-                    stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: '12px' }}
-                    width={120}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="products" 
-                    fill="hsl(var(--primary))" 
-                    radius={[0, 8, 8, 0]}
-                    name="New Products (2024-2025)"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+              {chartVisible && (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={categoryExplosionData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      type="number"
+                      stroke="hsl(var(--muted-foreground))"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="category" 
+                      stroke="hsl(var(--muted-foreground))"
+                      style={{ fontSize: '12px' }}
+                      width={120}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="products" 
+                      fill="hsl(var(--primary))" 
+                      radius={[0, 8, 8, 0]}
+                      name="New Products (2024-2025)"
+                      animationBegin={0}
+                      animationDuration={1800}
+                      animationEasing="ease-out"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             <p className="text-sm text-muted-foreground mt-4">
               Every industry is fragmenting into specialized niches. The breadth of specialization shows this isn't a trend—it's a fundamental shift.
             </p>
@@ -335,94 +350,48 @@ const AISpecializationTrends = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {chartVisible && (
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={monthlyLaunchData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="month" 
-                    stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: '11px' }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: '12px' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="niche" 
-                    stroke="hsl(var(--primary))" 
-                    fill="hsl(var(--primary))" 
-                    fillOpacity={0.4}
-                    name="New Niche AI Products"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+              {chartVisible && (
+                <ResponsiveContainer width="100%" height={350}>
+                  <AreaChart data={monthlyLaunchData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="hsl(var(--muted-foreground))"
+                      style={{ fontSize: '11px' }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="niche" 
+                      stroke="hsl(var(--primary))" 
+                      fill="hsl(var(--primary))" 
+                      fillOpacity={0.4}
+                      name="New Niche AI Products"
+                      animationBegin={0}
+                      animationDuration={2000}
+                      animationEasing="ease-out"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             <p className="text-sm text-muted-foreground mt-4">
               The launch rate is accelerating month-over-month. What started as a trickle has become a flood of specialized solutions.
             </p>
           </CardContent>
         </Card>
-
-        {/* Success Metrics Comparison */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
-                <Target className="w-5 h-5" />
-                Niche AI Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">3.2x</div>
-                <div className="text-sm text-muted-foreground">Higher funding success rate</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">2.8x</div>
-                <div className="text-sm text-muted-foreground">Faster user acquisition</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary mb-1">67%</div>
-                <div className="text-sm text-muted-foreground">Better retention rates</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-border bg-muted/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-muted-foreground">
-                <BarChart3 className="w-5 h-5" />
-                General AI Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="text-2xl font-bold text-muted-foreground mb-1">Baseline</div>
-                <div className="text-sm text-muted-foreground">Standard funding success</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-muted-foreground mb-1">Baseline</div>
-                <div className="text-sm text-muted-foreground">Standard user growth</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-muted-foreground mb-1">40%</div>
-                <div className="text-sm text-muted-foreground">Lower retention rates</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Narrative Conclusion */}
         <div className="mt-12 text-center max-w-4xl mx-auto">
