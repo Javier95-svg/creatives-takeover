@@ -291,57 +291,7 @@ const AISpecializationTrends = () => {
           </Card>
         </div>
 
-        {/* Chart 3: Category Explosion */}
-        <Card className="border-border hover:shadow-xl transition-all duration-500 mb-12">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
-              Specialization Across Industries
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-              {chartVisible && (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={categoryExplosionData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis 
-                      type="number"
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis 
-                      type="category" 
-                      dataKey="category" 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                      width={120}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Bar 
-                      dataKey="products" 
-                      fill="hsl(var(--primary))" 
-                      radius={[0, 8, 8, 0]}
-                      name="New Products (2024-2025)"
-                      animationBegin={0}
-                      animationDuration={1800}
-                      animationEasing="ease-out"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            <p className="text-sm text-muted-foreground mt-4">
-              Every industry is fragmenting into specialized niches. The breadth of specialization shows this isn't a trend—it's a fundamental shift.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Chart 4: Monthly Launch Rate */}
+        {/* Chart 3: Monthly Launch Rate */}
         <Card className="border-border hover:shadow-xl transition-all duration-500 mb-12">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
