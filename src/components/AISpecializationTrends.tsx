@@ -18,12 +18,31 @@ import {
 } from "recharts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+
+// Typed Paragraph Component
+const TypedParagraph = ({ text, startDelay = 0, className = "" }: { text: string; startDelay?: number; className?: string }) => {
+  const { displayedText, isTyping } = useTypingAnimation({
+    text,
+    speed: 30,
+    startDelay
+  });
+
+  return (
+    <p className={className}>
+      {displayedText}
+      {isTyping && <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />}
+    </p>
+  );
+};
 
 const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
+  const [textSectionVisible, setTextSectionVisible] = useState(false);
   
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
+  const { ref: textSectionRef, isVisible: textSectionIsVisible } = useScrollAnimation(100);
   
   useEffect(() => {
     if (chartIsVisible && !chartVisible) {
@@ -31,6 +50,13 @@ const AISpecializationTrends = () => {
       return () => clearTimeout(timer);
     }
   }, [chartIsVisible, chartVisible]);
+
+  useEffect(() => {
+    if (textSectionIsVisible && !textSectionVisible) {
+      const timer = setTimeout(() => setTextSectionVisible(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [textSectionIsVisible, textSectionVisible]);
 
   // Animated counters
   const { count: nicheGrowthCount, ref: nicheGrowthRef } = useCountUp(340, 2000);
@@ -89,6 +115,29 @@ const AISpecializationTrends = () => {
 
   return (
     <section className="py-20 lg:py-32 relative overflow-hidden bg-background">
+      <style>{`
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
+        }
+        .shiny-text {
+          background: linear-gradient(
+            90deg,
+            hsl(var(--foreground)) 0%,
+            hsl(var(--primary)) 50%,
+            hsl(var(--foreground)) 100%
+          );
+          background-size: 200% auto;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shimmer 3s linear infinite;
+        }
+      `}</style>
       {/* Background elements */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -344,15 +393,25 @@ const AISpecializationTrends = () => {
         </Card>
 
         {/* Narrative Conclusion */}
-        <div className="mt-12 text-center max-w-4xl mx-auto">
+        <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-8">
-            <h3 className="text-2xl font-bold mb-4">The Strategic Opportunity</h3>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-              It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.
-            </p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever—and the upside for solving a specific problem for a specific group of people has never been higher.
-            </p>
+            <h3 className="text-2xl font-bold mb-4 relative inline-block">
+              <span className="shiny-text">The Strategic Opportunity</span>
+            </h3>
+            {textSectionVisible && (
+              <>
+                <TypedParagraph 
+                  text="It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants."
+                  startDelay={0}
+                  className="text-lg text-muted-foreground leading-relaxed mb-4"
+                />
+                <TypedParagraph 
+                  text="The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher."
+                  startDelay={2000}
+                  className="text-lg text-muted-foreground leading-relaxed"
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
