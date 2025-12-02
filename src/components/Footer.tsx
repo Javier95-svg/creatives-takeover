@@ -99,16 +99,17 @@ const Footer = () => {
               </li>
               
               {/* X */}
-              <li>
+              <li className="flex items-center">
                 <a
                   href="https://x.com/Creatives_Rule"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="X"
+                  className="flex items-center justify-center"
                 >
-                  <span className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center text-lg font-bold">
-                    𝕏
-                  </span>
+                  <svg className="h-5 w-5 text-foreground hover:text-muted-foreground transition-colors" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
                 </a>
               </li>
               
@@ -121,23 +122,7 @@ const Footer = () => {
                   aria-label="YouTube"
                   className="flex items-center justify-center"
                 >
-                  <Youtube className="h-5 w-5 text-action hover:text-action/80 transition-colors" />
-                </a>
-              </li>
-              
-              {/* Reddit */}
-              <li>
-                <a
-                  href="https://www.reddit.com/r/Creatives_Takeover/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Reddit"
-                >
-                  <img 
-                    src="/lovable-uploads/reddit-logo.png" 
-                    alt="Reddit" 
-                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
-                  />
+                  <Youtube className="h-6 w-6 text-action hover:text-action/80 transition-colors" />
                 </a>
               </li>
             </ul>
