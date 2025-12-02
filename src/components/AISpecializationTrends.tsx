@@ -116,7 +116,7 @@ const AISpecializationTrends = () => {
             <span className="gradient-unified">The Explosion of Niche AI Software</span>
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
-            Specialization—not generalization—is becoming the core strategy of modern entrepreneurship. The data makes the trend unmistakably clear.
+            Specialization is emerging as the core strategy of modern entrepreneurship, and the data clearly confirms it.
           </p>
         </div>
 
