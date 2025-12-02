@@ -124,22 +124,6 @@ const Footer = () => {
                   <Youtube className="h-5 w-5 text-action hover:text-action/80 transition-colors" />
                 </a>
               </li>
-              
-              {/* Reddit */}
-              <li>
-                <a
-                  href="https://www.reddit.com/r/Creatives_Takeover/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Reddit"
-                >
-                  <img 
-                    src="/lovable-uploads/reddit-logo.png" 
-                    alt="Reddit" 
-                    className="h-5 w-5 hover:opacity-80 transition-opacity" 
-                  />
-                </a>
-              </li>
             </ul>
             
             {/* Product Hunt Badge */}
