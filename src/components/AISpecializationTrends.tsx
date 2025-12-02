@@ -395,8 +395,8 @@ const AISpecializationTrends = () => {
         {/* Narrative Conclusion */}
         <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-8">
-            <h3 className="text-2xl font-bold mb-4 relative inline-block">
-              <span className="shiny-text">The Strategic Opportunity</span>
+            <h3 className="text-2xl font-bold mb-4 relative text-center">
+              <span className="shiny-text">A Lifetime Opportunity</span>
             </h3>
             {textSectionVisible && (
               <>
