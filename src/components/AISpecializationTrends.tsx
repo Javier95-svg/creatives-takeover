@@ -347,8 +347,11 @@ const AISpecializationTrends = () => {
         <div className="mt-12 text-center max-w-4xl mx-auto">
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-8">
             <h3 className="text-2xl font-bold mb-4">The Strategic Opportunity</h3>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+              It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.
+            </p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants. The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever—and the upside for solving a specific problem for a specific group of people has never been higher.
+              The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever—and the upside for solving a specific problem for a specific group of people has never been higher.
             </p>
           </div>
         </div>
