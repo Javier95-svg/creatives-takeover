@@ -122,7 +122,7 @@ const Footer = () => {
                   aria-label="YouTube"
                   className="flex items-center justify-center"
                 >
-                  <Youtube className="h-5 w-5 text-action hover:text-action/80 transition-colors" />
+                  <Youtube className="h-6 w-6 text-action hover:text-action/80 transition-colors" />
                 </a>
               </li>
             </ul>
