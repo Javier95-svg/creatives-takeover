@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Loader2 } from 'lucide-react';
+import { Download, FileText, Loader2, FileType } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import DOMPurify from 'dompurify';
@@ -26,6 +26,9 @@ interface PDFGeneratorProps {
     goals: string;
   };
   successScore?: SuccessScore;
+  validationScore?: {
+    reddit_discussions?: any[];
+  } | null;
   className?: string;
 }
 
@@ -34,9 +37,11 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
   businessName, 
   userAnswers, 
   successScore,
+  validationScore,
   className = "" 
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingWord, setIsGeneratingWord] = useState(false);
 
   const generatePDF = async () => {
     setIsGenerating(true);
@@ -48,7 +53,8 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           reportContent,
           businessName,
           userAnswers,
-          successScore
+          successScore,
+          validationScore
         }
       });
 
@@ -135,24 +141,207 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
     }
   };
 
+  const generateWord = async () => {
+    setIsGeneratingWord(true);
+    
+    try {
+      // Lazy-load docx library
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
+      
+      // Convert markdown-style report to Word document structure
+      const sections: any[] = [];
+      
+      // Add title
+      sections.push(
+        new Paragraph({
+          text: `${businessName || 'Business'} Launch Report`,
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        }),
+        new Paragraph({
+          text: `Generated on ${new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}`,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 600 }
+        })
+      );
+
+      // Parse report content into sections
+      const lines = reportContent.split('\n');
+      let currentParagraph: string[] = [];
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        
+        if (!trimmed) {
+          if (currentParagraph.length > 0) {
+            sections.push(new Paragraph({
+              text: currentParagraph.join(' '),
+              spacing: { after: 200 }
+            }));
+            currentParagraph = [];
+          }
+          continue;
+        }
+        
+        // Handle headers
+        if (trimmed.startsWith('# ')) {
+          if (currentParagraph.length > 0) {
+            sections.push(new Paragraph({
+              text: currentParagraph.join(' '),
+              spacing: { after: 200 }
+            }));
+            currentParagraph = [];
+          }
+          sections.push(new Paragraph({
+            text: trimmed.substring(2),
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 }
+          }));
+        } else if (trimmed.startsWith('## ')) {
+          if (currentParagraph.length > 0) {
+            sections.push(new Paragraph({
+              text: currentParagraph.join(' '),
+              spacing: { after: 200 }
+            }));
+            currentParagraph = [];
+          }
+          sections.push(new Paragraph({
+            text: trimmed.substring(3),
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 150 }
+          }));
+        } else if (trimmed.startsWith('### ')) {
+          if (currentParagraph.length > 0) {
+            sections.push(new Paragraph({
+              text: currentParagraph.join(' '),
+              spacing: { after: 200 }
+            }));
+            currentParagraph = [];
+          }
+          sections.push(new Paragraph({
+            text: trimmed.substring(4),
+            heading: HeadingLevel.HEADING_3,
+            spacing: { before: 150, after: 100 }
+          }));
+        } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          // Bullet points
+          if (currentParagraph.length > 0) {
+            sections.push(new Paragraph({
+              text: currentParagraph.join(' '),
+              spacing: { after: 200 }
+            }));
+            currentParagraph = [];
+          }
+          sections.push(new Paragraph({
+            text: trimmed.substring(2),
+            bullet: { level: 0 },
+            spacing: { after: 100 }
+          }));
+        } else {
+          // Regular text
+          currentParagraph.push(trimmed);
+        }
+      }
+      
+      // Add remaining paragraph
+      if (currentParagraph.length > 0) {
+        sections.push(new Paragraph({
+          text: currentParagraph.join(' '),
+          spacing: { after: 200 }
+        }));
+      }
+
+      // Add success scores if available
+      if (successScore && Object.keys(successScore).length > 0) {
+        sections.push(
+          new Paragraph({
+            text: 'Success Scores',
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 }
+          })
+        );
+        
+        Object.entries(successScore).forEach(([key, value]) => {
+          if (typeof value === 'number') {
+            sections.push(new Paragraph({
+              text: `${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${value}%`,
+              spacing: { after: 100 }
+            }));
+          }
+        });
+      }
+
+      // Create document
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: sections
+        }]
+      });
+
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${businessName || 'Business'}_Launch_Report_${new Date().toISOString().split('T')[0]}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('Word document generated successfully!');
+    } catch (error) {
+      console.error('Error generating Word document:', error);
+      toast.error('Failed to generate Word document. Please try again.');
+    } finally {
+      setIsGeneratingWord(false);
+    }
+  };
+
   return (
-    <Button
-      onClick={generatePDF}
-      disabled={isGenerating}
-      className={`bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white ${className}`}
-    >
-      {isGenerating ? (
-        <>
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          Generating PDF...
-        </>
-      ) : (
-        <>
-          <Download className="w-4 h-4 mr-2" />
-          Download PDF Report
-        </>
-      )}
-    </Button>
+    <div className={`flex flex-col sm:flex-row gap-2 ${className}`}>
+      <Button
+        onClick={generatePDF}
+        disabled={isGenerating || isGeneratingWord}
+        className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white"
+      >
+        {isGenerating ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Generating PDF...
+          </>
+        ) : (
+          <>
+            <Download className="w-4 h-4 mr-2" />
+            Download PDF
+          </>
+        )}
+      </Button>
+      <Button
+        onClick={generateWord}
+        disabled={isGenerating || isGeneratingWord}
+        variant="outline"
+        className="border-2"
+      >
+        {isGeneratingWord ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Generating Word...
+          </>
+        ) : (
+          <>
+            <FileType className="w-4 h-4 mr-2" />
+            Download Word
+          </>
+        )}
+      </Button>
+    </div>
   );
 };
 

@@ -5,13 +5,16 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { RedditInsights } from '@/components/RedditInsights';
+import { MarketValidationScore } from '@/types/founderOS';
 
 interface ReportDisplayProps {
   report: string;
   onDownloadPDF?: () => void;
+  validationScore?: MarketValidationScore | null;
 }
 
-export const ReportDisplay = ({ report, onDownloadPDF }: ReportDisplayProps) => {
+export const ReportDisplay = ({ report, onDownloadPDF, validationScore }: ReportDisplayProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -61,6 +64,13 @@ export const ReportDisplay = ({ report, onDownloadPDF }: ReportDisplayProps) => 
               {report}
             </ReactMarkdown>
           </div>
+          
+          {/* Reddit Insights Section */}
+          {validationScore?.reddit_discussions && validationScore.reddit_discussions.length > 0 && (
+            <div className="mt-8">
+              <RedditInsights discussions={validationScore.reddit_discussions} />
+            </div>
+          )}
         </CardContent>
         
         {/* Mobile Download Button */}

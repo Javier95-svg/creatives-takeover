@@ -50,6 +50,9 @@ export interface MarketValidationScore {
   // Customer Analysis
   customer_needs_data?: CustomerNeedsData;
   
+  // Reddit Insights
+  reddit_discussions?: RedditDiscussion[];
+  
   // Metadata
   validation_date: string;
   data_sources: DataSource[];
@@ -103,6 +106,20 @@ export interface DataSource {
   type: 'api' | 'scraping' | 'manual' | 'ai_inference';
   url?: string;
   reliability_score: number; // 0-100
+}
+
+export interface RedditDiscussion {
+  title: string;
+  content: string;
+  subreddit: string;
+  upvotes: number;
+  comments: number;
+  url: string;
+  created_utc: number;
+  sentiment: 'positive' | 'neutral' | 'negative';
+  relevance_score: number; // 0-100
+  author?: string;
+  post_id?: string;
 }
 
 // ============================================

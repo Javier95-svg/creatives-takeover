@@ -55,6 +55,7 @@ const BizMapAI = () => {
   const [successScore, setSuccessScore] = useState<any>(null);
   const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [validationScore, setValidationScore] = useState<any>(null);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -1275,6 +1276,20 @@ Subject: "Quick question about [their pain point]"
                                 },
                               });
                             }).then(() => {
+                              // Fetch the validation score to display Reddit insights
+                              supabase
+                                .from('market_validation_scores')
+                                .select('*')
+                                .eq('session_id', currentSessionId)
+                                .order('created_at', { ascending: false })
+                                .limit(1)
+                                .single()
+                                .then(({ data, error }) => {
+                                  if (!error && data) {
+                                    setValidationScore(data);
+                                  }
+                                });
+                              
                               toast.success('✅ Founder OS Ready! Check out your roadmap.', {
                                 action: {
                                   label: 'View',
@@ -1316,6 +1331,7 @@ Subject: "Quick question about [their pain point]"
                   <div className="mb-8">
                     <ReportDisplay 
                       report={launchReport}
+                      validationScore={validationScore}
                       onDownloadPDF={() => {
                         // Trigger existing PDF generator
                         const pdfButton = document.querySelector('[data-pdf-download]') as HTMLButtonElement;
@@ -1541,6 +1557,7 @@ Subject: "Quick question about [their pain point]"
                           businessName={userAnswers.overview?.split(' ').slice(0, 3).join(' ') || 'Business Plan'}
                           userAnswers={userAnswers}
                           successScore={successScore}
+                          validationScore={validationScore}
                           className="flex-1"
                         />
                         <ReportDownload 

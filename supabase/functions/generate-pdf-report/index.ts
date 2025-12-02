@@ -24,6 +24,9 @@ interface PDFRequest {
     goals: string;
   };
   successScore?: any;
+  validationScore?: {
+    reddit_discussions?: any[];
+  };
 }
 
 serve(withErrorBoundary(async (req: Request) => {
@@ -65,11 +68,11 @@ serve(withErrorBoundary(async (req: Request) => {
       );
     }
 
-    const { reportContent, businessName, userAnswers, successScore }: PDFRequest = await req.json();
-    logInfo('pdf:request_received', { hasScore: Boolean(successScore) });
+    const { reportContent, businessName, userAnswers, successScore, validationScore }: PDFRequest = await req.json();
+    logInfo('pdf:request_received', { hasScore: Boolean(successScore), hasRedditData: Boolean(validationScore?.reddit_discussions?.length) });
 
     // Generate enhanced PDF content with professional formatting
-    const enhancedPDFContent = generateProfessionalPDFContent(reportContent, businessName, userAnswers, successScore);
+    const enhancedPDFContent = generateProfessionalPDFContent(reportContent, businessName, userAnswers, successScore, validationScore);
 
     // Use Puppeteer to generate PDF from HTML
     const htmlContent = `
@@ -283,6 +286,54 @@ function generateProfessionalPDFContent(reportContent: string, businessName: str
       ${successScore.action_recommendations.map((action: string, index: number) => `
         <div class="action-item">
           <strong>Step ${index + 1}:</strong> ${action}
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+
+    ${validationScore?.reddit_discussions && validationScore.reddit_discussions.length > 0 ? `
+    <div class="page-break"></div>
+    <div class="section">
+      <h2>🔍 Reddit Community Insights</h2>
+      <p style="margin-bottom: 20px; color: #6b7280;">
+        Real discussions from Reddit communities analyzing your business idea. These insights provide valuable market validation data.
+      </p>
+      
+      <div style="margin-bottom: 20px;">
+        <h3 style="color: #6366f1; margin-bottom: 10px;">Summary Statistics</h3>
+        <table>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+          <tr>
+            <td>Total Reddit Posts Analyzed</td>
+            <td>${validationScore.reddit_discussions.length}</td>
+          </tr>
+          <tr>
+            <td>Demand Signals (Positive Sentiment)</td>
+            <td>${validationScore.reddit_discussions.filter((p: any) => p.sentiment === 'positive').length}</td>
+          </tr>
+          <tr>
+            <td>Total Community Engagement</td>
+            <td>${validationScore.reddit_discussions.reduce((sum: number, p: any) => sum + (p.upvotes || 0), 0)} upvotes, ${validationScore.reddit_discussions.reduce((sum: number, p: any) => sum + (p.comments || 0), 0)} comments</td>
+          </tr>
+        </table>
+      </div>
+
+      <h3 style="color: #6366f1; margin-bottom: 10px; margin-top: 20px;">Top Relevant Discussions</h3>
+      ${validationScore.reddit_discussions
+        .sort((a: any, b: any) => (b.relevance_score || 0) - (a.relevance_score || 0))
+        .slice(0, 5)
+        .map((post: any, idx: number) => `
+        <div class="highlight-box" style="margin-bottom: 15px;">
+          <strong>${idx + 1}. ${post.title}</strong><br>
+          <span style="color: #6b7280; font-size: 14px;">
+            r/${post.subreddit} • ${post.upvotes || 0} upvotes • ${post.comments || 0} comments • 
+            Sentiment: <span style="color: ${post.sentiment === 'positive' ? '#10b981' : post.sentiment === 'negative' ? '#ef4444' : '#6b7280'}">${post.sentiment}</span> • 
+            Relevance: ${post.relevance_score || 0}%
+          </span>
+          ${post.url ? `<br><a href="${post.url}" style="color: #6366f1; font-size: 12px;">View on Reddit →</a>` : ''}
         </div>
       `).join('')}
     </div>
