@@ -95,23 +95,6 @@ const AISpecializationTrends = () => {
     { year: '2025', general: 35, specialized: 65 },
   ];
 
-  // Chart 4: Monthly Launch Rate (2024-2025)
-  const monthlyLaunchData = [
-    { month: 'Jan 2024', niche: 145 },
-    { month: 'Feb 2024', niche: 162 },
-    { month: 'Mar 2024', niche: 178 },
-    { month: 'Apr 2024', niche: 195 },
-    { month: 'May 2024', niche: 215 },
-    { month: 'Jun 2024', niche: 238 },
-    { month: 'Jul 2024', niche: 265 },
-    { month: 'Aug 2024', niche: 290 },
-    { month: 'Sep 2024', niche: 315 },
-    { month: 'Oct 2024', niche: 342 },
-    { month: 'Nov 2024', niche: 370 },
-    { month: 'Dec 2024', niche: 398 },
-    { month: 'Jan 2025', niche: 428 },
-    { month: 'Feb 2025', niche: 460 },
-  ];
 
   return (
     <section className="py-20 lg:py-32 relative overflow-hidden bg-background">
@@ -224,8 +207,14 @@ const AISpecializationTrends = () => {
             <CardContent>
               {chartVisible && (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={growthComparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <LineChart data={growthComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="nicheGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis 
                       dataKey="year" 
                       stroke="hsl(var(--muted-foreground))"
@@ -239,8 +228,12 @@ const AISpecializationTrends = () => {
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)'
                       }}
+                      animationDuration={300}
+                      animationEasing="ease-out"
+                      cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
                     />
                     <Legend />
                     <Line 
@@ -251,7 +244,7 @@ const AISpecializationTrends = () => {
                       dot={{ fill: 'hsl(var(--primary))', r: 4 }}
                       name="Niche AI Tools"
                       animationBegin={0}
-                      animationDuration={1500}
+                      animationDuration={2000}
                       animationEasing="ease-out"
                     />
                     <Line 
@@ -262,8 +255,8 @@ const AISpecializationTrends = () => {
                       strokeDasharray="5 5"
                       dot={{ fill: 'hsl(var(--muted-foreground))', r: 3 }}
                       name="General AI Tools"
-                      animationBegin={300}
-                      animationDuration={1500}
+                      animationBegin={500}
+                      animationDuration={2000}
                       animationEasing="ease-out"
                     />
                   </LineChart>
@@ -286,8 +279,18 @@ const AISpecializationTrends = () => {
             <CardContent>
               {chartVisible && (
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={marketShareData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <AreaChart data={marketShareData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="specializedGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      </linearGradient>
+                      <linearGradient id="generalGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.5} />
+                        <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.1} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis 
                       dataKey="year" 
                       stroke="hsl(var(--muted-foreground))"
@@ -302,8 +305,12 @@ const AISpecializationTrends = () => {
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)'
                       }}
+                      animationDuration={300}
+                      animationEasing="ease-out"
+                      cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
                     />
                     <Legend />
                     <Area 
@@ -311,11 +318,11 @@ const AISpecializationTrends = () => {
                       dataKey="specialized" 
                       stackId="1" 
                       stroke="hsl(var(--primary))" 
-                      fill="hsl(var(--primary))" 
+                      fill="url(#specializedGradient)" 
                       fillOpacity={0.6}
                       name="Specialized AI"
                       animationBegin={0}
-                      animationDuration={1500}
+                      animationDuration={2000}
                       animationEasing="ease-out"
                     />
                     <Area 
@@ -323,11 +330,11 @@ const AISpecializationTrends = () => {
                       dataKey="general" 
                       stackId="1" 
                       stroke="hsl(var(--muted-foreground))" 
-                      fill="hsl(var(--muted-foreground))" 
+                      fill="url(#generalGradient)" 
                       fillOpacity={0.3}
                       name="General AI"
-                      animationBegin={300}
-                      animationDuration={1500}
+                      animationBegin={400}
+                      animationDuration={2000}
                       animationEasing="ease-out"
                     />
                   </AreaChart>
@@ -339,58 +346,6 @@ const AISpecializationTrends = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Chart 3: Monthly Launch Rate */}
-        <Card className="border-border hover:shadow-xl transition-all duration-500 mb-12">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Accelerating Launch Velocity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-              {chartVisible && (
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={monthlyLaunchData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis 
-                      dataKey="month" 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '11px' }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="niche" 
-                      stroke="hsl(var(--primary))" 
-                      fill="hsl(var(--primary))" 
-                      fillOpacity={0.4}
-                      name="New Niche AI Products"
-                      animationBegin={0}
-                      animationDuration={2000}
-                      animationEasing="ease-out"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            <p className="text-sm text-muted-foreground mt-4">
-              The launch rate is accelerating month-over-month. What started as a trickle has become a flood of specialized solutions.
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Narrative Conclusion */}
         <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
