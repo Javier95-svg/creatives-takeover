@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
+import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
@@ -49,6 +50,8 @@ const Index = () => {
       <main className="pb-20 md:pb-0">
         <Hero />
         <EntrepreneurProblems />
+        
+        <AISpecializationTrends />
         
         <ValuePropositionCards />
         
