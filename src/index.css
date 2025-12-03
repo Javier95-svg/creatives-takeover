@@ -1193,6 +1193,17 @@ All colors MUST be HSL.
       animation: none !important;
     }
     
+    /* Disable mentor marketplace animations for reduced motion */
+    [style*="mentor-guidance-flow"],
+    [style*="mentor-guidance-pillar"],
+    [style*="mentor-connection-pulse"],
+    [style*="mentor-node-pulse"],
+    [style*="connection-fade"],
+    [style*="mentor-growth-orb"] {
+      animation: none !important;
+      opacity: 0.5 !important;
+    }
+    
     /* Faster, simpler animations for mobile */
     .animate-fade-in {
       animation: mobile-fade-in 0.3s ease-out;
@@ -1890,5 +1901,98 @@ All colors MUST be HSL.
   75% {
     opacity: 0.95;
     box-shadow: 0 10px 28px -5px rgba(59, 130, 246, 0.25), 0 10px 12px -5px rgba(59, 130, 246, 0.15);
+  }
+}
+
+/* Mentor Marketplace Wallpaper Animations */
+@keyframes mentor-guidance-flow {
+  0% {
+    transform: translateX(-100%) translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(100vw) translateY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes mentor-guidance-pillar {
+  0% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.5;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes mentor-connection-pulse {
+  0%, 100% {
+    stroke-dashoffset: 0;
+    opacity: 0.5;
+  }
+  25% {
+    stroke-dashoffset: -60;
+    opacity: 0.8;
+  }
+  50% {
+    stroke-dashoffset: -120;
+    opacity: 0.7;
+  }
+  75% {
+    stroke-dashoffset: -60;
+    opacity: 0.8;
+  }
+}
+
+@keyframes mentor-node-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+    box-shadow: 0 0 12px currentColor;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+    box-shadow: 0 0 20px currentColor;
+  }
+}
+
+@keyframes connection-fade {
+  0%, 100% {
+    opacity: 0.3;
+    stroke-width: 1.5;
+  }
+  50% {
+    opacity: 0.6;
+    stroke-width: 2;
+  }
+}
+
+@keyframes mentor-growth-orb {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.6;
+  }
+  33% {
+    transform: scale(1.08) translate(20px, -15px);
+    opacity: 0.7;
+  }
+  66% {
+    transform: scale(0.95) translate(-15px, 10px);
+    opacity: 0.65;
   }
 }
