@@ -1199,7 +1199,8 @@ All colors MUST be HSL.
     [style*="mentor-connection-pulse"],
     [style*="mentor-node-pulse"],
     [style*="connection-fade"],
-    [style*="mentor-growth-orb"] {
+    [style*="mentor-growth-orb"],
+    .geometric-float {
       animation: none !important;
       opacity: 0.5 !important;
     }
@@ -1994,5 +1995,25 @@ All colors MUST be HSL.
   66% {
     transform: scale(0.95) translate(-15px, 10px);
     opacity: 0.65;
+  }
+}
+
+/* Geometric Floating Animation for Mentor Marketplace Wallpaper */
+@keyframes geometric-float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.8;
+  }
+  25% {
+    transform: translate(10px, -15px) rotate(2deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-8px, -10px) rotate(-1deg);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translate(12px, -5px) rotate(1deg);
+    opacity: 0.95;
   }
 }
