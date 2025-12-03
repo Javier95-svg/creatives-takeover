@@ -155,7 +155,7 @@ const Hero = () => {
               className="border-2 hover:bg-primary/10 text-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" 
               asChild
             >
-              <Link to="/dashboard">
+              <Link to="/dashboard" className="flex items-center">
                 <LayoutDashboard className="mr-2 w-5 h-5" />
                 Dashboard
               </Link>
