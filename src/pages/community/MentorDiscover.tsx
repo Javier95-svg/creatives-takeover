@@ -7,10 +7,15 @@ import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { FilterSidebar, MentorFilters } from "@/components/mentor-marketplace/FilterSidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Mentor } from "@/types/mentor";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMentors } from "@/hooks/useMentors";
-import { Search, ArrowLeft, Loader2, Users } from "lucide-react";
+import { Search, ArrowLeft, Loader2, Users, Star, Sparkles, CheckCircle2, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+type QuickFilterType = 'all' | 'popular' | 'new' | 'available' | 'featured' | 'price-low' | 'price-mid' | 'price-high';
 
 const MentorDiscover = () => {
   const { user } = useAuth();
@@ -18,6 +23,7 @@ const MentorDiscover = () => {
   const { fetchMentors, loading } = useMentors();
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [quickFilter, setQuickFilter] = useState<QuickFilterType>('all');
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
     priceRange: [0, 50000],
@@ -35,7 +41,7 @@ const MentorDiscover = () => {
   };
 
   const filteredMentors = useMemo(() => {
-    return mentors.filter((mentor) => {
+    let result = mentors.filter((mentor) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -46,6 +52,27 @@ const MentorDiscover = () => {
         if (!matchesSearch) return false;
       }
 
+      // Quick filter specific filters (only apply if not "all")
+      if (quickFilter !== 'all') {
+        switch (quickFilter) {
+          case 'available':
+            if (mentor.is_active === false) return false;
+            break;
+          case 'featured':
+            if ((mentor as any).is_featured !== true) return false;
+            break;
+          case 'price-low':
+            if (mentor.hourly_rate > 10000) return false; // $0-100
+            break;
+          case 'price-mid':
+            if (mentor.hourly_rate <= 10000 || mentor.hourly_rate > 20000) return false; // $100-200
+            break;
+          case 'price-high':
+            if (mentor.hourly_rate <= 20000) return false; // $200+
+            break;
+        }
+      }
+
       // Expertise filter
       if (filters.expertise.length > 0) {
         const hasExpertise = filters.expertise.some((e) =>
@@ -54,22 +81,46 @@ const MentorDiscover = () => {
         if (!hasExpertise) return false;
       }
 
-      // Price range filter
-      if (
-        mentor.hourly_rate < filters.priceRange[0] ||
-        mentor.hourly_rate > filters.priceRange[1]
-      ) {
-        return false;
+      // Price range filter (only if not using quick price filter)
+      if (quickFilter !== 'price-low' && quickFilter !== 'price-mid' && quickFilter !== 'price-high') {
+        if (
+          mentor.hourly_rate < filters.priceRange[0] ||
+          mentor.hourly_rate > filters.priceRange[1]
+        ) {
+          return false;
+        }
       }
 
-      // Available now filter
-      if (filters.availableNow && mentor.is_active === false) {
+      // Available now filter (only if not using quick available filter)
+      if (quickFilter !== 'available' && filters.availableNow && mentor.is_active === false) {
         return false;
       }
 
       return true;
     });
-  }, [searchQuery, filters, mentors]);
+
+    // Apply quick filter sorting
+    switch (quickFilter) {
+      case 'popular':
+        result = result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'new':
+        result = result.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+      case 'price-low':
+      case 'price-mid':
+      case 'price-high':
+        result = result.sort((a, b) => a.hourly_rate - b.hourly_rate);
+        break;
+      default:
+        // Keep original order
+        break;
+    }
+
+    return result;
+  }, [searchQuery, filters, mentors, quickFilter]);
 
   const allExpertise = useMemo(() => {
     const expertiseSet = new Set<string>();
@@ -124,8 +175,66 @@ const MentorDiscover = () => {
                     placeholder="Search by name, expertise, or keywords..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-11"
                   />
+                </div>
+              </div>
+
+              {/* Quick Filter Chips */}
+              <div className="mb-6">
+                <div className="relative">
+                  {/* Gradient fade on edges for scroll indication */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+                  
+                  {/* Horizontal scrolling container */}
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-2 px-1 py-2 min-w-max">
+                      {[
+                        { id: 'all' as QuickFilterType, label: 'All', icon: null },
+                        { id: 'popular' as QuickFilterType, label: 'Popular', icon: Star },
+                        { id: 'featured' as QuickFilterType, label: 'Featured', icon: Sparkles },
+                        { id: 'available' as QuickFilterType, label: 'Available Now', icon: CheckCircle2 },
+                        { id: 'new' as QuickFilterType, label: 'New', icon: TrendingUp },
+                        { id: 'price-low' as QuickFilterType, label: '$0-100/hr', icon: null },
+                        { id: 'price-mid' as QuickFilterType, label: '$100-200/hr', icon: null },
+                        { id: 'price-high' as QuickFilterType, label: '$200+/hr', icon: null },
+                      ].map((filter) => {
+                        const Icon = filter.icon;
+                        const isActive = quickFilter === filter.id;
+                        const count = filter.id === 'all' 
+                          ? filteredMentors.length 
+                          : filter.id === 'available'
+                          ? mentors.filter(m => m.is_active !== false).length
+                          : filter.id === 'featured'
+                          ? mentors.filter(m => (m as any).is_featured === true).length
+                          : undefined;
+                        
+                        return (
+                          <Button
+                            key={filter.id}
+                            onClick={() => setQuickFilter(filter.id)}
+                            variant={isActive ? "default" : "outline"}
+                            size="sm"
+                            className={cn(
+                              "flex items-center gap-2 whitespace-nowrap transition-all duration-200 touch-manipulation h-9 px-4",
+                              isActive 
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+                                : "hover:bg-muted"
+                            )}
+                          >
+                            {Icon && <Icon className="w-3.5 h-3.5" />}
+                            <span className="font-medium text-sm">{filter.label}</span>
+                            {isActive && count !== undefined && count > 0 && (
+                              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-primary-foreground/20">
+                                {count}
+                              </Badge>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 

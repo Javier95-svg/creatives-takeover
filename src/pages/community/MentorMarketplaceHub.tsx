@@ -3,10 +3,11 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import CommunityWallpaper from "@/components/wallpapers/CommunityWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
-import { Search, Users, Calendar, MessageCircle, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, Users, Calendar, MessageCircle, ArrowRight, CheckCircle2, Loader2, Star } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,27 +41,59 @@ const MentorMarketplaceHub = () => {
         />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
+        <CommunityWallpaper />
         <div className="relative z-10">
           <Navigation />
           <div className="pt-16">
             {/* Hero Section */}
-            <section className="container mx-auto px-4 py-12 md:py-20">
+            <section className="container mx-auto px-4 py-12 md:py-20 relative z-20">
               <div className="max-w-3xl mx-auto text-center space-y-6">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-                  Find Your Mentor
+                  <span className="gradient-unified animate-fade-in">
+                    Find Your Mentor
+                  </span>
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
                   Connect with experienced founders and mentors who can guide you through startup execution.
                   Book 1-on-1 sessions and get personalized advice.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="lg">
+                
+                {/* Trust Indicators */}
+                {mentors.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-6 animate-fade-in">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">{mentors.length}</span>
+                      <span>Mentors Available</span>
+                    </div>
+                    {(() => {
+                      const avgRating = mentors
+                        .filter(m => m.rating && m.rating > 0)
+                        .reduce((sum, m) => sum + (m.rating || 0), 0) / 
+                        mentors.filter(m => m.rating && m.rating > 0).length;
+                      return avgRating > 0 && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium text-foreground">{avgRating.toFixed(1)}</span>
+                          <span>Average Rating</span>
+                        </div>
+                      );
+                    })()}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>Verified Mentors</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
+                  <Button asChild size="lg" className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all">
                     <Link to="/community/discover">
                       <Search className="h-5 w-5 mr-2" />
                       Discover Mentors
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg">
+                  <Button asChild variant="outline" size="lg" className="border-2 hover:bg-primary/10 shadow-lg hover:shadow-xl transition-all">
                     <Link to="/community/my-bookings">
                       <Calendar className="h-5 w-5 mr-2" />
                       My Bookings

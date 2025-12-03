@@ -13,6 +13,7 @@ export interface Mentor {
   review_count?: number; // Total number of reviews
   availability?: AvailabilitySlot[]; // Available time slots
   is_active?: boolean; // Whether mentor is accepting new bookings
+  is_featured?: boolean; // Whether mentor is featured on the hub page
   created_at: string;
   updated_at: string;
 }
