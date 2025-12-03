@@ -190,16 +190,28 @@ const Navigation = () => {
                   </Avatar>
                 </Link>
                 {user?.email?.toLowerCase() === 'admin@creatives-takeover.com' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="flex items-center gap-2"
-                  >
-                    <Link to="/stories/admin/new">
-                      Create Story
-                    </Link>
-                  </Button>
+                  <>
+                    <Button  
+                      variant="ghost" 
+                      size="sm" 
+                      asChild
+                      className="flex items-center gap-2"
+                    >
+                      <Link to="/stories/admin/new">
+                        Create Story
+                      </Link>
+                    </Button>
+                    <Button  
+                      variant="ghost" 
+                      size="sm" 
+                      asChild
+                      className="flex items-center gap-2"
+                    >
+                      <Link to="/community/admin/new">
+                        Create Mentor
+                      </Link>
+                    </Button>
+                  </>
                 )}
                 <Button 
                   variant="ghost" 
@@ -312,18 +324,32 @@ const Navigation = () => {
                       </Link>
                     </Button>
                     {user?.email?.toLowerCase() === 'admin@creatives-takeover.com' && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start" 
-                        onClick={() => setIsOpen(false)}
-                        asChild
-                      >
-                        <Link to="/stories/admin/new" className="flex items-center">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Admin: Create Story
-                        </Link>
-                      </Button>
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full justify-start" 
+                          onClick={() => setIsOpen(false)}
+                          asChild
+                        >
+                          <Link to="/stories/admin/new" className="flex items-center">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Admin: Create Story
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full justify-start" 
+                          onClick={() => setIsOpen(false)}
+                          asChild
+                        >
+                          <Link to="/community/admin/new" className="flex items-center">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Admin: Create Mentor
+                          </Link>
+                        </Button>
+                      </>
                     )}
                     <Button 
                       variant="ghost" 
