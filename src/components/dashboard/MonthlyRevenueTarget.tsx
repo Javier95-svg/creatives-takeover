@@ -385,7 +385,7 @@ export const MonthlyRevenueTarget = () => {
   const isCurrentMonth = format(selectedDate, 'yyyy-MM') === format(new Date(), 'yyyy-MM');
 
   return (
-    <Card className="backdrop-blur-sm bg-card/95">
+    <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -393,14 +393,14 @@ export const MonthlyRevenueTarget = () => {
             Monthly Revenue Target
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePreviousMonth}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousMonth}
+                className="h-8 w-8 p-0 transition-all duration-300 hover:scale-110"
+              >
+                <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
+              </Button>
             <div className="flex items-center gap-2 min-w-[200px] justify-center">
               <Select
                 value={currentMonth.toString()}
@@ -445,17 +445,17 @@ export const MonthlyRevenueTarget = () => {
               variant="outline"
               size="sm"
               onClick={handleNextMonth}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 transition-all duration-300 hover:scale-110 disabled:hover:scale-100"
               disabled={!isCurrentMonth && format(selectedDate, 'yyyy-MM') > format(new Date(), 'yyyy-MM')}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 transition-transform duration-300" />
             </Button>
             {!isCurrentMonth && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleToday}
-                className="h-8 text-xs"
+                className="h-8 text-xs transition-all duration-300 hover:scale-105"
               >
                 Today
               </Button>
@@ -485,9 +485,9 @@ export const MonthlyRevenueTarget = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="ml-4"
+                  className="ml-4 transition-all duration-300 hover:scale-110 hover:bg-accent"
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="h-4 w-4 transition-transform duration-300" />
                 </Button>
               </div>
             ) : (
@@ -515,12 +515,12 @@ export const MonthlyRevenueTarget = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSave} className="flex-1">
-                    <Save className="h-4 w-4 mr-2" />
+                  <Button size="sm" onClick={handleSave} className="flex-1 transition-all duration-300 hover:scale-105">
+                    <Save className="h-4 w-4 mr-2 transition-transform duration-300" />
                     Save
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleCancel} className="flex-1">
-                    <X className="h-4 w-4 mr-2" />
+                  <Button size="sm" variant="outline" onClick={handleCancel} className="flex-1 transition-all duration-300 hover:scale-105">
+                    <X className="h-4 w-4 mr-2 transition-transform duration-300" />
                     Cancel
                   </Button>
                 </div>

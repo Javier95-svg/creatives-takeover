@@ -146,7 +146,7 @@ export const PersonalizedDashboard = () => {
       {/* Exit Button - Fixed in top-right corner */}
       <button
         onClick={() => navigate('/')}
-        className="fixed right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:bg-accent flex items-center gap-2 text-sm font-medium"
+        className="fixed right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:shadow-xl hover:bg-accent flex items-center gap-2 text-sm font-medium"
         aria-label="Exit dashboard and return to platform"
       >
         <span>Go to Platform</span>
@@ -217,9 +217,9 @@ export const PersonalizedDashboard = () => {
         {/* Header Section */}
         <div className="space-y-4">
           {/* Welcome Header */}
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden animate-fade-in-up">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-2xl blur-3xl" />
-            <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
+            <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-xl">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
@@ -246,28 +246,42 @@ export const PersonalizedDashboard = () => {
         </div>
 
         {/* Active Projects */}
-        <ActiveProjects />
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+          <ActiveProjects />
+        </div>
 
         {/* Monthly Revenue Target - Full Width */}
-        <MonthlyRevenueTarget />
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+          <MonthlyRevenueTarget />
+        </div>
 
         {/* Task Overview - Below Active Projects, Matching Width */}
-        <TaskOverview />
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+          <TaskOverview />
+        </div>
           </div>
 
           {/* Right Sidebar - Task Calendar and Gmail Integration (Fixed/Sticky) */}
           <div className="hidden xl:block w-80 flex-shrink-0">
             <div className="sticky top-8 space-y-6">
-              <TaskCalendar />
-              <GmailIntegration />
+              <div className="animate-slide-in-right opacity-0" style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
+                <TaskCalendar />
+              </div>
+              <div className="animate-slide-in-right opacity-0" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
+                <GmailIntegration />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Task Calendar and Gmail Integration for Mobile/Tablet (below main content) */}
         <div className="xl:hidden mt-6 space-y-6">
-          <TaskCalendar />
-          <GmailIntegration />
+          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
+            <TaskCalendar />
+          </div>
+          <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
+            <GmailIntegration />
+          </div>
         </div>
 
       </div>

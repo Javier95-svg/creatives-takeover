@@ -180,10 +180,10 @@ export const TaskOverview = () => {
   }
 
   return (
-    <Card className="backdrop-blur-sm bg-card/95">
+    <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center transition-transform duration-300">
             <ListTodo className="h-4 w-4 text-primary" />
           </div>
           Task Overview
@@ -191,28 +191,29 @@ export const TaskOverview = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {tasks.slice(0, 4).map((task) => {
+          {tasks.slice(0, 4).map((task, index) => {
             const { subtitle, description } = generateTaskContext(task.task_text, task.priority);
             
             return (
               <div
                 key={task.id}
-                className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-all cursor-pointer"
+                className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${index * 0.08}s`, animationFillMode: 'forwards' }}
                 onClick={() => toggleTaskComplete(task.id)}
               >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleTaskComplete(task.id);
-                  }}
-                  className="mt-0.5 flex-shrink-0"
-                >
-                  {task.is_completed ? (
-                    <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
-                  ) : (
-                    <Circle className="w-4 h-4 text-muted-foreground/30" />
-                  )}
-                </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleTaskComplete(task.id);
+                }}
+                className="mt-0.5 flex-shrink-0 transition-all duration-300 hover:scale-125"
+              >
+                {task.is_completed ? (
+                  <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))] transition-transform duration-300" />
+                ) : (
+                  <Circle className="w-4 h-4 text-muted-foreground/30 transition-transform duration-300" />
+                )}
+              </button>
                 <div className="flex-1 min-w-0 pr-3">
                   {/* Task Title */}
                   <div className="text-sm font-semibold text-foreground mb-1 leading-tight">

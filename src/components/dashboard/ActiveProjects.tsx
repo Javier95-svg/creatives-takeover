@@ -108,24 +108,24 @@ export const ActiveProjects = () => {
   }
 
   return (
-    <Card className="backdrop-blur-sm bg-card/95">
+    <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center transition-transform duration-300">
               <FolderKanban className="h-4 w-4 text-primary" />
             </div>
             Active Projects
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs transition-all duration-300">
               {activeProjects.length} Active
             </Badge>
             {activeProjects.length > 0 && (
               <Link to="/projects-dashboard">
-                <Button variant="ghost" size="sm" className="h-7 text-xs">
+                <Button variant="ghost" size="sm" className="h-7 text-xs transition-all duration-300 hover:scale-105">
                   View All
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="h-3 w-3 ml-1 transition-transform duration-300 group-hover:translate-x-1" />
                 </Button>
               </Link>
             )}
@@ -146,9 +146,10 @@ export const ActiveProjects = () => {
               <Link
                 key={project.id}
                 to={`/bizmap-ai?session=${project.id}`}
-                className="block"
+                className="block animate-fade-in-up opacity-0"
+                style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'forwards' }}
               >
-                <div className="group p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+                <div className="group p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer">
                   {/* Header Row */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
@@ -201,13 +202,13 @@ export const ActiveProjects = () => {
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 hover:scale-105"
                       onClick={(e) => {
                         e.preventDefault();
                         window.location.href = `/bizmap-ai?session=${project.id}`;
                       }}
                     >
-                      <Play className="h-3 w-3 mr-2" />
+                      <Play className="h-3 w-3 mr-2 transition-transform duration-300 group-hover:translate-x-1" />
                       Continue Project
                     </Button>
                   </div>

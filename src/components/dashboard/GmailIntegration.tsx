@@ -26,10 +26,10 @@ export const GmailIntegration = () => {
 
   if (!connection) {
     return (
-      <Card className="backdrop-blur-sm bg-card/95 border-dashed">
+      <Card className="backdrop-blur-sm bg-card/95 border-dashed transition-all duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Mail className="h-5 w-5 text-primary" />
+            <Mail className="h-5 w-5 text-primary transition-transform duration-300" />
             Gmail Integration
           </CardTitle>
           <CardDescription>
@@ -46,7 +46,7 @@ export const GmailIntegration = () => {
             <Button
               onClick={connectGmail}
               disabled={connecting}
-              className="w-full"
+              className="w-full transition-all duration-300 hover:scale-105"
             >
               {connecting ? (
                 <>
@@ -55,7 +55,7 @@ export const GmailIntegration = () => {
                 </>
               ) : (
                 <>
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="h-4 w-4 mr-2 transition-transform duration-300" />
                   Connect Gmail
                 </>
               )}
@@ -67,12 +67,12 @@ export const GmailIntegration = () => {
   }
 
   return (
-    <Card className="backdrop-blur-sm bg-card/95">
+    <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Mail className="h-5 w-5 text-primary" />
+              <Mail className="h-5 w-5 text-primary transition-transform duration-300" />
               Gmail Integration
             </CardTitle>
             <CardDescription className="mt-1">
@@ -87,7 +87,7 @@ export const GmailIntegration = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 transition-all duration-300 hover:bg-muted/50 hover:border-primary/30">
             <div className="space-y-0.5">
               <Label htmlFor="task-reminders" className="text-sm font-medium">
                 Task Deadline Reminders
@@ -100,6 +100,7 @@ export const GmailIntegration = () => {
               id="task-reminders"
               checked={connection.task_reminders_enabled || false}
               onCheckedChange={enableTaskReminders}
+              className="transition-transform duration-300"
             />
           </div>
 
@@ -108,7 +109,7 @@ export const GmailIntegration = () => {
               variant="outline"
               size="sm"
               onClick={disconnectGmail}
-              className="w-full"
+              className="w-full transition-all duration-300 hover:scale-105"
             >
               Disconnect Gmail
             </Button>

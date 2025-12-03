@@ -117,10 +117,10 @@ export const TaskCalendar = () => {
     <>
       {user && <DeadlineConfirmationDialog userId={user.id} />}
       
-      <Card className="backdrop-blur-sm bg-card/95">
+      <Card className="backdrop-blur-sm bg-card/95 transition-all duration-300 hover:shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarIcon className="h-5 w-5 text-primary" />
+            <CalendarIcon className="h-5 w-5 text-primary transition-transform duration-300" />
             Task Calendar
           </CardTitle>
         </CardHeader>
@@ -148,9 +148,9 @@ export const TaskCalendar = () => {
               <Button 
                 size="sm" 
                 onClick={() => setShowTaskModal(true)}
-                className="h-8"
+                className="h-8 transition-all duration-300 hover:scale-105"
               >
-                <Plus className="h-4 w-4 mr-1" />
+                <Plus className="h-4 w-4 mr-1 transition-transform duration-300" />
                 Add Task
               </Button>
             </div>
@@ -161,7 +161,7 @@ export const TaskCalendar = () => {
                   <div
                     key={task.id}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer",
+                      "flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-md",
                       task.is_completed 
                         ? "bg-[hsl(var(--green-primary))]/10 border-[hsl(var(--green-primary))]/20" 
                         : "bg-card hover:bg-accent/50"
