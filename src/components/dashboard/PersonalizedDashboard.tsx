@@ -10,8 +10,8 @@ import { TaskCalendar } from './TaskCalendar';
 import { TaskOverview } from './TaskOverview';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 import { ActiveProjects } from './ActiveProjects';
-import { RevenueHub } from './RevenueHub';
 import { MonthlyRevenueTarget } from './MonthlyRevenueTarget';
+import { GmailIntegration } from './GmailIntegration';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -245,29 +245,29 @@ export const PersonalizedDashboard = () => {
           </div>
         </div>
 
-        {/* Revenue Hub and Monthly Revenue Target - Full Width Matching Active Projects */}
-        <div className="space-y-6">
-          <RevenueHub />
-          <MonthlyRevenueTarget />
-        </div>
+        {/* Monthly Revenue Target - Full Width */}
+        <MonthlyRevenueTarget />
 
         {/* Active Projects */}
         <ActiveProjects />
+
+        {/* Task Overview - Below Active Projects, Matching Width */}
+        <TaskOverview />
           </div>
 
-          {/* Right Sidebar - Task Calendar and Task Overview (Fixed/Sticky) */}
+          {/* Right Sidebar - Task Calendar and Gmail Integration (Fixed/Sticky) */}
           <div className="hidden xl:block w-80 flex-shrink-0">
             <div className="sticky top-8 space-y-6">
               <TaskCalendar />
-              <TaskOverview />
+              <GmailIntegration />
             </div>
           </div>
         </div>
 
-        {/* Task Calendar and Task Overview for Mobile/Tablet (below main content) */}
+        {/* Task Calendar and Gmail Integration for Mobile/Tablet (below main content) */}
         <div className="xl:hidden mt-6 space-y-6">
           <TaskCalendar />
-          <TaskOverview />
+          <GmailIntegration />
         </div>
 
       </div>
