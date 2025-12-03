@@ -12,6 +12,7 @@ import { Users, ArrowRight, Loader2 } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const MentorMarketplaceHub = () => {
   const navigate = useNavigate();
@@ -53,6 +54,14 @@ const MentorMarketplaceHub = () => {
     navigate(`/community/discover?expertise=${encodeURIComponent(expertise)}`);
   };
 
+  // Typing animation for description
+  const descriptionText = "Match with vetted startup coaches for hands-on guidance from idea to first funding. Book 1-on-1 sessions and get personalized advice.";
+  const { displayedText, isTyping } = useTypingAnimation({
+    text: descriptionText,
+    speed: 20,
+    startDelay: 500
+  });
+
   return (
     <>
       <Helmet>
@@ -69,24 +78,27 @@ const MentorMarketplaceHub = () => {
           {/* Hero Section */}
           <section className="relative py-20 lg:py-32">
             <div className="container mx-auto px-4 sm:px-6">
-              <div className="max-w-4xl mx-auto">
-                {/* Title with mentor count */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-                  {mentors.length > 0 
-                    ? `${mentors.length} mentor${mentors.length !== 1 ? 's' : ''} to boost your startup journey`
-                    : 'Find Your Startup Mentor'
-                  }
+              <div className="max-w-4xl mx-auto text-center">
+                {/* Title */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 takeover-title creatives-font">
+                  <span className="gradient-unified">
+                    Connect. Learn. Grow.
+                  </span>
                 </h1>
                 
-                {/* Description */}
-                <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl">
-                  Connect with experienced founders and mentors who can guide you through startup execution.
-                  Book 1-on-1 sessions and get personalized advice.
-                </p>
+                {/* Description with typing animation */}
+                <div className="max-w-3xl mx-auto mb-8">
+                  <p className="text-lg sm:text-xl md:text-2xl text-foreground/90 leading-relaxed">
+                    {displayedText}
+                    {isTyping && (
+                      <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
+                    )}
+                  </p>
+                </div>
 
                 {/* Popular Expertise Tags */}
                 {popularExpertise.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
                     <span className="text-sm font-medium text-muted-foreground">Popular expertise:</span>
                     {popularExpertise.map((expertise) => (
                       <Badge
