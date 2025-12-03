@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type SnippetColor = 'planning' | 'dashboard' | 'chat' | 'pmf' | 'prompt' | 'insighta' | 'community';
+type SnippetColor = 'planning' | 'dashboard' | 'chat' | 'pmf' | 'prompt' | 'insighta' | 'community' | 'white';
 
 interface PlatformSnippet {
   name: string;
@@ -28,49 +28,49 @@ const platformSnippets: PlatformSnippet[] = [
     description: "Generate your complete business plan with market analysis in just 3 minutes",
     icon: Target,
     route: "/bizmap-ai",
-    color: "planning"
+    color: "planning" // blue
   },
   {
     name: "Dashboard",
     description: "Track your progress, manage tasks, and monitor your business metrics in one place",
     icon: LayoutDashboard,
     route: "/dashboard",
-    color: "dashboard"
+    color: "dashboard" // yellow - contrasts with blue
   },
   {
     name: "Insighta",
     description: "Assess your fundraising readiness, find matched investors, and discover funding opportunities",
     icon: TrendingUp,
     route: "/insighta",
-    color: "insighta"
+    color: "insighta" // purple - contrasts with yellow
   },
   {
     name: "BizMap AI Chat",
     description: "Get strategic business advice from your AI co-founder through conversation",
     icon: MessageSquare,
     route: "/bizmap-ai",
-    color: "chat"
+    color: "chat" // green - contrasts with purple
   },
   {
     name: "Prompt Library",
     description: "Access ready-to-use AI prompts for pitches, emails, and customer interviews",
     icon: Lightbulb,
     route: "/prompt-library",
-    color: "prompt"
+    color: "pmf" // orange - contrasts with green
   },
   {
     name: "Product Market Fit Lab",
     description: "Validate your product-market fit with customer analysis and validation experiments",
     icon: FlaskConical,
     route: "/bizmap-ai",
-    color: "pmf"
+    color: "white" // white - contrasts with orange
   },
   {
     name: "Community",
     description: "Connect with founders, get feedback, and find accountability partners",
     icon: Users,
     route: "/community",
-    color: "community"
+    color: "prompt" // red - contrasts with purple, and when looping back to blue also good
   }
 ];
 
@@ -135,6 +135,14 @@ const HeroSnippets = () => {
         icon: 'text-pink-600 dark:text-pink-400',
         bg: 'bg-pink-500/15 hover:bg-pink-500/30',
         colorName: 'pink'
+      },
+      white: {
+        glass: 'glass-blue',
+        border: 'border-gray-300/60 hover:border-gray-400/90 dark:border-gray-500/60 dark:hover:border-gray-400/90',
+        shadow: 'hover:shadow-lg hover:shadow-gray-400/40 dark:hover:shadow-gray-500/40',
+        icon: 'text-gray-600 dark:text-gray-300',
+        bg: 'bg-gray-400/15 hover:bg-gray-400/25 dark:bg-gray-500/15 dark:hover:bg-gray-500/25',
+        colorName: 'white'
       }
     };
     return colorMap[color];
@@ -261,7 +269,8 @@ const HeroSnippets = () => {
                               colors.colorName === 'orange' ? 'rgba(249, 115, 22, 0.4)' :
                               colors.colorName === 'red' ? 'rgba(239, 68, 68, 0.4)' :
                               colors.colorName === 'purple' ? 'rgba(168, 85, 247, 0.4)' :
-                              'rgba(236, 72, 153, 0.4)'
+                              colors.colorName === 'pink' ? 'rgba(236, 72, 153, 0.4)' :
+                              'rgba(156, 163, 175, 0.4)'
                 }} />
               </Link>
             );
