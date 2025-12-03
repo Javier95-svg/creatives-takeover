@@ -15,6 +15,49 @@ interface Task {
   task_date: string;
 }
 
+// Generate contextual subtitle and description based on task text
+const generateTaskContext = (taskText: string, priority: string): { subtitle: string; description: string } => {
+  const lowerText = taskText.toLowerCase();
+  
+  // Generate subtitle based on task content
+  let subtitle = '';
+  if (lowerText.includes('funding') || lowerText.includes('investor') || lowerText.includes('raise')) {
+    subtitle = 'Explore funding options on Insighta';
+  } else if (lowerText.includes('customer') || lowerText.includes('user') || lowerText.includes('client')) {
+    subtitle = 'Connect with potential customers';
+  } else if (lowerText.includes('product') || lowerText.includes('mvp') || lowerText.includes('build')) {
+    subtitle = 'Develop and refine your product';
+  } else if (lowerText.includes('market') || lowerText.includes('research') || lowerText.includes('validate')) {
+    subtitle = 'Research and validate your market';
+  } else if (lowerText.includes('meeting') || lowerText.includes('call') || lowerText.includes('interview')) {
+    subtitle = 'Schedule and prepare for meetings';
+  } else if (lowerText.includes('email') || lowerText.includes('outreach') || lowerText.includes('contact')) {
+    subtitle = 'Reach out to key stakeholders';
+  } else if (lowerText.includes('plan') || lowerText.includes('strategy') || lowerText.includes('roadmap')) {
+    subtitle = 'Plan your next strategic moves';
+  } else {
+    subtitle = 'Make progress on your goals';
+  }
+
+  // Generate personalized description based on priority
+  let description = '';
+  switch (priority) {
+    case 'high':
+      description = 'This is critical for your immediate success. Focus here first to maximize impact.';
+      break;
+    case 'medium':
+      description = 'Important for steady progress. Complete this to maintain momentum.';
+      break;
+    case 'low':
+      description = 'Nice to have for long-term growth. Tackle when you have extra capacity.';
+      break;
+    default:
+      description = 'Keep moving forward on this task to build consistency.';
+  }
+
+  return { subtitle, description };
+};
+
 export const TaskOverview = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -148,34 +191,53 @@ export const TaskOverview = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {tasks.slice(0, 4).map((task) => (
-            <div
-              key={task.id}
-              className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-colors"
-            >
-              <button
+          {tasks.slice(0, 4).map((task) => {
+            const { subtitle, description } = generateTaskContext(task.task_text, task.priority);
+            
+            return (
+              <div
+                key={task.id}
+                className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border/50 hover:border-primary/30 transition-all cursor-pointer"
                 onClick={() => toggleTaskComplete(task.id)}
-                className="mt-0.5 flex-shrink-0"
               >
-                {task.is_completed ? (
-                  <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
-                ) : (
-                  <Circle className="w-4 h-4 text-muted-foreground/30" />
-                )}
-              </button>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">{task.task_text}</div>
-                <div className="flex items-center gap-2 mt-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTaskComplete(task.id);
+                  }}
+                  className="mt-0.5 flex-shrink-0"
+                >
+                  {task.is_completed ? (
+                    <CheckCircle className="w-4 h-4 text-[hsl(var(--green-primary))]" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-muted-foreground/30" />
+                  )}
+                </button>
+                <div className="flex-1 min-w-0 pr-3">
+                  {/* Task Title */}
+                  <div className="text-sm font-semibold text-foreground mb-1 leading-tight">
+                    {task.task_text}
+                  </div>
+                  {/* Subtitle */}
+                  <div className="text-xs text-muted-foreground leading-relaxed">
+                    {subtitle}
+                  </div>
+                </div>
+                {/* Right Side: Priority and Description */}
+                <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-[130px]">
                   <Badge
                     variant="outline"
-                    className={`text-xs ${getPriorityColor(task.priority)}`}
+                    className={`text-xs font-medium ${getPriorityColor(task.priority)}`}
                   >
                     {task.priority}
                   </Badge>
+                  <p className="text-xs text-muted-foreground text-right leading-relaxed max-w-[140px]">
+                    {description}
+                  </p>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {tasks.length > 4 && (
             <div className="pt-2 border-t border-border/50">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
