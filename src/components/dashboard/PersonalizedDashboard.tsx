@@ -7,6 +7,7 @@ import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TaskCalendar } from './TaskCalendar';
+import { TaskOverview } from './TaskOverview';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 import { ActiveProjects } from './ActiveProjects';
 import { RevenueHub } from './RevenueHub';
@@ -108,7 +109,8 @@ export const PersonalizedDashboard = () => {
     if (!hasInitializedRef.current) {
       trackActivity('dashboard_view');
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Disable auto-refresh on visibility change - preserve state
   // Removed visibility change handler to prevent auto-refresh
@@ -133,7 +135,7 @@ export const PersonalizedDashboard = () => {
     );
   }
 
-  const { profile, stats } = data;
+  const { profile, stats } = data || { profile: null, stats: { currentStreak: 0 } };
 
   // Determine greeting based on time
   const hour = new Date().getHours();
