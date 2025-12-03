@@ -88,7 +88,7 @@ const MentorMarketplaceHub = () => {
                 
                 {/* Description with typing animation */}
                 <div className="max-w-3xl mx-auto mb-8">
-                  <p className="text-lg sm:text-xl md:text-2xl text-foreground/90 leading-relaxed">
+                  <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed">
                     {displayedText}
                     {isTyping && (
                       <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
