@@ -10,50 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Mentor } from "@/types/mentor";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMentors } from "@/hooks/useMentors";
-import { Search, ArrowLeft, Loader2 } from "lucide-react";
-
-// Mock mentors - fallback if database is empty
-const MOCK_MENTORS: Mentor[] = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    picture: "/lovable-uploads/maya-chen-avatar.jpg",
-    bio: "Serial entrepreneur with 15+ years of experience. Successfully scaled 3 startups from idea to exit. Expert in product-market fit, fundraising, and growth strategies.",
-    hourly_rate: 20000,
-    expertise: ["Product Development", "Fundraising", "Strategy"],
-    rating: 4.8,
-    review_count: 42,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Marcus Johnson",
-    picture: "/lovable-uploads/jordan-park-avatar.jpg",
-    bio: "Tech veteran with expertise in B2B SaaS. Helped 50+ founders with technical architecture, team building, and go-to-market strategies.",
-    hourly_rate: 25000,
-    expertise: ["Technology", "Sales & Business Development", "Operations"],
-    rating: 4.9,
-    review_count: 67,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    picture: "/lovable-uploads/maya-chen-avatar.jpg",
-    bio: "Marketing expert specializing in early-stage startups. Built marketing teams from scratch and launched products that reached millions of users.",
-    hourly_rate: 18000,
-    expertise: ["Marketing & Growth", "Content Creation"],
-    rating: 4.7,
-    review_count: 35,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { Search, ArrowLeft, Loader2, Users } from "lucide-react";
 
 const MentorDiscover = () => {
   const { user } = useAuth();
@@ -74,7 +31,7 @@ const MentorDiscover = () => {
 
   const loadMentors = async () => {
     const fetchedMentors = await fetchMentors();
-    setMentors(fetchedMentors.length > 0 ? fetchedMentors : MOCK_MENTORS);
+    setMentors(fetchedMentors);
   };
 
   const filteredMentors = useMemo(() => {
@@ -208,12 +165,31 @@ const MentorDiscover = () => {
                         <MentorCard key={mentor.id} mentor={mentor} />
                       ))}
                     </div>
+                  ) : mentors.length === 0 ? (
+                    <Card>
+                      <CardContent className="p-12 text-center">
+                        <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                        <h3 className="text-xl font-semibold mb-2">No mentors yet</h3>
+                        <p className="text-muted-foreground mb-6">
+                          Mentor profiles will appear here once they're added to the marketplace.
+                        </p>
+                        {isAdmin && (
+                          <Button asChild>
+                            <Link to="/community/admin/new">
+                              Create First Mentor
+                            </Link>
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
                   ) : (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">
-                        No mentors found matching your criteria. Try adjusting your filters.
-                      </p>
-                    </div>
+                    <Card>
+                      <CardContent className="p-12 text-center">
+                        <p className="text-muted-foreground">
+                          No mentors found matching your criteria. Try adjusting your filters.
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                 </main>
               </div>

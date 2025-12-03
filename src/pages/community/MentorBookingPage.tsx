@@ -6,26 +6,16 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMentors } from "@/hooks/useMentors";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Mentor } from "@/types/mentor";
-import { format } from "date-fns";
-
-// Mock mentor - will be replaced with database query
-const MOCK_MENTOR: Mentor = {
-  id: "1",
-  name: "Sarah Chen",
-  picture: "/lovable-uploads/maya-chen-avatar.jpg",
-  bio: "Serial entrepreneur...",
-  hourly_rate: 20000,
-  is_active: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
 
 const MentorBookingPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { fetchMentorById, loading: mentorLoading } = useMentors();
+  const [mentor, setMentor] = useState<Mentor | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,6 +23,20 @@ const MentorBookingPage = () => {
       navigate("/auth?redirect=/community/book/" + id);
     }
   }, [isAuthenticated, authLoading, navigate, id]);
+
+  useEffect(() => {
+    if (id && isAuthenticated) {
+      loadMentor();
+    }
+  }, [id, isAuthenticated]);
+
+  const loadMentor = async () => {
+    if (!id) return;
+    const found = await fetchMentorById(id);
+    if (found) {
+      setMentor(found);
+    }
+  };
 
   const handleProceedToPayment = async () => {
     // TODO: Create Stripe checkout session
@@ -44,7 +48,7 @@ const MentorBookingPage = () => {
     }, 2000);
   };
 
-  if (authLoading) {
+  if (authLoading || mentorLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -56,7 +60,20 @@ const MentorBookingPage = () => {
     return null; // Will redirect
   }
 
-  const mentor = MOCK_MENTOR;
+  if (!mentor) {
+    return (
+      <>
+        <Navigation />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <p className="text-muted-foreground mb-4">Mentor not found</p>
+          <Button asChild>
+            <Link to="/community/discover">Browse Mentors</Link>
+          </Button>
+        </div>
+      </>
+    );
+  }
+
   const hourlyRate = mentor.hourly_rate / 100;
   const platformFee = hourlyRate * 0.1;
   const total = hourlyRate + platformFee;

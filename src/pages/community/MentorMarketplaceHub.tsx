@@ -9,51 +9,11 @@ import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { Search, Users, Calendar, MessageCircle, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
-
-// Mock data - fallback if database is empty
-const MOCK_MENTORS: Mentor[] = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    picture: "/lovable-uploads/maya-chen-avatar.jpg",
-    bio: "Serial entrepreneur with 15+ years of experience. Successfully scaled 3 startups from idea to exit. Expert in product-market fit, fundraising, and growth strategies.",
-    hourly_rate: 20000, // $200/hr
-    expertise: ["Product Development", "Fundraising", "Strategy"],
-    rating: 4.8,
-    review_count: 42,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Marcus Johnson",
-    picture: "/lovable-uploads/jordan-park-avatar.jpg",
-    bio: "Tech veteran with expertise in B2B SaaS. Helped 50+ founders with technical architecture, team building, and go-to-market strategies. Y Combinator alum.",
-    hourly_rate: 25000, // $250/hr
-    expertise: ["Technology", "Sales & Business Development", "Operations"],
-    rating: 4.9,
-    review_count: 67,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    picture: "/lovable-uploads/maya-chen-avatar.jpg",
-    bio: "Marketing expert specializing in early-stage startups. Built marketing teams from scratch and launched products that reached millions of users. Passionate about helping founders tell their story.",
-    hourly_rate: 18000, // $180/hr
-    expertise: ["Marketing & Growth", "Content Creation"],
-    rating: 4.7,
-    review_count: 35,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 const MentorMarketplaceHub = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentors, loading } = useMentors();
   const [mentors, setMentors] = useState<Mentor[]>([]);
 
@@ -63,10 +23,10 @@ const MentorMarketplaceHub = () => {
 
   const loadMentors = async () => {
     const fetchedMentors = await fetchMentors();
-    setMentors(fetchedMentors.length > 0 ? fetchedMentors : MOCK_MENTORS);
+    setMentors(fetchedMentors);
   };
 
-  const featuredMentors = mentors.filter(m => m.is_featured).slice(0, 3).length > 0
+  const featuredMentors = mentors.filter(m => m.is_featured).length > 0
     ? mentors.filter(m => m.is_featured).slice(0, 3)
     : mentors.slice(0, 3);
 
@@ -111,24 +71,50 @@ const MentorMarketplaceHub = () => {
             </section>
 
             {/* Featured Mentors */}
-            {featuredMentors.length > 0 && (
-              <section className="container mx-auto px-4 py-12">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-3xl font-bold">Featured Mentors</h2>
-                  <Button asChild variant="ghost">
-                    <Link to="/community/discover" className="flex items-center gap-2">
-                      View All
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
+            <section className="container mx-auto px-4 py-12">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold">Featured Mentors</h2>
+                <Button asChild variant="ghost">
+                  <Link to="/community/discover" className="flex items-center gap-2">
+                    View All
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
+              ) : featuredMentors.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {featuredMentors.map((mentor) => (
                     <MentorCard key={mentor.id} mentor={mentor} />
                   ))}
                 </div>
-              </section>
-            )}
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-xl font-semibold mb-2">No mentors yet</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Mentor profiles will appear here once they're added to the marketplace.
+                    </p>
+                    {isAdmin && (
+                      <Button asChild>
+                        <Link to="/community/admin/new">
+                          Create First Mentor
+                        </Link>
+                      </Button>
+                    )}
+                    <Button asChild variant="outline" className="ml-2">
+                      <Link to="/community/discover">
+                        Browse All
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </section>
 
             {/* How It Works */}
             <section className="container mx-auto px-4 py-12 bg-muted/30">
