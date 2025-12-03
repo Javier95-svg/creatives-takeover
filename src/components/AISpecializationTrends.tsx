@@ -120,6 +120,58 @@ const AISpecializationTrends = () => {
           -webkit-text-fill-color: transparent;
           animation: shimmer 3s linear infinite;
         }
+        @keyframes chartFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes lineDraw {
+          from {
+            stroke-dashoffset: 1000;
+          }
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes areaFill {
+          from {
+            opacity: 0;
+            transform: scaleY(0);
+            transform-origin: bottom;
+          }
+          to {
+            opacity: 1;
+            transform: scaleY(1);
+          }
+        }
+        @keyframes dotPulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.2);
+          }
+        }
+        .chart-container {
+          animation: chartFadeIn 0.8s ease-out forwards;
+        }
+        .chart-line {
+          stroke-dasharray: 1000;
+          animation: lineDraw 2s ease-out forwards;
+        }
+        .chart-area {
+          animation: areaFill 2.5s ease-out forwards;
+        }
+        .chart-dot {
+          animation: dotPulse 2s ease-in-out infinite;
+        }
       `}</style>
       {/* Background elements */}
       <div className="absolute inset-0 opacity-[0.02]">
@@ -197,7 +249,7 @@ const AISpecializationTrends = () => {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Chart 1: Niche vs General Growth */}
-          <Card className="border-border hover:shadow-xl transition-all duration-500">
+          <Card className="border-border hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-primary" />
@@ -206,61 +258,125 @@ const AISpecializationTrends = () => {
             </CardHeader>
             <CardContent>
               {chartVisible && (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={growthComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="nicheGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis 
-                      dataKey="year" 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)'
-                      }}
-                      animationDuration={300}
-                      animationEasing="ease-out"
-                      cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="niche" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={3}
-                      dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                      name="Niche AI Tools"
-                      animationBegin={0}
-                      animationDuration={2000}
-                      animationEasing="ease-out"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="general" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={{ fill: 'hsl(var(--muted-foreground))', r: 3 }}
-                      name="General AI Tools"
-                      animationBegin={500}
-                      animationDuration={2000}
-                      animationEasing="ease-out"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={growthComparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="nicheGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                        </linearGradient>
+                        <filter id="glow">
+                          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <XAxis 
+                        dataKey="year" 
+                        stroke="hsl(var(--muted-foreground))"
+                        style={{ fontSize: '12px' }}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        style={{ fontSize: '12px' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
+                          transition: 'all 0.3s ease'
+                        }}
+                        animationDuration={400}
+                        animationEasing="ease-out"
+                        cursor={{ 
+                          fill: 'hsl(var(--primary) / 0.1)',
+                          stroke: 'hsl(var(--primary))',
+                          strokeWidth: 2,
+                          strokeDasharray: '5 5'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ 
+                          transition: 'all 0.3s ease',
+                          paddingTop: '10px'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="niche" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={3}
+                        dot={{ 
+                          fill: 'hsl(var(--primary))', 
+                          r: 5,
+                          strokeWidth: 2,
+                          stroke: 'hsl(var(--background))',
+                          className: 'chart-dot',
+                          style: { 
+                            filter: 'drop-shadow(0 0 4px hsl(var(--primary) / 0.5))',
+                            transition: 'all 0.3s ease'
+                          }
+                        }}
+                        activeDot={{ 
+                          r: 7, 
+                          fill: 'hsl(var(--primary))',
+                          stroke: 'hsl(var(--background))',
+                          strokeWidth: 2,
+                          style: { 
+                            filter: 'drop-shadow(0 0 8px hsl(var(--primary) / 0.8))',
+                            transition: 'all 0.3s ease'
+                          }
+                        }}
+                        name="Niche AI Tools"
+                        animationBegin={0}
+                        animationDuration={2500}
+                        animationEasing="ease-out"
+                        style={{ 
+                          filter: 'drop-shadow(0 2px 4px hsl(var(--primary) / 0.3))',
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="general" 
+                        stroke="hsl(var(--muted-foreground))" 
+                        strokeWidth={2.5}
+                        strokeDasharray="5 5"
+                        dot={{ 
+                          fill: 'hsl(var(--muted-foreground))', 
+                          r: 4,
+                          strokeWidth: 2,
+                          stroke: 'hsl(var(--background))',
+                          style: { 
+                            transition: 'all 0.3s ease'
+                          }
+                        }}
+                        activeDot={{ 
+                          r: 6, 
+                          fill: 'hsl(var(--muted-foreground))',
+                          stroke: 'hsl(var(--background))',
+                          strokeWidth: 2,
+                          style: { 
+                            transition: 'all 0.3s ease'
+                          }
+                        }}
+                        name="General AI Tools"
+                        animationBegin={600}
+                        animationDuration={2500}
+                        animationEasing="ease-out"
+                        style={{ 
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
                 The divergence is dramatic: niche AI tools are experiencing explosive growth while general-purpose tools plateau.
@@ -269,7 +385,7 @@ const AISpecializationTrends = () => {
           </Card>
 
           {/* Chart 2: Market Share Shift */}
-          <Card className="border-border hover:shadow-xl transition-all duration-500">
+          <Card className="border-border hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
@@ -278,67 +394,96 @@ const AISpecializationTrends = () => {
             </CardHeader>
             <CardContent>
               {chartVisible && (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={marketShareData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="specializedGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      </linearGradient>
-                      <linearGradient id="generalGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.5} />
-                        <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.1} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis 
-                      dataKey="year" 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))"
-                      style={{ fontSize: '12px' }}
-                      unit="%"
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)'
-                      }}
-                      animationDuration={300}
-                      animationEasing="ease-out"
-                      cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
-                    />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="specialized" 
-                      stackId="1" 
-                      stroke="hsl(var(--primary))" 
-                      fill="url(#specializedGradient)" 
-                      fillOpacity={0.6}
-                      name="Specialized AI"
-                      animationBegin={0}
-                      animationDuration={2000}
-                      animationEasing="ease-out"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="general" 
-                      stackId="1" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fill="url(#generalGradient)" 
-                      fillOpacity={0.3}
-                      name="General AI"
-                      animationBegin={400}
-                      animationDuration={2000}
-                      animationEasing="ease-out"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div className="chart-container" style={{ animationDelay: '0.2s' }}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={marketShareData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="specializedGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        </linearGradient>
+                        <linearGradient id="generalGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.6} />
+                          <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
+                        </linearGradient>
+                        <filter id="areaGlow">
+                          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <XAxis 
+                        dataKey="year" 
+                        stroke="hsl(var(--muted-foreground))"
+                        style={{ fontSize: '12px' }}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        style={{ fontSize: '12px' }}
+                        unit="%"
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
+                          transition: 'all 0.3s ease'
+                        }}
+                        animationDuration={400}
+                        animationEasing="ease-out"
+                        cursor={{ 
+                          fill: 'hsl(var(--primary) / 0.1)',
+                          stroke: 'hsl(var(--primary))',
+                          strokeWidth: 2,
+                          strokeDasharray: '5 5'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ 
+                          transition: 'all 0.3s ease',
+                          paddingTop: '10px'
+                        }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="specialized" 
+                        stackId="1" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2.5}
+                        fill="url(#specializedGradient)" 
+                        fillOpacity={0.7}
+                        name="Specialized AI"
+                        animationBegin={0}
+                        animationDuration={2800}
+                        animationEasing="ease-out"
+                        style={{ 
+                          filter: 'drop-shadow(0 2px 4px hsl(var(--primary) / 0.2))',
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="general" 
+                        stackId="1" 
+                        stroke="hsl(var(--muted-foreground))" 
+                        strokeWidth={2}
+                        fill="url(#generalGradient)" 
+                        fillOpacity={0.4}
+                        name="General AI"
+                        animationBegin={500}
+                        animationDuration={2800}
+                        animationEasing="ease-out"
+                        style={{ 
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               )}
               <p className="text-sm text-muted-foreground mt-4">
                 By 2025, specialized AI tools will command 65% market share, up from 28% in 2020.
