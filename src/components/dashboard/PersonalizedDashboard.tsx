@@ -245,11 +245,11 @@ export const PersonalizedDashboard = () => {
           </div>
         </div>
 
-        {/* Monthly Revenue Target - Full Width */}
-        <MonthlyRevenueTarget />
-
         {/* Active Projects */}
         <ActiveProjects />
+
+        {/* Monthly Revenue Target - Full Width */}
+        <MonthlyRevenueTarget />
 
         {/* Task Overview - Below Active Projects, Matching Width */}
         <TaskOverview />
