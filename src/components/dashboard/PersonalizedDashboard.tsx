@@ -153,15 +153,44 @@ export const PersonalizedDashboard = () => {
         <ArrowRight className="h-4 w-4" />
       </button>
 
-      {/* Subtle grid pattern for light theme */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
-          `,
-          backgroundSize: '100px 100px, 100px 100px'
-        }} />
+      {/* Modern Wallpaper Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Base Gradient Mesh Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background via-primary/4 to-background" />
+        
+        {/* Animated Gradient Orbs for Depth */}
+        <div 
+          className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/12 rounded-full blur-3xl animate-pulse" 
+          style={{ animationDuration: '8s' }} 
+        />
+        <div 
+          className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl animate-pulse" 
+          style={{ animationDuration: '12s', animationDelay: '2s' }} 
+        />
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/6 rounded-full blur-3xl animate-pulse" 
+          style={{ animationDuration: '10s', animationDelay: '4s' }} 
+        />
+        
+        {/* Subtle Grid Pattern Overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" 
+          style={{
+            backgroundImage: `
+              linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
+              linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px, 60px 60px'
+          }} 
+        />
+        
+        {/* Radial Gradient Vignette Effect */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.4) 100%)'
+          }}
+        />
       </div>
 
 
@@ -193,12 +222,12 @@ export const PersonalizedDashboard = () => {
             <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                       {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
                     </h1>
-                    <p className="text-sm text-muted-foreground max-w-2xl">
-                      Your Founder Command Center
+                    <p className="text-sm text-muted-foreground">
+                      Welcome to your Founder Command Center.
                     </p>
                   </div>
                   {stats.currentStreak > 0 && (
@@ -214,17 +243,16 @@ export const PersonalizedDashboard = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
 
+        {/* Revenue Hub and Monthly Revenue Target - Full Width Matching Active Projects */}
+        <div className="space-y-6">
+          <RevenueHub />
+          <MonthlyRevenueTarget />
         </div>
 
         {/* Active Projects */}
         <ActiveProjects />
-
-        {/* Revenue Hub and Monthly Revenue Target */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RevenueHub />
-          <MonthlyRevenueTarget />
-        </div>
           </div>
 
           {/* Right Sidebar - Task Calendar and Task Overview (Fixed/Sticky) */}
