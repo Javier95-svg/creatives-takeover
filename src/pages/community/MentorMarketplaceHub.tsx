@@ -55,7 +55,7 @@ const MentorMarketplaceHub = () => {
   };
 
   // Typing animation for description
-  const descriptionText = "Match with vetted startup coaches for hands-on guidance from idea to first funding. Book 1-on-1 sessions and get personalized advice.";
+  const descriptionText = "Match with vetted startup coaches for hands-on guidance from first idea to first funding, tailored to the realities of pre-seed founders who are still figuring things out. Book focused 1-on-1 sessions, get actionable feedback on your roadmap, pitch, and go-to-market, and leave each call with clear next steps you can execute immediately.";
   const { displayedText, isTyping } = useTypingAnimation({
     text: descriptionText,
     speed: 20,
