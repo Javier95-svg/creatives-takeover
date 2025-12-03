@@ -149,7 +149,7 @@ export const PersonalizedDashboard = () => {
         className="fixed right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:shadow-xl hover:bg-accent flex items-center gap-2 text-sm font-medium"
         aria-label="Exit dashboard and return to platform"
       >
-        <span>Go to Platform</span>
+        <span>Dashboard</span>
         <ArrowRight className="h-4 w-4" />
       </button>
 
