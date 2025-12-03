@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
@@ -33,9 +33,13 @@ export const TaskCalendar = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const hasLoadedRef = useRef(false);
+  
   useEffect(() => {
-    if (user) {
+    // Only fetch if we haven't loaded before or if user changed
+    if (user && !hasLoadedRef.current) {
       fetchData();
+      hasLoadedRef.current = true;
     }
   }, [user]);
 

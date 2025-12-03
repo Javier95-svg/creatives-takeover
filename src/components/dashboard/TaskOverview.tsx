@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Circle, ListTodo } from 'lucide-react';
@@ -20,9 +20,13 @@ export const TaskOverview = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const hasLoadedRef = useRef(false);
+  
   useEffect(() => {
-    if (user) {
+    // Only fetch if we haven't loaded before or if user changed
+    if (user && !hasLoadedRef.current) {
       fetchTasks();
+      hasLoadedRef.current = true;
     }
   }, [user]);
 

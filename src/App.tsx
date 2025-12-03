@@ -44,7 +44,17 @@ import CreativesTakeover from "./pages/CreativesTakeover";
 import RAGTest from "./pages/RAGTest";
 import { Analytics } from '@vercel/analytics/react';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 const FeedbackWidgetWrapper = () => {
   const location = useLocation();

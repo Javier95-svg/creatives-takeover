@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -201,9 +201,21 @@ export const useChatSessions = () => {
     return sessions.find(session => session.id === sessionId) || null;
   }, [sessions]);
 
+  // Cache to prevent refetching on every mount
+  const hasLoadedRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
+  
   useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
+    // Only load if user changed or we haven't loaded before
+    if (user && (!hasLoadedRef.current || lastUserIdRef.current !== user.id)) {
+      loadSessions();
+      hasLoadedRef.current = true;
+      lastUserIdRef.current = user.id;
+    } else if (!user) {
+      hasLoadedRef.current = false;
+      lastUserIdRef.current = null;
+    }
+  }, [user?.id]); // Only depend on user id
 
   return {
     sessions,

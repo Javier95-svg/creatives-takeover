@@ -35,6 +35,9 @@ export const useKPIGoals = () => {
       return data as KPIGoal[];
     },
     enabled: !!user,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const updateGoal = useMutation({

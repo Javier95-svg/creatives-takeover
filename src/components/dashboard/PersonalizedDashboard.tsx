@@ -8,14 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TaskCalendar } from './TaskCalendar';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
-import { FounderHealthCheck } from './FounderHealthCheck';
-import { MissionThisWeek } from './MissionThisWeek';
-import { CoreMetrics } from './CoreMetrics';
-import { MonthlyMilestone } from './MonthlyMilestone';
-import { QuickWins } from './QuickWins';
-import { FounderResources } from './FounderResources';
-import { DecisionHelp } from './DecisionHelp';
-import { FounderLog } from './FounderLog';
+import { ActiveProjects } from './ActiveProjects';
+import { RevenueHub } from './RevenueHub';
+import { MonthlyRevenueTarget } from './MonthlyRevenueTarget';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -46,7 +41,10 @@ export const PersonalizedDashboard = () => {
     const now = Date.now();
     const shouldFetch = !hasInitializedRef.current || (now - lastFetchTimeRef.current > DATA_STALE_TIME);
     
-    if (!shouldFetch) return;
+    if (!shouldFetch) {
+      // Use cached data if available
+      return;
+    }
 
     const checkDailyCheckIn = async () => {
       const today = new Date().toISOString().split('T')[0];
@@ -112,28 +110,8 @@ export const PersonalizedDashboard = () => {
     }
   }, [user]);
 
-  // Handle visibility change - only refresh if tab becomes visible AND data is stale
-  useEffect(() => {
-    if (!user) return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const now = Date.now();
-        const timeSinceLastFetch = now - lastFetchTimeRef.current;
-        
-        // Only refresh if data is stale (older than 5 minutes)
-        if (timeSinceLastFetch > DATA_STALE_TIME) {
-          // Trigger a refresh by resetting the ref
-          hasInitializedRef.current = false;
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [user]);
+  // Disable auto-refresh on visibility change - preserve state
+  // Removed visibility change handler to prevent auto-refresh
 
   if (loading || isInitializing) {
     return (
@@ -237,42 +215,29 @@ export const PersonalizedDashboard = () => {
 
         </div>
 
-        {/* SECTION 1: Founder Health Check */}
-        <FounderHealthCheck />
+        {/* Active Projects */}
+        <ActiveProjects />
 
-        {/* SECTION 2: Your Mission This Week */}
-        <MissionThisWeek />
-
-        {/* SECTION 3 & 4: Core Metrics and Monthly Milestone */}
+        {/* Revenue Hub and Monthly Revenue Target */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CoreMetrics />
-          <MonthlyMilestone />
-        </div>
-
-        {/* SECTION 5 & 6: Quick Wins and Founder Resources */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <QuickWins />
-          <FounderResources />
-        </div>
-
-        {/* SECTION 7 & 8: Decision Help and Founder Log */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <DecisionHelp />
-          <FounderLog />
+          <RevenueHub />
+          <MonthlyRevenueTarget />
         </div>
           </div>
 
-          {/* Right Sidebar - Task Calendar (Fixed/Sticky) */}
+          {/* Right Sidebar - Task Calendar and Task Overview (Fixed/Sticky) */}
           <div className="hidden xl:block w-80 flex-shrink-0">
-            <div className="sticky top-8">
+            <div className="sticky top-8 space-y-6">
               <TaskCalendar />
+              <TaskOverview />
             </div>
           </div>
         </div>
 
-        {/* Task Calendar for Mobile/Tablet (below main content) */}
-        <div className="xl:hidden mt-6">
+        {/* Task Calendar and Task Overview for Mobile/Tablet (below main content) */}
+        <div className="xl:hidden mt-6 space-y-6">
           <TaskCalendar />
+          <TaskOverview />
         </div>
 
       </div>
