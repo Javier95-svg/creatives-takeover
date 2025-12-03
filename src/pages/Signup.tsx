@@ -219,8 +219,8 @@ const Signup = () => {
     try {
       console.log("Starting Google OAuth signup...");
       
-      // Save return URL and conversion source to localStorage before OAuth redirect
-      localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
+      // Save dashboard as return URL (override conversion source returnUrl)
+      localStorage.setItem('oauth_return_url', '/dashboard');
       localStorage.setItem('oauth_source', conversionSource.source);
       
       // Also save BizMap progress if it exists
@@ -234,7 +234,11 @@ const Signup = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://app.creatives-takeover.com/dashboard',
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
         }
       });
       

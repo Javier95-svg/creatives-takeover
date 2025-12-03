@@ -130,12 +130,20 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       console.log("Starting Google OAuth...");
+      
+      // Save dashboard as return URL for after OAuth completes
+      localStorage.setItem('oauth_return_url', '/dashboard');
+      
       toast("Redirecting to Google...");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://app.creatives-takeover.com/dashboard',
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
         }
       });
       
