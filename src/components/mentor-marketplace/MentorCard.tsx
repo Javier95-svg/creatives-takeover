@@ -1,9 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Mentor } from "@/types/mentor";
-import { Link } from "react-router-dom";
-import { ChevronRight, Star, Sparkles } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Star, CheckCircle2, MessageCircle, Calendar, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MentorCardProps {
@@ -12,19 +12,18 @@ interface MentorCardProps {
 }
 
 export const MentorCard = ({ mentor, className }: MentorCardProps) => {
-  const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}/hr`;
-  const isFeatured = mentor.is_featured === true;
+  const navigate = useNavigate();
+  const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   
   // Truncate bio if too long
-  const bioMaxLength = 120;
+  const bioMaxLength = 200;
   const truncatedBio = mentor.bio.length > bioMaxLength 
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
 
-  // Get first 2-3 expertise tags
-  const displayedExpertise = mentor.expertise?.slice(0, 3) || [];
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
+  const sessionsCompleted = mentor.total_sessions_completed || 0;
 
   const renderStars = (ratingValue: number) => {
     return (
@@ -33,10 +32,10 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
           <Star
             key={star}
             className={cn(
-              "h-3 w-3",
+              "h-3.5 w-3.5",
               star <= Math.round(ratingValue)
                 ? "fill-yellow-400 text-yellow-400"
-                : "text-muted-foreground/30"
+                : "text-muted-foreground/20"
             )}
           />
         ))}
@@ -44,96 +43,135 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     );
   };
 
-  return (
-    <Card 
-      className={cn(
-        "group cursor-pointer transition-all duration-300 relative overflow-hidden",
-        "hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1",
-        "border-2 hover:border-primary/20",
-        isFeatured && "ring-2 ring-primary/20",
-        className
-      )}
-    >
-      {/* Featured Badge */}
-      {isFeatured && (
-        <div className="absolute top-3 right-3 z-10">
-          <Badge className="bg-gradient-unified text-primary-foreground shadow-md">
-            <Sparkles className="h-3 w-3 mr-1" />
-            Featured
-          </Badge>
-        </div>
-      )}
+  const handleBookSession = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/community/book/${mentor.id}`);
+  };
 
-      <Link to={`/community/mentors/${mentor.id}`}>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4">
-            {/* Avatar and Name */}
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16 flex-shrink-0 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+  const handleSendMessage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/messages?mentor=${mentor.id}`);
+  };
+
+  return (
+    <Card className={cn("border rounded-sm hover:shadow-md transition-shadow", className)}>
+      <CardContent className="p-6">
+        <div className="flex gap-4">
+          {/* Left: Avatar */}
+          <div className="flex-shrink-0">
+            <div className="relative">
+              <Avatar className="h-16 w-16">
                 <AvatarImage src={mentor.picture} alt={mentor.name} />
-                <AvatarFallback className="text-lg bg-gradient-unified text-primary-foreground font-semibold">
+                <AvatarFallback className="bg-muted text-foreground font-semibold">
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
-                  {mentor.name}
-                </h3>
-                
-                {/* Rating */}
-                {rating > 0 && (
-                  <div className="flex items-center gap-2 mb-2">
-                    {renderStars(rating)}
-                    {reviewCount > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        ({reviewCount})
-                      </span>
-                    )}
-                  </div>
-                )}
-                
-                {/* Hourly Rate */}
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-primary">
-                    {hourlyRateFormatted}
-                  </span>
-                </div>
-              </div>
+              {mentor.is_active !== false && (
+                <div className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 rounded-full border-2 border-background" />
+              )}
+            </div>
+          </div>
+
+          {/* Center: Content */}
+          <div className="flex-1 min-w-0">
+            {/* Name and Verification */}
+            <div className="flex items-center gap-2 mb-1">
+              <Link 
+                to={`/community/mentors/${mentor.id}`}
+                className="font-semibold text-foreground hover:underline"
+              >
+                {mentor.name}
+              </Link>
+              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
             </div>
 
-            {/* Expertise Badges */}
-            {displayedExpertise.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {displayedExpertise.map((exp, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary" 
-                    className="text-xs px-2 py-0.5"
-                  >
-                    {exp}
-                  </Badge>
-                ))}
+            {/* Rating and Reviews */}
+            {rating > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                {renderStars(rating)}
+                <span className="text-sm text-muted-foreground">
+                  {rating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                </span>
+                {sessionsCompleted > 0 && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-sm text-muted-foreground">{sessionsCompleted} sessions</span>
+                  </>
+                )}
               </div>
             )}
 
             {/* Bio */}
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                {truncatedBio}
-              </p>
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {truncatedBio}
+            </p>
+            <Link 
+              to={`/community/mentors/${mentor.id}`}
+              className="text-sm text-primary hover:underline inline-block mb-3"
+            >
+              Learn more
+            </Link>
+
+            {/* Stats Row */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+              {rating > 0 && (
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span>{rating.toFixed(1)}</span>
+                </div>
+              )}
+              {reviewCount > 0 && <span>{reviewCount} reviews</span>}
+              {sessionsCompleted > 0 && <span>{sessionsCompleted} sessions</span>}
             </div>
 
-            {/* View Profile CTA */}
-            <div className="flex items-center justify-between pt-2 border-t border-border/50">
-              <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                View profile
-              </span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            {/* Expertise/Languages */}
+            {mentor.expertise && mentor.expertise.length > 0 && (
+              <div className="text-xs text-muted-foreground mb-4">
+                Expertise: {mentor.expertise.slice(0, 3).join(', ')}
+                {mentor.expertise.length > 3 && '...'}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                onClick={handleBookSession}
+                className="h-9"
+              >
+                <Calendar className="h-4 w-4 mr-1.5" />
+                Book Session
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSendMessage}
+                className="h-9"
+              >
+                <MessageCircle className="h-4 w-4 mr-1.5" />
+                Message
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Link>
+
+          {/* Right: Price and Heart */}
+          <div className="flex-shrink-0 flex flex-col items-end justify-between">
+            <button className="p-2 hover:bg-muted rounded-sm transition-colors">
+              <Heart className="h-5 w-5 text-muted-foreground hover:text-primary" />
+            </button>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-foreground">
+                {hourlyRateFormatted}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                50-min session
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };

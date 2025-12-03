@@ -3,11 +3,10 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import CommunityWallpaper from "@/components/wallpapers/CommunityWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
-import { Search, Users, Calendar, MessageCircle, ArrowRight, CheckCircle2, Loader2, Star } from "lucide-react";
+import { Search, Users, Calendar, ArrowRight, Loader2 } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,68 +39,38 @@ const MentorMarketplaceHub = () => {
           content="Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs."
         />
       </Helmet>
-      <div className="relative min-h-screen overflow-hidden">
-        <CommunityWallpaper />
-        <div className="relative z-10">
-          <Navigation />
-          <div className="pt-16">
-            {/* Hero Section */}
-            <section className="container mx-auto px-4 py-12 md:py-20 relative z-20">
-              <div className="max-w-3xl mx-auto text-center space-y-6">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-                  <span className="gradient-unified animate-fade-in">
-                    Find Your Mentor
-                  </span>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-16">
+          {/* Hero Section */}
+          <section className="container mx-auto px-4 py-12">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  Find Your Startup Mentor
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
+                <p className="text-lg text-muted-foreground max-w-2xl">
                   Connect with experienced founders and mentors who can guide you through startup execution.
                   Book 1-on-1 sessions and get personalized advice.
                 </p>
-                
-                {/* Trust Indicators */}
-                {mentors.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-6 animate-fade-in">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span className="font-medium text-foreground">{mentors.length}</span>
-                      <span>Mentors Available</span>
-                    </div>
-                    {(() => {
-                      const avgRating = mentors
-                        .filter(m => m.rating && m.rating > 0)
-                        .reduce((sum, m) => sum + (m.rating || 0), 0) / 
-                        mentors.filter(m => m.rating && m.rating > 0).length;
-                      return avgRating > 0 && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium text-foreground">{avgRating.toFixed(1)}</span>
-                          <span>Average Rating</span>
-                        </div>
-                      );
-                    })()}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span>Verified Mentors</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
-                  <Button asChild size="lg" className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all">
-                    <Link to="/community/discover">
-                      <Search className="h-5 w-5 mr-2" />
-                      Discover Mentors
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="border-2 hover:bg-primary/10 shadow-lg hover:shadow-xl transition-all">
-                    <Link to="/community/my-bookings">
-                      <Calendar className="h-5 w-5 mr-2" />
-                      My Bookings
-                    </Link>
-                  </Button>
-                </div>
               </div>
-            </section>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg">
+                  <Link to="/community/discover">
+                    <Search className="h-5 w-5 mr-2" />
+                    Discover Mentors
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/community/my-bookings">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    My Bookings
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
 
             {/* Featured Mentors */}
             <section className="container mx-auto px-4 py-12">
@@ -149,68 +118,9 @@ const MentorMarketplaceHub = () => {
               )}
             </section>
 
-            {/* How It Works */}
-            <section className="container mx-auto px-4 py-12 bg-muted/30">
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <Card>
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                        <Search className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold">1. Discover</h3>
-                      <p className="text-muted-foreground">
-                        Browse mentors by expertise, price, and availability. Read reviews and find the perfect match for your needs.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                        <Calendar className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold">2. Book</h3>
-                      <p className="text-muted-foreground">
-                        Select a date and time that works for you. Secure payment with Stripe and receive instant confirmation.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                        <MessageCircle className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-semibold">3. Connect</h3>
-                      <p className="text-muted-foreground">
-                        Join your session via Zoom and get personalized guidance. Continue the conversation through our messaging platform.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="container mx-auto px-4 py-12">
-              <Card className="bg-primary text-primary-foreground">
-                <CardContent className="p-8 md:p-12 text-center space-y-6">
-                  <h2 className="text-3xl md:text-4xl font-bold">Ready to Get Started?</h2>
-                  <p className="text-lg max-w-2xl mx-auto opacity-90">
-                    Join hundreds of founders who are accelerating their journey with expert mentorship.
-                  </p>
-                  <Button asChild size="lg" variant="secondary">
-                    <Link to="/community/discover">
-                      Browse All Mentors
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </section>
           </div>
-          <Footer />
         </div>
+        <Footer />
       </div>
     </>
   );
