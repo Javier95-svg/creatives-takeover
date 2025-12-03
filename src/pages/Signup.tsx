@@ -219,8 +219,8 @@ const Signup = () => {
     try {
       console.log("Starting Google OAuth signup...");
       
-      // Save return URL and conversion source to localStorage before OAuth redirect
-      localStorage.setItem('oauth_return_url', conversionSource.returnUrl);
+      // Save dashboard as return URL (override conversion source returnUrl)
+      localStorage.setItem('oauth_return_url', '/dashboard');
       localStorage.setItem('oauth_source', conversionSource.source);
       
       // Also save BizMap progress if it exists
