@@ -122,21 +122,21 @@ export const ProgressTimeline = () => {
 
   return (
     <Card className="backdrop-blur-sm bg-card/95">
-      <CardHeader>
-        <CardTitle>📅 Your Progress This Week</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">📅 Your Progress This Week</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {checkIns.map((checkIn, index) => (
+        <div className="space-y-2">
+          {checkIns.slice(0, 5).map((checkIn, index) => (
             <div
               key={checkIn.id}
-              className={`p-4 rounded-lg border bg-card transition-colors hover:bg-accent/50 ${
+              className={`p-3 rounded-lg border bg-card transition-colors hover:bg-accent/50 ${
                 index === 0 ? 'border-primary/50 bg-primary/5' : ''
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <Badge variant="outline" className="text-xs">
                       {getRelativeTime(checkIn.check_in_date)}
                     </Badge>
@@ -156,16 +156,11 @@ export const ProgressTimeline = () => {
                       </Badge>
                     )}
                   </div>
-                  <p className="font-medium text-sm mb-1">
+                  <p className="font-medium text-xs mb-1 line-clamp-2">
                     {checkIn.progress_summary}
                   </p>
-                  {checkIn.what_went_well && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      ✨ {checkIn.what_went_well}
-                    </p>
-                  )}
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   {getMoodEmoji(checkIn.mood_rating)}
                   <div className="flex gap-0.5">
                     {getEnergyIndicators(checkIn.energy_level)}

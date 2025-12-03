@@ -14,6 +14,11 @@ import { ProgressTimeline } from './ProgressTimeline';
 import { TaskCalendar } from './TaskCalendar';
 import { MarketValidationHub } from './MarketValidationHub';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
+import { TaskOverview } from './TaskOverview';
+import { KeyMilestones } from './KeyMilestones';
+import { QuickResources } from './QuickResources';
+import { ActiveProjects } from './ActiveProjects';
+import { PlanningTools } from './PlanningTools';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -145,7 +150,7 @@ export const PersonalizedDashboard = () => {
 
 
       {/* Main Content Container */}
-      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-6">
+      <div className="relative container mx-auto px-4 sm:px-6 py-6 max-w-7xl space-y-4">
         {/* Daily Goal Modal */}
         <DailyGoalModal 
           open={showDailyGoal}
@@ -161,47 +166,61 @@ export const PersonalizedDashboard = () => {
           }}
         />
 
-        {/* Welcome Header */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-3xl blur-3xl" />
-          <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                    {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
-                  </h1>
-                  <p className="text-sm sm:text-base text-muted-foreground max-w-3xl">
-                    Your command center for tracking KPIs, revenue metrics, quick actions, and progress—all the tools you need to grow your venture and track your journey
-                  </p>
-                </div>
-                {stats.currentStreak > 0 && (
-                  <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
-                    <Flame className="h-5 w-5 text-orange-500" />
-                    <div className="flex flex-col">
-                      <span className="text-xl font-bold text-orange-500">{stats.currentStreak}</span>
-                      <span className="text-xs text-orange-500/80">day streak</span>
-                    </div>
+        {/* Top Section - Hero */}
+        <div className="space-y-4">
+          {/* Welcome Header - More Compact */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-2xl blur-3xl" />
+            <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+                      {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
+                    </h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl">
+                      Your Founder Command Center for tracking KPIs, revenue metrics, quick actions, and progress
+                    </p>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  {stats.currentStreak > 0 && (
+                    <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
+                      <Flame className="h-4 w-4 text-orange-500" />
+                      <div className="flex flex-col">
+                        <span className="text-lg font-bold text-orange-500">{stats.currentStreak}</span>
+                        <span className="text-xs text-orange-500/80">day streak</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Stats Row - Compact KPI Card */}
+          <HeroKPI />
+
+          {/* Alerts Section - Condensed */}
+          <AlertsSection />
         </div>
 
-        {/* Alerts Section */}
-        <AlertsSection />
-
-        {/* Hero KPI Section */}
-        <HeroKPI />
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content Grid - 3 Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left Column - Primary Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-1 space-y-4">
+            {/* Task Overview */}
+            <TaskOverview />
+            
+            {/* Active Projects */}
+            <ActiveProjects />
             
             {/* Market Validation Hub */}
             <MarketValidationHub />
+          </div>
+
+          {/* Middle Column */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Key Milestones */}
+            <KeyMilestones />
             
             {/* Revenue Hub */}
             <RevenueHub />
@@ -211,7 +230,13 @@ export const PersonalizedDashboard = () => {
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-6">
+          <div className="lg:col-span-1 space-y-4">
+            {/* Quick Resources */}
+            <QuickResources />
+            
+            {/* Planning Tools */}
+            <PlanningTools />
+            
             {/* Task Calendar */}
             <TaskCalendar />
           </div>
