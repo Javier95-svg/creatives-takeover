@@ -12,13 +12,11 @@ import { HeroKPI } from './HeroKPI';
 import { RevenueHub } from './RevenueHub';
 import { ProgressTimeline } from './ProgressTimeline';
 import { TaskCalendar } from './TaskCalendar';
-import { MarketValidationHub } from './MarketValidationHub';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 import { TaskOverview } from './TaskOverview';
 import { KeyMilestones } from './KeyMilestones';
-import { QuickResources } from './QuickResources';
 import { ActiveProjects } from './ActiveProjects';
-import { PlanningTools } from './PlanningTools';
+import { BusinessHealthSummary } from './BusinessHealthSummary';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -150,7 +148,7 @@ export const PersonalizedDashboard = () => {
 
 
       {/* Main Content Container */}
-      <div className="relative container mx-auto px-4 sm:px-6 py-6 max-w-7xl space-y-4">
+      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-6">
         {/* Daily Goal Modal */}
         <DailyGoalModal 
           open={showDailyGoal}
@@ -166,27 +164,27 @@ export const PersonalizedDashboard = () => {
           }}
         />
 
-        {/* Top Section - Hero */}
+        {/* Header Section */}
         <div className="space-y-4">
-          {/* Welcome Header - More Compact */}
+          {/* Welcome Header */}
           <div className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-2xl blur-3xl" />
             <Card className="relative border-primary/20 shadow-lg backdrop-blur-sm bg-card/95">
-              <CardContent className="p-4 sm:p-6">
+              <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+                  <div className="space-y-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                       {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
                     </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl">
-                      Your Founder Command Center for tracking KPIs, revenue metrics, quick actions, and progress
+                    <p className="text-sm text-muted-foreground max-w-2xl">
+                      Your Founder Command Center
                     </p>
                   </div>
                   {stats.currentStreak > 0 && (
                     <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">
-                      <Flame className="h-4 w-4 text-orange-500" />
+                      <Flame className="h-5 w-5 text-orange-500" />
                       <div className="flex flex-col">
-                        <span className="text-lg font-bold text-orange-500">{stats.currentStreak}</span>
+                        <span className="text-xl font-bold text-orange-500">{stats.currentStreak}</span>
                         <span className="text-xs text-orange-500/80">day streak</span>
                       </div>
                     </div>
@@ -196,50 +194,41 @@ export const PersonalizedDashboard = () => {
             </Card>
           </div>
 
-          {/* Quick Stats Row - Compact KPI Card */}
-          <HeroKPI />
-
-          {/* Alerts Section - Condensed */}
+          {/* Alerts Section */}
           <AlertsSection />
         </div>
 
-        {/* Main Content Grid - 3 Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left Column - Primary Content */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Task Overview */}
-            <TaskOverview />
-            
+        {/* Key Metrics Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <HeroKPI />
+          <BusinessHealthSummary />
+        </div>
+
+        {/* Main Content Grid - 2 Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
             {/* Active Projects */}
             <ActiveProjects />
             
-            {/* Market Validation Hub */}
-            <MarketValidationHub />
+            {/* Task Overview */}
+            <TaskOverview />
           </div>
 
-          {/* Middle Column */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Key Milestones */}
-            <KeyMilestones />
-            
+          {/* Right Column */}
+          <div className="space-y-6">
             {/* Revenue Hub */}
             <RevenueHub />
-
-            {/* Progress Timeline */}
-            <ProgressTimeline />
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Quick Resources */}
-            <QuickResources />
             
-            {/* Planning Tools */}
-            <PlanningTools />
-            
-            {/* Task Calendar */}
-            <TaskCalendar />
+            {/* Key Milestones */}
+            <KeyMilestones />
           </div>
+        </div>
+
+        {/* Bottom Section - Progress & Calendar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ProgressTimeline />
+          <TaskCalendar />
         </div>
 
         {/* Floating Quick Win Button */}
