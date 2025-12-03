@@ -103,7 +103,7 @@ const Hero = () => {
           {/* Main Headline */}
           <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
             <span className="gradient-unified animate-fade-in">
-              Your Digital Partner for Building from Zero
+              The 0 ➜ 1 Platform
             </span>
           </h1>
 
