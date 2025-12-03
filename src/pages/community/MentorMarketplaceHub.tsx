@@ -117,8 +117,6 @@ const MentorMarketplaceHub = () => {
                 </Card>
               )}
             </section>
-
-          </div>
         </div>
         <Footer />
       </div>
