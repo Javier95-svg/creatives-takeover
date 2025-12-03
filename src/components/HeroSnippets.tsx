@@ -82,58 +82,58 @@ const HeroSnippets = () => {
     const colorMap = {
       planning: {
         glass: 'glass-blue',
-        border: 'border-blue-500/30 hover:border-blue-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-blue-500/20',
+        border: 'border-blue-500/50 hover:border-blue-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-blue-500/30',
         icon: 'text-blue-600 dark:text-blue-400',
-        bg: 'bg-blue-500/10 hover:bg-blue-500/20',
+        bg: 'bg-blue-500/15 hover:bg-blue-500/30',
         colorName: 'blue'
       },
       dashboard: {
         glass: 'glass-green',
-        border: 'border-yellow-500/30 hover:border-yellow-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-yellow-500/20',
+        border: 'border-yellow-500/50 hover:border-yellow-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-yellow-500/30',
         icon: 'text-yellow-600 dark:text-yellow-400',
-        bg: 'bg-yellow-500/10 hover:bg-yellow-500/20',
+        bg: 'bg-yellow-500/15 hover:bg-yellow-500/30',
         colorName: 'yellow'
       },
       chat: {
         glass: 'glass-green',
-        border: 'border-green-500/30 hover:border-green-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-green-500/20',
+        border: 'border-green-500/50 hover:border-green-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-green-500/30',
         icon: 'text-green-600 dark:text-green-400',
-        bg: 'bg-green-500/10 hover:bg-green-500/20',
+        bg: 'bg-green-500/15 hover:bg-green-500/30',
         colorName: 'green'
       },
       pmf: {
         glass: 'glass-red',
-        border: 'border-orange-500/30 hover:border-orange-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-orange-500/20',
+        border: 'border-orange-500/50 hover:border-orange-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-orange-500/30',
         icon: 'text-orange-600 dark:text-orange-400',
-        bg: 'bg-orange-500/10 hover:bg-orange-500/20',
+        bg: 'bg-orange-500/15 hover:bg-orange-500/30',
         colorName: 'orange'
       },
       prompt: {
         glass: 'glass-red',
-        border: 'border-red-500/30 hover:border-red-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-red-500/20',
+        border: 'border-red-500/50 hover:border-red-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-red-500/30',
         icon: 'text-red-600 dark:text-red-400',
-        bg: 'bg-red-500/10 hover:bg-red-500/20',
+        bg: 'bg-red-500/15 hover:bg-red-500/30',
         colorName: 'red'
       },
       insighta: {
         glass: 'glass-blue',
-        border: 'border-purple-500/30 hover:border-purple-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-purple-500/20',
+        border: 'border-purple-500/50 hover:border-purple-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-purple-500/30',
         icon: 'text-purple-600 dark:text-purple-400',
-        bg: 'bg-purple-500/10 hover:bg-purple-500/20',
+        bg: 'bg-purple-500/15 hover:bg-purple-500/30',
         colorName: 'purple'
       },
       community: {
         glass: 'glass-red',
-        border: 'border-pink-500/30 hover:border-pink-500/60',
-        shadow: 'hover:shadow-lg hover:shadow-pink-500/20',
+        border: 'border-pink-500/50 hover:border-pink-500/80',
+        shadow: 'hover:shadow-lg hover:shadow-pink-500/30',
         icon: 'text-pink-600 dark:text-pink-400',
-        bg: 'bg-pink-500/10 hover:bg-pink-500/20',
+        bg: 'bg-pink-500/15 hover:bg-pink-500/30',
         colorName: 'pink'
       }
     };
@@ -224,7 +224,7 @@ const HeroSnippets = () => {
                 )}
                 style={{ 
                   animationDelay: `${animationDelay}s`,
-                  background: `linear-gradient(135deg, ${colors.bg.split(' ')[0]}/5, transparent)`
+                  background: `linear-gradient(135deg, ${colors.bg.split(' ')[0]}/10, transparent)`
                 }}
               >
                 {/* Animated background gradient on hover */}
@@ -253,15 +253,15 @@ const HeroSnippets = () => {
                   </div>
                 </div>
                 
-                {/* Subtle glow effect on hover */}
+                {/* Enhanced glow effect on hover */}
                 <div className="absolute -inset-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none blur-md -z-10" style={{
-                  background: colors.colorName === 'blue' ? 'rgba(59, 130, 246, 0.25)' :
-                              colors.colorName === 'yellow' ? 'rgba(234, 179, 8, 0.25)' :
-                              colors.colorName === 'green' ? 'rgba(34, 197, 94, 0.25)' :
-                              colors.colorName === 'orange' ? 'rgba(249, 115, 22, 0.25)' :
-                              colors.colorName === 'red' ? 'rgba(239, 68, 68, 0.25)' :
-                              colors.colorName === 'purple' ? 'rgba(168, 85, 247, 0.25)' :
-                              'rgba(236, 72, 153, 0.25)'
+                  background: colors.colorName === 'blue' ? 'rgba(59, 130, 246, 0.4)' :
+                              colors.colorName === 'yellow' ? 'rgba(234, 179, 8, 0.4)' :
+                              colors.colorName === 'green' ? 'rgba(34, 197, 94, 0.4)' :
+                              colors.colorName === 'orange' ? 'rgba(249, 115, 22, 0.4)' :
+                              colors.colorName === 'red' ? 'rgba(239, 68, 68, 0.4)' :
+                              colors.colorName === 'purple' ? 'rgba(168, 85, 247, 0.4)' :
+                              'rgba(236, 72, 153, 0.4)'
                 }} />
               </Link>
             );
