@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
@@ -15,12 +15,14 @@ import { useMentors } from "@/hooks/useMentors";
 import { Search, ArrowLeft, Loader2, Users } from "lucide-react";
 
 const MentorDiscover = () => {
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentors, loading } = useMentors();
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recommended");
+  
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
     priceRange: [0, 50000],
@@ -30,7 +32,40 @@ const MentorDiscover = () => {
 
   useEffect(() => {
     loadMentors();
+    
+    // Initialize filters from URL query params
+    const expertiseParam = searchParams.get("expertise");
+    if (expertiseParam) {
+      const expertise = decodeURIComponent(expertiseParam);
+      setFilters((prev) => ({
+        ...prev,
+        expertise: [expertise],
+      }));
+    }
   }, []);
+
+  // Update filters when URL params change
+  useEffect(() => {
+    const expertiseParam = searchParams.get("expertise");
+    if (expertiseParam) {
+      const expertise = decodeURIComponent(expertiseParam);
+      setFilters((prev) => {
+        if (!prev.expertise.includes(expertise)) {
+          return {
+            ...prev,
+            expertise: [expertise],
+          };
+        }
+        return prev;
+      });
+    } else {
+      // Clear expertise filter if no query param
+      setFilters((prev) => ({
+        ...prev,
+        expertise: [],
+      }));
+    }
+  }, [searchParams]);
 
   const loadMentors = async () => {
     const fetchedMentors = await fetchMentors();

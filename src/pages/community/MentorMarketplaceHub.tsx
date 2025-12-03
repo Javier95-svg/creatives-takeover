@@ -1,17 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import MentorMarketplaceWallpaper from "@/components/wallpapers/MentorMarketplaceWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
-import { Search, Users, Calendar, ArrowRight, Loader2 } from "lucide-react";
+import { Users, ArrowRight, Loader2 } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 
 const MentorMarketplaceHub = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentors, loading } = useMentors();
@@ -30,6 +33,26 @@ const MentorMarketplaceHub = () => {
     ? mentors.filter(m => m.is_featured).slice(0, 3)
     : mentors.slice(0, 3);
 
+  // Calculate popular expertise tags
+  const popularExpertise = useMemo(() => {
+    const expertiseCount = new Map<string, number>();
+    
+    mentors.forEach((mentor) => {
+      mentor.expertise?.forEach((exp) => {
+        expertiseCount.set(exp, (expertiseCount.get(exp) || 0) + 1);
+      });
+    });
+
+    return Array.from(expertiseCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([expertise]) => expertise);
+  }, [mentors]);
+
+  const handleExpertiseClick = (expertise: string) => {
+    navigate(`/community/discover?expertise=${encodeURIComponent(expertise)}`);
+  };
+
   return (
     <>
       <Helmet>
@@ -39,41 +62,50 @@ const MentorMarketplaceHub = () => {
           content="Connect with experienced founders and mentors who can guide you through startup execution. Book 1-on-1 sessions with proven entrepreneurs."
         />
       </Helmet>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
+        <MentorMarketplaceWallpaper />
         <Navigation />
-        <div className="pt-16">
+        <div className="pt-16 relative z-10">
           {/* Hero Section */}
-          <section className="container mx-auto px-4 py-12">
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                  Find Your Startup Mentor
+          <section className="relative py-20 lg:py-32">
+            <div className="container mx-auto px-4 sm:px-6">
+              <div className="max-w-4xl mx-auto">
+                {/* Title with mentor count */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
+                  {mentors.length > 0 
+                    ? `${mentors.length} mentor${mentors.length !== 1 ? 's' : ''} to boost your startup journey`
+                    : 'Find Your Startup Mentor'
+                  }
                 </h1>
-                <p className="text-lg text-muted-foreground max-w-2xl">
+                
+                {/* Description */}
+                <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl">
                   Connect with experienced founders and mentors who can guide you through startup execution.
                   Book 1-on-1 sessions and get personalized advice.
                 </p>
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg">
-                  <Link to="/community/discover">
-                    <Search className="h-5 w-5 mr-2" />
-                    Discover Mentors
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/community/my-bookings">
-                    <Calendar className="h-5 w-5 mr-2" />
-                    My Bookings
-                  </Link>
-                </Button>
+                {/* Popular Expertise Tags */}
+                {popularExpertise.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-sm font-medium text-muted-foreground">Popular expertise:</span>
+                    {popularExpertise.map((expertise) => (
+                      <Badge
+                        key={expertise}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
+                        onClick={() => handleExpertiseClick(expertise)}
+                      >
+                        {expertise}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>
 
-            {/* Featured Mentors */}
-            <section className="container mx-auto px-4 py-12">
+          {/* Featured Mentors */}
+          <section className="container mx-auto px-4 py-12 relative z-10">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold">Featured Mentors</h2>
                 <Button asChild variant="ghost">
