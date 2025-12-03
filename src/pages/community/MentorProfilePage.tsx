@@ -11,38 +11,6 @@ import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Loader2, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-  id: "1",
-  name: "Sarah Chen",
-  picture: "/lovable-uploads/maya-chen-avatar.jpg",
-  bio: "Serial entrepreneur with 15+ years of experience. Successfully scaled 3 startups from idea to exit. Expert in product-market fit, fundraising, and growth strategies.\n\nI've helped over 100 founders navigate the early stages of their startup journey. My approach is practical, data-driven, and focused on execution.\n\nAreas of expertise:\n• Product-market fit validation\n• Seed and Series A fundraising\n• Go-to-market strategies\n• Team building and scaling",
-  hourly_rate: 20000,
-  expertise: ["Product Development", "Fundraising", "Strategy"],
-  rating: 4.8,
-  review_count: 42,
-  is_active: true,
-  testimonials: [
-    {
-      id: "1",
-      mentor_id: "1",
-      founder_name: "Alex Thompson",
-      text: "Sarah helped me refine my pitch and connect with the right investors. Her advice was invaluable during our fundraising round.",
-      rating: 5,
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      mentor_id: "1",
-      founder_name: "Maria Garcia",
-      text: "Best mentor I've worked with. Very practical advice and always available when I needed guidance.",
-      rating: 5,
-      created_at: new Date().toISOString(),
-    },
-  ],
-  total_sessions_completed: 156,
-  response_time_hours: 4,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
 
 const MentorProfilePage = () => {
   const { id } = useParams<{ id: string }>();
