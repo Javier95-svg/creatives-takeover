@@ -111,16 +111,43 @@ const EntrepreneurProblems = () => {
         @keyframes slideUpFadeIn {
           from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
             transform: translateY(0);
           }
         }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
         .animate-card-entrance {
-          animation: slideUpFadeIn 0.6s ease-out forwards;
+          animation: slideUpFadeIn 0.5s ease-out forwards;
           opacity: 0;
+        }
+        .card-hover-effect {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover-effect:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+        .icon-hover-effect {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover-effect:hover .icon-hover-effect {
+          transform: scale(1.1) rotate(5deg);
+        }
+        .arrow-hover-effect {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover-effect:hover .arrow-hover-effect {
+          transform: scale(1.15) rotate(12deg);
         }
       `}</style>
       {/* Problem-Focused Wallpaper - theme-aware */}
@@ -171,7 +198,7 @@ const EntrepreneurProblems = () => {
         </div>
 
         {/* Problems Grid - 3 Column Layout with Better Spacing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {problems.map((item, index) => {
             const BeforeIcon = item.beforeIcon;
             const AfterIcon = item.afterIcon;
@@ -180,24 +207,24 @@ const EntrepreneurProblems = () => {
             return (
               <Card 
                 key={index} 
-                className="border-l-4 border-red-500/50 hover:border-red-500/80 border-border hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden group animate-card-entrance"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="card-hover-effect border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group animate-card-entrance bg-card/50 backdrop-blur-sm"
+                style={{ animationDelay: `${index * 0.08}s` }}
               >
                 {/* Problem Section Background Gradient */}
-                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/30 dark:from-red-950/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/20 dark:from-red-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <CardHeader className="pb-6 p-8 relative z-10">
+                <CardHeader className="pb-4 p-5 relative z-10">
                   {/* Problem Section */}
-                  <div className="space-y-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-4 rounded-xl bg-red-500/10 border-2 border-red-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
-                        <BeforeIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="icon-hover-effect p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex-shrink-0">
+                        <BeforeIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
-                      <div className="flex-1 min-w-0 space-y-3">
-                        <CardTitle className="text-xl font-bold leading-tight text-red-600 dark:text-red-400">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <CardTitle className="text-lg font-bold leading-tight text-red-600 dark:text-red-400">
                           {item.problem}
                         </CardTitle>
-                        <CardDescription className="text-sm leading-relaxed text-muted-foreground">
+                        <CardDescription className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
                           {item.beforeText}
                         </CardDescription>
                       </div>
@@ -205,32 +232,32 @@ const EntrepreneurProblems = () => {
                   </div>
                 </CardHeader>
 
-                {/* Arrow Divider - More Prominent */}
-                <div className="relative px-8 py-4">
+                {/* Arrow Divider - More Compact */}
+                <div className="relative px-5 py-3">
                   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/20 to-green-500/20 border-2 border-primary/30 flex items-center justify-center shadow-lg backdrop-blur-sm group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-                      <ArrowRight className="w-5 h-5 text-primary" />
+                    <div className="arrow-hover-effect w-8 h-8 rounded-full bg-gradient-to-br from-red-500/20 to-green-500/20 border border-primary/30 flex items-center justify-center shadow-md backdrop-blur-sm">
+                      <ArrowRight className="w-4 h-4 text-primary" />
                     </div>
                   </div>
-                  <div className="h-0.5 bg-gradient-to-r from-red-200 via-primary/30 to-green-200 dark:from-red-900/50 dark:via-primary/20 dark:to-green-900/50" />
+                  <div className="h-px bg-gradient-to-r from-red-200 via-primary/20 to-green-200 dark:from-red-900/40 dark:via-primary/15 dark:to-green-900/40" />
                 </div>
 
                 {/* Solution Section Background Gradient */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-tl from-green-50/30 dark:from-green-950/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-tl from-green-50/20 dark:from-green-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 {/* Solution Section */}
-                <CardContent className="pt-6 pb-8 px-8 flex-1 flex flex-col relative z-10">
-                  <div className="space-y-6 flex-1">
-                    <div className="flex items-start gap-4">
-                      <div className="p-4 rounded-xl bg-green-500/10 border-2 border-green-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
-                        <AfterIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <CardContent className="pt-4 pb-5 px-5 flex-1 flex flex-col relative z-10">
+                  <div className="space-y-4 flex-1">
+                    <div className="flex items-start gap-3">
+                      <div className="icon-hover-effect p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex-shrink-0">
+                        <AfterIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
                       </div>
-                      <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                          <h4 className="text-base font-semibold text-green-600 dark:text-green-400">Solution</h4>
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                          <h4 className="text-sm font-semibold text-green-600 dark:text-green-400">Solution</h4>
                         </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
                           {item.afterText}
                         </p>
                       </div>
@@ -239,38 +266,38 @@ const EntrepreneurProblems = () => {
 
                   {/* Expandable Detail Section */}
                   {isExpanded && (
-                    <div className="mt-6 pt-6 border-t-2 border-border space-y-6 animate-fade-in">
-                      <div className="p-4 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
-                        <h5 className="text-sm font-bold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4" />
+                    <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                      <div className="p-3 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
+                        <h5 className="text-xs font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+                          <AlertCircle className="w-3.5 h-3.5" />
                           The Problem:
                         </h5>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{item.detail}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
                       </div>
-                      <div className="p-4 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30">
-                        <h5 className="text-sm font-bold text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4" />
+                      <div className="p-3 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30">
+                        <h5 className="text-xs font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5" />
                           The Solution:
                         </h5>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{item.solution}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{item.solution}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* Expand/Collapse Button - More Prominent */}
+                  {/* Expand/Collapse Button - More Compact */}
                   <button
                     onClick={() => toggleExpand(index)}
-                    className="mt-6 w-full py-3.5 bg-primary/10 hover:bg-primary/20 border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:text-primary/90 hover:scale-[1.02] active:scale-[0.98]"
+                    className="mt-4 w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all duration-300 rounded-lg flex items-center justify-center gap-2 text-xs font-semibold text-primary hover:text-primary/90 active:scale-[0.98]"
                   >
                     {isExpanded ? (
                       <>
                         <span>Show Less</span>
-                        <ChevronUp className="w-4 h-4 transition-transform duration-300" />
+                        <ChevronUp className="w-3.5 h-3.5 transition-transform duration-300" />
                       </>
                     ) : (
                       <>
                         <span>Learn More</span>
-                        <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-1" />
+                        <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-y-0.5" />
                       </>
                     )}
                   </button>
