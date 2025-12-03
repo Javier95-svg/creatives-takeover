@@ -149,16 +149,6 @@ const AISpecializationTrends = () => {
             transform: scaleY(1);
           }
         }
-        @keyframes dotPulse {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.2);
-          }
-        }
         .chart-container {
           animation: chartFadeIn 0.8s ease-out forwards;
         }
@@ -168,9 +158,6 @@ const AISpecializationTrends = () => {
         }
         .chart-area {
           animation: areaFill 2.5s ease-out forwards;
-        }
-        .chart-dot {
-          animation: dotPulse 2s ease-in-out infinite;
         }
       `}</style>
       {/* Background elements */}
@@ -317,7 +304,6 @@ const AISpecializationTrends = () => {
                           r: 5,
                           strokeWidth: 2,
                           stroke: 'hsl(var(--background))',
-                          className: 'chart-dot',
                           style: { 
                             filter: 'drop-shadow(0 0 4px hsl(var(--primary) / 0.5))',
                             transition: 'all 0.3s ease'
