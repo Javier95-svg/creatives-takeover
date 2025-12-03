@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
-import { Flame } from 'lucide-react';
+import { Flame, X } from 'lucide-react';
 import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +17,7 @@ import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { isInitializing, isInitialized } = useDashboardInitialization();
   const {
     data,
@@ -120,6 +122,15 @@ export const PersonalizedDashboard = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
+      {/* Exit Button - Fixed in top-right corner */}
+      <button
+        onClick={() => navigate('/')}
+        className="fixed right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 p-2 shadow-lg hover:bg-accent"
+        aria-label="Exit dashboard and return to platform"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
       {/* Subtle grid pattern for light theme */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
