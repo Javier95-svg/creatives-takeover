@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -62,19 +62,61 @@ export const usePersonalizedDashboard = () => {
     }
   });
   const [loading, setLoading] = useState(true);
+  
+  // Cache to prevent unnecessary refetches
+  const dataCacheRef = useRef<{ data: DashboardData | null; timestamp: number }>({ data: null, timestamp: 0 });
+  const isLoadingRef = useRef(false);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   useEffect(() => {
     if (user) {
-      loadDashboardData();
+      // Only load if cache is stale or doesn't exist
+      const now = Date.now();
+      const cacheAge = now - dataCacheRef.current.timestamp;
+      
+      if (dataCacheRef.current.data && cacheAge < CACHE_DURATION && !isLoadingRef.current) {
+        // Use cached data
+        setData(dataCacheRef.current.data);
+        setLoading(false);
+        return;
+      }
+      
+      // Prevent multiple simultaneous loads
+      if (!isLoadingRef.current) {
+        loadDashboardData();
+      }
     } else {
       setLoading(false);
     }
   }, [user]);
+  
+  // Handle visibility change - only refresh if data is stale
+  useEffect(() => {
+    if (!user) return;
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        const cacheAge = now - dataCacheRef.current.timestamp;
+        
+        // Only refresh if cache is older than 5 minutes
+        if (cacheAge > CACHE_DURATION && !isLoadingRef.current) {
+          loadDashboardData();
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
 
   const loadDashboardData = async () => {
-    if (!user) return;
+    if (!user || isLoadingRef.current) return;
 
     try {
+      isLoadingRef.current = true;
       setLoading(true);
 
       // Load profile
@@ -149,7 +191,7 @@ export const usePersonalizedDashboard = () => {
         }
       }
 
-      setData({
+      const newData = {
         profile: profile as UserProfile,
         recommendations: (recommendations || []) as PersonalizedRecommendation[],
         widgets: (widgets || []) as DashboardWidget[],
@@ -159,7 +201,15 @@ export const usePersonalizedDashboard = () => {
           currentStreak,
           totalCheckIns: totalCheckIns ?? 0
         }
-      });
+      };
+      
+      setData(newData);
+      
+      // Update cache
+      dataCacheRef.current = {
+        data: newData,
+        timestamp: Date.now()
+      };
 
       // Generate recommendations if none exist
       if (!recommendations || recommendations.length === 0) {
@@ -170,6 +220,7 @@ export const usePersonalizedDashboard = () => {
       toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   };
 

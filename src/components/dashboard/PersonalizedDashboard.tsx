@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,17 +6,16 @@ import { Flame, ArrowRight } from 'lucide-react';
 import { DailyGoalModal } from './DailyGoalModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { QuickWinButton } from './QuickWinButton';
-import { AlertsSection } from './AlertsSection';
-import { HeroKPI } from './HeroKPI';
-import { RevenueHub } from './RevenueHub';
-import { ProgressTimeline } from './ProgressTimeline';
 import { TaskCalendar } from './TaskCalendar';
 import { useDashboardInitialization } from '@/hooks/useDashboardInitialization';
-import { TaskOverview } from './TaskOverview';
-import { KeyMilestones } from './KeyMilestones';
-import { ActiveProjects } from './ActiveProjects';
-import { BusinessHealthSummary } from './BusinessHealthSummary';
+import { FounderHealthCheck } from './FounderHealthCheck';
+import { MissionThisWeek } from './MissionThisWeek';
+import { CoreMetrics } from './CoreMetrics';
+import { MonthlyMilestone } from './MonthlyMilestone';
+import { QuickWins } from './QuickWins';
+import { FounderResources } from './FounderResources';
+import { DecisionHelp } from './DecisionHelp';
+import { FounderLog } from './FounderLog';
 
 export const PersonalizedDashboard = () => {
   const { user } = useAuth();
@@ -33,12 +32,23 @@ export const PersonalizedDashboard = () => {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
+  
+  // Track last fetch time to prevent unnecessary refreshes
+  const lastFetchTimeRef = useRef<number>(0);
+  const hasInitializedRef = useRef<boolean>(false);
+  const DATA_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
   // Check if user has checked in today and calculate streak
   useEffect(() => {
-    const checkDailyCheckIn = async () => {
-      if (!user) return;
+    if (!user) return;
+    
+    // Only fetch if we haven't initialized or data is stale
+    const now = Date.now();
+    const shouldFetch = !hasInitializedRef.current || (now - lastFetchTimeRef.current > DATA_STALE_TIME);
+    
+    if (!shouldFetch) return;
 
+    const checkDailyCheckIn = async () => {
       const today = new Date().toISOString().split('T')[0];
       const currentHour = new Date().getHours();
       
@@ -91,10 +101,38 @@ export const PersonalizedDashboard = () => {
         setModalMode('morning');
         setShowDailyGoal(true);
       }
+      
+      lastFetchTimeRef.current = Date.now();
+      hasInitializedRef.current = true;
     };
 
     checkDailyCheckIn();
-    trackActivity('dashboard_view');
+    if (!hasInitializedRef.current) {
+      trackActivity('dashboard_view');
+    }
+  }, [user]);
+
+  // Handle visibility change - only refresh if tab becomes visible AND data is stale
+  useEffect(() => {
+    if (!user) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchTimeRef.current;
+        
+        // Only refresh if data is stale (older than 5 minutes)
+        if (timeSinceLastFetch > DATA_STALE_TIME) {
+          // Trigger a refresh by resetting the ref
+          hasInitializedRef.current = false;
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [user]);
 
   if (loading || isInitializing) {
@@ -147,8 +185,11 @@ export const PersonalizedDashboard = () => {
       </div>
 
 
-      {/* Main Content Container */}
-      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-7xl space-y-6">
+      {/* Main Content Container with Right Sidebar */}
+      <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-[1600px]">
+        <div className="flex gap-6">
+          {/* Main Content Area */}
+          <div className="flex-1 space-y-6 min-w-0">
         {/* Daily Goal Modal */}
         <DailyGoalModal 
           open={showDailyGoal}
@@ -194,45 +235,46 @@ export const PersonalizedDashboard = () => {
             </Card>
           </div>
 
-          {/* Alerts Section */}
-          <AlertsSection />
         </div>
 
-        {/* Key Metrics Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <HeroKPI />
-          <BusinessHealthSummary />
-        </div>
+        {/* SECTION 1: Founder Health Check */}
+        <FounderHealthCheck />
 
-        {/* Main Content Grid - 2 Column Layout */}
+        {/* SECTION 2: Your Mission This Week */}
+        <MissionThisWeek />
+
+        {/* SECTION 3 & 4: Core Metrics and Monthly Milestone */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Active Projects */}
-            <ActiveProjects />
-            
-            {/* Task Overview */}
-            <TaskOverview />
+          <CoreMetrics />
+          <MonthlyMilestone />
+        </div>
+
+        {/* SECTION 5 & 6: Quick Wins and Founder Resources */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <QuickWins />
+          <FounderResources />
+        </div>
+
+        {/* SECTION 7 & 8: Decision Help and Founder Log */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DecisionHelp />
+          <FounderLog />
+        </div>
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Revenue Hub */}
-            <RevenueHub />
-            
-            {/* Key Milestones */}
-            <KeyMilestones />
+          {/* Right Sidebar - Task Calendar (Fixed/Sticky) */}
+          <div className="hidden xl:block w-80 flex-shrink-0">
+            <div className="sticky top-8">
+              <TaskCalendar />
+            </div>
           </div>
         </div>
 
-        {/* Bottom Section - Progress & Calendar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProgressTimeline />
+        {/* Task Calendar for Mobile/Tablet (below main content) */}
+        <div className="xl:hidden mt-6">
           <TaskCalendar />
         </div>
 
-        {/* Floating Quick Win Button */}
-        <QuickWinButton onWinAdded={() => {}} />
       </div>
     </div>
   );
