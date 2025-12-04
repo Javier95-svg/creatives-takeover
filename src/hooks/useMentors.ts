@@ -15,6 +15,30 @@ export interface CreateMentorInput {
   is_featured?: boolean;
 }
 
+// Helper function to format error messages
+const formatErrorMessage = (error: any, defaultMessage: string): string => {
+  const errorMessage = error?.message || error?.toString() || '';
+  const errorCode = error?.code || error?.hint || '';
+  
+  // Check for schema cache errors
+  if (errorMessage.includes('schema cache') || errorMessage.includes('Could not find the table')) {
+    return 'Database table not found. Please ensure migrations have been applied. Contact support if this persists.';
+  }
+  
+  // Check for permission errors
+  if (errorCode === '42501' || errorMessage.includes('permission denied') || errorMessage.includes('row-level security')) {
+    return 'Permission denied. Please check your access rights.';
+  }
+  
+  // Check for connection errors
+  if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('Failed to fetch')) {
+    return 'Network error. Please check your connection and try again.';
+  }
+  
+  // Return specific error message if available, otherwise default
+  return errorMessage || defaultMessage;
+};
+
 export const useMentors = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -37,8 +61,15 @@ export const useMentors = () => {
       
       return (data || []) as Mentor[];
     } catch (error: any) {
-      console.error('Error fetching mentors:', error);
-      toast.error('Failed to load mentors');
+      console.error('Error fetching mentors:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
+      const errorMessage = formatErrorMessage(error, 'Failed to load mentors');
+      toast.error(errorMessage);
       return [];
     } finally {
       setLoading(false);
@@ -60,8 +91,16 @@ export const useMentors = () => {
       
       return data as Mentor | null;
     } catch (error: any) {
-      console.error('Error fetching mentor:', error);
-      toast.error('Failed to load mentor');
+      console.error('Error fetching mentor:', {
+        id,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
+      const errorMessage = formatErrorMessage(error, 'Failed to load mentor');
+      toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
@@ -92,8 +131,16 @@ export const useMentors = () => {
       toast.success('Mentor created successfully');
       return data as Mentor;
     } catch (error: any) {
-      console.error('Error creating mentor:', error);
-      toast.error(error.message || 'Failed to create mentor');
+      console.error('Error creating mentor:', {
+        input,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
+      const errorMessage = formatErrorMessage(error, 'Failed to create mentor');
+      toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
@@ -122,8 +169,17 @@ export const useMentors = () => {
       toast.success('Mentor updated successfully');
       return data as Mentor;
     } catch (error: any) {
-      console.error('Error updating mentor:', error);
-      toast.error(error.message || 'Failed to update mentor');
+      console.error('Error updating mentor:', {
+        id,
+        input,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
+      const errorMessage = formatErrorMessage(error, 'Failed to update mentor');
+      toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
@@ -150,8 +206,16 @@ export const useMentors = () => {
       toast.success('Mentor deleted successfully');
       return true;
     } catch (error: any) {
-      console.error('Error deleting mentor:', error);
-      toast.error(error.message || 'Failed to delete mentor');
+      console.error('Error deleting mentor:', {
+        id,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
+      const errorMessage = formatErrorMessage(error, 'Failed to delete mentor');
+      toast.error(errorMessage);
       return false;
     } finally {
       setLoading(false);
