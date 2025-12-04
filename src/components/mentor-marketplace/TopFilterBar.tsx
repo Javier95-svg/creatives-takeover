@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Filter, ChevronDown } from "lucide-react";
+import { X, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { MentorFilters } from "./FilterSidebar";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,22 @@ export const TopFilterBar = ({
 
   const handlePriceRangeChange = (values: number[]) => {
     onFiltersChange({ ...filters, priceRange: [values[0], values[1]] });
+  };
+
+  const handleMinPriceChange = (newMin: number) => {
+    const clampedMin = Math.max(0, Math.min(newMin, filters.priceRange[1] - 100));
+    onFiltersChange({
+      ...filters,
+      priceRange: [clampedMin, filters.priceRange[1]],
+    });
+  };
+
+  const handleMaxPriceChange = (newMax: number) => {
+    const clampedMax = Math.max(filters.priceRange[0] + 100, Math.min(newMax, priceRangeMax));
+    onFiltersChange({
+      ...filters,
+      priceRange: [filters.priceRange[0], clampedMax],
+    });
   };
 
   const handleAvailableNowToggle = (checked: boolean) => {
@@ -167,24 +184,115 @@ export const TopFilterBar = ({
         </PopoverTrigger>
         <PopoverContent className="w-80" align="start">
           <div className="space-y-4">
-            <Label className="font-semibold">8 Week Coaching Program</Label>
+            <Label className="font-semibold">Coaching Program Fee</Label>
             <Separator />
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Price Inputs with Scroll Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Minimum Price */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Min Budget</Label>
+                  <div className="flex items-center gap-1">
+                    <div className="flex flex-col">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-6 w-8 rounded-b-none border-b-0 p-0"
+                        onClick={() => handleMinPriceChange(filters.priceRange[0] + 100)}
+                        disabled={filters.priceRange[0] >= filters.priceRange[1] - 100}
+                      >
+                        <ChevronUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-6 w-8 rounded-t-none p-0"
+                        onClick={() => handleMinPriceChange(filters.priceRange[0] - 100)}
+                        disabled={filters.priceRange[0] <= 0}
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        value={(filters.priceRange[0] / 100).toFixed(0)}
+                        onChange={(e) => {
+                          const value = Math.max(0, Math.min(parseInt(e.target.value) || 0, (filters.priceRange[1] / 100) - 1));
+                          handleMinPriceChange(value * 100);
+                        }}
+                        min={0}
+                        max={(filters.priceRange[1] / 100) - 1}
+                        className="pl-7 h-10 text-sm"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Maximum Price */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Max Budget</Label>
+                  <div className="flex items-center gap-1">
+                    <div className="flex flex-col">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-6 w-8 rounded-b-none border-b-0 p-0"
+                        onClick={() => handleMaxPriceChange(filters.priceRange[1] + 100)}
+                        disabled={filters.priceRange[1] >= priceRangeMax}
+                      >
+                        <ChevronUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-6 w-8 rounded-t-none p-0"
+                        onClick={() => handleMaxPriceChange(filters.priceRange[1] - 100)}
+                        disabled={filters.priceRange[1] <= filters.priceRange[0] + 100}
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        value={(filters.priceRange[1] / 100).toFixed(0)}
+                        onChange={(e) => {
+                          const value = Math.max((filters.priceRange[0] / 100) + 1, Math.min(parseInt(e.target.value) || priceRangeMax / 100, priceRangeMax / 100));
+                          handleMaxPriceChange(value * 100);
+                        }}
+                        min={(filters.priceRange[0] / 100) + 1}
+                        max={priceRangeMax / 100}
+                        className="pl-7 h-10 text-sm"
+                        placeholder="5000"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Range Display */}
+              <div className="text-center py-2 px-3 bg-muted/50 rounded-md">
+                <span className="text-sm font-medium text-foreground">
+                  ${(filters.priceRange[0] / 100).toFixed(0)} - ${(filters.priceRange[1] / 100).toFixed(0)}
+                </span>
+              </div>
+
+              {/* Slider */}
               <Slider
                 value={filters.priceRange}
                 onValueChange={handlePriceRangeChange}
                 min={0}
                 max={priceRangeMax}
-                step={500}
+                step={100}
               />
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  ${(filters.priceRange[0] / 100).toFixed(0)}
-                </span>
-                <span className="text-muted-foreground">
-                  ${(filters.priceRange[1] / 100).toFixed(0)}
-                </span>
-              </div>
             </div>
           </div>
         </PopoverContent>
