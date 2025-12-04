@@ -23,6 +23,9 @@ import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
 
+// Calendly link for Samuel Starkman
+const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
+
 interface Profile {
   id: string;
   username: string | null;
@@ -56,6 +59,17 @@ interface Post {
   comment_count: number;
 }
 
+// Helper function to check if profile belongs to Samuel Starkman
+const isSamuelStarkmanProfile = (profile: Profile | null): boolean => {
+  if (!profile) return false;
+  const fullName = profile.full_name?.toLowerCase() || '';
+  const username = profile.username?.toLowerCase() || '';
+  // Check if full name contains both "samuel" and "starkman"
+  // Or if username contains either "samuel" or "starkman"
+  return (fullName.includes('samuel') && fullName.includes('starkman')) || 
+         username.includes('samuel') || username.includes('starkman');
+};
+
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
   const { user: currentUser } = useAuth();
@@ -67,6 +81,10 @@ const Profile = () => {
   const isOwnProfile = currentUser?.id === profile?.id;
   
   const { stats, loading: statsLoading } = useProfileData(profile?.id || '');
+
+  const handleBookDiscoveryCall = () => {
+    window.open(SAMUEL_STARKMAN_CALENDLY_URL, '_blank', 'noopener,noreferrer');
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -334,18 +352,31 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         {isOwnProfile ? (
                           <Button variant="outline" size="sm" onClick={() => setShowEditModal(true)}>
                             <Settings className="h-4 w-4 mr-2" />
                             Edit Profile
                           </Button>
                         ) : profile.id && (
-                          <SocialButtons 
-                            userId={profile.id} 
-                            userName={profile.full_name || undefined}
-                            showAccountabilityPartner={true}
-                          />
+                          <>
+                            {/* Book Discovery Call button for Samuel Starkman */}
+                            {isSamuelStarkmanProfile(profile) && (
+                              <Button 
+                                size="sm" 
+                                onClick={handleBookDiscoveryCall}
+                                className="hover:shadow-md transition-all duration-200"
+                              >
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Book Discovery Call
+                              </Button>
+                            )}
+                            <SocialButtons 
+                              userId={profile.id} 
+                              userName={profile.full_name || undefined}
+                              showAccountabilityPartner={true}
+                            />
+                          </>
                         )}
                       </div>
                     </div>
