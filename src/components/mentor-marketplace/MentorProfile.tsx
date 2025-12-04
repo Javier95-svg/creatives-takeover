@@ -44,7 +44,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   };
 
   const handleSendMessage = () => {
-    navigate(`/messages?mentor=${mentor.id}`);
+    navigate('/auth');
   };
 
   return (

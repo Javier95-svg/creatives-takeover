@@ -60,7 +60,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const handleSendMessage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/messages?mentor=${mentor.id}`);
+    navigate('/auth');
   };
 
   return (
