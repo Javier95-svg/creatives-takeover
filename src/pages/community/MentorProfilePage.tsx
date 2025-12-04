@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
+const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
 const MentorProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,12 +49,23 @@ const MentorProfilePage = () => {
       ? SAMUEL_STARKMAN_CALENDLY_URL 
       : mentor.calendly_url;
     
-    if (calendlyUrl) {
-      window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
-    } else {
+    if (!calendlyUrl) {
       // Fallback: show message if no Calendly link is set
       alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
+      return;
     }
+    
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      // Store Calendly URL in localStorage for redirect after auth
+      localStorage.setItem(CALENDLY_REDIRECT_KEY, calendlyUrl);
+      // Redirect to auth page
+      navigate('/auth?redirect=/community');
+      return;
+    }
+    
+    // User is authenticated, open Calendly directly
+    window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {

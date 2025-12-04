@@ -25,6 +25,9 @@ const Auth: React.FC = () => {
   // Get redirect parameter from URL
   const searchParams = new URLSearchParams(location.search);
   const redirectUrl = searchParams.get('redirect') || '/';
+  
+  // Check for pending Calendly redirect
+  const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
   // Form states
   const [email, setEmail] = useState('');
@@ -84,6 +87,17 @@ const Auth: React.FC = () => {
       }
       toast.success('Welcome back!');
       
+      // Check for pending Calendly redirect
+      const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
+      if (pendingCalendlyUrl) {
+        localStorage.removeItem(CALENDLY_REDIRECT_KEY);
+        // Redirect to Calendly
+        window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+        // Also navigate to community page
+        navigate('/community');
+        return;
+      }
+      
       // If redirect is a booking flow, go to /community instead
       const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
       navigate(finalRedirect);
@@ -140,9 +154,17 @@ const Auth: React.FC = () => {
     try {
       console.log("Starting Google OAuth...");
       
+      // Check for pending Calendly redirect - if exists, preserve it
+      const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
+      
       // If redirect is a booking flow, go to /community instead
       const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
       localStorage.setItem('oauth_return_url', finalRedirect);
+      
+      // Preserve Calendly redirect for OAuth callback
+      if (pendingCalendlyUrl) {
+        localStorage.setItem('oauth_calendly_redirect', pendingCalendlyUrl);
+      }
       
       toast("Redirecting to Google...");
       

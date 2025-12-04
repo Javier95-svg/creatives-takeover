@@ -10,6 +10,7 @@ import { getCountryFlag } from "@/utils/countryFlags";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
+const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -18,7 +19,7 @@ interface MentorCardProps {
 
 export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   
   // Truncate bio if too long
@@ -76,12 +77,23 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
       ? SAMUEL_STARKMAN_CALENDLY_URL 
       : mentor.calendly_url;
     
-    if (calendlyUrl) {
-      window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
-    } else {
+    if (!calendlyUrl) {
       // Fallback: show message if no Calendly link is set
       alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
+      return;
     }
+    
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      // Store Calendly URL in localStorage for redirect after auth
+      localStorage.setItem(CALENDLY_REDIRECT_KEY, calendlyUrl);
+      // Redirect to auth page
+      navigate('/auth?redirect=/community');
+      return;
+    }
+    
+    // User is authenticated, open Calendly directly
+    window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleSendMessage = (e: React.MouseEvent) => {

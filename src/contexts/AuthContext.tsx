@@ -39,6 +39,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Create or update profile when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
+          // Check for pending Calendly redirect
+          const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
+          const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
+          if (pendingCalendlyUrl) {
+            // Small delay to ensure UI is ready, then redirect
+            setTimeout(() => {
+              localStorage.removeItem(CALENDLY_REDIRECT_KEY);
+              window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+            }, 1000);
+          }
+          
           setTimeout(async () => {
             // Verify profile exists or create it
             let profileExists = false;

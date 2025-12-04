@@ -47,6 +47,25 @@ const AuthCallback = () => {
           setStatus('success');
           toast.success('Successfully signed in!');
           
+          // Check for pending Calendly redirect (from OAuth or regular auth)
+          const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
+          const oauthCalendlyUrl = localStorage.getItem('oauth_calendly_redirect');
+          const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY) || oauthCalendlyUrl;
+          
+          if (pendingCalendlyUrl) {
+            // Clean up Calendly redirect keys
+            localStorage.removeItem(CALENDLY_REDIRECT_KEY);
+            localStorage.removeItem('oauth_calendly_redirect');
+            
+            // Redirect to Calendly
+            window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+            // Also navigate to community page
+            setTimeout(() => {
+              navigate('/community');
+            }, 500);
+            return;
+          }
+          
           // Get return URL from localStorage (saved before OAuth redirect)
           let returnUrl = localStorage.getItem('oauth_return_url') || '/';
           const oauthSource = localStorage.getItem('oauth_source');
