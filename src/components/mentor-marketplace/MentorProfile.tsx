@@ -194,27 +194,27 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                onClick={onBookClick}
-                size="default"
-                className="flex-1 lg:flex-initial"
-                disabled={mentor.is_active === false}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Book Session
-              </Button>
-              <Button
-                variant="outline"
-                size="default"
-                onClick={handleSendMessage}
-                className="flex-1 lg:flex-initial"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-            </div>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <Button
+                    onClick={onBookClick}
+                    size="default"
+                    className="flex-1"
+                    disabled={mentor.is_active === false}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Book Session
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    onClick={handleSendMessage}
+                    className="flex-1"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Send Message
+                  </Button>
+                </div>
           </div>
 
           {/* Right: Price and Heart */}

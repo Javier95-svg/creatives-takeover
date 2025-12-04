@@ -184,26 +184,26 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <Button
-                size="sm"
-                onClick={handleBookSession}
-                className="h-9"
-              >
-                <Calendar className="h-4 w-4 mr-1.5" />
-                Book Session
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleSendMessage}
-                className="h-9"
-              >
-                <MessageCircle className="h-4 w-4 mr-1.5" />
-                Message
-              </Button>
-            </div>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    onClick={handleBookSession}
+                    className="h-9 flex-1"
+                  >
+                    <Calendar className="h-4 w-4 mr-1.5" />
+                    Book Session
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSendMessage}
+                    className="h-9 flex-1"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1.5" />
+                    Message
+                  </Button>
+                </div>
           </div>
 
           {/* Right: Price and Heart */}
