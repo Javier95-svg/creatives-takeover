@@ -23,7 +23,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
 
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
-  const sessionsCompleted = mentor.total_sessions_completed || 0;
 
   const renderStars = (ratingValue: number) => {
     return (
@@ -94,12 +93,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                 <span className="text-sm text-muted-foreground">
                   {rating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
                 </span>
-                {sessionsCompleted > 0 && (
-                  <>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="text-sm text-muted-foreground">{sessionsCompleted} sessions</span>
-                  </>
-                )}
               </div>
             )}
 
@@ -123,7 +116,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                 </div>
               )}
               {reviewCount > 0 && <span>{reviewCount} reviews</span>}
-              {sessionsCompleted > 0 && <span>{sessionsCompleted} sessions</span>}
             </div>
 
             {/* Expertise/Languages */}
