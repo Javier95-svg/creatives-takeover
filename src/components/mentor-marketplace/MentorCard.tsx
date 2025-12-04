@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
 
+// Calendly link for Samuel Starkman
+const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
+
 interface MentorCardProps {
   mentor: Mentor;
   className?: string;
@@ -63,9 +66,18 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Redirect to Calendly link if available
-    if (mentor.calendly_url) {
-      window.open(mentor.calendly_url, '_blank', 'noopener,noreferrer');
+    // Check if this is Samuel Starkman's profile
+    const mentorNameLower = mentor.name.toLowerCase();
+    const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
+                             mentorNameLower.includes('samuel starkman');
+    
+    // Use hardcoded URL for Samuel Starkman, otherwise use mentor's calendly_url
+    const calendlyUrl = isSamuelStarkman 
+      ? SAMUEL_STARKMAN_CALENDLY_URL 
+      : mentor.calendly_url;
+    
+    if (calendlyUrl) {
+      window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
     } else {
       // Fallback: show message if no Calendly link is set
       alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
