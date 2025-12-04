@@ -1905,6 +1905,54 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes text-flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  2% {
+    opacity: 0.8;
+  }
+  4% {
+    opacity: 1;
+  }
+  6% {
+    opacity: 0.9;
+  }
+  8% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  52% {
+    opacity: 1;
+  }
+  54% {
+    opacity: 0.9;
+  }
+  56% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.88;
+  }
+  92% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.92;
+  }
+  96% {
+    opacity: 1;
+  }
+}
+
 /* Mentor Marketplace Wallpaper Animations */
 @keyframes mentor-guidance-flow {
   0% {

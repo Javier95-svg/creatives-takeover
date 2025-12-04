@@ -434,7 +434,8 @@ export default {
 				'rgb-pulse': 'rgb-pulse 3s ease-in-out infinite',
 				'rgb-glow-rotate': 'rgb-glow-rotate 6s linear infinite',
 				'lightbulb-shine': 'lightbulb-shine 3s ease-in-out infinite',
-				'subtle-flicker': 'subtle-flicker 2.5s ease-in-out infinite'
+				'subtle-flicker': 'subtle-flicker 2.5s ease-in-out infinite',
+				'text-flicker': 'text-flicker 3s ease-in-out infinite'
 			}
 		}
 	},
