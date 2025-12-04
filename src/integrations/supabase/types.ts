@@ -3175,6 +3175,60 @@ export type Database = {
           },
         ]
       }
+      mentors: {
+        Row: {
+          availability: Json | null
+          bio: string
+          created_at: string
+          expertise: string[] | null
+          hourly_rate: number
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          name: string
+          picture: string | null
+          rating: number | null
+          review_count: number | null
+          stripe_connected_account_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          availability?: Json | null
+          bio: string
+          created_at?: string
+          expertise?: string[] | null
+          hourly_rate?: number
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name: string
+          picture?: string | null
+          rating?: number | null
+          review_count?: number | null
+          stripe_connected_account_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          availability?: Json | null
+          bio?: string
+          created_at?: string
+          expertise?: string[] | null
+          hourly_rate?: number
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name?: string
+          picture?: string | null
+          rating?: number | null
+          review_count?: number | null
+          stripe_connected_account_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: Json | null
