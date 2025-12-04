@@ -64,19 +64,19 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   };
 
   return (
-    <Card className={cn("border rounded-sm hover:shadow-md transition-shadow", className)}>
-      <CardContent className="p-6">
-        <div className="flex gap-4">
+    <Card className={cn("border-2 border-border/60 rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background", className)}>
+      <CardContent className="p-6 lg:p-8">
+        <div className="flex gap-6 lg:gap-8">
           {/* Left: Avatar */}
           <div className="flex-shrink-0">
-            <div className="relative">
-              <Avatar className="h-16 w-16">
+            <div className="relative group">
+              <Avatar className="h-20 w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
                 <AvatarImage 
                   src={mentor.picture || undefined} 
                   alt={mentor.name}
                   className="object-cover"
                 />
-                <AvatarFallback className="bg-muted text-foreground font-semibold">
+                <AvatarFallback className="bg-muted text-foreground font-semibold text-lg lg:text-xl">
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -84,21 +84,21 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
           </div>
 
           {/* Center: Content */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 space-y-2">
             {/* Name and Verification */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link 
                 to={`/community/mentors/${mentor.id}`}
-                className="font-semibold text-foreground hover:underline"
+                className="text-lg lg:text-xl font-bold text-foreground hover:text-primary transition-colors"
               >
                 {mentor.name}
               </Link>
-              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
             </div>
 
             {/* Social Links */}
             {(mentor.linkedin_url || mentor.twitter_x_url || mentor.website_url) && (
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3">
                 {mentor.linkedin_url && (
                   <a
                     href={mentor.linkedin_url}
@@ -108,7 +108,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                     aria-label="LinkedIn"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Linkedin className="h-4 w-4" />
+                    <Linkedin className="h-5 w-5" />
                   </a>
                 )}
                 {mentor.twitter_x_url && (
@@ -120,7 +120,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                     aria-label="X (Twitter)"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                   </a>
@@ -134,7 +134,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                     aria-label="Website"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="2" y1="12" x2="22" y2="12"/>
                       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -146,7 +146,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
 
             {/* Rating and Reviews */}
             {rating > 0 && (
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2">
                 {renderStars(rating)}
                 <span className="text-sm text-muted-foreground">
                   {rating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
@@ -155,21 +155,21 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
             )}
 
             {/* Bio */}
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+            <p className="text-sm lg:text-base text-muted-foreground leading-relaxed line-clamp-2">
               {truncatedBio}
             </p>
             <Link 
               to={`/community/mentors/${mentor.id}`}
-              className="text-sm text-primary hover:underline inline-block mb-3"
+              className="text-sm font-medium text-primary hover:underline inline-block"
             >
               Learn more
             </Link>
 
             {/* Stats Row */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+            <div className="flex items-center gap-4 text-xs lg:text-sm text-muted-foreground">
               {rating > 0 && (
                 <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                   <span>{rating.toFixed(1)}</span>
                 </div>
               )}
@@ -178,27 +178,27 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
 
             {/* Expertise/Languages */}
             {mentor.expertise && mentor.expertise.length > 0 && (
-              <div className="text-xs text-muted-foreground mb-4">
-                Expertise: {mentor.expertise.slice(0, 3).join(', ')}
+              <div className="text-sm text-muted-foreground">
+                Expertise: <span className="font-medium">{mentor.expertise.slice(0, 3).join(', ')}</span>
                 {mentor.expertise.length > 3 && '...'}
               </div>
             )}
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 pt-2">
                   <Button
-                    size="sm"
+                    size="default"
                     onClick={handleBookSession}
-                    className="h-9 flex-1"
+                    className="h-10 flex-1 hover:shadow-md transition-all duration-200"
                   >
                     <Calendar className="h-4 w-4 mr-1.5" />
                     Book Session
                   </Button>
                   <Button
-                    size="sm"
+                    size="default"
                     variant="outline"
                     onClick={handleSendMessage}
-                    className="h-9 flex-1"
+                    className="h-10 flex-1 hover:shadow-md transition-all duration-200"
                   >
                     <MessageCircle className="h-4 w-4 mr-1.5" />
                     Message
@@ -207,15 +207,15 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
           </div>
 
           {/* Right: Price and Heart */}
-          <div className="flex-shrink-0 flex flex-col items-end justify-between">
-            <button className="p-2 hover:bg-muted rounded-sm transition-colors">
-              <Heart className="h-5 w-5 text-muted-foreground hover:text-primary" />
+          <div className="flex-shrink-0 flex flex-col items-end justify-between gap-4">
+            <button className="p-2 hover:bg-muted rounded-md transition-all duration-200 hover:scale-110">
+              <Heart className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
             </button>
             <div className="text-right">
-              <div className="text-2xl font-bold text-foreground">
+              <div className="text-2xl lg:text-3xl font-bold text-foreground mb-1">
                 {hourlyRateFormatted}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs lg:text-sm text-muted-foreground">
                 50-min session
               </div>
             </div>

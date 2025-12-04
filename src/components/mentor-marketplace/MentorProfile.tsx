@@ -48,19 +48,19 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   };
 
   return (
-    <Card className="border border-border/60 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-background">
+    <Card className="border-2 border-border/60 rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-background">
       <CardContent className="p-6 lg:p-8">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Left: Large Profile Picture */}
           <div className="flex-shrink-0 flex justify-center lg:justify-start">
-            <div className="relative">
-              <Avatar className="h-28 w-28 lg:h-36 lg:w-36 ring-2 ring-border/40">
+            <div className="relative group">
+              <Avatar className="h-28 w-28 lg:h-36 lg:w-36 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
                 <AvatarImage 
                   src={mentor.picture || undefined} 
                   alt={mentor.name}
                   className="object-cover w-full h-full"
                 />
-                <AvatarFallback className="text-2xl bg-muted text-foreground font-semibold">
+                <AvatarFallback className="text-2xl lg:text-3xl bg-muted text-foreground font-semibold">
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -71,10 +71,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
           <div className="flex-1 min-w-0 space-y-3">
             {/* Name and Verification */}
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground">
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
                 {mentor.name}
               </h1>
-              <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              <CheckCircle2 className="h-5 w-5 lg:h-6 lg:w-6 text-primary flex-shrink-0" />
             </div>
 
             {/* Social Links */}
@@ -85,10 +85,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     href={mentor.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-blue-600 transition-colors"
+                    className="text-muted-foreground hover:text-blue-600 transition-colors hover:scale-110"
                     aria-label="LinkedIn"
                   >
-                    <Linkedin className="h-5 w-5" />
+                    <Linkedin className="h-5 w-5 lg:h-6 lg:w-6" />
                   </a>
                 )}
                 {mentor.twitter_x_url && (
@@ -96,10 +96,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     href={mentor.twitter_x_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors hover:scale-110"
                     aria-label="X (Twitter)"
                   >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5 lg:h-6 lg:w-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                   </a>
@@ -109,10 +109,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     href={mentor.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors hover:scale-110"
                     aria-label="Website"
                   >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="h-5 w-5 lg:h-6 lg:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="2" y1="12" x2="22" y2="12"/>
                       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -199,7 +199,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                   <Button
                     onClick={onBookClick}
                     size="default"
-                    className="flex-1"
+                    className="flex-1 hover:shadow-md transition-all duration-200"
                     disabled={mentor.is_active === false}
                   >
                     <Calendar className="h-4 w-4 mr-2" />
@@ -209,7 +209,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     variant="outline"
                     size="default"
                     onClick={handleSendMessage}
-                    className="flex-1"
+                    className="flex-1 hover:shadow-md transition-all duration-200"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Send Message
@@ -220,7 +220,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
           {/* Right: Price and Heart */}
           <div className="flex-shrink-0 flex flex-col items-center lg:items-end justify-between lg:justify-start gap-4">
             <button 
-              className="p-2 hover:bg-muted rounded-md transition-colors self-end lg:self-start"
+              className="p-2 hover:bg-muted rounded-md transition-all duration-200 hover:scale-110 self-end lg:self-start"
               aria-label="Favorite"
             >
               <Heart className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
