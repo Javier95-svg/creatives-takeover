@@ -123,17 +123,16 @@ const AdminMentorEditor = () => {
       // Upload to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${mentor?.id || 'temp'}-${Date.now()}.${fileExt}`;
-      const filePath = `mentor-pictures/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('mentor-pictures')
-        .upload(filePath, file, { upsert: true });
+        .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('mentor-pictures')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       setFormData((prev) => ({
         ...prev,
