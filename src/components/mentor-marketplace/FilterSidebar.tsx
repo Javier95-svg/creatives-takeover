@@ -159,15 +159,15 @@ export const FilterSidebar = ({
           <Label className="text-sm font-semibold mb-3 block">
             Coaching Program Fee
           </Label>
-          <div className="space-y-4">
-            {/* Scroll Button at Top */}
+          <div className="space-y-3">
+            {/* Scroll Button at Top/Beginning */}
             <Button
               type="button"
               variant="outline"
               size="default"
               onClick={handleScrollUp}
               disabled={filters.priceRange[1] >= priceRangeMax}
-              className="w-full h-10"
+              className="w-full h-10 flex items-center justify-center"
             >
               <ChevronUp className="h-4 w-4 mr-2" />
               Scroll to Higher Range
@@ -180,14 +180,14 @@ export const FilterSidebar = ({
               </span>
             </div>
 
-            {/* Scroll Button at Bottom */}
+            {/* Scroll Button at Bottom/End */}
             <Button
               type="button"
               variant="outline"
               size="default"
               onClick={handleScrollDown}
               disabled={filters.priceRange[0] <= 0}
-              className="w-full h-10"
+              className="w-full h-10 flex items-center justify-center"
             >
               <ChevronDown className="h-4 w-4 mr-2" />
               Scroll to Lower Range
