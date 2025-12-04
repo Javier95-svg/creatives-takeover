@@ -194,7 +194,7 @@ const AdminMentorEditor = () => {
     if (confirm("Are you sure you want to delete this mentor?")) {
       const success = await deleteMentor(mentor.id);
       if (success) {
-        navigate("/community/discover");
+        navigate("/community");
       }
     }
   };
@@ -213,7 +213,7 @@ const AdminMentorEditor = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/community/discover">
+                <Link to="/community">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Link>

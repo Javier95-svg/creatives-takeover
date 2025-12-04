@@ -1,38 +1,58 @@
 import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import MentorMarketplaceWallpaper from "@/components/wallpapers/MentorMarketplaceWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
-import { Users, ArrowRight, Loader2 } from "lucide-react";
+import { TopFilterBar } from "@/components/mentor-marketplace/TopFilterBar";
+import { MentorFilters } from "@/components/mentor-marketplace/FilterSidebar";
+import { Users, Loader2, Search } from "lucide-react";
 import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 const MentorMarketplaceHub = () => {
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentors, loading } = useMentors();
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("recommended");
+  
+  const [filters, setFilters] = useState<MentorFilters>({
+    expertise: [],
+    priceRange: [0, 50000],
+    stage: [],
+    availableNow: false,
+  });
 
   useEffect(() => {
     loadMentors();
+    
+    // Initialize filters from URL query params
+    const expertiseParam = searchParams.get("expertise");
+    if (expertiseParam) {
+      const expertise = decodeURIComponent(expertiseParam);
+      setFilters((prev) => ({
+        ...prev,
+        expertise: [expertise],
+      }));
+      // Clear the query parameter after setting the filter
+      setSearchParams({}, { replace: true });
+    }
   }, []);
 
   const loadMentors = async () => {
     const fetchedMentors = await fetchMentors();
     setMentors(fetchedMentors);
   };
-
-  const featuredMentors = mentors.filter(m => m.is_featured).length > 0
-    ? mentors.filter(m => m.is_featured).slice(0, 3)
-    : mentors.slice(0, 3);
 
   // Calculate popular expertise tags
   const popularExpertise = useMemo(() => {
@@ -51,8 +71,96 @@ const MentorMarketplaceHub = () => {
   }, [mentors]);
 
   const handleExpertiseClick = (expertise: string) => {
-    navigate(`/community/discover?expertise=${encodeURIComponent(expertise)}`);
+    // Add expertise to filters instead of navigating
+    if (!filters.expertise.includes(expertise)) {
+      setFilters((prev) => ({
+        ...prev,
+        expertise: [...prev.expertise, expertise],
+      }));
+    }
+    // Scroll to mentor grid
+    const mentorGrid = document.getElementById('mentor-grid');
+    if (mentorGrid) {
+      mentorGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
+
+  const filteredMentors = useMemo(() => {
+    let result = mentors.filter((mentor) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          mentor.name.toLowerCase().includes(query) ||
+          mentor.bio.toLowerCase().includes(query) ||
+          mentor.expertise?.some((e) => e.toLowerCase().includes(query));
+        if (!matchesSearch) return false;
+      }
+
+      // Expertise filter
+      if (filters.expertise.length > 0) {
+        const hasExpertise = filters.expertise.some((e) =>
+          mentor.expertise?.includes(e)
+        );
+        if (!hasExpertise) return false;
+      }
+
+      // Price range filter
+      if (
+        mentor.hourly_rate < filters.priceRange[0] ||
+        mentor.hourly_rate > filters.priceRange[1]
+      ) {
+        return false;
+      }
+
+      // Available now filter
+      if (filters.availableNow && mentor.is_active === false) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Apply sorting
+    switch (sortBy) {
+      case "rating":
+        result = result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case "price-low":
+        result = result.sort((a, b) => a.hourly_rate - b.hourly_rate);
+        break;
+      case "price-high":
+        result = result.sort((a, b) => b.hourly_rate - a.hourly_rate);
+        break;
+      case "newest":
+        result = result.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+        );
+        break;
+      case "recommended":
+      default:
+        // Featured first, then by rating
+        result = result.sort((a, b) => {
+          const aFeatured = a.is_featured === true ? 1 : 0;
+          const bFeatured = b.is_featured === true ? 1 : 0;
+          if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+          return (b.rating || 0) - (a.rating || 0);
+        });
+        break;
+    }
+
+    return result;
+  }, [searchQuery, filters, mentors, sortBy]);
+
+  const allExpertise = useMemo(() => {
+    const expertiseSet = new Set<string>();
+    mentors.forEach((m) => {
+      m.expertise?.forEach((e) => expertiseSet.add(e));
+    });
+    return Array.from(expertiseSet).sort();
+  }, [mentors]);
 
   // Typing animation for description
   const descriptionText = "Match with vetted startup coaches for hands-on guidance from first idea to first funding, tailored to the realities of pre-seed founders who are still figuring things out. Book focused 1-on-1 sessions, get actionable feedback on your roadmap, pitch, and go-to-market, and leave each call with clear next steps you can execute immediately.";
@@ -116,51 +224,98 @@ const MentorMarketplaceHub = () => {
             </div>
           </section>
 
-          {/* Featured Mentors */}
-          <section className="container mx-auto px-4 py-12 relative z-10">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold">Featured Mentors</h2>
-                <Button asChild variant="ghost">
-                  <Link to="/community/discover" className="flex items-center gap-2">
-                    View All
-                    <ArrowRight className="h-4 w-4" />
+          {/* Mentors Section with Filters */}
+          <section id="mentor-grid" className="container mx-auto px-4 py-12 relative z-10">
+            {/* Admin Create Button */}
+            {isAdmin && (
+              <div className="mb-6 flex justify-end">
+                <Button asChild>
+                  <Link to="/community/admin/new">
+                    Create Mentor
                   </Link>
                 </Button>
               </div>
+            )}
+
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or keyword"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11"
+                />
+              </div>
+            </div>
+
+            {/* Top Filter Bar */}
+            <div className="mb-6">
+              <TopFilterBar
+                filters={filters}
+                onFiltersChange={setFilters}
+                availableExpertise={allExpertise}
+                availableStages={["Idea Stage", "Pre-Seed", "Seed", "Series A"]}
+                priceRangeMax={50000}
+                mentorCount={filteredMentors.length}
+                onSortChange={setSortBy}
+                sortBy={sortBy}
+              />
+            </div>
+
+            {/* Results Count */}
+            <div className="mb-4">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : featuredMentors.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {featuredMentors.map((mentor) => (
-                    <MentorCard key={mentor.id} mentor={mentor} />
-                  ))}
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading mentors...</span>
                 </div>
               ) : (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No mentors yet</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Mentor profiles will appear here once they're added to the marketplace.
-                    </p>
-                    {isAdmin && (
-                      <Button asChild>
-                        <Link to="/community/admin/new">
-                          Create First Mentor
-                        </Link>
-                      </Button>
-                    )}
-                    <Button asChild variant="outline" className="ml-2">
-                      <Link to="/community/discover">
-                        Browse All
+                <p className="text-sm text-muted-foreground">
+                  {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 's' : ''} found
+                </p>
+              )}
+            </div>
+
+            {/* Mentor Cards Grid */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredMentors.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {filteredMentors.map((mentor) => (
+                  <MentorCard key={mentor.id} mentor={mentor} />
+                ))}
+              </div>
+            ) : mentors.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-semibold mb-2">No mentors yet</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Mentor profiles will appear here once they're added to the marketplace.
+                  </p>
+                  {isAdmin && (
+                    <Button asChild>
+                      <Link to="/community/admin/new">
+                        Create First Mentor
                       </Link>
                     </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </section>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <p className="text-muted-foreground">
+                    No mentors found matching your criteria. Try adjusting your filters.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </section>
         </div>
         <Footer />
       </div>
@@ -169,4 +324,3 @@ const MentorMarketplaceHub = () => {
 };
 
 export default MentorMarketplaceHub;
-

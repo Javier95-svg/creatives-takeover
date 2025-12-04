@@ -43,7 +43,6 @@ import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
 import RAGTest from "./pages/RAGTest";
 import MentorMarketplaceHub from "./pages/community/MentorMarketplaceHub";
-import MentorDiscover from "./pages/community/MentorDiscover";
 import MentorProfilePage from "./pages/community/MentorProfilePage";
 import MentorBookingPage from "./pages/community/MentorBookingPage";
 import MyBookings from "./pages/community/MyBookings";
@@ -94,7 +93,6 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/community" element={<CommunityPage />} />
-                  <Route path="/community/discover" element={<MentorDiscover />} />
                   <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
                   <Route path="/community/book/:id" element={<MentorBookingPage />} />
                   <Route path="/community/my-bookings" element={<MyBookings />} />

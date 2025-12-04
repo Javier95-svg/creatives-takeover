@@ -62,7 +62,7 @@ const MentorProfilePage = () => {
         <div className="container mx-auto px-4 py-20 text-center">
           <p>Mentor not found</p>
           <Button asChild className="mt-4">
-            <Link to="/community/discover">Browse Mentors</Link>
+            <Link to="/community">Browse Mentors</Link>
           </Button>
         </div>
       </>
@@ -82,9 +82,9 @@ const MentorProfilePage = () => {
             <div className="container mx-auto px-4 py-8">
               <div className="flex items-center justify-between mb-6">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/community/discover" className="flex items-center gap-2">
+                  <Link to="/community" className="flex items-center gap-2">
                     <ArrowLeft className="h-4 w-4" />
-                    Back to Discover
+                    Back to Community
                   </Link>
                 </Button>
                 {isAdmin && mentor && (

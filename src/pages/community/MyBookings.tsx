@@ -113,7 +113,7 @@ const MyBookings = () => {
                         You don't have any upcoming sessions yet.
                       </p>
                       <Button asChild>
-                        <Link to="/community/discover">Browse Mentors</Link>
+                        <Link to="/community">Browse Mentors</Link>
                       </Button>
                     </CardContent>
                   </Card>

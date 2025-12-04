@@ -67,7 +67,7 @@ const MentorBookingPage = () => {
         <div className="container mx-auto px-4 py-20 text-center">
           <p className="text-muted-foreground mb-4">Mentor not found</p>
           <Button asChild>
-            <Link to="/community/discover">Browse Mentors</Link>
+            <Link to="/community">Browse Mentors</Link>
           </Button>
         </div>
       </>
