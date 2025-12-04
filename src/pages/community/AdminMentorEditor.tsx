@@ -48,6 +48,7 @@ const AdminMentorEditor = () => {
   const [mentor, setMentor] = useState<Mentor | null>(null);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<CreateMentorInput>({
     name: "",
     picture: null,
@@ -140,6 +141,34 @@ const AdminMentorEditor = () => {
         picture: publicUrl,
       }));
 
+      // Update picturePreview to show the actual uploaded URL (not just base64 preview)
+      setPicturePreview(publicUrl);
+
+      console.log('✅ Picture uploaded successfully:', {
+        fileName,
+        publicUrl,
+        publicUrlLength: publicUrl?.length,
+        mentorId: mentor?.id || 'new mentor',
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
+      // Verify the URL is accessible
+      fetch(publicUrl, { method: 'HEAD' })
+        .then(response => {
+          console.log('✅ Picture URL is accessible:', {
+            url: publicUrl,
+            status: response.status,
+            contentType: response.headers.get('content-type')
+          });
+        })
+        .catch(error => {
+          console.error('❌ Picture URL is NOT accessible:', {
+            url: publicUrl,
+            error: error.message
+          });
+        });
+
       // Save picture immediately to database if mentor exists
       // For new mentors, picture URL is saved in formData and will be included when creating the mentor
       if (mentor?.id) {
@@ -189,6 +218,8 @@ const AdminMentorEditor = () => {
   };
 
   const handleSave = async () => {
+    console.log('Save button clicked!', { mentor: mentor?.id, formData });
+    
     if (!formData.name || !formData.bio) {
       toast.error("Please fill in name and bio");
       return;
@@ -199,30 +230,40 @@ const AdminMentorEditor = () => {
       return;
     }
 
-    // Ensure picture is explicitly included in the save payload
-    const saveData: CreateMentorInput = {
-      ...formData,
-      picture: formData.picture || null, // Explicitly include picture field
-    };
+    try {
+      setSaving(true);
+      console.log('Starting save operation...');
 
-    // Debug: Log saveData to verify picture is included
-    console.log('Saving mentor with data:', {
-      ...saveData,
-      picture: saveData.picture ? `Picture URL: ${saveData.picture.substring(0, 50)}...` : 'No picture URL'
-    });
+      // Ensure picture is explicitly included in the save payload
+      const saveData: CreateMentorInput = {
+        ...formData,
+        picture: formData.picture || null, // Explicitly include picture field
+      };
 
-    let result: Mentor | null = null;
-    if (mentor) {
-      result = await updateMentor(mentor.id, saveData);
-    } else {
-      result = await createMentor(saveData);
-    }
+      // Debug: Log saveData to verify picture is included
+      console.log('Saving mentor with data:', {
+        ...saveData,
+        picture: saveData.picture ? `Picture URL: ${saveData.picture.substring(0, 50)}...` : 'No picture URL'
+      });
 
-    if (result) {
-      toast.success(mentor ? "Mentor updated!" : "Mentor created!");
-      navigate(`/community/mentors/${result.id}`);
-    } else {
-      toast.error("Failed to save mentor. Please check the console for details.");
+      let result: Mentor | null = null;
+      if (mentor) {
+        result = await updateMentor(mentor.id, saveData);
+      } else {
+        result = await createMentor(saveData);
+      }
+
+      if (result) {
+        toast.success(mentor ? "Mentor updated!" : "Mentor created!");
+        navigate(`/community/mentors/${result.id}`);
+      } else {
+        toast.error("Failed to save mentor. Please check the console for details.");
+      }
+    } catch (error: any) {
+      console.error('Error in handleSave:', error);
+      toast.error(`Failed to save mentor: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -275,9 +316,9 @@ const AdminMentorEditor = () => {
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={loading}
+                disabled={loading || saving || uploadingPicture}
               >
-                {loading ? (
+                {(loading || saving) ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
@@ -300,7 +341,11 @@ const AdminMentorEditor = () => {
               {/* Picture Upload */}
               <div className="flex items-center gap-6">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={picturePreview || undefined} />
+                  <AvatarImage 
+                    src={picturePreview || formData.picture || undefined} 
+                    alt={formData.name || 'Mentor'}
+                    className="object-cover"
+                  />
                   <AvatarFallback className="text-2xl">
                     {formData.name ? formData.name[0].toUpperCase() : <User className="h-12 w-12" />}
                   </AvatarFallback>

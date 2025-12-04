@@ -62,7 +62,11 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
           <div className="flex-shrink-0">
             <div className="relative">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={mentor.picture} alt={mentor.name} />
+                <AvatarImage 
+                  src={mentor.picture || undefined} 
+                  alt={mentor.name}
+                  className="object-cover"
+                />
                 <AvatarFallback className="bg-muted text-foreground font-semibold">
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
