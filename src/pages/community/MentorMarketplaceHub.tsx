@@ -132,7 +132,7 @@ const MentorMarketplaceHub = () => {
   }, [mentors]);
 
   // Typing animation for description
-  const descriptionText = "Match with vetted startup coaches for hands-on guidance from first idea to first funding, tailored to the realities of pre-seed founders who are still figuring things out. Book focused 1-on-1 sessions, get actionable feedback on your roadmap, pitch, and go-to-market, and leave each call with clear next steps you can execute immediately.";
+  const descriptionText = "Match with vetted startup coaches for hands-on guidance from first idea to first funding, tailored to the realities of pre-seed founders who are still figuring things out. \n\nBook focused 1-on-1 sessions, get actionable feedback on your roadmap, pitch, and go-to-market, and leave each call with clear next steps you can execute immediately.";
   const { displayedText, isTyping } = useTypingAnimation({
     text: descriptionText,
     speed: 20,
@@ -165,7 +165,13 @@ const MentorMarketplaceHub = () => {
                 
                 {/* Description with typing animation */}
                 <div className="max-w-3xl mx-auto mb-8">
-                  <p className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed">
+                  <p 
+                    className="text-base sm:text-lg md:text-xl text-foreground/90 leading-relaxed" 
+                    style={{ 
+                      whiteSpace: 'pre-line',
+                      fontFamily: "'Space Grotesk', 'Poppins', sans-serif"
+                    }}
+                  >
                     {displayedText}
                     {isTyping && (
                       <span className="inline-block w-0.5 h-5 sm:h-6 bg-primary ml-1 animate-pulse" />
