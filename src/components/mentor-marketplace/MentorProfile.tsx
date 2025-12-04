@@ -250,7 +250,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                 {hourlyRateFormatted}
               </div>
               <div className="text-xs lg:text-sm text-muted-foreground">
-                8 Week Coaching Program Fee
+                8 Week Coaching Program
               </div>
             </div>
           </div>

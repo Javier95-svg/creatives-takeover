@@ -140,7 +140,7 @@ export const FilterSidebar = ({
         {/* Price Range */}
         <div>
           <Label className="text-sm font-semibold mb-3 block">
-            8 Week Coaching Program Fee
+            8 Week Coaching Program
           </Label>
           <div className="space-y-3">
             <Slider

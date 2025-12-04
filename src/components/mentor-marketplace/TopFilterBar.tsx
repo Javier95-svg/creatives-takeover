@@ -167,7 +167,7 @@ export const TopFilterBar = ({
         </PopoverTrigger>
         <PopoverContent className="w-80" align="start">
           <div className="space-y-4">
-            <Label className="font-semibold">8 Week Coaching Program Fee</Label>
+            <Label className="font-semibold">8 Week Coaching Program</Label>
             <Separator />
             <div className="space-y-3">
               <Slider
