@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createArticleSchema, createBreadcrumbSchema } from "@/components/SEO";
 import { slugifyTag } from "@/utils/hashtagUtils";
+import RelatedStories from "@/components/stories/RelatedStories";
 
 // LinkedIn Embed Component
 const LinkedInEmbed = ({ url }: { url: string }) => {
@@ -190,8 +191,45 @@ const StoryArticle = () => {
     day: "numeric",
   });
 
+  // Calculate reading time (average reading speed: 200 words per minute)
+  const calculateReadingTime = (content: string | null): number => {
+    if (!content) return 3; // Default 3 minutes for LinkedIn posts
+    const words = content.split(/\s+/).length;
+    const minutes = Math.ceil(words / 200);
+    return Math.max(1, minutes); // Minimum 1 minute
+  };
+  const readingTime = calculateReadingTime(article.body_content || article.excerpt);
+
+  // Optimize meta title - include primary keyword (first hashtag) if available
+  const primaryTag = article.hashtags && article.hashtags.length > 0 
+    ? article.hashtags[0].replace('#', '') 
+    : '';
   const metaTitle = article.meta_title || article.title;
-  const metaDescription = article.meta_description || article.excerpt || article.title;
+  const optimizedMetaTitle = primaryTag && !metaTitle.toLowerCase().includes(primaryTag.toLowerCase())
+    ? `${metaTitle} | ${primaryTag}`
+    : metaTitle;
+  
+  // Optimize meta description - ensure 150-160 characters, keyword-rich
+  let metaDescription = article.meta_description || article.excerpt || article.title;
+  if (metaDescription.length < 120) {
+    // Enhance short descriptions
+    const tagKeywords = article.hashtags?.slice(0, 2).map(t => t.replace('#', '')).join(', ') || '';
+    metaDescription = tagKeywords 
+      ? `${metaDescription} Learn about ${tagKeywords} and more from Creatives Takeover.`
+      : `${metaDescription} Read insights and stories from Creatives Takeover.`;
+  }
+  // Ensure description is within optimal length (150-160 chars)
+  if (metaDescription.length > 160) {
+    metaDescription = metaDescription.substring(0, 157) + '...';
+  } else if (metaDescription.length < 120) {
+    metaDescription = metaDescription + ' Discover expert insights and actionable advice.';
+    if (metaDescription.length > 160) {
+      metaDescription = metaDescription.substring(0, 157) + '...';
+    }
+  }
+  
+  // Get primary hashtag for article:section
+  const articleSection = primaryTag || 'General';
   
   // Use LinkedIn OG image if available, otherwise fallback to banner or default
   const ogImage = linkedInOgImage || article.banner_image_url || "";
@@ -201,17 +239,21 @@ const StoryArticle = () => {
   return (
     <>
       <Helmet>
-        <title>{metaTitle} | Creatives Takeover Stories</title>
+        <title>{optimizedMetaTitle} | Creatives Takeover Stories</title>
         <meta name="description" content={metaDescription} />
         {article.hashtags && article.hashtags.length > 0 && (
           <meta name="keywords" content={article.hashtags.map(t => t.replace('#', '')).join(', ')} />
         )}
+        <meta name="author" content="Creatives Takeover" />
 
         {/* Open Graph - Optimized for LinkedIn (1200x627 or 1920x1080) */}
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={metaTitle} />
+        <meta property="og:title" content={optimizedMetaTitle} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:url" content={articleUrl} />
+        <meta property="article:section" content={articleSection} />
+        <meta property="article:author" content="Creatives Takeover" />
+        <meta property="article:publisher" content="Creatives Takeover" />
         {ogImageUrl && (
           <>
             <meta property="og:image" content={ogImageUrl} />
@@ -239,31 +281,59 @@ const StoryArticle = () => {
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:title" content={optimizedMetaTitle} />
         <meta name="twitter:description" content={metaDescription} />
         {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
-        <meta name="twitter:image:alt" content={metaTitle} />
+        <meta name="twitter:image:alt" content={optimizedMetaTitle} />
+        <meta name="twitter:site" content="@CreativesTakeover" />
+        <meta name="twitter:creator" content="@CreativesTakeover" />
 
         <link rel="canonical" href={articleUrl} />
+        {article.linkedin_post_url && (
+          <link rel="alternate" href={article.linkedin_post_url} type="text/html" />
+        )}
 
         {/* Structured Data (JSON-LD) */}
         <script type="application/ld+json">
           {JSON.stringify([
-            createArticleSchema({
-              title: article.title,
-              description: metaDescription,
-              image: ogImageUrl || undefined,
-              author: "Creatives Takeover",
-              publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
-              modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
-              url: `/stories/${article.slug}`,
-              keywords: article.hashtags || [],
-            }),
+            {
+              ...createArticleSchema({
+                title: article.title,
+                description: metaDescription,
+                image: ogImageUrl || undefined,
+                author: "Creatives Takeover",
+                publishedTime: article.published_at ? new Date(article.published_at).toISOString() : new Date(article.created_at).toISOString(),
+                modifiedTime: article.updated_at ? new Date(article.updated_at).toISOString() : undefined,
+                url: `/stories/${article.slug}`,
+                keywords: article.hashtags || [],
+                articleSection: articleSection,
+              }),
+              "@id": `https://creatives-takeover.com/stories/${article.slug}`,
+              "mainEntity": {
+                "@type": "WebPage",
+                "@id": `https://creatives-takeover.com/stories/${article.slug}`
+              }
+            },
             createBreadcrumbSchema([
               { name: 'Home', url: '/' },
               { name: 'Stories', url: '/stories' },
               { name: article.title, url: `/stories/${article.slug}` }
-            ])
+            ]),
+            // ImageObject schema for banner image
+            ...(ogImageUrl ? [{
+              "@context": "https://schema.org",
+              "@type": "ImageObject",
+              "url": ogImageUrl,
+              "contentUrl": ogImageUrl,
+              "caption": article.title,
+              "description": metaDescription,
+            }] : []),
+            // Speakable schema for voice search
+            {
+              "@context": "https://schema.org",
+              "@type": "SpeakableSpecification",
+              "cssSelector": ["h1", ".excerpt"]
+            }
           ])}
         </script>
       </Helmet>
@@ -277,8 +347,9 @@ const StoryArticle = () => {
             <div className="w-full h-[400px] md:h-[500px] overflow-hidden bg-muted relative">
               <img
                 src={article.banner_image_url}
-                alt={article.title}
+                alt={article.excerpt || article.title}
                 className="w-full h-full object-cover"
+                loading="lazy"
                 onError={(e) => {
                   // Fallback if image fails to load
                   const target = e.target as HTMLImageElement;
@@ -337,19 +408,21 @@ const StoryArticle = () => {
 
               {/* Excerpt */}
               {article.excerpt && (
-                <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
+                <p className="text-xl text-muted-foreground mb-6 leading-relaxed excerpt">
                   {article.excerpt}
                 </p>
               )}
 
               {/* Metadata */}
               <div className="flex items-center gap-6 mb-6 text-muted-foreground text-sm">
-                <div className="flex items-center gap-2">
+                <time dateTime={publishedDate.toISOString()} className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>{fullDate}</span>
-                </div>
+                </time>
                 <span>•</span>
                 <span>{timeAgo}</span>
+                <span>•</span>
+                <span>{readingTime} min read</span>
               </div>
 
               {/* Share Buttons */}
@@ -400,7 +473,7 @@ const StoryArticle = () => {
                 <LinkedInEmbed url={article.linkedin_post_url} />
               </div>
             ) : article.body_content ? (
-              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
+              <section className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-headings:mt-8 prose-headings:mb-4 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-bold prose-ul:list-disc prose-ol:list-decimal prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-muted prose-pre:p-4 prose-pre:rounded-lg">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
@@ -408,7 +481,8 @@ const StoryArticle = () => {
                       <img
                         {...props}
                         className="rounded-lg my-4 max-w-full h-auto"
-                        alt={props.alt || ""}
+                        alt={props.alt || article.title}
+                        loading="lazy"
                       />
                     ),
                     a: ({ node, ...props }) => (
@@ -423,12 +497,15 @@ const StoryArticle = () => {
                 >
                   {article.body_content}
                 </ReactMarkdown>
-              </div>
+              </section>
             ) : (
               <div className="my-8 p-8 border border-dashed rounded-lg text-center text-muted-foreground">
                 <p>No content available for this article.</p>
               </div>
             )}
+
+            {/* Related Stories Section */}
+            <RelatedStories currentStory={article} limit={3} />
           </article>
         </main>
 

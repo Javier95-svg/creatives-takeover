@@ -10,13 +10,15 @@ import { Hash, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createBreadcrumbSchema } from "@/components/SEO";
 import { normalizeHashtag, slugifyTag } from "@/utils/hashtagUtils";
+import RelatedTags from "@/components/stories/RelatedTags";
 
 const StoryTagPage = () => {
   const { tagSlug } = useParams<{ tagSlug: string }>();
   const navigate = useNavigate();
-  const { fetchStories, loading } = useStories();
+  const { fetchStories, fetchUniqueHashtags, loading } = useStories();
   const [stories, setStories] = useState<StoryArticle[]>([]);
   const [tagDisplay, setTagDisplay] = useState<string>("");
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!tagSlug) {
@@ -97,18 +99,28 @@ const StoryTagPage = () => {
   const baseUrl = window.location.origin;
   const fullUrl = `${baseUrl}${tagUrl}`;
   
-  // Create description based on stories
+  // Create enhanced description based on stories
   const description = stories.length > 0
-    ? `Discover ${stories.length} ${stories.length === 1 ? 'story' : 'stories'} tagged with ${tagDisplay}. Explore insights, articles, and posts about ${tagDisplay} from Creatives Takeover.`
-    : `Explore stories and articles tagged with ${tagDisplay} from Creatives Takeover.`;
+    ? `Discover ${stories.length} ${stories.length === 1 ? 'story' : 'stories'} about ${tagDisplay}. Read expert insights, actionable advice, and real-world examples on ${tagDisplay} from Creatives Takeover. Learn from successful entrepreneurs and creative professionals.`
+    : `Explore stories and articles about ${tagDisplay} from Creatives Takeover. Discover expert insights, actionable advice, and inspiration for your creative journey.`;
+  
+  // Enhanced meta description (150-160 chars)
+  const optimizedDescription = description.length > 160 
+    ? description.substring(0, 157) + '...'
+    : description;
 
   // CollectionPage schema for tag archive
   const collectionPageSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": `${tagDisplay} Stories | Creatives Takeover`,
-    "description": description,
+    "description": optimizedDescription,
     "url": `https://creatives-takeover.com${tagUrl}`,
+    "about": {
+      "@type": "Thing",
+      "name": tagDisplay
+    },
+    "keywords": `${tagDisplay}, entrepreneurship, business, startups, creative insights`,
     "mainEntity": {
       "@type": "ItemList",
       "numberOfItems": stories.length,
@@ -139,13 +151,13 @@ const StoryTagPage = () => {
     <>
       <Helmet>
         <title>{tagDisplay} Stories | Creatives Takeover</title>
-        <meta name="description" content={description} />
-        <meta name="keywords" content={`${tagDisplay}, stories, articles, insights, creatives takeover`} />
+        <meta name="description" content={optimizedDescription} />
+        <meta name="keywords" content={`${tagDisplay}, stories, articles, insights, entrepreneurship, business, startups, creative insights, creatives takeover`} />
         
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${tagDisplay} Stories | Creatives Takeover`} />
-        <meta property="og:description" content={description} />
+        <meta property="og:description" content={optimizedDescription} />
         <meta property="og:url" content={fullUrl} />
         <meta property="og:site_name" content="Creatives Takeover" />
         <meta property="og:locale" content="en_US" />
@@ -153,7 +165,8 @@ const StoryTagPage = () => {
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={`${tagDisplay} Stories | Creatives Takeover`} />
-        <meta name="twitter:description" content={description} />
+        <meta name="twitter:description" content={optimizedDescription} />
+        <meta name="twitter:site" content="@CreativesTakeover" />
         
         <link rel="canonical" href={fullUrl} />
 
@@ -179,19 +192,31 @@ const StoryTagPage = () => {
             </div>
 
             {/* Header */}
-            <div className="mb-8">
+            <header className="mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <Hash className="w-6 h-6 text-muted-foreground" />
                 <h1 className="text-3xl md:text-4xl font-bold">
-                  Stories Tagged: {tagDisplay}
+                  Stories About {tagDisplay}
                 </h1>
               </div>
               {stories.length > 0 && (
-                <p className="text-muted-foreground">
-                  Found {stories.length} {stories.length === 1 ? 'story' : 'stories'}
+                <p className="text-muted-foreground mb-4">
+                  Found {stories.length} {stories.length === 1 ? 'story' : 'stories'} about {tagDisplay}
                 </p>
               )}
-            </div>
+              <div className="prose prose-sm max-w-none text-muted-foreground">
+                <p>
+                  Explore our collection of stories, insights, and articles about {tagDisplay}. 
+                  Learn from expert advice, real-world examples, and actionable strategies to help you succeed.
+                </p>
+              </div>
+              {/* Related Tags */}
+              {tagDisplay && (
+                <div className="mt-6">
+                  <RelatedTags currentTag={`#${tagDisplay}`} limit={8} />
+                </div>
+              )}
+            </header>
 
             {/* Stories Grid */}
             {loading ? (

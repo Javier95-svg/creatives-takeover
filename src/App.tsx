@@ -35,6 +35,7 @@ import Stories from "./pages/Stories";
 import StoryArticle from "./pages/StoryArticle";
 import StoryTagPage from "./pages/StoryTagPage";
 import AdminStoryEditor from "./pages/AdminStoryEditor";
+import StoriesRSS from "./pages/StoriesRSS";
 import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
@@ -99,6 +100,7 @@ function App() {
                   <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                   <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
                   <Route path="/stories" element={<Stories />} />
+                  <Route path="/stories/rss.xml" element={<StoriesRSS />} />
                   <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
                   <Route path="/stories/:slug" element={<StoryArticle />} />
                   <Route path="/stories/admin/new" element={<AdminStoryEditor />} />

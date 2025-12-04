@@ -108,19 +108,27 @@ const Stories = () => {
         <title>Stories | Creatives Takeover</title>
         <meta
           name="description"
-          content="Read stories, insights, and articles from Creatives Takeover. Learn about entrepreneurship, startups, marketing, fundraising, and more."
+          content="Read expert stories, insights, and articles from Creatives Takeover. Learn about entrepreneurship, startups, marketing, fundraising, business strategy, and creative success stories from industry leaders."
         />
         <meta
           name="keywords"
-          content="startups, entrepreneurship, marketing, fundraising, business stories, creative insights"
+          content="startups, entrepreneurship, marketing, fundraising, business stories, creative insights, business strategy, startup advice, entrepreneur stories, business growth"
         />
+        <meta name="author" content="Creatives Takeover" />
         <meta property="og:title" content="Stories | Creatives Takeover" />
         <meta
           property="og:description"
-          content="Discover stories, insights, and articles about turning ideas into reality."
+          content="Discover expert stories, insights, and articles about turning ideas into reality. Learn from successful entrepreneurs and creative professionals."
         />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="/stories" />
+        <meta property="og:url" content="https://creatives-takeover.com/stories" />
+        <meta property="og:site_name" content="Creatives Takeover" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Stories | Creatives Takeover" />
+        <meta name="twitter:description" content="Discover expert stories, insights, and articles about turning ideas into reality." />
+        <meta name="twitter:site" content="@CreativesTakeover" />
+        <link rel="canonical" href="https://creatives-takeover.com/stories" />
+        <link rel="alternate" type="application/rss+xml" title="Creatives Takeover Stories RSS Feed" href="https://creatives-takeover.com/stories/rss.xml" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -135,6 +143,23 @@ const Stories = () => {
 
           {/* Content Section */}
           <div className="container mx-auto px-6 max-w-7xl relative z-10">
+            {/* SEO-Friendly Intro Content */}
+            {!selectedTag && activeTab === "published" && (
+              <section className="mb-12 mt-8">
+                <div className="max-w-3xl">
+                  <h2 className="text-3xl font-bold mb-4">Expert Stories & Insights</h2>
+                  <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                    Discover actionable insights, real-world stories, and expert advice from successful entrepreneurs and creative professionals. 
+                    Learn from their experiences, mistakes, and triumphs as they build and grow their businesses.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Whether you're starting a new venture, scaling your business, or looking for creative inspiration, 
+                    our stories cover topics like entrepreneurship, marketing, fundraising, business strategy, and more.
+                  </p>
+                </div>
+              </section>
+            )}
+
             {/* Admin Controls */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
@@ -180,22 +205,27 @@ const Stories = () => {
 
               {/* Popular Tags - Only show for published */}
               {allTags.length > 0 && !selectedTag && activeTab === "published" && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="text-sm text-muted-foreground mr-2">Popular tags:</span>
-                  {allTags.slice(0, 10).map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                      onClick={() => {
-                        const tagSlug = slugifyTag(tag);
-                        navigate(`/stories/tags/${tagSlug}`);
-                      }}
-                    >
-                      <Hash className="w-3 h-3 mr-1" />
-                      {tag.replace('#', '')}
-                    </Badge>
-                  ))}
+                <div className="mt-6 p-6 border rounded-lg bg-muted/30">
+                  <h3 className="text-lg font-semibold mb-4">Explore Topics</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Browse stories by topic to find insights relevant to your interests
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.slice(0, 15).map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
+                        onClick={() => {
+                          const tagSlug = slugifyTag(tag);
+                          navigate(`/stories/tags/${tagSlug}`);
+                        }}
+                      >
+                        <Hash className="w-3 h-3 mr-1" />
+                        {tag.replace('#', '')}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
