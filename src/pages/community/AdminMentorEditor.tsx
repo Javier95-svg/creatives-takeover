@@ -141,22 +141,27 @@ const AdminMentorEditor = () => {
       };
       reader.readAsDataURL(file);
 
-      // Upload to storage
-      const fileExt = file.name.split('.').pop();
-      // Use mentor ID if exists, otherwise use a UUID-like string for temp uploads
-      const fileId = mentor?.id || `temp-${Date.now()}`;
-      const fileName = `${fileId}-${Date.now()}.${fileExt}`;
+      // Upload to storage - EXACT same pattern as Account page (which works!)
+      // Use folder structure: mentorId/timestamp.ext (like user.id/timestamp.jpg in Account)
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileId = mentor?.id || 'temp';
+      const fileName = `${fileId}/${Date.now()}.${fileExt}`;
 
-      console.log('📤 Uploading to storage:', { 
+      console.log('📤 Uploading to storage (Account page pattern):', { 
         fileName, 
         bucket: 'mentor-pictures',
         fileId,
         hasMentorId: !!mentor?.id
       });
 
+      // Use EXACT same upload options as Account page handleCropComplete
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('mentor-pictures')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,  // Allow overwrite (Account uses false, but we want overwrite)
+          contentType: file.type
+        });
 
       if (uploadError) {
         console.error('❌ Storage upload error:', uploadError);
@@ -166,6 +171,7 @@ const AdminMentorEditor = () => {
 
       console.log('✅ File uploaded to storage:', uploadData);
 
+      // Get public URL - same pattern as Account page
       const { data: { publicUrl } } = supabase.storage
         .from('mentor-pictures')
         .getPublicUrl(fileName);
