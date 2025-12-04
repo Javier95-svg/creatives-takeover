@@ -134,11 +134,32 @@ const AdminMentorEditor = () => {
         .from('mentor-pictures')
         .getPublicUrl(fileName);
 
+      // Update formData with picture URL
       setFormData((prev) => ({
         ...prev,
         picture: publicUrl,
       }));
-      toast.success('Picture uploaded successfully');
+
+      // Save picture immediately to database if mentor exists
+      // For new mentors, picture URL is saved in formData and will be included when creating the mentor
+      if (mentor?.id) {
+        const { error: dbError } = await supabase
+          .from('mentors')
+          .update({ picture: publicUrl })
+          .eq('id', mentor.id);
+
+        if (dbError) {
+          console.error('Error saving picture to database:', dbError);
+          toast.error(`Failed to save picture: ${dbError.message || 'Database error'}`);
+          throw dbError;
+        }
+        
+        // Update the mentor state to reflect the new picture
+        setMentor({ ...mentor, picture: publicUrl });
+        toast.success('Picture uploaded and saved successfully!');
+      } else {
+        toast.success('Picture uploaded successfully! It will be saved when you create the mentor.');
+      }
     } catch (error: any) {
       console.error('Error uploading picture:', error);
       toast.error('Failed to upload picture');
@@ -178,22 +199,30 @@ const AdminMentorEditor = () => {
       return;
     }
 
-    // Debug: Log formData to verify picture is included
-    console.log('Saving mentor with formData:', {
+    // Ensure picture is explicitly included in the save payload
+    const saveData: CreateMentorInput = {
       ...formData,
-      picture: formData.picture ? 'Picture URL present' : 'No picture URL'
+      picture: formData.picture || null, // Explicitly include picture field
+    };
+
+    // Debug: Log saveData to verify picture is included
+    console.log('Saving mentor with data:', {
+      ...saveData,
+      picture: saveData.picture ? `Picture URL: ${saveData.picture.substring(0, 50)}...` : 'No picture URL'
     });
 
     let result: Mentor | null = null;
     if (mentor) {
-      result = await updateMentor(mentor.id, formData);
+      result = await updateMentor(mentor.id, saveData);
     } else {
-      result = await createMentor(formData);
+      result = await createMentor(saveData);
     }
 
     if (result) {
       toast.success(mentor ? "Mentor updated!" : "Mentor created!");
       navigate(`/community/mentors/${result.id}`);
+    } else {
+      toast.error("Failed to save mentor. Please check the console for details.");
     }
   };
 
