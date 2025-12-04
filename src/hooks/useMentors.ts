@@ -13,6 +13,8 @@ export interface CreateMentorInput {
   expertise?: string[];
   is_active?: boolean;
   is_featured?: boolean;
+  linkedin_url?: string | null;
+  twitter_x_url?: string | null;
 }
 
 // Helper function to format error messages

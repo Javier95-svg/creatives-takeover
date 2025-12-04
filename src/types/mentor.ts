@@ -14,6 +14,8 @@ export interface Mentor {
   availability?: AvailabilitySlot[]; // Available time slots
   is_active?: boolean; // Whether mentor is accepting new bookings
   is_featured?: boolean; // Whether mentor is featured on the hub page
+  linkedin_url?: string; // LinkedIn profile URL
+  twitter_x_url?: string; // X (Twitter) profile URL
   created_at: string;
   updated_at: string;
 }

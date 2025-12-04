@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Mentor } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
-import { Star, CheckCircle2, MessageCircle, Calendar, Heart } from "lucide-react";
+import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MentorCardProps {
@@ -85,6 +85,38 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
               </Link>
               <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
             </div>
+
+            {/* Social Links */}
+            {(mentor.linkedin_url || mentor.twitter_x_url) && (
+              <div className="flex items-center gap-3 mb-2">
+                {mentor.linkedin_url && (
+                  <a
+                    href={mentor.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-blue-600 transition-colors"
+                    aria-label="LinkedIn"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Linkedin className="h-4 w-4" />
+                  </a>
+                )}
+                {mentor.twitter_x_url && (
+                  <a
+                    href={mentor.twitter_x_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="X (Twitter)"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* Rating and Reviews */}
             {rating > 0 && (

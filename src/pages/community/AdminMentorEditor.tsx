@@ -56,6 +56,8 @@ const AdminMentorEditor = () => {
     expertise: [],
     is_active: true,
     is_featured: false,
+    linkedin_url: null,
+    twitter_x_url: null,
   });
 
   useEffect(() => {
@@ -82,7 +84,9 @@ const AdminMentorEditor = () => {
         hourly_rate: found.hourly_rate,
         expertise: found.expertise || [],
         is_active: found.is_active !== false,
-        is_featured: false,
+        is_featured: found.is_featured === true,
+        linkedin_url: found.linkedin_url || null,
+        twitter_x_url: found.twitter_x_url || null,
       });
       if (found.picture) {
         setPicturePreview(found.picture);
@@ -307,6 +311,42 @@ const AdminMentorEditor = () => {
                   placeholder="Enter mentor's full name"
                   className="mt-1"
                 />
+              </div>
+
+              {/* Social Links */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                  <Input
+                    id="linkedin_url"
+                    type="url"
+                    value={formData.linkedin_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, linkedin_url: e.target.value || null }))
+                    }
+                    placeholder="https://linkedin.com/in/username"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional LinkedIn profile URL
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="twitter_x_url">X (Twitter) URL</Label>
+                  <Input
+                    id="twitter_x_url"
+                    type="url"
+                    value={formData.twitter_x_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, twitter_x_url: e.target.value || null }))
+                    }
+                    placeholder="https://x.com/username"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional X (Twitter) profile URL
+                  </p>
+                </div>
               </div>
 
               {/* Bio */}
