@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -73,13 +72,6 @@ export const FilterSidebar = ({
     onFiltersChange({
       ...filters,
       stage: newStage,
-    });
-  };
-
-  const handlePriceRangeChange = (values: number[]) => {
-    onFiltersChange({
-      ...filters,
-      priceRange: [values[0], values[1]],
     });
   };
 
@@ -167,51 +159,39 @@ export const FilterSidebar = ({
           <Label className="text-sm font-semibold mb-3 block">
             Coaching Program Fee
           </Label>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {/* Scroll Button at Top */}
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleScrollUp}
-                disabled={filters.priceRange[1] >= priceRangeMax}
-                className="h-8 w-full"
-              >
-                <ChevronUp className="h-4 w-4 mr-2" />
-                Scroll to Higher Range
-              </Button>
-            </div>
-
-            {/* Slider */}
-            <Slider
-              value={filters.priceRange}
-              onValueChange={handlePriceRangeChange}
-              min={0}
-              max={priceRangeMax}
-              step={500} // $5 increments
-              className="w-full"
-            />
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              onClick={handleScrollUp}
+              disabled={filters.priceRange[1] >= priceRangeMax}
+              className="w-full h-10"
+            >
+              <ChevronUp className="h-4 w-4 mr-2" />
+              Scroll to Higher Range
+            </Button>
             
             {/* Range Display */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{priceRangeDisplay}</span>
+            <div className="text-center py-3 px-4 bg-muted/50 rounded-md">
+              <span className="text-base font-semibold text-foreground">
+                {priceRangeDisplay}
+              </span>
             </div>
 
             {/* Scroll Button at Bottom */}
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleScrollDown}
-                disabled={filters.priceRange[0] <= 0}
-                className="h-8 w-full"
-              >
-                <ChevronDown className="h-4 w-4 mr-2" />
-                Scroll to Lower Range
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              onClick={handleScrollDown}
+              disabled={filters.priceRange[0] <= 0}
+              className="w-full h-10"
+            >
+              <ChevronDown className="h-4 w-4 mr-2" />
+              Scroll to Lower Range
+            </Button>
           </div>
         </div>
 
