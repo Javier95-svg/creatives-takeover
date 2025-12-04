@@ -85,9 +85,9 @@ export const BookingModal = ({
 
         <div className="space-y-6 py-4">
           {/* Calendar */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label>Select Date</Label>
-            <div className="w-full border rounded-md p-3 bg-card">
+            <div className="w-full border rounded-md bg-card p-4">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -95,6 +95,16 @@ export const BookingModal = ({
                 disabled={(date) => date < new Date()}
                 initialFocus
                 className="w-full"
+                classNames={{
+                  months: "w-full",
+                  month: "w-full",
+                  caption: "w-full flex justify-center",
+                  table: "w-full",
+                  head_row: "w-full flex",
+                  head_cell: "w-full text-center",
+                  row: "w-full flex",
+                  cell: "flex-1",
+                }}
               />
             </div>
           </div>
