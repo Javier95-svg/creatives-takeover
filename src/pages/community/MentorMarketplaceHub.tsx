@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import MentorMarketplaceWallpaper from "@/components/wallpapers/MentorMarketplaceWallpaper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MentorCard } from "@/components/mentor-marketplace/MentorCard";
 import { TopFilterBar } from "@/components/mentor-marketplace/TopFilterBar";
@@ -54,36 +53,6 @@ const MentorMarketplaceHub = () => {
     setMentors(fetchedMentors);
   };
 
-  // Calculate popular expertise tags
-  const popularExpertise = useMemo(() => {
-    const expertiseCount = new Map<string, number>();
-    
-    mentors.forEach((mentor) => {
-      mentor.expertise?.forEach((exp) => {
-        expertiseCount.set(exp, (expertiseCount.get(exp) || 0) + 1);
-      });
-    });
-
-    return Array.from(expertiseCount.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([expertise]) => expertise);
-  }, [mentors]);
-
-  const handleExpertiseClick = (expertise: string) => {
-    // Add expertise to filters instead of navigating
-    if (!filters.expertise.includes(expertise)) {
-      setFilters((prev) => ({
-        ...prev,
-        expertise: [...prev.expertise, expertise],
-      }));
-    }
-    // Scroll to mentor grid
-    const mentorGrid = document.getElementById('mentor-grid');
-    if (mentorGrid) {
-      mentorGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   const filteredMentors = useMemo(() => {
     let result = mentors.filter((mentor) => {
@@ -204,22 +173,6 @@ const MentorMarketplaceHub = () => {
                   </p>
                 </div>
 
-                {/* Popular Expertise Tags */}
-                {popularExpertise.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <span className="text-sm font-medium text-muted-foreground">Popular expertise:</span>
-                    {popularExpertise.map((expertise) => (
-                      <Badge
-                        key={expertise}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
-                        onClick={() => handleExpertiseClick(expertise)}
-                      >
-                        {expertise}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </section>
