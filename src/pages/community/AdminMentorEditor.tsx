@@ -97,7 +97,26 @@ const AdminMentorEditor = () => {
 
   const handlePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      toast.error('No file selected');
+      return;
+    }
+
+    // Check if mentor ID exists (required for existing mentors)
+    if (!mentor?.id && id && id !== 'new') {
+      toast.error('Mentor ID not found. Please refresh the page and try again.');
+      console.error('Mentor ID missing:', { id, mentor });
+      return;
+    }
+
+    console.log('📤 Starting picture upload:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      mentorId: mentor?.id || 'new mentor',
+      pageId: id
+    });
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
@@ -113,6 +132,7 @@ const AdminMentorEditor = () => {
 
     try {
       setUploadingPicture(true);
+      toast.loading('Uploading picture...', { id: 'upload-picture' });
 
       // Show preview
       const reader = new FileReader();
@@ -123,17 +143,34 @@ const AdminMentorEditor = () => {
 
       // Upload to storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${mentor?.id || 'temp'}-${Date.now()}.${fileExt}`;
+      // Use mentor ID if exists, otherwise use a UUID-like string for temp uploads
+      const fileId = mentor?.id || `temp-${Date.now()}`;
+      const fileName = `${fileId}-${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('📤 Uploading to storage:', { 
+        fileName, 
+        bucket: 'mentor-pictures',
+        fileId,
+        hasMentorId: !!mentor?.id
+      });
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('mentor-pictures')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Storage upload error:', uploadError);
+        toast.error(`Upload failed: ${uploadError.message || 'Storage error'}`, { id: 'upload-picture' });
+        throw uploadError;
+      }
+
+      console.log('✅ File uploaded to storage:', uploadData);
 
       const { data: { publicUrl } } = supabase.storage
         .from('mentor-pictures')
         .getPublicUrl(fileName);
+
+      console.log('✅ Public URL generated:', publicUrl);
 
       // Update formData with picture URL
       setFormData((prev) => ({
@@ -144,57 +181,53 @@ const AdminMentorEditor = () => {
       // Update picturePreview to show the actual uploaded URL (not just base64 preview)
       setPicturePreview(publicUrl);
 
-      console.log('✅ Picture uploaded successfully:', {
-        fileName,
-        publicUrl,
-        publicUrlLength: publicUrl?.length,
-        mentorId: mentor?.id || 'new mentor',
-        fileSize: file.size,
-        fileType: file.type
-      });
-      
-      // Verify the URL is accessible
-      fetch(publicUrl, { method: 'HEAD' })
-        .then(response => {
-          console.log('✅ Picture URL is accessible:', {
-            url: publicUrl,
-            status: response.status,
-            contentType: response.headers.get('content-type')
-          });
-        })
-        .catch(error => {
-          console.error('❌ Picture URL is NOT accessible:', {
-            url: publicUrl,
-            error: error.message
-          });
-        });
-
       // Save picture immediately to database if mentor exists
-      // For new mentors, picture URL is saved in formData and will be included when creating the mentor
       if (mentor?.id) {
-        const { error: dbError } = await supabase
+        console.log('💾 Saving picture URL to database for mentor:', mentor.id);
+        toast.loading('Saving to database...', { id: 'save-picture' });
+
+        const { data: updateData, error: dbError } = await supabase
           .from('mentors')
           .update({ picture: publicUrl })
-          .eq('id', mentor.id);
+          .eq('id', mentor.id)
+          .select();
 
         if (dbError) {
-          console.error('Error saving picture to database:', dbError);
-          toast.error(`Failed to save picture: ${dbError.message || 'Database error'}`);
+          console.error('❌ Database update error:', dbError);
+          toast.error(`Failed to save picture: ${dbError.message || 'Database error'}`, { id: 'save-picture' });
           throw dbError;
         }
+
+        console.log('✅ Picture saved to database:', updateData);
         
         // Update the mentor state to reflect the new picture
         setMentor({ ...mentor, picture: publicUrl });
-        toast.success('Picture uploaded and saved successfully!');
+        toast.success('Picture uploaded and saved successfully!', { id: 'save-picture' });
       } else {
-        toast.success('Picture uploaded successfully! It will be saved when you create the mentor.');
+        toast.success('Picture uploaded successfully! It will be saved when you create the mentor.', { id: 'upload-picture' });
       }
     } catch (error: any) {
-      console.error('Error uploading picture:', error);
-      toast.error('Failed to upload picture');
+      console.error('❌ Error in handlePictureUpload:', {
+        error,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
+      toast.error(`Failed to upload picture: ${error?.message || 'Unknown error'}`, { id: 'upload-picture' });
+      
+      // Reset preview on error
+      if (mentor?.picture) {
+        setPicturePreview(mentor.picture);
+      } else {
+        setPicturePreview(null);
+      }
     } finally {
       setUploadingPicture(false);
-      event.target.value = '';
+      // Clear the file input
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   };
 
