@@ -48,8 +48,13 @@ const AuthCallback = () => {
           toast.success('Successfully signed in!');
           
           // Get return URL from localStorage (saved before OAuth redirect)
-          const returnUrl = localStorage.getItem('oauth_return_url') || '/';
+          let returnUrl = localStorage.getItem('oauth_return_url') || '/';
           const oauthSource = localStorage.getItem('oauth_source');
+          
+          // If return URL is a booking flow, redirect to /community instead
+          if (returnUrl.startsWith('/community/book/')) {
+            returnUrl = '/community';
+          }
           
           // Restore BizMap progress if it exists
           const savedBizMapProgress = localStorage.getItem('oauth_bizmap_progress');

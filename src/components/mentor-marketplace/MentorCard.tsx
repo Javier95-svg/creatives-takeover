@@ -5,6 +5,7 @@ import { Mentor } from "@/types/mentor";
 import { Link, useNavigate } from "react-router-dom";
 import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -13,6 +14,7 @@ interface MentorCardProps {
 
 export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   
   // Truncate bio if too long
@@ -45,7 +47,14 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const handleBookSession = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/community/book/${mentor.id}`);
+    
+    // If not authenticated, redirect to auth with booking redirect
+    if (!isAuthenticated) {
+      navigate(`/auth?redirect=/community/book/${mentor.id}`);
+    } else {
+      // If authenticated, navigate to booking page
+      navigate(`/community/book/${mentor.id}`);
+    }
   };
 
   const handleSendMessage = (e: React.MouseEvent) => {

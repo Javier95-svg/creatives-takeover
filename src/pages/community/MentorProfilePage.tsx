@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 const MentorProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, loading } = useMentors();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
@@ -35,7 +35,13 @@ const MentorProfilePage = () => {
   };
 
   const handleBookClick = () => {
-    setBookingModalOpen(true);
+    // If not authenticated, redirect to auth with booking redirect
+    if (!isAuthenticated) {
+      navigate(`/auth?redirect=/community/book/${id}`);
+    } else {
+      // If authenticated, open booking modal
+      setBookingModalOpen(true);
+    }
   };
 
   const handleBookingConfirm = (date: Date, timeSlot: string) => {

@@ -22,6 +22,10 @@ const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('login');
   const { hasPendingCredits } = useFeedbackCredits();
 
+  // Get redirect parameter from URL
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/';
+
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,7 +83,10 @@ const Auth: React.FC = () => {
         localStorage.removeItem('rememberedEmail');
       }
       toast.success('Welcome back!');
-      navigate('/');
+      
+      // If redirect is a booking flow, go to /community instead
+      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+      navigate(finalRedirect);
     }
   };
 
@@ -120,6 +127,11 @@ const Auth: React.FC = () => {
       toast.success('Check your email to confirm your account!');
       setActiveTab('login');
       setLoading(false);
+      
+      // For signup, if redirect is a booking flow, save it for after email confirmation
+      if (redirectUrl.startsWith('/community/book/')) {
+        localStorage.setItem('pending_booking_redirect', '/community');
+      }
     }
   };
 
@@ -128,8 +140,9 @@ const Auth: React.FC = () => {
     try {
       console.log("Starting Google OAuth...");
       
-      // Save dashboard as return URL for after OAuth completes
-      localStorage.setItem('oauth_return_url', '/dashboard');
+      // If redirect is a booking flow, go to /community instead
+      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+      localStorage.setItem('oauth_return_url', finalRedirect);
       
       toast("Redirecting to Google...");
       
@@ -166,8 +179,9 @@ const Auth: React.FC = () => {
     try {
       console.log("Starting Google OAuth signup...");
       
-      // Save dashboard as return URL for after OAuth completes
-      localStorage.setItem('oauth_return_url', '/dashboard');
+      // If redirect is a booking flow, go to /community instead
+      const finalRedirect = redirectUrl.startsWith('/community/book/') ? '/community' : redirectUrl;
+      localStorage.setItem('oauth_return_url', finalRedirect);
       
       toast("Redirecting to Google...");
       

@@ -87,14 +87,16 @@ export const BookingModal = ({
           {/* Calendar */}
           <div className="space-y-2">
             <Label>Select Date</Label>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(date) => date < new Date()}
-              initialFocus
-              className="rounded-md border"
-            />
+            <div className="w-full border rounded-md p-3 bg-card">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                className="w-full"
+              />
+            </div>
           </div>
 
           <Separator />
