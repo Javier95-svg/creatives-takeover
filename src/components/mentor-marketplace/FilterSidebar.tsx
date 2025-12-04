@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Filter, X, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 
 export interface MentorFilters {
   expertise: string[];
@@ -84,20 +83,32 @@ export const FilterSidebar = ({
     });
   };
 
-  const handleMinPriceChange = (newMin: number) => {
-    const clampedMin = Math.max(0, Math.min(newMin, filters.priceRange[1] - 100));
-    onFiltersChange({
-      ...filters,
-      priceRange: [clampedMin, filters.priceRange[1]],
-    });
+  const handleScrollUp = () => {
+    // Move to higher budget range
+    const step = 10000; // $100 increment
+    const rangeSize = filters.priceRange[1] - filters.priceRange[0];
+    const newMin = Math.max(0, Math.min(filters.priceRange[0] + step, priceRangeMax - rangeSize));
+    const newMax = newMin + rangeSize;
+    if (newMax <= priceRangeMax) {
+      onFiltersChange({
+        ...filters,
+        priceRange: [newMin, newMax],
+      });
+    }
   };
 
-  const handleMaxPriceChange = (newMax: number) => {
-    const clampedMax = Math.max(filters.priceRange[0] + 100, Math.min(newMax, priceRangeMax));
-    onFiltersChange({
-      ...filters,
-      priceRange: [filters.priceRange[0], clampedMax],
-    });
+  const handleScrollDown = () => {
+    // Move to lower budget range
+    const step = 10000; // $100 increment
+    const rangeSize = filters.priceRange[1] - filters.priceRange[0];
+    const newMin = Math.max(0, filters.priceRange[0] - step);
+    const newMax = newMin + rangeSize;
+    if (newMin >= 0) {
+      onFiltersChange({
+        ...filters,
+        priceRange: [newMin, newMax],
+      });
+    }
   };
 
   const handleAvailableNowToggle = (checked: boolean) => {
@@ -156,103 +167,20 @@ export const FilterSidebar = ({
           <Label className="text-sm font-semibold mb-3 block">
             Coaching Program Fee
           </Label>
-          <div className="space-y-4">
-            {/* Price Inputs with Scroll Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Minimum Price */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Min Budget</Label>
-                <div className="flex items-center gap-1">
-                  <div className="flex flex-col">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-8 rounded-b-none border-b-0 p-0"
-                      onClick={() => handleMinPriceChange(filters.priceRange[0] + 100)}
-                      disabled={filters.priceRange[0] >= filters.priceRange[1] - 100}
-                    >
-                      <ChevronUp className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-8 rounded-t-none p-0"
-                      onClick={() => handleMinPriceChange(filters.priceRange[0] - 100)}
-                      disabled={filters.priceRange[0] <= 0}
-                    >
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                    <Input
-                      type="number"
-                      value={(filters.priceRange[0] / 100).toFixed(0)}
-                      onChange={(e) => {
-                        const value = Math.max(0, Math.min(parseInt(e.target.value) || 0, (filters.priceRange[1] / 100) - 1));
-                        handleMinPriceChange(value * 100);
-                      }}
-                      min={0}
-                      max={(filters.priceRange[1] / 100) - 1}
-                      className="pl-7 h-10 text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Maximum Price */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Max Budget</Label>
-                <div className="flex items-center gap-1">
-                  <div className="flex flex-col">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-8 rounded-b-none border-b-0 p-0"
-                      onClick={() => handleMaxPriceChange(filters.priceRange[1] + 100)}
-                      disabled={filters.priceRange[1] >= priceRangeMax}
-                    >
-                      <ChevronUp className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-8 rounded-t-none p-0"
-                      onClick={() => handleMaxPriceChange(filters.priceRange[1] - 100)}
-                      disabled={filters.priceRange[1] <= filters.priceRange[0] + 100}
-                    >
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                    <Input
-                      type="number"
-                      value={(filters.priceRange[1] / 100).toFixed(0)}
-                      onChange={(e) => {
-                        const value = Math.max((filters.priceRange[0] / 100) + 1, Math.min(parseInt(e.target.value) || priceRangeMax / 100, priceRangeMax / 100));
-                        handleMaxPriceChange(value * 100);
-                      }}
-                      min={(filters.priceRange[0] / 100) + 1}
-                      max={priceRangeMax / 100}
-                      className="pl-7 h-10 text-sm"
-                      placeholder="5000"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Range Display */}
-            <div className="text-center py-2 px-3 bg-muted/50 rounded-md">
-              <span className="text-sm font-medium text-foreground">
-                ${(filters.priceRange[0] / 100).toFixed(0)} - ${(filters.priceRange[1] / 100).toFixed(0)}
-              </span>
+          <div className="space-y-3">
+            {/* Scroll Button at Top */}
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleScrollUp}
+                disabled={filters.priceRange[1] >= priceRangeMax}
+                className="h-8 w-full"
+              >
+                <ChevronUp className="h-4 w-4 mr-2" />
+                Scroll to Higher Range
+              </Button>
             </div>
 
             {/* Slider */}
@@ -261,9 +189,29 @@ export const FilterSidebar = ({
               onValueChange={handlePriceRangeChange}
               min={0}
               max={priceRangeMax}
-              step={100} // $1 increments for smoother control
+              step={500} // $5 increments
               className="w-full"
             />
+            
+            {/* Range Display */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{priceRangeDisplay}</span>
+            </div>
+
+            {/* Scroll Button at Bottom */}
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleScrollDown}
+                disabled={filters.priceRange[0] <= 0}
+                className="h-8 w-full"
+              >
+                <ChevronDown className="h-4 w-4 mr-2" />
+                Scroll to Lower Range
+              </Button>
+            </div>
           </div>
         </div>
 
