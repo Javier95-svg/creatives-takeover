@@ -64,9 +64,6 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              {mentor.is_active !== false && (
-                <span className="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg-green-500 ring-2 ring-background" />
-              )}
             </div>
           </div>
 

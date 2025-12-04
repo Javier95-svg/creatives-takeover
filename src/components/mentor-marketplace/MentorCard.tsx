@@ -71,9 +71,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              {mentor.is_active !== false && (
-                <div className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 rounded-full border-2 border-background" />
-              )}
             </div>
           </div>
 
