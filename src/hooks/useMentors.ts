@@ -159,6 +159,13 @@ export const useMentors = () => {
     try {
       setLoading(true);
       
+      // Debug: Log the input to verify picture field is included
+      console.log('Updating mentor with input:', {
+        id,
+        ...input,
+        picture: input.picture ? `Picture URL: ${input.picture.substring(0, 50)}...` : 'No picture URL'
+      });
+      
       const { data, error } = await supabase
         .from('mentors')
         .update(input)
@@ -167,6 +174,13 @@ export const useMentors = () => {
         .single();
 
       if (error) throw error;
+      
+      // Debug: Log the returned data to verify picture was saved
+      console.log('Mentor updated successfully:', {
+        id: data?.id,
+        name: data?.name,
+        picture: (data as any)?.picture ? 'Picture URL saved' : 'No picture URL in response'
+      });
       
       toast.success('Mentor updated successfully');
       return data as Mentor;

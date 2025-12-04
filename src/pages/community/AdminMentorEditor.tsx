@@ -178,6 +178,12 @@ const AdminMentorEditor = () => {
       return;
     }
 
+    // Debug: Log formData to verify picture is included
+    console.log('Saving mentor with formData:', {
+      ...formData,
+      picture: formData.picture ? 'Picture URL present' : 'No picture URL'
+    });
+
     let result: Mentor | null = null;
     if (mentor) {
       result = await updateMentor(mentor.id, formData);
