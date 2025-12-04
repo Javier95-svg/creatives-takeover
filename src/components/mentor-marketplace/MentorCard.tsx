@@ -59,16 +59,16 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     );
   };
 
-  const handleBookSession = (e: React.MouseEvent) => {
+  const handleBookDiscoveryCall = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // If not authenticated, redirect to auth with booking redirect
-    if (!isAuthenticated) {
-      navigate(`/auth?redirect=/community/book/${mentor.id}`);
+    // Redirect to Calendly link if available
+    if (mentor.calendly_url) {
+      window.open(mentor.calendly_url, '_blank', 'noopener,noreferrer');
     } else {
-      // If authenticated, navigate to booking page
-      navigate(`/community/book/${mentor.id}`);
+      // Fallback: show message if no Calendly link is set
+      alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
     }
   };
 
@@ -208,11 +208,11 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                 <div className="flex items-center gap-3 pt-2">
                   <Button
                     size="default"
-                    onClick={handleBookSession}
+                    onClick={handleBookDiscoveryCall}
                     className="h-10 flex-1 hover:shadow-md transition-all duration-200"
                   >
                     <Calendar className="h-4 w-4 mr-1.5" />
-                    Book Session
+                    Book Discovery Call
                   </Button>
                   <Button
                     size="default"

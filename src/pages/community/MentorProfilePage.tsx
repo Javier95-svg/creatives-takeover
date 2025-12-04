@@ -4,7 +4,6 @@ import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { MentorProfile } from "@/components/mentor-marketplace/MentorProfile";
-import { BookingModal } from "@/components/mentor-marketplace/BookingModal";
 import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
@@ -19,7 +18,6 @@ const MentorProfilePage = () => {
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, loading } = useMentors();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -35,18 +33,13 @@ const MentorProfilePage = () => {
   };
 
   const handleBookClick = () => {
-    // If not authenticated, redirect to auth with booking redirect
-    if (!isAuthenticated) {
-      navigate(`/auth?redirect=/community/book/${id}`);
+    // Redirect to Calendly link if available
+    if (mentor?.calendly_url) {
+      window.open(mentor.calendly_url, '_blank', 'noopener,noreferrer');
     } else {
-      // If authenticated, open booking modal
-      setBookingModalOpen(true);
+      // Fallback: show message if no Calendly link is set
+      alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
     }
-  };
-
-  const handleBookingConfirm = (date: Date, timeSlot: string) => {
-    // Navigate to booking page
-    window.location.href = `/community/book/${id}`;
   };
 
   if (loading) {
@@ -112,12 +105,6 @@ const MentorProfilePage = () => {
         </div>
       </div>
 
-      <BookingModal
-        open={bookingModalOpen}
-        onOpenChange={setBookingModalOpen}
-        mentor={mentor}
-        onConfirm={handleBookingConfirm}
-      />
     </>
   );
 };

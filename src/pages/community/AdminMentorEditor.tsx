@@ -60,6 +60,7 @@ const AdminMentorEditor = () => {
     linkedin_url: null,
     twitter_x_url: null,
     website_url: null,
+    calendly_url: null,
   });
 
   useEffect(() => {
@@ -90,6 +91,7 @@ const AdminMentorEditor = () => {
         linkedin_url: found.linkedin_url || null,
         twitter_x_url: found.twitter_x_url || null,
         website_url: found.website_url || null,
+        calendly_url: found.calendly_url || null,
       });
       if (found.picture) {
         setPicturePreview(found.picture);
@@ -434,7 +436,7 @@ const AdminMentorEditor = () => {
               </div>
 
               {/* Social Links */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="linkedin_url">LinkedIn URL</Label>
                   <Input
@@ -481,6 +483,22 @@ const AdminMentorEditor = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Optional personal or company website URL
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="calendly_url">Calendly URL *</Label>
+                  <Input
+                    id="calendly_url"
+                    type="url"
+                    value={formData.calendly_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, calendly_url: e.target.value || null }))
+                    }
+                    placeholder="https://calendly.com/username"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Required: Calendly link for discovery call bookings
                   </p>
                 </div>
               </div>

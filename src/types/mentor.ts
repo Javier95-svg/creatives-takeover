@@ -17,6 +17,7 @@ export interface Mentor {
   linkedin_url?: string; // LinkedIn profile URL
   twitter_x_url?: string; // X (Twitter) profile URL
   website_url?: string; // Personal or company website URL
+  calendly_url?: string; // Calendly scheduling link for discovery calls
   nationality?: string; // Country name or code (e.g., "USA", "US", "United States")
   created_at: string;
   updated_at: string;

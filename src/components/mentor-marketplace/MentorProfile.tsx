@@ -223,7 +223,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     disabled={mentor.is_active === false}
                   >
                     <Calendar className="h-4 w-4 mr-2" />
-                    Book Session
+                    Book Discovery Call
                   </Button>
                   <Button
                     variant="outline"

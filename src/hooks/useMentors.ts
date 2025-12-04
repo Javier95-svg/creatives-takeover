@@ -16,6 +16,7 @@ export interface CreateMentorInput {
   linkedin_url?: string | null;
   twitter_x_url?: string | null;
   website_url?: string | null;
+  calendly_url?: string | null;
 }
 
 // Helper function to format error messages
