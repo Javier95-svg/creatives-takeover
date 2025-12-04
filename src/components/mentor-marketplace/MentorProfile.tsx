@@ -6,6 +6,7 @@ import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { Star, Calendar, MessageCircle, CheckCircle2, Heart, Users, Linkedin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getCountryFlag } from "@/utils/countryFlags";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
@@ -24,6 +25,20 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const truncatedBio = mentor.bio.length > bioMaxLength 
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
+  
+  // Get country flag - special case for Samuel (American)
+  const getNationality = () => {
+    if (mentor.nationality) {
+      return mentor.nationality;
+    }
+    // Special case: Samuel is American
+    if (mentor.name.toLowerCase().includes('samuel')) {
+      return 'USA';
+    }
+    return null;
+  };
+  
+  const countryFlag = getCountryFlag(getNationality());
 
   const renderStars = (rating: number) => {
     return (
@@ -75,6 +90,11 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                 {mentor.name}
               </h1>
               <CheckCircle2 className="h-5 w-5 lg:h-6 lg:w-6 text-primary flex-shrink-0" />
+              {countryFlag && (
+                <span className="text-2xl lg:text-3xl" title={getNationality() || ''}>
+                  {countryFlag}
+                </span>
+              )}
             </div>
 
             {/* Social Links */}

@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { getCountryFlag } from "@/utils/countryFlags";
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -25,6 +26,20 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
 
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
+  
+  // Get country flag - special case for Samuel (American)
+  const getNationality = () => {
+    if (mentor.nationality) {
+      return mentor.nationality;
+    }
+    // Special case: Samuel is American
+    if (mentor.name.toLowerCase().includes('samuel')) {
+      return 'USA';
+    }
+    return null;
+  };
+  
+  const countryFlag = getCountryFlag(getNationality());
 
   const renderStars = (ratingValue: number) => {
     return (
@@ -94,6 +109,11 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                 {mentor.name}
               </Link>
               <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+              {countryFlag && (
+                <span className="text-lg lg:text-xl" title={getNationality() || ''}>
+                  {countryFlag}
+                </span>
+              )}
             </div>
 
             {/* Social Links */}
