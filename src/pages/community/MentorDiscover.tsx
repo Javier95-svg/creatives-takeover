@@ -25,7 +25,7 @@ const MentorDiscover = () => {
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
-    priceRange: [0, 50000],
+    priceRange: [0, 500000],
     stage: [],
     availableNow: false,
   });
@@ -204,7 +204,7 @@ const MentorDiscover = () => {
               onFiltersChange={setFilters}
               availableExpertise={allExpertise}
               availableStages={["Idea Stage", "Pre-Seed", "Seed", "Series A"]}
-              priceRangeMax={50000}
+              priceRangeMax={500000}
               mentorCount={filteredMentors.length}
               onSortChange={setSortBy}
               sortBy={sortBy}

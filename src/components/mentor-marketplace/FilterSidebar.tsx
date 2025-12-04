@@ -52,7 +52,7 @@ export const FilterSidebar = ({
   onFiltersChange,
   availableExpertise = EXPERTISE_OPTIONS,
   availableStages = STAGE_OPTIONS,
-  priceRangeMax = 50000, // $500 max for 8-week program
+  priceRangeMax = 500000, // $5000 max for 8-week program
   className,
 }: FilterSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
