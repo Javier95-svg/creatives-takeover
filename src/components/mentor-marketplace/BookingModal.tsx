@@ -97,13 +97,18 @@ export const BookingModal = ({
                 className="w-full"
                 classNames={{
                   months: "w-full",
-                  month: "w-full",
-                  caption: "w-full flex justify-center",
-                  table: "w-full",
-                  head_row: "w-full flex",
-                  head_cell: "w-full text-center",
-                  row: "w-full flex",
-                  cell: "flex-1",
+                  month: "w-full space-y-0",
+                  caption: "w-full flex justify-center items-center relative mb-4 pb-4 border-b border-border",
+                  caption_label: "text-base font-semibold text-foreground",
+                  nav: "space-x-1 flex items-center",
+                  nav_button: "h-8 w-8 border border-border hover:bg-muted hover:border-primary transition-colors",
+                  nav_button_previous: "absolute left-0",
+                  nav_button_next: "absolute right-0",
+                  table: "w-full border-collapse",
+                  head_row: "w-full flex mt-0",
+                  head_cell: "flex-1 text-center text-muted-foreground text-xs font-medium py-2",
+                  row: "w-full flex mt-1",
+                  cell: "flex-1 text-center",
                 }}
               />
             </div>
