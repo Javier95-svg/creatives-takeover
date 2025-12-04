@@ -156,7 +156,7 @@ export const TopFilterBar = ({
               hasPriceFilter && "border-primary bg-primary/5"
             )}
           >
-            Price per hour
+            Program Fee
             {hasPriceFilter && (
               <Badge variant="secondary" className="ml-2 h-5 px-1.5">
                 {`$${(filters.priceRange[0] / 100).toFixed(0)} - $${(filters.priceRange[1] / 100).toFixed(0)}`}
@@ -167,7 +167,7 @@ export const TopFilterBar = ({
         </PopoverTrigger>
         <PopoverContent className="w-80" align="start">
           <div className="space-y-4">
-            <Label className="font-semibold">Hourly Rate</Label>
+            <Label className="font-semibold">8 Week Coaching Program Fee</Label>
             <Separator />
             <div className="space-y-3">
               <Slider
@@ -179,10 +179,10 @@ export const TopFilterBar = ({
               />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  ${(filters.priceRange[0] / 100).toFixed(0)}/hr
+                  ${(filters.priceRange[0] / 100).toFixed(0)}
                 </span>
                 <span className="text-muted-foreground">
-                  ${(filters.priceRange[1] / 100).toFixed(0)}/hr
+                  ${(filters.priceRange[1] / 100).toFixed(0)}
                 </span>
               </div>
             </div>

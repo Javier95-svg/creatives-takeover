@@ -52,7 +52,7 @@ export const FilterSidebar = ({
   onFiltersChange,
   availableExpertise = EXPERTISE_OPTIONS,
   availableStages = STAGE_OPTIONS,
-  priceRangeMax = 50000, // $500/hr max
+  priceRangeMax = 50000, // $500 max for 8-week program
   className,
 }: FilterSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -110,8 +110,8 @@ export const FilterSidebar = ({
     filters.priceRange[1] < priceRangeMax;
 
   const priceRangeDisplay = [
-    `$${(filters.priceRange[0] / 100).toFixed(0)}/hr`,
-    `$${(filters.priceRange[1] / 100).toFixed(0)}/hr`,
+    `$${(filters.priceRange[0] / 100).toFixed(0)}`,
+    `$${(filters.priceRange[1] / 100).toFixed(0)}`,
   ].join(" - ");
 
   return (
@@ -140,7 +140,7 @@ export const FilterSidebar = ({
         {/* Price Range */}
         <div>
           <Label className="text-sm font-semibold mb-3 block">
-            Hourly Rate
+            8 Week Coaching Program Fee
           </Label>
           <div className="space-y-3">
             <Slider

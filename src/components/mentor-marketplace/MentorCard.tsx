@@ -236,7 +236,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                 {hourlyRateFormatted}
               </div>
               <div className="text-xs lg:text-sm text-muted-foreground">
-                50-min session
+                8 Week Coaching Program Fee
               </div>
             </div>
           </div>

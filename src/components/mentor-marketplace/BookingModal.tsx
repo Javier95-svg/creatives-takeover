@@ -79,7 +79,7 @@ export const BookingModal = ({
         <DialogHeader>
           <DialogTitle>Book a Session with {mentor.name}</DialogTitle>
           <DialogDescription>
-            Select a date and time for your 1-hour mentoring session
+            Select a date and time to start your 8-week coaching program
           </DialogDescription>
         </DialogHeader>
 
@@ -144,7 +144,7 @@ export const BookingModal = ({
             <h3 className="font-semibold">Pricing Summary</h3>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Hourly Rate (1 hour)</span>
+                <span className="text-muted-foreground">8 Week Coaching Program Fee</span>
                 <span>${hourlyRate.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">

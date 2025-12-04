@@ -53,7 +53,7 @@ const AdminMentorEditor = () => {
     name: "",
     picture: null,
     bio: "",
-    hourly_rate: 10000, // $100/hr default
+    hourly_rate: 10000, // $100 default for 8-week program (stored in cents)
     expertise: [],
     is_active: true,
     is_featured: false,
@@ -266,8 +266,8 @@ const AdminMentorEditor = () => {
       return;
     }
 
-    if (formData.hourly_rate < 1000) {
-      toast.error("Hourly rate must be at least $10/hr");
+    if (formData.hourly_rate < 10000) {
+      toast.error("8 Week Coaching Program Fee must be at least $100");
       return;
     }
 
@@ -503,19 +503,19 @@ const AdminMentorEditor = () => {
                 </p>
               </div>
 
-              {/* Hourly Rate */}
+              {/* 8 Week Coaching Program Fee */}
               <div>
                 <Label htmlFor="hourly_rate" className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  Hourly Rate (USD) *
+                  8 Week Coaching Program Fee (USD) *
                 </Label>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-muted-foreground">$</span>
                   <Input
                     id="hourly_rate"
                     type="number"
-                    min="10"
-                    step="5"
+                    min="100"
+                    step="50"
                     value={(formData.hourly_rate / 100).toFixed(0)}
                     onChange={(e) => {
                       const dollars = parseFloat(e.target.value) || 0;
@@ -524,13 +524,12 @@ const AdminMentorEditor = () => {
                         hourly_rate: Math.round(dollars * 100),
                       }));
                     }}
-                    placeholder="100"
+                    placeholder="1000"
                     className="flex-1"
                   />
-                  <span className="text-muted-foreground">/hr</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Enter the hourly rate in dollars (e.g., 100 for $100/hr). Minimum: $10/hr
+                  Enter the 8-week coaching program fee in dollars (e.g., 1000 for $1,000). Minimum: $100
                 </p>
               </div>
 

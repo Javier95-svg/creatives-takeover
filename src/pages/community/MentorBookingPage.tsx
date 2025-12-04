@@ -107,7 +107,7 @@ const MentorBookingPage = () => {
                   {/* Mentor Info */}
                   <div className="border rounded-lg p-4">
                     <h3 className="font-semibold mb-2">Mentor: {mentor.name}</h3>
-                    <p className="text-sm text-muted-foreground">1-hour session</p>
+                    <p className="text-sm text-muted-foreground">8 Week Coaching Program</p>
                   </div>
 
                   {/* Pricing */}
@@ -115,7 +115,7 @@ const MentorBookingPage = () => {
                     <h3 className="font-semibold">Pricing Summary</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Hourly Rate</span>
+                        <span className="text-muted-foreground">8 Week Coaching Program Fee</span>
                         <span>${hourlyRate.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
