@@ -20,7 +20,7 @@ const ValuePropositionCards = () => {
       icon: Users,
       title: "SHARE",
       subtitle: "Community",
-      description: "Join creative entrepreneurs who get it. Share your journey, celebrate wins, get honest feedback, and find accountability partners who'll keep you moving forward.",
+      description: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding.",
       cta: "Join Community",
       link: "/community",
       color: "action", // Red for action/urgency

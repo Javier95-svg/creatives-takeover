@@ -67,7 +67,7 @@ const platformSnippets: PlatformSnippet[] = [
   },
   {
     name: "Community",
-    description: "Connect with founders, get feedback, and find accountability partners",
+    description: "Find expert mentors and get practical guidance to streamline your startup growth",
     icon: Users,
     route: "/community",
     color: "prompt" // red - contrasts with purple, and when looping back to blue also good
