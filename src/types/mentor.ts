@@ -16,6 +16,7 @@ export interface Mentor {
   is_featured?: boolean; // Whether mentor is featured on the hub page
   linkedin_url?: string; // LinkedIn profile URL
   twitter_x_url?: string; // X (Twitter) profile URL
+  website_url?: string; // Personal or company website URL
   created_at: string;
   updated_at: string;
 }

@@ -97,7 +97,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
             </div>
 
             {/* Social Links */}
-            {(mentor.linkedin_url || mentor.twitter_x_url) && (
+            {(mentor.linkedin_url || mentor.twitter_x_url || mentor.website_url) && (
               <div className="flex items-center gap-3 mb-2">
                 {mentor.linkedin_url && (
                   <a
@@ -122,6 +122,22 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                   >
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </a>
+                )}
+                {mentor.website_url && (
+                  <a
+                    href={mentor.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    aria-label="Website"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                     </svg>
                   </a>
                 )}

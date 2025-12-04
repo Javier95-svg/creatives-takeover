@@ -59,6 +59,7 @@ const AdminMentorEditor = () => {
     is_featured: false,
     linkedin_url: null,
     twitter_x_url: null,
+    website_url: null,
   });
 
   useEffect(() => {
@@ -88,6 +89,7 @@ const AdminMentorEditor = () => {
         is_featured: found.is_featured === true,
         linkedin_url: found.linkedin_url || null,
         twitter_x_url: found.twitter_x_url || null,
+        website_url: found.website_url || null,
       });
       if (found.picture) {
         setPicturePreview(found.picture);
@@ -432,7 +434,7 @@ const AdminMentorEditor = () => {
               </div>
 
               {/* Social Links */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="linkedin_url">LinkedIn URL</Label>
                   <Input
@@ -463,6 +465,22 @@ const AdminMentorEditor = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Optional X (Twitter) profile URL
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="website_url">Website URL</Label>
+                  <Input
+                    id="website_url"
+                    type="url"
+                    value={formData.website_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, website_url: e.target.value || null }))
+                    }
+                    placeholder="https://example.com"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional personal or company website URL
                   </p>
                 </div>
               </div>
