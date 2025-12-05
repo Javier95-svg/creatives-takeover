@@ -506,6 +506,36 @@ const StoryArticle = () => {
 
             {/* Related Stories Section */}
             <RelatedStories currentStory={article} limit={3} />
+
+            {/* More from this topic - Link to tag pages */}
+            {article.hashtags && article.hashtags.length > 0 && (
+              <section className="mt-12 pt-8 border-t">
+                <div className="mb-4">
+                  <h2 className="text-xl font-semibold mb-2">More from this topic</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Explore more stories about these topics
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {article.hashtags.slice(0, 5).map((tag, index) => {
+                    const tagSlug = slugifyTag(tag);
+                    const tagDisplay = tag.replace('#', '');
+                    return (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/stories/tags/${tagSlug}`)}
+                        className="flex items-center gap-2"
+                      >
+                        <Hash className="w-3 h-3" />
+                        {tagDisplay}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </article>
         </main>
 
