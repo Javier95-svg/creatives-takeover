@@ -287,6 +287,7 @@ const AdminMentorEditor = () => {
   const handleSave = async () => {
     console.log('Save button clicked!', { mentor: mentor?.id, formData });
     
+    // Validation
     if (!formData.name || !formData.bio) {
       toast.error("Please fill in name and bio");
       return;
@@ -301,16 +302,37 @@ const AdminMentorEditor = () => {
       setSaving(true);
       console.log('Starting save operation...');
 
-      // Ensure picture is explicitly included in the save payload
+      // Ensure all fields are explicitly included in the save payload
       const saveData: CreateMentorInput = {
-        ...formData,
-        picture: formData.picture || null, // Explicitly include picture field
+        name: formData.name,
+        bio: formData.bio,
+        hourly_rate: formData.hourly_rate,
+        picture: formData.picture || null,
+        expertise: formData.expertise || [],
+        universities: formData.universities || [], // Explicitly include universities
+        is_active: formData.is_active !== undefined ? formData.is_active : true,
+        is_featured: formData.is_featured !== undefined ? formData.is_featured : false,
+        linkedin_url: formData.linkedin_url || null,
+        twitter_x_url: formData.twitter_x_url || null,
+        website_url: formData.website_url || null,
+        calendly_url: formData.calendly_url || null,
       };
 
-      // Debug: Log saveData to verify picture is included
+      // Debug: Log saveData to verify all fields are included
       console.log('Saving mentor with data:', {
-        ...saveData,
-        picture: saveData.picture ? `Picture URL: ${saveData.picture.substring(0, 50)}...` : 'No picture URL'
+        name: saveData.name,
+        bioLength: saveData.bio.length,
+        hourly_rate: saveData.hourly_rate,
+        expertise: saveData.expertise?.length || 0,
+        universities: saveData.universities?.length || 0,
+        universitiesList: saveData.universities,
+        hasPicture: !!saveData.picture,
+        is_active: saveData.is_active,
+        is_featured: saveData.is_featured,
+        hasLinkedIn: !!saveData.linkedin_url,
+        hasTwitter: !!saveData.twitter_x_url,
+        hasWebsite: !!saveData.website_url,
+        hasCalendly: !!saveData.calendly_url
       });
 
       let result: Mentor | null = null;
@@ -327,7 +349,13 @@ const AdminMentorEditor = () => {
         toast.error("Failed to save mentor. Please check the console for details.");
       }
     } catch (error: any) {
-      console.error('Error in handleSave:', error);
+      console.error('Error in handleSave:', {
+        error,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
       toast.error(`Failed to save mentor: ${error?.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
