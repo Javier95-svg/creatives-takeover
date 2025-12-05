@@ -32,12 +32,36 @@ export interface Message {
   };
 }
 
+// Samuel Starkman's email constant
+export const SAMUEL_STARKMAN_EMAIL = 'sestarkman@gmail.com';
+
 export const useMessaging = () => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+
+  // Get user ID by email using database function
+  const getUserIdByEmail = async (email: string): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase.rpc('get_user_id_by_email', {
+        user_email: email
+      });
+
+      if (error) {
+        console.error('Error getting user ID by email:', error);
+        return null;
+      }
+
+      return data || null;
+    } catch (error) {
+      console.error('Error in getUserIdByEmail:', error);
+      return null;
+    }
+  };
 
   // Load user's conversations
   useEffect(() => {
@@ -319,6 +343,7 @@ export const useMessaging = () => {
     startConversation,
     sendMessage,
     markAsRead,
-    getUnreadCount
+    getUnreadCount,
+    getUserIdByEmail
   };
 };

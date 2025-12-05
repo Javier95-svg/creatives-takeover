@@ -8,7 +8,11 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 
-export const MessagingInterface = () => {
+interface MessagingInterfaceProps {
+  initialConversationId?: string;
+}
+
+export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps = {}) => {
   const { user } = useAuth();
   const {
     conversations,
@@ -23,11 +27,31 @@ export const MessagingInterface = () => {
   
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasSetInitialConversation = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeConversationId]);
+
+  // Set initial conversation ID from URL parameter
+  useEffect(() => {
+    if (initialConversationId && !hasSetInitialConversation.current) {
+      // If conversations are loaded, check if it exists
+      if (conversations.length > 0) {
+        const conversationExists = conversations.some(conv => conv.id === initialConversationId);
+        if (conversationExists) {
+          setActiveConversationId(initialConversationId);
+          hasSetInitialConversation.current = true;
+        }
+      } else if (!loading) {
+        // If conversations are not loaded yet and not loading, set it directly
+        // This handles the case where we just created a new conversation
+        setActiveConversationId(initialConversationId);
+        hasSetInitialConversation.current = true;
+      }
+    }
+  }, [initialConversationId, conversations, loading, setActiveConversationId]);
 
   // Mark messages as read when conversation is opened
   useEffect(() => {

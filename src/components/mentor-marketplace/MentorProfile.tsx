@@ -7,6 +7,10 @@ import { Star, Calendar, MessageCircle, CheckCircle2, Heart, Users, Linkedin } f
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL } from "@/hooks/useMessaging";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface MentorProfileProps {
   mentor: MentorProfileType;
@@ -15,6 +19,9 @@ interface MentorProfileProps {
 
 export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const { startConversation, getUserIdByEmail } = useMessaging();
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
@@ -58,8 +65,52 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     );
   };
 
-  const handleSendMessage = () => {
-    navigate('/auth');
+  const handleSendMessage = async () => {
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      navigate('/auth');
+      return;
+    }
+
+    // Check if this is Samuel Starkman's profile
+    const mentorNameLower = mentor.name.toLowerCase();
+    const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
+                             mentorNameLower.includes('samuel starkman');
+
+    if (!isSamuelStarkman) {
+      // For other mentors, just navigate to auth for now
+      navigate('/auth');
+      return;
+    }
+
+    // This is Samuel's profile - create conversation
+    setIsStartingConversation(true);
+    try {
+      // Get Samuel's user ID by email
+      const samuelUserId = await getUserIdByEmail(SAMUEL_STARKMAN_EMAIL);
+      
+      if (!samuelUserId) {
+        toast.error('Could not find Samuel\'s account. Please try again later.');
+        return;
+      }
+
+      // Start conversation with Samuel
+      const conversationId = await startConversation(samuelUserId);
+      
+      if (conversationId) {
+        // Small delay to ensure conversation is added to state
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Navigate to messages with the conversation ID
+        navigate(`/messages?conversationId=${conversationId}`);
+      } else {
+        toast.error('Failed to start conversation. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error starting conversation with Samuel:', error);
+      toast.error('Failed to start conversation. Please try again.');
+    } finally {
+      setIsStartingConversation(false);
+    }
   };
 
   return (
@@ -234,10 +285,11 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
                     variant="outline"
                     size="default"
                     onClick={handleSendMessage}
+                    disabled={isStartingConversation}
                     className="flex-1 hover:shadow-md transition-all duration-200"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Send Message
+                    {isStartingConversation ? 'Starting conversation...' : 'Send Message'}
                   </Button>
                 </div>
           </div>

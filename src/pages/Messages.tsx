@@ -7,10 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const Messages = () => {
   const { isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
+  const conversationId = searchParams.get('conversationId');
 
   if (!isAuthenticated) {
     return (
@@ -68,7 +70,7 @@ const Messages = () => {
               </div>
               
               <Card className="p-6">
-                <MessagingInterface />
+                <MessagingInterface initialConversationId={conversationId || undefined} />
               </Card>
             </div>
           </main>
