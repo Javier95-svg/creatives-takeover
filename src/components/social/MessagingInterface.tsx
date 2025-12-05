@@ -7,6 +7,7 @@ import { Send, MessageCircle } from "lucide-react";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -29,6 +30,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasSetInitialConversation = useRef(false);
+  const [participantProfiles, setParticipantProfiles] = useState<Record<string, { full_name: string; avatar_url: string | null }>>({});
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -78,12 +80,81 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return conversation.participants.find((id: string) => id !== user.id);
   };
 
+  // Fetch participant profiles for conversations
+  useEffect(() => {
+    if (!user || conversations.length === 0) return;
+
+    const fetchProfiles = async () => {
+      const participantIds = new Set<string>();
+      
+      // Collect all participant IDs
+      conversations.forEach(conv => {
+        if (!conv.is_group) {
+          const otherParticipant = conv.participants.find((id: string) => id !== user.id);
+          if (otherParticipant) {
+            participantIds.add(otherParticipant);
+          }
+        }
+      });
+
+      // Filter out already fetched profiles
+      const idsToFetch = Array.from(participantIds).filter(id => !participantProfiles[id]);
+
+      if (idsToFetch.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', idsToFetch);
+
+        if (error) throw error;
+
+        if (data) {
+          const newProfiles: Record<string, { full_name: string; avatar_url: string | null }> = {};
+          data.forEach(profile => {
+            newProfiles[profile.id] = {
+              full_name: profile.full_name || 'Unknown User',
+              avatar_url: profile.avatar_url
+            };
+          });
+
+          setParticipantProfiles(prev => ({ ...prev, ...newProfiles }));
+        }
+      } catch (error) {
+        console.error('Error fetching participant profiles:', error);
+      }
+    };
+
+    fetchProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, user]);
+
   const getConversationName = (conversation: any) => {
     if (conversation.is_group && conversation.name) {
       return conversation.name;
     }
-    // For 1-on-1 chats, we'd need to fetch the other user's profile
+    
+    // For 1-on-1 chats, get the other participant's name
+    const otherParticipantId = getOtherParticipant(conversation);
+    if (otherParticipantId && participantProfiles[otherParticipantId]) {
+      return participantProfiles[otherParticipantId].full_name;
+    }
+    
     return "Direct Message";
+  };
+
+  const getConversationAvatar = (conversation: any) => {
+    if (conversation.is_group) {
+      return null; // Group avatars handled separately
+    }
+    
+    const otherParticipantId = getOtherParticipant(conversation);
+    if (otherParticipantId && participantProfiles[otherParticipantId]) {
+      return participantProfiles[otherParticipantId].avatar_url;
+    }
+    
+    return null;
   };
 
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
@@ -119,8 +190,9 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   >
                     <div className="flex items-center gap-3 w-full">
                       <Avatar className="h-8 w-8">
+                        <AvatarImage src={getConversationAvatar(conversation) || undefined} />
                         <AvatarFallback>
-                          {getConversationName(conversation).charAt(0)}
+                          {getConversationName(conversation).charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       

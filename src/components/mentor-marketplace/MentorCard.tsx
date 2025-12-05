@@ -7,7 +7,7 @@ import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lu
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID } from "@/hooks/useMessaging";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME } from "@/hooks/useMessaging";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -121,16 +121,8 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
       return;
     }
 
-    // Use the same pattern as profile pages - simple and direct
-    try {
-      const conversationId = await startConversation(SAMUEL_STARKMAN_USER_ID);
-      if (conversationId) {
-        navigate('/messages');
-      }
-    } catch (error) {
-      console.error('Error starting conversation:', error);
-      toast.error('Failed to start conversation');
-    }
+    // Navigate to username-based route
+    navigate(`/messages/${SAMUEL_STARKMAN_USERNAME}`);
   };
 
   return (

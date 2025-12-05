@@ -121,6 +121,7 @@ function App() {
                   <Route path="/account" element={<Account />} />
                   <Route path="/insighta" element={<Blog />} />
                   <Route path="/demo" element={<Demo />} />
+                  <Route path="/messages/:username" element={<Messages />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/profile/:username" element={<Profile />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />

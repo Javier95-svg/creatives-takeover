@@ -7,12 +7,67 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, ArrowLeft } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useParams } from "react-router-dom";
+import { useMessaging } from "@/hooks/useMessaging";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const Messages = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { username } = useParams<{ username: string }>();
   const [searchParams] = useSearchParams();
-  const conversationId = searchParams.get('conversationId');
+  const conversationIdParam = searchParams.get('conversationId');
+  const { getUserIdByUsername, startConversation } = useMessaging();
+  const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>(conversationIdParam || undefined);
+  const [isResolvingUsername, setIsResolvingUsername] = useState(false);
+
+  // Handle username parameter
+  useEffect(() => {
+    if (!username || !user || !isAuthenticated) {
+      // If no username, use conversationId from query param or undefined
+      setResolvedConversationId(conversationIdParam || undefined);
+      return;
+    }
+
+    const resolveUsername = async () => {
+      setIsResolvingUsername(true);
+      try {
+        // Get user ID from username
+        const userId = await getUserIdByUsername(username);
+        
+        if (!userId) {
+          toast.error(`User "${username}" not found`);
+          setResolvedConversationId(undefined);
+          return;
+        }
+
+        // Don't create conversation with yourself
+        if (userId === user.id) {
+          toast.error('Cannot message yourself');
+          setResolvedConversationId(undefined);
+          return;
+        }
+
+        // Create or find conversation with that user
+        const conversationId = await startConversation(userId);
+        
+        if (conversationId) {
+          setResolvedConversationId(conversationId);
+        } else {
+          toast.error('Failed to start conversation');
+          setResolvedConversationId(undefined);
+        }
+      } catch (error) {
+        console.error('Error resolving username:', error);
+        toast.error('Failed to load conversation');
+        setResolvedConversationId(undefined);
+      } finally {
+        setIsResolvingUsername(false);
+      }
+    };
+
+    resolveUsername();
+  }, [username, user, isAuthenticated, getUserIdByUsername, startConversation, conversationIdParam]);
 
   if (!isAuthenticated) {
     return (
@@ -70,7 +125,16 @@ const Messages = () => {
               </div>
               
               <Card className="p-6">
-                <MessagingInterface initialConversationId={conversationId || undefined} />
+                {isResolvingUsername ? (
+                  <div className="flex items-center justify-center h-[600px]">
+                    <div className="text-center">
+                      <MessageCircle className="h-12 w-12 mx-auto mb-4 animate-pulse text-muted-foreground" />
+                      <p className="text-muted-foreground">Loading conversation...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <MessagingInterface initialConversationId={resolvedConversationId} />
+                )}
               </Card>
             </div>
           </main>

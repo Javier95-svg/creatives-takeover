@@ -32,9 +32,10 @@ export interface Message {
   };
 }
 
-// Samuel Starkman's email and user ID constants
+// Samuel Starkman's email, user ID, and username constants
 export const SAMUEL_STARKMAN_EMAIL = 'sestarkman@gmail.com';
 export const SAMUEL_STARKMAN_USER_ID = '22fdf3fa-b444-4949-a2c3-a5acc247b390'; // Known user ID from previous conversation
+export const SAMUEL_STARKMAN_USERNAME = 'samuelstarkman'; // Username based on firstname + lastname pattern
 
 export const useMessaging = () => {
   const { user } = useAuth();
@@ -534,6 +535,76 @@ export const useMessaging = () => {
     ).length;
   };
 
+  // Get user ID by username
+  const getUserIdByUsername = async (username: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.toLowerCase())
+        .single();
+
+      if (error) {
+        console.error('getUserIdByUsername: Error fetching profile:', {
+          error,
+          code: error.code,
+          message: error.message,
+          username
+        });
+        return null;
+      }
+
+      if (!data) {
+        console.warn('getUserIdByUsername: No profile found for username', username);
+        return null;
+      }
+
+      return data.id;
+    } catch (error: any) {
+      console.error('getUserIdByUsername: Exception occurred:', {
+        error,
+        errorMessage: error?.message,
+        username
+      });
+      return null;
+    }
+  };
+
+  // Get username by user ID
+  const getUsernameByUserId = async (userId: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('getUsernameByUserId: Error fetching profile:', {
+          error,
+          code: error.code,
+          message: error.message,
+          userId
+        });
+        return null;
+      }
+
+      if (!data || !data.username) {
+        console.warn('getUsernameByUserId: No username found for user ID', userId);
+        return null;
+      }
+
+      return data.username;
+    } catch (error: any) {
+      console.error('getUsernameByUserId: Exception occurred:', {
+        error,
+        errorMessage: error?.message,
+        userId
+      });
+      return null;
+    }
+  };
+
   return {
     conversations,
     messages,
@@ -544,6 +615,8 @@ export const useMessaging = () => {
     sendMessage,
     markAsRead,
     getUnreadCount,
-    getUserIdByEmail
+    getUserIdByEmail,
+    getUserIdByUsername,
+    getUsernameByUserId
   };
 };

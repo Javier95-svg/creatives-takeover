@@ -14,18 +14,36 @@ import { useCommunityNotifications } from '@/hooks/useCommunityNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useMessaging } from '@/hooks/useMessaging';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useCommunityNotifications(user?.id);
+  const { getUsernameByUserId } = useMessaging();
   const navigate = useNavigate();
 
   const handleNotificationClick = async (notification: any) => {
     await markAsRead(notification.id);
     
     // Navigate to messages if it's a message notification
-    if (notification.notification_type === 'message' && notification.metadata?.conversation_id) {
-      navigate(`/messages?conversationId=${notification.metadata.conversation_id}`);
+    if (notification.notification_type === 'message') {
+      // Try to get username from actor if available
+      if (notification.actor?.username) {
+        navigate(`/messages/${notification.actor.username}`);
+      } else if (notification.actor_id) {
+        // Fallback: get username from user ID
+        const username = await getUsernameByUserId(notification.actor_id);
+        if (username) {
+          navigate(`/messages/${username}`);
+        } else {
+          // Last resort: use conversationId query param
+          if (notification.metadata?.conversation_id) {
+            navigate(`/messages?conversationId=${notification.metadata.conversation_id}`);
+          }
+        }
+      } else if (notification.metadata?.conversation_id) {
+        navigate(`/messages?conversationId=${notification.metadata.conversation_id}`);
+      }
       return;
     }
     

@@ -11,6 +11,7 @@ export interface CommunityNotification {
   message_id: string | null;
   read: boolean;
   created_at: string;
+  actor_id?: string;
   actor: {
     name: string;
     avatar: string;
@@ -69,6 +70,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
             message_id: notification.message_id || null,
             read: notification.read,
             created_at: notification.created_at,
+            actor_id: notification.actor_id,
             actor: {
               name: actorData?.[0]?.actor_name || 'Someone',
               avatar: actorData?.[0]?.actor_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=Anonymous`,
