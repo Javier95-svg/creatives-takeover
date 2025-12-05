@@ -24,7 +24,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation } = useMessaging();
-  const [isStartingConversation, setIsStartingConversation] = useState(false);
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   
   // Truncate bio if too long
@@ -122,44 +121,15 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
       return;
     }
 
-    // This is Samuel's profile - create conversation
-    console.log('MentorCard: Starting conversation with Samuel', {
-      currentUser: user?.email,
-      mentorEmail: SAMUEL_STARKMAN_EMAIL
-    });
-    
-    setIsStartingConversation(true);
+    // Use the same pattern as profile pages - simple and direct
     try {
-      // Use Samuel's known user ID directly (more reliable than email lookup)
-      const samuelUserId = SAMUEL_STARKMAN_USER_ID;
-      console.log('MentorCard: Using Samuel\'s user ID', { samuelUserId });
-
-      // Start conversation with Samuel
-      console.log('MentorCard: Starting conversation with Samuel');
-      const conversationId = await startConversation(samuelUserId);
-      
+      const conversationId = await startConversation(SAMUEL_STARKMAN_USER_ID);
       if (conversationId) {
-        console.log('MentorCard: Conversation started successfully', { conversationId });
-        // Small delay to ensure conversation is added to state
-        await new Promise(resolve => setTimeout(resolve, 100));
-        // Navigate to messages with the conversation ID
-        console.log('MentorCard: Navigating to messages', { conversationId });
-        navigate(`/messages?conversationId=${conversationId}`);
-      } else {
-        console.error('MentorCard: Failed to start conversation - no conversation ID returned');
-        toast.error('Failed to start conversation. Please try again.');
+        navigate('/messages');
       }
-    } catch (error: any) {
-      console.error('MentorCard: Error starting conversation with Samuel:', {
-        error,
-        errorMessage: error?.message,
-        errorCode: error?.code,
-        stack: error?.stack,
-        currentUser: user?.email
-      });
-      toast.error('Failed to start conversation. Please try again.');
-    } finally {
-      setIsStartingConversation(false);
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast.error('Failed to start conversation');
     }
   };
 
@@ -308,11 +278,10 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                     size="default"
                     variant="outline"
                     onClick={handleSendMessage}
-                    disabled={isStartingConversation}
                     className="h-10 flex-1 hover:shadow-md transition-all duration-200"
                   >
                     <MessageCircle className="h-4 w-4 mr-1.5" />
-                    {isStartingConversation ? 'Starting...' : 'Message'}
+                    Message
                   </Button>
                 </div>
           </div>
