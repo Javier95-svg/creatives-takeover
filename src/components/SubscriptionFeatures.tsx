@@ -8,7 +8,7 @@ import {
   TrendingUp, 
   Check,
   Sparkles,
-  Calendar,
+  FlaskConical,
   BookOpen,
   ChevronDown
 } from "lucide-react";
@@ -54,12 +54,12 @@ const SubscriptionFeatures = () => {
       details: "Discover actionable insights, real-world stories, and expert advice from successful entrepreneurs and creative professionals. Learn from their experiences, mistakes, and triumphs as they build and grow their businesses. All stories are tagged and searchable by topic."
     },
     {
-      icon: <Calendar className="w-10 h-10 text-primary" />,
-      title: "Sprint Planning & Kanban",
-      description: "Organize your projects with sprint planning tools and Kanban boards to maintain momentum and track progress.",
-      benefits: ["Unlimited sprint planning", "Kanban board management", "Daily check-ins", "Progress tracking"],
+      icon: <FlaskConical className="w-10 h-10 text-primary" />,
+      title: "Product Market Fit Lab",
+      description: "Validate your product in the market and discover if there's real demand with AI-powered analysis and validation experiments.",
+      benefits: ["Customer segment analysis", "Problem-solution fit scoring", "PMF score calculation", "Validation experiments"],
       highlight: "",
-      details: "Break down big goals into manageable sprints. Visualize your workflow with Kanban boards, track progress, and maintain momentum with daily check-ins and accountability features. Perfect for keeping your 30-day launch plan on track."
+      details: "Validate your product in the market and discover if there's real demand. Get AI-powered customer segment analysis, problem-solution fit scoring, PMF score calculation, and actionable validation experiments. Includes survey questions and interview scripts to test your assumptions."
     },
     {
       icon: <Sparkles className="w-10 h-10 text-primary" />,
