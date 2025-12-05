@@ -44,21 +44,47 @@ export const useMessaging = () => {
 
   // Get user ID by email using database function
   const getUserIdByEmail = async (email: string): Promise<string | null> => {
-    if (!user) return null;
+    if (!user) {
+      console.warn('getUserIdByEmail: User not authenticated');
+      return null;
+    }
 
     try {
+      console.log('getUserIdByEmail: Looking up user ID for email', email);
+      
       const { data, error } = await supabase.rpc('get_user_id_by_email', {
         user_email: email
       });
 
       if (error) {
-        console.error('Error getting user ID by email:', error);
+        console.error('getUserIdByEmail: Error calling RPC function:', {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          email,
+          currentUserId: user.id
+        });
         return null;
       }
 
-      return data || null;
-    } catch (error) {
-      console.error('Error in getUserIdByEmail:', error);
+      if (!data) {
+        console.warn('getUserIdByEmail: No user found for email', email);
+        return null;
+      }
+
+      console.log('getUserIdByEmail: Found user ID', { email, userId: data });
+      return data;
+    } catch (error: any) {
+      console.error('getUserIdByEmail: Exception occurred:', {
+        error,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        stack: error?.stack,
+        email,
+        currentUserId: user?.id
+      });
       return null;
     }
   };
@@ -229,23 +255,80 @@ export const useMessaging = () => {
   }, [activeConversationId, messages]);
 
   const startConversation = async (participantId: string): Promise<string | null> => {
-    if (!user || loading) return null;
+    if (!user || loading) {
+      console.warn('startConversation: User not authenticated or already loading');
+      return null;
+    }
 
     setLoading(true);
     try {
-      // Check if conversation already exists
-      const existingConversation = conversations.find(conv => 
+      console.log('startConversation: Starting conversation', {
+        currentUserId: user.id,
+        participantId,
+        email: user.email
+      });
+
+      // First check in-memory state for quick lookup
+      const existingInMemory = conversations.find(conv => 
         conv.participants.length === 2 && 
         conv.participants.includes(participantId) && 
         conv.participants.includes(user.id)
       );
 
-      if (existingConversation) {
-        setActiveConversationId(existingConversation.id);
-        return existingConversation.id;
+      if (existingInMemory) {
+        console.log('startConversation: Found existing conversation in memory', existingInMemory.id);
+        setActiveConversationId(existingInMemory.id);
+        return existingInMemory.id;
+      }
+
+      // Query database to check if conversation already exists
+      // Query conversations where current user is a participant, then filter for exact match
+      console.log('startConversation: Checking database for existing conversation');
+      const { data: existingConversations, error: queryError } = await safe.select(async () =>
+        await supabase
+          .from('conversations')
+          .select('*')
+          .eq('is_group', false)
+          .contains('participants', [user.id])
+      );
+
+      if (queryError) {
+        console.error('startConversation: Error querying existing conversations:', {
+          error: queryError,
+          code: queryError.code,
+          message: queryError.message,
+          details: queryError.details,
+          hint: queryError.hint
+        });
+        // Continue to create new conversation even if query fails
+      } else if (existingConversations && existingConversations.length > 0) {
+        // Filter to find exact match (both participants)
+        const exactMatch = existingConversations.find(conv => 
+          conv.participants.length === 2 &&
+          conv.participants.includes(user.id) &&
+          conv.participants.includes(participantId)
+        );
+
+        if (exactMatch) {
+          console.log('startConversation: Found existing conversation in database', exactMatch.id);
+          setConversations(prev => {
+            // Add to state if not already there
+            if (!prev.find(c => c.id === exactMatch.id)) {
+              return [exactMatch, ...prev];
+            }
+            return prev;
+          });
+          setActiveConversationId(exactMatch.id);
+          return exactMatch.id;
+        }
       }
 
       // Create new conversation
+      console.log('startConversation: Creating new conversation', {
+        participants: [user.id, participantId],
+        is_group: false
+      });
+
       const { data, error } = await safe.insert(async () =>
         await supabase
           .from('conversations')
@@ -257,14 +340,52 @@ export const useMessaging = () => {
           .single()
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error('startConversation: Error creating conversation:', {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          participants: [user.id, participantId]
+        });
+        throw error;
+      }
+
+      if (!data) {
+        console.error('startConversation: No data returned from conversation creation');
+        throw new Error('Failed to create conversation: No data returned');
+      }
+
+      console.log('startConversation: Conversation created successfully', {
+        conversationId: data.id,
+        participants: data.participants
+      });
 
       setConversations(prev => [data, ...prev]);
       setActiveConversationId(data.id);
       return data.id;
-    } catch (error) {
-      console.error('Error starting conversation:', error);
-      toast.error('Failed to start conversation');
+    } catch (error: any) {
+      console.error('startConversation: Error starting conversation:', {
+        error,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details,
+        errorHint: error?.hint,
+        stack: error?.stack,
+        currentUserId: user?.id,
+        participantId
+      });
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to start conversation';
+      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('row-level security')) {
+        errorMessage = 'Permission denied. You may not have access to create conversations.';
+      } else if (error?.message) {
+        errorMessage = `Failed to start conversation: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
@@ -272,10 +393,24 @@ export const useMessaging = () => {
   };
 
   const sendMessage = async (conversationId: string, content: string, replyToId?: string) => {
-    if (!user || loading || !content.trim()) return;
+    if (!user || loading || !content.trim()) {
+      console.warn('sendMessage: Invalid parameters', {
+        hasUser: !!user,
+        loading,
+        hasContent: !!content.trim()
+      });
+      return;
+    }
 
     setLoading(true);
     try {
+      console.log('sendMessage: Sending message', {
+        conversationId,
+        senderId: user.id,
+        contentLength: content.trim().length,
+        replyToId
+      });
+
       const { data, error } = await safe.insert(async () =>
         await supabase
           .from('messages')
@@ -290,19 +425,67 @@ export const useMessaging = () => {
           .single()
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error('sendMessage: Error inserting message:', {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          conversationId,
+          senderId: user.id
+        });
+        throw error;
+      }
+
+      if (!data) {
+        console.error('sendMessage: No data returned from message insertion');
+        throw new Error('Failed to send message: No data returned');
+      }
+
+      console.log('sendMessage: Message sent successfully', {
+        messageId: data.id,
+        conversationId
+      });
 
       // Update conversation's last message timestamp
-      await safe.update(async () =>
+      const { error: updateError } = await safe.update(async () =>
         await supabase
           .from('conversations')
           .update({ last_message_at: new Date().toISOString() })
           .eq('id', conversationId)
       );
 
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
+      if (updateError) {
+        console.warn('sendMessage: Failed to update conversation timestamp:', {
+          error: updateError,
+          conversationId
+        });
+        // Don't throw - message was sent successfully
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('sendMessage: Error sending message:', {
+        error,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details,
+        errorHint: error?.hint,
+        stack: error?.stack,
+        conversationId,
+        senderId: user?.id
+      });
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to send message';
+      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('row-level security')) {
+        errorMessage = 'Permission denied. You may not have access to send messages in this conversation.';
+      } else if (error?.message) {
+        errorMessage = `Failed to send message: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

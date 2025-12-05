@@ -123,29 +123,48 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     }
 
     // This is Samuel's profile - create conversation
+    console.log('MentorCard: Starting conversation with Samuel', {
+      currentUser: user?.email,
+      mentorEmail: SAMUEL_STARKMAN_EMAIL
+    });
+    
     setIsStartingConversation(true);
     try {
       // Get Samuel's user ID by email
+      console.log('MentorCard: Getting Samuel\'s user ID by email');
       const samuelUserId = await getUserIdByEmail(SAMUEL_STARKMAN_EMAIL);
       
       if (!samuelUserId) {
+        console.error('MentorCard: Could not find Samuel\'s user ID');
         toast.error('Could not find Samuel\'s account. Please try again later.');
         return;
       }
 
+      console.log('MentorCard: Found Samuel\'s user ID', { samuelUserId });
+
       // Start conversation with Samuel
+      console.log('MentorCard: Starting conversation');
       const conversationId = await startConversation(samuelUserId);
       
       if (conversationId) {
+        console.log('MentorCard: Conversation started successfully', { conversationId });
         // Small delay to ensure conversation is added to state
         await new Promise(resolve => setTimeout(resolve, 100));
         // Navigate to messages with the conversation ID
+        console.log('MentorCard: Navigating to messages', { conversationId });
         navigate(`/messages?conversationId=${conversationId}`);
       } else {
+        console.error('MentorCard: Failed to start conversation - no conversation ID returned');
         toast.error('Failed to start conversation. Please try again.');
       }
-    } catch (error) {
-      console.error('Error starting conversation with Samuel:', error);
+    } catch (error: any) {
+      console.error('MentorCard: Error starting conversation with Samuel:', {
+        error,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        stack: error?.stack,
+        currentUser: user?.email
+      });
       toast.error('Failed to start conversation. Please try again.');
     } finally {
       setIsStartingConversation(false);
