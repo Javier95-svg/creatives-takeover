@@ -250,11 +250,16 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                 </div>
           </div>
 
-          {/* Right: Heart */}
-          <div className="flex-shrink-0 flex flex-col items-end justify-start">
+          {/* Right: Heart and Program Info */}
+          <div className="flex-shrink-0 flex flex-col items-end justify-between gap-4">
             <button className="p-2 hover:bg-muted rounded-md transition-all duration-200 hover:scale-110">
               <Heart className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
             </button>
+            <div className="text-right">
+              <div className="text-xs lg:text-sm text-muted-foreground">
+                8 Week Coaching Program
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
