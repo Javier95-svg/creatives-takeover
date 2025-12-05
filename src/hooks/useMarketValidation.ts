@@ -26,15 +26,15 @@ export const useMarketValidation = () => {
 
       if (error) throw error;
       
-      // Parse JSONB fields
-      return (data || []).map((score) => ({
+      // Parse JSONB fields with safe type handling
+      return (data || []).map((score: any) => ({
         ...score,
         top_competitors: (score.top_competitors || []) as any[],
         demand_trends: (score.demand_trends || {}) as any,
         search_volume_data: (score.search_volume_data || {}) as any,
         competitor_gaps: (score.competitor_gaps || []) as any[],
         differentiation_opportunities: (score.differentiation_opportunities || []) as string[],
-        customer_needs_data: (score.customer_needs_data || undefined) as any,
+        customer_needs_data: score.customer_needs_data || undefined,
         data_sources: (score.data_sources || []) as any[],
       })) as MarketValidationScore[];
     },

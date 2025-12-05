@@ -19,6 +19,19 @@ export interface CommunityNotification {
   metadata: any;
 }
 
+interface NotificationRow {
+  id: string;
+  notification_type: string;
+  post_id: string | null;
+  comment_id: string | null;
+  conversation_id?: string | null;
+  message_id?: string | null;
+  read: boolean;
+  created_at: string;
+  actor_id: string;
+  metadata: any;
+}
+
 export const useCommunityNotifications = (userId: string | undefined) => {
   const [notifications, setNotifications] = useState<CommunityNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -42,7 +55,7 @@ export const useCommunityNotifications = (userId: string | undefined) => {
 
       // Fetch actor information for each notification
       const notificationsWithActors = await Promise.all(
-        (data || []).map(async (notification) => {
+        ((data || []) as NotificationRow[]).map(async (notification) => {
           const { data: actorData } = await supabase.rpc('get_notification_actor_info', {
             actor_user_id: notification.actor_id
           });
