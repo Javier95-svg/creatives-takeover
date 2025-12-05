@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, MessageCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Send, MessageCircle, Trash2 } from "lucide-react";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
@@ -23,7 +24,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     setActiveConversationId,
     sendMessage,
     markAsRead,
-    getUnreadCount
+    getUnreadCount,
+    deleteConversation
   } = useMessaging();
   
   const [newMessage, setNewMessage] = useState("");
@@ -32,6 +34,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
   const hasSetInitialConversation = useRef(false);
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, { full_name: string; avatar_url: string | null }>>({});
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -198,6 +202,27 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   const activeMessages = activeConversationId ? messages[activeConversationId] || [] : [];
 
+  const handleDeleteClick = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation(); // Prevent selecting the conversation
+    setConversationToDelete(conversationId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!conversationToDelete) return;
+    
+    setIsDeleting(true);
+    const success = await deleteConversation(conversationToDelete);
+    setIsDeleting(false);
+    
+    if (success) {
+      setConversationToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConversationToDelete(null);
+  };
+
   return (
     <div className="flex h-[600px] border rounded-lg bg-card">
       {/* Conversations List */}
@@ -221,38 +246,51 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                 const unreadCount = getUnreadCount(conversation.id);
                 
                 return (
-                  <Button
+                  <div
                     key={conversation.id}
-                    variant={activeConversationId === conversation.id ? "secondary" : "ghost"}
-                    className="w-full justify-start p-3 h-auto"
-                    onClick={() => setActiveConversationId(conversation.id)}
+                    className="relative group"
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={getConversationAvatar(conversation) || undefined} />
-                        <AvatarFallback>
-                          {getConversationName(conversation).charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {getConversationName(conversation)}
-                        </p>
-                        {conversation.last_message_at && (
-                          <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(conversation.last_message_at))} ago
+                    <Button
+                      variant={activeConversationId === conversation.id ? "secondary" : "ghost"}
+                      className="w-full justify-start p-3 h-auto"
+                      onClick={() => setActiveConversationId(conversation.id)}
+                    >
+                      <div className="flex items-center gap-3 w-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={getConversationAvatar(conversation) || undefined} />
+                          <AvatarFallback>
+                            {getConversationName(conversation).charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {getConversationName(conversation)}
                           </p>
+                          {conversation.last_message_at && (
+                            <p className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(conversation.last_message_at))} ago
+                            </p>
+                          )}
+                        </div>
+                        
+                        {unreadCount > 0 && (
+                          <div className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </div>
                         )}
                       </div>
-                      
-                      {unreadCount > 0 && (
-                        <div className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </div>
-                      )}
-                    </div>
-                  </Button>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={(e) => handleDeleteClick(e, conversation.id)}
+                      aria-label="Delete conversation"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 );
               })}
             </div>
@@ -343,6 +381,34 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!conversationToDelete} onOpenChange={handleCancelDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Conversation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this conversation? This action cannot be undone and all messages will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

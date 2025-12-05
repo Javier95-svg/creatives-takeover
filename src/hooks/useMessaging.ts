@@ -605,6 +605,70 @@ export const useMessaging = () => {
     }
   };
 
+  const deleteConversation = async (conversationId: string) => {
+    if (!user) {
+      toast.error('You must be logged in to delete conversations');
+      return false;
+    }
+
+    try {
+      // First, verify the user is a participant in this conversation
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (!conversation || !conversation.participants.includes(user.id)) {
+        toast.error('You do not have permission to delete this conversation');
+        return false;
+      }
+
+      // Delete all messages in the conversation first (due to foreign key constraints)
+      const { error: messagesError } = await safe.delete(async () =>
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', conversationId)
+      );
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        toast.error('Failed to delete messages');
+        return false;
+      }
+
+      // Delete the conversation
+      const { error: conversationError } = await safe.delete(async () =>
+        await supabase
+          .from('conversations')
+          .delete()
+          .eq('id', conversationId)
+      );
+
+      if (conversationError) {
+        console.error('Error deleting conversation:', conversationError);
+        toast.error('Failed to delete conversation');
+        return false;
+      }
+
+      // Remove from local state
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      setMessages(prev => {
+        const updated = { ...prev };
+        delete updated[conversationId];
+        return updated;
+      });
+
+      // If this was the active conversation, clear it
+      if (activeConversationId === conversationId) {
+        setActiveConversationId(null);
+      }
+
+      toast.success('Conversation deleted successfully');
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting conversation:', error);
+      toast.error('Failed to delete conversation');
+      return false;
+    }
+  };
+
   return {
     conversations,
     messages,
@@ -615,6 +679,7 @@ export const useMessaging = () => {
     sendMessage,
     markAsRead,
     getUnreadCount,
+    deleteConversation,
     getUserIdByEmail,
     getUserIdByUsername,
     getUsernameByUserId
