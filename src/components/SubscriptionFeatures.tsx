@@ -3,13 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  MessageSquare, 
+  Bot, 
   Users, 
   TrendingUp, 
   Check,
   Sparkles,
-  Target,
-  BarChart3,
+  Calendar,
+  BookOpen,
   ChevronDown
 } from "lucide-react";
 import {
@@ -22,52 +22,52 @@ const SubscriptionFeatures = () => {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const features = [
     {
-      icon: <MessageSquare className="w-10 h-10 text-primary" />,
-      title: "Business Planning",
-      description: "Get personalized business insights with our BizMap Creative Operating System and strategic planning tools.",
-      benefits: ["Business analysis & insights", "Custom launch reports", "Strategic recommendations"],
+      icon: <Bot className="w-10 h-10 text-primary" />,
+      title: "BizMap AI",
+      description: "Your AI co-founder that guides you through a 7-step business planning wizard to transform ideas into actionable roadmaps.",
+      benefits: ["7-step interactive wizard", "AI-powered validation", "Success probability scoring", "Downloadable business roadmap"],
       highlight: "Core Feature",
-      details: "Our AI-powered business planning system analyzes your ideas, market conditions, and competitive landscape to provide actionable insights. Get step-by-step guidance from ideation to launch."
+      details: "Start with our BizMap AI Creative Operating System to analyze your business idea, validate market fit, and create a comprehensive 30-day launch strategy. Get real-time AI guidance, competitor analysis, and strategic recommendations tailored to your creative business."
     },
     {
       icon: <Users className="w-10 h-10 text-primary" />,
-      title: "Community & Collaboration",
-      description: "Connect with fellow entrepreneurs and collaborate on projects in real-time.",
-      benefits: ["Entrepreneur community", "Real-time collaboration", "Team workspaces"],
+      title: "Community",
+      description: "Join 10,000+ entrepreneurs sharing progress, getting feedback, and growing together in a supportive network.",
+      benefits: ["Share wins & get support", "Daily challenges & rewards", "Reputation badges & leveling", "Connect with founders"],
       highlight: "Most Popular",
-      details: "Join thousands of entrepreneurs sharing insights, feedback, and support. Collaborate with your team using whiteboards, video calls, and shared workspaces designed for distributed teams."
+      details: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding. Post updates, engage with others, and build your reputation."
     },
     {
       icon: <TrendingUp className="w-10 h-10 text-primary" />,
-      title: "Market Intelligence",
-      description: "Stay ahead with real-time market insights and trend analysis for your industry.",
-      benefits: ["Market trend analysis", "Industry insights", "Opportunity detection"],
+      title: "Insighta",
+      description: "Your curated news hub for funding opportunities, accelerator programs, and the latest AI & startup trends.",
+      benefits: ["Funding opportunities", "Latest AI & startup news", "Trending articles", "Bookmark & save"],
       highlight: "New",
-      details: "Access real-time market data, emerging trends, and competitive intelligence. Our AI monitors thousands of sources to identify opportunities before your competitors do."
+      details: "Access a complete fundraising toolkit designed for entrepreneurs. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy. Stay updated with the latest trends in AI and entrepreneurship."
     },
     {
-      icon: <Target className="w-10 h-10 text-primary" />,
-      title: "Sprint Planning & Kanban",
-      description: "Organize your projects with advanced sprint planning and Kanban board management.",
-      benefits: ["Sprint planning tools", "Kanban boards", "Progress tracking"],
+      icon: <BookOpen className="w-10 h-10 text-primary" />,
+      title: "Stories",
+      description: "Read expert insights, real-world stories, and actionable advice from successful entrepreneurs and creative professionals.",
+      benefits: ["Expert insights & articles", "Real-world success stories", "Actionable business advice", "LinkedIn post integration"],
       highlight: "",
-      details: "Break down big goals into manageable sprints. Visualize your workflow, track progress, and maintain momentum with daily check-ins and accountability features."
+      details: "Discover actionable insights, real-world stories, and expert advice from successful entrepreneurs and creative professionals. Learn from their experiences, mistakes, and triumphs as they build and grow their businesses. All stories are tagged and searchable by topic."
+    },
+    {
+      icon: <Calendar className="w-10 h-10 text-primary" />,
+      title: "Sprint Planning & Kanban",
+      description: "Organize your projects with sprint planning tools and Kanban boards to maintain momentum and track progress.",
+      benefits: ["Unlimited sprint planning", "Kanban board management", "Daily check-ins", "Progress tracking"],
+      highlight: "",
+      details: "Break down big goals into manageable sprints. Visualize your workflow with Kanban boards, track progress, and maintain momentum with daily check-ins and accountability features. Perfect for keeping your 30-day launch plan on track."
     },
     {
       icon: <Sparkles className="w-10 h-10 text-primary" />,
       title: "Prompt Library",
-      description: "Access our curated collection of business prompts and templates for various scenarios.",
-      benefits: ["Curated business prompts", "Template library", "Export functionality"],
+      description: "Access 30+ battle-tested prompts for AI, E-commerce, SaaS, and creative businesses with one-click copy.",
+      benefits: ["4 industry categories", "One-click copy prompts", "BizMap AI integration", "Customizable templates"],
       highlight: "",
-      details: "Leverage hundreds of proven business prompts and templates. From pitch decks to financial models, get professional-grade resources tailored to your industry and stage."
-    },
-    {
-      icon: <BarChart3 className="w-10 h-10 text-primary" />,
-      title: "Success Analytics",
-      description: "Track your business performance with detailed analytics and success scoring.",
-      benefits: ["Business success scores", "Performance tracking", "Analytics dashboard"],
-      highlight: "",
-      details: "Measure what matters with our comprehensive analytics suite. Track KPIs, monitor progress, and get AI-powered recommendations to improve your success trajectory."
+      details: "Leverage hundreds of proven business prompts and templates. From pitch decks to financial models, get professional-grade resources tailored to your industry and stage. Copy prompts directly into BizMap AI conversations for seamless workflow."
     }
   ];
 
@@ -85,8 +85,7 @@ const SubscriptionFeatures = () => {
             Everything You Need to Build Your Business
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our comprehensive platform combines business planning, community collaboration, 
-            and market intelligence to accelerate your entrepreneurial journey.
+            From AI-powered business planning to community support, funding resources, and expert insights—everything you need to go from idea to launch in 30 days.
           </p>
         </div>
 
