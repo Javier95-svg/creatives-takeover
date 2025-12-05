@@ -320,10 +320,10 @@ const StoriesWallpaper = () => {
         }}
       />
 
-      {/* Readability overlay - ensures content is always readable */}
+      {/* Readability overlay - stronger in content area, lighter in hero */}
       <div className="absolute inset-0 
-        dark:from-background/75 dark:via-background/45 dark:to-background/80 
-        from-background/92 via-background/96 to-background/92 
+        dark:from-background/70 dark:via-background/50 dark:to-background/85 
+        from-background/90 via-background/95 to-background/95 
         bg-gradient-to-b" />
     </div>
   );
