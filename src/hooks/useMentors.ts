@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Mentor } from '@/types/mentor';
+import { Mentor, AvailabilitySlot } from '@/types/mentor';
 
 export interface CreateMentorInput {
   name: string;
@@ -64,6 +64,14 @@ const formatErrorMessage = (error: any, defaultMessage: string): string => {
   return errorMessage || defaultMessage;
 };
 
+// Helper to convert database row to Mentor type
+const convertToMentor = (data: any): Mentor => {
+  return {
+    ...data,
+    availability: (data.availability || []) as AvailabilitySlot[],
+  };
+};
+
 export const useMentors = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -84,7 +92,7 @@ export const useMentors = () => {
 
       if (error) throw error;
       
-      return (data || []) as Mentor[];
+      return (data || []).map(convertToMentor);
     } catch (error: any) {
       console.error('Error fetching mentors:', {
         message: error?.message,
@@ -114,7 +122,7 @@ export const useMentors = () => {
 
       if (error) throw error;
       
-      return data as Mentor | null;
+      return data ? convertToMentor(data) : null;
     } catch (error: any) {
       console.error('Error fetching mentor:', {
         id,
@@ -168,7 +176,7 @@ export const useMentors = () => {
       
       const { data, error } = await supabase
         .from('mentors')
-        .insert(insertData)
+        .insert([insertData])
         .select()
         .single();
 
@@ -191,7 +199,7 @@ export const useMentors = () => {
       });
       
       toast.success('Mentor created successfully');
-      return data as Mentor;
+      return convertToMentor(data);
     } catch (error: any) {
       console.error('Error creating mentor:', {
         input,
@@ -284,7 +292,7 @@ export const useMentors = () => {
       });
       
       toast.success('Mentor updated successfully');
-      return data as Mentor;
+      return convertToMentor(data);
     } catch (error: any) {
       console.error('Error updating mentor:', {
         id,
@@ -359,4 +367,3 @@ export const useMentors = () => {
     isAdmin,
   };
 };
-

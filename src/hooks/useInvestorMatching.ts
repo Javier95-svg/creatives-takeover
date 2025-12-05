@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { MatchRequest, MatchResults, InvestorMatch, Investor } from '@/types/investor';
-import { toast } from 'sonner';
+import { MatchRequest, MatchResults, Investor } from '@/types/investor';
 
 export const useInvestorMatching = () => {
   const [loading, setLoading] = useState(false);
@@ -63,7 +62,7 @@ export const useInvestorMatching = () => {
   const getSavedMatches = useCallback(async () => {
     try {
       const { data, error: fetchError } = await supabase
-        .from('investor_matches')
+        .from('investor_matches' as any)
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -80,14 +79,14 @@ export const useInvestorMatching = () => {
   const getInvestorProfile = useCallback(async (investorId: string): Promise<Investor | null> => {
     try {
       const { data, error: fetchError } = await supabase
-        .from('investors')
+        .from('investors' as any)
         .select('*')
         .eq('id', investorId)
         .eq('is_active', true)
         .single();
 
       if (fetchError) throw fetchError;
-      return data as Investor;
+      return data as unknown as Investor;
     } catch (err) {
       console.error('Error fetching investor profile:', err);
       return null;
@@ -108,4 +107,3 @@ export const useInvestorMatching = () => {
     }
   };
 };
-

@@ -263,10 +263,10 @@ ${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
   return (
     <div className="space-y-6">
       <CreditGate
-        open={creditGateOpen}
-        onOpenChange={setCreditGateOpen}
+        isOpen={creditGateOpen}
+        onClose={() => setCreditGateOpen(false)}
         requiredCredits={CREDIT_COSTS.PMF_ANALYSIS}
-        featureName="PMF Analysis"
+        feature="PMF Analysis"
       />
 
       <Card>

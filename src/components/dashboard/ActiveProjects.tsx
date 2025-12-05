@@ -134,7 +134,7 @@ export const ActiveProjects = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {activeProjects.map((project) => {
+          {activeProjects.map((project, index) => {
             const progress = getProgressPercentage(project);
             const status = getStatusBadge(project);
             const stage = getProjectStage(progress);

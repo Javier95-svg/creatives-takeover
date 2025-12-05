@@ -68,20 +68,18 @@ export const useOutreachGenerator = () => {
 
   const getMaterials = useCallback(async (investorId?: string) => {
     try {
-      let query = supabase
-        .from('outreach_materials')
+      const baseQuery = supabase
+        .from('outreach_materials' as any)
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (investorId) {
-        query = query.eq('investor_id', investorId);
-      }
-
-      const { data, error: fetchError } = await query;
+      const { data, error: fetchError } = investorId 
+        ? await baseQuery.eq('investor_id', investorId)
+        : await baseQuery;
 
       if (fetchError) throw fetchError;
-      return data as OutreachMaterial[] || [];
+      return ((data as any) || []) as OutreachMaterial[];
     } catch (err) {
       console.error('Error fetching materials:', err);
       return [];
@@ -116,4 +114,3 @@ export const useOutreachGenerator = () => {
     }
   };
 };
-
