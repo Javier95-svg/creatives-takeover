@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL } from "@/hooks/useMessaging";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID } from "@/hooks/useMessaging";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +20,7 @@ interface MentorProfileProps {
 export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation, getUserIdByEmail } = useMessaging();
+  const { startConversation } = useMessaging();
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   const averageRating = mentor.rating || 0;
@@ -91,20 +91,12 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     
     setIsStartingConversation(true);
     try {
-      // Get Samuel's user ID by email
-      console.log('MentorProfile: Getting Samuel\'s user ID by email');
-      const samuelUserId = await getUserIdByEmail(SAMUEL_STARKMAN_EMAIL);
-      
-      if (!samuelUserId) {
-        console.error('MentorProfile: Could not find Samuel\'s user ID');
-        toast.error('Could not find Samuel\'s account. Please try again later.');
-        return;
-      }
-
-      console.log('MentorProfile: Found Samuel\'s user ID', { samuelUserId });
+      // Use Samuel's known user ID directly (more reliable than email lookup)
+      const samuelUserId = SAMUEL_STARKMAN_USER_ID;
+      console.log('MentorProfile: Using Samuel\'s user ID', { samuelUserId });
 
       // Start conversation with Samuel
-      console.log('MentorProfile: Starting conversation');
+      console.log('MentorProfile: Starting conversation with Samuel');
       const conversationId = await startConversation(samuelUserId);
       
       if (conversationId) {

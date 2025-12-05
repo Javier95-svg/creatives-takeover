@@ -7,7 +7,7 @@ import { Star, CheckCircle2, MessageCircle, Calendar, Heart, Linkedin } from "lu
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL } from "@/hooks/useMessaging";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID } from "@/hooks/useMessaging";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -23,7 +23,7 @@ interface MentorCardProps {
 export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation, getUserIdByEmail } = useMessaging();
+  const { startConversation } = useMessaging();
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   
@@ -130,20 +130,12 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     
     setIsStartingConversation(true);
     try {
-      // Get Samuel's user ID by email
-      console.log('MentorCard: Getting Samuel\'s user ID by email');
-      const samuelUserId = await getUserIdByEmail(SAMUEL_STARKMAN_EMAIL);
-      
-      if (!samuelUserId) {
-        console.error('MentorCard: Could not find Samuel\'s user ID');
-        toast.error('Could not find Samuel\'s account. Please try again later.');
-        return;
-      }
-
-      console.log('MentorCard: Found Samuel\'s user ID', { samuelUserId });
+      // Use Samuel's known user ID directly (more reliable than email lookup)
+      const samuelUserId = SAMUEL_STARKMAN_USER_ID;
+      console.log('MentorCard: Using Samuel\'s user ID', { samuelUserId });
 
       // Start conversation with Samuel
-      console.log('MentorCard: Starting conversation');
+      console.log('MentorCard: Starting conversation with Samuel');
       const conversationId = await startConversation(samuelUserId);
       
       if (conversationId) {

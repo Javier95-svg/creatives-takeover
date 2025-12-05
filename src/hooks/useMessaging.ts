@@ -32,8 +32,9 @@ export interface Message {
   };
 }
 
-// Samuel Starkman's email constant
+// Samuel Starkman's email and user ID constants
 export const SAMUEL_STARKMAN_EMAIL = 'sestarkman@gmail.com';
+export const SAMUEL_STARKMAN_USER_ID = '22fdf3fa-b444-4949-a2c3-a5acc247b390'; // Known user ID from previous conversation
 
 export const useMessaging = () => {
   const { user } = useAuth();
@@ -42,30 +43,46 @@ export const useMessaging = () => {
   const [loading, setLoading] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
-  // Get user ID by email using database function
+  // Get user ID by email using database function with fallback
   const getUserIdByEmail = async (email: string): Promise<string | null> => {
     if (!user) {
       console.warn('getUserIdByEmail: User not authenticated');
       return null;
     }
 
+    // Direct lookup for Samuel's email - use known user ID
+    if (email.toLowerCase() === SAMUEL_STARKMAN_EMAIL.toLowerCase()) {
+      console.log('getUserIdByEmail: Using known Samuel user ID', SAMUEL_STARKMAN_USER_ID);
+      return SAMUEL_STARKMAN_USER_ID;
+    }
+
     try {
       console.log('getUserIdByEmail: Looking up user ID for email', email);
       
+      // Try RPC function first
       const { data, error } = await supabase.rpc('get_user_id_by_email', {
         user_email: email
       });
 
       if (error) {
-        console.error('getUserIdByEmail: Error calling RPC function:', {
+        console.warn('getUserIdByEmail: RPC function failed, trying direct query:', {
           error,
           code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          email,
-          currentUserId: user.id
+          message: error.message
         });
+        
+        // Fallback: Try querying profiles table if email is stored there
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email.toLowerCase())
+          .single();
+        
+        if (!profileError && profileData?.id) {
+          console.log('getUserIdByEmail: Found user ID via profiles table', { email, userId: profileData.id });
+          return profileData.id;
+        }
+        
         return null;
       }
 
