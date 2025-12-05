@@ -7,6 +7,8 @@ export interface CommunityNotification {
   notification_type: string;
   post_id: string | null;
   comment_id: string | null;
+  conversation_id: string | null;
+  message_id: string | null;
   read: boolean;
   created_at: string;
   actor: {
@@ -50,6 +52,8 @@ export const useCommunityNotifications = (userId: string | undefined) => {
             notification_type: notification.notification_type,
             post_id: notification.post_id,
             comment_id: notification.comment_id,
+            conversation_id: notification.conversation_id || null,
+            message_id: notification.message_id || null,
             read: notification.read,
             created_at: notification.created_at,
             actor: {

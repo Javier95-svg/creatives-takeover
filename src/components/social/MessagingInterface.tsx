@@ -27,6 +27,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const hasSetInitialConversation = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
@@ -57,6 +58,10 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   useEffect(() => {
     if (activeConversationId) {
       markAsRead(activeConversationId);
+      // Focus input when conversation is active and ready
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [activeConversationId, markAsRead]);
 
@@ -205,10 +210,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             <form onSubmit={handleSendMessage} className="p-4 border-t bg-card/50">
               <div className="flex gap-2">
                 <Input
+                  ref={inputRef}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   disabled={loading}
+                  autoFocus
                 />
                 <Button type="submit" disabled={loading || !newMessage.trim()}>
                   <Send className="h-4 w-4" />

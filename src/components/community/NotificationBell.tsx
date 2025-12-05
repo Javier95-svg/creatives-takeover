@@ -23,7 +23,13 @@ export const NotificationBell = () => {
   const handleNotificationClick = async (notification: any) => {
     await markAsRead(notification.id);
     
-    // Navigate to the post
+    // Navigate to messages if it's a message notification
+    if (notification.notification_type === 'message' && notification.metadata?.conversation_id) {
+      navigate(`/messages?conversationId=${notification.metadata.conversation_id}`);
+      return;
+    }
+    
+    // Navigate to the post for community notifications
     if (notification.post_id) {
       navigate(`/community?post=${notification.post_id}`);
     }
@@ -33,6 +39,8 @@ export const NotificationBell = () => {
     const { notification_type, actor } = notification;
     
     switch (notification_type) {
+      case 'message':
+        return `${actor.name} sent you a message`;
       case 'comment':
         return `${actor.name} commented on your post`;
       case 'like':
