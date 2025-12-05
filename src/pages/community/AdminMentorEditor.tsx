@@ -55,6 +55,7 @@ const AdminMentorEditor = () => {
     bio: "",
     hourly_rate: 10000, // $100 default for 8-week program (stored in cents)
     expertise: [],
+    universities: [],
     is_active: true,
     is_featured: false,
     linkedin_url: null,
@@ -86,6 +87,7 @@ const AdminMentorEditor = () => {
         bio: found.bio,
         hourly_rate: found.hourly_rate,
         expertise: found.expertise || [],
+        universities: found.universities || [],
         is_active: found.is_active !== false,
         is_featured: found.is_featured === true,
         linkedin_url: found.linkedin_url || null,
@@ -257,6 +259,28 @@ const AdminMentorEditor = () => {
         ? current.filter((e) => e !== expertise)
         : [...current, expertise];
       return { ...prev, expertise: newExpertise };
+    });
+  };
+
+  const [universityInput, setUniversityInput] = useState("");
+
+  const addUniversity = () => {
+    if (universityInput.trim()) {
+      setFormData((prev) => {
+        const current = prev.universities || [];
+        if (!current.includes(universityInput.trim())) {
+          return { ...prev, universities: [...current, universityInput.trim()] };
+        }
+        return prev;
+      });
+      setUniversityInput("");
+    }
+  };
+
+  const removeUniversity = (university: string) => {
+    setFormData((prev) => {
+      const current = prev.universities || [];
+      return { ...prev, universities: current.filter((u) => u !== university) };
     });
   };
 
@@ -572,6 +596,57 @@ const AdminMentorEditor = () => {
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Select all relevant expertise areas for this mentor.
+                </p>
+              </div>
+
+              {/* Universities */}
+              <div>
+                <Label>Universities</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    type="text"
+                    value={universityInput}
+                    onChange={(e) => setUniversityInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addUniversity();
+                      }
+                    }}
+                    placeholder="Enter university name (e.g., Harvard University)"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addUniversity}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {formData.universities && formData.universities.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.universities.map((university) => (
+                      <Badge
+                        key={university}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
+                        {university}
+                        <button
+                          type="button"
+                          onClick={() => removeUniversity(university)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Add universities or educational institutions the mentor attended.
                 </p>
               </div>
 

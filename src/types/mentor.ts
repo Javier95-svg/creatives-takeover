@@ -19,6 +19,7 @@ export interface Mentor {
   website_url?: string; // Personal or company website URL
   calendly_url?: string; // Calendly scheduling link for discovery calls
   nationality?: string; // Country name or code (e.g., "USA", "US", "United States")
+  universities?: string[]; // Array of universities/educational institutions
   created_at: string;
   updated_at: string;
 }

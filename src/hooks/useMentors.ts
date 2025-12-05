@@ -11,6 +11,7 @@ export interface CreateMentorInput {
   hourly_rate: number; // In cents
   stripe_connected_account_id?: string | null;
   expertise?: string[];
+  universities?: string[];
   is_active?: boolean;
   is_featured?: boolean;
   linkedin_url?: string | null;
