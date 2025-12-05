@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 
 const Messages = () => {
@@ -20,17 +20,27 @@ const Messages = () => {
   const { getUserIdByUsername, startConversation } = useMessaging();
   const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>(conversationIdParam || undefined);
   const [isResolvingUsername, setIsResolvingUsername] = useState(false);
+  const hasResolvedUsername = useRef<string | null>(null);
 
   // Handle username parameter
   useEffect(() => {
     if (!username || !user || !isAuthenticated) {
       // If no username, use conversationId from query param or undefined
       setResolvedConversationId(conversationIdParam || undefined);
+      hasResolvedUsername.current = null;
+      return;
+    }
+
+    // Prevent re-resolving the same username
+    if (hasResolvedUsername.current === username && resolvedConversationId) {
       return;
     }
 
     const resolveUsername = async () => {
+      // Mark that we're resolving this username
+      hasResolvedUsername.current = username;
       setIsResolvingUsername(true);
+      
       try {
         // Get user ID from username
         const userId = await getUserIdByUsername(username);
@@ -38,6 +48,7 @@ const Messages = () => {
         if (!userId) {
           toast.error(`User "${username}" not found`);
           setResolvedConversationId(undefined);
+          hasResolvedUsername.current = null; // Reset on error
           return;
         }
 
@@ -45,6 +56,7 @@ const Messages = () => {
         if (userId === user.id) {
           toast.error('Cannot message yourself');
           setResolvedConversationId(undefined);
+          hasResolvedUsername.current = null;
           return;
         }
 
@@ -56,18 +68,21 @@ const Messages = () => {
         } else {
           toast.error('Failed to start conversation');
           setResolvedConversationId(undefined);
+          hasResolvedUsername.current = null;
         }
       } catch (error) {
         console.error('Error resolving username:', error);
         toast.error('Failed to load conversation');
         setResolvedConversationId(undefined);
+        hasResolvedUsername.current = null;
       } finally {
         setIsResolvingUsername(false);
       }
     };
 
     resolveUsername();
-  }, [username, user, isAuthenticated, getUserIdByUsername, startConversation, conversationIdParam]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username, user?.id, isAuthenticated, conversationIdParam]);
 
   if (!isAuthenticated) {
     return (
