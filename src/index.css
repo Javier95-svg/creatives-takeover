@@ -2047,6 +2047,45 @@ All colors MUST be HSL.
 }
 
 /* Geometric Floating Animation for Mentor Marketplace Wallpaper */
+/* Stories Content Wallpaper Animations */
+@keyframes content-float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(8px, -12px) rotate(1deg) scale(1.03);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-6px, -8px) rotate(-0.5deg) scale(0.98);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translate(10px, -4px) rotate(0.5deg) scale(1.01);
+    opacity: 0.45;
+  }
+}
+
+@keyframes content-wave {
+  0%, 100% {
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+  25% {
+    stroke-dashoffset: -40;
+    opacity: 0.5;
+  }
+  50% {
+    stroke-dashoffset: -80;
+    opacity: 0.4;
+  }
+  75% {
+    stroke-dashoffset: -40;
+    opacity: 0.5;
+  }
+}
+
 @keyframes geometric-float {
   0%, 100% {
     transform: translate(0, 0) rotate(0deg);

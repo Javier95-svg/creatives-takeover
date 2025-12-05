@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { StoryCard } from "@/components/stories/StoryCard";
 import StoriesHero from "@/components/stories/StoriesHero";
 import StoriesWallpaper from "@/components/wallpapers/StoriesWallpaper";
+import StoriesContentWallpaper from "@/components/wallpapers/StoriesContentWallpaper";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
@@ -141,8 +142,10 @@ const Stories = () => {
             <StoriesHero />
           </section>
 
-          {/* Content Section */}
-          <div className="container mx-auto px-6 max-w-7xl relative z-10">
+          {/* Content Section with Animated Background */}
+          <section className="relative">
+            <StoriesContentWallpaper />
+            <div className="container mx-auto px-6 max-w-7xl relative z-10">
             {/* Admin Controls */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
@@ -340,7 +343,8 @@ const Stories = () => {
                 </div>
               )
             )}
-          </div>
+            </div>
+          </section>
         </main>
 
         <Footer />
