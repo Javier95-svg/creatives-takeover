@@ -30,7 +30,7 @@ export const useGmailIntegration = () => {
 
     try {
       const { data, error } = await supabase
-        .from('gmail_connections')
+        .from('gmail_connections' as any)
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
@@ -40,7 +40,7 @@ export const useGmailIntegration = () => {
         throw error;
       }
 
-      setConnection(data || null);
+      setConnection(data as unknown as GmailConnection | null);
     } catch (error) {
       console.error('Error loading Gmail connection:', error);
     } finally {
@@ -82,7 +82,7 @@ export const useGmailIntegration = () => {
 
     try {
       const { error } = await supabase
-        .from('gmail_connections')
+        .from('gmail_connections' as any)
         .update({ is_active: false })
         .eq('id', connection.id);
 
@@ -101,7 +101,7 @@ export const useGmailIntegration = () => {
 
     try {
       const { error } = await supabase
-        .from('gmail_connections')
+        .from('gmail_connections' as any)
         .update({ 
           task_reminders_enabled: enabled,
           updated_at: new Date().toISOString()
@@ -128,4 +128,3 @@ export const useGmailIntegration = () => {
     refreshConnection: loadConnection
   };
 };
-

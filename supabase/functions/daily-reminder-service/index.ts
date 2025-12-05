@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
-import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,12 +13,10 @@ interface Sprint {
   start_date: string;
   end_date: string;
   status: string;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-  email?: string;
+  profiles: {
+    id: string;
+    full_name: string;
+  };
 }
 
 interface CheckInReminder {
@@ -36,7 +33,43 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+// Simple email sending function using fetch
+async function sendEmail(to: string, subject: string, html: string): Promise<{ success: boolean; error?: string }> {
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
+  const fromEmail = Deno.env.get('FROM_EMAIL') || 'onboarding@resend.dev';
+  
+  if (!resendApiKey) {
+    console.log('RESEND_API_KEY not configured, skipping email send');
+    return { success: false, error: 'RESEND_API_KEY not configured' };
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `Creatives Takeover <${fromEmail}>`,
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Resend API error:', errorText);
+      return { success: false, error: errorText };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, error: String(error) };
+  }
+}
 
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -84,7 +117,7 @@ serve(async (req: Request): Promise<Response> => {
     const remindersToSend: CheckInReminder[] = [];
 
     // Check each sprint for users who need reminders
-    for (const sprint of activeSprints) {
+    for (const sprint of activeSprints as Sprint[]) {
       // Get the user's email from auth.users
       const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(sprint.user_id);
       
@@ -140,7 +173,7 @@ serve(async (req: Request): Promise<Response> => {
     let sentCount = 0;
     for (const reminder of remindersToSend) {
       try {
-        const subject = daysSinceLastCheckIn === 1 
+        const subject = reminder.last_checkin_days_ago === 1 
           ? `🚀 Daily Check-in: ${reminder.sprint_title}`
           : `⏰ Missing You: ${reminder.sprint_title} Check-in`;
 
@@ -174,15 +207,10 @@ serve(async (req: Request): Promise<Response> => {
           </div>
         `;
 
-        const emailResponse = await resend.emails.send({
-          from: `Creatives Takeover <${Deno.env.get('FROM_EMAIL') || 'onboarding@resend.dev'}>`,
-          to: [reminder.user_email],
-          subject,
-          html,
-        });
+        const emailResult = await sendEmail(reminder.user_email, subject, html);
 
-        if (emailResponse.error) {
-          console.error(`Failed to send reminder to ${reminder.user_email}:`, emailResponse.error);
+        if (!emailResult.success) {
+          console.error(`Failed to send reminder to ${reminder.user_email}:`, emailResult.error);
         } else {
           console.log(`Sent reminder to ${reminder.user_email} for sprint ${reminder.sprint_title}`);
           sentCount++;

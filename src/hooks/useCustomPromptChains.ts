@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -25,6 +25,21 @@ export interface CustomPromptChain {
   updated_at: string;
 }
 
+interface CustomPromptChainRow {
+  id: string;
+  user_id: string;
+  concept_title: string;
+  description: string;
+  category: string;
+  tags: string[] | null;
+  difficulty: string;
+  steps: any;
+  author_name: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export function useCustomPromptChains() {
   const { user } = useAuth();
   const { subscriptionData } = useSubscription();
@@ -39,7 +54,7 @@ export function useCustomPromptChains() {
     setError(null);
     try {
       const { data, error: fetchError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false });
@@ -47,13 +62,13 @@ export function useCustomPromptChains() {
       if (fetchError) throw fetchError;
 
       // Convert to MultiStepPrompt format
-      const convertedChains: MultiStepPrompt[] = (data || []).map((chain) => ({
+      const convertedChains: MultiStepPrompt[] = ((data || []) as unknown as CustomPromptChainRow[]).map((chain) => ({
         id: chain.id,
         conceptTitle: chain.concept_title,
         category: chain.category,
         description: chain.description,
         tags: chain.tags || [],
-        difficulty: chain.difficulty,
+        difficulty: chain.difficulty as "Easy" | "Medium" | "Hard",
         requiredTier: 'free' as const, // Custom chains are free to use
         steps: chain.steps as MultiStepPrompt['steps'],
         author_name: chain.author_name,
@@ -77,14 +92,14 @@ export function useCustomPromptChains() {
     setError(null);
     try {
       const { data, error: fetchError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      setUserChains((data || []) as CustomPromptChain[]);
+      setUserChains((data || []) as unknown as CustomPromptChain[]);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch your prompt chains');
       console.error('Error fetching user chains:', err);
@@ -130,7 +145,7 @@ export function useCustomPromptChains() {
       }
 
       const { data, error: createError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .insert({
           user_id: user.id,
           concept_title: chainData.concept_title,
@@ -148,7 +163,7 @@ export function useCustomPromptChains() {
       if (createError) throw createError;
 
       toast.success('Prompt chain saved successfully!');
-      return data as CustomPromptChain;
+      return data as unknown as CustomPromptChain;
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to create prompt chain';
       setError(errorMessage);
@@ -174,7 +189,7 @@ export function useCustomPromptChains() {
       }
 
       const { data, error: updateError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .update(updates)
         .eq('id', chainId)
         .eq('user_id', user.id)
@@ -184,7 +199,7 @@ export function useCustomPromptChains() {
       if (updateError) throw updateError;
 
       toast.success('Prompt chain updated successfully!');
-      return data as CustomPromptChain;
+      return data as unknown as CustomPromptChain;
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to update prompt chain';
       setError(errorMessage);
@@ -225,7 +240,7 @@ export function useCustomPromptChains() {
       const authorName = profile?.full_name?.trim() || user.user_metadata?.full_name?.trim() || 'Anonymous';
 
       const { data, error: publishError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .update({
           published: true,
           author_name: authorName,
@@ -240,7 +255,7 @@ export function useCustomPromptChains() {
       toast.success(`Prompt chain published successfully! It is now discoverable in the Prompt Library with your Account name (${authorName}) as the author.`, {
         duration: 5000,
       });
-      return data as CustomPromptChain;
+      return data as unknown as CustomPromptChain;
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to publish prompt chain';
       setError(errorMessage);
@@ -261,7 +276,7 @@ export function useCustomPromptChains() {
     setError(null);
     try {
       const { error: deleteError } = await supabase
-        .from('custom_prompt_chains')
+        .from('custom_prompt_chains' as any)
         .delete()
         .eq('id', chainId)
         .eq('user_id', user.id);
@@ -292,4 +307,3 @@ export function useCustomPromptChains() {
     deleteChain,
   };
 }
-

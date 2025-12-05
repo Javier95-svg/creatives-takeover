@@ -1422,8 +1422,10 @@ export type Database = {
         Row: {
           actor_id: string
           comment_id: string | null
+          conversation_id: string | null
           created_at: string
           id: string
+          message_id: string | null
           metadata: Json | null
           notification_type: string
           post_id: string | null
@@ -1433,8 +1435,10 @@ export type Database = {
         Insert: {
           actor_id: string
           comment_id?: string | null
+          conversation_id?: string | null
           created_at?: string
           id?: string
+          message_id?: string | null
           metadata?: Json | null
           notification_type: string
           post_id?: string | null
@@ -1444,8 +1448,10 @@ export type Database = {
         Update: {
           actor_id?: string
           comment_id?: string | null
+          conversation_id?: string | null
           created_at?: string
           id?: string
+          message_id?: string | null
           metadata?: Json | null
           notification_type?: string
           post_id?: string | null
@@ -1453,6 +1459,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "community_notifications_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "community_notifications_post_id_fkey"
             columns: ["post_id"]
@@ -3179,53 +3192,71 @@ export type Database = {
         Row: {
           availability: Json | null
           bio: string
+          calendly_url: string | null
           created_at: string
           expertise: string[] | null
           hourly_rate: number
           id: string
           is_active: boolean | null
           is_featured: boolean | null
+          linkedin_url: string | null
           name: string
+          nationality: string | null
           picture: string | null
           rating: number | null
           review_count: number | null
           stripe_connected_account_id: string | null
+          twitter_x_url: string | null
+          universities: string[] | null
           updated_at: string
           user_id: string | null
+          website_url: string | null
         }
         Insert: {
           availability?: Json | null
           bio: string
+          calendly_url?: string | null
           created_at?: string
           expertise?: string[] | null
           hourly_rate?: number
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          linkedin_url?: string | null
           name: string
+          nationality?: string | null
           picture?: string | null
           rating?: number | null
           review_count?: number | null
           stripe_connected_account_id?: string | null
+          twitter_x_url?: string | null
+          universities?: string[] | null
           updated_at?: string
           user_id?: string | null
+          website_url?: string | null
         }
         Update: {
           availability?: Json | null
           bio?: string
+          calendly_url?: string | null
           created_at?: string
           expertise?: string[] | null
           hourly_rate?: number
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          linkedin_url?: string | null
           name?: string
+          nationality?: string | null
           picture?: string | null
           rating?: number | null
           review_count?: number | null
           stripe_connected_account_id?: string | null
+          twitter_x_url?: string | null
+          universities?: string[] | null
           updated_at?: string
           user_id?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -5482,6 +5513,7 @@ export type Database = {
           reward_points: number
         }[]
       }
+      get_user_id_by_email: { Args: { user_email: string }; Returns: string }
       grant_monthly_credits: { Args: never; Returns: undefined }
       has_completed_todays_challenge: {
         Args: { p_user_id: string }

@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 export const useCountUp = (end: number, duration: number = 2000, start: number = 0) => {
   const [count, setCount] = useState(start);
   const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
