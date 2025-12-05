@@ -85,7 +85,7 @@ const SubscriptionFeatures = () => {
             Everything You Need to Build Your Business
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            From AI-powered business planning to community support, funding resources, and expert insights—everything you need to go from idea to launch in 30 days.
+            Get the tools, community, and insights you need to turn your idea into a real business. Start planning today and launch in 30 days.
           </p>
         </div>
 
