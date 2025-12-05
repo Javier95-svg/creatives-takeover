@@ -140,15 +140,18 @@ const Messages = () => {
         <MessagesBackground />
         <div className="relative z-10">
           <Navigation />
+          {/* Back to Community button - fixed at top right, below navigation */}
+          <div className="fixed top-16 right-4 z-40">
+            <Button variant="ghost" size="sm" asChild className="shadow-md bg-background/95 backdrop-blur-sm">
+              <Link to="/community" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Community
+              </Link>
+            </Button>
+          </div>
           <main className="container mx-auto px-4 py-8">
             <div className="max-w-6xl mx-auto">
               <div className="mb-6 text-center">
-                <Button variant="ghost" size="sm" asChild className="mb-4">
-                  <Link to="/community" className="flex items-center gap-2">
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Community
-                  </Link>
-                </Button>
                 <h1 className="text-5xl font-bold mb-2">
                   <span className="gradient-unified">Time to Chat</span>
                 </h1>
