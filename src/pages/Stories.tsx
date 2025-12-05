@@ -143,23 +143,6 @@ const Stories = () => {
 
           {/* Content Section */}
           <div className="container mx-auto px-6 max-w-7xl relative z-10">
-            {/* SEO-Friendly Intro Content */}
-            {!selectedTag && activeTab === "published" && (
-              <section className="mb-12 mt-8">
-                <div className="max-w-3xl">
-                  <h2 className="text-3xl font-bold mb-4">Expert Stories & Insights</h2>
-                  <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                    Discover actionable insights, real-world stories, and expert advice from successful entrepreneurs and creative professionals. 
-                    Learn from their experiences, mistakes, and triumphs as they build and grow their businesses.
-                  </p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Whether you're starting a new venture, scaling your business, or looking for creative inspiration, 
-                    our stories cover topics like entrepreneurship, marketing, fundraising, business strategy, and more.
-                  </p>
-                </div>
-              </section>
-            )}
-
             {/* Admin Controls */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
