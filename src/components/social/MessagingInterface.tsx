@@ -29,13 +29,34 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
   const hasSetInitialConversation = useRef(false);
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, { full_name: string; avatar_url: string | null }>>({});
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeConversationId]);
+    if (scrollAreaRef.current && activeConversationId) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+      if (scrollContainer) {
+        const activeMessages = messages[activeConversationId] || [];
+        const lastMessage = activeMessages[activeMessages.length - 1];
+        const isUserMessage = lastMessage?.sender_id === user?.id;
+        
+        // Only auto-scroll if:
+        // 1. User is already near the bottom (within 100px), OR
+        // 2. It's the user's own message (they just sent it), OR
+        // 3. There are no messages yet
+        const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 100;
+        
+        if (isNearBottom || isUserMessage || activeMessages.length === 0) {
+          // Use setTimeout to ensure DOM has updated
+          setTimeout(() => {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          }, 0);
+        }
+      }
+    }
+  }, [messages, activeConversationId, user?.id]);
 
   // Set initial conversation ID from URL parameter
   useEffect(() => {
@@ -233,7 +254,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
               <div className="space-y-4">
                 {activeMessages.map((message) => (
                   <div
