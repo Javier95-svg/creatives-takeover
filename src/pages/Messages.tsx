@@ -22,7 +22,7 @@ const Messages = () => {
   const [isResolvingUsername, setIsResolvingUsername] = useState(false);
   const hasResolvedUsername = useRef<string | null>(null);
 
-  // Prevent unwanted scrolling on page load
+  // Prevent unwanted scrolling on page load and interactions
   useEffect(() => {
     // Scroll to top on mount
     window.scrollTo(0, 0);
@@ -36,6 +36,41 @@ const Messages = () => {
     if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
+
+    // Prevent scroll when focusing elements (like input fields)
+    const handleFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      // Only prevent scroll for elements within the messages card
+      const messagesCard = document.querySelector('[class*="max-w-6xl"]');
+      if (messagesCard && messagesCard.contains(target)) {
+        // Use scrollIntoView with preventScroll option if supported
+        if (target.scrollIntoView && 'preventScroll' in {}) {
+          target.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+        }
+      }
+    };
+
+    // Prevent unwanted scroll on form submissions
+    const handleSubmit = (e: Event) => {
+      const form = e.target as HTMLFormElement;
+      if (form && form.closest('[class*="max-w-6xl"]')) {
+        // Form already has preventDefault in handleSendMessage, but ensure no scroll
+        const currentScroll = window.scrollY;
+        setTimeout(() => {
+          if (Math.abs(window.scrollY - currentScroll) > 10) {
+            window.scrollTo(0, currentScroll);
+          }
+        }, 0);
+      }
+    };
+
+    document.addEventListener('focusin', handleFocus, true);
+    document.addEventListener('submit', handleSubmit, true);
+
+    return () => {
+      document.removeEventListener('focusin', handleFocus, true);
+      document.removeEventListener('submit', handleSubmit, true);
+    };
   }, []);
 
   // Handle username parameter

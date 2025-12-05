@@ -81,9 +81,17 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   useEffect(() => {
     if (activeConversationId) {
       markAsRead(activeConversationId);
-      // Focus input when conversation is active and ready
+      // Focus input when conversation is active and ready, without scrolling
       setTimeout(() => {
-        inputRef.current?.focus();
+        if (inputRef.current) {
+          // Store current scroll position
+          const scrollY = window.scrollY;
+          inputRef.current.focus({ preventScroll: true });
+          // Restore scroll position if it changed
+          if (window.scrollY !== scrollY) {
+            window.scrollTo(0, scrollY);
+          }
+        }
       }, 100);
     }
   }, [activeConversationId, markAsRead]);
@@ -92,8 +100,18 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     e.preventDefault();
     if (!newMessage.trim() || !activeConversationId || loading) return;
 
+    // Store current scroll position to prevent unwanted scrolling
+    const scrollY = window.scrollY;
+
     await sendMessage(activeConversationId, newMessage);
     setNewMessage("");
+
+    // Restore scroll position if it changed
+    setTimeout(() => {
+      if (Math.abs(window.scrollY - scrollY) > 10) {
+        window.scrollTo(0, scrollY);
+      }
+    }, 0);
   };
 
   const getOtherParticipant = (conversation: any) => {
