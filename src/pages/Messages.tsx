@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import AnimatedBackground from "@/components/AnimatedBackground";
+import MessagesBackground from "@/components/MessagesBackground";
 import { MessagingInterface } from "@/components/social/MessagingInterface";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -92,7 +92,7 @@ const Messages = () => {
           <meta name="description" content="Direct messaging for entrepreneurs and creators" />
         </Helmet>
         <div className="relative min-h-screen overflow-hidden">
-          <AnimatedBackground />
+          <MessagesBackground />
           <div className="relative z-10">
             <Navigation />
             <main className="container mx-auto px-4 py-20">
@@ -121,7 +121,7 @@ const Messages = () => {
         <meta name="description" content="Direct messaging for entrepreneurs and creators" />
       </Helmet>
       <div className="relative min-h-screen overflow-hidden">
-        <AnimatedBackground />
+        <MessagesBackground />
         <div className="relative z-10">
           <Navigation />
           <main className="container mx-auto px-4 py-8">
@@ -133,9 +133,11 @@ const Messages = () => {
                     Back to Community
                   </Link>
                 </Button>
-                <h1 className="text-3xl font-bold mb-2">Messages</h1>
-                <p className="text-muted-foreground">
-                  Connect and chat with other entrepreneurs and creators
+                <h1 className="text-5xl font-bold mb-2">
+                  <span className="gradient-unified">Time to Chat</span>
+                </h1>
+                <p className="text-muted-foreground text-lg">
+                  Meet, connect, and chat with fellow founders, entrepreneurs, and experienced mentors.
                 </p>
               </div>
               
