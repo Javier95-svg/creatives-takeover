@@ -22,6 +22,22 @@ const Messages = () => {
   const [isResolvingUsername, setIsResolvingUsername] = useState(false);
   const hasResolvedUsername = useRef<string | null>(null);
 
+  // Prevent unwanted scrolling on page load
+  useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo(0, 0);
+    
+    // Prevent scroll restoration
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    
+    // Remove any hash from URL that might cause scrolling
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   // Handle username parameter
   useEffect(() => {
     if (!username || !user || !isAuthenticated) {
@@ -126,7 +142,7 @@ const Messages = () => {
           <Navigation />
           <main className="container mx-auto px-4 py-8">
             <div className="max-w-6xl mx-auto">
-              <div className="mb-6">
+              <div className="mb-6 text-center">
                 <Button variant="ghost" size="sm" asChild className="mb-4">
                   <Link to="/community" className="flex items-center gap-2">
                     <ArrowLeft className="h-4 w-4" />
