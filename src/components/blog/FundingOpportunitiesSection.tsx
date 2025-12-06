@@ -138,9 +138,12 @@ const FundingOpportunitiesSection = ({
             </h2>
             <span className="text-4xl md:text-5xl">💰</span>
           </div>
-          <p className="text-muted-foreground text-lg mt-4">
+          <p className="text-muted-foreground text-lg mt-4" id="insighta-description">
             Find grants, accelerators, contests, and microfunds for your project
           </p>
+          <span className="sr-only">
+            Browse and filter funding opportunities by type, location, and keywords. Bookmark opportunities for later review.
+          </span>
         </div>
 
         {/* Filters */}

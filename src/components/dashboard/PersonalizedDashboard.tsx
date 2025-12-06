@@ -148,9 +148,10 @@ export const PersonalizedDashboard = () => {
         onClick={() => navigate('/')}
         className="fixed right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:shadow-xl hover:bg-accent flex items-center gap-2 text-sm font-medium"
         aria-label="Exit dashboard and return to platform"
+        type="button"
       >
         <span>Platform</span>
-        <ArrowRight className="h-4 w-4" />
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {/* Modern Wallpaper Background */}
@@ -226,9 +227,12 @@ export const PersonalizedDashboard = () => {
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                       {greeting}, {profile?.full_name?.split(' ')[0] || 'Creator'}! 👋
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground" id="dashboard-welcome">
                       Welcome to your Founder Command Center.
                     </p>
+                    <span className="sr-only">
+                      Track your business progress, manage tasks, and monitor your entrepreneurial journey.
+                    </span>
                   </div>
                   {stats.currentStreak > 0 && (
                     <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/20 to-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20">

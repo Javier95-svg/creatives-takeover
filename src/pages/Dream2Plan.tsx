@@ -425,9 +425,12 @@ const BizMapAI = () => {
         scoring_criteria: score.scoring_breakdown
       });
       toast.success('Success score calculated.');
-    } catch (e) {
-      console.error('Scoring error:', e);
-      toast.error('Could not calculate success score, please try again later.');
+      } catch (e) {
+        console.error('Scoring error:', e);
+        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+        toast.error(`Could not calculate success score: ${errorMessage}. Please try again later.`, {
+          duration: 5000,
+        });
     }
   };
 
@@ -1207,16 +1210,18 @@ Subject: "Quick question about [their pain point]"
                   <TabsTrigger 
                     value="bizmap" 
                     className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
+                    aria-label="Business Planning tab - AI-powered business planning wizard"
                   >
-                    <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
+                    <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" aria-hidden="true" />
                     <span className="hidden sm:inline">Business Planning</span>
                     <span className="sm:hidden leading-tight pb-0.5">Planning</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="pmf" 
                     className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/20 data-[state=active]:to-secondary/10 data-[state=active]:text-secondary transition-all duration-300 hover:bg-secondary/5 rounded-lg font-medium text-xs sm:text-sm"
+                    aria-label="Product Market Fit Lab tab - Validate product-market fit"
                   >
-                    <FlaskConical className="w-4 sm:w-5 h-4 sm:h-5" />
+                    <FlaskConical className="w-4 sm:w-5 h-4 sm:h-5" aria-hidden="true" />
                     <span className="hidden sm:inline">Product Market Fit Lab</span>
                     <span className="sm:hidden">PMF Lab</span>
                   </TabsTrigger>

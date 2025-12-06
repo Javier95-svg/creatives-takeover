@@ -28,6 +28,15 @@ const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) =>
     <Card 
       className="hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col"
       onClick={() => window.open(opportunity.url, '_blank', 'noopener,noreferrer')}
+      role="article"
+      aria-label={`Funding opportunity: ${opportunity.title}`}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          window.open(opportunity.url, '_blank', 'noopener,noreferrer');
+        }
+      }}
     >
       <CardHeader className="pb-4 flex-grow">
         <div className="flex items-start justify-between gap-3">
@@ -84,8 +93,9 @@ const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) =>
             e.stopPropagation();
             window.open(opportunity.url, '_blank', 'noopener,noreferrer');
           }}
+          aria-label={`Learn more about ${opportunity.title} funding opportunity`}
         >
-          <ExternalLink className="h-3 w-3 mr-1" />
+          <ExternalLink className="h-3 w-3 mr-1" aria-hidden="true" />
           Learn More
         </Button>
       </CardContent>

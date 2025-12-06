@@ -305,15 +305,26 @@ export const BizMapChat = ({
         )}
         
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative">
+      <div 
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative"
+        role="log"
+        aria-label="Conversation messages"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {messages.map((msg, index) => (
           <div
             key={msg.id}
             className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
             style={{ animationDelay: `${index * 50}ms` }}
+            role="article"
+            aria-label={msg.isBot ? "AI assistant message" : "Your message"}
           >
             {msg.isBot && (
-              <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10">
+              <div 
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10"
+                aria-hidden="true"
+              >
                 <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
             )}
@@ -324,10 +335,13 @@ export const BizMapChat = ({
                   : 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
               }`}
             >
-              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
             </div>
             {!msg.isBot && (
-              <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20">
+              <div 
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20"
+                aria-hidden="true"
+              >
                 <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
             )}
@@ -449,7 +463,19 @@ export const BizMapChat = ({
               isStreaming
             }
             className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
+            aria-label={
+              chatMode === 'freeform'
+                ? "Ask your AI co-founder a question about your business"
+                : `Answer the question: ${wizardSteps[currentStep]?.question || 'Continue your business planning'}`
+            }
+            aria-describedby="input-help-text"
+            aria-required={currentStep < wizardSteps.length}
           />
+          <span id="input-help-text" className="sr-only">
+            {chatMode === 'freeform' 
+              ? "Type your question and press Enter to send, or Shift+Enter for a new line"
+              : `Step ${currentStep + 1} of ${wizardSteps.length}. Press Enter to submit your answer`}
+          </span>
           <FileAttachment 
             onFileSelect={setAttachedFiles}
             currentFiles={attachedFiles}
@@ -457,6 +483,7 @@ export const BizMapChat = ({
             maxSizeMB={10}
             acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
             iconOnly
+            aria-label="Attach file to message"
           />
           <Button 
             onClick={handleSend}
@@ -467,11 +494,16 @@ export const BizMapChat = ({
             }
             size="icon"
             className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            aria-label="Send message"
+            aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
           >
             {isTyping || isStreaming ? (
-              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+              <>
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" aria-hidden="true" />
+                <span id="sending-status" className="sr-only">Sending message, please wait</span>
+              </>
             ) : (
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
             )}
           </Button>
         </div>

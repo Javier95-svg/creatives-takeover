@@ -66,7 +66,12 @@ const FundingFilters = ({
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-10 pr-10"
+          aria-label="Search funding opportunities"
+          aria-describedby="search-help"
         />
+        <span id="search-help" className="sr-only">
+          Search by title, description, or keywords. Results update as you type.
+        </span>
         {searchTerm && (
           <Button
             variant="ghost"
@@ -105,8 +110,14 @@ const FundingFilters = ({
         <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
           {/* Type Filter */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Type</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="text-sm font-medium mb-2 block" id="type-filter-label">
+              Type
+            </label>
+            <div 
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-labelledby="type-filter-label"
+            >
               {fundingTypes.map((type) => (
                 <Button
                   key={type}
@@ -114,6 +125,8 @@ const FundingFilters = ({
                   size="sm"
                   onClick={() => handleTypeToggle(type)}
                   className="capitalize"
+                  aria-pressed={filters.type === type}
+                  aria-label={`Filter by ${type} funding type`}
                 >
                   {type}
                 </Button>
@@ -124,14 +137,22 @@ const FundingFilters = ({
           {/* Location Filter */}
           {availableLocations.length > 0 && (
             <div>
-              <label className="text-sm font-medium mb-2 block">Location</label>
-              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+              <label className="text-sm font-medium mb-2 block" id="location-filter-label">
+                Location
+              </label>
+              <div 
+                className="flex flex-wrap gap-2 max-h-32 overflow-y-auto"
+                role="group"
+                aria-labelledby="location-filter-label"
+              >
                 {availableLocations.map((location) => (
                   <Button
                     key={location}
                     variant={filters.location === location ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleLocationToggle(location)}
+                    aria-pressed={filters.location === location}
+                    aria-label={`Filter by ${location} location`}
                   >
                     {location}
                   </Button>
