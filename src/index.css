@@ -2424,3 +2424,127 @@ All colors MUST be HSL.
     opacity: 0.95;
   }
 }
+
+/* Navigation Menu Bar Animations */
+@keyframes nav-item-hover {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes active-indicator-slide {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes nav-backdrop-transition {
+  from {
+    backdrop-filter: blur(0px);
+    background-color: hsl(var(--background) / 0.8);
+  }
+  to {
+    backdrop-filter: blur(12px);
+    background-color: hsl(var(--background) / 0.95);
+  }
+}
+
+@keyframes mobile-drawer-slide {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes gradient-border-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes nav-glow {
+  0%, 100% {
+    box-shadow: 0 0 0px hsl(var(--primary) / 0);
+  }
+  50% {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+  }
+}
+
+.animate-nav-item-hover {
+  animation: nav-item-hover 0.3s ease-in-out;
+}
+
+.animate-active-indicator {
+  animation: active-indicator-slide 0.3s ease-out forwards;
+}
+
+.animate-nav-backdrop {
+  animation: nav-backdrop-transition 0.3s ease-out;
+}
+
+.animate-mobile-drawer {
+  animation: mobile-drawer-slide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-gradient-border {
+  animation: gradient-border-pulse 3s ease-in-out infinite;
+}
+
+.nav-item-hover-effect {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item-hover-effect:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 2px 4px hsl(var(--primary) / 0.2);
+}
+
+.nav-active-indicator {
+  position: relative;
+}
+
+.nav-active-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-active-indicator.active::after {
+  transform: scaleX(1);
+}
+
+.nav-logo-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-logo-hover:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 8px hsl(var(--primary) / 0.3));
+}

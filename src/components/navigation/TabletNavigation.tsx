@@ -67,13 +67,13 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   onClick={() => onItemClick?.(item.name)}
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 relative",
-                    "px-2 py-2 rounded-lg transition-all duration-200",
-                    "min-h-[44px] min-w-[50px] touch-manipulation",
+                    "px-3 py-2.5 rounded-lg transition-all duration-250",
+                    "min-h-[48px] min-w-[60px] touch-manipulation",
                     "text-sm font-medium",
                     isActive
-                      ? "text-primary bg-primary/10"
-                      : `text-muted-foreground ${colorClass}`,
-                    "active:scale-95"
+                      ? "text-primary bg-primary/10 shadow-sm scale-105"
+                      : `text-muted-foreground ${colorClass} hover:bg-muted/50`,
+                    "active:scale-95 hover:scale-105"
                   )}
                 >
                   {Icon && <Icon className="h-4 w-4" />}
