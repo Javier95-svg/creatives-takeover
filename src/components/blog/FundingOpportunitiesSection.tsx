@@ -5,6 +5,8 @@ import FundingOpportunityCard from "@/components/funding/FundingOpportunityCard"
 import FundingFilters from "@/components/funding/FundingFilters";
 import { FundingFilters as FundingFiltersType } from "@/types/funding";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { InsightaTour } from "@/components/onboarding/InsightaTour";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface FundingOpportunitiesSectionProps {
   filters?: FundingFiltersType;
@@ -84,7 +86,9 @@ const FundingOpportunitiesSection = ({
   }
 
   return (
-    <section className="py-20 px-4 relative overflow-hidden" data-section="opportunities">
+    <ErrorBoundary>
+      <section className="py-20 px-4 relative overflow-hidden" data-section="opportunities">
+        <InsightaTour />
       {/* Animated funding wallpaper */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Subtle gradient base */}
@@ -174,6 +178,7 @@ const FundingOpportunitiesSection = ({
         )}
       </div>
     </section>
+    </ErrorBoundary>
   );
 };
 

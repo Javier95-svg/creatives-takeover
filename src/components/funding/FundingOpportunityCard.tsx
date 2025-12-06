@@ -3,12 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
+import { useDeviceType } from "@/hooks/use-device-type";
 
 interface FundingOpportunityCardProps {
   opportunity: FundingOpportunity;
 }
 
 const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) => {
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
+  
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'grant':
@@ -26,7 +30,11 @@ const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) =>
 
   return (
     <Card 
-      className="hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col"
+      className={`
+        hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 
+        bg-gradient-to-br from-background to-muted/20 h-full flex flex-col
+        ${isMobile ? 'active:scale-[0.98]' : ''}
+      `}
       onClick={() => window.open(opportunity.url, '_blank', 'noopener,noreferrer')}
       role="article"
       aria-label={`Funding opportunity: ${opportunity.title}`}
@@ -88,7 +96,7 @@ const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) =>
         
         <Button 
           size="sm" 
-          className="w-full text-xs h-8 mt-auto"
+          className={`w-full text-xs mt-auto touch-manipulation ${isMobile ? 'h-10 min-h-[44px]' : 'h-8'}`}
           onClick={(e) => {
             e.stopPropagation();
             window.open(opportunity.url, '_blank', 'noopener,noreferrer');

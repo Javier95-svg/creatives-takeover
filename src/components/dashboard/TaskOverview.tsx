@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { HelpTooltip } from '@/components/ui/HelpTooltip';
 
 interface Task {
   id: string;
@@ -187,6 +188,10 @@ export const TaskOverview = () => {
             <ListTodo className="h-4 w-4 text-primary" />
           </div>
           Task Overview
+          <HelpTooltip
+            content="Your daily priorities and tasks. Click a task to mark it complete. Tasks are organized by priority to help you focus on what matters most."
+            side="right"
+          />
         </CardTitle>
       </CardHeader>
       <CardContent>

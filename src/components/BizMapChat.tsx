@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { useCofounderPersonality } from "@/hooks/useCofounderPersonality";
 import { PersonalityIndicator } from "./ai-cofounder/PersonalityIndicator";
+import { HelpTooltip } from "@/components/ui/HelpTooltip";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -329,13 +330,13 @@ export const BizMapChat = ({
               </div>
             )}
             <div
-              className={`max-w-[80%] sm:max-w-[75%] rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg ${
+              className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg ${
                 msg.isBot
                   ? 'bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm hover:shadow-primary/5'
                   : 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
               }`}
             >
-              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
+              <p className="text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
             </div>
             {!msg.isBot && (
               <div 
@@ -383,12 +384,26 @@ export const BizMapChat = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-border/50 p-4 sm:p-5 bg-gradient-to-br from-background to-muted/20">
+      <div className="border-t border-border/50 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-background to-muted/20">
         {chatMode === 'freeform' && (
-          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-primary" />
-            I remember your business context and journey
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-primary" />
+              I remember your business context and journey
+            </p>
+            <HelpTooltip
+              content="In freeform mode, you can ask any question about your business. The AI remembers your previous conversation and can help with strategy, planning, and problem-solving."
+              side="top"
+            />
+          </div>
+        )}
+        {chatMode !== 'freeform' && currentStep < wizardSteps.length && (
+          <div className="flex items-center justify-end mb-3">
+            <HelpTooltip
+              content={`Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || 'Business Planning'}. Answer the question to continue building your business plan.`}
+              side="top"
+            />
+          </div>
         )}
         
         {/* Attached Files Display */}
@@ -462,7 +477,7 @@ export const BizMapChat = ({
               isTyping || 
               isStreaming
             }
-            className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base"
+            className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base min-h-[44px]"
             aria-label={
               chatMode === 'freeform'
                 ? "Ask your AI co-founder a question about your business"
@@ -493,7 +508,7 @@ export const BizMapChat = ({
               isStreaming
             }
             size="icon"
-            className="h-10 w-10 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            className="h-11 w-11 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 min-h-[44px] min-w-[44px] touch-manipulation"
             aria-label="Send message"
             aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
           >

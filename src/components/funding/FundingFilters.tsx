@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, X, Filter } from "lucide-react";
 import { FundingType, FundingFilters as FundingFiltersType } from "@/types/funding";
+import { HelpTooltip } from "@/components/ui/HelpTooltip";
 
 interface FundingFiltersProps {
   filters: FundingFiltersType;
@@ -86,20 +87,27 @@ const FundingFilters = ({
 
       {/* Filter Toggle & Results Count */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2"
-        >
-          <Filter className="h-4 w-4" />
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-          {hasActiveFilters && (
-            <Badge variant="secondary" className="ml-1">
-              {[filters.type, filters.location, filters.search, filters.featured].filter(Boolean).length}
-            </Badge>
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2"
+            aria-label={showFilters ? 'Hide filters' : 'Show filters'}
+          >
+            <Filter className="h-4 w-4" />
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="ml-1">
+                {[filters.type, filters.location, filters.search, filters.featured].filter(Boolean).length}
+              </Badge>
+            )}
+          </Button>
+          <HelpTooltip
+            content="Filter funding opportunities by type (grant, accelerator, contest, microfund), location, or search by keywords. Featured opportunities are highlighted."
+            side="bottom"
+          />
+        </div>
         <div className="text-sm text-muted-foreground">
           {resultCount} {resultCount === 1 ? 'opportunity' : 'opportunities'} found
         </div>

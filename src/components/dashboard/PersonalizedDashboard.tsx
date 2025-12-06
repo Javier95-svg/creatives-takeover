@@ -142,7 +142,9 @@ export const PersonalizedDashboard = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background">
+    <ErrorBoundary>
+      <div className="min-h-screen relative overflow-hidden bg-background">
+        <DashboardTour />
       {/* Exit Button - Fixed in top-right corner */}
       <button
         onClick={() => navigate('/')}
@@ -249,6 +251,11 @@ export const PersonalizedDashboard = () => {
           </div>
         </div>
 
+        {/* Smart Recommendations */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.05s', animationFillMode: 'forwards' }}>
+          <SmartRecommendations maxRecommendations={2} />
+        </div>
+
         {/* Active Projects */}
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
           <ActiveProjects />
@@ -290,5 +297,6 @@ export const PersonalizedDashboard = () => {
 
       </div>
     </div>
+    </ErrorBoundary>
   );
 };

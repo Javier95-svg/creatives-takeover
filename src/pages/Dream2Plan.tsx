@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +23,7 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import SuccessScore from "@/components/SuccessScore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProductMarketFitLab from "@/components/pmf/ProductMarketFitLab";
 import { ArrowLeft, FlaskConical } from "lucide-react";
-import PDFGenerator from "@/components/PDFGenerator";
 
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
@@ -35,6 +33,11 @@ import { BookOpen } from "lucide-react";
 import { trackActivity } from "@/lib/activity";
 import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
+import { BizMapTour } from "@/components/onboarding/BizMapTour";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+// Lazy load heavy components for better performance
+const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -1180,17 +1183,21 @@ Subject: "Quick question about [their pain point]"
   ];
 
   return (
-    <div className="relative min-h-screen">
-      <SEO
-        title="BizMap AI - Founder Idea Validation + 30-Day Launch OS"
-        description="Validate your startup idea with AI-powered market analysis, get a 30-day launch roadmap, and join founder cohorts. Free market validation and personalized sprint planning."
-        keywords="AI idea validation, startup validation, 30-day launch, founder OS, MVP builder, startup roadmap, market validation AI"
-        url="/bizmap-ai"
-        structuredData={structuredData}
-      />
-      
-      <div className="relative z-10 bg-background">
-        <Navigation />
+    <ErrorBoundary>
+      <div className="relative min-h-screen">
+        <SEO
+          title="BizMap AI - Founder Idea Validation + 30-Day Launch OS"
+          description="Validate your startup idea with AI-powered market analysis, get a 30-day launch roadmap, and join founder cohorts. Free market validation and personalized sprint planning."
+          keywords="AI idea validation, startup validation, 30-day launch, founder OS, MVP builder, startup roadmap, market validation AI"
+          url="/bizmap-ai"
+          structuredData={structuredData}
+        />
+        
+        <div className="relative z-10 bg-background">
+          <Navigation />
+          
+          {/* Feature Tour for New Users */}
+          <BizMapTour />
         
         <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
@@ -1317,6 +1324,13 @@ Subject: "Quick question about [their pain point]"
                     </div>
                   </div>
                 </div>
+
+                {/* Smart Recommendations */}
+                {currentStep >= wizardSteps.length && (
+                  <div className="mb-6 animate-fade-in">
+                    <SmartRecommendations maxRecommendations={2} />
+                  </div>
+                )}
 
                 {/* Example Conversations Modal */}
                 <ExampleConversations

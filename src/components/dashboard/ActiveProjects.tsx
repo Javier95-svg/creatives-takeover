@@ -7,6 +7,7 @@ import { FolderKanban, ArrowRight, Lightbulb, FileText, Code, CheckCircle2, Cloc
 import { useChatSessions } from '@/hooks/useChatSessions';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { HelpTooltip } from '@/components/ui/HelpTooltip';
 
 export const ActiveProjects = () => {
   const { sessions, loading } = useChatSessions();
@@ -116,6 +117,10 @@ export const ActiveProjects = () => {
               <FolderKanban className="h-4 w-4 text-primary" />
             </div>
             Active Projects
+            <HelpTooltip
+              content="Your active business planning projects from BizMap AI. Click any project to continue where you left off. Projects show progress, stage, and next steps."
+              side="right"
+            />
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs transition-all duration-300">
