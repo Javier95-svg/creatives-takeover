@@ -1235,6 +1235,39 @@ All colors MUST be HSL.
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     
+    /* Tablet utility classes */
+    .tablet-grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .tablet-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    
+    .tablet-padding {
+      padding: 1.5rem;
+    }
+    
+    .tablet-padding-x {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+    
+    .tablet-padding-y {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+    
+    .tablet-text-lg {
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+    
+    .tablet-text-xl {
+      font-size: 1.25rem;
+      line-height: 1.5;
+    }
+    
     /* Tablet typography - between mobile and desktop */
     h1 {
       font-size: clamp(2rem, 4vw, 3rem) !important;
@@ -1255,6 +1288,17 @@ All colors MUST be HSL.
     
     .gap-6 {
       gap: 1.5rem;
+    }
+    
+    /* Tablet-specific animations (lighter than desktop, more than mobile) */
+    @media (prefers-reduced-motion: no-preference) {
+      .tablet-animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      
+      .tablet-animate-slide-up {
+        animation: slideUp 0.3s ease-out;
+      }
     }
   }
 

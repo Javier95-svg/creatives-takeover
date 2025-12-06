@@ -120,7 +120,7 @@ export const PersonalizedDashboard = () => {
       <div className="container mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-6">
           <div className="h-32 bg-muted rounded-lg" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="h-40 bg-muted rounded-lg" />
             <div className="h-40 bg-muted rounded-lg" />
             <div className="h-40 bg-muted rounded-lg" />

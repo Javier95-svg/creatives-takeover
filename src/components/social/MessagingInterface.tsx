@@ -10,7 +10,8 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useDeviceType, useIsMobile } from "@/hooks/use-device-type";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -18,7 +19,9 @@ interface MessagingInterfaceProps {
 
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps = {}) => {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
+  const deviceType = useDeviceType();
+  const isMobile = deviceType === 'mobile';
+  const isTablet = deviceType === 'tablet';
   const {
     conversations,
     messages,
@@ -310,9 +313,6 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       </ScrollArea>
     </>
   );
-
-  // Check if tablet (between mobile and desktop)
-  const isTablet = !isMobile && window.innerWidth < 1024;
 
   return (
     <div className={`flex ${isMobile ? 'flex-col h-[calc(100vh-200px)] min-h-[500px]' : isTablet ? 'h-[calc(100vh-250px)]' : 'h-[600px]'} border rounded-lg bg-card`}>

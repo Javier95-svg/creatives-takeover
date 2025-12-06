@@ -1,26 +1,30 @@
 import { useEffect } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useDeviceType } from '@/hooks/use-device-type';
 
 const MobileOptimization = () => {
-  const isMobile = useIsMobile();
+  const deviceType = useDeviceType();
 
   useEffect(() => {
-    // Add mobile-specific class to body for CSS targeting
-    if (isMobile) {
+    // Add device-specific classes to body for CSS targeting
+    document.body.classList.remove('mobile-device', 'tablet-device', 'desktop-device');
+    
+    if (deviceType === 'mobile') {
       document.body.classList.add('mobile-device');
+    } else if (deviceType === 'tablet') {
+      document.body.classList.add('tablet-device');
     } else {
-      document.body.classList.remove('mobile-device');
+      document.body.classList.add('desktop-device');
     }
 
     // Cleanup
     return () => {
-      document.body.classList.remove('mobile-device');
+      document.body.classList.remove('mobile-device', 'tablet-device', 'desktop-device');
     };
-  }, [isMobile]);
+  }, [deviceType]);
 
   useEffect(() => {
     // Mobile-specific optimizations
-    if (isMobile) {
+    if (deviceType === 'mobile') {
       // Disable hover effects on mobile to prevent sticky states
       const style = document.createElement('style');
       style.textContent = `
@@ -82,7 +86,7 @@ const MobileOptimization = () => {
         document.body.classList.remove('keyboard-open');
       };
     }
-  }, [isMobile]);
+  }, [deviceType]);
 
   return null;
 };

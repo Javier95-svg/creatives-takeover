@@ -18,6 +18,8 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ThemeToggle from "@/components/ThemeToggle";
 import ctLogo from "@/assets/ct-logo.png";
+import { useDeviceType } from "@/hooks/use-device-type";
+import { TabletNavigation } from "@/components/navigation/TabletNavigation";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +29,7 @@ const Navigation = () => {
   const { user, signOut, loading, isAuthenticated } = useAuth();
   const { pendingFriendRequests } = useSocial(user?.id || '');
   const { trackClick } = usePageAnalytics();
+  const deviceType = useDeviceType();
   
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
@@ -105,50 +108,62 @@ const Navigation = () => {
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
-              {navItems.map((item) => {
-                // Color-code navigation items semantically
-                let colorClass = '';
-                if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-                  colorClass = 'hover:text-planning animated-underline-rgb';
-                } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-                  colorClass = 'hover:text-action';
-                } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-                  colorClass = 'hover:text-growth';
-                } else {
-                  colorClass = 'animated-underline';
-                }
-                
-                return (
-                  <Tooltip key={item.name}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        to={item.href}
-                        onClick={() => trackClick(item.name, 'Navigation')}
-                        className={`text-muted-foreground hover:text-foreground transition-all duration-300 whitespace-nowrap ${colorClass} ${
-                          item.name === 'BizMap AI' ? 'relative' : ''
-                        }`}
-                        onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
-                        onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
-                      >
-                        {item.name}
-                        {item.name === 'BizMap AI' && (
-                          <div className="absolute -top-1 -right-2 flex items-center">
-                            <Gift className="w-3 h-3 text-planning animate-bounce" />
-                          </div>
-                        )}
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{item.tooltip}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
+            {/* Tablet Navigation */}
+            {deviceType === 'tablet' && (
+              <div className="flex-1 flex items-center justify-center">
+                <TabletNavigation 
+                  navItems={navItems}
+                  onItemClick={(name) => trackClick(name, 'Navigation')}
+                />
+              </div>
+            )}
 
-          {/* Desktop CTA */}
+            {/* Desktop Navigation */}
+            {deviceType === 'desktop' && (
+              <div className="flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0">
+                {navItems.map((item) => {
+                  // Color-code navigation items semantically
+                  let colorClass = '';
+                  if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
+                    colorClass = 'hover:text-planning animated-underline-rgb';
+                  } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
+                    colorClass = 'hover:text-action';
+                  } else if (item.name === 'Insighta' || item.name === 'Pricing') {
+                    colorClass = 'hover:text-growth';
+                  } else {
+                    colorClass = 'animated-underline';
+                  }
+                  
+                  return (
+                    <Tooltip key={item.name}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          to={item.href}
+                          onClick={() => trackClick(item.name, 'Navigation')}
+                          className={`text-muted-foreground hover:text-foreground transition-all duration-300 whitespace-nowrap ${colorClass} ${
+                            item.name === 'BizMap AI' ? 'relative' : ''
+                          }`}
+                          onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
+                          onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
+                        >
+                          {item.name}
+                          {item.name === 'BizMap AI' && (
+                            <div className="absolute -top-1 -right-2 flex items-center">
+                              <Gift className="w-3 h-3 text-planning animate-bounce" />
+                            </div>
+                          )}
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{item.tooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            )}
+
+          {/* Desktop & Tablet CTA */}
           <div className="hidden md:flex items-center space-x-4 !border-0">
             {loading ? (
               <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
