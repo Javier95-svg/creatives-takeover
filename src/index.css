@@ -1953,6 +1953,10 @@ All colors MUST be HSL.
   }
 }
 
+.animate-flicker {
+  animation: text-flicker 3s ease-in-out infinite;
+}
+
 /* Mentor Marketplace Wallpaper Animations */
 @keyframes mentor-guidance-flow {
   0% {

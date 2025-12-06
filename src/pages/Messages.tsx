@@ -188,7 +188,7 @@ const Messages = () => {
             <div className="max-w-6xl mx-auto">
               <div className="mb-6 text-center">
                 <h1 className="text-5xl font-bold mb-2">
-                  <span className="gradient-unified">Time to Chat</span>
+                  <span className="gradient-unified animate-flicker">Time to Chat</span>
                 </h1>
                 <p className="text-muted-foreground text-lg">
                   Meet, connect, and chat with fellow founders, entrepreneurs, and experienced mentors.
