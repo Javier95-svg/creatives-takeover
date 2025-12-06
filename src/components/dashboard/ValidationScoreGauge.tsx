@@ -109,7 +109,7 @@ export const ValidationScoreGauge = ({ validation, showBreakdown = true }: Valid
           )}
 
           {/* Additional Info */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
             {validation.estimated_market_size_usd && (
               <div>
                 <p className="text-xs text-muted-foreground">Market Size</p>

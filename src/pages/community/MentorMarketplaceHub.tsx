@@ -198,13 +198,13 @@ const MentorMarketplaceHub = () => {
 
             {/* Search Bar */}
             <div className="mb-6">
-              <div className="relative max-w-md">
+              <div className="relative w-full max-w-md mx-auto md:mx-0">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name or keyword"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-11"
+                  className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
                 />
               </div>
             </div>

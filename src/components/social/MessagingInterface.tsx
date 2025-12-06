@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Send, MessageCircle, Trash2 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Send, MessageCircle, Trash2, Menu } from "lucide-react";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -16,6 +18,7 @@ interface MessagingInterfaceProps {
 
 export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps = {}) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const {
     conversations,
     messages,
@@ -36,6 +39,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, { full_name: string; avatar_url: string | null }>>({});
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -223,10 +227,110 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     setConversationToDelete(null);
   };
 
+  const handleConversationSelect = (conversationId: string) => {
+    setActiveConversationId(conversationId);
+    if (isMobile) {
+      setMobileSheetOpen(false);
+    }
+  };
+
+  // Conversation list component (reusable for desktop and mobile)
+  const ConversationList = ({ onSelect }: { onSelect: (id: string) => void }) => (
+    <>
+      <div className="p-4 border-b">
+        <h3 className="font-semibold flex items-center gap-2">
+          <MessageCircle className="h-5 w-5" />
+          Messages
+        </h3>
+      </div>
+      
+      <ScrollArea className={isMobile ? "h-[calc(100vh-120px)]" : "h-[calc(600px-80px)]"}>
+        {conversations.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground">
+            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No conversations yet</p>
+          </div>
+        ) : (
+          <div className="p-2 space-y-1">
+            {conversations.map((conversation) => {
+              const unreadCount = getUnreadCount(conversation.id);
+              
+              return (
+                <div
+                  key={conversation.id}
+                  className="relative group"
+                >
+                  <Button
+                    variant={activeConversationId === conversation.id ? "secondary" : "ghost"}
+                    className="w-full justify-start p-3 h-auto min-h-[44px] touch-manipulation"
+                    onClick={() => onSelect(conversation.id)}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        <AvatarImage src={getConversationAvatar(conversation) || undefined} />
+                        <AvatarFallback>
+                          {getConversationName(conversation).charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {getConversationName(conversation)}
+                        </p>
+                        {conversation.last_message_at && (
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(conversation.last_message_at))} ago
+                          </p>
+                        )}
+                      </div>
+                      
+                      {unreadCount > 0 && (
+                        <div className="bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </div>
+                      )}
+                    </div>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 opacity-100 md:opacity-0 transition-opacity h-10 w-10 p-0 min-h-[44px] min-w-[44px] touch-manipulation hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={(e) => handleDeleteClick(e, conversation.id)}
+                    aria-label="Delete conversation"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </ScrollArea>
+    </>
+  );
+
   return (
-    <div className="flex h-[600px] border rounded-lg bg-card">
-      {/* Conversations List */}
-      <div className="w-80 border-r bg-card/50">
+    <div className={`flex ${isMobile ? 'flex-col h-[calc(100vh-200px)] min-h-[500px]' : 'h-[600px]'} border rounded-lg bg-card`}>
+      {/* Desktop Conversations List */}
+      {!isMobile && (
+        <div className="w-80 border-r bg-card/50 flex-shrink-0">
+          <ConversationList onSelect={setActiveConversationId} />
+        </div>
+      )}
+
+      {/* Mobile Conversations Sheet */}
+      {isMobile && (
+        <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+          <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Conversations</SheetTitle>
+            </SheetHeader>
+            <div className="h-full bg-card/50">
+              <ConversationList onSelect={handleConversationSelect} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
         <div className="p-4 border-b">
           <h3 className="font-semibold flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
@@ -299,28 +403,39 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
       </div>
 
       {/* Chat Interface */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {activeConversationId ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b bg-card/50">
-              <h4 className="font-semibold">
+            <div className="p-3 md:p-4 border-b bg-card/50 flex items-center gap-2 min-h-[44px]">
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-10 w-10 p-0 min-h-[44px] min-w-[44px] touch-manipulation"
+                  onClick={() => setMobileSheetOpen(true)}
+                  aria-label="Open conversations"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
+              <h4 className="font-semibold text-sm md:text-base truncate flex-1">
                 {getConversationName(conversations.find(c => c.id === activeConversationId))}
               </h4>
             </div>
 
             {/* Messages */}
-            <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-              <div className="space-y-4">
+            <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 md:p-4">
+              <div className="space-y-3 md:space-y-4">
                 {activeMessages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex gap-3 ${
+                    className={`flex gap-2 md:gap-3 ${
                       message.sender_id === user?.id ? 'justify-end' : 'justify-start'
                     }`}
                   >
                     {message.sender_id !== user?.id && (
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0">
                         <AvatarImage src={message.sender?.avatar_url} />
                         <AvatarFallback>
                           {message.sender?.full_name?.charAt(0) || '?'}
@@ -329,20 +444,20 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                     )}
                     
                     <div
-                      className={`max-w-xs px-3 py-2 rounded-lg ${
+                      className={`max-w-[75%] md:max-w-xs px-3 py-2 rounded-lg ${
                         message.sender_id === user?.id
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <p className="text-sm break-words">{message.content}</p>
                       <p className="text-xs opacity-70 mt-1">
                         {formatDistanceToNow(new Date(message.created_at))} ago
                       </p>
                     </div>
 
                     {message.sender_id === user?.id && (
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-7 w-7 md:h-8 md:w-8 flex-shrink-0">
                         <AvatarImage src={user.user_metadata?.avatar_url} />
                         <AvatarFallback>
                           {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
@@ -355,8 +470,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
               </div>
             </ScrollArea>
 
-            {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t bg-card/50">
+            {/* Message Input - Sticky on mobile */}
+            <form onSubmit={handleSendMessage} className={`p-3 md:p-4 border-t bg-card/50 ${isMobile ? 'sticky bottom-0' : ''}`}>
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
@@ -364,19 +479,41 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   disabled={loading}
-                  autoFocus
+                  autoFocus={!isMobile}
+                  className="min-h-[44px] text-base md:text-sm"
                 />
-                <Button type="submit" disabled={loading || !newMessage.trim()}>
+                <Button 
+                  type="submit" 
+                  disabled={loading || !newMessage.trim()}
+                  className="min-h-[44px] min-w-[44px] px-3 touch-manipulation"
+                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
             </form>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
             <div className="text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Select a conversation to start messaging</p>
+              <p className="text-sm md:text-base">
+                {isMobile ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setMobileSheetOpen(true)}
+                      className="mb-4 min-h-[44px] touch-manipulation"
+                    >
+                      <Menu className="h-4 w-4 mr-2" />
+                      Select a conversation
+                    </Button>
+                    <br />
+                    or start a new one
+                  </>
+                ) : (
+                  "Select a conversation to start messaging"
+                )}
+              </p>
             </div>
           </div>
         )}

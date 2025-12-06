@@ -112,7 +112,7 @@ export const DecisionHelp = () => {
                   {decision.options.map((option, index) => (
                     <div key={index} className="space-y-2">
                       <p className="font-semibold text-sm">{option.label}</p>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                         <div>
                           <p className="font-medium text-green-600 mb-1">Pros:</p>
                           <ul className="space-y-1">

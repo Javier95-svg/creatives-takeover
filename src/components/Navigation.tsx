@@ -217,9 +217,10 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0"
+            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0 active:opacity-70 transition-opacity"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -227,62 +228,64 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden bg-background border-t border-border animate-slide-in-right">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+          <div className="md:hidden bg-background border-t border-border animate-slide-in-right safe-area-inset">
+            <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
               {/* Theme Toggle at top of mobile menu */}
-              <div className="px-4 py-3 border-b border-border">
+              <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-foreground">Theme</span>
                   <ThemeToggle />
                 </div>
               </div>
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="block px-4 py-4 text-muted-foreground hover:text-foreground transition-colors min-h-[44px] touch-manipulation flex items-center"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              <div className="px-3 py-2 space-y-2">
+              <div className="py-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="block px-4 py-3.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted transition-colors min-h-[48px] touch-manipulation flex items-center text-base"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+              <div className="px-3 py-3 space-y-2 border-t border-border">
                 {loading ? (
-                  <div className="w-full h-10 animate-pulse bg-muted rounded" />
+                  <div className="w-full h-12 animate-pulse bg-muted rounded" />
                 ) : user ? (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between px-3 py-2">
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <User className="w-4 h-4" />
-                        <span>{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                    <div className="flex items-center justify-between px-3 py-2.5 bg-muted/30 rounded-lg mb-2">
+                      <div className="flex items-center space-x-2 text-sm text-foreground">
+                        <User className="w-5 h-5" />
+                        <span className="font-medium">{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
                       </div>
                       <CreditDisplay variant="inline" />
                     </div>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start" 
+                      className="w-full justify-start min-h-[48px] touch-manipulation text-base" 
                       onClick={() => setIsOpen(false)}
                       asChild
                     >
                       <Link to="/messages" className="flex items-center">
-                        <MessageCircle className="w-4 h-4 mr-2" />
+                        <MessageCircle className="w-5 h-5 mr-3" />
                         Messages
                       </Link>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start relative" 
+                      className="w-full justify-start relative min-h-[48px] touch-manipulation text-base" 
                       onClick={() => {
                         setIsOpen(false);
                         setShowFriendRequests(true);
                       }}
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
+                      <UserPlus className="w-5 h-5 mr-3" />
                       Friend Requests
                       {pendingFriendRequests.length > 0 && (
-                        <Badge variant="destructive" className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs">
+                        <Badge variant="destructive" className="ml-auto h-6 w-6 flex items-center justify-center p-0 text-xs font-semibold">
                           {pendingFriendRequests.length}
                         </Badge>
                       )}
@@ -290,37 +293,48 @@ const Navigation = () => {
                     <Button  
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start" 
+                      className="w-full justify-start min-h-[48px] touch-manipulation text-base" 
                       onClick={() => setIsOpen(false)}
                       asChild
                     >
                       <Link to="/account" className="flex items-center">
-                        <Settings className="w-4 h-4 mr-2" />
+                        <Settings className="w-5 h-5 mr-3" />
                         Account
                       </Link>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full justify-start" 
+                      className="w-full justify-start min-h-[48px] touch-manipulation text-base text-destructive hover:text-destructive hover:bg-destructive/10" 
                       onClick={() => {
                         setIsOpen(false);
                         handleSignOut();
                       }}
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut className="w-5 h-5 mr-3" />
                       Sign Out
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setIsOpen(false)} asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start min-h-[48px] touch-manipulation text-base" 
+                      onClick={() => setIsOpen(false)} 
+                      asChild
+                    >
                       <Link to="/login" className="flex items-center">
-                        <LogIn className="w-4 h-4 mr-2" />
+                        <LogIn className="w-5 h-5 mr-3" />
                         Sign In
                       </Link>
                     </Button>
-                    <Button size="sm" className="w-full bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => setIsOpen(false)} asChild>
+                    <Button 
+                      size="sm" 
+                      className="w-full bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 min-h-[48px] touch-manipulation text-base font-semibold" 
+                      onClick={() => setIsOpen(false)} 
+                      asChild
+                    >
                       <Link to="/signup">Sign Up</Link>
                     </Button>
                   </div>

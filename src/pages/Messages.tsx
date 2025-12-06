@@ -176,26 +176,27 @@ const Messages = () => {
         <div className="relative z-10">
           <Navigation />
           {/* Back to Community button - fixed at top right, below navigation */}
-          <div className="fixed top-16 right-4 z-40">
-            <Button variant="ghost" size="sm" asChild className="shadow-md bg-background/95 backdrop-blur-sm">
-              <Link to="/community" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Community
+          <div className="fixed top-16 right-2 md:right-4 z-40">
+            <Button variant="ghost" size="sm" asChild className="shadow-md bg-background/95 backdrop-blur-sm min-h-[44px] touch-manipulation text-xs md:text-sm">
+              <Link to="/community" className="flex items-center gap-1.5 md:gap-2">
+                <ArrowLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Back to Community</span>
+                <span className="sm:hidden">Back</span>
               </Link>
             </Button>
           </div>
-          <main className="container mx-auto px-4 pt-24 pb-8">
+          <main className="container mx-auto px-3 md:px-4 pt-20 md:pt-24 pb-4 md:pb-8">
             <div className="max-w-6xl mx-auto">
-              <div className="mb-6 text-center">
-                <h1 className="text-5xl font-bold mb-2">
+              <div className="mb-4 md:mb-6 text-center">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
                   <span className="gradient-unified animate-flicker">Time to Chat</span>
                 </h1>
-                <p className="text-muted-foreground text-lg">
+                <p className="text-muted-foreground text-sm md:text-base lg:text-lg px-2">
                   Meet, connect, and chat with fellow founders, entrepreneurs, and experienced mentors.
                 </p>
               </div>
               
-              <Card className="p-6">
+              <Card className="p-3 md:p-4 lg:p-6">
                 {isResolvingUsername ? (
                   <div className="flex items-center justify-center h-[600px]">
                     <div className="text-center">

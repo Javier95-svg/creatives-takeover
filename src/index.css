@@ -1026,6 +1026,17 @@ All colors MUST be HSL.
       animation-duration: 8s;
     }
     
+    /* Respect reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
     /* Optimize text gradients for mobile */
     .takeover-gradient,
     .animated-gradient,
@@ -1122,6 +1133,14 @@ All colors MUST be HSL.
       padding-right: env(safe-area-inset-right);
     }
     
+    .pb-safe {
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+    
+    .pt-safe {
+      padding-top: calc(1rem + env(safe-area-inset-top));
+    }
+    
     /* Mobile keyboard handling */
     .keyboard-open {
       height: 100vh;
@@ -1131,6 +1150,30 @@ All colors MUST be HSL.
     /* Mobile viewport height */
     .min-h-dvh {
       min-height: 100dvh;
+    }
+    
+    /* Optimize container padding for mobile */
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    /* Better spacing for mobile cards */
+    .space-y-6 > * + * {
+      margin-top: 1.5rem;
+    }
+    
+    .space-y-4 > * + * {
+      margin-top: 1rem;
+    }
+    
+    /* Optimize gap spacing for mobile grids */
+    .gap-6 {
+      gap: 1rem;
+    }
+    
+    .gap-4 {
+      gap: 0.75rem;
     }
   }
   
@@ -1144,6 +1187,11 @@ All colors MUST be HSL.
     /* Tablet-specific hover effects */
     .hover-lift:hover {
       transform: translateY(-3px);
+    }
+    
+    /* Tablet grid optimizations */
+    .grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
@@ -1264,6 +1312,24 @@ All colors MUST be HSL.
       min-height: calc(100vh - env(keyboard-inset-height, 0px));
     }
   }
+  
+  /* Reduced motion support - global */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    .animate-flicker,
+    .animate-pulse,
+    .animate-spin {
+      animation: none !important;
+    }
+  }
 
   /* Touch device optimizations */
   @media (hover: none) and (pointer: coarse) {
@@ -1297,6 +1363,38 @@ All colors MUST be HSL.
     -webkit-appearance: none;
     appearance: none;
     border-radius: 8px;
+  }
+  
+  /* Image lazy loading optimization */
+  img {
+    loading: lazy;
+    decoding: async;
+  }
+  
+  img[loading="eager"] {
+    loading: eager;
+  }
+  
+  /* Performance: will-change for animated elements */
+  .animate-float,
+  .animate-spiral,
+  .animate-zigzag,
+  .animate-diagonal-float,
+  .animate-figure-eight,
+  .animate-orbit {
+    will-change: transform;
+  }
+  
+  /* Disable will-change on mobile for better performance */
+  @media (max-width: 767px) {
+    .animate-float,
+    .animate-spiral,
+    .animate-zigzag,
+    .animate-diagonal-float,
+    .animate-figure-eight,
+    .animate-orbit {
+      will-change: auto;
+    }
   }
 }
 
