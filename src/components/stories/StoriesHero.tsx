@@ -27,11 +27,11 @@ const StoriesHero = () => {
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 bg-secondary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
               <BookOpen className="w-3 sm:w-4 h-3 sm:h-4 text-secondary" />
-              <span className="text-xs sm:text-sm font-medium">Expert Insights</span>
+              <span className="text-xs sm:text-sm font-medium">Growth Stories</span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 bg-accent/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
               <Sparkles className="w-3 sm:w-4 h-3 sm:h-4 text-accent" />
-              <span className="text-xs sm:text-sm font-medium">Latest Stories</span>
+              <span className="text-xs sm:text-sm font-medium">Industry Tips</span>
             </div>
           </div>
 
