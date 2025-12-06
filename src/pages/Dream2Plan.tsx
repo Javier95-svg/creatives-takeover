@@ -1701,6 +1701,7 @@ Subject: "Quick question about [their pain point]"
 
       <Footer />
     </div>
+    </ErrorBoundary>
   );
 };
 
