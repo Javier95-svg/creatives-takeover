@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { X, Sparkles, Lock, TrendingUp, Save } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 interface WizardConversionPromptProps {
   step: number;
@@ -11,6 +13,11 @@ interface WizardConversionPromptProps {
   onDismiss: () => void;
   onSignUp: () => void;
   show: boolean;
+  context?: {
+    progress?: number; // Progress percentage (0-100)
+    timeSpent?: number; // Time spent in seconds
+    engagementScore?: number; // Engagement score (0-100)
+  };
 }
 
 export const WizardConversionPrompt = ({
@@ -19,9 +26,59 @@ export const WizardConversionPrompt = ({
   variant,
   onDismiss,
   onSignUp,
-  show
+  show,
+  context
 }: WizardConversionPromptProps) => {
   const navigate = useNavigate();
+  const { trackTriggerView, trackEngagement, trackDismissal, trackSignupStarted } = useConversionTracking();
+  const triggerType = `bizmap-step-${triggerStep}`;
+
+  // Track trigger view when shown
+  useEffect(() => {
+    if (show && step === triggerStep) {
+      trackTriggerView(triggerType, {
+        variant,
+        step,
+        progress: context?.progress,
+        timeSpent: context?.timeSpent,
+        engagementScore: context?.engagementScore,
+      });
+    }
+  }, [show, step, triggerStep, variant, context, trackTriggerView, triggerType]);
+
+  // Generate contextual messaging
+  const getContextualMessage = () => {
+    if (context?.progress && context.progress >= 80) {
+      return {
+        title: "You're almost done! 🎉",
+        description: `You've completed ${Math.round(context.progress)}% of your business plan. Sign up to save your progress and get your complete roadmap.`
+      };
+    } else if (context?.timeSpent && context.timeSpent > 300) {
+      return {
+        title: "You've invested time in this plan",
+        description: "Don't lose your work! Create a free account to save your progress and access it anytime."
+      };
+    } else if (context?.engagementScore && context.engagementScore > 70) {
+      return {
+        title: "You're clearly engaged!",
+        description: "You're putting real thought into this. Sign up to unlock AI-powered insights tailored to your business."
+      };
+    }
+    return null;
+  };
+
+  const contextualMsg = getContextualMessage();
+
+  const handleSignUpClick = () => {
+    trackEngagement(triggerType, context?.engagementScore);
+    trackSignupStarted(triggerType);
+    onSignUp();
+  };
+
+  const handleDismiss = () => {
+    trackDismissal(triggerType);
+    onDismiss();
+  };
 
   if (!show || step !== triggerStep) return null;
 
@@ -33,14 +90,16 @@ export const WizardConversionPrompt = ({
           <div className="flex items-start gap-3 flex-1">
             <Save className="h-5 w-5 text-primary mt-0.5" />
             <div className="space-y-1 flex-1">
-              <h4 className="font-semibold text-sm">Save your progress & unlock more features</h4>
+              <h4 className="font-semibold text-sm">
+                {contextualMsg?.title || "Save your progress & unlock more features"}
+              </h4>
               <AlertDescription className="text-xs text-muted-foreground">
-                Create a free account to save your business plan, access AI insights, and get personalized recommendations
+                {contextualMsg?.description || "Create a free account to save your business plan, access AI insights, and get personalized recommendations"}
               </AlertDescription>
               <div className="flex gap-2 mt-2">
                 <Button 
                   size="sm" 
-                  onClick={onSignUp}
+                  onClick={handleSignUpClick}
                   className="h-8 text-xs"
                 >
                   <Sparkles className="h-3 w-3 mr-1" />
@@ -49,7 +108,7 @@ export const WizardConversionPrompt = ({
                 <Button 
                   size="sm" 
                   variant="ghost"
-                  onClick={onDismiss}
+                  onClick={handleDismiss}
                   className="h-8 text-xs"
                 >
                   Continue Without Account
@@ -61,7 +120,7 @@ export const WizardConversionPrompt = ({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={onDismiss}
+            onClick={handleDismiss}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -113,7 +172,7 @@ export const WizardConversionPrompt = ({
 
           <DialogFooter className="flex-col sm:flex-col gap-2">
             <Button 
-              onClick={onSignUp}
+              onClick={handleSignUpClick}
               className="w-full"
             >
               <Sparkles className="h-4 w-4 mr-2" />
@@ -121,7 +180,7 @@ export const WizardConversionPrompt = ({
             </Button>
             <Button 
               variant="outline"
-              onClick={onDismiss}
+              onClick={handleDismiss}
               className="w-full"
             >
               Maybe Later
@@ -170,7 +229,7 @@ export const WizardConversionPrompt = ({
 
           <DialogFooter className="flex-col sm:flex-col gap-2">
             <Button 
-              onClick={onSignUp}
+              onClick={handleSignUpClick}
               className="w-full h-11"
             >
               Sign Up & Continue

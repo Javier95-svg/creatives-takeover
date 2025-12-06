@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -11,26 +11,25 @@ import AuthWallpaper from "@/components/wallpapers/AuthWallpaper";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { trackActivity } from "@/lib/activity";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { SocialProof } from "@/components/SocialProof";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
     email: "",
-    password: "",
-    confirmPassword: ""
+    password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
-    fullName: "",
     email: "",
-    password: "",
-    confirmPassword: ""
+    password: ""
   });
+  const [currentStep, setCurrentStep] = useState(1); // 1 = signup, 2 = onboarding (future)
   
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
+  const { trackSignupStarted, trackSignupCompleted } = useConversionTracking();
 
   // Get conversion source from URL
   const [conversionSource] = useState(() => {
@@ -74,21 +73,12 @@ const Signup = () => {
     }
   };
 
-  // Form validation
+  // Form validation (simplified - no confirm password, no full name required)
   const validateForm = () => {
     const newErrors = {
-      fullName: "",
       email: "",
-      password: "",
-      confirmPassword: ""
+      password: ""
     };
-
-    // Full name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
-    }
 
     // Email validation
     if (!formData.email.trim()) {
@@ -104,15 +94,8 @@ const Signup = () => {
       newErrors.password = "Password must be at least 6 characters";
     }
 
-    // Confirm password validation
-    if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
     setErrors(newErrors);
-    return !newErrors.fullName && !newErrors.email && !newErrors.password && !newErrors.confirmPassword;
+    return !newErrors.email && !newErrors.password;
   };
 
   // Handle form submission
@@ -126,10 +109,16 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
+      // Get trigger type from conversion source
+      const triggerType = conversionSource.source !== 'direct' ? conversionSource.source : 'signup-page';
+      
+      // Track sign-up started
+      trackSignupStarted(triggerType);
+      
       const { error } = await signUp(
         formData.email, 
         formData.password, 
-        formData.fullName.trim() || ''
+        '' // Full name moved to post-signup onboarding
       );
       
       if (error) {
@@ -163,6 +152,9 @@ const Signup = () => {
         }
         
         // User is already logged in (email confirmation disabled or auto-confirmed)
+        // Track conversion completion
+        trackSignupCompleted(triggerType);
+        
         // Track conversion source
         if (conversionSource.source !== 'direct') {
           console.log('User signed up from:', conversionSource.source);
@@ -208,10 +200,6 @@ const Signup = () => {
   // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
   };
 
   // Google OAuth signup
@@ -297,30 +285,15 @@ const Signup = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
-              {/* Full Name Field */}
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-medium">
-                  Username
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    placeholder="Create your username"
-                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.fullName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
-                    }`}
-                    disabled={isLoading}
-                    autoComplete="name"
-                  />
+              {/* Progress Indicator */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                  <span>Step 1 of 2</span>
+                  <span>Quick sign-up</span>
                 </div>
-                {errors.fullName && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.fullName}</p>
-                )}
+                <div className="w-full bg-muted rounded-full h-1.5">
+                  <div className="bg-primary h-1.5 rounded-full" style={{ width: '50%' }}></div>
+                </div>
               </div>
 
               {/* Email Field */}
@@ -393,47 +366,6 @@ const Signup = () => {
                 )}
               </div>
 
-              {/* Confirm Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Confirm your password"
-                    className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
-                    }`}
-                    disabled={isLoading}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleConfirmPasswordVisibility}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    disabled={isLoading}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {!errors.confirmPassword && formData.confirmPassword && formData.password === formData.confirmPassword && (
-                  <p className="text-xs text-green-600">Passwords match ✓</p>
-                )}
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-500 animate-fade-in">{errors.confirmPassword}</p>
-                )}
-              </div>
-
               {/* Sign Up Button */}
               <Button
                 type="submit"
@@ -446,7 +378,10 @@ const Signup = () => {
                     Creating account...
                   </div>
                 ) : (
-                  "Create Account"
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Create Account - 30 Seconds
+                  </>
                 )}
               </Button>
 
@@ -462,22 +397,38 @@ const Signup = () => {
                 </div>
               </div>
 
-              {/* Social Login Buttons */}
+              {/* Social Proof */}
+              <div className="py-3">
+                <SocialProof variant="inline" />
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Social Login Buttons - Enhanced */}
               <div className="grid grid-cols-1 gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   disabled={isLoading}
                   onClick={handleGoogleSignup}
-                  className="h-12 border-2 hover:bg-muted/50 transition-all duration-200"
+                  className="h-12 border-2 hover:bg-muted/50 hover:border-primary/50 transition-all duration-200 font-medium"
                 >
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                   Continue with Google
+                  <span className="ml-auto text-xs text-muted-foreground">Faster</span>
                 </Button>
               </div>
 
