@@ -185,7 +185,7 @@ const Messages = () => {
               </Link>
             </Button>
           </div>
-          <main className="container mx-auto px-3 md:px-4 pt-20 md:pt-24 pb-4 md:pb-8">
+          <main className="container mx-auto px-3 md:px-4 pt-20 md:pt-24">
             <div className="max-w-6xl mx-auto">
               <div className="mb-4 md:mb-6 text-center">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">

@@ -40,6 +40,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [swipedConversationId, setSwipedConversationId] = useState<string | null>(null);
+  const { trigger: triggerHaptic } = useHapticFeedback();
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
@@ -309,11 +311,14 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     </>
   );
 
+  // Check if tablet (between mobile and desktop)
+  const isTablet = !isMobile && window.innerWidth < 1024;
+
   return (
-    <div className={`flex ${isMobile ? 'flex-col h-[calc(100vh-200px)] min-h-[500px]' : 'h-[600px]'} border rounded-lg bg-card`}>
-      {/* Desktop Conversations List */}
+    <div className={`flex ${isMobile ? 'flex-col h-[calc(100vh-200px)] min-h-[500px]' : isTablet ? 'h-[calc(100vh-250px)]' : 'h-[600px]'} border rounded-lg bg-card`}>
+      {/* Desktop & Tablet Conversations List */}
       {!isMobile && (
-        <div className="w-80 border-r bg-card/50 flex-shrink-0">
+        <div className={`${isTablet ? 'w-64' : 'w-80'} border-r bg-card/50 flex-shrink-0`}>
           <ConversationList onSelect={setActiveConversationId} />
         </div>
       )}

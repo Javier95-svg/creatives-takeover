@@ -1098,7 +1098,19 @@ All colors MUST be HSL.
     /* Better mobile text sizes - ensure minimum 16px for body text */
     body, p, .text-base {
       font-size: 16px !important;
-      line-height: 1.6 !important;
+      line-height: 1.7 !important;
+    }
+    
+    /* Improved color contrast for mobile readability */
+    .text-muted-foreground {
+      color: hsl(var(--muted-foreground) / 0.9) !important;
+    }
+    
+    /* Better focus states for accessibility */
+    *:focus-visible {
+      outline: 2px solid hsl(var(--ring));
+      outline-offset: 2px;
+      border-radius: 4px;
     }
     
     .text-xs {
@@ -1109,20 +1121,37 @@ All colors MUST be HSL.
       font-size: 0.9375rem; /* 15px minimum */
     }
     
-    /* Increase heading sizes on mobile for better hierarchy */
+    /* Fluid typography for mobile - better scaling */
     h1 {
-      font-size: 2rem !important;
+      font-size: clamp(1.75rem, 5vw, 2.5rem) !important;
       line-height: 1.2 !important;
+      letter-spacing: -0.02em;
     }
     
     h2 {
-      font-size: 1.75rem !important;
+      font-size: clamp(1.5rem, 4vw, 2rem) !important;
       line-height: 1.3 !important;
+      letter-spacing: -0.01em;
     }
     
     h3 {
-      font-size: 1.5rem !important;
+      font-size: clamp(1.25rem, 3.5vw, 1.75rem) !important;
       line-height: 1.4 !important;
+    }
+    
+    h4 {
+      font-size: clamp(1.125rem, 3vw, 1.5rem) !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Better paragraph spacing on mobile */
+    p {
+      margin-bottom: 1rem;
+    }
+    
+    /* Improved line-height for readability */
+    .text-base, p {
+      line-height: 1.7 !important;
     }
     
     /* Mobile safe areas */
@@ -1156,6 +1185,18 @@ All colors MUST be HSL.
     .container {
       padding-left: 1rem;
       padding-right: 1rem;
+    }
+    
+    /* Add padding for bottom navigation on mobile */
+    main {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0));
+    }
+    
+    /* Remove bottom padding on desktop */
+    @media (min-width: 768px) {
+      main {
+        padding-bottom: 0;
+      }
     }
     
     /* Better spacing for mobile cards */
@@ -1192,6 +1233,28 @@ All colors MUST be HSL.
     /* Tablet grid optimizations */
     .grid-cols-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    /* Tablet typography - between mobile and desktop */
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem) !important;
+    }
+    
+    h2 {
+      font-size: clamp(1.75rem, 3.5vw, 2.25rem) !important;
+    }
+    
+    h3 {
+      font-size: clamp(1.5rem, 3vw, 1.875rem) !important;
+    }
+    
+    /* Better spacing for tablet */
+    .space-y-6 > * + * {
+      margin-top: 1.75rem;
+    }
+    
+    .gap-6 {
+      gap: 1.5rem;
     }
   }
 
@@ -1311,6 +1374,23 @@ All colors MUST be HSL.
     body.keyboard-open .min-h-dvh {
       min-height: calc(100vh - env(keyboard-inset-height, 0px));
     }
+    
+    /* Better input focus on mobile */
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      ring: 2px;
+      ring-color: hsl(var(--ring));
+      ring-offset: 2px;
+    }
+    
+    /* Prevent layout shift when keyboard opens */
+    @supports (height: 100dvh) {
+      .keyboard-aware {
+        min-height: 100dvh;
+      }
+    }
   }
   
   /* Reduced motion support - global */
@@ -1328,6 +1408,45 @@ All colors MUST be HSL.
     .animate-pulse,
     .animate-spin {
       animation: none !important;
+    }
+  }
+  
+  /* Better skeleton loading animations */
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .skeleton {
+    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  /* Respect reduced motion for skeletons */
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton {
+      animation: none;
+      background: hsl(var(--muted));
     }
   }
 
@@ -1369,10 +1488,65 @@ All colors MUST be HSL.
   img {
     loading: lazy;
     decoding: async;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
   
   img[loading="eager"] {
     loading: eager;
+  }
+  
+  /* Better image loading on mobile */
+  @media (max-width: 767px) {
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Optimize background images */
+    [style*="background-image"] {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+  
+  /* Scroll indicators for mobile */
+  .scroll-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, transparent, hsl(var(--primary)), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  
+  .scrollable:not(.at-bottom) .scroll-indicator {
+    opacity: 1;
+  }
+  
+  /* Better scrollbar styling for mobile */
+  @media (max-width: 767px) {
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted-foreground) / 0.3);
+      border-radius: 2px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.5);
+    }
   }
   
   /* Performance: will-change for animated elements */

@@ -196,7 +196,7 @@ export const PersonalizedDashboard = () => {
 
       {/* Main Content Container with Right Sidebar */}
       <div className="relative container mx-auto px-4 sm:px-6 py-8 max-w-[1600px]">
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content Area */}
           <div className="flex-1 space-y-6 min-w-0">
         {/* Daily Goal Modal */}

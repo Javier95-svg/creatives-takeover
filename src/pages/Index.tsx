@@ -6,6 +6,8 @@ import UserReviews from "@/components/UserReviews";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
@@ -15,6 +17,7 @@ import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 
 const Index = () => {
+  const isMobile = useIsMobile();
   // Track homepage analytics
   usePageAnalytics('/', 'Home - Creatives Takeover');
   
@@ -23,6 +26,10 @@ const Index = () => {
     // Clear popup session storage on fresh page load
     sessionStorage.removeItem('credit-popup-time-seen');
   }, []);
+  
+  const handleRefresh = async () => {
+    window.location.reload();
+  };
 
   // Structured data for homepage
   const structuredData = [
@@ -47,19 +54,38 @@ const Index = () => {
         // googleSiteVerification="paste-your-verification-code-here"
       />
       <Navigation />
-      <main className="pb-20 md:pb-0">
-        <Hero />
-        <EntrepreneurProblems />
-        
-        <AISpecializationTrends />
-        
-        <ValuePropositionCards />
-        
-        <UserReviews />
-        
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-          <HomeFAQ />
-        </Suspense>
+      <main>
+        {isMobile ? (
+          <PullToRefresh onRefresh={handleRefresh}>
+            <Hero />
+            <EntrepreneurProblems />
+            
+            <AISpecializationTrends />
+            
+            <ValuePropositionCards />
+            
+            <UserReviews />
+            
+            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+              <HomeFAQ />
+            </Suspense>
+          </PullToRefresh>
+        ) : (
+          <>
+            <Hero />
+            <EntrepreneurProblems />
+            
+            <AISpecializationTrends />
+            
+            <ValuePropositionCards />
+            
+            <UserReviews />
+            
+            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+              <HomeFAQ />
+            </Suspense>
+          </>
+        )}
       </main>
       <Footer />
       

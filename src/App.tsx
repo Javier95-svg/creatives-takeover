@@ -9,6 +9,7 @@ import { ProgressProvider } from "@/contexts/ProgressContext";
 import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import FloatingFeedbackWidget from "@/components/FloatingFeedbackWidget";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
@@ -130,6 +131,7 @@ function App() {
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <MobileBottomNav />
               </BrowserRouter>
             </TooltipProvider>
           </ProgressProvider>
