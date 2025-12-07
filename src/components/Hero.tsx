@@ -1,12 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import heroImage from "@/assets/hero-bg.jpg";
 import HeroSnippets from "@/components/HeroSnippets";
+import { Badge } from "@/components/ui/badge";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useEffect, useRef } from "react";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
+  const { trackTriggerView, trackEngagement, trackSignupStarted } = useConversionTracking();
+  const heroRef = useRef<HTMLElement>(null);
+  const hasTrackedView = useRef(false);
   // RGB colored particles for brand identity
   const creativeParticles = [
     { top: "18%", left: "16%", size: 8, color: "hsl(var(--blue-primary))", delay: "0s" },
@@ -21,9 +26,52 @@ const Hero = () => {
     { top: "70%", right: "18%" },
   ];
 
+  // Track hero CTA view when component is visible
+  useEffect(() => {
+    if (hasTrackedView.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasTrackedView.current) {
+            hasTrackedView.current = true;
+            trackTriggerView('hero-primary-cta', {
+              ctaType: 'primary',
+              authenticated: isAuthenticated,
+            });
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
+    }
+
+    return () => {
+      if (heroRef.current) {
+        observer.unobserve(heroRef.current);
+      }
+    };
+  }, [trackTriggerView, isAuthenticated]);
+
+  // Handle CTA clicks
+  const handlePrimaryCTAClick = () => {
+    trackEngagement('hero-primary-cta', 85);
+  };
+
+  const handleSecondaryCTAClick = () => {
+    trackEngagement('hero-secondary-cta', 70);
+  };
+
+  const handleTertiaryCTAClick = () => {
+    trackSignupStarted('hero-tertiary-cta');
+  };
   
   return (
     <section
+      ref={heroRef}
       id="overview"
       className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30 bg-gradient-rgb-subtle"
     >
@@ -136,30 +184,87 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
-            <Button 
-              size="lg" 
-              className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" 
-              asChild
-            >
-              <Link to="/bizmap-ai">
-                <span className="relative z-10">Start Here</span>
-                <ArrowRight className="ml-2 w-5 h-5 relative z-10" />
-                <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-              </Link>
-            </Button>
-            <Button 
-              variant="outline"
-              size="lg" 
-              className="border-2 hover:bg-primary/10 text-foreground px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" 
-              asChild
-            >
-              <Link to="/dashboard" className="flex items-center">
-                <LayoutDashboard className="mr-2 w-5 h-5" />
-                Dashboard
-              </Link>
-            </Button>
+          {/* Enhanced CTA Section */}
+          <div className="mb-8 sm:mb-12 px-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            {/* Primary CTA - Value-Focused */}
+            <div className="mb-4 sm:mb-6">
+              <Button 
+                size="lg" 
+                className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2" 
+                asChild
+              >
+                <Link to="/bizmap-ai" onClick={handlePrimaryCTAClick}>
+                  <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
+                    <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                    <span className="relative z-10">Design Your Plan in 3 Minutes</span>
+                    <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                </Link>
+              </Button>
+              
+              {/* Value Indicators */}
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-3">
+                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-primary/20 text-xs px-3 py-1">
+                  <CheckCircle className="w-3 h-3 mr-1.5 text-green-500" />
+                  Free
+                </Badge>
+                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-primary/20 text-xs px-3 py-1">
+                  <CheckCircle className="w-3 h-3 mr-1.5 text-green-500" />
+                  No sign-up required
+                </Badge>
+                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-primary/20 text-xs px-3 py-1">
+                  <CheckCircle className="w-3 h-3 mr-1.5 text-green-500" />
+                  3 minutes
+                </Badge>
+              </div>
+            </div>
+
+            {/* Secondary & Tertiary CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+              {/* Secondary CTA - Exploration */}
+              <Button 
+                variant="outline"
+                size="lg" 
+                className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                asChild
+              >
+                <Link to="/bizmap-ai" className="flex items-center" onClick={handleSecondaryCTAClick}>
+                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                  Explore Features
+                </Link>
+              </Button>
+
+              {/* Tertiary CTA - Sign-up (only for unauthenticated) */}
+              {!isAuthenticated && (
+                <Button 
+                  variant="ghost"
+                  size="lg" 
+                  className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline" 
+                  asChild
+                >
+                  <Link to="/signup?source=hero&return=/bizmap-ai" className="flex items-center" onClick={handleTertiaryCTAClick}>
+                    Join 1,000+ Founders
+                    <ArrowRight className="ml-1.5 w-4 h-4" />
+                  </Link>
+                </Button>
+              )}
+
+              {/* Authenticated: Dashboard CTA */}
+              {isAuthenticated && (
+                <Button 
+                  variant="outline"
+                  size="lg" 
+                  className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                  asChild
+                >
+                  <Link to="/dashboard" className="flex items-center">
+                    <LayoutDashboard className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                    View Dashboard
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Platform Snippets - Horizontal Scrollable */}
