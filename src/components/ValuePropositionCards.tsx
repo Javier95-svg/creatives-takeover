@@ -49,7 +49,7 @@ const ValuePropositionCards = () => {
   ];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle">
+    <section id="what-you-get" className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle scroll-mt-24">
       {/* RGB gradient overlay */}
       <div className="absolute inset-0 bg-gradient-rgb-soft opacity-30" />
       

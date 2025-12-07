@@ -229,7 +229,7 @@ const Hero = () => {
                 className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
                 asChild
               >
-                <Link to="/bizmap-ai" className="flex items-center" onClick={handleSecondaryCTAClick}>
+                <Link to="#what-you-get" className="flex items-center" onClick={handleSecondaryCTAClick}>
                   <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                   Explore Features
                 </Link>
