@@ -43,7 +43,7 @@ const ValuePropositionCards = () => {
       description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
       cta: "Explore Insighta",
       link: "/insighta",
-      color: "planning", // Blue for planning/fundraising
+      color: "accent", // Yellow for fundraising
       metric: "Find your VC"
     }
   ];
@@ -109,6 +109,16 @@ const ValuePropositionCards = () => {
                 gradient: 'bg-gradient-growth',
                 glass: 'glass-green',
                 shadow: 'hover:shadow-growth/20'
+              },
+              accent: {
+                border: 'border-amber-500/30 hover:border-amber-500/60',
+                bg: 'bg-amber-500/10 group-hover:bg-amber-500/20',
+                text: 'text-amber-600 dark:text-amber-400',
+                textHover: 'text-amber-600 dark:text-amber-400 group-hover:text-amber-600/90 dark:group-hover:text-amber-400/90',
+                metric: 'text-amber-600/80 dark:text-amber-400/80',
+                gradient: 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20',
+                glass: 'glass-amber',
+                shadow: 'hover:shadow-amber-500/20'
               }
             };
             const colors = colorClasses[card.color as keyof typeof colorClasses];
@@ -172,6 +182,8 @@ const ValuePropositionCards = () => {
                             e.currentTarget.style.background = 'var(--gradient-action)';
                           } else if (card.color === 'growth') {
                             e.currentTarget.style.background = 'var(--gradient-growth)';
+                          } else if (card.color === 'accent') {
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgb(251 191 36 / 0.9), rgb(234 179 8 / 0.9))';
                           }
                         }}
                         onMouseLeave={(e) => {
