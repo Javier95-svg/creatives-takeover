@@ -17,7 +17,7 @@ interface MessagingInterfaceProps {
   initialConversationId?: string;
 }
 
-export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps = {}) => {
+export const MessagingInterface = ({ initialConversationId }: MessagingInterfaceProps) => {
   const { user } = useAuth();
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
@@ -43,33 +43,38 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
-  const [swipedConversationId, setSwipedConversationId] = useState<string | null>(null);
   const { trigger: triggerHaptic } = useHapticFeedback();
+
+  // Track message count to detect new messages
+  const messageCount = activeConversationId ? (messages[activeConversationId]?.length || 0) : 0;
+  const lastMessage = activeConversationId && messages[activeConversationId]?.length > 0
+    ? messages[activeConversationId][messages[activeConversationId].length - 1]
+    : null;
 
   // Auto-scroll to bottom when new messages arrive (only within ScrollArea, not the page)
   useEffect(() => {
-    if (scrollAreaRef.current && activeConversationId) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-      if (scrollContainer) {
-        const activeMessages = messages[activeConversationId] || [];
-        const lastMessage = activeMessages[activeMessages.length - 1];
-        const isUserMessage = lastMessage?.sender_id === user?.id;
-        
-        // Only auto-scroll if:
-        // 1. User is already near the bottom (within 100px), OR
-        // 2. It's the user's own message (they just sent it), OR
-        // 3. There are no messages yet
-        const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 100;
-        
-        if (isNearBottom || isUserMessage || activeMessages.length === 0) {
-          // Use setTimeout to ensure DOM has updated
-          setTimeout(() => {
-            scrollContainer.scrollTop = scrollContainer.scrollHeight;
-          }, 0);
+    if (!scrollAreaRef.current || !activeConversationId) return;
+
+    const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    if (!scrollContainer) return;
+
+    const isUserMessage = lastMessage?.sender_id === user?.id;
+    
+    // Only auto-scroll if:
+    // 1. User is already near the bottom (within 100px), OR
+    // 2. It's the user's own message (they just sent it), OR
+    // 3. There are no messages yet
+    const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 100;
+    
+    if (isNearBottom || isUserMessage || messageCount === 0) {
+      // Use requestAnimationFrame for smoother scrolling after DOM updates
+      requestAnimationFrame(() => {
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
-      }
+      });
     }
-  }, [messages, activeConversationId, user?.id]);
+  }, [messageCount, activeConversationId, user?.id, lastMessage?.id]);
 
   // Set initial conversation ID from URL parameter
   useEffect(() => {
@@ -299,7 +304,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 opacity-100 md:opacity-0 transition-opacity h-10 w-10 p-0 min-h-[44px] min-w-[44px] touch-manipulation hover:bg-destructive hover:text-destructive-foreground"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity h-10 w-10 p-0 min-h-[44px] min-w-[44px] touch-manipulation hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => handleDeleteClick(e, conversation.id)}
                     aria-label="Delete conversation"
                   >

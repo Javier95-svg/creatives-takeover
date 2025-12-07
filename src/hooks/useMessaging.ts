@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +43,13 @@ export const useMessaging = () => {
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  // Ref to track current messages for subscription callbacks
+  const messagesRef = useRef<Record<string, Message[]>>({});
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Get user ID by email using database function with fallback
   const getUserIdByEmail = async (email: string): Promise<string | null> => {
@@ -123,8 +130,9 @@ export const useMessaging = () => {
 
         if (error) throw error;
         setConversations(data || []);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading conversations:', error);
+        toast.error('Failed to load conversations. Please refresh the page.');
       }
     };
 
@@ -210,9 +218,10 @@ export const useMessaging = () => {
             [activeConversationId]: messagesWithSenders
           }));
         }
-      } catch (error) {
+      } catch (error: any) {
         if (!abortController.signal.aborted) {
           console.error('Error loading messages:', error);
+          toast.error('Failed to load messages. Please try again.');
         }
       }
     };
@@ -230,18 +239,29 @@ export const useMessaging = () => {
           filter: `conversation_id=eq.${activeConversationId}`
         },
         async (payload) => {
-          // Get sender info for the new message (cached if already loaded)
-          const existingMessages = messages[activeConversationId] || [];
-          const existingSender = existingMessages.find(m => m.sender_id === payload.new.sender_id)?.sender;
+          // Use ref to access current messages without causing re-renders
+          const existingMessages = messagesRef.current[activeConversationId] || [];
           
-          let senderData = existingSender;
+          // Check if message already exists (prevent duplicates)
+          if (existingMessages.some(m => m.id === payload.new.id)) {
+            return;
+          }
+
+          // Get sender info from existing messages if available
+          let senderData = existingMessages.find(m => m.sender_id === payload.new.sender_id)?.sender;
+
+          // If sender not found, fetch it
           if (!senderData) {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id, full_name, avatar_url')
-              .eq('id', payload.new.sender_id)
-              .single();
-            senderData = data || undefined;
+            try {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', payload.new.sender_id)
+                .single();
+              senderData = data || undefined;
+            } catch (error) {
+              console.error('Error fetching sender profile:', error);
+            }
           }
 
           const newMessage: Message = {
@@ -258,10 +278,18 @@ export const useMessaging = () => {
             sender: senderData
           };
 
-          setMessages(prev => ({
-            ...prev,
-            [activeConversationId]: [...(prev[activeConversationId] || []), newMessage]
-          }));
+          // Use functional update to add message
+          setMessages(prev => {
+            const currentMessages = prev[activeConversationId] || [];
+            // Double-check for duplicates (race condition protection)
+            if (currentMessages.some(m => m.id === newMessage.id)) {
+              return prev;
+            }
+            return {
+              ...prev,
+              [activeConversationId]: [...currentMessages, newMessage]
+            };
+          });
         }
       )
       .subscribe();
@@ -270,7 +298,7 @@ export const useMessaging = () => {
       abortController.abort();
       supabase.removeChannel(messageSubscription);
     };
-  }, [activeConversationId, messages]);
+  }, [activeConversationId]);
 
   const startConversation = async (participantId: string): Promise<string | null> => {
     if (!user || loading) {

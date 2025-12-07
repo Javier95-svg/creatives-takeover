@@ -43,9 +43,18 @@ const Messages = () => {
       // Only prevent scroll for elements within the messages card
       const messagesCard = document.querySelector('[class*="max-w-6xl"]');
       if (messagesCard && messagesCard.contains(target)) {
-        // Use scrollIntoView with preventScroll option if supported
-        if (target.scrollIntoView && 'preventScroll' in {}) {
-          target.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+        // Use preventScroll option if supported (available in modern browsers)
+        try {
+          // Check if preventScroll is supported by attempting to use it
+          const focusOptions: FocusOptions = { preventScroll: true };
+          if (target.focus && typeof target.focus === 'function') {
+            target.focus(focusOptions);
+          }
+        } catch {
+          // Fallback: use scrollIntoView with nearest positioning
+          if (target.scrollIntoView) {
+            target.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+          }
         }
       }
     };
@@ -132,8 +141,7 @@ const Messages = () => {
     };
 
     resolveUsername();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username, user?.id, isAuthenticated, conversationIdParam]);
+  }, [username, user?.id, isAuthenticated, conversationIdParam, getUserIdByUsername, startConversation, resolvedConversationId]);
 
   if (!isAuthenticated) {
     return (
