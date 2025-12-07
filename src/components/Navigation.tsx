@@ -188,11 +188,6 @@ const Navigation = () => {
                         >
                           {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
                           <span className="tracking-wide">{item.name}</span>
-                          {item.name === 'BizMap AI' && (
-                            <div className="absolute -top-1 -right-1 flex items-center">
-                              <Gift className="w-3 h-3 text-planning animate-bounce" />
-                            </div>
-                          )}
                         </Link>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -360,9 +355,6 @@ const Navigation = () => {
                     >
                       {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
                       <span>{item.name}</span>
-                      {item.name === 'BizMap AI' && (
-                        <Gift className="ml-auto h-4 w-4 text-planning animate-bounce" />
-                      )}
                     </Link>
                   );
                 })}

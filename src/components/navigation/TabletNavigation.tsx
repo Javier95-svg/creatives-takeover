@@ -80,9 +80,6 @@ export const TabletNavigation: React.FC<TabletNavigationProps> = ({
                   <span className="text-[10px] leading-tight text-center max-w-[60px] truncate">
                     {item.name}
                   </span>
-                  {item.name === 'BizMap AI' && (
-                    <Gift className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 text-planning animate-bounce" />
-                  )}
                 </Link>
               </TooltipTrigger>
               {item.tooltip && (
