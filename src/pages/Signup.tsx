@@ -389,29 +389,14 @@ const Signup = () => {
               </Button>
 
               {/* Divider */}
-              <div className="relative">
+              <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">
-                    Or continue with
+                    OR
                   </span>
-                </div>
-              </div>
-
-              {/* Social Proof */}
-              <div className="py-3">
-                <SocialProof variant="inline" />
-              </div>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
 
@@ -446,6 +431,16 @@ const Signup = () => {
                     </span>
                   </Button>
                 </div>
+              </div>
+
+              {/* Hype Text */}
+              <div className="text-center mt-4 space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Join <span className="font-semibold text-foreground">1,247 entrepreneurs</span> building their businesses.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">2 people</span> signed up in the last hour.
+                </p>
               </div>
 
               {/* Security Badge */}
