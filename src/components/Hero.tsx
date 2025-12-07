@@ -61,8 +61,39 @@ const Hero = () => {
     trackEngagement('hero-primary-cta', 85);
   };
 
-  const handleSecondaryCTAClick = () => {
+  const handleSecondaryCTAClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     trackEngagement('hero-secondary-cta', 70);
+    
+    // Small delay to ensure tracking is logged
+    setTimeout(() => {
+      // Find the target section
+      const targetSection = document.getElementById('what-you-get');
+      if (targetSection) {
+        // Get the navigation bar height (typically 64px for h-16)
+        const navHeight = 64;
+        const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        
+        // Smooth scroll to the section
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback: try scrolling after a short delay in case component hasn't rendered
+        setTimeout(() => {
+          const targetSection = document.getElementById('what-you-get');
+          if (targetSection) {
+            const navHeight = 64;
+            const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+          }
+        }, 100);
+      }
+    }, 10);
   };
 
   const handleTertiaryCTAClick = () => {
@@ -227,12 +258,13 @@ const Hero = () => {
                 variant="outline"
                 size="lg" 
                 className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
-                asChild
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSecondaryCTAClick(e as any);
+                }}
               >
-                <Link to="#what-you-get" className="flex items-center" onClick={handleSecondaryCTAClick}>
-                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                  Explore Features
-                </Link>
+                <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                Explore Features
               </Button>
 
               {/* Tertiary CTA - Sign-up (only for unauthenticated) */}
