@@ -5,7 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CreditDisplay } from "@/components/CreditDisplay";
-import { SubscriptionStatus } from "@/components/SubscriptionStatus";
 import { CreditCampaignPopup } from "@/components/CreditCampaignPopup";
 import { useHoverPopup } from "@/hooks/useHoverPopup";
 import { useSocial } from "@/hooks/useSocial";
@@ -200,13 +199,12 @@ const Navigation = () => {
             )}
 
           {/* Desktop & Tablet CTA */}
-          <div className="hidden md:flex items-center space-x-3 !border-0">
+          <div className="hidden md:flex items-center gap-3 !border-0 ml-auto">
             {loading ? (
               <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
             ) : user ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-3">
                 <CreditDisplay variant="navigation" showPurchaseButton={true} />
-                <SubscriptionStatus variant="inline" />
                 <Button
                   variant="ghost"
                   size="icon"
