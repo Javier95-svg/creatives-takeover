@@ -192,14 +192,13 @@ const Hero = () => {
           
           {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
-            {/* Community - 1,000+ Active Founders */}
+            {/* Community - Connect with Founders & Mentors */}
             <Link 
               to="/community" 
               className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
             >
               <Users className="w-4 h-4 text-growth group-hover:text-growth/80 transition-colors" />
-              <span className="font-semibold text-foreground group-hover:text-primary transition-colors">1,000+</span>
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Active Founders</span>
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Connect with Founders & Mentors</span>
             </Link>
             
             {/* Dashboard - Measure your progress */}
