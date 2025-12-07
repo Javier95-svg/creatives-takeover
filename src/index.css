@@ -503,7 +503,7 @@ All colors MUST be HSL.
   
   /* Logo Breathing Pulse Effect - Subtle Scale In/Out with Pulsing RGB Glow */
   .lightbulb-glow {
-    animation: logo-breathing 3s ease-in-out infinite;
+    animation: logo-breathing 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     transition: all 0.3s ease;
     transform-origin: center;
     will-change: transform, filter;
@@ -516,7 +516,7 @@ All colors MUST be HSL.
   }
   
   .lightbulb-glow:hover {
-    animation-duration: 2s;
+    animation-duration: 3.5s;
     filter: 
       drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.6))
       drop-shadow(0 0 12px hsl(var(--red-primary) / 0.5))
@@ -535,7 +535,7 @@ All colors MUST be HSL.
   }
   
   .dark .lightbulb-glow:hover {
-    animation-duration: 2s;
+    animation-duration: 3.5s;
     filter: 
       drop-shadow(0 0 10px hsl(var(--blue-primary) / 0.8))
       drop-shadow(0 0 14px hsl(var(--red-primary) / 0.7))
@@ -2137,6 +2137,14 @@ All colors MUST be HSL.
       drop-shadow(0 0 14px hsl(var(--green-primary) / 0.3))
       brightness(1.05);
   }
+  25% {
+    transform: scale(1.04);
+    filter: 
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.55))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.475))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.4))
+      brightness(1.085);
+  }
   50% {
     transform: scale(1.08);
     filter: 
@@ -2144,6 +2152,14 @@ All colors MUST be HSL.
       drop-shadow(0 0 14px hsl(var(--red-primary) / 0.6))
       drop-shadow(0 0 18px hsl(var(--green-primary) / 0.5))
       brightness(1.12);
+  }
+  75% {
+    transform: scale(1.04);
+    filter: 
+      drop-shadow(0 0 8px hsl(var(--blue-primary) / 0.55))
+      drop-shadow(0 0 12px hsl(var(--red-primary) / 0.475))
+      drop-shadow(0 0 16px hsl(var(--green-primary) / 0.4))
+      brightness(1.085);
   }
 }
 
