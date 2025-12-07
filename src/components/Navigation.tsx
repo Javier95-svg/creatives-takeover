@@ -128,13 +128,13 @@ const Navigation = () => {
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 md:h-18 border-0">
-            {/* Logo with Enhanced Hover Effects */}
-            <div className="flex items-center border-0">
-              <Link to="/" className="flex items-center" aria-label="Home">
+            {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
+            <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
+              <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-10 w-auto animate-logo-breathing" 
+                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing" 
                 />
               </Link>
             </div>
