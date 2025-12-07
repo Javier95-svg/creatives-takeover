@@ -438,7 +438,29 @@ const Signup = () => {
                 <p className="text-sm text-muted-foreground">
                   Join <span className="font-semibold text-foreground">1,247 entrepreneurs</span> building their businesses.
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+                  <span 
+                    className="relative w-2 h-2 rounded-full bg-green-500"
+                    style={{
+                      animation: 'flicker 1.5s ease-in-out infinite',
+                      boxShadow: '0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5)'
+                    }}
+                  >
+                    <style>{`
+                      @keyframes flicker {
+                        0%, 100% {
+                          opacity: 1;
+                          transform: scale(1);
+                          box-shadow: 0 0 6px rgba(34, 197, 94, 0.8), 0 0 12px rgba(34, 197, 94, 0.5);
+                        }
+                        50% {
+                          opacity: 0.4;
+                          transform: scale(0.8);
+                          box-shadow: 0 0 4px rgba(34, 197, 94, 0.4), 0 0 8px rgba(34, 197, 94, 0.2);
+                        }
+                      }
+                    `}</style>
+                  </span>
                   <span className="font-semibold text-foreground">2 people</span> signed up in the last hour.
                 </p>
               </div>
