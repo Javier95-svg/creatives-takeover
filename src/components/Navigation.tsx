@@ -134,7 +134,7 @@ const Navigation = () => {
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-10 w-auto" 
+                  className="h-10 w-auto animate-logo-breathing" 
                 />
               </Link>
             </div>

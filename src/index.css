@@ -2163,6 +2163,13 @@ All colors MUST be HSL.
   }
 }
 
+/* Logo Breathing Animation Utility Class */
+.animate-logo-breathing {
+  animation: logo-breathing 3s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
+}
+
 /* Stories Wallpaper Animations */
 /* Smooth horizontal flow animation for narrative ribbons */
 @keyframes story-flow {
