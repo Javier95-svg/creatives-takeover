@@ -370,7 +370,10 @@ const Signup = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 mt-6"
+                className="w-full h-12 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 mt-6 group"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(var(--blue-primary)), hsl(var(--blue-dark)))',
+                }}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -380,7 +383,7 @@ const Signup = () => {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Create Account - 30 Seconds
+                    Create Account
                   </>
                 )}
               </Button>
