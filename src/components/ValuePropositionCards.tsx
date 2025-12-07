@@ -18,13 +18,13 @@ const ValuePropositionCards = () => {
     },
     {
       icon: Users,
-      title: "SHARE",
+      title: "CONNECT",
       subtitle: "Community",
       description: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding.",
       cta: "Join Community",
       link: "/community",
       color: "action", // Red for action/urgency
-      metric: "Savvy Mentors"
+      metric: "Connect with mentors"
     },
     {
       icon: LayoutDashboard,
@@ -34,7 +34,7 @@ const ValuePropositionCards = () => {
       cta: "View Dashboard",
       link: "/dashboard",
       color: "growth", // Green for growth/success
-      metric: "Track progress"
+      metric: "Track your progress"
     },
     {
       icon: Rocket,
