@@ -13,7 +13,6 @@ import { ActiveProjects } from './ActiveProjects';
 import { MonthlyRevenueTarget } from './MonthlyRevenueTarget';
 import { GmailIntegration } from './GmailIntegration';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { DashboardTour } from '@/components/onboarding/DashboardTour';
 import { SmartRecommendations } from '@/components/smart/SmartRecommendations';
 
 export const PersonalizedDashboard = () => {
@@ -155,7 +154,6 @@ export const PersonalizedDashboard = () => {
   return (
     <ErrorBoundary>
       <div className="min-h-screen relative overflow-hidden bg-background">
-        <DashboardTour />
       {/* Exit Button - Fixed in top-right corner */}
       <button
         onClick={() => navigate('/')}

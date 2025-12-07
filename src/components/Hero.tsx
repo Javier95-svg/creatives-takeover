@@ -60,6 +60,10 @@ const Hero = () => {
     trackEngagement('hero-primary-cta', 85);
   };
 
+  const handleDashboardCTAClick = () => {
+    trackEngagement('hero-dashboard-cta', 90);
+  };
+
   const handleSecondaryCTAClick = (e: React.MouseEvent) => {
     e.preventDefault();
     trackEngagement('hero-secondary-cta', 70);
@@ -231,70 +235,91 @@ const Hero = () => {
 
           {/* Enhanced CTA Section */}
           <div className="mb-8 sm:mb-12 px-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            {/* Primary CTA - Value-Focused */}
-            <div className="mb-4 sm:mb-6">
-              <Button 
-                size="lg" 
-                className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2" 
-                asChild
-              >
-                <Link to="/bizmap-ai" onClick={handlePrimaryCTAClick}>
-                  <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
-                    <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                    <span className="relative z-10">Design Your Plan in 3 Minutes</span>
-                    <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* Secondary & Tertiary CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-              {/* Secondary CTA - Exploration */}
-              <Button 
-                variant="outline"
-                size="lg" 
-                className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleSecondaryCTAClick(e as any);
-                }}
-              >
-                <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                Explore Features
-              </Button>
-
-              {/* Tertiary CTA - Sign-up (only for unauthenticated) */}
-              {!isAuthenticated && (
+            {isAuthenticated ? (
+              /* Authenticated User CTAs: Open Dashboard + Explore Features */
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+                {/* Primary CTA - Open Dashboard with Animation */}
                 <Button 
-                  variant="ghost"
                   size="lg" 
-                  className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline" 
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300 animate-dashboard-cta" 
                   asChild
                 >
-                  <Link to="/signup" className="flex items-center" onClick={handleTertiaryCTAClick}>
-                    Join 1,000+ Founders
-                    <ArrowRight className="ml-1.5 w-4 h-4" />
+                  <Link to="/dashboard" onClick={handleDashboardCTAClick}>
+                    <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
+                      <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                      <span className="relative z-10">Open Dashboard</span>
+                      <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </Link>
                 </Button>
-              )}
 
-              {/* Authenticated: Dashboard CTA */}
-              {isAuthenticated && (
+                {/* Secondary CTA - Explore Features */}
                 <Button 
                   variant="outline"
                   size="lg" 
-                  className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
-                  asChild
+                  className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSecondaryCTAClick(e as any);
+                  }}
                 >
-                  <Link to="/dashboard" className="flex items-center">
-                    <LayoutDashboard className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                    View Dashboard
-                  </Link>
+                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                  Explore Features
                 </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              /* Unauthenticated User CTAs: Design Your Plan + Explore Features + Join */
+              <>
+                {/* Primary CTA - Value-Focused */}
+                <div className="mb-4 sm:mb-6">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2" 
+                    asChild
+                  >
+                    <Link to="/bizmap-ai" onClick={handlePrimaryCTAClick}>
+                      <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
+                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                        <span className="relative z-10">Design Your Plan in 3 Minutes</span>
+                        <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                    </Link>
+                  </Button>
+                </div>
+
+                {/* Secondary & Tertiary CTAs */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                  {/* Secondary CTA - Exploration */}
+                  <Button 
+                    variant="outline"
+                    size="lg" 
+                    className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSecondaryCTAClick(e as any);
+                    }}
+                  >
+                    <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                    Explore Features
+                  </Button>
+
+                  {/* Tertiary CTA - Sign-up */}
+                  <Button 
+                    variant="ghost"
+                    size="lg" 
+                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline" 
+                    asChild
+                  >
+                    <Link to="/signup" className="flex items-center" onClick={handleTertiaryCTAClick}>
+                      Join 1,000+ Founders
+                      <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Platform Snippets - Horizontal Scrollable */}

@@ -151,7 +151,7 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-evenly flex-1 pl-4 lg:pl-6 pr-8 lg:pr-16 !border-0 gap-1">
+              <div className="flex items-center justify-evenly flex-1 pl-8 lg:pl-12 pr-8 lg:pr-16 !border-0 gap-1">
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
