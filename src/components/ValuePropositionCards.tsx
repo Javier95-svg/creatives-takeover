@@ -14,7 +14,7 @@ const ValuePropositionCards = () => {
       cta: "Start Planning",
       link: "/bizmap-ai",
       color: "planning", // Blue for planning/trust
-      metric: "30-day launch"
+      metric: "Design your plan"
     },
     {
       icon: Users,
@@ -24,7 +24,7 @@ const ValuePropositionCards = () => {
       cta: "Join Community",
       link: "/community",
       color: "action", // Red for action/urgency
-      metric: "1,000+ founders"
+      metric: "Savvy Mentors"
     },
     {
       icon: LayoutDashboard,
@@ -43,7 +43,8 @@ const ValuePropositionCards = () => {
       description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
       cta: "Explore Insighta",
       link: "/insighta",
-      color: "planning" // Blue for planning/fundraising
+      color: "planning", // Blue for planning/fundraising
+      metric: "Find your VC"
     }
   ];
 
