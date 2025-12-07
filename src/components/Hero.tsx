@@ -190,28 +190,46 @@ const Hero = () => {
             Turn your bold idea into a thriving project. Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders throughout their journey.
           </p>
           
-          {/* Platform-Specific Trust Indicators */}
+          {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
-            <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <Users className="w-4 h-4 text-growth" />
-              <span className="font-semibold text-foreground">1,000+</span>
-              <span className="text-muted-foreground">Active Founders</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <Zap className="w-4 h-4 text-action" />
-              <span className="font-semibold text-foreground">30-Day</span>
-              <span className="text-muted-foreground">Launch Plan</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <Sparkles className="w-4 h-4 text-planning" />
-              <span className="font-semibold text-foreground">3 Minutes</span>
-              <span className="text-muted-foreground">to Business Plan</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <DollarSign className="w-4 h-4 text-growth" />
-              <span className="font-semibold text-foreground">500+</span>
-              <span className="text-muted-foreground">Funding Opportunities</span>
-            </div>
+            {/* Community - 1,000+ Active Founders */}
+            <Link 
+              to="/community" 
+              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
+            >
+              <Users className="w-4 h-4 text-growth group-hover:text-growth/80 transition-colors" />
+              <span className="font-semibold text-foreground group-hover:text-primary transition-colors">1,000+</span>
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Active Founders</span>
+            </Link>
+            
+            {/* Dashboard - Measure your progress */}
+            <Link 
+              to="/dashboard" 
+              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
+            >
+              <LayoutDashboard className="w-4 h-4 text-action group-hover:text-action/80 transition-colors" />
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Measure your progress</span>
+            </Link>
+            
+            {/* BizMap AI - 3 Minutes to Business Plan */}
+            <Link 
+              to="/bizmap-ai" 
+              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-planning group-hover:text-planning/80 transition-colors" />
+              <span className="font-semibold text-foreground group-hover:text-primary transition-colors">3 Minutes</span>
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">to Business Plan</span>
+            </Link>
+            
+            {/* Insighta - 500+ Funding Opportunities */}
+            <Link 
+              to="/insighta" 
+              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
+            >
+              <DollarSign className="w-4 h-4 text-growth group-hover:text-growth/80 transition-colors" />
+              <span className="font-semibold text-foreground group-hover:text-primary transition-colors">500+</span>
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Funding Opportunities</span>
+            </Link>
           </div>
 
           {/* Enhanced CTA Section */}
