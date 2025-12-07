@@ -92,7 +92,7 @@ const Messages = () => {
     }
 
     // Prevent re-resolving the same username
-    if (hasResolvedUsername.current === username && resolvedConversationId) {
+    if (hasResolvedUsername.current === username) {
       return;
     }
 
@@ -141,7 +141,8 @@ const Messages = () => {
     };
 
     resolveUsername();
-  }, [username, user?.id, isAuthenticated, conversationIdParam, getUserIdByUsername, startConversation, resolvedConversationId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username, user?.id, isAuthenticated, conversationIdParam]);
 
   if (!isAuthenticated) {
     return (

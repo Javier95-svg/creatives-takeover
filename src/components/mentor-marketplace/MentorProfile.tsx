@@ -82,8 +82,8 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
       return;
     }
 
-    // Navigate to username-based route
-    navigate(`/messages/${SAMUEL_STARKMAN_USERNAME}`);
+    // Navigate to messages page to see all chats
+    navigate('/messages');
   };
 
   return (

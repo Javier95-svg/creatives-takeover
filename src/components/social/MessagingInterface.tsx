@@ -39,6 +39,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<React.ElementRef<typeof ScrollArea>>(null);
   const hasSetInitialConversation = useRef(false);
+  const previousInitialConversationId = useRef<string | undefined>(undefined);
   const [participantProfiles, setParticipantProfiles] = useState<Record<string, { full_name: string; avatar_url: string | null }>>({});
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -78,6 +79,12 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
 
   // Set initial conversation ID from URL parameter
   useEffect(() => {
+    // Reset flag if initialConversationId changes
+    if (previousInitialConversationId.current !== initialConversationId) {
+      hasSetInitialConversation.current = false;
+      previousInitialConversationId.current = initialConversationId;
+    }
+
     if (initialConversationId && !hasSetInitialConversation.current) {
       // If conversations are loaded, check if it exists
       if (conversations.length > 0) {
