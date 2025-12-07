@@ -135,7 +135,7 @@ const Navigation = () => {
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-12 w-auto cursor-pointer transition-all duration-300" 
+                  className="h-12 w-auto lightbulb-glow cursor-pointer transition-all duration-300" 
                 />
               </Link>
             </div>
