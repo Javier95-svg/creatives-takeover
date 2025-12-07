@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play, CheckCircle } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import HeroSnippets from "@/components/HeroSnippets";
-import { Badge } from "@/components/ui/badge";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef } from "react";
 
@@ -233,22 +232,6 @@ const Hero = () => {
                   <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                 </Link>
               </Button>
-              
-              {/* Value Indicators */}
-              <div className="flex flex-wrap items-center justify-center gap-3 mt-3">
-                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-primary/20 text-xs px-3 py-1">
-                  <CheckCircle className="w-3 h-3 mr-1.5 text-green-500" />
-                  Free
-                </Badge>
-                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-primary/20 text-xs px-3 py-1">
-                  <CheckCircle className="w-3 h-3 mr-1.5 text-green-500" />
-                  No sign-up required
-                </Badge>
-                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-primary/20 text-xs px-3 py-1">
-                  <CheckCircle className="w-3 h-3 mr-1.5 text-green-500" />
-                  3 minutes
-                </Badge>
-              </div>
             </div>
 
             {/* Secondary & Tertiary CTAs */}
