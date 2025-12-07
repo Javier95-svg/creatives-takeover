@@ -24,7 +24,7 @@ const ValuePropositionCards = () => {
       cta: "Join Community",
       link: "/community",
       color: "action", // Red for action/urgency
-      metric: "Connect with mentors"
+      metric: "Access mentorship"
     },
     {
       icon: LayoutDashboard,
