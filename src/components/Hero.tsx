@@ -211,24 +211,22 @@ const Hero = () => {
               <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Measure your progress</span>
             </Link>
             
-            {/* BizMap AI - 3 Minutes to Business Plan */}
+            {/* BizMap AI - Business Plan in 3 Minutes */}
             <Link 
               to="/bizmap-ai" 
               className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-planning group-hover:text-planning/80 transition-colors" />
-              <span className="font-semibold text-foreground group-hover:text-primary transition-colors">3 Minutes</span>
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">to Business Plan</span>
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Business Plan in 3 Minutes</span>
             </Link>
             
-            {/* Insighta - 500+ Funding Opportunities */}
+            {/* Insighta - Discover Funding Opportunities */}
             <Link 
               to="/insighta" 
               className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
             >
               <DollarSign className="w-4 h-4 text-growth group-hover:text-growth/80 transition-colors" />
-              <span className="font-semibold text-foreground group-hover:text-primary transition-colors">500+</span>
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Funding Opportunities</span>
+              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Discover Funding Opportunities</span>
             </Link>
           </div>
 
