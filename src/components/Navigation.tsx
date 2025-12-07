@@ -130,12 +130,11 @@ const Navigation = () => {
           <div className="flex items-center h-16 md:h-18 border-0">
             {/* Logo with Enhanced Hover Effects */}
             <div className="flex items-center border-0">
-              <Link to="/" className="flex items-center nav-logo-hover" aria-label="Home">
+              <Link to="/" className="flex items-center" aria-label="Home">
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-10 w-auto lightbulb-glow cursor-pointer transition-all duration-300" 
-                  style={{ minWidth: 'auto', maxWidth: 'none' }}
+                  className="h-10 w-auto" 
                 />
               </Link>
             </div>
