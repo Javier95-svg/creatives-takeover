@@ -13,15 +13,21 @@ import {
 
 const EntrepreneurProblems = () => {
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [manuallyFlipped, setManuallyFlipped] = useState<Set<number>>(new Set());
 
   const toggleFlip = (index: number) => {
     const newFlipped = new Set(flippedCards);
+    const newManuallyFlipped = new Set(manuallyFlipped);
+    
     if (newFlipped.has(index)) {
       newFlipped.delete(index);
+      newManuallyFlipped.delete(index);
     } else {
       newFlipped.add(index);
+      newManuallyFlipped.add(index);
     }
     setFlippedCards(newFlipped);
+    setManuallyFlipped(newManuallyFlipped);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -71,7 +77,7 @@ const EntrepreneurProblems = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden" aria-labelledby="roadblocks-heading">
+    <section className="py-20 lg:py-32 relative overflow-visible" aria-labelledby="roadblocks-heading">
       <style>{`
         @keyframes flicker {
           0%, 100% {
@@ -110,12 +116,14 @@ const EntrepreneurProblems = () => {
         }
         .flip-card {
           perspective: 1000px;
-          height: 100%;
+          min-height: 400px;
+          overflow: visible;
         }
         .flip-card-inner {
           position: relative;
           width: 100%;
           height: 100%;
+          min-height: 400px;
           transform-style: preserve-3d;
           transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -127,6 +135,7 @@ const EntrepreneurProblems = () => {
           position: absolute;
           width: 100%;
           height: 100%;
+          min-height: 400px;
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           border-radius: 0.5rem;
@@ -136,8 +145,11 @@ const EntrepreneurProblems = () => {
           transform: rotateY(180deg);
         }
         @media (hover: hover) and (pointer: fine) {
-          .flip-card:hover:not(.flipped) .flip-card-inner {
+          .flip-card:not(.manually-flipped):not(.flipped):hover .flip-card-inner {
             transform: rotateY(180deg);
+          }
+          .flip-card:not(.manually-flipped).flipped:hover .flip-card-inner {
+            transform: rotateY(0deg);
           }
         }
       `}</style>
@@ -174,7 +186,7 @@ const EntrepreneurProblems = () => {
       <div className="absolute top-1/4 left-1/5 w-32 h-1 dark:bg-[hsl(var(--red-primary))]/30 bg-[hsl(var(--red-primary))]/20 animate-pulse" />
       <div className="absolute bottom-1/3 right-1/5 w-24 h-1 dark:bg-orange-500/30 bg-orange-400/20 animate-pulse" style={{ animationDelay: '1s' }} />
       
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 overflow-visible">
         {/* Section Header */}
         <div className="text-center mb-16">
           <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 mb-6 text-sm animate-flicker">
@@ -189,29 +201,29 @@ const EntrepreneurProblems = () => {
         </div>
 
         {/* Flip Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-visible">
           {problems.map((item, index) => {
             const Icon = item.icon;
             const isFlipped = flippedCards.has(index);
+            const isManuallyFlipped = manuallyFlipped.has(index);
             
             return (
               <article
                 key={index}
-                className={`flip-card animate-card-entrance ${isFlipped ? 'flipped' : ''}`}
+                className={`flip-card animate-card-entrance ${isFlipped ? 'flipped' : ''} ${isManuallyFlipped ? 'manually-flipped' : ''}`}
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
                 <div
-                  className="flip-card-inner"
+                  className="flip-card-inner cursor-pointer"
                   onClick={() => toggleFlip(index)}
                   onKeyDown={(e) => handleKeyDown(e, index)}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${item.problem} - Click or hover to flip and see solution`}
+                  aria-label={isFlipped ? `${item.problem} - Click to see problem` : `${item.problem} - Click or hover to see solution`}
                   aria-pressed={isFlipped}
-                  aria-expanded={isFlipped}
                 >
                   {/* Front Side - Problem (Red) */}
-                  <div className="flip-card-front bg-card/50 backdrop-blur-sm border-2 border-red-500/50 hover:border-red-500/80 rounded-lg p-6 flex flex-col h-full min-h-[400px] focus-within:ring-2 focus-within:ring-red-500/50 focus-within:ring-offset-2 transition-all duration-300">
+                  <div className="flip-card-front bg-card/50 backdrop-blur-sm border-2 border-red-500/50 hover:border-red-500/80 rounded-lg p-6 flex flex-col h-full min-h-[400px] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 transition-all duration-300">
                     <div className="bg-red-500/10 rounded-lg p-4 mb-4 border border-red-500/20">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 flex-shrink-0">
@@ -236,7 +248,7 @@ const EntrepreneurProblems = () => {
                   </div>
 
                   {/* Back Side - Solution (Green) */}
-                  <div className="flip-card-back bg-card/50 backdrop-blur-sm border-2 border-green-500/50 hover:border-green-500/80 rounded-lg p-6 flex flex-col h-full min-h-[400px] focus-within:ring-2 focus-within:ring-green-500/50 focus-within:ring-offset-2 transition-all duration-300">
+                  <div className="flip-card-back bg-card/50 backdrop-blur-sm border-2 border-green-500/50 hover:border-green-500/80 rounded-lg p-6 flex flex-col h-full min-h-[400px] focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 transition-all duration-300">
                     <div className="bg-green-500/10 rounded-lg p-4 mb-4 border border-green-500/20">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30 flex-shrink-0">
