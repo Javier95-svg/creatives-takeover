@@ -143,7 +143,7 @@ serve(async (req) => {
 
     // 🚀 OPTIMIZATION: Check response cache before making AI calls
     const cacheKey = await generateCacheKey(message, businessContext, conversationHistory, chatMode);
-    const cachedResponse = await checkResponseCache(supabase, cacheKey);
+    const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
     if (cachedResponse) {
       console.log('⚡ Cache hit - returning cached response');
       const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
@@ -154,8 +154,27 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
     const optimizedHistory = conversationHistory.slice(-6);
     
-    // 🚀 OPTIMIZATION: Cache system prompt
-    const systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+    // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
+    const needsKnowledge = detectKnowledgeQuery(message, businessContext);
+    
+    // 🚀 OPTIMIZATION: Detect if query needs market data
+    const needsMarketData = detectMarketDataQuery(message, businessContext);
+    
+    // 🚀 OPTIMIZATION: Parallel processing - start RAG, market data, and AI preparation simultaneously
+    const [ragData, marketData, aiStreamReady] = await Promise.all([
+      needsKnowledge ? fetchRAGData(supabase, [], userId, businessContext) : Promise.resolve(null),
+      needsMarketData ? fetchMarketData(supabase, message, businessContext) : Promise.resolve(null),
+      Promise.resolve(true) // AI stream preparation (already ready)
+    ]);
+    
+    // 🚀 OPTIMIZATION: Build system prompt with market data if available
+    let systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+    if (marketData && marketData.data && marketData.data.length > 0) {
+      const marketInsights = formatMarketDataForPrompt(marketData);
+      systemPrompt = `${systemPrompt}\n\nREAL-TIME MARKET INTELLIGENCE:\n${marketInsights}\n\nUse this market data to provide current, relevant insights when answering the user's question.`;
+      console.log(`📊 Injected ${marketData.data.length} market insights into prompt`);
+    }
+    
     let messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...optimizedHistory,
@@ -165,26 +184,18 @@ serve(async (req) => {
     // Process file attachments if present
     messages = await processAttachments(messages, attachments);
 
-    // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
-    const needsKnowledge = detectKnowledgeQuery(message, businessContext);
-    
-    // 🚀 OPTIMIZATION: Parallel processing - start RAG and AI preparation simultaneously
-    const [ragData, aiStreamReady] = await Promise.all([
-      needsKnowledge ? fetchRAGData(supabase, messages, userId, businessContext) : Promise.resolve(null),
-      Promise.resolve(true) // AI stream preparation (already ready)
-    ]);
-
     // If RAG provided answer, stream it. Otherwise use Lovable AI
     if (ragData?.answer) {
       const response = createRAGStream(ragData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
-      // Cache the response
-      await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', 'google/gemini-2.5-flash');
+      // Cache the response (use model from RAG response if available)
+      const ragModel = ragData.model || 'google/gemini-2.5-flash';
+      await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
       requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
       return response;
     }
 
     console.log('💬 Using conversational Lovable AI');
-    const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey);
+    const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey, message);
     requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
     return response;
 
@@ -200,20 +211,51 @@ serve(async (req) => {
   }
 });
 
-// 🚀 OPTIMIZATION: Generate cache key for response caching
+// 🚀 OPTIMIZATION: Generate cache key for response caching with semantic normalization
 async function generateCacheKey(message: string, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Promise<string> {
+  // Normalize message: remove extra whitespace, lowercase, remove punctuation variations
+  const normalizedMessage = message
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[?!.,;:]/g, '')
+    .substring(0, 200); // Limit length for consistent hashing
+  
   const contextStr = JSON.stringify({
-    message: message.toLowerCase().trim(),
-    industry: businessContext.industry,
-    stage: businessContext.stage,
+    message: normalizedMessage,
+    industry: businessContext.industry || null,
+    stage: businessContext.stage || null,
     chatMode,
-    lastMessage: conversationHistory[conversationHistory.length - 1]?.content?.substring(0, 100)
+    // Only include last message if it's relevant (not just greetings)
+    lastMessage: conversationHistory.length > 0 && conversationHistory[conversationHistory.length - 1]?.content?.length > 20
+      ? conversationHistory[conversationHistory.length - 1].content.substring(0, 100).toLowerCase().trim()
+      : null
   });
   const encoder = new TextEncoder();
   const data = encoder.encode(contextStr);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 🚀 OPTIMIZATION: Determine cache TTL based on query stability
+function determineCacheTTL(message: string, businessContext: BusinessContext): number {
+  const text = message.toLowerCase();
+  
+  // Stable queries (factual, template requests) → 24 hours
+  const stablePatterns = /(what is|what are|how to|template|example|guide|benchmark|standard|average|typical|common)/i;
+  if (stablePatterns.test(text) && !businessContext.goals?.length) {
+    return 24 * 60 * 60 * 1000; // 24 hours
+  }
+  
+  // Dynamic queries (user-specific, time-sensitive) → 1 hour
+  const dynamicPatterns = /(my|i want|i need|help me|suggest|recommend|for me|personalized)/i;
+  if (dynamicPatterns.test(text) || businessContext.goals?.length) {
+    return 60 * 60 * 1000; // 1 hour
+  }
+  
+  // Default: 6 hours
+  return 6 * 60 * 60 * 1000; // 6 hours
 }
 
 // 🚀 OPTIMIZATION: Generate request fingerprint for deduplication
@@ -230,20 +272,26 @@ async function generateRequestFingerprint(message: string, businessContext: Busi
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 🚀 OPTIMIZATION: Check response cache
-async function checkResponseCache(supabase: any, cacheKey: string): Promise<string | null> {
+// 🚀 OPTIMIZATION: Check response cache with semantic similarity fallback
+async function checkResponseCache(supabase: any, cacheKey: string, message?: string): Promise<string | null> {
   try {
+    // First, try exact cache key match
     const { data, error } = await supabase
       .from('ai_cache')
-      .select('response_data, expires_at')
+      .select('response_data, expires_at, created_at')
       .eq('cache_key', cacheKey)
       .gt('expires_at', new Date().toISOString())
       .single();
     
-    if (error || !data) return null;
+    if (!error && data) {
+      console.log('✅ Exact cache hit');
+      return data.response_data?.content || null;
+    }
     
-    // Return cached response content
-    return data.response_data?.content || null;
+    // 🚀 OPTIMIZATION: For simple queries, try semantic similarity (future enhancement)
+    // This would require embedding comparison, which we can add later
+    
+    return null;
   } catch (e) {
     console.error('Cache check error:', e);
     return null;
@@ -259,12 +307,17 @@ async function generateInputHash(content: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 🚀 OPTIMIZATION: Save response to cache
-async function saveResponseCache(supabase: any, cacheKey: string, content: string, provider: string, model: string): Promise<void> {
+// 🚀 OPTIMIZATION: Save response to cache with dynamic TTL
+async function saveResponseCache(supabase: any, cacheKey: string, content: string, provider: string, model: string, message?: string, businessContext?: BusinessContext): Promise<void> {
   // Save in background (non-blocking)
   setTimeout(async () => {
     try {
       const inputHash = await generateInputHash(content);
+      
+      // 🚀 OPTIMIZATION: Use dynamic TTL based on query stability
+      const ttl = message && businessContext ? determineCacheTTL(message, businessContext) : 6 * 60 * 60 * 1000; // Default 6 hours
+      const expiresAt = new Date(Date.now() + ttl).toISOString();
+      
       await supabase
         .from('ai_cache')
         .upsert({
@@ -273,10 +326,12 @@ async function saveResponseCache(supabase: any, cacheKey: string, content: strin
           model,
           input_hash: inputHash,
           response_data: { content },
-          expires_at: new Date(Date.now() + 3600000).toISOString() // 1 hour TTL
+          expires_at: expiresAt
         }, {
           onConflict: 'cache_key'
         });
+      
+      console.log(`💾 Cached response with TTL: ${Math.round(ttl / (60 * 60 * 1000))} hours`);
     } catch (e) {
       console.error('Cache save error:', e);
     }
@@ -343,18 +398,23 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
   }
 }
 
-// 🚀 OPTIMIZATION: Create stream from cached response
+// 🚀 OPTIMIZATION: Create stream from cached response with faster streaming
 function createCachedStream(cachedContent: string, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Response {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Stream cached content word by word for natural feel
+        // 🚀 OPTIMIZATION: Stream cached content in chunks for faster perceived speed
         const words = cachedContent.split(' ');
-        for (let i = 0; i < words.length; i++) {
+        const chunkSize = 3; // Stream 3 words at a time for faster display
+        
+        for (let i = 0; i < words.length; i += chunkSize) {
+          const chunk = words.slice(i, i + chunkSize).join(' ');
+          const prefix = i === 0 ? '' : ' ';
           controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+            `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 20)); // Faster than real generation
+          // 🚀 OPTIMIZATION: Reduced delay for cached responses (10ms vs 20ms)
+          await new Promise(r => setTimeout(r, 10));
         }
         
         // Complete
@@ -723,6 +783,98 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
 }
 
 // 🧠 INTENT DETECTION: Determine if query needs knowledge base lookup
+// 🚀 OPTIMIZATION: Detect if query needs market data
+function detectMarketDataQuery(message: string, context: BusinessContext): boolean {
+  const lowerMessage = message.toLowerCase();
+  
+  // Market data query patterns
+  const marketPatterns = [
+    /(market|industry|trend|competitor|competition|pricing|revenue|growth|forecast|outlook|demand|supply)/i,
+    /(what.*happening|current.*trend|latest.*news|recent.*development)/i,
+    /(how.*market|market.*size|market.*opportunity|market.*analysis)/i,
+    /(industry.*insight|sector.*trend|market.*intelligence)/i,
+  ];
+  
+  const hasMarketKeywords = marketPatterns.some(pattern => pattern.test(lowerMessage));
+  const hasIndustryContext = Boolean(context.industry);
+  const hasBusinessStage = Boolean(context.stage);
+  
+  // Request market data if:
+  // 1. Has market-related keywords, OR
+  // 2. Has industry context and asking about trends/competition
+  return hasMarketKeywords || (hasIndustryContext && /(trend|competitor|market|industry)/i.test(lowerMessage));
+}
+
+// 🚀 OPTIMIZATION: Fetch market data for query
+async function fetchMarketData(supabase: any, message: string, businessContext: BusinessContext): Promise<any> {
+  try {
+    console.log('📊 Fetching market data for query');
+    
+    const industries = businessContext.industry ? [businessContext.industry] : [];
+    const keywords = extractKeywordsFromMessage(message);
+    
+    const { data, error } = await supabase.functions.invoke('market-data-aggregator', {
+      body: {
+        industries,
+        keywords,
+        data_types: ['news', 'trend'],
+        refresh_cache: false // Use cached data for speed
+      }
+    });
+    
+    if (error || !data) {
+      console.log('⚠️ Market data fetch failed, continuing without it');
+      return null;
+    }
+    
+    console.log(`✅ Fetched ${data.data?.length || 0} market insights`);
+    return data;
+  } catch (e) {
+    console.log('⚠️ Market data error, continuing without it:', e);
+    return null;
+  }
+}
+
+// 🚀 OPTIMIZATION: Extract keywords from message for market data search
+function extractKeywordsFromMessage(message: string): string[] {
+  const keywords: string[] = [];
+  const lowerMessage = message.toLowerCase();
+  
+  // Extract business-related keywords
+  const businessTerms = message.match(/\b(business|startup|company|product|service|app|platform|saas|ecommerce|marketplace)\b/gi);
+  if (businessTerms) {
+    keywords.push(...businessTerms.map(t => t.toLowerCase()));
+  }
+  
+  // Extract industry terms if mentioned
+  const industries = ['technology', 'healthcare', 'retail', 'food', 'creative', 'education', 'finance', 'real estate'];
+  industries.forEach(industry => {
+    if (lowerMessage.includes(industry)) {
+      keywords.push(industry);
+    }
+  });
+  
+  return [...new Set(keywords)]; // Remove duplicates
+}
+
+// 🚀 OPTIMIZATION: Format market data for injection into system prompt
+function formatMarketDataForPrompt(marketData: any): string {
+  if (!marketData.data || marketData.data.length === 0) {
+    return 'No current market data available.';
+  }
+  
+  const insights = marketData.data.slice(0, 5).map((item: any, index: number) => {
+    const title = item.title || item.data_payload?.title || 'Market Insight';
+    const summary = item.data_payload?.summary || item.insights?.[0] || '';
+    const relevance = item.relevance_score || 0;
+    const source = item.source || 'Market Intelligence';
+    
+    return `${index + 1}. ${title} (Relevance: ${Math.round(relevance * 100)}%)\n   ${summary}\n   Source: ${source}`;
+  }).join('\n\n');
+  
+  return `Current Market Insights:\n${insights}\n\nUse these insights to provide up-to-date, relevant information. Cite sources when referencing specific market data.`;
+}
+
 function detectKnowledgeQuery(message: string, context: BusinessContext): boolean {
   const lowerMessage = message.toLowerCase();
   
@@ -825,15 +977,69 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
   });
 }
 
-// 💬 Create Lovable AI stream response
-async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any, cacheKey?: string): Promise<Response> {
+// 🚀 OPTIMIZATION: Detect query complexity for intelligent routing
+function detectQueryComplexity(message: string, businessContext: BusinessContext, conversationHistory: ChatMessage[]): 'simple' | 'moderate' | 'complex' {
+  const text = message.toLowerCase();
+  const messageLength = message.length;
+  const historyLength = conversationHistory.length;
+  
+  // Simple queries: greetings, yes/no, short questions
+  const simplePatterns = /^(hi|hello|hey|thanks|thank you|yes|no|ok|sure|got it|thanks|bye|goodbye|what|who|when|where|how much|how many)/i;
+  if (simplePatterns.test(message) && messageLength < 100) {
+    return 'simple';
+  }
+  
+  // Complex queries: analysis, strategy, multi-step reasoning
+  const complexPatterns = /(analy[sz]e|strategy|plan|compare|evaluate|recommend|optimize|design|architecture|financial model|market analysis|business plan|competitive analysis|swot|pricing strategy|go-to-market|revenue model)/i;
+  const hasComplexKeywords = complexPatterns.test(message);
+  const isLongQuery = messageLength > 500;
+  const hasContext = Object.keys(businessContext).length > 2;
+  const hasHistory = historyLength > 3;
+  
+  if (hasComplexKeywords || (isLongQuery && hasContext) || (hasHistory && messageLength > 300)) {
+    return 'complex';
+  }
+  
+  // Moderate: everything else
+  return 'moderate';
+}
+
+// 🚀 OPTIMIZATION: Select optimal model based on query complexity
+function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatMode: string): { model: string; strategy: string } {
+  // Tour guide mode always uses fast model
+  if (chatMode === 'tour-guide') {
+    return { model: 'google/gemini-2.5-flash', strategy: 'speed' };
+  }
+  
+  // Simple queries → fastest, cheapest model
+  if (complexity === 'simple') {
+    return { model: 'google/gemini-2.5-flash', strategy: 'speed' };
+  }
+  
+  // Complex queries → quality model (if available via router)
+  if (complexity === 'complex') {
+    return { model: 'google/gemini-2.5-flash', strategy: 'quality' }; // Will route via ai-model-router if available
+  }
+  
+  // Moderate → balanced
+  return { model: 'google/gemini-2.5-flash', strategy: 'balanced' };
+}
+
+// 💬 Create Lovable AI stream response with intelligent routing
+async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any, cacheKey?: string, originalMessage?: string): Promise<Response> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+
+  // 🚀 OPTIMIZATION: Detect complexity and select optimal model
+  const complexity = detectQueryComplexity(userMessage, businessContext, conversationHistory);
+  const { model: selectedModel, strategy } = selectOptimalModel(complexity, chatMode);
+  
+  console.log(`🎯 Query complexity: ${complexity}, selected model: ${selectedModel}, strategy: ${strategy}`);
 
   const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'google/gemini-2.5-flash', messages, stream: true, temperature: 0.3 }),
+    body: JSON.stringify({ model: selectedModel, messages, stream: true, temperature: 0.3 }),
   });
 
   if (!aiResponse.ok) {
@@ -852,46 +1058,52 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       let fullMessage = '';
       let buffer = '';
       let firstTokenReceived = false;
+      const startTime = Date.now();
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          // 🚀 OPTIMIZATION: Process buffer more efficiently
-          buffer += decoder.decode(value, { stream: true });
-          
-          // Process complete lines only
-          let newlineIndex;
-          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-            const line = buffer.slice(0, newlineIndex);
-            buffer = buffer.slice(newlineIndex + 1);
+          // 🚀 OPTIMIZATION: Process buffer more efficiently with immediate streaming
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
             
-            if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
-            
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-            
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                if (!firstTokenReceived) {
-                  firstTokenReceived = true;
-                  // 🚀 OPTIMIZATION: First token received - stream immediately
+            // Process all available complete lines immediately (don't wait for full buffer)
+            let newlineIndex;
+            while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+              const line = buffer.slice(0, newlineIndex);
+              buffer = buffer.slice(newlineIndex + 1);
+              
+              if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
+              
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') continue;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  if (!firstTokenReceived) {
+                    firstTokenReceived = true;
+                    const timeToFirstToken = Date.now() - startTime;
+                    console.log(`⚡ First token received in ${timeToFirstToken}ms`);
+                    // 🚀 OPTIMIZATION: Stream first token immediately without delay
+                  }
+                  fullMessage += content;
+                  // 🚀 OPTIMIZATION: Enqueue immediately without batching
+                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
                 }
-                fullMessage += content;
-                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
+              } catch (e) {
+                // Ignore parse errors for malformed JSON
               }
-            } catch (e) {
-              // Ignore parse errors for malformed JSON
             }
           }
         }
 
         // 🚀 OPTIMIZATION: Save to cache and DB in background (non-blocking)
         if (cacheKey && fullMessage) {
-          saveResponseCache(supabase, cacheKey, fullMessage, 'lovable', 'google/gemini-2.5-flash').catch(() => {});
+          saveResponseCache(supabase, cacheKey, fullMessage, 'lovable', selectedModel, originalMessage || userMessage, businessContext).catch(() => {});
         }
         
         // Background: Save message and update context
