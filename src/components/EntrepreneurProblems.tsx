@@ -163,14 +163,14 @@ const EntrepreneurProblems = () => {
         }
         .flip-card {
           perspective: 1000px;
-          min-height: 400px;
+          min-height: 500px;
           overflow: visible;
         }
         .flip-card-inner {
           position: relative;
           width: 100%;
           height: 100%;
-          min-height: 400px;
+          min-height: 500px;
           transform-style: preserve-3d;
           animation: autoFlip 8s ease-in-out infinite;
         }
@@ -208,11 +208,11 @@ const EntrepreneurProblems = () => {
           position: absolute;
           width: 100%;
           height: 100%;
-          min-height: 400px;
+          min-height: 500px;
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           border-radius: 0.75rem;
-          overflow: hidden;
+          overflow: visible;
         }
         .flip-card-back {
           transform: rotateY(180deg);
@@ -284,7 +284,7 @@ const EntrepreneurProblems = () => {
                   aria-label={`${item.problem} - Automatically flipping between problem and solution`}
                 >
                   {/* Front Side - Problem (Red) */}
-                  <div className="flip-card-front bg-gradient-to-br from-card via-card/95 to-red-950/5 dark:from-card dark:via-card/95 dark:to-red-950/20 backdrop-blur-sm border-2 border-red-500/60 hover:border-red-500/90 rounded-xl p-6 flex flex-col h-full min-h-[400px] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-xl hover:shadow-red-500/20 relative overflow-hidden">
+                  <div className="flip-card-front bg-gradient-to-br from-card via-card/95 to-red-950/5 dark:from-card dark:via-card/95 dark:to-red-950/20 backdrop-blur-sm border-2 border-red-500/60 hover:border-red-500/90 rounded-xl p-6 flex flex-col h-full min-h-[500px] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-xl hover:shadow-red-500/20 relative overflow-visible">
                     {/* Animated background gradient */}
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-red-600/10 opacity-50 animate-pulse" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
@@ -301,8 +301,8 @@ const EntrepreneurProblems = () => {
                           </h3>
                         </div>
                       </div>
-                      <div className="flex-1 flex flex-col">
-                        <div className="flex-1 bg-white/5 dark:bg-black/10 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex-1 bg-white/5 dark:bg-black/10 rounded-lg p-4 backdrop-blur-sm overflow-y-auto">
                           <ul className="space-y-3 text-sm leading-relaxed text-muted-foreground">
                             {item.detail.map((point, idx) => (
                               <li key={idx} className="flex items-start gap-3 group/item">
@@ -312,7 +312,7 @@ const EntrepreneurProblems = () => {
                             ))}
                           </ul>
                         </div>
-                        <div className="mt-6 pt-4 border-t border-red-500/30 flex items-center justify-center gap-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/5 rounded-lg py-2">
+                        <div className="mt-4 pt-3 border-t border-red-500/30 flex items-center justify-center gap-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/5 rounded-lg py-2 flex-shrink-0">
                           <span>Auto-flipping to solution...</span>
                           <RotateCcw className="w-4 h-4 animate-spin" style={{ animationDuration: '8s' }} />
                         </div>
@@ -321,7 +321,7 @@ const EntrepreneurProblems = () => {
                   </div>
 
                   {/* Back Side - Solution (Green) */}
-                  <div className="flip-card-back bg-gradient-to-br from-card via-card/95 to-green-950/5 dark:from-card dark:via-card/95 dark:to-green-950/20 backdrop-blur-sm border-2 border-green-500/60 hover:border-green-500/90 rounded-xl p-6 flex flex-col h-full min-h-[400px] focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 transition-all duration-300 shadow-lg shadow-green-500/10 hover:shadow-xl hover:shadow-green-500/20 relative overflow-hidden">
+                  <div className="flip-card-back bg-gradient-to-br from-card via-card/95 to-green-950/5 dark:from-card dark:via-card/95 dark:to-green-950/20 backdrop-blur-sm border-2 border-green-500/60 hover:border-green-500/90 rounded-xl p-6 flex flex-col h-full min-h-[500px] focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 transition-all duration-300 shadow-lg shadow-green-500/10 hover:shadow-xl hover:shadow-green-500/20 relative overflow-visible">
                     {/* Animated background gradient */}
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-600/10 opacity-50 animate-pulse" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
@@ -338,8 +338,8 @@ const EntrepreneurProblems = () => {
                           </h3>
                         </div>
                       </div>
-                      <div className="flex-1 flex flex-col">
-                        <div className="flex-1 bg-white/5 dark:bg-black/10 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex-1 bg-white/5 dark:bg-black/10 rounded-lg p-4 backdrop-blur-sm overflow-y-auto">
                           <ul className="space-y-3 text-sm leading-relaxed text-muted-foreground">
                             {item.solution.map((point, idx) => (
                               <li key={idx} className="flex items-start gap-3 group/item">
@@ -349,7 +349,7 @@ const EntrepreneurProblems = () => {
                             ))}
                           </ul>
                         </div>
-                        <div className="mt-6 pt-4 border-t border-green-500/30 flex items-center justify-center gap-2 text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/5 rounded-lg py-2">
+                        <div className="mt-4 pt-3 border-t border-green-500/30 flex items-center justify-center gap-2 text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/5 rounded-lg py-2 flex-shrink-0">
                           <span>Auto-flipping to problem...</span>
                           <RotateCcw className="w-4 h-4 animate-spin" style={{ animationDuration: '8s' }} />
                         </div>
