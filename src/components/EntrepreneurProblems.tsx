@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search,
@@ -6,16 +8,32 @@ import {
   Map,
   AlertCircle,
   Flame,
+  ArrowRight,
   CheckCircle,
-  RotateCcw
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 const EntrepreneurProblems = () => {
+  const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
+
+  const toggleExpand = (index: number) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedCards(newExpanded);
+  };
 
   const problems = [
     {
-      icon: Search,
+      beforeIcon: Search,
+      afterIcon: CheckCircle,
       problem: "Building Without Validating",
+      beforeText: "Spending months building an MVP without validating demand, watching savings disappear with no clear direction.",
+      afterText: "Validate your idea with BizMap AI's 7-question framework before committing months to a build.",
       detail: [
         "Spending months building an MVP without validating if anyone needs it",
         "Watching savings disappear with no clear direction or market feedback",
@@ -32,8 +50,11 @@ const EntrepreneurProblems = () => {
       ],
     },
     {
-      icon: Users,
+      beforeIcon: Users,
+      afterIcon: CheckCircle,
       problem: "Team Building Nightmares",
+      beforeText: "Paralyzed by equity split uncertainty, unable to move forward with team building decisions.",
+      afterText: "Connect with founders in our Community who've navigated equity splits and co-founder agreements.",
       detail: [
         "Paralyzed by uncertainty about fair equity splits for co-founders",
         "Second-guessing whether you're being too generous or too stingy",
@@ -50,8 +71,11 @@ const EntrepreneurProblems = () => {
       ],
     },
     {
-      icon: DollarSign,
+      beforeIcon: DollarSign,
+      afterIcon: CheckCircle,
       problem: "Raising Capital Feels Impossible",
+      beforeText: "Stuck in the 'need money to get money' trap, wasting time pitching to the wrong investors.",
+      afterText: "Use Insighta to research investors, understand their thesis, and identify the right fit for your startup.",
       detail: [
         "Stuck in the 'need money to get money' trap with no clear path forward",
         "Shooting in the dark, not knowing which investors invest in your space",
@@ -68,8 +92,11 @@ const EntrepreneurProblems = () => {
       ],
     },
     {
-      icon: Map,
+      beforeIcon: Map,
+      afterIcon: CheckCircle,
       problem: "Go-to-Market Confusion",
+      beforeText: "No clear understanding of your ideal customer or which channels to focus on, wasting time and money.",
+      afterText: "Build a comprehensive go-to-market strategy with BizMap AI, defining your ICP and channel selection.",
       detail: [
         "No clear understanding of what 'go to market' means for your startup",
         "Paralyzed by fundamental questions like B2B vs B2C or direct sales vs inbound",
@@ -86,8 +113,11 @@ const EntrepreneurProblems = () => {
       ],
     },
     {
-      icon: AlertCircle,
+      beforeIcon: AlertCircle,
+      afterIcon: CheckCircle,
       problem: "Weak Execution Habits",
+      beforeText: "Getting distracted by Wednesday, juggling too many priorities with no clear execution system.",
+      afterText: "Your Dashboard keeps you focused with clear priorities, progress tracking, and weekly sprint planning.",
       detail: [
         "Getting distracted by Wednesday, pulled toward shiny new ideas",
         "Juggling too many things but nothing feels like it's moving forward",
@@ -104,8 +134,11 @@ const EntrepreneurProblems = () => {
       ],
     },
     {
-      icon: Flame,
+      beforeIcon: Flame,
+      afterIcon: CheckCircle,
       problem: "Early Burnout & Lost Momentum",
+      beforeText: "Initial excitement faded, replaced by exhaustion and uncertainty, questioning if you have what it takes.",
+      afterText: "Connect with founders in our Community who understand the emotional rollercoaster and help maintain momentum.",
       detail: [
         "Initial excitement faded, replaced by exhaustion from late nights and rejection",
         "Questioning if you have what it takes as the emotional weight wears you down",
@@ -157,71 +190,38 @@ const EntrepreneurProblems = () => {
             transform: translateY(0);
           }
         }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
         .animate-card-entrance {
           animation: slideUpFadeIn 0.5s ease-out forwards;
           opacity: 0;
         }
-        .flip-card {
-          perspective: 1000px;
-          min-height: 500px;
-          overflow: visible;
+        .card-hover-effect {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .flip-card-inner {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          min-height: 500px;
-          transform-style: preserve-3d;
-          animation: autoFlip 8s ease-in-out infinite;
+        .card-hover-effect:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
         }
-        .flip-card:nth-child(1) .flip-card-inner {
-          animation-delay: 0s;
+        .icon-hover-effect {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .flip-card:nth-child(2) .flip-card-inner {
-          animation-delay: 0.5s;
+        .card-hover-effect:hover .icon-hover-effect {
+          transform: scale(1.1) rotate(5deg);
         }
-        .flip-card:nth-child(3) .flip-card-inner {
-          animation-delay: 1s;
+        .arrow-hover-effect {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .flip-card:nth-child(4) .flip-card-inner {
-          animation-delay: 1.5s;
-        }
-        .flip-card:nth-child(5) .flip-card-inner {
-          animation-delay: 2s;
-        }
-        .flip-card:nth-child(6) .flip-card-inner {
-          animation-delay: 2.5s;
-        }
-        @keyframes autoFlip {
-          0%, 45% {
-            transform: rotateY(0deg);
-          }
-          50%, 95% {
-            transform: rotateY(180deg);
-          }
-          100% {
-            transform: rotateY(0deg);
-          }
-        }
-        .flip-card-front,
-        .flip-card-back {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          min-height: 500px;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          border-radius: 0.75rem;
-          overflow: visible;
-        }
-        .flip-card-back {
-          transform: rotateY(180deg);
-        }
-        .flip-card-inner:hover {
-          animation-play-state: paused;
+        .card-hover-effect:hover .arrow-hover-effect {
+          transform: scale(1.15) rotate(12deg);
         }
       `}</style>
-      
       {/* Problem-Focused Wallpaper - theme-aware */}
       <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
       
@@ -238,6 +238,7 @@ const EntrepreneurProblems = () => {
       
       {/* Scattered Problem Icons Background */}
       <div className="absolute inset-0 opacity-5">
+        {/* Scattered X marks representing problems */}
         <div className="absolute top-20 left-20 text-[hsl(var(--red-primary))] text-4xl font-bold">✕</div>
         <div className="absolute top-40 right-32 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
         <div className="absolute bottom-32 left-40 text-[hsl(var(--red-primary))] text-5xl font-bold">✕</div>
@@ -268,96 +269,126 @@ const EntrepreneurProblems = () => {
           </p>
         </div>
 
-        {/* Flip Cards Grid */}
+        {/* Problems Grid - 3 Column Layout with Better Spacing */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-visible">
           {problems.map((item, index) => {
-            const Icon = item.icon;
+            const BeforeIcon = item.beforeIcon;
+            const AfterIcon = item.afterIcon;
+            const isExpanded = expandedCards.has(index);
             
             return (
-              <article
-                key={index}
-                className="flip-card animate-card-entrance"
+              <Card 
+                key={index} 
+                className="card-hover-effect border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group animate-card-entrance bg-card/50 backdrop-blur-sm"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                <div
-                  className="flip-card-inner"
-                  aria-label={`${item.problem} - Automatically flipping between problem and solution`}
-                >
-                  {/* Front Side - Problem (Red) */}
-                  <div className="flip-card-front bg-gradient-to-br from-card via-card/95 to-red-950/5 dark:from-card dark:via-card/95 dark:to-red-950/20 backdrop-blur-sm border-2 border-red-500/60 hover:border-red-500/90 rounded-xl p-6 flex flex-col h-full min-h-[500px] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-xl hover:shadow-red-500/20 relative overflow-visible">
-                    {/* Animated background gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-red-600/10 opacity-50 animate-pulse" />
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
-                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-red-600/5 rounded-full blur-3xl translate-y-20 -translate-x-20" />
-                    
-                    <div className="relative z-10">
-                      <div className="bg-gradient-to-br from-red-500/15 to-red-600/10 rounded-xl p-3.5 mb-4 border border-red-500/30 shadow-md backdrop-blur-sm">
-                        <div className="flex items-center gap-3 mb-0">
-                          <div className="p-2.5 rounded-lg bg-gradient-to-br from-red-500/25 to-red-600/15 border-2 border-red-500/40 flex-shrink-0 shadow-lg shadow-red-500/20">
-                            <Icon className="w-5 h-5 text-red-600 dark:text-red-400" />
-                          </div>
-                          <h3 className="text-base font-bold text-red-600 dark:text-red-400 drop-shadow-sm leading-tight">
-                            {item.problem}
-                          </h3>
-                        </div>
+                {/* Problem Section Background Gradient */}
+                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/20 dark:from-red-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <CardHeader className="pb-4 p-5 relative z-10">
+                  {/* Problem Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="icon-hover-effect p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex-shrink-0">
+                        <BeforeIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
-                      <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex-1 bg-white/5 dark:bg-black/10 rounded-lg p-4 backdrop-blur-sm overflow-y-auto">
-                          <ul className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-                            {item.detail.map((point, idx) => (
-                              <li key={idx} className="flex items-start gap-3 group/item">
-                                <span className="text-red-500 dark:text-red-400 mt-1.5 flex-shrink-0 text-lg font-bold group-hover/item:scale-110 transition-transform">•</span>
-                                <span className="group-hover/item:text-foreground transition-colors">{point}</span>
-                              </li>
-                            ))}
-                          </ul>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <CardTitle className="text-lg font-bold leading-tight text-red-600 dark:text-red-400">
+                          {item.problem}
+                        </CardTitle>
+                        <CardDescription className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                          {item.beforeText}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                {/* Arrow Divider - More Compact */}
+                <div className="relative px-5 py-3">
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                    <div className="arrow-hover-effect w-8 h-8 rounded-full bg-gradient-to-br from-red-500/20 to-green-500/20 border border-primary/30 flex items-center justify-center shadow-md backdrop-blur-sm">
+                      <ArrowRight className="w-4 h-4 text-primary" />
+                    </div>
+                  </div>
+                  <div className="h-px bg-gradient-to-r from-red-200 via-primary/20 to-green-200 dark:from-red-900/40 dark:via-primary/15 dark:to-green-900/40" />
+                </div>
+
+                {/* Solution Section Background Gradient */}
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-tl from-green-50/20 dark:from-green-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Solution Section */}
+                <CardContent className="pt-4 pb-5 px-5 flex-1 flex flex-col relative z-10">
+                  <div className="space-y-4 flex-1">
+                    <div className="flex items-start gap-3">
+                      <div className="icon-hover-effect p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex-shrink-0">
+                        <AfterIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                          <h4 className="text-sm font-semibold text-green-600 dark:text-green-400">Solution</h4>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-red-500/30 flex items-center justify-center gap-2 text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/5 rounded-lg py-2 flex-shrink-0">
-                          <span>Auto-flipping to solution...</span>
-                          <RotateCcw className="w-4 h-4 animate-spin" style={{ animationDuration: '8s' }} />
-                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                          {item.afterText}
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Back Side - Solution (Green) */}
-                  <div className="flip-card-back bg-gradient-to-br from-card via-card/95 to-green-950/5 dark:from-card dark:via-card/95 dark:to-green-950/20 backdrop-blur-sm border-2 border-green-500/60 hover:border-green-500/90 rounded-xl p-6 flex flex-col h-full min-h-[500px] focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 transition-all duration-300 shadow-lg shadow-green-500/10 hover:shadow-xl hover:shadow-green-500/20 relative overflow-visible">
-                    {/* Animated background gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-600/10 opacity-50 animate-pulse" />
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
-                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-green-600/5 rounded-full blur-3xl translate-y-20 -translate-x-20" />
-                    
-                    <div className="relative z-10">
-                      <div className="bg-gradient-to-br from-green-500/15 to-green-600/10 rounded-xl p-3.5 mb-4 border border-green-500/30 shadow-md backdrop-blur-sm">
-                        <div className="flex items-center gap-3 mb-0">
-                          <div className="p-2.5 rounded-lg bg-gradient-to-br from-green-500/25 to-green-600/15 border-2 border-green-500/40 flex-shrink-0 shadow-lg shadow-green-500/20">
-                            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                          </div>
-                          <h3 className="text-base font-bold text-green-600 dark:text-green-400 drop-shadow-sm leading-tight">
-                            Our Solution
-                          </h3>
-                        </div>
+                  {/* Expandable Detail Section */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                      <div className="p-3 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
+                        <h5 className="text-xs font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          The Problem:
+                        </h5>
+                        <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+                          {item.detail.map((point, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-red-500 dark:text-red-400 mt-1 flex-shrink-0">•</span>
+                              <span>{point}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex-1 bg-white/5 dark:bg-black/10 rounded-lg p-4 backdrop-blur-sm overflow-y-auto">
-                          <ul className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-                            {item.solution.map((point, idx) => (
-                              <li key={idx} className="flex items-start gap-3 group/item">
-                                <span className="text-green-500 dark:text-green-400 mt-1.5 flex-shrink-0 text-lg font-bold group-hover/item:scale-110 transition-transform">•</span>
-                                <span className="group-hover/item:text-foreground transition-colors">{point}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-green-500/30 flex items-center justify-center gap-2 text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/5 rounded-lg py-2 flex-shrink-0">
-                          <span>Auto-flipping to problem...</span>
-                          <RotateCcw className="w-4 h-4 animate-spin" style={{ animationDuration: '8s' }} />
-                        </div>
+                      <div className="p-3 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30">
+                        <h5 className="text-xs font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          The Solution:
+                        </h5>
+                        <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+                          {item.solution.map((point, idx) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-green-500 dark:text-green-400 mt-1 flex-shrink-0">•</span>
+                              <span>{point}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </article>
+                  )}
+
+                  {/* Expand/Collapse Button - More Compact */}
+                  <button
+                    onClick={() => toggleExpand(index)}
+                    className="mt-4 w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all duration-300 rounded-lg flex items-center justify-center gap-2 text-xs font-semibold text-primary hover:text-primary/90 active:scale-[0.98]"
+                  >
+                    {isExpanded ? (
+                      <>
+                        <span>Show Less</span>
+                        <ChevronUp className="w-3.5 h-3.5 transition-transform duration-300" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Learn More</span>
+                        <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-y-0.5" />
+                      </>
+                    )}
+                  </button>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
