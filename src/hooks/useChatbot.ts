@@ -1998,6 +1998,9 @@ What specific aspect of your business would you like to focus on first?`;
     }, []),
     switchToWizard: useCallback(() => {
       setChatMode('wizard');
-    }, [])
+    }, []),
+    
+    // Session ID for document uploads
+    sessionId
   };
 };

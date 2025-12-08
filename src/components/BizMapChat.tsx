@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X, FileText, Image as ImageIcon } from "lucide-react";
 import { FileAttachment } from './chatbot/FileAttachment';
+import { DocumentUpload } from './DocumentUpload';
 import { Badge } from "@/components/ui/badge";
 import { useChatbot, ChatMessage } from "@/hooks/useChatbot";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +13,7 @@ import { useChatBotStore } from "@/store/chatBotStore";
 import { useCofounderPersonality } from "@/hooks/useCofounderPersonality";
 import { PersonalityIndicator } from "./ai-cofounder/PersonalityIndicator";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
+import { toast } from "sonner";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -165,7 +167,8 @@ export const BizMapChat = ({
     switchToFreeform,
     conversionPromptShown,
     conversionPromptDismissed,
-    trackConversionEvent
+    trackConversionEvent,
+    sessionId
   } = useChatbot({
     enableNLU: true,
     enableDynamicFAQ: false,
@@ -402,6 +405,20 @@ export const BizMapChat = ({
             <HelpTooltip
               content={`Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || 'Business Planning'}. Answer the question to continue building your business plan.`}
               side="top"
+            />
+          </div>
+        )}
+        
+        {/* Document Upload Section - Only in freeform mode */}
+        {chatMode === 'freeform' && (
+          <div className="mb-3">
+            <DocumentUpload
+              conversationId={sessionId}
+              onDocumentUploaded={(doc) => {
+                console.log('Document uploaded and analyzed:', doc);
+                toast.success(`Document "${doc.file_name}" is now available for AI analysis`);
+              }}
+              maxFiles={5}
             />
           </div>
         )}

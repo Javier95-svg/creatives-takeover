@@ -162,7 +162,7 @@ serve(async (req) => {
     
     // 🚀 OPTIMIZATION: Parallel processing - start RAG, market data, and AI preparation simultaneously
     const [ragData, marketData, aiStreamReady] = await Promise.all([
-      needsKnowledge ? fetchRAGData(supabase, [], userId, businessContext) : Promise.resolve(null),
+      needsKnowledge ? fetchRAGData(supabase, [], userId, businessContext, conversation?.id) : Promise.resolve(null),
       needsMarketData ? fetchMarketData(supabase, message, businessContext) : Promise.resolve(null),
       Promise.resolve(true) // AI stream preparation (already ready)
     ]);
@@ -368,18 +368,23 @@ function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any
 }
 
 // 🚀 OPTIMIZATION: Fetch RAG data (extracted for parallel processing)
-async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: string | null, businessContext: BusinessContext): Promise<any> {
+async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: string | null, businessContext: BusinessContext, conversationId?: string): Promise<any> {
   console.log('🔍 Knowledge query detected - calling RAG');
   try {
     const filter: any = {};
     if (businessContext.industry) filter.tag = businessContext.industry;
     
+    // 🚀 OPTIMIZATION: Include user documents in RAG search
+    if (userId) {
+      filter.source = 'user_document'; // This will search user documents too
+    }
+    
     const result = await supabase.functions.invoke('rag-chat', {
       body: {
         messages: messages.filter(m => m.role !== 'system'),
         userId,
-        matchCount: 5,
-        filter,
+        matchCount: 8, // Increased to include document chunks
+        filter: userId ? undefined : filter, // Don't filter by source if user has documents
         model: 'google/gemini-2.5-flash',
         temperature: 0.3,
       }
