@@ -291,12 +291,12 @@ const EntrepreneurProblems = () => {
                     <div className="absolute bottom-0 left-0 w-40 h-40 bg-red-600/5 rounded-full blur-3xl translate-y-20 -translate-x-20" />
                     
                     <div className="relative z-10">
-                      <div className="bg-gradient-to-br from-red-500/15 to-red-600/10 rounded-xl p-5 mb-5 border border-red-500/30 shadow-md backdrop-blur-sm">
-                        <div className="flex items-center gap-4 mb-0">
-                          <div className="p-4 rounded-xl bg-gradient-to-br from-red-500/25 to-red-600/15 border-2 border-red-500/40 flex-shrink-0 shadow-lg shadow-red-500/20">
-                            <Icon className="w-7 h-7 text-red-600 dark:text-red-400" />
+                      <div className="bg-gradient-to-br from-red-500/15 to-red-600/10 rounded-xl p-3.5 mb-4 border border-red-500/30 shadow-md backdrop-blur-sm">
+                        <div className="flex items-center gap-3 mb-0">
+                          <div className="p-2.5 rounded-lg bg-gradient-to-br from-red-500/25 to-red-600/15 border-2 border-red-500/40 flex-shrink-0 shadow-lg shadow-red-500/20">
+                            <Icon className="w-5 h-5 text-red-600 dark:text-red-400" />
                           </div>
-                          <h3 className="text-xl font-bold text-red-600 dark:text-red-400 drop-shadow-sm">
+                          <h3 className="text-base font-bold text-red-600 dark:text-red-400 drop-shadow-sm leading-tight">
                             {item.problem}
                           </h3>
                         </div>
@@ -328,12 +328,12 @@ const EntrepreneurProblems = () => {
                     <div className="absolute bottom-0 left-0 w-40 h-40 bg-green-600/5 rounded-full blur-3xl translate-y-20 -translate-x-20" />
                     
                     <div className="relative z-10">
-                      <div className="bg-gradient-to-br from-green-500/15 to-green-600/10 rounded-xl p-5 mb-5 border border-green-500/30 shadow-md backdrop-blur-sm">
-                        <div className="flex items-center gap-4 mb-0">
-                          <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/25 to-green-600/15 border-2 border-green-500/40 flex-shrink-0 shadow-lg shadow-green-500/20">
-                            <CheckCircle className="w-7 h-7 text-green-600 dark:text-green-400" />
+                      <div className="bg-gradient-to-br from-green-500/15 to-green-600/10 rounded-xl p-3.5 mb-4 border border-green-500/30 shadow-md backdrop-blur-sm">
+                        <div className="flex items-center gap-3 mb-0">
+                          <div className="p-2.5 rounded-lg bg-gradient-to-br from-green-500/25 to-green-600/15 border-2 border-green-500/40 flex-shrink-0 shadow-lg shadow-green-500/20">
+                            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                           </div>
-                          <h3 className="text-xl font-bold text-green-600 dark:text-green-400 drop-shadow-sm">
+                          <h3 className="text-base font-bold text-green-600 dark:text-green-400 drop-shadow-sm leading-tight">
                             Our Solution
                           </h3>
                         </div>
