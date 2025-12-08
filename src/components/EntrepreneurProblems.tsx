@@ -334,7 +334,7 @@ const EntrepreneurProblems = () => {
                             <CheckCircle className="w-7 h-7 text-green-600 dark:text-green-400" />
                           </div>
                           <h3 className="text-xl font-bold text-green-600 dark:text-green-400 drop-shadow-sm">
-                            Creatives Takeover Solution
+                            Our Solution
                           </h3>
                         </div>
                       </div>
