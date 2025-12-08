@@ -6,12 +6,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Send, MessageCircle, Trash2, Menu } from "lucide-react";
-import { useMessaging } from "@/hooks/useMessaging";
+import { useMessaging, Conversation } from "@/hooks/useMessaging";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useDeviceType, useIsMobile } from "@/hooks/use-device-type";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
+import { logError } from "@/lib/logger";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -139,8 +140,8 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     }, 0);
   };
 
-  const getOtherParticipant = (conversation: any) => {
-    if (!user) return null;
+  const getOtherParticipant = (conversation: Conversation): string | undefined => {
+    if (!user) return undefined;
     return conversation.participants.find((id: string) => id !== user.id);
   };
 
@@ -186,7 +187,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
           setParticipantProfiles(prev => ({ ...prev, ...newProfiles }));
         }
       } catch (error) {
-        console.error('Error fetching participant profiles:', error);
+        logError('Error fetching participant profiles', error);
       }
     };
 
@@ -194,7 +195,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations, user]);
 
-  const getConversationName = (conversation: any) => {
+  const getConversationName = (conversation: Conversation): string => {
     if (conversation.is_group && conversation.name) {
       return conversation.name;
     }
@@ -208,7 +209,7 @@ export const MessagingInterface = ({ initialConversationId }: MessagingInterface
     return "Direct Message";
   };
 
-  const getConversationAvatar = (conversation: any) => {
+  const getConversationAvatar = (conversation: Conversation): string | null => {
     if (conversation.is_group) {
       return null; // Group avatars handled separately
     }

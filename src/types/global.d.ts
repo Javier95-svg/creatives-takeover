@@ -1,8 +1,10 @@
+import { RealtimeChannel } from '@supabase/supabase-js';
+
 export {};
 
 declare global {
   interface Window {
-    // Collaboration channel set by CollaborationContext; refine the type as needed later.
-    collaborationChannel?: any;
+    // Collaboration channel set by CollaborationContext
+    collaborationChannel?: RealtimeChannel;
   }
 }

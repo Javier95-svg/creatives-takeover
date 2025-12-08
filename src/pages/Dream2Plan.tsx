@@ -89,7 +89,13 @@ const BizMapAI = () => {
     selectedSegment?: string;
     refinedProblem?: string;
     pmfScore?: number;
-    experiments?: any[];
+    experiments?: Array<{
+      id?: string;
+      name: string;
+      description?: string;
+      status?: string;
+      results?: Record<string, unknown>;
+    }>;
   }) => {
     // Update userAnswers with refined PMF data
     if (data.selectedSegment || data.refinedProblem) {
@@ -397,7 +403,18 @@ const BizMapAI = () => {
   }, []);
 
   // Helper: compute and store success score
-  const computeAndStoreSuccessScore = async (answers: any) => {
+  interface BusinessAnswers {
+    idea?: string;
+    problem?: string;
+    solution?: string;
+    market?: string;
+    revenue?: string;
+    competition?: string;
+    team?: string;
+    [key: string]: unknown;
+  }
+  
+  const computeAndStoreSuccessScore = async (answers: BusinessAnswers) => {
     try {
       const { data: scoreData, error: scoreError } = await supabase.rpc('calculate_business_success_score', { answers });
       if (scoreError) throw scoreError;
@@ -406,7 +423,7 @@ const BizMapAI = () => {
       // Persist for history/analytics
       const { data } = await supabase.auth.getSession();
       const userId = data.session?.user?.id ?? null;
-      const score: any = scoreData as any;
+      const score = scoreData as { score: number; breakdown?: Record<string, number> };
       setSuccessScore(score);
 
       // Persist for history/analytics
@@ -894,7 +911,7 @@ Subject: "Quick question about [their pain point]"
   };
 
   const generateContextualFollowUp = (stepKey: string, answer: string) => {
-    const prev = userAnswers as any;
+    const prev = userAnswers as BusinessAnswers;
     
     // Analyze user's business context for smarter follow-ups
     const businessType = prev.overview ? (

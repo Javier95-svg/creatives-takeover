@@ -31,7 +31,16 @@ const AdminAnalytics = () => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [dateRange, setDateRange] = useState("7");
-  const [activityEvents, setActivityEvents] = useState<any[]>([]);
+  interface ActivityEvent {
+    id: string;
+    user_id?: string;
+    event_type: string;
+    event_data?: Record<string, unknown>;
+    page_path?: string;
+    created_at: string;
+  }
+  
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -71,13 +80,13 @@ const AdminAnalytics = () => {
   useEffect(() => {
     (async () => {
       const { data } = await safe.select(async () =>
-        await (supabase as any)
+        await supabase
           .from('activity_events')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(200)
       );
-      setActivityEvents((data as any[]) || []);
+      setActivityEvents((data as ActivityEvent[]) || []);
     })();
   }, [dateRange]);
 

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { logError } from '@/lib/logger';
 
 export interface CollaborationSession {
   id: string;
@@ -50,7 +51,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [comments, setComments] = useState<LiveComment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [realtimeChannels, setRealtimeChannels] = useState<RealtimeChannel[]>([]);
+  const realtimeChannelsRef = useRef<RealtimeChannel[]>([]);
 
   // Create or join collaboration session
   const startCollaboration = useCallback(async () => {
@@ -103,7 +104,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       setupRealtimeSubscriptions(sessionData.id);
 
     } catch (error) {
-      console.error('Error starting collaboration:', error);
+      logError('Error starting collaboration', error);
     } finally {
       setLoading(false);
     }
@@ -145,7 +146,11 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       )
       .subscribe();
 
-    setRealtimeChannels([presenceChannel, commentsChannel]);
+    // Clean up old channels before setting new ones
+    realtimeChannelsRef.current.forEach(channel => {
+      supabase.removeChannel(channel);
+    });
+    realtimeChannelsRef.current = [presenceChannel, commentsChannel];
   }, []);
 
   // Fetch active users in session
@@ -160,7 +165,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       .eq('is_active', true);
 
     if (!error && data) {
-      setActiveUsers(data as any);
+      setActiveUsers(data as UserPresence[]);
     }
   }, []);
 
@@ -176,7 +181,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      setComments(data as any);
+      setComments(data as LiveComment[]);
     }
   }, []);
 
@@ -194,7 +199,7 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       });
 
     if (error) {
-      console.error('Error adding comment:', error);
+      logError('Error adding comment', error);
     }
   }, [session, user]);
 
@@ -249,15 +254,15 @@ export const useCollaboration = (resourceType: string, resourceId: string) => {
       .eq('user_id', user.id);
 
     // Clean up realtime subscriptions
-    realtimeChannels.forEach(channel => {
+    realtimeChannelsRef.current.forEach(channel => {
       supabase.removeChannel(channel);
     });
+    realtimeChannelsRef.current = [];
 
     setSession(null);
     setActiveUsers([]);
     setComments([]);
-    setRealtimeChannels([]);
-  }, [session, user, realtimeChannels]);
+  }, [session, user]);
 
   // Initialize collaboration when component mounts
   useEffect(() => {

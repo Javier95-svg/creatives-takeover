@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { logInfo, logError } from '@/lib/logger';
 
 export interface Trend {
   id: string;
@@ -47,7 +48,7 @@ export const useTrends = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('📋 Fetching trends from database...');
+      logInfo('Fetching trends from database');
 
       const { data, error: fetchError } = await supabase
         .from('trends')
@@ -58,10 +59,10 @@ export const useTrends = () => {
         .order('trend_score', { ascending: false })
         .limit(60);
 
-      console.log('📊 Fetch trends result:', { data, error: fetchError, count: data?.length });
+      logInfo('Fetch trends result', { count: data?.length });
 
       if (fetchError) {
-        console.error('❌ Database fetch error:', fetchError);
+        logError('Database fetch error', fetchError);
         throw fetchError;
       }
 
@@ -69,7 +70,7 @@ export const useTrends = () => {
         ...item,
         sentiment: (item.sentiment as 'positive' | 'negative' | 'neutral') || 'neutral',
         business_opportunity: item.business_opportunity ? 
-          (item.business_opportunity as any) :
+          (item.business_opportunity as Record<string, unknown>) :
           undefined,
         revenue_models: item.revenue_models || [],
         target_audience: item.target_audience || [],
@@ -83,10 +84,10 @@ export const useTrends = () => {
         summary: item.summary || undefined
       })) as Trend[];
 
-      console.log('✅ Successfully fetched trends:', processedTrends.length);
+      logInfo('Successfully fetched trends', { count: processedTrends.length });
       setTrends(processedTrends);
     } catch (err) {
-      console.error('❌ Error fetching trends:', err);
+      logError('Error fetching trends', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch trends');
     } finally {
       setIsLoading(false);

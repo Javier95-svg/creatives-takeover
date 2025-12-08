@@ -22,6 +22,7 @@ import { PinnedPosts } from "@/components/profile/PinnedPosts";
 import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
+import { logError } from "@/lib/logger";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
@@ -196,7 +197,7 @@ const Profile = () => {
             .limit(4);
           
           if (pinnedError) {
-            console.error('Error loading pinned posts:', pinnedError);
+            logError('Error loading pinned posts', pinnedError);
             setPinnedPosts([]); // Set empty array on error
           } else {
             setPinnedPosts(pinnedData || []);
@@ -206,8 +207,8 @@ const Profile = () => {
           setPinnedPosts([]); // Set empty array on error
         }
 
-      } catch (error: any) {
-        console.error('Error loading profile:', error);
+      } catch (error) {
+        logError('Error loading profile', error);
         toast.error('Failed to load profile');
       } finally {
         setLoading(false);
@@ -233,10 +234,10 @@ const Profile = () => {
         },
         (payload) => {
           if (payload.new && typeof payload.new === 'object') {
-            const newData = payload.new as any;
+            const newData = payload.new as Partial<Profile>;
             setProfile(prev => prev ? {
               ...prev,
-              followers_count: newData.followers_count || 0,
+              followers_count: (newData.followers_count ?? prev.followers_count) || 0,
               following_count: newData.following_count || 0,
               friends_count: newData.friends_count || 0
             } : null);

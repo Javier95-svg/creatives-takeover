@@ -32,7 +32,7 @@ export const useCommitments = (sprintId?: string) => {
   const [loading, setLoading] = useState(false);
   const [userActiveCommitments, setUserActiveCommitments] = useState<SprintCommitment[]>([]);
 
-  const fetchCommitments = async () => {
+  const fetchCommitments = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -52,31 +52,31 @@ export const useCommitments = (sprintId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setCommitments((data as any) || []);
-    } catch (error: any) {
-      console.error('Error fetching commitments:', error);
+      setCommitments((data as SprintCommitment[]) || []);
+    } catch (error) {
+      logError('Error fetching commitments', error);
       toast({ title: 'Error', description: 'Failed to load commitments', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, sprintId]);
 
-  const fetchUserActiveCommitments = async () => {
+  const fetchUserActiveCommitments = useCallback(async () => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
-        .from('sprint_commitments' as any)
+        .from('sprint_commitments')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'active');
 
       if (error) throw error;
-      setUserActiveCommitments((data as any) || []);
-    } catch (error: any) {
-      console.error('Error fetching user active commitments:', error);
+      setUserActiveCommitments((data as SprintCommitment[]) || []);
+    } catch (error) {
+      logError('Error fetching user active commitments', error);
     }
-  };
+  }, [user]);
 
   const createCommitment = async (commitmentData: {
     sprintId: string | null;
@@ -115,14 +115,14 @@ export const useCommitments = (sprintId?: string) => {
       await fetchUserActiveCommitments();
       
       return data.commitment;
-    } catch (error: any) {
-      console.error('Error creating commitment:', error);
+    } catch (error) {
+      logError('Error creating commitment', error);
       toast({ title: 'Error', description: 'Failed to create commitment', variant: 'destructive' });
       return null;
     }
   };
 
-  const verifyCommitment = async (commitmentId: string, verificationData?: any, achievementNotes?: string) => {
+  const verifyCommitment = async (commitmentId: string, verificationData?: Record<string, unknown>, achievementNotes?: string) => {
     if (!user) return;
 
     try {
@@ -151,8 +151,8 @@ export const useCommitments = (sprintId?: string) => {
       
       await fetchCommitments();
       await fetchUserActiveCommitments();
-    } catch (error: any) {
-      console.error('Error verifying commitment:', error);
+    } catch (error) {
+      logError('Error verifying commitment', error);
       toast({ title: 'Error', description: 'Failed to verify commitment', variant: 'destructive' });
     }
   };
@@ -193,8 +193,8 @@ export const useCommitments = (sprintId?: string) => {
       
       await fetchCommitments();
       await fetchUserActiveCommitments();
-    } catch (error: any) {
-      console.error('Error resolving commitment:', error);
+    } catch (error) {
+      logError('Error resolving commitment', error);
       toast({ title: 'Error', description: 'Failed to resolve commitment', variant: 'destructive' });
     }
   };
@@ -224,8 +224,8 @@ export const useCommitments = (sprintId?: string) => {
       
       await fetchCommitments();
       await fetchUserActiveCommitments();
-    } catch (error: any) {
-      console.error('Error cancelling commitment:', error);
+    } catch (error) {
+      logError('Error cancelling commitment', error);
       toast({ title: 'Error', description: 'Failed to cancel commitment', variant: 'destructive' });
     }
   };
@@ -235,7 +235,7 @@ export const useCommitments = (sprintId?: string) => {
       fetchCommitments();
       fetchUserActiveCommitments();
     }
-  }, [user, sprintId]);
+  }, [user, sprintId, fetchCommitments, fetchUserActiveCommitments]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -260,7 +260,7 @@ export const useCommitments = (sprintId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, sprintId]);
+  }, [user, sprintId, fetchCommitments, fetchUserActiveCommitments]);
 
   return {
     commitments,

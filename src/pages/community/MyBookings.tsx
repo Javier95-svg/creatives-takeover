@@ -67,7 +67,7 @@ const MyBookings = () => {
                             <div className="space-y-2">
                               <div className="flex items-center gap-3">
                                 <h3 className="text-lg font-semibold">Mentor Session</h3>
-                                <Badge variant={getStatusBadge(booking.status) as any}>
+                                <Badge variant={getStatusBadge(booking.status) as 'default' | 'secondary' | 'destructive' | 'outline'}>
                                   {booking.status}
                                 </Badge>
                               </div>
@@ -132,7 +132,7 @@ const MyBookings = () => {
                             <div className="space-y-2">
                               <div className="flex items-center gap-3">
                                 <h3 className="text-lg font-semibold">Mentor Session</h3>
-                                <Badge variant={getStatusBadge(booking.status) as any}>
+                                <Badge variant={getStatusBadge(booking.status) as 'default' | 'secondary' | 'destructive' | 'outline'}>
                                   {booking.status}
                                 </Badge>
                               </div>

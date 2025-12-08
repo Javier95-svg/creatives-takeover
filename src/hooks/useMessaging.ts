@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError, logWarn, logInfo } from '@/lib/logger';
+import { handleError, getUserMessage } from '@/lib/errors';
 
 export interface Conversation {
   id: string;
@@ -52,20 +54,20 @@ export const useMessaging = () => {
   }, [messages]);
 
   // Get user ID by email using database function with fallback
-  const getUserIdByEmail = async (email: string): Promise<string | null> => {
+  const getUserIdByEmail = useCallback(async (email: string): Promise<string | null> => {
     if (!user) {
-      console.warn('getUserIdByEmail: User not authenticated');
+      logWarn('getUserIdByEmail: User not authenticated');
       return null;
     }
 
     // Direct lookup for Samuel's email - use known user ID
     if (email.toLowerCase() === SAMUEL_STARKMAN_EMAIL.toLowerCase()) {
-      console.log('getUserIdByEmail: Using known Samuel user ID', SAMUEL_STARKMAN_USER_ID);
+      logInfo('getUserIdByEmail: Using known Samuel user ID', { userId: SAMUEL_STARKMAN_USER_ID });
       return SAMUEL_STARKMAN_USER_ID;
     }
 
     try {
-      console.log('getUserIdByEmail: Looking up user ID for email', email);
+      logInfo('getUserIdByEmail: Looking up user ID for email', { email });
       
       // Try RPC function first
       const { data, error } = await supabase.rpc('get_user_id_by_email', {
@@ -73,10 +75,10 @@ export const useMessaging = () => {
       });
 
       if (error) {
-        console.warn('getUserIdByEmail: RPC function failed, trying direct query:', {
-          error,
+        logWarn('getUserIdByEmail: RPC function failed, trying direct query', {
+          error: error.message,
           code: error.code,
-          message: error.message
+          email
         });
         
         // Fallback: Try querying profiles table if email is stored there
@@ -87,7 +89,7 @@ export const useMessaging = () => {
           .single();
         
         if (!profileError && profileData?.id) {
-          console.log('getUserIdByEmail: Found user ID via profiles table', { email, userId: profileData.id });
+          logInfo('getUserIdByEmail: Found user ID via profiles table', { email, userId: profileData.id });
           return profileData.id;
         }
         
@@ -95,24 +97,20 @@ export const useMessaging = () => {
       }
 
       if (!data) {
-        console.warn('getUserIdByEmail: No user found for email', email);
+        logWarn('getUserIdByEmail: No user found for email', { email });
         return null;
       }
 
-      console.log('getUserIdByEmail: Found user ID', { email, userId: data });
+      logInfo('getUserIdByEmail: Found user ID', { email, userId: data });
       return data;
-    } catch (error: any) {
-      console.error('getUserIdByEmail: Exception occurred:', {
-        error,
-        errorMessage: error?.message,
-        errorCode: error?.code,
-        stack: error?.stack,
+    } catch (error) {
+      logError('getUserIdByEmail: Exception occurred', error, {
         email,
         currentUserId: user?.id
       });
       return null;
     }
-  };
+  }, [user]);
 
   // Load user's conversations
   useEffect(() => {
@@ -130,8 +128,8 @@ export const useMessaging = () => {
 
         if (error) throw error;
         setConversations(data || []);
-      } catch (error: any) {
-        console.error('Error loading conversations:', error);
+      } catch (error) {
+        logError('Error loading conversations', error);
         toast.error('Failed to load conversations. Please refresh the page.');
       }
     };
@@ -220,7 +218,7 @@ export const useMessaging = () => {
         }
       } catch (error: any) {
         if (!abortController.signal.aborted) {
-          console.error('Error loading messages:', error);
+          logError('Error loading messages', error);
           toast.error('Failed to load messages. Please try again.');
         }
       }
@@ -260,7 +258,7 @@ export const useMessaging = () => {
                 .single();
               senderData = data || undefined;
             } catch (error) {
-              console.error('Error fetching sender profile:', error);
+              logError('Error fetching sender profile', error);
             }
           }
 
@@ -300,15 +298,15 @@ export const useMessaging = () => {
     };
   }, [activeConversationId]);
 
-  const startConversation = async (participantId: string): Promise<string | null> => {
+  const startConversation = useCallback(async (participantId: string): Promise<string | null> => {
     if (!user || loading) {
-      console.warn('startConversation: User not authenticated or already loading');
+      logWarn('startConversation: User not authenticated or already loading');
       return null;
     }
 
     setLoading(true);
     try {
-      console.log('startConversation: Starting conversation', {
+      logInfo('startConversation: Starting conversation', {
         currentUserId: user.id,
         participantId,
         email: user.email
@@ -322,14 +320,14 @@ export const useMessaging = () => {
       );
 
       if (existingInMemory) {
-        console.log('startConversation: Found existing conversation in memory', existingInMemory.id);
+        logInfo('startConversation: Found existing conversation in memory', { conversationId: existingInMemory.id });
         setActiveConversationId(existingInMemory.id);
         return existingInMemory.id;
       }
 
       // Query database to check if conversation already exists
       // Query conversations where current user is a participant, then filter for exact match
-      console.log('startConversation: Checking database for existing conversation');
+      logInfo('startConversation: Checking database for existing conversation');
       const { data: existingConversations, error: queryError } = await safe.select(async () =>
         await supabase
           .from('conversations')
@@ -339,12 +337,9 @@ export const useMessaging = () => {
       );
 
       if (queryError) {
-        console.error('startConversation: Error querying existing conversations:', {
-          error: queryError,
+        logError('startConversation: Error querying existing conversations', queryError, {
           code: queryError.code,
-          message: queryError.message,
-          details: queryError.details,
-          hint: queryError.hint
+          message: queryError.message
         });
         // Continue to create new conversation even if query fails
       } else if (existingConversations && existingConversations.length > 0) {
@@ -356,7 +351,7 @@ export const useMessaging = () => {
         );
 
         if (exactMatch) {
-          console.log('startConversation: Found existing conversation in database', exactMatch.id);
+          logInfo('startConversation: Found existing conversation in database', { conversationId: exactMatch.id });
           setConversations(prev => {
             // Add to state if not already there
             if (!prev.find(c => c.id === exactMatch.id)) {
@@ -370,7 +365,7 @@ export const useMessaging = () => {
       }
 
       // Create new conversation
-      console.log('startConversation: Creating new conversation', {
+      logInfo('startConversation: Creating new conversation', {
         participants: [user.id, participantId],
         is_group: false
       });
@@ -387,23 +382,20 @@ export const useMessaging = () => {
       );
 
       if (error) {
-        console.error('startConversation: Error creating conversation:', {
-          error,
+        logError('startConversation: Error creating conversation', error, {
           code: error.code,
           message: error.message,
-          details: error.details,
-          hint: error.hint,
           participants: [user.id, participantId]
         });
         throw error;
       }
 
       if (!data) {
-        console.error('startConversation: No data returned from conversation creation');
+        logError('startConversation: No data returned from conversation creation', new Error('No data returned'));
         throw new Error('Failed to create conversation: No data returned');
       }
 
-      console.log('startConversation: Conversation created successfully', {
+      logInfo('startConversation: Conversation created successfully', {
         conversationId: data.id,
         participants: data.participants
       });
@@ -411,36 +403,25 @@ export const useMessaging = () => {
       setConversations(prev => [data, ...prev]);
       setActiveConversationId(data.id);
       return data.id;
-    } catch (error: any) {
-      console.error('startConversation: Error starting conversation:', {
-        error,
-        errorMessage: error?.message,
-        errorCode: error?.code,
-        errorDetails: error?.details,
-        errorHint: error?.hint,
-        stack: error?.stack,
+    } catch (error) {
+      const appError = handleError(error);
+      logError('startConversation: Error starting conversation', appError, {
         currentUserId: user?.id,
         participantId
       });
       
       // Provide more specific error messages
-      let errorMessage = 'Failed to start conversation';
-      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('row-level security')) {
-        errorMessage = 'Permission denied. You may not have access to create conversations.';
-      } else if (error?.message) {
-        errorMessage = `Failed to start conversation: ${error.message}`;
-      }
-      
+      const errorMessage = getUserMessage(error);
       toast.error(errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, loading, conversations, setActiveConversationId]);
 
-  const sendMessage = async (conversationId: string, content: string, replyToId?: string) => {
+  const sendMessage = useCallback(async (conversationId: string, content: string, replyToId?: string) => {
     if (!user || loading || !content.trim()) {
-      console.warn('sendMessage: Invalid parameters', {
+      logWarn('sendMessage: Invalid parameters', {
         hasUser: !!user,
         loading,
         hasContent: !!content.trim()
@@ -450,7 +431,7 @@ export const useMessaging = () => {
 
     setLoading(true);
     try {
-      console.log('sendMessage: Sending message', {
+      logInfo('sendMessage: Sending message', {
         conversationId,
         senderId: user.id,
         contentLength: content.trim().length,
@@ -472,12 +453,9 @@ export const useMessaging = () => {
       );
 
       if (error) {
-        console.error('sendMessage: Error inserting message:', {
-          error,
+        logError('sendMessage: Error inserting message', error, {
           code: error.code,
           message: error.message,
-          details: error.details,
-          hint: error.hint,
           conversationId,
           senderId: user.id
         });
@@ -485,11 +463,11 @@ export const useMessaging = () => {
       }
 
       if (!data) {
-        console.error('sendMessage: No data returned from message insertion');
+        logError('sendMessage: No data returned from message insertion', new Error('No data returned'));
         throw new Error('Failed to send message: No data returned');
       }
 
-      console.log('sendMessage: Message sent successfully', {
+      logInfo('sendMessage: Message sent successfully', {
         messageId: data.id,
         conversationId
       });
@@ -503,41 +481,30 @@ export const useMessaging = () => {
       );
 
       if (updateError) {
-        console.warn('sendMessage: Failed to update conversation timestamp:', {
-          error: updateError,
+        logWarn('sendMessage: Failed to update conversation timestamp', {
+          error: updateError.message,
           conversationId
         });
         // Don't throw - message was sent successfully
       }
 
       return data;
-    } catch (error: any) {
-      console.error('sendMessage: Error sending message:', {
-        error,
-        errorMessage: error?.message,
-        errorCode: error?.code,
-        errorDetails: error?.details,
-        errorHint: error?.hint,
-        stack: error?.stack,
+    } catch (error) {
+      const appError = handleError(error);
+      logError('sendMessage: Error sending message', appError, {
         conversationId,
         senderId: user?.id
       });
       
       // Provide more specific error messages
-      let errorMessage = 'Failed to send message';
-      if (error?.code === '42501' || error?.message?.includes('permission denied') || error?.message?.includes('row-level security')) {
-        errorMessage = 'Permission denied. You may not have access to send messages in this conversation.';
-      } else if (error?.message) {
-        errorMessage = `Failed to send message: ${error.message}`;
-      }
-      
+      const errorMessage = getUserMessage(error);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, loading]);
 
-  const markAsRead = async (conversationId: string) => {
+  const markAsRead = useCallback(async (conversationId: string) => {
     if (!user) return;
 
     try {
@@ -552,9 +519,9 @@ export const useMessaging = () => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      logError('Error marking messages as read', error);
     }
-  };
+  }, [user]);
 
   const getUnreadCount = (conversationId: string): number => {
     const conversationMessages = messages[conversationId] || [];
@@ -564,7 +531,7 @@ export const useMessaging = () => {
   };
 
   // Get user ID by username
-  const getUserIdByUsername = async (username: string): Promise<string | null> => {
+  const getUserIdByUsername = useCallback(async (username: string): Promise<string | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -573,8 +540,7 @@ export const useMessaging = () => {
         .single();
 
       if (error) {
-        console.error('getUserIdByUsername: Error fetching profile:', {
-          error,
+        logError('getUserIdByUsername: Error fetching profile', error, {
           code: error.code,
           message: error.message,
           username
@@ -583,23 +549,19 @@ export const useMessaging = () => {
       }
 
       if (!data) {
-        console.warn('getUserIdByUsername: No profile found for username', username);
+        logWarn('getUserIdByUsername: No profile found for username', { username });
         return null;
       }
 
       return data.id;
-    } catch (error: any) {
-      console.error('getUserIdByUsername: Exception occurred:', {
-        error,
-        errorMessage: error?.message,
-        username
-      });
+    } catch (error) {
+      logError('getUserIdByUsername: Exception occurred', error, { username });
       return null;
     }
-  };
+  }, []);
 
   // Get username by user ID
-  const getUsernameByUserId = async (userId: string): Promise<string | null> => {
+  const getUsernameByUserId = useCallback(async (userId: string): Promise<string | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -608,8 +570,7 @@ export const useMessaging = () => {
         .single();
 
       if (error) {
-        console.error('getUsernameByUserId: Error fetching profile:', {
-          error,
+        logError('getUsernameByUserId: Error fetching profile', error, {
           code: error.code,
           message: error.message,
           userId
@@ -618,22 +579,18 @@ export const useMessaging = () => {
       }
 
       if (!data || !data.username) {
-        console.warn('getUsernameByUserId: No username found for user ID', userId);
+        logWarn('getUsernameByUserId: No username found for user ID', { userId });
         return null;
       }
 
       return data.username;
-    } catch (error: any) {
-      console.error('getUsernameByUserId: Exception occurred:', {
-        error,
-        errorMessage: error?.message,
-        userId
-      });
+    } catch (error) {
+      logError('getUsernameByUserId: Exception occurred', error, { userId });
       return null;
     }
-  };
+  }, []);
 
-  const deleteConversation = async (conversationId: string) => {
+  const deleteConversation = useCallback(async (conversationId: string): Promise<boolean> => {
     if (!user) {
       toast.error('You must be logged in to delete conversations');
       return false;
@@ -656,7 +613,7 @@ export const useMessaging = () => {
       );
 
       if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
+        logError('Error deleting messages', messagesError);
         toast.error('Failed to delete messages');
         return false;
       }
@@ -670,7 +627,7 @@ export const useMessaging = () => {
       );
 
       if (conversationError) {
-        console.error('Error deleting conversation:', conversationError);
+        logError('Error deleting conversation', conversationError);
         toast.error('Failed to delete conversation');
         return false;
       }
@@ -690,12 +647,12 @@ export const useMessaging = () => {
 
       toast.success('Conversation deleted successfully');
       return true;
-    } catch (error: any) {
-      console.error('Error deleting conversation:', error);
+    } catch (error) {
+      logError('Error deleting conversation', error);
       toast.error('Failed to delete conversation');
       return false;
     }
-  };
+  }, [user, conversations, activeConversationId, setActiveConversationId]);
 
   return {
     conversations,

@@ -16,6 +16,8 @@ import { Save, X, Loader2, ArrowLeft, Trash2, Upload, DollarSign, User } from "l
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Mentor } from "@/types/mentor";
+import { logInfo, logError, logWarn } from "@/lib/logger";
+import { handleError } from "@/lib/errors";
 
 const EXPERTISE_OPTIONS = [
   "Product Development",
@@ -104,7 +106,7 @@ const AdminMentorEditor = () => {
   const handlePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
-      console.log('No file selected');
+      logInfo('No file selected');
       toast.error('No file selected');
       return;
     }
@@ -112,11 +114,11 @@ const AdminMentorEditor = () => {
     // Check if mentor ID exists (required for existing mentors)
     if (!mentor?.id && id && id !== 'new') {
       toast.error('Mentor ID not found. Please refresh the page and try again.');
-      console.error('Mentor ID missing:', { id, mentor });
+      logError('Mentor ID missing', new Error('Mentor ID missing'), { id, mentor: mentor?.id });
       return;
     }
 
-    console.log('📤 Starting picture upload:', {
+    logInfo('Starting picture upload', {
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
@@ -153,7 +155,7 @@ const AdminMentorEditor = () => {
       const fileId = mentor?.id || 'temp';
       const fileName = `${fileId}/${Date.now()}.${fileExt}`;
 
-      console.log('📤 Uploading to storage (Account page pattern):', { 
+      logInfo('Uploading to storage (Account page pattern)', { 
         fileName, 
         bucket: 'mentor-pictures',
         fileId,
@@ -170,19 +172,19 @@ const AdminMentorEditor = () => {
         });
 
       if (uploadError) {
-        console.error('❌ Storage upload error:', uploadError);
+        logError('Storage upload error', uploadError);
         toast.error(`Upload failed: ${uploadError.message || 'Storage error'}`, { id: 'upload-picture' });
         throw uploadError;
       }
 
-      console.log('✅ File uploaded to storage:', uploadData);
+      logInfo('File uploaded to storage', { path: uploadData.path });
 
       // Get public URL - same pattern as Account page
       const { data: { publicUrl } } = supabase.storage
         .from('mentor-pictures')
         .getPublicUrl(fileName);
 
-      console.log('✅ Public URL generated:', publicUrl);
+      logInfo('Public URL generated', { publicUrl });
 
       // Update formData with picture URL
       setFormData((prev) => ({
@@ -195,7 +197,7 @@ const AdminMentorEditor = () => {
 
       // Save picture immediately to database if mentor exists
       if (mentor?.id) {
-        console.log('💾 Saving picture URL to database for mentor:', mentor.id);
+        logInfo('Saving picture URL to database for mentor', { mentorId: mentor.id });
         toast.loading('Saving to database...', { id: 'save-picture' });
 
         const { data: updateData, error: dbError } = await supabase
@@ -205,12 +207,12 @@ const AdminMentorEditor = () => {
           .select();
 
         if (dbError) {
-          console.error('❌ Database update error:', dbError);
+          logError('Database update error', dbError);
           toast.error(`Failed to save picture: ${dbError.message || 'Database error'}`, { id: 'save-picture' });
           throw dbError;
         }
 
-        console.log('✅ Picture saved to database:', updateData);
+        logInfo('Picture saved to database', { mentorId: mentor.id });
         
         // Update the mentor state to reflect the new picture
         setMentor({ ...mentor, picture: publicUrl });
@@ -218,15 +220,10 @@ const AdminMentorEditor = () => {
       } else {
         toast.success('Picture uploaded successfully! It will be saved when you create the mentor.', { id: 'upload-picture' });
       }
-    } catch (error: any) {
-      console.error('❌ Error in handlePictureUpload:', {
-        error,
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      });
-      toast.error(`Failed to upload picture: ${error?.message || 'Unknown error'}`, { id: 'upload-picture' });
+    } catch (error) {
+      const appError = handleError(error);
+      logError('Error in handlePictureUpload', appError);
+      toast.error(`Failed to upload picture: ${appError.message || 'Unknown error'}`, { id: 'upload-picture' });
       
       // Reset preview on error
       if (mentor?.picture) {
@@ -285,7 +282,7 @@ const AdminMentorEditor = () => {
   };
 
   const handleSave = async () => {
-    console.log('Save button clicked!', { mentor: mentor?.id, formData });
+    logInfo('Save button clicked', { mentor: mentor?.id });
     
     // Validation
     if (!formData.name || !formData.bio) {
@@ -300,7 +297,7 @@ const AdminMentorEditor = () => {
 
     try {
       setSaving(true);
-      console.log('Starting save operation...');
+      logInfo('Starting save operation');
 
       // Ensure all fields are explicitly included in the save payload
       const saveData: CreateMentorInput = {
@@ -319,20 +316,15 @@ const AdminMentorEditor = () => {
       };
 
       // Debug: Log saveData to verify all fields are included
-      console.log('Saving mentor with data:', {
+      logInfo('Saving mentor with data', {
         name: saveData.name,
         bioLength: saveData.bio.length,
         hourly_rate: saveData.hourly_rate,
         expertise: saveData.expertise?.length || 0,
         universities: saveData.universities?.length || 0,
-        universitiesList: saveData.universities,
         hasPicture: !!saveData.picture,
         is_active: saveData.is_active,
-        is_featured: saveData.is_featured,
-        hasLinkedIn: !!saveData.linkedin_url,
-        hasTwitter: !!saveData.twitter_x_url,
-        hasWebsite: !!saveData.website_url,
-        hasCalendly: !!saveData.calendly_url
+        is_featured: saveData.is_featured
       });
 
       let result: Mentor | null = null;
@@ -348,15 +340,10 @@ const AdminMentorEditor = () => {
       } else {
         toast.error("Failed to save mentor. Please check the console for details.");
       }
-    } catch (error: any) {
-      console.error('Error in handleSave:', {
-        error,
-        message: error?.message,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint
-      });
-      toast.error(`Failed to save mentor: ${error?.message || 'Unknown error'}`);
+    } catch (error) {
+      const appError = handleError(error);
+      logError('Error in handleSave', appError);
+      toast.error(`Failed to save mentor: ${appError.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
     }

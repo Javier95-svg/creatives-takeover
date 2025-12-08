@@ -3,6 +3,8 @@
  * Used to get Open Graph images for proper social media previews
  */
 
+import { logError } from '@/lib/logger';
+
 /**
  * Fetch Open Graph image from a LinkedIn post URL
  * Uses LinkedIn's oEmbed-like API or fetches the page to extract og:image
@@ -31,7 +33,7 @@ export async function fetchLinkedInOgImage(linkedinUrl: string): Promise<string 
     
     return null;
   } catch (error) {
-    console.error('Error fetching LinkedIn OG image:', error);
+    logError('Error fetching LinkedIn OG image', error);
     return null;
   }
 }
@@ -59,7 +61,7 @@ export async function fetchLinkedInImageViaProxy(linkedinUrl: string): Promise<s
     
     return null;
   } catch (error) {
-    console.error('Error fetching LinkedIn image via proxy:', error);
+    logError('Error fetching LinkedIn image via proxy', error);
     return null;
   }
 }

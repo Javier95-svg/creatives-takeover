@@ -3,6 +3,9 @@
  * Generates XML sitemap with all routes, priorities, and change frequencies
  */
 
+import { SupabaseClient } from '@supabase/supabase-js';
+import { logError } from '@/lib/logger';
+
 interface SitemapEntry {
   path: string;
   priority: number;
@@ -175,6 +178,8 @@ export function saveSitemap(
   tags?: TagSitemapEntry[]
 ): void {
   const sitemap = generateSitemap('https://creatives-takeover.com', stories, tags);
+  // Note: This function is typically used in build scripts, so console.log is acceptable here
+  // for direct output to stdout
   console.log('Generated sitemap:');
   console.log(sitemap);
   console.log('\nTo save this sitemap, copy the above XML and save it to public/sitemap.xml');
@@ -184,7 +189,7 @@ export function saveSitemap(
  * Helper function to fetch stories and tags for sitemap generation
  * This should be called server-side or during build time
  */
-export async function fetchSitemapData(supabaseClient: any): Promise<{
+export async function fetchSitemapData(supabaseClient: SupabaseClient): Promise<{
   stories: StorySitemapEntry[];
   tags: TagSitemapEntry[];
 }> {
@@ -211,7 +216,7 @@ export async function fetchSitemapData(supabaseClient: any): Promise<{
     // Extract tags and find latest article date for each tag
     const tagLastMod = new Map<string, string>();
     
-    (allStories || []).forEach((story: any) => {
+      (allStories || []).forEach((story: StorySitemapEntry) => {
       if (story.hashtags && Array.isArray(story.hashtags)) {
         const lastmod = story.updated_at || story.published_at || new Date().toISOString();
         
@@ -232,7 +237,7 @@ export async function fetchSitemapData(supabaseClient: any): Promise<{
     }));
 
     return {
-      stories: (stories || []).map((s: any) => ({
+      stories: (stories || []).map((s: StorySitemapEntry) => ({
         slug: s.slug,
         published_at: s.published_at,
         updated_at: s.updated_at
@@ -240,7 +245,7 @@ export async function fetchSitemapData(supabaseClient: any): Promise<{
       tags
     };
   } catch (error) {
-    console.error('Error fetching sitemap data:', error);
+    logError('Error fetching sitemap data', error);
     return { stories: [], tags: [] };
   }
 }

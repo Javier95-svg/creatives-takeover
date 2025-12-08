@@ -54,6 +54,10 @@ export default defineConfig(({ mode }) => {
           assetFileNames: `assets/[name].[hash].[ext]`,
         },
       },
+      // Increase chunk size warning limit
+      chunkSizeWarningLimit: 1000,
+      // Add sourcemap for debugging (can be disabled in production)
+      sourcemap: false,
     },
   };
 });

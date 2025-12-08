@@ -11,6 +11,7 @@ import { Link, useSearchParams, useParams } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
+import { logError } from "@/lib/logger";
 
 const Messages = () => {
   const { isAuthenticated, user } = useAuth();
@@ -130,12 +131,12 @@ const Messages = () => {
           setResolvedConversationId(undefined);
           hasResolvedUsername.current = null;
         }
-      } catch (error) {
-        console.error('Error resolving username:', error);
-        toast.error('Failed to load conversation');
-        setResolvedConversationId(undefined);
-        hasResolvedUsername.current = null;
-      } finally {
+        } catch (error) {
+          logError('Error resolving username', error);
+          toast.error('Failed to load conversation');
+          setResolvedConversationId(undefined);
+          hasResolvedUsername.current = null;
+        } finally {
         setIsResolvingUsername(false);
       }
     };

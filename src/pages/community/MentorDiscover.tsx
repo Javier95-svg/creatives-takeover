@@ -133,8 +133,8 @@ const MentorDiscover = () => {
       default:
         // Featured first, then by rating
         result = result.sort((a, b) => {
-          const aFeatured = (a as any).is_featured === true ? 1 : 0;
-          const bFeatured = (b as any).is_featured === true ? 1 : 0;
+          const aFeatured = a.is_featured === true ? 1 : 0;
+          const bFeatured = b.is_featured === true ? 1 : 0;
           if (aFeatured !== bFeatured) return bFeatured - aFeatured;
           return (b.rating || 0) - (a.rating || 0);
         });

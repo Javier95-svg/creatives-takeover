@@ -216,7 +216,7 @@ export const usePersonalizedDashboard = () => {
         await generateRecommendations();
       }
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      logError('Error loading dashboard data', error);
       toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);

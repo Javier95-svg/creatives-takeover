@@ -12,7 +12,8 @@ const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 function isRetryable(error: PostgrestError | null | undefined): boolean {
   if (!error) return false;
   // Match on common transient errors and rate limits
-  const code = (error as any).code || '';
+  // PostgrestError has a code property, but it might be undefined
+  const code = error.code || '';
   const message = (error.message || '').toLowerCase();
   return (
     code === '53300' || // too_many_connections

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { OutreachGenerationRequest, OutreachGenerationResponse, OutreachMaterial } from '@/types/outreach';
 import { toast } from 'sonner';
+import { logError } from '@/lib/logger';
 
 export const useOutreachGenerator = () => {
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export const useOutreachGenerator = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate material. Please try again.';
       setError(errorMessage);
-      console.error('Error generating material:', err);
+      logError('Error generating material', err);
       if (!errorMessage.includes('credits')) {
         toast.error(errorMessage);
       }

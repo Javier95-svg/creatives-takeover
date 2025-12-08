@@ -95,7 +95,7 @@ export const useInteractiveCollaboration = (sessionId: string) => {
   const [pollVotes, setPollVotes] = useState<PollVote[]>([]);
   const [files, setFiles] = useState<CollaborationFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [realtimeChannels, setRealtimeChannels] = useState<RealtimeChannel[]>([]);
+  const realtimeChannelsRef = useRef<RealtimeChannel[]>([]);
 
   // Fetch whiteboards
   const fetchWhiteboards = useCallback(async () => {
@@ -509,7 +509,11 @@ export const useInteractiveCollaboration = (sessionId: string) => {
 
     channels.push(filesChannel);
 
-    setRealtimeChannels(channels);
+    // Clean up old channels before setting new ones
+    realtimeChannelsRef.current.forEach(channel => {
+      supabase.removeChannel(channel);
+    });
+    realtimeChannelsRef.current = channels;
   }, [sessionId, fetchWhiteboards, fetchWhiteboardObjects, fetchPolls, fetchPollVotes, fetchFiles]);
 
   // Initialize
@@ -529,10 +533,11 @@ export const useInteractiveCollaboration = (sessionId: string) => {
       setupRealtimeSubscriptions();
 
       return () => {
-        // Clean up channels
-        realtimeChannels.forEach(channel => {
+        // Clean up channels from ref
+        realtimeChannelsRef.current.forEach(channel => {
           supabase.removeChannel(channel);
         });
+        realtimeChannelsRef.current = [];
       };
     }
   }, [sessionId, user]);
