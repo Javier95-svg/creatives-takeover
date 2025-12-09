@@ -23,7 +23,7 @@ interface MentorCardProps {
 export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation, getUserIdByEmail, getUsernameByUserId } = useMessaging();
+  const { startConversation, getUserIdByEmail } = useMessaging();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   
   // Truncate bio if too long
@@ -143,14 +143,8 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
         // Start conversation
         const conversationId = await startConversation(userId);
         if (conversationId) {
-          // Get username and navigate to username-based route
-          const username = await getUsernameByUserId(userId);
-          if (username) {
-            navigate(`/messages/${username}`);
-          } else {
-            // Fallback to generic messages if username not found
-            navigate('/messages');
-          }
+          // Navigate to messages page with conversationId to automatically open the chat
+          navigate(`/messages?conversationId=${conversationId}`);
         } else {
           toast.error('Failed to start conversation. Please try again.');
         }
