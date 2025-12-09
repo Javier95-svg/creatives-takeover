@@ -127,8 +127,24 @@ const Footer = () => {
               </li>
             </ul>
             
-            {/* Product Hunt Badge */}
+            {/* ShipSquad Badge */}
             <div className="mt-4 pt-4 border-t border-border">
+              <a 
+                href="https://shipsquad.space/saas/2a1346bb-0b4a-435c-8495-f2dfdac4d022" 
+                target="_blank" 
+                rel="noopener"
+                aria-label="Featured on ShipSquad"
+              >
+                <img 
+                  src="https://shipsquad.space/api/badge?id=2a1346bb-0b4a-435c-8495-f2dfdac4d022&style=dark" 
+                  alt="Featured on ShipSquad" 
+                  className="hover:opacity-80 transition-opacity"
+                />
+              </a>
+            </div>
+
+            {/* Product Hunt Badge */}
+            <div className="mt-4">
               <a 
                 href="https://www.producthunt.com/products/creatives-takeover?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-creatives-takeover" 
                 target="_blank"
@@ -142,22 +158,6 @@ const Footer = () => {
                   style={{ width: '250px', height: '54px' }} 
                   width="250" 
                   height="54" 
-                />
-              </a>
-            </div>
-
-            {/* Peerpush Badge */}
-            <div className="mt-4">
-              <a 
-                href="https://peerpush.net/p/creatives-takeover" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Featured on Peerpush"
-              >
-                <img 
-                  src="https://peerpush.net/p/creatives-takeover/badge" 
-                  alt="Creatives Takeover badge" 
-                  className="hover:opacity-80 transition-opacity h-[60px]"
                 />
               </a>
             </div>
@@ -179,18 +179,18 @@ const Footer = () => {
               </a>
             </div>
 
-            {/* ShipSquad Badge */}
+            {/* Peerpush Badge */}
             <div className="mt-4">
               <a 
-                href="https://shipsquad.space/saas/2a1346bb-0b4a-435c-8495-f2dfdac4d022" 
+                href="https://peerpush.net/p/creatives-takeover" 
                 target="_blank" 
-                rel="noopener"
-                aria-label="Featured on ShipSquad"
+                rel="noopener noreferrer"
+                aria-label="Featured on Peerpush"
               >
                 <img 
-                  src="https://shipsquad.space/api/badge?id=2a1346bb-0b4a-435c-8495-f2dfdac4d022&style=dark" 
-                  alt="Featured on ShipSquad" 
-                  className="hover:opacity-80 transition-opacity"
+                  src="https://peerpush.net/p/creatives-takeover/badge" 
+                  alt="Creatives Takeover badge" 
+                  className="hover:opacity-80 transition-opacity h-[60px]"
                 />
               </a>
             </div>
