@@ -28,6 +28,12 @@ interface BizMapChatProps {
   currentStep: number;
   answers: Record<string, string>;
   onChatModeReady?: (switchToFreeform: () => void) => void;
+  sessionManagement?: {
+    currentSessionId: string | null;
+    createNewSession: (title?: string) => Promise<string | null>;
+    setCurrentSessionId: (sessionId: string | null) => void;
+    updateSession: (sessionId: string, updates: any) => Promise<void>;
+  };
 }
 
 // Helper function to categorize message importance
@@ -127,7 +133,8 @@ export const BizMapChat = ({
   onWizardComplete,
   currentStep,
   answers,
-  onChatModeReady
+  onChatModeReady,
+  sessionManagement
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -175,6 +182,7 @@ export const BizMapChat = ({
     enableAnalytics: true,
     enablePersonalization: true,
     enableAIGeneratedAnswers: false,
+    sessionManagement,
     wizardMode: {
       enabled: true,
       currentStep,

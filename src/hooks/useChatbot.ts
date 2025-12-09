@@ -251,7 +251,17 @@ export interface WizardMode {
   onWizardComplete?: (answers: Record<string, string>) => void;
 }
 
-export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: WizardMode } = {
+export interface SessionManagement {
+  currentSessionId: string | null;
+  createNewSession: (title?: string) => Promise<string | null>;
+  setCurrentSessionId: (sessionId: string | null) => void;
+  updateSession: (sessionId: string, updates: any) => Promise<void>;
+}
+
+export const useChatbot = (config: EnhancedChatbotConfig & { 
+  wizardMode?: WizardMode;
+  sessionManagement?: SessionManagement;
+} = {
   enableNLU: true,
   enableDynamicFAQ: true,
   enableAnalytics: true,
@@ -320,6 +330,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & { wizardMode?: Wizard
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
+  const sessionCreationAttempted = useRef(false); // Track if we've attempted to create a session
   
   // Phase 3: Feedback Collection
   const [feedbackTriggerCount, setFeedbackTriggerCount] = useState(0);
@@ -1361,6 +1372,47 @@ What specific aspect of your business would you like to focus on first?`;
       return;
     }
 
+    // Auto-create session if user is authenticated and no session exists
+    const { data: { user } } = await supabase.auth.getUser();
+    const sessionMgmt = config.sessionManagement;
+    
+    if (user && sessionMgmt && !sessionMgmt.currentSessionId && !sessionCreationAttempted.current) {
+      // Check if this is the first user message (not counting welcome/bot messages)
+      const userMessages = messages.filter(msg => !msg.isBot);
+      if (userMessages.length === 0) {
+        sessionCreationAttempted.current = true; // Mark as attempted to prevent duplicates
+        console.log('🆕 Auto-creating chat session for first user interaction');
+        
+        // Generate title from first message (max 50 chars)
+        const title = content.trim().length > 50 
+          ? content.trim().substring(0, 47) + '...'
+          : content.trim() || 'New Business Idea';
+        
+        try {
+          const newSessionId = await sessionMgmt.createNewSession(title);
+          if (newSessionId) {
+            sessionMgmt.setCurrentSessionId(newSessionId);
+            console.log('✅ Chat session created:', newSessionId);
+            
+            // Update session with initial wizard state if in wizard mode
+            if (config.wizardMode?.enabled) {
+              await sessionMgmt.updateSession(newSessionId, {
+                current_step: config.wizardMode.currentStep || 0,
+                answers: config.wizardMode.answers || {}
+              });
+            }
+          } else {
+            // Reset flag if creation failed so we can try again
+            sessionCreationAttempted.current = false;
+          }
+        } catch (error) {
+          console.error('Error auto-creating session:', error);
+          // Reset flag on error so we can try again
+          sessionCreationAttempted.current = false;
+        }
+      }
+    }
+
     // Track user interaction
     trackUserInteraction({ 
       type: 'question_asked', 
@@ -1636,7 +1688,7 @@ What specific aspect of your business would you like to focus on first?`;
       setIsStreaming(false);
       dispatch({ type: 'SET_PROCESSING', payload: false });
     }
-  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messages]);
+  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messages, wizardStep, wizardAnswers, chatMode, enableStreaming]);
 
   // Handle quick action clicks - Compatible with ChatbotWidget expectations
   const handleQuickAction = useCallback(async (action: string, href?: string) => {

@@ -1337,6 +1337,12 @@ Subject: "Quick question about [their pain point]"
                         onChatModeReady={(switchToFreeform) => {
                           setSwitchToFreeformFunc(() => switchToFreeform);
                         }}
+                        sessionManagement={{
+                          currentSessionId,
+                          createNewSession,
+                          setCurrentSessionId,
+                          updateSession
+                        }}
                       />
                     </div>
                   </div>
