@@ -1242,7 +1242,7 @@ Subject: "Quick question about [their pain point]"
                   </TabsTrigger>
                   <TabsTrigger 
                     value="pmf" 
-                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/20 data-[state=active]:to-secondary/10 data-[state=active]:text-secondary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm"
+                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
                     aria-label="Product Market Fit Lab tab - Validate product-market fit"
                   >
                     <FlaskConical className="w-4 sm:w-5 h-4 sm:h-5" aria-hidden="true" />
