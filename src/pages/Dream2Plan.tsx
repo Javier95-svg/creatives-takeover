@@ -1654,14 +1654,25 @@ Subject: "Quick question about [their pain point]"
                   </div>
                 </div>
                 
-                <ProductMarketFitLab
-                  businessPlanData={launchReport ? {
-                    answers: userAnswers,
-                    launchReport: launchReport,
-                    successScore: successScore
-                  } : undefined}
-                  onDataExport={handlePMFDataExport}
-                />
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-4">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                        <p className="text-muted-foreground">Loading Product Market Fit Lab...</p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <ProductMarketFitLab
+                    businessPlanData={launchReport ? {
+                      answers: userAnswers,
+                      launchReport: launchReport,
+                      successScore: successScore
+                    } : undefined}
+                    onDataExport={handlePMFDataExport}
+                  />
+                </Suspense>
               </TabsContent>
             </Tabs>
           </div>
