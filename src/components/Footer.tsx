@@ -179,19 +179,18 @@ const Footer = () => {
               </a>
             </div>
 
-            {/* Turbo0 Badge */}
+            {/* ShipSquad Badge */}
             <div className="mt-4">
               <a 
-                href="https://turbo0.com/item/creatives-takeover" 
+                href="https://shipsquad.space/saas/2a1346bb-0b4a-435c-8495-f2dfdac4d022" 
                 target="_blank" 
-                rel="noopener noreferrer"
-                aria-label="Listed on Turbo0"
+                rel="noopener"
+                aria-label="Featured on ShipSquad"
               >
                 <img 
-                  src="https://img.turbo0.com/badge-listed-light.svg" 
-                  alt="Listed on Turbo0" 
+                  src="https://shipsquad.space/api/badge?id=2a1346bb-0b4a-435c-8495-f2dfdac4d022&style=dark" 
+                  alt="Featured on ShipSquad" 
                   className="hover:opacity-80 transition-opacity"
-                  style={{ height: '54px', width: 'auto' }}
                 />
               </a>
             </div>
