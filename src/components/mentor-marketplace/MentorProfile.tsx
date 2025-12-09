@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getCountryFlag } from "@/utils/countryFlags";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME } from "@/hooks/useMessaging";
+import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME, NIC_M_RAYCE_EMAIL } from "@/hooks/useMessaging";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +20,7 @@ interface MentorProfileProps {
 export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation } = useMessaging();
+  const { startConversation, getUserIdByEmail, getUsernameByUserId } = useMessaging();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
@@ -75,19 +75,55 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
       return;
     }
 
-    // Check if this is Samuel Starkman's profile
     const mentorNameLower = mentor.name.toLowerCase();
+    
+    // Check if this is Samuel Starkman's profile
     const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
                              mentorNameLower.includes('samuel starkman');
 
-    if (!isSamuelStarkman) {
-      // For other mentors, just navigate to auth for now
-      navigate('/auth');
+    // Check if this is Nic M Rayce's profile
+    const isNicMRayce = (mentorNameLower.includes('nic') && mentorNameLower.includes('rayce')) ||
+                        mentorNameLower.includes('nic m rayce');
+
+    if (isSamuelStarkman) {
+      // Navigate to messages page to see all chats
+      navigate('/messages');
       return;
     }
 
-    // Navigate to messages page to see all chats
-    navigate('/messages');
+    if (isNicMRayce) {
+      try {
+        // Get user ID by email
+        const userId = await getUserIdByEmail(NIC_M_RAYCE_EMAIL);
+        
+        if (!userId) {
+          toast.error('Unable to find user. Please try again later.');
+          return;
+        }
+
+        // Start conversation
+        const conversationId = await startConversation(userId);
+        if (conversationId) {
+          // Get username and navigate to username-based route
+          const username = await getUsernameByUserId(userId);
+          if (username) {
+            navigate(`/messages/${username}`);
+          } else {
+            // Fallback to generic messages if username not found
+            navigate('/messages');
+          }
+        } else {
+          toast.error('Failed to start conversation. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error starting conversation with Nic M Rayce:', error);
+        toast.error('Failed to start conversation. Please try again.');
+      }
+      return;
+    }
+
+    // For other mentors, just navigate to auth for now
+    navigate('/auth');
   };
 
   return (

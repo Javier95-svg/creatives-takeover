@@ -39,6 +39,9 @@ export const SAMUEL_STARKMAN_EMAIL = 'sestarkman@gmail.com';
 export const SAMUEL_STARKMAN_USER_ID = '22fdf3fa-b444-4949-a2c3-a5acc247b390'; // Known user ID from previous conversation
 export const SAMUEL_STARKMAN_USERNAME = 'samuelstarkman'; // Username based on firstname + lastname pattern
 
+// Nic M Rayce's email constant
+export const NIC_M_RAYCE_EMAIL = 'nicmrayce@gmail.com';
+
 export const useMessaging = () => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -64,6 +67,12 @@ export const useMessaging = () => {
     if (email.toLowerCase() === SAMUEL_STARKMAN_EMAIL.toLowerCase()) {
       logInfo('getUserIdByEmail: Using known Samuel user ID', { userId: SAMUEL_STARKMAN_USER_ID });
       return SAMUEL_STARKMAN_USER_ID;
+    }
+
+    // Direct lookup for Nic M Rayce's email
+    if (email.toLowerCase() === NIC_M_RAYCE_EMAIL.toLowerCase()) {
+      logInfo('getUserIdByEmail: Looking up Nic M Rayce user ID', { email });
+      // Will use RPC function or profile lookup below
     }
 
     try {
