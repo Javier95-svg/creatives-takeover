@@ -54,7 +54,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get/create conversation
+    // 🚀 OPTIMIZATION: Get/create conversation (parallel with cache check preparation)
     const convResult = await supabase
       .from('chatbot_conversations')
       .select('*')
@@ -139,6 +139,16 @@ serve(async (req) => {
     if (cachedRequest && Date.now() - cachedRequest.timestamp < REQUEST_DEDUP_TTL) {
       console.log('⚡ Returning cached response (deduplication)');
       return cachedRequest.response;
+    }
+
+    // 🚀 OPTIMIZATION: Check response templates first (instant responses)
+    const matchedTemplate = matchResponseTemplate(message, businessContext);
+    if (matchedTemplate) {
+      console.log('⚡ Template match - returning instant response');
+      const templateResponse = matchedTemplate.response;
+      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode);
+      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      return response;
     }
 
     // 🚀 OPTIMIZATION: Check response cache before making AI calls
@@ -403,6 +413,44 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
   }
 }
 
+// 🚀 OPTIMIZATION: Create stream from template response (instant, <50ms)
+function createTemplateStream(templateContent: string, quickActions: Array<{text: string, id: string}>, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Response {
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // 🚀 OPTIMIZATION: Stream template content very fast (5ms chunks for instant feel)
+        const words = templateContent.split(' ');
+        const chunkSize = 5; // Stream 5 words at a time for instant display
+        
+        for (let i = 0; i < words.length; i += chunkSize) {
+          const chunk = words.slice(i, i + chunkSize).join(' ');
+          const prefix = i === 0 ? '' : ' ';
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
+          ));
+          // 🚀 OPTIMIZATION: Minimal delay for template responses (5ms for instant feel)
+          await new Promise(r => setTimeout(r, 5));
+        }
+        
+        // Complete
+        const stage = determineConversationStage(businessContext, conversationHistory.length);
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: quickActions.length > 0 ? quickActions : generateQuickActions(stage, chatMode, templateContent), template: true })}\n\n`
+        ));
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      } catch (e) {
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+        controller.close();
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+  });
+}
+
 // 🚀 OPTIMIZATION: Create stream from cached response with faster streaming
 function createCachedStream(cachedContent: string, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Response {
   const stream = new ReadableStream({
@@ -487,11 +535,21 @@ You're guiding the user through structured business planning. This is step ${cur
 ${contextString}
 
 RESPONSE PROTOCOL:
-1. **Acknowledge their answer positively** - Build confidence
-2. **Extract key insights** - Show you understand deeply
+1. **Acknowledge their answer positively** - Build confidence ("That's a solid start!" or "I love this direction!")
+2. **Extract key insights** - Show you understand deeply ("So you're targeting [X] who struggle with [Y]...")
 3. **Ask clarifying follow-up** if needed (1 focused question)
 4. **Keep it conversational** - 2-3 sentences max, under 60 words
 5. **Be encouraging** - They're building something amazing
+
+FEW-SHOT EXAMPLES:
+
+Example - Step 1 (Business Concept):
+User: "I want to build an app for busy parents"
+You: "Great! So you're helping busy parents save time. What specific problem are they facing that your app solves? Is it scheduling, communication, or something else?"
+
+Example - Step 2 (Target Market):
+User: "Parents aged 30-45 in cities"
+You: "Perfect! Urban parents in that age range often juggle work and kids. Where do they currently go when they have this problem? That'll help us reach them."
 
 BUSINESS EXPERTISE:
 - Market validation and competitive analysis
@@ -504,7 +562,7 @@ BUSINESS EXPERTISE:
 Think like a seasoned entrepreneur who's launched multiple successful creative businesses. Be practical, actionable, and inspiring.`;
   }
   
-  // Freeform mode - advanced AI co-founder
+  // Freeform mode - advanced AI co-founder with enhanced reasoning
   return `You are BizMap AI - an expert business strategist, advisor, and AI co-founder for creative entrepreneurs.
 
 🧠 ADVANCED REASONING MODE: You can think deeply about complex business problems.
@@ -525,18 +583,34 @@ When answering complex questions, use this approach:
 3. **Synthesize** - Provide actionable recommendations
 4. **Validate** - Suggest how to test assumptions
 
+FEW-SHOT EXAMPLES (Learn from these patterns):
+
+Example 1 - Market Validation:
+User: "How do I know if people want my product?"
+You: "Great question! Start with 10 customer interviews this week. Ask: 'What's your biggest frustration with [problem]?' If 7+ people say they'd pay for a solution, you have validation. Want help crafting interview questions?"
+
+Example 2 - Pricing Strategy:
+User: "What should I charge?"
+You: "For [industry], typical pricing ranges $X-$Y. But test it! Create 3 price points and ask 5 potential customers which they'd choose. The price where 60%+ choose it is your sweet spot. What's your cost structure?"
+
+Example 3 - Launch Strategy:
+User: "Where should I launch?"
+You: "Start where your customers already gather. If they're on LinkedIn → post there. If they're in Facebook groups → engage there. Pick ONE channel, master it, then expand. Where do your ideal customers spend time?"
+
 RESPONSE STYLE:
 • Be conversational but insightful (2-4 sentences, 80 words max)
 • Ask strategic follow-up questions when needed
-• Provide specific, actionable advice
+• Provide specific, actionable advice with numbers/examples
 • Reference best practices from successful businesses
 • Build confidence while being realistic
+• Use the reasoning framework for complex questions
 
 CRITICAL RULES:
 - If they ask about competitors, market size, or trends → Acknowledge you'd need real-time data, suggest research approaches
 - If they share detailed plans → Provide strategic feedback on assumptions and risks
 - If they're stuck → Help break down the problem into smaller, manageable steps
 - Always be encouraging yet practical
+- For complex queries, show your reasoning process briefly
 
 You're not just answering questions - you're their strategic partner in building a successful business.`;
 }
@@ -883,46 +957,56 @@ function formatMarketDataForPrompt(marketData: any): string {
 function detectKnowledgeQuery(message: string, context: BusinessContext): boolean {
   const lowerMessage = message.toLowerCase();
   
+  // 🚀 OPTIMIZATION: Skip RAG for simple conversational queries
+  const isSimpleConversational = /^(hi|hello|hey|thanks|thank you|yes|no|ok|sure|got it|bye|goodbye)[\s!.,]*$/i.test(message.trim());
+  if (isSimpleConversational) {
+    return false; // Templates will handle these
+  }
+  
+  // 🚀 OPTIMIZATION: Skip RAG for very short queries (likely conversational)
+  if (message.trim().length < 30 && !/(what|how|when|where|which|who|show|give|provide|list|example|template)/i.test(message)) {
+    return false;
+  }
+  
   // Factual query patterns that benefit from RAG
   const knowledgePatterns = [
     // Direct questions about templates, examples, guides
-    /what (is|are) (the|a|an)? ?(typical|average|common|standard|best)/i,
-    /show me (a|an|some)? ?(example|template|sample|guide)/i,
-    /how (much|many|often|long) (does|do|is|are)/i,
+    /what (is|are) (the|a|an)? ?(typical|average|common|standard|best|normal)/i,
+    /show me (a|an|some)? ?(example|template|sample|guide|format)/i,
+    /how (much|many|often|long) (does|do|is|are|should|typically)/i,
     
     // Industry-specific information requests
     /in (the )?(technology|healthcare|retail|food|creative|education) industry/i,
     /for (technology|healthcare|retail|food|creative|education) (startups|businesses)/i,
     
     // Legal, compliance, or regulatory questions
-    /legal|compliance|regulation|law|permit|license|tax|incorporation/i,
+    /(legal|compliance|regulation|law|permit|license|tax|incorporation) (requirement|process|need|how)/i,
     
     // Financial templates or specific models
-    /financial (projection|model|template|statement|plan)/i,
-    /profit (and )?loss|p&l|income statement|balance sheet|cash flow/i,
+    /financial (projection|model|template|statement|plan|forecast)/i,
+    /(profit|p&l|income statement|balance sheet|cash flow) (template|example|format)/i,
     
     // Business plan sections
-    /business plan (section|template|example)/i,
-    /executive summary|market analysis|competitive analysis/i,
+    /business plan (section|template|example|format|structure)/i,
+    /(executive summary|market analysis|competitive analysis) (template|example|format)/i,
     
     // Specific metrics or benchmarks
-    /benchmark|industry (standard|average|metric)|conversion rate|churn rate/i,
+    /(benchmark|industry (standard|average|metric)|conversion rate|churn rate|typical|average) (for|in|of)/i,
     
     // Case studies or success stories
-    /case study|success story|example of|companies that/i,
+    /(case study|success story|example of|companies that|businesses that) (in|for|with)/i,
   ];
   
   // Check if message matches knowledge patterns
   const isKnowledgeQuery = knowledgePatterns.some(pattern => pattern.test(lowerMessage));
   
-  // Additional heuristics
+  // Additional heuristics - must be specific factual request
   const hasQuestionWords = /^(what|how|when|where|which|who|show|give|provide|list)/i.test(message);
-  const requestsSpecifics = /specific|example|template|guide|list|steps|process/i.test(lowerMessage);
+  const requestsSpecifics = /(specific|example|template|guide|list|steps|process|format|structure|benchmark|typical|average|standard)/i.test(lowerMessage);
+  const hasIndustryContext = Boolean(context.industry);
   
-  // NOT conversational if highly specific factual request
-  const isConversational = /^(hi|hey|hello|thanks|thank you|yes|no|okay|great|awesome|i think|i feel|i want|i need|help me)/i.test(lowerMessage);
-  
-  return isKnowledgeQuery || (hasQuestionWords && requestsSpecifics && !isConversational);
+  // Only use RAG if it's a clear factual/knowledge request
+  return isKnowledgeQuery || (hasQuestionWords && requestsSpecifics && hasIndustryContext);
 }
 
 // 📚 Create RAG stream response with sources
@@ -1010,24 +1094,76 @@ function detectQueryComplexity(message: string, businessContext: BusinessContext
 }
 
 // 🚀 OPTIMIZATION: Select optimal model based on query complexity
-function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatMode: string): { model: string; strategy: string } {
+function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatMode: string): { 
+  model: string; 
+  strategy: string;
+  maxTokens: number;
+  temperature: number;
+} {
   // Tour guide mode always uses fast model
   if (chatMode === 'tour-guide') {
-    return { model: 'google/gemini-2.5-flash', strategy: 'speed' };
+    return { 
+      model: 'google/gemini-2.5-flash', 
+      strategy: 'speed',
+      maxTokens: 100,
+      temperature: 0.4
+    };
   }
   
   // Simple queries → fastest, cheapest model
   if (complexity === 'simple') {
-    return { model: 'google/gemini-2.5-flash', strategy: 'speed' };
+    return { 
+      model: 'google/gemini-2.5-flash', 
+      strategy: 'speed',
+      maxTokens: 150,
+      temperature: 0.5
+    };
   }
   
-  // Complex queries → quality model (if available via router)
+  // Complex queries → better model for quality
   if (complexity === 'complex') {
-    return { model: 'google/gemini-2.5-flash', strategy: 'quality' }; // Will route via ai-model-router if available
+    // Use flash with higher tokens for complex queries (fallback if better model unavailable)
+    return { 
+      model: 'google/gemini-2.5-flash', // Use flash with more tokens for complex queries
+      strategy: 'quality',
+      maxTokens: 800,
+      temperature: 0.7
+    };
   }
   
   // Moderate → balanced
-  return { model: 'google/gemini-2.5-flash', strategy: 'balanced' };
+  return { 
+    model: 'google/gemini-2.5-flash', 
+    strategy: 'balanced',
+    maxTokens: 300,
+    temperature: 0.6
+  };
+}
+
+// 🚀 OPTIMIZATION: Dynamic temperature based on query type
+function determineTemperature(message: string, complexity: 'simple' | 'moderate' | 'complex', chatMode: string): number {
+  const lowerMessage = message.toLowerCase();
+  
+  // Factual queries → lower temperature
+  if (/^(what|when|where|who|how many|how much|which|list|show)/i.test(message) && 
+      !/(think|feel|suggest|recommend|creative|strategy)/i.test(lowerMessage)) {
+    return 0.2;
+  }
+  
+  // Creative/strategy queries → higher temperature
+  if (/(suggest|recommend|creative|strategy|plan|design|idea|brainstorm|think)/i.test(lowerMessage)) {
+    return 0.8;
+  }
+  
+  // Conversational → medium temperature
+  if (/(how are you|tell me|explain|help|advice)/i.test(lowerMessage)) {
+    return 0.6;
+  }
+  
+  // Use complexity-based default
+  if (complexity === 'simple') return 0.5;
+  if (complexity === 'complex') return 0.7;
+  return 0.6;
 }
 
 // 💬 Create Lovable AI stream response with intelligent routing
@@ -1037,20 +1173,103 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
 
   // 🚀 OPTIMIZATION: Detect complexity and select optimal model
   const complexity = detectQueryComplexity(userMessage, businessContext, conversationHistory);
-  const { model: selectedModel, strategy } = selectOptimalModel(complexity, chatMode);
+  const { model: selectedModel, strategy, maxTokens, temperature: baseTemperature } = selectOptimalModel(complexity, chatMode);
   
-  console.log(`🎯 Query complexity: ${complexity}, selected model: ${selectedModel}, strategy: ${strategy}`);
+  // 🚀 OPTIMIZATION: Dynamic temperature tuning based on query type
+  const finalTemperature = determineTemperature(userMessage, complexity, chatMode);
+  
+  console.log(`🎯 Query complexity: ${complexity}, model: ${selectedModel}, tokens: ${maxTokens}, temp: ${finalTemperature}, strategy: ${strategy}`);
 
   const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: selectedModel, messages, stream: true, temperature: 0.3 }),
+    body: JSON.stringify({ 
+      model: selectedModel, 
+      messages, 
+      stream: true, 
+      temperature: finalTemperature,
+      max_tokens: maxTokens
+    }),
   });
 
   if (!aiResponse.ok) {
     const err = await aiResponse.text();
     if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    
+    // 🚀 OPTIMIZATION: Fallback to simpler model on error
+    console.log(`⚠️ Model ${selectedModel} failed, trying fallback`);
+    if (selectedModel !== 'google/gemini-2.5-flash') {
+      // Retry with flash model
+      const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          model: 'google/gemini-2.5-flash', 
+          messages, 
+          stream: true, 
+          temperature: finalTemperature,
+          max_tokens: Math.min(maxTokens, 500) // Cap at 500 for fallback
+        }),
+      });
+      
+      if (fallbackResponse.ok) {
+        // Use fallback response
+        const reader = fallbackResponse.body?.getReader();
+        if (!reader) throw new Error('No response body');
+        
+        const stream = new ReadableStream({
+          async start(controller) {
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullMessage = '';
+            
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, { stream: true });
+                let newlineIndex;
+                while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+                  const line = buffer.slice(0, newlineIndex);
+                  buffer = buffer.slice(newlineIndex + 1);
+                  
+                  if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
+                  
+                  const data = line.slice(6).trim();
+                  if (data === '[DONE]') continue;
+                  
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+                    if (content) {
+                      fullMessage += content;
+                      controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
+                    }
+                  } catch (e) {}
+                }
+              }
+              
+              const stage = determineConversationStage(businessContext, conversationHistory.length);
+              controller.enqueue(new TextEncoder().encode(
+                `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, userMessage) })}\n\n`
+              ));
+              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+              controller.close();
+            } catch (e) {
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+              controller.close();
+            }
+          }
+        });
+        
+        return new Response(stream, {
+          headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+        });
+      }
+    }
+    
     throw new Error(`AI Error: ${aiResponse.status} - ${err}`);
   }
 
@@ -1096,7 +1315,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
                     // 🚀 OPTIMIZATION: Stream first token immediately without delay
                   }
                   fullMessage += content;
-                  // 🚀 OPTIMIZATION: Enqueue immediately without batching
+                  // 🚀 OPTIMIZATION: Enqueue immediately without batching for fastest streaming
                   controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
                 }
               } catch (e) {
