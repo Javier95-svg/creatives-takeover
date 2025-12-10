@@ -97,6 +97,8 @@ export function getCountryFlag(country: string | null | undefined): string {
     'RUSSIA': '🇷🇺',
     'UA': '🇺🇦',
     'UKRAINE': '🇺🇦',
+    'PK': '🇵🇰',
+    'PAKISTAN': '🇵🇰',
   };
   
   // Check direct match
