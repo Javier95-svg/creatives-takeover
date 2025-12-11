@@ -2,15 +2,16 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { matchTemplate } from '../response-templates/index.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// In-memory cache for request deduplication (short-lived)
-const requestCache = new Map<string, { response: Response; timestamp: number }>();
-const REQUEST_DEDUP_TTL = 5000; // 5 seconds
+// Note: Request deduplication removed - Response objects are streams that can only be consumed once
+// We rely on the response cache (ai_cache table) for caching instead
+const REQUEST_DEDUP_TTL = 5000; // 5 seconds (kept for reference, not used)
 const SYSTEM_PROMPT_CACHE = new Map<string, { prompt: string; timestamp: number }>();
 const PROMPT_CACHE_TTL = 3600000; // 1 hour
 
@@ -81,15 +82,12 @@ serve(async (req) => {
     }
 
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
-    const matchedTemplate = matchResponseTemplate(message, businessContext);
+    const matchedTemplate = matchTemplate(message, businessContext);
     if (matchedTemplate) {
       console.log('⚡ Template match - returning instant response');
       const templateResponse = matchedTemplate.response;
       const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode);
-      // Cache in background (don't wait for fingerprint generation)
-      generateRequestFingerprint(message, businessContext, conversationHistory).then(requestFingerprint => {
-        requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
-      }).catch(() => {}); // Ignore errors in background
+      // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
 
@@ -100,18 +98,15 @@ serve(async (req) => {
     ]);
 
     // Check request deduplication cache (in-memory, fast)
-    const cachedRequestEntry = requestCache.get(requestFingerprint);
-    if (cachedRequestEntry && Date.now() - cachedRequestEntry.timestamp < REQUEST_DEDUP_TTL) {
-      console.log('⚡ Returning cached response (deduplication)');
-      return cachedRequestEntry.response;
-    }
+    // Note: We don't cache Response objects as they're streams that can only be consumed once
+    // Request deduplication is handled by the requestFingerprint check above
 
     // Check response cache (DB query)
     const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
     if (cachedResponse) {
       console.log('⚡ Cache hit - returning cached response');
       const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
-      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
 
@@ -208,16 +203,16 @@ serve(async (req) => {
     // If RAG provided answer, stream it. Otherwise use Lovable AI
     if (ragData?.answer) {
       const response = createRAGStream(ragData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
-      // Cache the response (use model from RAG response if available)
+      // Cache the response content (not the Response object - streams can only be consumed once)
       const ragModel = ragData.model || 'google/gemini-2.5-flash';
       await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
-      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
 
     console.log('💬 Using conversational Lovable AI');
     const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey, message);
-    requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+    // Don't cache Response objects - they're streams that can only be consumed once
     return response;
 
   } catch (error) {
