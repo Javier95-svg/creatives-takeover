@@ -54,12 +54,17 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 🚀 OPTIMIZATION: Get/create conversation (parallel with cache check preparation)
-    const convResult = await supabase
-      .from('chatbot_conversations')
-      .select('*')
-      .eq('session_id', sessionId)
-      .maybeSingle();
+    // 🚀 OPTIMIZATION: Parallelize independent operations
+    // Generate cache key and request fingerprint in parallel with conversation lookup
+    const [convResult, cacheKey, requestFingerprint] = await Promise.all([
+      supabase
+        .from('chatbot_conversations')
+        .select('*')
+        .eq('session_id', sessionId)
+        .maybeSingle(),
+      generateCacheKey(message, businessContext, conversationHistory, chatMode),
+      generateRequestFingerprint(message, businessContext, conversationHistory)
+    ]);
 
     let conversation = convResult.data;
     
@@ -78,6 +83,38 @@ serve(async (req) => {
 
       if (createError) throw createError;
       conversation = newConv;
+    }
+
+    // 🚀 OPTIMIZATION: Check cache and templates in parallel before credit check
+    const cachedRequestEntry = requestCache.get(requestFingerprint);
+    const isCachedRequestValid = cachedRequestEntry && Date.now() - cachedRequestEntry.timestamp < REQUEST_DEDUP_TTL;
+    
+    const [matchedTemplate, cachedResponse] = await Promise.all([
+      Promise.resolve(matchResponseTemplate(message, businessContext)),
+      checkResponseCache(supabase, cacheKey, message)
+    ]);
+
+    // Check request deduplication cache
+    if (isCachedRequestValid && cachedRequestEntry) {
+      console.log('⚡ Returning cached response (deduplication)');
+      return cachedRequestEntry.response;
+    }
+
+    // Check template match
+    if (matchedTemplate) {
+      console.log('⚡ Template match - returning instant response');
+      const templateResponse = matchedTemplate.response;
+      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode);
+      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      return response;
+    }
+
+    // Check response cache
+    if (cachedResponse) {
+      console.log('⚡ Cache hit - returning cached response');
+      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
+      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      return response;
     }
 
     // 💳 CREDIT DEDUCTION: Check and deduct credits for authenticated users
@@ -120,40 +157,20 @@ serve(async (req) => {
       console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
     }
 
-    // Save user message in background (non-blocking)
-    supabase
-      .from('chatbot_messages')
-      .insert({
-        conversation_id: conversation.id,
-        role: 'user',
-        content: message,
-        metadata: { timestamp: new Date().toISOString() }
-      })
-      .then(({ error }) => {
-        if (error) console.error('Background: Error saving user message:', error);
-      });
-
-    // 🚀 OPTIMIZATION: Request deduplication - check for duplicate requests
-    const requestFingerprint = await generateRequestFingerprint(message, businessContext, conversationHistory);
-    const cachedRequest = requestCache.get(requestFingerprint);
-    if (cachedRequest && Date.now() - cachedRequest.timestamp < REQUEST_DEDUP_TTL) {
-      console.log('⚡ Returning cached response (deduplication)');
-      return cachedRequest.response;
-    }
-
-    // 🚀 OPTIMIZATION: Check response templates first (instant responses)
-    const matchedTemplate = matchResponseTemplate(message, businessContext);
-    if (matchedTemplate) {
-      console.log('⚡ Template match - returning instant response');
-      const templateResponse = matchedTemplate.response;
-      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode);
-      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
-      return response;
-    }
-
-    // 🚀 OPTIMIZATION: Check response cache before making AI calls
-    const cacheKey = await generateCacheKey(message, businessContext, conversationHistory, chatMode);
-    const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
+    // 🚀 OPTIMIZATION: Save user message in background (non-blocking) - already optimized
+    queueMicrotask(() => {
+      supabase
+        .from('chatbot_messages')
+        .insert({
+          conversation_id: conversation.id,
+          role: 'user',
+          content: message,
+          metadata: { timestamp: new Date().toISOString() }
+        })
+        .then(({ error }) => {
+          if (error) console.error('Background: Error saving user message:', error);
+        });
+    });
     if (cachedResponse) {
       console.log('⚡ Cache hit - returning cached response');
       const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
@@ -170,11 +187,15 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Detect if query needs market data
     const needsMarketData = detectMarketDataQuery(message, businessContext);
     
-    // 🚀 OPTIMIZATION: Parallel processing - start RAG, market data, and AI preparation simultaneously
-    const [ragData, marketData, aiStreamReady] = await Promise.all([
-      needsKnowledge ? fetchRAGData(supabase, [], userId, businessContext, conversation?.id) : Promise.resolve(null),
-      needsMarketData ? fetchMarketData(supabase, message, businessContext) : Promise.resolve(null),
-      Promise.resolve(true) // AI stream preparation (already ready)
+    // 🚀 OPTIMIZATION: Parallel processing with timeouts - start RAG, market data simultaneously
+    // Timeouts are handled inside fetchRAGData and fetchMarketData functions (500ms max each)
+    const [ragData, marketData] = await Promise.all([
+      needsKnowledge 
+        ? fetchRAGData(supabase, [], userId, businessContext, conversation?.id)
+        : Promise.resolve(null),
+      needsMarketData 
+        ? fetchMarketData(supabase, message, businessContext)
+        : Promise.resolve(null)
     ]);
     
     // 🚀 OPTIMIZATION: Build system prompt with market data if available
@@ -377,7 +398,7 @@ function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any
   return prompt;
 }
 
-// 🚀 OPTIMIZATION: Fetch RAG data (extracted for parallel processing)
+// 🚀 OPTIMIZATION: Fetch RAG data (extracted for parallel processing with timeout)
 async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: string | null, businessContext: BusinessContext, conversationId?: string): Promise<any> {
   console.log('🔍 Knowledge query detected - calling RAG');
   try {
@@ -389,7 +410,12 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
       filter.source = 'user_document'; // This will search user documents too
     }
     
-    const result = await supabase.functions.invoke('rag-chat', {
+    // 🚀 OPTIMIZATION: Add timeout to prevent blocking (500ms max)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('RAG timeout')), 500)
+    );
+    
+    const ragPromise = supabase.functions.invoke('rag-chat', {
       body: {
         messages: messages.filter(m => m.role !== 'system'),
         userId,
@@ -400,6 +426,8 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
       }
     });
     
+    const result = await Promise.race([ragPromise, timeoutPromise]) as any;
+    
     if (!result.error) {
       console.log(`✅ RAG returned ${result.data.sources?.length || 0} sources`);
       return result.data;
@@ -408,7 +436,7 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
       return null;
     }
   } catch (e) {
-    console.log('⚠️ RAG failed, using conversational AI:', e);
+    console.log('⚠️ RAG failed or timed out, using conversational AI:', e);
     return null;
   }
 }
@@ -418,7 +446,7 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 🚀 OPTIMIZATION: Stream template content very fast (5ms chunks for instant feel)
+        // 🚀 OPTIMIZATION: Stream template content very fast (5ms → 2ms chunks for instant feel)
         const words = templateContent.split(' ');
         const chunkSize = 5; // Stream 5 words at a time for instant display
         
@@ -428,8 +456,8 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          // 🚀 OPTIMIZATION: Minimal delay for template responses (5ms for instant feel)
-          await new Promise(r => setTimeout(r, 5));
+          // 🚀 OPTIMIZATION: Minimal delay for template responses (5ms → 2ms for instant feel)
+          await new Promise(r => setTimeout(r, 2));
         }
         
         // Complete
@@ -456,7 +484,7 @@ function createCachedStream(cachedContent: string, message: string, conversation
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 🚀 OPTIMIZATION: Stream cached content in chunks for faster perceived speed
+        // 🚀 OPTIMIZATION: Stream cached content in chunks with reduced delay (10ms → 5ms)
         const words = cachedContent.split(' ');
         const chunkSize = 3; // Stream 3 words at a time for faster display
         
@@ -466,8 +494,8 @@ function createCachedStream(cachedContent: string, message: string, conversation
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          // 🚀 OPTIMIZATION: Reduced delay for cached responses (10ms vs 20ms)
-          await new Promise(r => setTimeout(r, 10));
+          // 🚀 OPTIMIZATION: Reduced delay for cached responses (10ms → 5ms)
+          await new Promise(r => setTimeout(r, 5));
         }
         
         // Complete
@@ -884,7 +912,7 @@ function detectMarketDataQuery(message: string, context: BusinessContext): boole
   return hasMarketKeywords || (hasIndustryContext && /(trend|competitor|market|industry)/i.test(lowerMessage));
 }
 
-// 🚀 OPTIMIZATION: Fetch market data for query
+// 🚀 OPTIMIZATION: Fetch market data for query with timeout
 async function fetchMarketData(supabase: any, message: string, businessContext: BusinessContext): Promise<any> {
   try {
     console.log('📊 Fetching market data for query');
@@ -892,7 +920,12 @@ async function fetchMarketData(supabase: any, message: string, businessContext: 
     const industries = businessContext.industry ? [businessContext.industry] : [];
     const keywords = extractKeywordsFromMessage(message);
     
-    const { data, error } = await supabase.functions.invoke('market-data-aggregator', {
+    // 🚀 OPTIMIZATION: Add timeout to prevent blocking (500ms max)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Market data timeout')), 500)
+    );
+    
+    const marketPromise = supabase.functions.invoke('market-data-aggregator', {
       body: {
         industries,
         keywords,
@@ -901,15 +934,17 @@ async function fetchMarketData(supabase: any, message: string, businessContext: 
       }
     });
     
-    if (error || !data) {
+    const result = await Promise.race([marketPromise, timeoutPromise]) as any;
+    
+    if (result.error || !result.data) {
       console.log('⚠️ Market data fetch failed, continuing without it');
       return null;
     }
     
-    console.log(`✅ Fetched ${data.data?.length || 0} market insights`);
-    return data;
+    console.log(`✅ Fetched ${result.data.data?.length || 0} market insights`);
+    return result.data;
   } catch (e) {
-    console.log('⚠️ Market data error, continuing without it:', e);
+    console.log('⚠️ Market data error or timed out, continuing without it:', e);
     return null;
   }
 }
@@ -1016,13 +1051,13 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Stream answer word by word
+        // 🚀 OPTIMIZATION: Stream answer with reduced delay (30ms → 10ms per word)
         const words = answer.split(' ');
         for (let i = 0; i < words.length; i++) {
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 30));
+          await new Promise(r => setTimeout(r, 10));
         }
         
         // Add sources
