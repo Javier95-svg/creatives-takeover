@@ -32,7 +32,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
   
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), and Irfan Ahmad Malik (Pakistan)
+  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), and Gonzalo Wangüemert (Spain)
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -48,6 +48,10 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     // Special case: Irfan Ahmad Malik is from Pakistan
     if (mentor.name.toLowerCase().includes('irfan') && mentor.name.toLowerCase().includes('malik')) {
       return 'Pakistan';
+    }
+    // Special case: Gonzalo Wangüemert is from Spain
+    if (mentor.name.toLowerCase().includes('gonzalo') && mentor.name.toLowerCase().includes('wangüemert')) {
+      return 'Spain';
     }
     return null;
   };
