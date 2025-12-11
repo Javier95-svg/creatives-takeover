@@ -54,17 +54,12 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 🚀 OPTIMIZATION: Parallelize independent operations
-    // Generate cache key and request fingerprint in parallel with conversation lookup
-    const [convResult, cacheKey, requestFingerprint] = await Promise.all([
-      supabase
-        .from('chatbot_conversations')
-        .select('*')
-        .eq('session_id', sessionId)
-        .maybeSingle(),
-      generateCacheKey(message, businessContext, conversationHistory, chatMode),
-      generateRequestFingerprint(message, businessContext, conversationHistory)
-    ]);
+    // Get/create conversation first (fast DB query with index)
+    const convResult = await supabase
+      .from('chatbot_conversations')
+      .select('*')
+      .eq('session_id', sessionId)
+      .maybeSingle();
 
     let conversation = convResult.data;
     
@@ -85,31 +80,34 @@ serve(async (req) => {
       conversation = newConv;
     }
 
-    // 🚀 OPTIMIZATION: Check cache and templates in parallel before credit check
-    const cachedRequestEntry = requestCache.get(requestFingerprint);
-    const isCachedRequestValid = cachedRequestEntry && Date.now() - cachedRequestEntry.timestamp < REQUEST_DEDUP_TTL;
-    
-    const [matchedTemplate, cachedResponse] = await Promise.all([
-      Promise.resolve(matchResponseTemplate(message, businessContext)),
-      checkResponseCache(supabase, cacheKey, message)
-    ]);
-
-    // Check request deduplication cache
-    if (isCachedRequestValid && cachedRequestEntry) {
-      console.log('⚡ Returning cached response (deduplication)');
-      return cachedRequestEntry.response;
-    }
-
-    // Check template match
+    // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
+    const matchedTemplate = matchResponseTemplate(message, businessContext);
     if (matchedTemplate) {
       console.log('⚡ Template match - returning instant response');
       const templateResponse = matchedTemplate.response;
       const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode);
-      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      // Cache in background (don't wait for fingerprint generation)
+      generateRequestFingerprint(message, businessContext, conversationHistory).then(requestFingerprint => {
+        requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
+      }).catch(() => {}); // Ignore errors in background
       return response;
     }
 
-    // Check response cache
+    // 🚀 OPTIMIZATION: Generate cache keys in parallel (only if template didn't match)
+    const [requestFingerprint, cacheKey] = await Promise.all([
+      generateRequestFingerprint(message, businessContext, conversationHistory),
+      generateCacheKey(message, businessContext, conversationHistory, chatMode)
+    ]);
+
+    // Check request deduplication cache (in-memory, fast)
+    const cachedRequestEntry = requestCache.get(requestFingerprint);
+    if (cachedRequestEntry && Date.now() - cachedRequestEntry.timestamp < REQUEST_DEDUP_TTL) {
+      console.log('⚡ Returning cached response (deduplication)');
+      return cachedRequestEntry.response;
+    }
+
+    // Check response cache (DB query)
+    const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
     if (cachedResponse) {
       console.log('⚡ Cache hit - returning cached response');
       const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
@@ -157,26 +155,18 @@ serve(async (req) => {
       console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
     }
 
-    // 🚀 OPTIMIZATION: Save user message in background (non-blocking) - already optimized
-    queueMicrotask(() => {
-      supabase
-        .from('chatbot_messages')
-        .insert({
-          conversation_id: conversation.id,
-          role: 'user',
-          content: message,
-          metadata: { timestamp: new Date().toISOString() }
-        })
-        .then(({ error }) => {
-          if (error) console.error('Background: Error saving user message:', error);
-        });
-    });
-    if (cachedResponse) {
-      console.log('⚡ Cache hit - returning cached response');
-      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
-      requestCache.set(requestFingerprint, { response, timestamp: Date.now() });
-      return response;
-    }
+    // 🚀 OPTIMIZATION: Save user message in background (non-blocking)
+    supabase
+      .from('chatbot_messages')
+      .insert({
+        conversation_id: conversation.id,
+        role: 'user',
+        content: message,
+        metadata: { timestamp: new Date().toISOString() }
+      })
+      .then(({ error }) => {
+        if (error) console.error('Background: Error saving user message:', error);
+      });
 
     // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
     const optimizedHistory = conversationHistory.slice(-6);
@@ -410,9 +400,9 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
       filter.source = 'user_document'; // This will search user documents too
     }
     
-    // 🚀 OPTIMIZATION: Add timeout to prevent blocking (500ms max)
+    // 🚀 OPTIMIZATION: Add timeout to prevent blocking (1000ms max - more reasonable)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('RAG timeout')), 500)
+      setTimeout(() => reject(new Error('RAG timeout')), 1000)
     );
     
     const ragPromise = supabase.functions.invoke('rag-chat', {
@@ -446,7 +436,7 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 🚀 OPTIMIZATION: Stream template content very fast (5ms → 2ms chunks for instant feel)
+        // Stream template content fast (original timing)
         const words = templateContent.split(' ');
         const chunkSize = 5; // Stream 5 words at a time for instant display
         
@@ -456,8 +446,7 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          // 🚀 OPTIMIZATION: Minimal delay for template responses (5ms → 2ms for instant feel)
-          await new Promise(r => setTimeout(r, 2));
+          await new Promise(r => setTimeout(r, 5)); // Original delay
         }
         
         // Complete
@@ -484,7 +473,7 @@ function createCachedStream(cachedContent: string, message: string, conversation
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 🚀 OPTIMIZATION: Stream cached content in chunks with reduced delay (10ms → 5ms)
+        // Stream cached content in chunks (original timing)
         const words = cachedContent.split(' ');
         const chunkSize = 3; // Stream 3 words at a time for faster display
         
@@ -494,8 +483,7 @@ function createCachedStream(cachedContent: string, message: string, conversation
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          // 🚀 OPTIMIZATION: Reduced delay for cached responses (10ms → 5ms)
-          await new Promise(r => setTimeout(r, 5));
+          await new Promise(r => setTimeout(r, 10)); // Original delay
         }
         
         // Complete
@@ -920,9 +908,9 @@ async function fetchMarketData(supabase: any, message: string, businessContext: 
     const industries = businessContext.industry ? [businessContext.industry] : [];
     const keywords = extractKeywordsFromMessage(message);
     
-    // 🚀 OPTIMIZATION: Add timeout to prevent blocking (500ms max)
+    // 🚀 OPTIMIZATION: Add timeout to prevent blocking (1000ms max - more reasonable)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Market data timeout')), 500)
+      setTimeout(() => reject(new Error('Market data timeout')), 1000)
     );
     
     const marketPromise = supabase.functions.invoke('market-data-aggregator', {
@@ -1051,13 +1039,13 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 🚀 OPTIMIZATION: Stream answer with reduced delay (30ms → 10ms per word)
+        // Stream answer word by word (original timing for smooth experience)
         const words = answer.split(' ');
         for (let i = 0; i < words.length; i++) {
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 10));
+          await new Promise(r => setTimeout(r, 20)); // Balanced delay for smooth streaming
         }
         
         // Add sources
