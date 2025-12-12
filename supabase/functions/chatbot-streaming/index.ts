@@ -283,25 +283,44 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
     const optimizedHistory = conversationHistory.slice(-6);
     
+    // 🔍 SEARCH INTENT DETECTION: Classify query for routing
+    const searchIntent = detectSearchIntent(message, businessContext, chatMode);
+    console.log(`🔍 Search intent detected: ${searchIntent}`);
+    
     // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
     const needsKnowledge = detectKnowledgeQuery(message, businessContext);
     
     // 🚀 OPTIMIZATION: Detect if query needs market data
     const needsMarketData = detectMarketDataQuery(message, businessContext);
     
-    // 🚀 OPTIMIZATION: Parallel processing with timeouts - start RAG, market data simultaneously
-    // Timeouts are handled inside fetchRAGData and fetchMarketData functions (500ms max each)
-    const [ragData, marketData] = await Promise.all([
-      needsKnowledge 
+    // 🌐 WEB SEARCH: Determine if query needs web search
+    const needsWebSearch = searchIntent === 'general' || searchIntent === 'hybrid';
+    
+    // 🚀 OPTIMIZATION: Parallel processing with timeouts - start RAG, market data, web search simultaneously
+    // Timeouts are handled inside fetch functions (1000ms max each)
+    const [ragData, marketData, webSearchData] = await Promise.all([
+      needsKnowledge && (searchIntent === 'business' || searchIntent === 'hybrid')
         ? fetchRAGData(supabase, [], userId, businessContext, conversation?.id)
         : Promise.resolve(null),
       needsMarketData 
         ? fetchMarketData(supabase, message, businessContext)
+        : Promise.resolve(null),
+      needsWebSearch
+        ? fetchWebSearch(supabase, message, businessContext, searchIntent)
         : Promise.resolve(null)
     ]);
     
-    // 🚀 OPTIMIZATION: Build system prompt with market data if available
+    // 🚀 OPTIMIZATION: Build system prompt with market data and web search if available
     let systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+    
+    // Add web search results if available
+    if (webSearchData?.success && webSearchData.answer) {
+      const webSearchContext = formatWebSearchForPrompt(webSearchData);
+      systemPrompt = `${systemPrompt}\n\nREAL-TIME WEB SEARCH RESULTS:\n${webSearchContext}\n\nUse this real-time information to provide current, accurate answers. Always cite sources using [Source X] format.`;
+      console.log(`🌐 Injected web search results with ${webSearchData.sources?.length || 0} sources`);
+    }
+    
+    // Add market data if available
     if (marketData && marketData.data && marketData.data.length > 0) {
       const marketInsights = formatMarketDataForPrompt(marketData);
       systemPrompt = `${systemPrompt}\n\nREAL-TIME MARKET INTELLIGENCE:\n${marketInsights}\n\nUse this market data to provide current, relevant insights when answering the user's question.`;
@@ -317,9 +336,37 @@ serve(async (req) => {
     // Process file attachments if present
     messages = await processAttachments(messages, attachments);
 
-    // If RAG provided answer, stream it. Otherwise use Lovable AI
+    // For general search queries, prioritize web search results
+    if (searchIntent === 'general' && webSearchData?.success && webSearchData.answer) {
+      const response = createWebSearchStream(webSearchData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
+      // Cache the response
+      await saveResponseCache(supabase, cacheKey, webSearchData.answer, 'web-search', webSearchData.model || 'perplexity', message, businessContext);
+      return response;
+    }
+    
+    // For hybrid queries, merge RAG and web search if both available
+    if (searchIntent === 'hybrid' && webSearchData?.success && (ragData?.answer || webSearchData.answer)) {
+      const mergedData = mergeSearchResults(ragData, webSearchData);
+      const response = createMergedSearchStream(mergedData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
+      await saveResponseCache(supabase, cacheKey, mergedData.answer, 'hybrid-search', mergedData.model || 'hybrid', message, businessContext);
+      return response;
+    }
+
+    // If RAG provided answer (business queries), stream it
     if (ragData?.answer) {
-      const response = createRAGStream(ragData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
+      // Enhance RAG sources with web search sources if available
+      const enhancedRagData = webSearchData?.sources 
+        ? { ...ragData, sources: [...(ragData.sources || []), ...webSearchData.sources.map(s => ({ 
+            title: s.title, 
+            source: s.url, 
+            similarity: s.relevanceScore || 0.8,
+            excerpt: s.snippet || '',
+            url: s.url,
+            sourceType: 'web'
+          }))) }
+        : ragData;
+      
+      const response = createRAGStream(enhancedRagData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
       // Cache the response content (not the Response object - streams can only be consumed once)
       const ragModel = ragData.model || 'google/gemini-2.5-flash';
       await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
@@ -732,26 +779,33 @@ YOUR EXPERTISE:
 • Product Strategy - MVP Definition, Feature Prioritization, Product-Market Fit
 • Creative Industries - Design, Media, Content, SaaS, Marketplaces
 
+SOURCE CITATION REQUIREMENTS:
+• When using real-time web search results or market data, ALWAYS cite sources inline using [Source 1], [Source 2] format
+• Distinguish between verified facts (from sources) and your own strategic insights
+• For time-sensitive information (current trends, recent news, latest data), mention when the information is from
+• If referencing specific statistics, studies, or reports, cite the source
+• When combining multiple sources, clearly indicate which insights come from which sources
+
 REASONING FRAMEWORK:
 When answering complex questions, use this approach:
 1. **Understand** - Clarify the core business challenge
-2. **Analyze** - Break down key factors and dependencies
+2. **Analyze** - Break down key factors and dependencies (cite sources when providing facts)
 3. **Synthesize** - Provide actionable recommendations
 4. **Validate** - Suggest how to test assumptions
 
 FEW-SHOT EXAMPLES (Learn from these patterns):
 
-Example 1 - Market Validation:
+Example 1 - Market Validation (with sources):
 User: "How do I know if people want my product?"
-You: "Great question! Start with 10 customer interviews this week. Ask: 'What's your biggest frustration with [problem]?' If 7+ people say they'd pay for a solution, you have validation. Want help crafting interview questions?"
+You: "Great question! Start with 10 customer interviews this week. Ask: 'What's your biggest frustration with [problem]?' If 7+ people say they'd pay for a solution, you have validation. According to [Source 1], 70% of successful startups validate before building. Want help crafting interview questions?"
 
-Example 2 - Pricing Strategy:
+Example 2 - Pricing Strategy (with current data):
 User: "What should I charge?"
-You: "For [industry], typical pricing ranges $X-$Y. But test it! Create 3 price points and ask 5 potential customers which they'd choose. The price where 60%+ choose it is your sweet spot. What's your cost structure?"
+You: "For [industry], typical pricing ranges $X-$Y based on recent market analysis [Source 1]. But test it! Create 3 price points and ask 5 potential customers which they'd choose. The price where 60%+ choose it is your sweet spot. What's your cost structure?"
 
-Example 3 - Launch Strategy:
+Example 3 - Launch Strategy (with real-time trends):
 User: "Where should I launch?"
-You: "Start where your customers already gather. If they're on LinkedIn → post there. If they're in Facebook groups → engage there. Pick ONE channel, master it, then expand. Where do your ideal customers spend time?"
+You: "Start where your customers already gather. Recent data shows [channel] has 30% higher conversion for [industry] [Source 1]. If they're on LinkedIn → post there. If they're in Facebook groups → engage there. Pick ONE channel, master it, then expand. Where do your ideal customers spend time?"
 
 RESPONSE STYLE:
 • Be conversational but insightful (2-4 sentences, 80 words max)
@@ -760,15 +814,17 @@ RESPONSE STYLE:
 • Reference best practices from successful businesses
 • Build confidence while being realistic
 • Use the reasoning framework for complex questions
+• **Always cite sources** when providing facts, statistics, or current information
 
 CRITICAL RULES:
-- If they ask about competitors, market size, or trends → Acknowledge you'd need real-time data, suggest research approaches
+- If they ask about competitors, market size, or trends → Use real-time web search results and cite sources [Source X]
 - If they share detailed plans → Provide strategic feedback on assumptions and risks
 - If they're stuck → Help break down the problem into smaller, manageable steps
 - Always be encouraging yet practical
 - For complex queries, show your reasoning process briefly
+- **Distinguish verified facts from strategic insights** - mark facts with [Source X]
 
-You're not just answering questions - you're their strategic partner in building a successful business.`;
+You're not just answering questions - you're their strategic partner in building a successful business. Always back up factual claims with citations.`;
 }
 
 async function processAttachments(messages: ChatMessage[], attachments: any[]): Promise<ChatMessage[]> {
@@ -1117,6 +1173,194 @@ function formatMarketDataForPrompt(marketData: any): string {
   return `Current Market Insights:\n${insights}\n\nUse these insights to provide up-to-date, relevant information. Cite sources when referencing specific market data.`;
 }
 
+// 🌐 WEB SEARCH: Fetch web search results with timeout
+async function fetchWebSearch(supabase: any, message: string, businessContext: BusinessContext, searchIntent: string): Promise<any> {
+  try {
+    console.log('🌐 Fetching web search results');
+    
+    // Choose model based on intent
+    const model = searchIntent === 'hybrid' ? 'llama-3.1-sonar-large-128k-online' : 'llama-3.1-sonar-large-128k-online';
+    
+    // Add timeout to prevent blocking (2000ms for web search)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Web search timeout')), 2000)
+    );
+    
+    const webSearchPromise = supabase.functions.invoke('web-search', {
+      body: {
+        query: message,
+        model: model,
+        maxResults: 5,
+        searchRecency: searchIntent === 'hybrid' ? 'month' : 'month',
+        businessContext: {
+          industry: businessContext.industry,
+          businessType: businessContext.businessType,
+          location: businessContext.location
+        }
+      }
+    });
+    
+    const result = await Promise.race([webSearchPromise, timeoutPromise]) as any;
+    
+    if (result.error || !result.data || !result.data.success) {
+      console.log('⚠️ Web search fetch failed, continuing without it');
+      return null;
+    }
+    
+    console.log(`✅ Fetched web search results with ${result.data.sources?.length || 0} sources`);
+    return result.data;
+  } catch (e) {
+    console.log('⚠️ Web search error or timed out, continuing without it:', e);
+    return null;
+  }
+}
+
+// 🌐 Format web search results for system prompt
+function formatWebSearchForPrompt(webSearchData: any): string {
+  if (!webSearchData.answer) {
+    return 'No web search results available.';
+  }
+  
+  let formatted = `Answer: ${webSearchData.answer}\n\n`;
+  
+  if (webSearchData.sources && webSearchData.sources.length > 0) {
+    formatted += `Sources:\n`;
+    webSearchData.sources.slice(0, 5).forEach((source: any, index: number) => {
+      formatted += `${index + 1}. ${source.title || 'Source'} (${source.url})\n`;
+      if (source.snippet) {
+        formatted += `   ${source.snippet.substring(0, 150)}...\n`;
+      }
+    });
+  }
+  
+  return formatted;
+}
+
+// 🌐 Merge RAG and web search results intelligently
+function mergeSearchResults(ragData: any, webSearchData: any): any {
+  // Combine answers - prefer web search for current info, RAG for templates/knowledge
+  let answer = '';
+  if (webSearchData?.answer) {
+    answer = webSearchData.answer;
+    // Append RAG answer if it provides additional context
+    if (ragData?.answer && ragData.answer.length > 50) {
+      answer += `\n\n${ragData.answer}`;
+    }
+  } else if (ragData?.answer) {
+    answer = ragData.answer;
+  }
+  
+  // Combine sources
+  const sources = [];
+  if (ragData?.sources) {
+    sources.push(...ragData.sources.map((s: any) => ({ ...s, sourceType: 'knowledge' })));
+  }
+  if (webSearchData?.sources) {
+    sources.push(...webSearchData.sources.map((s: any) => ({
+      title: s.title,
+      source: s.url,
+      url: s.url,
+      excerpt: s.snippet || '',
+      similarity: s.relevanceScore || 0.8,
+      sourceType: 'web',
+      publishedDate: s.publishedDate
+    })));
+  }
+  
+  // Remove duplicates by URL
+  const uniqueSources = sources.filter((source, index, self) => 
+    index === self.findIndex(s => (s.url || s.source) === (source.url || source.source))
+  );
+  
+  // Sort by relevance (web sources first if recent, then by similarity)
+  uniqueSources.sort((a, b) => {
+    if (a.sourceType === 'web' && b.sourceType !== 'web') return -1;
+    if (a.sourceType !== 'web' && b.sourceType === 'web') return 1;
+    return (b.similarity || 0) - (a.similarity || 0);
+  });
+  
+  return {
+    answer: answer.trim(),
+    sources: uniqueSources.slice(0, 8), // Limit to top 8 sources
+    model: 'hybrid'
+  };
+}
+
+// 🔍 SEARCH INTENT DETECTION: Classify query type for routing
+type SearchIntent = 'business' | 'general' | 'hybrid' | 'conversational';
+
+function detectSearchIntent(message: string, context: BusinessContext, chatMode: string): SearchIntent {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Skip search for simple conversational queries (handled by templates)
+  const isSimpleConversational = /^(hi|hello|hey|thanks|thank you|yes|no|ok|sure|got it|bye|goodbye)[\s!.,]*$/i.test(lowerMessage);
+  if (isSimpleConversational) {
+    return 'conversational';
+  }
+  
+  // If in wizard mode and no explicit search intent, stay conversational
+  if (chatMode === 'wizard' && !lowerMessage.includes('search') && !lowerMessage.includes('find') && !lowerMessage.includes('latest') && !lowerMessage.includes('current')) {
+    // Check if it's a business planning query
+    const businessPlanningPatterns = [
+      /(business|startup|company|product|service|idea|venture|entrepreneur)/i,
+      /(market|customer|target|pricing|revenue|cost|profit|validation)/i,
+      /(launch|strategy|plan|mvp|go-to-market|gtm)/i,
+      /(competitor|competitive|positioning|differentiation)/i
+    ];
+    
+    if (businessPlanningPatterns.some(p => p.test(lowerMessage)) && (context.industry || context.businessType)) {
+      return 'conversational'; // Stay in business planning mode
+    }
+  }
+  
+  // Business-focused queries: startup/business/entrepreneurship related
+  const businessKeywords = [
+    /(startup|business|entrepreneur|founder|venture|saas|product-market fit|pmf)/i,
+    /(pricing strategy|go-to-market|gtm|launch strategy|market validation)/i,
+    /(competitor analysis|competitive advantage|market size|tam|sam|som)/i,
+    /(mvp|minimum viable product|customer discovery|user research)/i,
+    /(revenue model|business model|unit economics|cac|ltv)/i
+  ];
+  
+  // General search queries: broad informational questions
+  const generalSearchPatterns = [
+    /^(what is|who is|when did|where is|how does|explain)/i,
+    /^(tell me about|give me information|search for|find|look up)/i,
+    /(recent|latest|current|new|today|this week|this month|2024|2025)/i,
+    /(news|article|study|research paper|report|statistics|data)/i,
+    /(history of|background|overview|information about)/i
+  ];
+  
+  // Hybrid queries: Business questions needing current/realtime data
+  const hybridPatterns = [
+    /(current|latest|recent|today|this week|this month|2024|2025).*(market|trend|competitor|industry|pricing)/i,
+    /(market|trend|competitor|industry).*(current|latest|recent|today|now|2024|2025)/i,
+    /(what's happening|what's new|what changed).*(in|with|for).*(market|industry|startup|business)/i,
+    /(recent funding|latest news|current trends|today's market)/i
+  ];
+  
+  const hasBusinessKeywords = businessKeywords.some(p => p.test(lowerMessage));
+  const hasBusinessContext = Boolean(context.industry || context.businessType || context.stage);
+  const isGeneralSearch = generalSearchPatterns.some(p => p.test(lowerMessage)) && !hasBusinessKeywords;
+  const isHybridQuery = hybridPatterns.some(p => p.test(lowerMessage)) && (hasBusinessKeywords || hasBusinessContext);
+  
+  // Determine intent
+  if (isHybridQuery) {
+    return 'hybrid'; // Business question needing real-time web search
+  } else if (isGeneralSearch && !hasBusinessContext) {
+    return 'general'; // Broad informational query → web search
+  } else if (hasBusinessKeywords || hasBusinessContext) {
+    // Check if it needs real-time data
+    if (/(current|latest|recent|today|this week|now)/i.test(lowerMessage)) {
+      return 'hybrid'; // Business query with time-sensitivity
+    }
+    return 'business'; // Business question → enhanced RAG + market data
+  }
+  
+  // Default to conversational for chat-style interactions
+  return 'conversational';
+}
+
 function detectKnowledgeQuery(message: string, context: BusinessContext): boolean {
   const lowerMessage = message.toLowerCase();
   
@@ -1188,16 +1432,32 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
           await new Promise(r => setTimeout(r, 20)); // Balanced delay for smooth streaming
         }
         
-        // Add sources
+        // Add sources with type indicators
         if (sources.length > 0) {
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: '\n\n📚 **Sources:**\n' })}\n\n`
           ));
-          for (const s of sources.slice(0, 3)) {
+          for (const s of sources.slice(0, 5)) {
+            const sourceType = s.sourceType === 'web' ? '🌐' : '📖';
+            const sourceLabel = s.sourceType === 'web' ? 'Web' : 'Knowledge Base';
+            const sourceText = s.url 
+              ? `${sourceType} ${s.title} (${sourceLabel}) - ${s.url}`
+              : `${sourceType} ${s.title} (${s.source || sourceLabel})`;
             controller.enqueue(new TextEncoder().encode(
-              `data: ${JSON.stringify({ type: 'delta', content: `- ${s.title} (${s.source})\n` })}\n\n`
+              `data: ${JSON.stringify({ type: 'delta', content: `- ${sourceText}\n` })}\n\n`
             ));
           }
+          
+          // Send sources metadata for UI
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'sources', sources: sources.map((s: any) => ({
+              title: s.title,
+              url: s.url || s.source,
+              sourceType: s.sourceType || 'knowledge',
+              snippet: s.excerpt || s.snippet,
+              relevance: s.similarity || s.relevanceScore
+            })) })}\n\n`
+          ));
         }
         
         // Save in background
@@ -1207,7 +1467,12 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
               conversation_id: conversation.id,
               role: 'assistant',
               content: answer,
-              metadata: { rag: true, sources, timestamp: new Date().toISOString() }
+              metadata: { 
+                rag: true, 
+                sources, 
+                sourceTypes: sources.map((s: any) => s.sourceType || 'knowledge'),
+                timestamp: new Date().toISOString() 
+              }
             });
           } catch (e) {
             console.error('Error saving RAG message:', e);
@@ -1218,6 +1483,167 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
         const stage = determineConversationStage(businessContext, conversationHistory.length);
         controller.enqueue(new TextEncoder().encode(
           `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, message), rag: true, sources: sources.slice(0, 3) })}\n\n`
+        ));
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      } catch (e) {
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+        controller.close();
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+  });
+}
+
+// 🌐 Create web search stream response with sources
+function createWebSearchStream(webSearchData: any, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Response {
+  const { answer, sources = [] } = webSearchData;
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Stream answer word by word
+        const words = answer.split(' ');
+        for (let i = 0; i < words.length; i++) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+          ));
+          await new Promise(r => setTimeout(r, 20));
+        }
+        
+        // Add sources
+        if (sources.length > 0) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: '\n\n🌐 **Sources:**\n' })}\n\n`
+          ));
+          for (const s of sources.slice(0, 5)) {
+            const sourceText = s.url ? `🌐 ${s.title} - ${s.url}` : `🌐 ${s.title}`;
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({ type: 'delta', content: `- ${sourceText}\n` })}\n\n`
+            ));
+          }
+          
+          // Send sources metadata for UI
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'sources', sources: sources.map((s: any) => ({
+              title: s.title,
+              url: s.url,
+              sourceType: 'web',
+              snippet: s.snippet,
+              relevance: s.relevanceScore || 0.8,
+              publishedDate: s.publishedDate
+            })) })}\n\n`
+          ));
+        }
+        
+        // Save in background
+        queueMicrotask(async () => {
+          try {
+            await supabase.from('chatbot_messages').insert({
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: answer,
+              metadata: { 
+                webSearch: true, 
+                sources, 
+                sourceTypes: ['web'],
+                timestamp: new Date().toISOString() 
+              }
+            });
+          } catch (e) {
+            console.error('Error saving web search message:', e);
+          }
+        });
+        
+        // Complete
+        const stage = determineConversationStage(businessContext, conversationHistory.length);
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, message), webSearch: true, sources: sources.slice(0, 5) })}\n\n`
+        ));
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      } catch (e) {
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+        controller.close();
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+  });
+}
+
+// 🔀 Create merged search stream (RAG + Web Search)
+function createMergedSearchStream(mergedData: any, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Response {
+  const { answer, sources = [] } = mergedData;
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Stream answer word by word
+        const words = answer.split(' ');
+        for (let i = 0; i < words.length; i++) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+          ));
+          await new Promise(r => setTimeout(r, 20));
+        }
+        
+        // Add sources with type indicators
+        if (sources.length > 0) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'delta', content: '\n\n📚 **Sources:**\n' })}\n\n`
+          ));
+          for (const s of sources.slice(0, 8)) {
+            const sourceType = s.sourceType === 'web' ? '🌐' : '📖';
+            const sourceLabel = s.sourceType === 'web' ? 'Web' : 'Knowledge Base';
+            const sourceText = s.url 
+              ? `${sourceType} ${s.title} (${sourceLabel}) - ${s.url}`
+              : `${sourceType} ${s.title} (${s.source || sourceLabel})`;
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({ type: 'delta', content: `- ${sourceText}\n` })}\n\n`
+            ));
+          }
+          
+          // Send sources metadata for UI
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ type: 'sources', sources: sources.map((s: any) => ({
+              title: s.title,
+              url: s.url || s.source,
+              sourceType: s.sourceType || 'knowledge',
+              snippet: s.excerpt || s.snippet,
+              relevance: s.similarity || s.relevanceScore
+            })) })}\n\n`
+          ));
+        }
+        
+        // Save in background
+        queueMicrotask(async () => {
+          try {
+            await supabase.from('chatbot_messages').insert({
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: answer,
+              metadata: { 
+                hybridSearch: true,
+                sources, 
+                sourceTypes: sources.map((s: any) => s.sourceType || 'knowledge'),
+                timestamp: new Date().toISOString() 
+              }
+            });
+          } catch (e) {
+            console.error('Error saving merged search message:', e);
+          }
+        });
+        
+        // Complete
+        const stage = determineConversationStage(businessContext, conversationHistory.length);
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, message), hybridSearch: true, sources: sources.slice(0, 8) })}\n\n`
         ));
         controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();

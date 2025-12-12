@@ -16,6 +16,8 @@ import { HelpTooltip } from "@/components/ui/HelpTooltip";
 import { toast } from "sonner";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { SourceCitation } from "./chatbot/SourceCitation";
+import { SearchResults } from "./chatbot/SearchResults";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -144,6 +146,9 @@ export const BizMapChat = ({
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [searchStatus, setSearchStatus] = useState<'searching' | 'found' | 'none'>('none');
+  const [searchSourceCount, setSearchSourceCount] = useState(0);
+  const [currentSources, setCurrentSources] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -311,6 +316,14 @@ export const BizMapChat = ({
       console.log('💬 Sending message:', { message, filesCount: attachedFiles.length });
       lastSentMessage.current = messageContent;
       lastSendTime.current = now;
+      
+      // Detect if this might trigger a search
+      const mightSearch = /(what|who|when|where|how|search|find|latest|current|recent|tell me about)/i.test(messageContent);
+      if (mightSearch) {
+        setSearchStatus('searching');
+        setSearchSourceCount(0);
+      }
+      
       sendMessage(message, attachedFiles);
       setMessage("");
       setAttachedFiles([]);
@@ -323,6 +336,23 @@ export const BizMapChat = ({
       });
     }
   };
+  
+  // Monitor messages for sources to update search status
+  useEffect(() => {
+    const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
+    if (lastBotMessage?.sourceMetadata && lastBotMessage.sourceMetadata.length > 0) {
+      setSearchStatus('found');
+      setSearchSourceCount(lastBotMessage.sourceMetadata.length);
+      // Reset after 3 seconds
+      setTimeout(() => {
+        if (!isStreaming) {
+          setSearchStatus('none');
+        }
+      }, 3000);
+    } else if (!isStreaming && searchStatus === 'searching') {
+      setSearchStatus('none');
+    }
+  }, [messages, isStreaming]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -361,41 +391,53 @@ export const BizMapChat = ({
         aria-live="polite"
         aria-atomic="false"
       >
+        {/* Search Status Indicator */}
+        {isStreaming && searchStatus !== 'none' && (
+          <SearchResults status={searchStatus} sourceCount={searchSourceCount} />
+        )}
+        
         {messages.map((msg, index) => (
-          <div
-            key={msg.id}
-            className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
-            style={{ animationDelay: `${index * 50}ms` }}
-            role="article"
-            aria-label={msg.isBot ? "AI assistant message" : "Your message"}
-          >
-            {msg.isBot && (
-              <div 
-                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10"
-                aria-hidden="true"
-              >
-                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
-              </div>
-            )}
+          <div key={msg.id} className="space-y-2">
             <div
-              className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg ${
-                msg.isBot
-                  ? 'bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm hover:shadow-primary/5'
-                  : 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
-              }`}
+              className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
+              style={{ animationDelay: `${index * 50}ms` }}
+              role="article"
+              aria-label={msg.isBot ? "AI assistant message" : "Your message"}
             >
-              <p className="text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
-            </div>
-            {!msg.isBot && (
-              <Avatar 
-                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 shadow-lg shadow-primary/30 ring-2 ring-primary/20"
-                aria-hidden="true"
+              {msg.isBot && (
+                <div 
+                  className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10"
+                  aria-hidden="true"
+                >
+                  <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+                </div>
+              )}
+              <div
+                className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg ${
+                  msg.isBot
+                    ? 'bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm hover:shadow-primary/5'
+                    : 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
+                }`}
               >
-                <AvatarImage src={userAvatarUrl || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground flex items-center justify-center">
-                  {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
+                <p className="text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
+              </div>
+              {!msg.isBot && (
+                <Avatar 
+                  className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 shadow-lg shadow-primary/30 ring-2 ring-primary/20"
+                  aria-hidden="true"
+                >
+                  <AvatarImage src={userAvatarUrl || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground flex items-center justify-center">
+                    {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+            {/* Display sources for bot messages */}
+            {msg.isBot && msg.sourceMetadata && msg.sourceMetadata.length > 0 && (
+              <div className="ml-12 sm:ml-14">
+                <SourceCitation sources={msg.sourceMetadata} />
+              </div>
             )}
           </div>
         ))}

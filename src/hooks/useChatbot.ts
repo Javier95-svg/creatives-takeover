@@ -29,6 +29,17 @@ export interface ChatMessage {
   businessContext?: string;
   confidence?: number;
   sources?: string[];
+  sourceMetadata?: Array<{
+    title: string;
+    url?: string;
+    source?: string;
+    sourceType?: 'web' | 'knowledge';
+    snippet?: string;
+    excerpt?: string;
+    relevance?: number;
+    similarity?: number;
+    publishedDate?: string;
+  }>;
   attachments?: Array<{
     type: 'pdf' | 'xlsx' | 'docx' | 'image';
     name: string;
@@ -1602,7 +1613,7 @@ What specific aspect of your business would you like to focus on first?`;
             chatMode,
             messageAttachments,
             (chunk) => setStreamingMessage(prev => prev + chunk),
-            (fullMessage, quickActions) => {
+            (fullMessage, quickActions, sources) => {
               // Replace streaming message with final message and add quick actions
               setMessages(prev => prev.map(msg => 
                 msg.id === 'streaming' 
@@ -1610,12 +1621,17 @@ What specific aspect of your business would you like to focus on first?`;
                       ...msg, 
                       id: generateId(), 
                       content: fullMessage,
-                      quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text }))
+                      quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
+                      sources: sources?.map((s: any) => s.url || s.title) || [],
+                      sourceMetadata: sources
                     }
                   : msg
               ));
               setStreamingMessage('');
               setIsStreaming(false);
+            },
+            (sources) => {
+              // Handle sources as they arrive
             }
           );
           
@@ -1696,7 +1712,7 @@ What specific aspect of your business would you like to focus on first?`;
           chatMode,
           messageAttachments,
           (chunk) => setStreamingMessage(prev => prev + chunk),
-          (fullMessage, quickActions) => {
+          (fullMessage, quickActions, sources) => {
             // Replace streaming message with final message and add quick actions
             setMessages(prev => prev.map(msg => 
               msg.id === 'streaming' 
@@ -1704,12 +1720,18 @@ What specific aspect of your business would you like to focus on first?`;
                     ...msg, 
                     id: generateId(), 
                     content: fullMessage,
-                    quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text }))
+                    quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
+                    sources: sources?.map((s: any) => s.url || s.title) || [],
+                    sourceMetadata: sources
                   }
                 : msg
             ));
             setStreamingMessage('');
             setIsStreaming(false);
+          },
+          (sources) => {
+            // Handle sources as they arrive (for UI updates)
+            // Sources are already handled in onComplete
           }
         );
 
