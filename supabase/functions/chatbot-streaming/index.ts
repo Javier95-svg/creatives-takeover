@@ -158,7 +158,9 @@ serve(async (req) => {
       wizardMode = null,
       currentStep = null,
       chatMode = 'wizard',
-      attachments = []
+      attachments = [],
+      aiMode = 'strategy', // Default to Strategy Mode
+      strategyProgress = null // User's strategy mode progress
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -283,6 +285,11 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
     const optimizedHistory = conversationHistory.slice(-6);
     
+    // 🎯 AI MODE DETECTION: Determine operational mode (Strategy is default for new users)
+    const detectedMode = detectAIMode(message, businessContext, chatMode, userId, strategyProgress);
+    const activeMode = aiMode || detectedMode; // Use provided mode or detect
+    console.log(`🎯 AI Mode: ${activeMode} (detected: ${detectedMode})`);
+    
     // 🔍 SEARCH INTENT DETECTION: Classify query for routing
     const searchIntent = detectSearchIntent(message, businessContext, chatMode);
     console.log(`🔍 Search intent detected: ${searchIntent}`);
@@ -293,8 +300,8 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Detect if query needs market data
     const needsMarketData = detectMarketDataQuery(message, businessContext);
     
-    // 🌐 WEB SEARCH: Determine if query needs web search
-    const needsWebSearch = searchIntent === 'general' || searchIntent === 'hybrid';
+    // 🌐 WEB SEARCH: Determine if query needs web search (Research Mode prioritizes web search)
+    const needsWebSearch = activeMode === 'research' || searchIntent === 'general' || searchIntent === 'hybrid';
     
     // 🚀 OPTIMIZATION: Parallel processing with timeouts - start RAG, market data, web search simultaneously
     // Timeouts are handled inside fetch functions (1000ms max each)
@@ -310,8 +317,15 @@ serve(async (req) => {
         : Promise.resolve(null)
     ]);
     
-    // 🚀 OPTIMIZATION: Build system prompt with market data and web search if available
-    let systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+    // 🚀 OPTIMIZATION: Build system prompt based on AI mode and available data
+    let systemPrompt = buildModeSpecificPrompt(
+      activeMode, 
+      businessContext, 
+      wizardMode, 
+      currentStep, 
+      chatMode,
+      strategyProgress
+    );
     
     // Add web search results if available
     if (webSearchData?.success && webSearchData.answer) {
@@ -1284,6 +1298,201 @@ function mergeSearchResults(ragData: any, webSearchData: any): any {
     sources: uniqueSources.slice(0, 8), // Limit to top 8 sources
     model: 'hybrid'
   };
+}
+
+// 🎯 AI MODE DETECTION: Determine operational mode for multi-mode platform
+type AIMode = 'strategy' | 'business' | 'research' | 'investor';
+
+function detectAIMode(message: string, context: BusinessContext, chatMode: string, userId: string | null, strategyProgress: any): AIMode {
+  const lowerMessage = message.toLowerCase();
+  
+  // Strategy Mode is REQUIRED first stop for new users
+  // Check if user has completed Strategy Mode
+  const hasCompletedStrategy = strategyProgress?.completionStatus === 'completed';
+  const currentStrategyStep = strategyProgress?.currentStep || 0;
+  
+  // Force Strategy Mode for new users or users mid-strategy
+  if (!hasCompletedStrategy && currentStrategyStep < 7) {
+    // Allow explicit requests for Research/Investor modes even during strategy
+    if (/research|market.*research|trend.*analysis/i.test(lowerMessage)) {
+      return 'research'; // Research mode available during strategy
+    }
+    if (/investor|funding|pitch|raise.*capital/i.test(lowerMessage)) {
+      return 'investor'; // Investor mode available during strategy
+    }
+    // Block switching to Business Mode until Strategy is complete
+    if (/business.*mode|switch.*mode/i.test(lowerMessage) && currentStrategyStep < 2) {
+      return 'strategy'; // Keep in strategy
+    }
+    return 'strategy'; // Required progression
+  }
+  
+  // After Strategy Mode completion, detect based on query:
+  
+  // Investor Mode (highest priority for explicit requests)
+  if (/investor|funding|pitch|raise|valuation|vc|angel|deck|investor.*deck/i.test(lowerMessage)) {
+    return 'investor';
+  }
+  
+  // Research Mode
+  if (/research|market.*trend|data.*analysis|insight.*research|trend.*analysis/i.test(lowerMessage)) {
+    return 'research';
+  }
+  
+  // Business Mode (advanced planning after strategy)
+  if (/advanced.*plan|business.*model|detailed.*planning|comprehensive.*plan|full.*business.*plan/i.test(lowerMessage)) {
+    return 'business';
+  }
+  
+  // Strategy Mode patterns (always available)
+  if (/strategy|strategic|competitive|positioning|swot|differentiation/i.test(lowerMessage)) {
+    return 'strategy';
+  }
+  
+  // Default based on completion status
+  return hasCompletedStrategy ? 'business' : 'strategy';
+}
+
+// 🎯 BUILD MODE-SPECIFIC PROMPTS
+function buildModeSpecificPrompt(
+  mode: AIMode,
+  businessContext: BusinessContext,
+  wizardMode: any,
+  currentStep: number | null,
+  chatMode: string,
+  strategyProgress: any
+): string {
+  const { industry, businessType, stage, location, budget, goals = [] } = businessContext;
+  
+  // Build contextual insights
+  const contextInsights = [];
+  if (industry) contextInsights.push(`Industry: ${industry}`);
+  if (businessType) contextInsights.push(`Type: ${businessType}`);
+  if (stage) contextInsights.push(`Stage: ${stage}`);
+  if (location) contextInsights.push(`Location: ${location}`);
+  if (budget) contextInsights.push(`Budget: ${budget}`);
+  if (goals.length > 0) contextInsights.push(`Goals: ${goals.join(', ')}`);
+  
+  const contextString = contextInsights.length > 0 
+    ? `\n\n📊 BUSINESS CONTEXT:\n${contextInsights.join('\n')}` 
+    : '';
+  
+  // Strategy Mode: 7-Step Guided Workshop + Cofounder
+  if (mode === 'strategy') {
+    const stepNumber = (currentStep || strategyProgress?.currentStep || 0) + 1;
+    const totalSteps = 7;
+    const completedSteps = strategyProgress?.completedSteps || [];
+    const progressPercent = Math.round((completedSteps.length / totalSteps) * 100);
+    
+    const stepTitles = [
+      'Business Concept (Days 1-2)',
+      'Target Customer (Days 3-4)',
+      'Validation Plan (Days 5-7)',
+      'MVP Design (Days 8-14)',
+      'Launch Strategy (Days 15-21)',
+      'Pricing Model (Days 22-28)',
+      'Goals & Timeline (Days 29-30)'
+    ];
+    
+    return `You are BizMap AI - a strategic workshop facilitator and AI co-founder helping entrepreneurs build their business plan through a structured 7-step process.
+
+🎯 STRATEGY MODE: 7-Step Guided Workshop
+Current Step: ${stepNumber}/7 - ${stepTitles[stepNumber - 1] || 'Getting Started'}
+Progress: ${progressPercent}% complete
+${completedSteps.length > 0 ? `Completed Steps: ${completedSteps.map((s: number) => s + 1).join(', ')}` : 'Starting your journey!'}
+${contextString}
+
+YOUR ROLE: Workshop Facilitator + Strategic Cofounder
+• You are leading a structured workshop, not having a casual chat
+• Be directional and action-driven - always guide to the next step
+• Act as both a facilitator (guiding the process) and cofounder (providing strategic insight)
+• Optimize for completion and retention - keep users engaged and progressing
+
+STEP PROGRESSION RULES:
+• Users MUST complete steps sequentially - they cannot skip ahead
+• Each step must be completed before moving to the next
+• Celebrate step completions to build momentum
+• If user tries to skip ahead, gently guide them back to current step
+• Show clear "what's next" guidance at the end of each step
+
+CURRENT STEP FOCUS (Step ${stepNumber}):
+${stepNumber === 1 ? `Focus on understanding their core business concept. Ask clarifying questions if needed, but keep momentum.` : ''}
+${stepNumber === 2 ? `Help them identify their ideal FIRST customer. Be specific about demographics, location, and where to find them.` : ''}
+${stepNumber === 3 ? `Guide them through validation methods. Emphasize testing demand before building.` : ''}
+${stepNumber === 4 ? `Keep MVP scope minimal. Fight feature creep. Focus on core problem-solving features only.` : ''}
+${stepNumber === 5 ? `Help them identify specific channels and tactics for their first 10 users. Be tactical, not theoretical.` : ''}
+${stepNumber === 6 ? `Guide pricing strategy that makes sense for early customers. Balance value with acquisition.` : ''}
+${stepNumber === 7 ? `Set realistic, measurable goals. Focus on validation milestones, not vanity metrics.` : ''}
+
+RESPONSE STYLE:
+• Be encouraging but directive: "Great answer! Now let's move to the next step..."
+• Always end with clear next action: "Once you complete this step, we'll move to [next step title]"
+• Use timeline awareness: "You're on Day ${stepNumber * 4} of your 30-day plan..."
+• Celebrate progress: "You're ${progressPercent}% done with the workshop!"
+• Be action-oriented: Focus on what they'll DO, not just what they'll think
+
+RETENTION OPTIMIZATION:
+• Acknowledge their effort: "I can see you're putting real thought into this..."
+• Build anticipation: "Once we finish Step ${stepNumber}, you'll have [benefit]..."
+• Show progress: "You've completed ${completedSteps.length} of 7 steps - keep going!"
+• Create urgency: "Let's complete this step so you can move forward with confidence"
+
+If user tries to skip steps or ask about future steps, redirect:
+"Let's focus on completing Step ${stepNumber} first. Once you finish this, we'll tackle [next step] together. This sequential approach ensures your plan is solid at every stage."
+
+Keep responses concise (2-3 sentences, 80 words max) but strategic. You're their cofounder, guiding them through this workshop with expertise and encouragement.`;
+  }
+  
+  // Research Mode
+  if (mode === 'research') {
+    return `You are BizMap AI - a market research specialist with access to real-time data and insights.
+${contextString}
+
+YOUR EXPERTISE:
+• Real-time market data and trend analysis
+• Industry insights and competitive intelligence
+• Data-driven recommendations with citations
+
+RESPONSE STYLE:
+• Fact-focused and comprehensive
+• Always cite sources when providing data
+• Provide specific numbers, dates, and sources
+• Distinguish verified facts from insights
+
+Use web search and market data to provide current, accurate research.`;
+  }
+  
+  // Investor Mode
+  if (mode === 'investor') {
+    return `You are BizMap AI - a fundraising advisor and pitch coach.
+${contextString}
+
+YOUR EXPERTISE:
+• Pitch deck creation and optimization
+• Fundraising strategy and investor relations
+• Valuation guidance and term sheet understanding
+• Investor matching and outreach
+
+RESPONSE STYLE:
+• Professional and pitch-oriented
+• Results-focused with metrics emphasis
+• Actionable fundraising guidance
+• Investor perspective awareness
+
+Help them prepare compelling pitches and effective fundraising strategies.`;
+  }
+  
+  // Business Mode (Advanced - post-strategy)
+  return `You are BizMap AI - an advanced business planning advisor.
+${contextString}
+
+YOUR EXPERTISE:
+• Comprehensive business plan development
+• Advanced market validation
+• Financial modeling and projections
+• Strategic business planning
+
+This mode is for users who have completed the Strategy Workshop and want to dive deeper.`;
 }
 
 // 🔍 SEARCH INTENT DETECTION: Classify query type for routing
