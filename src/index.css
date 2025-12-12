@@ -72,29 +72,6 @@ All colors MUST be HSL.
     --neutral-gray: 215 16% 47%;
     --neutral-gray-light: 215 20% 65%;
 
-    /* 🎨 CREATIVE & BOLD: Vibrant accent colors for interactive elements */
-    --accent-bold: 262 83% 58%; /* Vibrant purple */
-    --accent-bold-2: 280 90% 60%; /* Bright magenta */
-    --accent-cyan: 188 94% 56%; /* Electric cyan */
-    --accent-orange: 25 95% 53%; /* Bold orange */
-    --accent-yellow: 48 96% 53%; /* Vibrant yellow */
-    --accent-pink: 330 81% 60%; /* Hot pink */
-    
-    /* Bold color combinations for creative designs */
-    --bold-gradient-1: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 90% 60%), hsl(330 81% 60%));
-    --bold-gradient-2: linear-gradient(135deg, hsl(217 91% 60%), hsl(188 94% 56%), hsl(142 76% 36%));
-    --bold-gradient-3: linear-gradient(135deg, hsl(25 95% 53%), hsl(48 96% 53%), hsl(142 76% 36%));
-    --bold-gradient-4: linear-gradient(135deg, hsl(280 90% 60%), hsl(330 81% 60%), hsl(25 95% 53%));
-    
-    /* Animated gradient for borders and highlights */
-    --gradient-flow: linear-gradient(90deg, 
-      hsl(262 83% 58%), 
-      hsl(280 90% 60%), 
-      hsl(330 81% 60%), 
-      hsl(25 95% 53%), 
-      hsl(262 83% 58%));
-    --gradient-flow-size: 300% 100%;
-
     /* RGB Gradients for Light Theme - Enhanced contrast */
     --gradient-primary: linear-gradient(135deg, hsl(var(--blue-dark)), hsl(217 91% 45%));
     --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
@@ -241,29 +218,6 @@ All colors MUST be HSL.
     --neutral-gray: 215 15% 65%;
     --neutral-gray-light: 215 20% 75%;
     
-    /* 🎨 CREATIVE & BOLD: Vibrant accent colors for dark mode (brighter) */
-    --accent-bold: 262 83% 68%; /* Vibrant purple - brighter */
-    --accent-bold-2: 280 90% 70%; /* Bright magenta - brighter */
-    --accent-cyan: 188 94% 66%; /* Electric cyan - brighter */
-    --accent-orange: 25 95% 63%; /* Bold orange - brighter */
-    --accent-yellow: 48 96% 63%; /* Vibrant yellow - brighter */
-    --accent-pink: 330 81% 70%; /* Hot pink - brighter */
-    
-    /* Bold color combinations for dark mode */
-    --bold-gradient-1: linear-gradient(135deg, hsl(262 83% 68%), hsl(280 90% 70%), hsl(330 81% 70%));
-    --bold-gradient-2: linear-gradient(135deg, hsl(217 92% 65%), hsl(188 94% 66%), hsl(142 72% 45%));
-    --bold-gradient-3: linear-gradient(135deg, hsl(25 95% 63%), hsl(48 96% 63%), hsl(142 72% 45%));
-    --bold-gradient-4: linear-gradient(135deg, hsl(280 90% 70%), hsl(330 81% 70%), hsl(25 95% 63%));
-    
-    /* Animated gradient for borders and highlights - dark mode */
-    --gradient-flow: linear-gradient(90deg, 
-      hsl(262 83% 68%), 
-      hsl(280 90% 70%), 
-      hsl(330 81% 70%), 
-      hsl(25 95% 63%), 
-      hsl(262 83% 68%));
-    --gradient-flow-size: 300% 100%;
-    
     /* Sidebar colors for dark mode */
     --sidebar-background: 222 15% 11%;
     --sidebar-foreground: 210 20% 95%;
@@ -370,90 +324,6 @@ All colors MUST be HSL.
     color: hsl(var(--blue-dark));
     /* Text shadow for better visibility in light mode */
     filter: drop-shadow(0 1px 2px hsl(var(--foreground) / 0.08));
-  }
-
-  /* 🎨 CREATIVE & BOLD: Animated gradient text */
-  .gradient-text-bold {
-    background: var(--bold-gradient-1);
-    background-size: var(--gradient-flow-size);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: inline-block;
-    font-weight: 700;
-    animation: gradient-flow 3s ease infinite;
-    color: hsl(var(--accent-bold));
-  }
-
-  /* 🎨 CREATIVE & BOLD: Vibrant gradient backgrounds */
-  .bg-gradient-bold {
-    background: var(--bold-gradient-1);
-    background-size: var(--gradient-flow-size);
-    animation: gradient-flow 4s ease infinite;
-  }
-
-  .bg-gradient-bold-2 {
-    background: var(--bold-gradient-2);
-    background-size: var(--gradient-flow-size);
-    animation: gradient-flow 5s ease infinite;
-  }
-
-  .bg-gradient-bold-3 {
-    background: var(--bold-gradient-3);
-    background-size: var(--gradient-flow-size);
-    animation: gradient-flow 6s ease infinite;
-  }
-
-  /* 🎨 CREATIVE & BOLD: Animated gradient borders */
-  .border-gradient-bold {
-    position: relative;
-    border: 2px solid transparent;
-    background: hsl(var(--card));
-    background-clip: padding-box;
-  }
-
-  .border-gradient-bold::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2px;
-    background: var(--gradient-flow);
-    background-size: var(--gradient-flow-size);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: gradient-flow 3s ease infinite;
-    z-index: -1;
-  }
-
-  /* 🎨 CREATIVE & BOLD: Glowing effects */
-  .glow-bold {
-    box-shadow: 
-      0 0 20px hsl(var(--accent-bold) / 0.4),
-      0 0 40px hsl(var(--accent-bold-2) / 0.3),
-      0 0 60px hsl(var(--accent-cyan) / 0.2);
-  }
-
-  .glow-bold-blue {
-    box-shadow: 
-      0 0 20px hsl(var(--blue-primary) / 0.5),
-      0 0 40px hsl(var(--blue-primary) / 0.3),
-      0 0 60px hsl(var(--blue-primary) / 0.2);
-  }
-
-  .glow-bold-purple {
-    box-shadow: 
-      0 0 20px hsl(var(--accent-bold) / 0.5),
-      0 0 40px hsl(var(--accent-bold) / 0.3),
-      0 0 60px hsl(var(--accent-bold) / 0.2);
-  }
-
-  .glow-bold-pink {
-    box-shadow: 
-      0 0 20px hsl(var(--accent-pink) / 0.5),
-      0 0 40px hsl(var(--accent-pink) / 0.3),
-      0 0 60px hsl(var(--accent-pink) / 0.2);
   }
   
   /* Dark mode gradient-text - brighter for visibility */
@@ -862,6 +732,69 @@ All colors MUST be HSL.
     background: linear-gradient(135deg, hsl(210 40% 96%), hsl(210 40% 94%), hsl(215 20% 92%));
   }
 
+  .bizmap-chat-ambient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 150% at 20% 10%, rgba(35, 199, 189, 0.12), transparent 55%),
+      radial-gradient(130% 160% at 80% 120%, rgba(14, 18, 31, 0.65), #0b0f1a 95%);
+  }
+
+  /* Light mode: Gray gradient ambient background */
+  :root:not(.dark) .bizmap-chat-ambient {
+    background: linear-gradient(135deg, 
+      hsl(210 40% 96% / 0.8), 
+      hsl(210 40% 94% / 0.9), 
+      hsl(215 20% 92% / 0.85));
+  }
+
+  .bizmap-chat-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: url("/assets/chat-celebration-dark.svg");
+    background-size: 180px 180px;
+    background-position: center;
+    opacity: 0.12;
+  }
+
+  .bizmap-chat-glow-layer,
+  .bizmap-chat-shimmer {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .bizmap-chat-glow-layer {
+    opacity: 0.2;
+    background: radial-gradient(60% 80% at 50% 50%, rgba(35, 199, 189, 0.18), transparent 70%);
+    animation: wallpaperGlow 22s ease-in-out infinite;
+  }
+
+  .bizmap-chat-shimmer {
+    width: 220%;
+    height: 100%;
+    top: 0;
+    left: -120%;
+    opacity: 0.18;
+    background: linear-gradient(120deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+    transform: translateX(-10%);
+    animation: wallpaperShimmer 18s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bizmap-chat-glow-layer,
+    .bizmap-chat-shimmer {
+      animation: none !important;
+      opacity: 0.18;
+    }
+    .bizmap-chat-shimmer {
+      display: none;
+    }
+  }
 
   /* Dark Silver Background Utilities */
   .bg-gradient-silver {
@@ -1829,171 +1762,8 @@ All colors MUST be HSL.
 
 /* Creatives Takeover Gradient Animations */
 @keyframes gradient-flow {
-  0% { background-position: 0% 50%; }
+  0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* 🎨 CREATIVE & BOLD: Pulsing glow animation */
-@keyframes pulse-glow-bold {
-  0%, 100% {
-    box-shadow: 
-      0 0 20px hsl(var(--accent-bold) / 0.4),
-      0 0 40px hsl(var(--accent-bold-2) / 0.3),
-      0 0 60px hsl(var(--accent-cyan) / 0.2);
-  }
-  50% {
-    box-shadow: 
-      0 0 30px hsl(var(--accent-bold) / 0.6),
-      0 0 60px hsl(var(--accent-bold-2) / 0.5),
-      0 0 90px hsl(var(--accent-cyan) / 0.4);
-  }
-}
-
-/* 🎨 CREATIVE & BOLD: Shimmer animation for text */
-@keyframes shimmer-bold {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
-.shimmer-bold {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: shimmer-bold 2s ease-in-out infinite;
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-/* Simple fade-in animation for messages */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Message content typography */
-.message-content {
-  line-height: 1.6;
-}
-
-.message-content strong {
-  font-weight: 600;
-}
-
-.message-content code {
-  font-family: 'Fira Code', 'Monaco', 'Courier New', monospace;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.875em;
-  background: hsl(var(--muted));
-  border: 1px solid hsl(var(--border));
-}
-
-.message-content a {
-  color: hsl(var(--primary));
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.2s ease;
-}
-
-.message-content a:hover {
-  color: hsl(var(--primary) / 0.8);
-}
-
-
-
-/* Mobile optimizations */
-@media (max-width: 640px) {
-  /* Reduce animation complexity on mobile for better performance */
-
-  /* Larger touch targets */
-  button,
-  a,
-  input {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Reduced shadow complexity on mobile */
-  .glow-bold,
-  .glow-bold-blue,
-  .glow-bold-purple,
-  .glow-bold-pink {
-    box-shadow: 
-      0 0 15px hsl(var(--accent-bold) / 0.3);
-  }
-
-
-  /* Optimize typography for mobile readability */
-  .message-content {
-    font-size: 0.9375rem;
-    line-height: 1.6;
-  }
-
-  /* Touch-friendly spacing */
-  .message-content code {
-    padding: 3px 8px;
-    font-size: 0.8125rem;
-  }
-
-  /* Simplified hover effects on mobile */
-  @media (hover: none) {
-    .hover\:scale-\[1\.02\]:hover,
-    .hover\:scale-110:hover,
-    .hover\:scale-105:hover {
-      transform: scale(1);
-    }
-
-    .hover\:rotate-12:hover,
-    .hover\:rotate-3:hover {
-      transform: rotate(0deg);
-    }
-  }
-}
-
-/* 🎨 CREATIVE & BOLD: Touch device optimizations */
-@media (pointer: coarse) {
-  /* Larger interactive elements for touch */
-  button,
-  a[href],
-  input[type="text"],
-  input[type="email"],
-  textarea {
-    min-height: 44px;
-  }
-
-  /* Reduce hover effects on touch devices */
-  *:hover {
-    transition-duration: 0.1s;
-  }
-}
-
-/* 🎨 CREATIVE & BOLD: Button ripple effect */
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-.animate-ripple {
-  animation: ripple 0.6s ease-out;
 }
 
 /* RGB Gradient Animations */

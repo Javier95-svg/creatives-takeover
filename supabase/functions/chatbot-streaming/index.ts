@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
-import { logError, logAPIKeyValidationFailure, logAuthFailure, logRateLimit, logModelError } from '../_shared/logger.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -130,85 +129,6 @@ const REQUEST_DEDUP_TTL = 5000; // 5 seconds (kept for reference, not used)
 const SYSTEM_PROMPT_CACHE = new Map<string, { prompt: string; timestamp: number }>();
 const PROMPT_CACHE_TTL = 3600000; // 1 hour
 
-// API Key validation cache (5 minute TTL)
-const API_KEY_VALIDATION_CACHE = new Map<string, { valid: boolean; validatedAt: number; error?: string }>();
-const API_KEY_VALIDATION_TTL = 5 * 60 * 1000; // 5 minutes
-
-/**
- * Validate LOVABLE_API_KEY by making a test API call
- * Results are cached for 5 minutes to avoid excessive validation calls
- */
-async function validateAPIKey(apiKey: string, endpoint: string = 'chatbot-streaming'): Promise<{ valid: boolean; error?: string }> {
-  const cacheKey = `lovable_api_key_${apiKey.substring(0, 10)}`;
-  const cached = API_KEY_VALIDATION_CACHE.get(cacheKey);
-  
-  // Return cached result if still valid
-  if (cached && (Date.now() - cached.validatedAt) < API_KEY_VALIDATION_TTL) {
-    if (!cached.valid) {
-      logAPIKeyValidationFailure('LOVABLE_API_KEY', cached.error || 'Invalid API key', { endpoint });
-    }
-    return { valid: cached.valid, error: cached.error };
-  }
-
-  // Validate the API key
-  try {
-    const testResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'user', content: 'test' }],
-        max_tokens: 5,
-      }),
-    });
-
-    if (testResponse.status === 401) {
-      const error = 'Invalid API key (401 Unauthorized)';
-      API_KEY_VALIDATION_CACHE.set(cacheKey, {
-        valid: false,
-        validatedAt: Date.now(),
-        error,
-      });
-      logAPIKeyValidationFailure('LOVABLE_API_KEY', error, { endpoint });
-      return { valid: false, error };
-    }
-
-    if (testResponse.status === 429) {
-      const error = 'Rate limit exceeded during validation';
-      // Don't cache rate limit errors - they're temporary
-      logAPIKeyValidationFailure('LOVABLE_API_KEY', error, { endpoint });
-      return { valid: false, error };
-    }
-
-    if (!testResponse.ok) {
-      const errorText = await testResponse.text();
-      const error = `API error: ${testResponse.status} - ${errorText.substring(0, 100)}`;
-      API_KEY_VALIDATION_CACHE.set(cacheKey, {
-        valid: false,
-        validatedAt: Date.now(),
-        error,
-      });
-      logAPIKeyValidationFailure('LOVABLE_API_KEY', error, { endpoint });
-      return { valid: false, error };
-    }
-
-    // Key is valid
-    API_KEY_VALIDATION_CACHE.set(cacheKey, {
-      valid: true,
-      validatedAt: Date.now(),
-    });
-    return { valid: true };
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error during validation';
-    // Don't cache network errors - they're temporary
-    logAPIKeyValidationFailure('LOVABLE_API_KEY', errorMsg, { endpoint });
-    return { valid: false, error: errorMsg };
-  }
-}
-
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -221,148 +141,6 @@ interface BusinessContext {
   location?: string;
   budget?: string;
   goals?: string[];
-}
-
-/**
- * Calculate ambiguity score for a response (0-100, higher = more ambiguous/nonsensical)
- */
-function calculateAmbiguityScore(response: string, userMessage: string, businessContext: BusinessContext): number {
-  let score = 0;
-  const lowerResponse = response.toLowerCase();
-  const lowerUserMessage = userMessage.toLowerCase();
-  
-  // Generic responses that don't address the question
-  const genericPatterns = [
-    /^(i (don't know|can't help|am not sure)|sorry,? i (don't|can't)|unfortunately)/i,
-    /^(that's (a|an) (good|interesting|great) (question|idea))/i,
-    /^(let me (think|see)|i (need|would) (to|like) (to|more) (think|know|understand))/i,
-    /^(i'm (not|unable) (sure|certain|able))/i,
-  ];
-  
-  for (const pattern of genericPatterns) {
-    if (pattern.test(response)) {
-      score += 30;
-    }
-  }
-  
-  // Very short responses (likely incomplete or generic)
-  if (response.length < 20) {
-    score += 25;
-  }
-  
-  // Responses that don't mention any keywords from the user's message
-  const userKeywords = lowerUserMessage.split(/\s+/).filter(w => w.length > 4);
-  const mentionedKeywords = userKeywords.filter(keyword => lowerResponse.includes(keyword));
-  if (userKeywords.length > 0 && mentionedKeywords.length === 0) {
-    score += 20;
-  }
-  
-  // Responses that don't reference business context when available
-  if (businessContext.industry && !lowerResponse.includes(businessContext.industry.toLowerCase())) {
-    score += 15;
-  }
-  
-  // Responses with excessive hedging
-  const hedgingPatterns = /(might|maybe|perhaps|possibly|could|may|probably|likely)/gi;
-  const hedgingCount = (response.match(hedgingPatterns) || []).length;
-  if (hedgingCount > 3) {
-    score += 10;
-  }
-  
-  return Math.min(100, score);
-}
-
-/**
- * Calculate context quality score (0-100, higher = better context)
- */
-function calculateContextQualityScore(conversationHistory: ChatMessage[], businessContext: BusinessContext): number {
-  let score = 0;
-  
-  // More messages = better context
-  if (conversationHistory.length >= 10) score += 30;
-  else if (conversationHistory.length >= 5) score += 20;
-  else if (conversationHistory.length >= 2) score += 10;
-  
-  // Business context richness
-  const contextFields = Object.keys(businessContext).filter(key => businessContext[key as keyof BusinessContext]);
-  if (contextFields.length >= 3) score += 30;
-  else if (contextFields.length >= 2) score += 20;
-  else if (contextFields.length >= 1) score += 10;
-  
-  // Recent conversation activity (last 3 messages)
-  const recentMessages = conversationHistory.slice(-3);
-  const hasRecentUserQuestion = recentMessages.some(msg => msg.role === 'user' && msg.content.includes('?'));
-  if (hasRecentUserQuestion) score += 20;
-  
-  // Conversation continuity (bot references previous messages)
-  if (conversationHistory.length > 1) {
-    const lastBotMessage = [...conversationHistory].reverse().find(msg => msg.role === 'assistant');
-    if (lastBotMessage) {
-      const prevUserMessage = [...conversationHistory].reverse().find(msg => msg.role === 'user');
-      if (prevUserMessage && lastBotMessage.content.toLowerCase().includes(prevUserMessage.content.substring(0, 20).toLowerCase())) {
-        score += 20;
-      }
-    }
-  }
-  
-  return Math.min(100, score);
-}
-
-/**
- * Smart message selection: prioritize important messages instead of just last N
- * Prioritizes: system messages, recent user questions, context-rich bot responses
- */
-function selectImportantMessages(messages: ChatMessage[], maxMessages: number): ChatMessage[] {
-  if (messages.length <= maxMessages) {
-    return messages;
-  }
-
-  // Score each message by importance
-  const scoredMessages = messages.map((msg, index) => {
-    let score = 0;
-    const isRecent = index >= messages.length - 5; // Last 5 messages get bonus
-    const isSystem = msg.role === 'system';
-    const isUser = msg.role === 'user';
-    const contentLength = msg.content.length;
-    
-    // System messages are always important
-    if (isSystem) score += 1000;
-    
-    // Recent messages get priority
-    if (isRecent) score += 100 - (messages.length - index) * 10;
-    
-    // User questions are important
-    if (isUser) {
-      score += 50;
-      // Questions (containing ?) are more important
-      if (msg.content.includes('?')) score += 30;
-    }
-    
-    // Longer messages (more context) are more important
-    if (contentLength > 100) score += 20;
-    if (contentLength > 300) score += 30;
-    
-    // Bot responses with context (mentioning previous topics) are important
-    if (msg.role === 'assistant' && contentLength > 150) {
-      score += 25;
-    }
-    
-    return { message: msg, score, index };
-  });
-
-  // Sort by score (highest first), then by index (most recent first for ties)
-  scoredMessages.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    return b.index - a.index;
-  });
-
-  // Take top N and restore chronological order
-  const selected = scoredMessages
-    .slice(0, maxMessages)
-    .sort((a, b) => a.index - b.index)
-    .map(item => item.message);
-
-  return selected;
 }
 
 serve(async (req) => {
@@ -380,9 +158,7 @@ serve(async (req) => {
       wizardMode = null,
       currentStep = null,
       chatMode = 'wizard',
-      attachments = [],
-      aiMode = 'strategy', // Default to Strategy Mode
-      strategyProgress = null // User's strategy mode progress
+      attachments = []
     } = await req.json();
 
     if (!message || !sessionId) {
@@ -419,52 +195,6 @@ serve(async (req) => {
       conversation = newConv;
     }
 
-    // 🔄 CONTEXT FIX: Load full conversation history from database
-    // This ensures we have complete context even if frontend state is lost
-    let dbConversationHistory: ChatMessage[] = [];
-    if (conversation.id) {
-      const { data: dbMessages, error: messagesError } = await supabase
-        .from('chatbot_messages')
-        .select('role, content, created_at')
-        .eq('conversation_id', conversation.id)
-        .order('created_at', { ascending: true });
-      
-      if (!messagesError && dbMessages) {
-        dbConversationHistory = dbMessages
-          .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-          .map(msg => ({
-            role: msg.role as 'user' | 'assistant',
-            content: msg.content || ''
-          }));
-      }
-    }
-
-    // Merge DB history with provided history (prioritize DB version for accuracy)
-    // Remove duplicates by content and timestamp proximity
-    const mergedHistory: ChatMessage[] = [];
-    const seenMessages = new Set<string>();
-    
-    // First add DB messages (they're the source of truth)
-    for (const msg of dbConversationHistory) {
-      const key = `${msg.role}:${msg.content.substring(0, 50)}`;
-      if (!seenMessages.has(key)) {
-        mergedHistory.push(msg);
-        seenMessages.add(key);
-      }
-    }
-    
-    // Then add provided history messages that aren't duplicates
-    for (const msg of conversationHistory) {
-      const key = `${msg.role}:${msg.content.substring(0, 50)}`;
-      if (!seenMessages.has(key)) {
-        mergedHistory.push(msg);
-        seenMessages.add(key);
-      }
-    }
-    
-    // Use merged history instead of provided history
-    const enrichedConversationHistory = mergedHistory;
-
     // 🚀 OPTIMIZATION: Save user message first (before any early returns)
     // This ensures user messages are always saved, even for template/cache hits
     const userMessageSavePromise = supabase
@@ -485,15 +215,15 @@ serve(async (req) => {
       console.log('⚡ Template match - returning instant response');
       const templateResponse = matchedTemplate.response;
       // User message save is already in progress, return immediately
-      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, enrichedConversationHistory, chatMode, supabase);
+      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode, supabase);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
 
     // 🚀 OPTIMIZATION: Generate cache keys in parallel (only if template didn't match)
     const [requestFingerprint, cacheKey] = await Promise.all([
-      generateRequestFingerprint(message, businessContext, enrichedConversationHistory),
-      generateCacheKey(message, businessContext, enrichedConversationHistory, chatMode)
+      generateRequestFingerprint(message, businessContext, conversationHistory),
+      generateCacheKey(message, businessContext, conversationHistory, chatMode)
     ]);
 
     // Check request deduplication cache (in-memory, fast)
@@ -505,7 +235,7 @@ serve(async (req) => {
     if (cachedResponse) {
       console.log('⚡ Cache hit - returning cached response');
       // User message save is already in progress, return immediately
-      const response = createCachedStream(cachedResponse, message, conversation, businessContext, enrichedConversationHistory, chatMode, supabase);
+      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode, supabase);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
@@ -550,14 +280,8 @@ serve(async (req) => {
       console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
     }
 
-    // 🔄 CONTEXT FIX: Use enriched history and increase window to 20 messages
-    // Smart selection: prioritize important messages (system, recent user questions, context-rich bot responses)
-    const optimizedHistory = selectImportantMessages(enrichedConversationHistory, 20);
-    
-    // 🎯 AI MODE DETECTION: Determine operational mode (Strategy is default for new users)
-    const detectedMode = detectAIMode(message, businessContext, chatMode, userId, strategyProgress);
-    const activeMode = aiMode || detectedMode; // Use provided mode or detect
-    console.log(`🎯 AI Mode: ${activeMode} (detected: ${detectedMode})`);
+    // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
+    const optimizedHistory = conversationHistory.slice(-6);
     
     // 🔍 SEARCH INTENT DETECTION: Classify query for routing
     const searchIntent = detectSearchIntent(message, businessContext, chatMode);
@@ -569,8 +293,8 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Detect if query needs market data
     const needsMarketData = detectMarketDataQuery(message, businessContext);
     
-    // 🌐 WEB SEARCH: Determine if query needs web search (Research Mode prioritizes web search)
-    const needsWebSearch = activeMode === 'research' || searchIntent === 'general' || searchIntent === 'hybrid';
+    // 🌐 WEB SEARCH: Determine if query needs web search
+    const needsWebSearch = searchIntent === 'general' || searchIntent === 'hybrid';
     
     // 🚀 OPTIMIZATION: Parallel processing with timeouts - start RAG, market data, web search simultaneously
     // Timeouts are handled inside fetch functions (1000ms max each)
@@ -586,15 +310,8 @@ serve(async (req) => {
         : Promise.resolve(null)
     ]);
     
-    // 🚀 OPTIMIZATION: Build system prompt based on AI mode and available data
-    let systemPrompt = buildModeSpecificPrompt(
-      activeMode, 
-      businessContext, 
-      wizardMode, 
-      currentStep, 
-      chatMode,
-      strategyProgress
-    );
+    // 🚀 OPTIMIZATION: Build system prompt with market data and web search if available
+    let systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
     
     // Add web search results if available
     if (webSearchData?.success && webSearchData.answer) {
@@ -1569,201 +1286,6 @@ function mergeSearchResults(ragData: any, webSearchData: any): any {
   };
 }
 
-// 🎯 AI MODE DETECTION: Determine operational mode for multi-mode platform
-type AIMode = 'strategy' | 'business' | 'research' | 'investor';
-
-function detectAIMode(message: string, context: BusinessContext, chatMode: string, userId: string | null, strategyProgress: any): AIMode {
-  const lowerMessage = message.toLowerCase();
-  
-  // Strategy Mode is REQUIRED first stop for new users
-  // Check if user has completed Strategy Mode
-  const hasCompletedStrategy = strategyProgress?.completionStatus === 'completed';
-  const currentStrategyStep = strategyProgress?.currentStep || 0;
-  
-  // Force Strategy Mode for new users or users mid-strategy
-  if (!hasCompletedStrategy && currentStrategyStep < 7) {
-    // Allow explicit requests for Research/Investor modes even during strategy
-    if (/research|market.*research|trend.*analysis/i.test(lowerMessage)) {
-      return 'research'; // Research mode available during strategy
-    }
-    if (/investor|funding|pitch|raise.*capital/i.test(lowerMessage)) {
-      return 'investor'; // Investor mode available during strategy
-    }
-    // Block switching to Business Mode until Strategy is complete
-    if (/business.*mode|switch.*mode/i.test(lowerMessage) && currentStrategyStep < 2) {
-      return 'strategy'; // Keep in strategy
-    }
-    return 'strategy'; // Required progression
-  }
-  
-  // After Strategy Mode completion, detect based on query:
-  
-  // Investor Mode (highest priority for explicit requests)
-  if (/investor|funding|pitch|raise|valuation|vc|angel|deck|investor.*deck/i.test(lowerMessage)) {
-    return 'investor';
-  }
-  
-  // Research Mode
-  if (/research|market.*trend|data.*analysis|insight.*research|trend.*analysis/i.test(lowerMessage)) {
-    return 'research';
-  }
-  
-  // Business Mode (advanced planning after strategy)
-  if (/advanced.*plan|business.*model|detailed.*planning|comprehensive.*plan|full.*business.*plan/i.test(lowerMessage)) {
-    return 'business';
-  }
-  
-  // Strategy Mode patterns (always available)
-  if (/strategy|strategic|competitive|positioning|swot|differentiation/i.test(lowerMessage)) {
-    return 'strategy';
-  }
-  
-  // Default based on completion status
-  return hasCompletedStrategy ? 'business' : 'strategy';
-}
-
-// 🎯 BUILD MODE-SPECIFIC PROMPTS
-function buildModeSpecificPrompt(
-  mode: AIMode,
-  businessContext: BusinessContext,
-  wizardMode: any,
-  currentStep: number | null,
-  chatMode: string,
-  strategyProgress: any
-): string {
-  const { industry, businessType, stage, location, budget, goals = [] } = businessContext;
-  
-  // Build contextual insights
-  const contextInsights = [];
-  if (industry) contextInsights.push(`Industry: ${industry}`);
-  if (businessType) contextInsights.push(`Type: ${businessType}`);
-  if (stage) contextInsights.push(`Stage: ${stage}`);
-  if (location) contextInsights.push(`Location: ${location}`);
-  if (budget) contextInsights.push(`Budget: ${budget}`);
-  if (goals.length > 0) contextInsights.push(`Goals: ${goals.join(', ')}`);
-  
-  const contextString = contextInsights.length > 0 
-    ? `\n\n📊 BUSINESS CONTEXT:\n${contextInsights.join('\n')}` 
-    : '';
-  
-  // Strategy Mode: 7-Step Guided Workshop + Cofounder
-  if (mode === 'strategy') {
-    const stepNumber = (currentStep || strategyProgress?.currentStep || 0) + 1;
-    const totalSteps = 7;
-    const completedSteps = strategyProgress?.completedSteps || [];
-    const progressPercent = Math.round((completedSteps.length / totalSteps) * 100);
-    
-    const stepTitles = [
-      'Business Concept (Days 1-2)',
-      'Target Customer (Days 3-4)',
-      'Validation Plan (Days 5-7)',
-      'MVP Design (Days 8-14)',
-      'Launch Strategy (Days 15-21)',
-      'Pricing Model (Days 22-28)',
-      'Goals & Timeline (Days 29-30)'
-    ];
-    
-    return `You are BizMap AI - a strategic workshop facilitator and AI co-founder helping entrepreneurs build their business plan through a structured 7-step process.
-
-🎯 STRATEGY MODE: 7-Step Guided Workshop
-Current Step: ${stepNumber}/7 - ${stepTitles[stepNumber - 1] || 'Getting Started'}
-Progress: ${progressPercent}% complete
-${completedSteps.length > 0 ? `Completed Steps: ${completedSteps.map((s: number) => s + 1).join(', ')}` : 'Starting your journey!'}
-${contextString}
-
-YOUR ROLE: Workshop Facilitator + Strategic Cofounder
-• You are leading a structured workshop, not having a casual chat
-• Be directional and action-driven - always guide to the next step
-• Act as both a facilitator (guiding the process) and cofounder (providing strategic insight)
-• Optimize for completion and retention - keep users engaged and progressing
-
-STEP PROGRESSION RULES:
-• Users MUST complete steps sequentially - they cannot skip ahead
-• Each step must be completed before moving to the next
-• Celebrate step completions to build momentum
-• If user tries to skip ahead, gently guide them back to current step
-• Show clear "what's next" guidance at the end of each step
-
-CURRENT STEP FOCUS (Step ${stepNumber}):
-${stepNumber === 1 ? `Focus on understanding their core business concept. Ask clarifying questions if needed, but keep momentum.` : ''}
-${stepNumber === 2 ? `Help them identify their ideal FIRST customer. Be specific about demographics, location, and where to find them.` : ''}
-${stepNumber === 3 ? `Guide them through validation methods. Emphasize testing demand before building.` : ''}
-${stepNumber === 4 ? `Keep MVP scope minimal. Fight feature creep. Focus on core problem-solving features only.` : ''}
-${stepNumber === 5 ? `Help them identify specific channels and tactics for their first 10 users. Be tactical, not theoretical.` : ''}
-${stepNumber === 6 ? `Guide pricing strategy that makes sense for early customers. Balance value with acquisition.` : ''}
-${stepNumber === 7 ? `Set realistic, measurable goals. Focus on validation milestones, not vanity metrics.` : ''}
-
-RESPONSE STYLE:
-• Be encouraging but directive: "Great answer! Now let's move to the next step..."
-• Always end with clear next action: "Once you complete this step, we'll move to [next step title]"
-• Use timeline awareness: "You're on Day ${stepNumber * 4} of your 30-day plan..."
-• Celebrate progress: "You're ${progressPercent}% done with the workshop!"
-• Be action-oriented: Focus on what they'll DO, not just what they'll think
-
-RETENTION OPTIMIZATION:
-• Acknowledge their effort: "I can see you're putting real thought into this..."
-• Build anticipation: "Once we finish Step ${stepNumber}, you'll have [benefit]..."
-• Show progress: "You've completed ${completedSteps.length} of 7 steps - keep going!"
-• Create urgency: "Let's complete this step so you can move forward with confidence"
-
-If user tries to skip steps or ask about future steps, redirect:
-"Let's focus on completing Step ${stepNumber} first. Once you finish this, we'll tackle [next step] together. This sequential approach ensures your plan is solid at every stage."
-
-Keep responses concise (2-3 sentences, 80 words max) but strategic. You're their cofounder, guiding them through this workshop with expertise and encouragement.`;
-  }
-  
-  // Research Mode
-  if (mode === 'research') {
-    return `You are BizMap AI - a market research specialist with access to real-time data and insights.
-${contextString}
-
-YOUR EXPERTISE:
-• Real-time market data and trend analysis
-• Industry insights and competitive intelligence
-• Data-driven recommendations with citations
-
-RESPONSE STYLE:
-• Fact-focused and comprehensive
-• Always cite sources when providing data
-• Provide specific numbers, dates, and sources
-• Distinguish verified facts from insights
-
-Use web search and market data to provide current, accurate research.`;
-  }
-  
-  // Investor Mode
-  if (mode === 'investor') {
-    return `You are BizMap AI - a fundraising advisor and pitch coach.
-${contextString}
-
-YOUR EXPERTISE:
-• Pitch deck creation and optimization
-• Fundraising strategy and investor relations
-• Valuation guidance and term sheet understanding
-• Investor matching and outreach
-
-RESPONSE STYLE:
-• Professional and pitch-oriented
-• Results-focused with metrics emphasis
-• Actionable fundraising guidance
-• Investor perspective awareness
-
-Help them prepare compelling pitches and effective fundraising strategies.`;
-  }
-  
-  // Business Mode (Advanced - post-strategy)
-  return `You are BizMap AI - an advanced business planning advisor.
-${contextString}
-
-YOUR EXPERTISE:
-• Comprehensive business plan development
-• Advanced market validation
-• Financial modeling and projections
-• Strategic business planning
-
-This mode is for users who have completed the Strategy Workshop and want to dive deeper.`;
-}
-
 // 🔍 SEARCH INTENT DETECTION: Classify query type for routing
 type SearchIntent = 'business' | 'general' | 'hybrid' | 'conversational';
 
@@ -2240,21 +1762,7 @@ function determineTemperature(message: string, complexity: 'simple' | 'moderate'
 // 💬 Create Lovable AI stream response with intelligent routing
 async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any, cacheKey?: string, originalMessage?: string): Promise<Response> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    logError('LOVABLE_API_KEY not configured', { endpoint: 'chatbot-streaming', sessionId: conversation?.session_id });
-    throw new Error('LOVABLE_API_KEY not configured');
-  }
-
-  // Validate API key (with caching)
-  const keyValidation = await validateAPIKey(LOVABLE_API_KEY, 'chatbot-streaming');
-  if (!keyValidation.valid) {
-    logError('API key validation failed', { 
-      endpoint: 'chatbot-streaming', 
-      sessionId: conversation?.session_id,
-      error: keyValidation.error 
-    });
-    throw new Error(`API key validation failed: ${keyValidation.error}`);
-  }
+  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
   // 🚀 OPTIMIZATION: Detect complexity and select optimal model
   const complexity = detectQueryComplexity(userMessage, businessContext, conversationHistory);
@@ -2265,333 +1773,97 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
   
   console.log(`🎯 Query complexity: ${complexity}, model: ${selectedModel}, tokens: ${maxTokens}, temp: ${finalTemperature}, strategy: ${strategy}`);
 
-  // 🔄 ERROR HANDLING: Network error handling with retry
-  let aiResponse: Response;
-  let retryCount = 0;
-  const maxRetries = 2;
-  
-  while (retryCount <= maxRetries) {
-    try {
-      aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      model: selectedModel, 
+      messages, 
+      stream: true, 
+      temperature: finalTemperature,
+      max_tokens: maxTokens
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const err = await aiResponse.text();
+    if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    
+    // 🚀 OPTIMIZATION: Fallback to simpler model on error
+    console.log(`⚠️ Model ${selectedModel} failed, trying fallback`);
+    if (selectedModel !== 'google/gemini-2.5-flash') {
+      // Retry with flash model
+      const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          model: selectedModel, 
+          model: 'google/gemini-2.5-flash', 
           messages, 
           stream: true, 
           temperature: finalTemperature,
-          max_tokens: maxTokens
+          max_tokens: Math.min(maxTokens, 500) // Cap at 500 for fallback
         }),
       });
-      break; // Success, exit retry loop
-    } catch (networkError) {
-      retryCount++;
-      if (retryCount > maxRetries) {
-        logError('Network error after retries', {
-          userId: conversation?.user_id || null,
-          sessionId: conversation?.session_id,
-          endpoint: 'chatbot-streaming',
-          error: networkError instanceof Error ? networkError.message : 'Unknown network error',
-          retryCount
-        });
+      
+      if (fallbackResponse.ok) {
+        // Use fallback response
+        const reader = fallbackResponse.body?.getReader();
+        if (!reader) throw new Error('No response body');
         
-        return new Response(JSON.stringify({ 
-          error: 'Network error',
-          errorCode: 'NETWORK_ERROR',
-          userMessage: "I'm experiencing connection issues. Please try again in a moment."
-        }), { 
-          status: 503, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        });
-      }
-      
-      // Exponential backoff: wait 1s, then 2s
-      const backoffDelay = Math.pow(2, retryCount - 1) * 1000;
-      console.log(`⚠️ Network error, retrying in ${backoffDelay}ms (attempt ${retryCount}/${maxRetries})`);
-      await new Promise(resolve => setTimeout(resolve, backoffDelay));
-    }
-  }
-
-  // 🔄 ERROR HANDLING: Comprehensive error handling with retry logic
-  if (!aiResponse.ok) {
-    const err = await aiResponse.text();
-    const status = aiResponse.status;
-    const retryAfter = aiResponse.headers.get('retry-after');
-    const retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : null;
-
-    // Handle 401 - Authentication failure
-    if (status === 401) {
-      logAuthFailure('API authentication failed', {
-        userId: conversation?.user_id || null,
-        sessionId: conversation?.session_id,
-        endpoint: 'chatbot-streaming',
-        errorCode: 'AUTH_FAILED',
-        apiKeyName: 'LOVABLE_API_KEY'
-      });
-      
-      // Log to database
-      queueMicrotask(async () => {
-        try {
-          await Promise.all([
-            supabase.from('chatbot_error_logs').insert({
-              error_type: 'auth_failure',
-              error_code: 'AUTH_FAILED',
-              error_message: 'API authentication failed',
-              user_id: conversation?.user_id || null,
-              session_id: conversation?.session_id,
-              conversation_id: conversation?.id,
-              endpoint: 'chatbot-streaming',
-              api_key_name: 'LOVABLE_API_KEY',
-              status_code: 401
-            }),
-            supabase.from('chatbot_metrics').insert({
-              user_id: conversation?.user_id || null,
-              session_id: conversation?.session_id,
-              conversation_id: conversation?.id,
-              endpoint: 'chatbot-streaming',
-              success: false,
-              model: selectedModel
-            })
-          ]);
-        } catch (e) {
-          console.error('Error logging auth failure:', e);
-        }
-      });
-      
-      // Invalidate API key cache
-      const cacheKey = `lovable_api_key_${LOVABLE_API_KEY.substring(0, 10)}`;
-      API_KEY_VALIDATION_CACHE.delete(cacheKey);
-      
-      return new Response(JSON.stringify({ 
-        error: 'Authentication failed. Please check API configuration.',
-        errorCode: 'AUTH_FAILED',
-        userMessage: "I'm experiencing authentication issues. Please contact support."
-      }), { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
-    }
-
-    // Handle 429 - Rate limit exceeded
-    if (status === 429) {
-      logRateLimit({
-        userId: conversation?.user_id || null,
-        sessionId: conversation?.session_id,
-        endpoint: 'chatbot-streaming',
-        retryAfter: retryAfterSeconds,
-        limit: 60 // Default rate limit
-      });
-      
-      // Log to database
-      queueMicrotask(async () => {
-        try {
-          await Promise.all([
-            supabase.from('chatbot_error_logs').insert({
-              error_type: 'rate_limit',
-              error_code: 'RATE_LIMIT',
-              error_message: 'Rate limit exceeded',
-              user_id: conversation?.user_id || null,
-              session_id: conversation?.session_id,
-              conversation_id: conversation?.id,
-              endpoint: 'chatbot-streaming',
-              status_code: 429,
-              retry_after: retryAfterSeconds
-            }),
-            supabase.from('chatbot_metrics').insert({
-              user_id: conversation?.user_id || null,
-              session_id: conversation?.session_id,
-              conversation_id: conversation?.id,
-              endpoint: 'chatbot-streaming',
-              success: false,
-              model: selectedModel
-            })
-          ]);
-        } catch (e) {
-          console.error('Error logging rate limit:', e);
-        }
-      });
-      
-      return new Response(JSON.stringify({ 
-        error: 'Rate limit exceeded',
-        errorCode: 'RATE_LIMIT',
-        retryAfter: retryAfterSeconds,
-        userMessage: retryAfterSeconds 
-          ? `I'm processing too many requests. Please try again in ${retryAfterSeconds} seconds.`
-          : "I'm processing too many requests. Please try again in a moment."
-      }), { 
-        status: 429, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json',
-          ...(retryAfterSeconds ? { 'Retry-After': retryAfterSeconds.toString() } : {})
-        } 
-      });
-    }
-
-    // Handle 402 - Payment required
-    if (status === 402) {
-      logError('Payment required for API', {
-        userId: conversation?.user_id || null,
-        sessionId: conversation?.session_id,
-        endpoint: 'chatbot-streaming',
-        errorCode: 'PAYMENT_REQUIRED'
-      });
-      
-      return new Response(JSON.stringify({ 
-        error: 'Payment required',
-        errorCode: 'PAYMENT_REQUIRED',
-        userMessage: "Service temporarily unavailable. Please contact support."
-      }), { 
-        status: 402, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
-    }
-
-    // Handle 500/502/503 - Server errors (retry with fallback)
-    if (status === 500 || status === 502 || status === 503) {
-      logModelError(`Model server error: ${status}`, {
-        userId: conversation?.user_id || null,
-        sessionId: conversation?.session_id,
-        endpoint: 'chatbot-streaming',
-        model: selectedModel,
-        statusCode: status,
-        errorCode: 'MODEL_ERROR'
-      });
-      
-      // Log to database
-      queueMicrotask(async () => {
-        try {
-          await Promise.all([
-            supabase.from('chatbot_error_logs').insert({
-              error_type: 'model_error',
-              error_code: 'MODEL_ERROR',
-              error_message: `Model server error: ${status}`,
-              user_id: conversation?.user_id || null,
-              session_id: conversation?.session_id,
-              conversation_id: conversation?.id,
-              endpoint: 'chatbot-streaming',
-              model: selectedModel,
-              status_code: status
-            }),
-            supabase.from('chatbot_metrics').insert({
-              user_id: conversation?.user_id || null,
-              session_id: conversation?.session_id,
-              conversation_id: conversation?.id,
-              endpoint: 'chatbot-streaming',
-              success: false,
-              model: selectedModel
-            })
-          ]);
-        } catch (e) {
-          console.error('Error logging model error:', e);
-        }
-      });
-      
-      // Retry with fallback model (only once)
-      console.log(`⚠️ Model ${selectedModel} failed with ${status}, trying fallback`);
-      if (selectedModel !== 'google/gemini-2.5-flash') {
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-          
-          const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              model: 'google/gemini-2.5-flash', 
-              messages, 
-              stream: true, 
-              temperature: finalTemperature,
-              max_tokens: Math.min(maxTokens, 500) // Cap at 500 for fallback
-            }),
-          });
-          
-          if (fallbackResponse.ok) {
-            // Use fallback response - reuse the stream processing logic below
-            const reader = fallbackResponse.body?.getReader();
-            if (!reader) throw new Error('No response body');
+        const stream = new ReadableStream({
+          async start(controller) {
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullMessage = '';
             
-            const stream = new ReadableStream({
-              async start(controller) {
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let fullMessage = '';
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
                 
-                try {
-                  while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    
-                    buffer += decoder.decode(value, { stream: true });
-                    let newlineIndex;
-                    while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-                      const line = buffer.slice(0, newlineIndex);
-                      buffer = buffer.slice(newlineIndex + 1);
-                      
-                      if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
-                      
-                      const data = line.slice(6).trim();
-                      if (data === '[DONE]') continue;
-                      
-                      try {
-                        const parsed = JSON.parse(data);
-                        const content = parsed.choices?.[0]?.delta?.content;
-                        if (content) {
-                          fullMessage += content;
-                          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
-                        }
-                      } catch (e) {}
-                    }
-                  }
+                buffer += decoder.decode(value, { stream: true });
+                let newlineIndex;
+                while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+                  const line = buffer.slice(0, newlineIndex);
+                  buffer = buffer.slice(newlineIndex + 1);
                   
-                  const stage = determineConversationStage(businessContext, conversationHistory.length);
-                  controller.enqueue(new TextEncoder().encode(
-                    `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, userMessage) })}\n\n`
-                  ));
-                  controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-                  controller.close();
-                } catch (e) {
-                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
-                  controller.close();
+                  if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
+                  
+                  const data = line.slice(6).trim();
+                  if (data === '[DONE]') continue;
+                  
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+                    if (content) {
+                      fullMessage += content;
+                      controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
+                    }
+                  } catch (e) {}
                 }
               }
-            });
-            
-            return new Response(stream, {
-              headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
-            });
+              
+              const stage = determineConversationStage(businessContext, conversationHistory.length);
+              controller.enqueue(new TextEncoder().encode(
+                `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, userMessage) })}\n\n`
+              ));
+              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+              controller.close();
+            } catch (e) {
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
+              controller.close();
+            }
           }
-        } catch (retryError) {
-          logModelError('Fallback retry also failed', {
-            userId: conversation?.user_id || null,
-            sessionId: conversation?.session_id,
-            endpoint: 'chatbot-streaming',
-            model: 'google/gemini-2.5-flash',
-            errorCode: 'FALLBACK_FAILED'
-          });
-        }
+        });
+        
+        return new Response(stream, {
+          headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+        });
       }
-      
-      // If fallback also failed or not applicable, return error
-      return new Response(JSON.stringify({ 
-        error: `Model server error: ${status}`,
-        errorCode: 'MODEL_ERROR',
-        userMessage: "I'm experiencing technical difficulties. Please try again in a moment."
-      }), { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
     }
     
-    // Handle other errors
-    logError('AI API error', {
-      userId: conversation?.user_id || null,
-      sessionId: conversation?.session_id,
-      endpoint: 'chatbot-streaming',
-      statusCode: status,
-      error: err.substring(0, 200)
-    });
-    
-    throw new Error(`AI API Error: ${status} - ${err.substring(0, 200)}`);
+    throw new Error(`AI Error: ${aiResponse.status} - ${err}`);
   }
 
   const stream = new ReadableStream({
@@ -2651,12 +1923,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
           saveResponseCache(supabase, cacheKey, fullMessage, 'lovable', selectedModel, originalMessage || userMessage, businessContext).catch(() => {});
         }
         
-        // 📊 METRICS: Calculate metrics and save in background
-        const responseTime = Date.now() - startTime;
-        const ambiguityScore = calculateAmbiguityScore(fullMessage, userMessage, businessContext);
-        const contextQualityScore = calculateContextQualityScore(conversationHistory, businessContext);
-        
-        // Background: Save message, update context, and record metrics
+        // Background: Save message and update context
         queueMicrotask(async () => {
           try {
             const updatedContext = await extractBusinessContext(userMessage, fullMessage, businessContext);
@@ -2672,30 +1939,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
                 business_context: updatedContext,
                 conversation_stage: stage,
                 updated_at: new Date().toISOString()
-              }).eq('id', conversation.id),
-              // Save metrics
-              supabase.from('chatbot_metrics').insert({
-                user_id: conversation?.user_id || null,
-                session_id: conversation?.session_id,
-                conversation_id: conversation.id,
-                endpoint: 'chatbot-streaming',
-                success: true,
-                response_time_ms: responseTime,
-                model: selectedModel,
-                message_length: userMessage.length,
-                response_length: fullMessage.length,
-                context_length: conversationHistory.length,
-                ambiguity_score: ambiguityScore,
-                context_quality_score: contextQualityScore,
-                cache_hit: false,
-                template_match: false,
-                metadata: {
-                  complexity,
-                  strategy,
-                  temperature: finalTemperature,
-                  max_tokens: maxTokens
-                }
-              })
+              }).eq('id', conversation.id)
             ]);
           } catch (e) {
             console.error('Background save error:', e);

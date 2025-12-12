@@ -1225,11 +1225,7 @@ Subject: "Quick question about [their pain point]"
 
                   {/* Enhanced BizMapChat Component with 7 Principles */}
                   <div className="flex-1 min-w-0">
-                    <div className="relative h-[700px] hover-lift transition-all duration-500 rounded-xl lg:rounded-2xl overflow-hidden border-2 border-gradient-bold shadow-2xl glow-bold-blue">
-                      {/* Creative container background */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-muted/20 opacity-90" />
-                      <div className="absolute inset-0 bg-gradient-flow opacity-5 animate-gradient-flow pointer-events-none" style={{ backgroundSize: '300% 100%' }} />
-                      
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-sm h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
