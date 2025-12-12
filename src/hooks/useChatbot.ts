@@ -467,23 +467,6 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'Implementation Timeline'
   ], []);
 
-  // Load messages when session is selected
-  const previousSessionIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    const currentSessionId = config.sessionManagement?.currentSessionId;
-    
-    // Only load if sessionId changed and is not null
-    if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
-      previousSessionIdRef.current = currentSessionId;
-      console.log('🔄 Session changed, loading messages:', currentSessionId);
-      loadMessagesFromSession(currentSessionId);
-    } else if (!currentSessionId && previousSessionIdRef.current) {
-      // Session was cleared, reset messages
-      previousSessionIdRef.current = null;
-      setMessages([]);
-    }
-  }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession]);
-
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
     // Only initialize if no session is selected and messages are empty
@@ -827,6 +810,23 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       setIsTyping(false);
     }
   }, []);
+
+  // Load messages when session is selected (must be after loadMessagesFromSession is defined)
+  const previousSessionIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentSessionId = config.sessionManagement?.currentSessionId;
+    
+    // Only load if sessionId changed and is not null
+    if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
+      previousSessionIdRef.current = currentSessionId;
+      console.log('🔄 Session changed, loading messages:', currentSessionId);
+      loadMessagesFromSession(currentSessionId);
+    } else if (!currentSessionId && previousSessionIdRef.current) {
+      // Session was cleared, reset messages
+      previousSessionIdRef.current = null;
+      setMessages([]);
+    }
+  }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession]);
 
   const createWelcomeMessage = (): ChatMessage => {
     const path = location.pathname;
