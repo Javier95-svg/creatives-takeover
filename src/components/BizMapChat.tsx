@@ -14,6 +14,8 @@ import { useCofounderPersonality } from "@/hooks/useCofounderPersonality";
 import { PersonalityIndicator } from "./ai-cofounder/PersonalityIndicator";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -141,6 +143,7 @@ export const BizMapChat = ({
   const [celebrationMode, setCelebrationMode] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareData, setShareData] = useState<any>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -255,6 +258,40 @@ export const BizMapChat = ({
     }
   }, [currentStep, user, chatMode, trackConversionEvent]);
 
+  // Fetch user avatar from profile
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      if (!user) {
+        setUserAvatarUrl(null);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching user avatar:', error);
+          return;
+        }
+        
+        if (data?.avatar_url) {
+          setUserAvatarUrl(data.avatar_url);
+        } else {
+          setUserAvatarUrl(null);
+        }
+      } catch (error) {
+        console.error('Error fetching user avatar:', error);
+        setUserAvatarUrl(null);
+      }
+    };
+
+    fetchAvatar();
+  }, [user]);
+
   // 🚀 OPTIMIZATION: Request deduplication - prevent duplicate sends
   const lastSentMessage = useRef<string>('');
   const lastSendTime = useRef<number>(0);
@@ -350,12 +387,15 @@ export const BizMapChat = ({
               <p className="text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
             </div>
             {!msg.isBot && (
-              <div 
-                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20"
+              <Avatar 
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 shadow-lg shadow-primary/30 ring-2 ring-primary/20"
                 aria-hidden="true"
               >
-                <User className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
-              </div>
+                <AvatarImage src={userAvatarUrl || undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground flex items-center justify-center">
+                  {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
             )}
           </div>
         ))}
