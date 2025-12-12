@@ -186,6 +186,9 @@ const BizMapAI = () => {
   // Session Management Functions
   const handleSessionSelect = (session: ChatSession | null) => {
     if (session) {
+      // Set the current session ID - this will trigger message loading in useChatbot
+      setCurrentSessionId(session.id);
+      
       // Properly map session answers to userAnswers structure  
       const mappedAnswers = {
         overview: session.answers.overview || "",
@@ -201,52 +204,11 @@ const BizMapAI = () => {
       setCurrentStep(session.current_step);
       setLaunchReport(session.launch_report || "");
       
-      // Reconstruct messages based on session data
-      const reconstructedMessages = [
-        {
-          type: "assistant",
-          content: "Hey there! 👋 I'm your AI co-founder, and I'm genuinely excited to help you build something amazing! \n\nI'd love to start by hearing about your business idea. In a few sentences, what are you planning to create or offer? Don't worry about making it perfect – just tell me what's on your mind!"
-        }
-      ];
-
-      // Add messages for completed steps
-      wizardSteps.forEach((step, index) => {
-        if (index <= session.current_step && session.answers[step.key]) {
-          if (index > 0) {
-            // Add transition from previous step
-            reconstructedMessages.push({
-              type: "assistant",
-              content: wizardSteps[index - 1].transition + "\n\n" + step.question
-            });
-          }
-          reconstructedMessages.push({
-            type: "user",
-            content: session.answers[step.key]
-          });
-        }
-      });
-
-      // Add launch report if completed
-      if (session.is_completed && session.launch_report) {
-        reconstructedMessages.push({
-          type: "assistant",
-          content: session.launch_report
-        });
-      } else if (session.current_step < wizardSteps.length) {
-        // Add next question if not completed
-        const nextStep = session.current_step;
-        if (nextStep < wizardSteps.length) {
-          const transitionText = nextStep > 0 ? wizardSteps[nextStep - 1].transition + "\n\n" : "";
-          reconstructedMessages.push({
-            type: "assistant",
-            content: transitionText + wizardSteps[nextStep].question
-          });
-        }
-      }
-
-      setMessages(reconstructedMessages);
+      // Messages will be loaded automatically by useChatbot hook when currentSessionId changes
+      // No need to reconstruct messages here
     } else {
       // Reset for new chat
+      setCurrentSessionId(null);
       resetChat();
     }
   };

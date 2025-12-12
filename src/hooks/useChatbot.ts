@@ -467,9 +467,28 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'Implementation Timeline'
   ], []);
 
+  // Load messages when session is selected
+  const previousSessionIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentSessionId = config.sessionManagement?.currentSessionId;
+    
+    // Only load if sessionId changed and is not null
+    if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
+      previousSessionIdRef.current = currentSessionId;
+      console.log('🔄 Session changed, loading messages:', currentSessionId);
+      loadMessagesFromSession(currentSessionId);
+    } else if (!currentSessionId && previousSessionIdRef.current) {
+      // Session was cleared, reset messages
+      previousSessionIdRef.current = null;
+      setMessages([]);
+    }
+  }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession]);
+
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
-    if (messages.length === 0) {
+    // Only initialize if no session is selected and messages are empty
+    const currentSessionId = config.sessionManagement?.currentSessionId;
+    if (!currentSessionId && messages.length === 0) {
       if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
         // Initialize wizard mode with first question
         console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
@@ -487,7 +506,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname, config.wizardMode]);
+  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, messages.length]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
@@ -714,6 +733,98 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     if (retryTimeout.current) {
       clearTimeout(retryTimeout.current);
       retryTimeout.current = null;
+    }
+  }, []);
+
+  // Load messages from a session when it's selected
+  const loadMessagesFromSession = useCallback(async (sessionId: string) => {
+    if (!sessionId) return;
+    
+    try {
+      setIsTyping(true);
+      console.log('📥 Loading messages for session:', sessionId);
+      
+      // First, find the conversation for this session
+      const { data: conversation, error: convError } = await supabase
+        .from('chatbot_conversations')
+        .select('id')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+      
+      if (convError) {
+        console.error('Error loading conversation:', convError);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load conversation history' });
+        setIsTyping(false);
+        return;
+      }
+      
+      // If no conversation exists, this is a new/empty session
+      if (!conversation) {
+        console.log('📭 No conversation found for session, starting fresh');
+        setMessages([]);
+        setIsTyping(false);
+        return;
+      }
+      
+      // Load all messages for this conversation
+      const { data: dbMessages, error: messagesError } = await supabase
+        .from('chatbot_messages')
+        .select('*')
+        .eq('conversation_id', conversation.id)
+        .order('created_at', { ascending: true });
+      
+      if (messagesError) {
+        console.error('Error loading messages:', messagesError);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load messages' });
+        setIsTyping(false);
+        return;
+      }
+      
+      // Convert database messages to ChatMessage format
+      const loadedMessages: ChatMessage[] = (dbMessages || []).map((msg) => ({
+        id: msg.id || generateId(),
+        content: msg.content || '',
+        isBot: msg.role === 'assistant',
+        timestamp: new Date(msg.created_at || Date.now()),
+        businessContext: typeof msg.metadata === 'object' && msg.metadata !== null 
+          ? (msg.metadata as any).businessContext 
+          : undefined
+      }));
+      
+      console.log(`✅ Loaded ${loadedMessages.length} messages from session`);
+      setMessages(loadedMessages);
+      
+      // Update conversation state based on loaded messages
+      if (loadedMessages.length > 0) {
+        const userMessages = loadedMessages.filter(m => !m.isBot);
+        dispatch({ 
+          type: 'UPDATE_STATE', 
+          payload: { 
+            messageCount: loadedMessages.length,
+            context: userMessages.length > 0 
+              ? ConversationContext.BUSINESS_CONCEPT 
+              : ConversationContext.WELCOME
+          } 
+        });
+      } else {
+        // Empty conversation - reset to welcome state
+        dispatch({ 
+          type: 'UPDATE_STATE', 
+          payload: { 
+            messageCount: 0,
+            context: ConversationContext.WELCOME
+          } 
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error loading messages from session:', error);
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: error instanceof Error ? error.message : 'Unknown error loading messages' 
+      });
+    } finally {
+      setIsTyping(false);
     }
   }, []);
 
