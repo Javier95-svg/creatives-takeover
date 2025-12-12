@@ -195,12 +195,27 @@ serve(async (req) => {
       conversation = newConv;
     }
 
+    // 🚀 OPTIMIZATION: Save user message first (before any early returns)
+    // This ensures user messages are always saved, even for template/cache hits
+    const userMessageSavePromise = supabase
+      .from('chatbot_messages')
+      .insert({
+        conversation_id: conversation.id,
+        role: 'user',
+        content: message,
+        metadata: { timestamp: new Date().toISOString() }
+      })
+      .then(({ error }) => {
+        if (error) console.error('Error saving user message:', error);
+      });
+
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
     const matchedTemplate = matchTemplate(message, businessContext);
     if (matchedTemplate) {
       console.log('⚡ Template match - returning instant response');
       const templateResponse = matchedTemplate.response;
-      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode);
+      // User message save is already in progress, return immediately
+      const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode, supabase);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
@@ -219,7 +234,8 @@ serve(async (req) => {
     const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
     if (cachedResponse) {
       console.log('⚡ Cache hit - returning cached response');
-      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode);
+      // User message save is already in progress, return immediately
+      const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode, supabase);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
@@ -263,19 +279,6 @@ serve(async (req) => {
       
       console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
     }
-
-    // 🚀 OPTIMIZATION: Save user message in background (non-blocking)
-    supabase
-      .from('chatbot_messages')
-      .insert({
-        conversation_id: conversation.id,
-        role: 'user',
-        content: message,
-        metadata: { timestamp: new Date().toISOString() }
-      })
-      .then(({ error }) => {
-        if (error) console.error('Background: Error saving user message:', error);
-      });
 
     // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
     const optimizedHistory = conversationHistory.slice(-6);
@@ -541,7 +544,7 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
 }
 
 // 🚀 OPTIMIZATION: Create stream from template response (instant, <50ms)
-function createTemplateStream(templateContent: string, quickActions: Array<{text: string, id: string}>, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Response {
+function createTemplateStream(templateContent: string, quickActions: Array<{text: string, id: string}>, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Response {
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -565,6 +568,20 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
         ));
         controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();
+        
+        // Save assistant message in background (non-blocking)
+        queueMicrotask(async () => {
+          try {
+            await supabase.from('chatbot_messages').insert({
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: templateContent,
+              metadata: { timestamp: new Date().toISOString(), source: 'template' }
+            });
+          } catch (e) {
+            console.error('Error saving template message:', e);
+          }
+        });
       } catch (e) {
         controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
         controller.close();
@@ -578,7 +595,7 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
 }
 
 // 🚀 OPTIMIZATION: Create stream from cached response with faster streaming
-function createCachedStream(cachedContent: string, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Response {
+function createCachedStream(cachedContent: string, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Response {
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -602,6 +619,20 @@ function createCachedStream(cachedContent: string, message: string, conversation
         ));
         controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();
+        
+        // Save assistant message in background (non-blocking)
+        queueMicrotask(async () => {
+          try {
+            await supabase.from('chatbot_messages').insert({
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: cachedContent,
+              metadata: { timestamp: new Date().toISOString(), source: 'cached' }
+            });
+          } catch (e) {
+            console.error('Error saving cached message:', e);
+          }
+        });
       } catch (e) {
         controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
         controller.close();
@@ -1170,14 +1201,18 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
         }
         
         // Save in background
-        setTimeout(() => {
-          supabase.from('chatbot_messages').insert({
-            conversation_id: conversation.id,
-            role: 'assistant',
-            content: answer,
-            metadata: { rag: true, sources, timestamp: new Date().toISOString() }
-          }).then(() => {});
-        }, 0);
+        queueMicrotask(async () => {
+          try {
+            await supabase.from('chatbot_messages').insert({
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: answer,
+              metadata: { rag: true, sources, timestamp: new Date().toISOString() }
+            });
+          } catch (e) {
+            console.error('Error saving RAG message:', e);
+          }
+        });
         
         // Complete
         const stage = determineConversationStage(businessContext, conversationHistory.length);
