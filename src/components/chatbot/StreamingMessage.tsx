@@ -49,7 +49,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
       </div>
       {!isComplete && (
         <span 
-          className={`inline-block w-2 h-4 bg-primary ml-1 transition-opacity duration-75 ${
+          className={`inline-block w-0.5 h-4 bg-foreground ml-1 transition-opacity duration-75 ${
             showCursor ? 'opacity-100' : 'opacity-0'
           }`}
           aria-label="Typing cursor"

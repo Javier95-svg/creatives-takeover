@@ -368,38 +368,28 @@ export const BizMapChat = ({
     return "Type your message...";
   };
 
-  // Format message content with bold typography effects
+  // Format message content
   const formatMessageContent = (content: string): string => {
     if (!content) return '';
     
-    // Convert markdown-style bold to HTML with gradient styling
+    // Convert markdown-style bold to HTML
     let formatted = content
-      .replace(/\*\*(.+?)\*\*/g, '<strong class="gradient-text-bold">$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em class="italic text-primary/90">$1</em>')
-      .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 bg-primary/10 text-primary rounded font-mono text-xs border border-primary/20">$1</code>');
-    
-    // Highlight emojis with subtle animation
-    formatted = formatted.replace(/([\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}])/gu, '<span class="inline-block animate-bounce-slow">$1</span>');
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
+      .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 bg-muted rounded font-mono text-xs">$1</code>');
     
     // Convert URLs to styled links
     formatted = formatted.replace(
       /(https?:\/\/[^\s]+)/g,
-      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary underline decoration-primary/30 hover:decoration-primary decoration-2 underline-offset-2 transition-all hover:text-accent-bold">$1</a>'
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80">$1</a>'
     );
     
     return formatted;
   };
 
   return (
-    <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl border-2 border-border/30 shadow-2xl">
-      <div className="bizmap-chat-ambient" aria-hidden="true">
-        <div className="bizmap-chat-pattern" />
-        <div className="bizmap-chat-glow-layer" />
-        <div className="bizmap-chat-shimmer" />
-      </div>
+    <div className="relative flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl border border-border bg-background">
       <div className="relative z-10 flex h-full flex-col">
-        {/* Creative header accent */}
-        <div className="h-1 bg-gradient-bold w-full animate-gradient-flow opacity-80" style={{ backgroundSize: '300% 100%' }} />
         {/* Personality Indicator */}
         {user && preferences && preferences.onboardingCompleted && (
           <div className="absolute top-4 right-4 z-20">
@@ -417,7 +407,7 @@ export const BizMapChat = ({
       >
         {/* Search Status Indicator */}
         {isStreaming && searchStatus !== 'none' && (
-          <div className="animate-message-slide-in" style={{ animationDelay: '0ms' }}>
+          <div>
             <SearchResults status={searchStatus} sourceCount={searchSourceCount} />
           </div>
         )}
@@ -432,62 +422,46 @@ export const BizMapChat = ({
             } as React.CSSProperties}
           >
             <div
-              className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-message-slide-in message-creative-transform ${msg.isBot ? 'message-transform-left' : 'message-transform-right'}`}
+              className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} transition-opacity duration-200`}
               style={{ 
-                animationDelay: `${index * 80}ms`,
-                '--offset-index': index % 3,
-                '--transform-index': index % 2
+                opacity: 0,
+                animation: 'fadeIn 0.2s ease-in forwards',
+                animationDelay: `${index * 50}ms`
               } as React.CSSProperties}
               role="article"
               aria-label={msg.isBot ? "AI assistant message" : "Your message"}
             >
               {msg.isBot && (
                 <div 
-                  className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-bold-2 rounded-full flex items-center justify-center shadow-lg glow-bold-blue ring-2 ring-primary/30 relative overflow-hidden group"
+                  className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-full flex items-center justify-center"
                   aria-hidden="true"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-                  <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10 drop-shadow-lg" />
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
                 </div>
               )}
               <div
-                className={`relative max-w-[85%] sm:max-w-[80%] md:max-w-[75%] p-3 sm:p-4 md:p-5 transition-all duration-300 group ${
+                className={`relative max-w-[85%] sm:max-w-[80%] md:max-w-[75%] p-4 rounded-lg ${
                   msg.isBot
-                    ? 'rounded-2xl rounded-tl-sm bg-gradient-to-br from-muted via-muted/90 to-muted/70 border-2 border-gradient-bold shadow-lg hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-1 hover:scale-[1.02]'
-                    : 'rounded-2xl rounded-tr-sm bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 hover:scale-[1.02] glow-bold-blue'
-                }`}
-                style={{
-                  clipPath: msg.isBot 
-                    ? 'polygon(8px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 8px)'
-                    : 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 8px, 100% 100%, 0% 100%)'
-                }}
+                    ? 'bg-muted'
+                    : 'bg-primary text-primary-foreground'
+                } shadow-sm`}
               >
-                {/* Shimmer effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer-bold transition-opacity duration-500 rounded-2xl pointer-events-none" />
-                
                 {/* Content */}
                 <div className="relative z-10">
                   <p 
-                    className="text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium message-content" 
+                    className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap message-content" 
                     role="text"
                     dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }}
                   />
                 </div>
-                
-                {/* Subtle 3D depth effect */}
-                <div className={`absolute inset-0 rounded-2xl pointer-events-none ${
-                  msg.isBot 
-                    ? 'bg-gradient-to-br from-white/5 to-transparent'
-                    : 'bg-gradient-to-br from-white/20 to-transparent'
-                }`} style={{ clipPath: 'inherit' }} />
               </div>
               {!msg.isBot && (
                 <Avatar 
-                  className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 shadow-xl shadow-primary/40 ring-2 ring-primary/30 ring-offset-2 ring-offset-background glow-bold-blue group hover:scale-110 transition-transform duration-300"
+                  className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10"
                   aria-hidden="true"
                 >
                   <AvatarImage src={userAvatarUrl || undefined} />
-                  <AvatarFallback className="bg-gradient-bold-2 text-white flex items-center justify-center font-bold text-sm sm:text-base">
+                  <AvatarFallback className="bg-primary text-primary-foreground flex items-center justify-center text-sm">
                     {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -504,47 +478,30 @@ export const BizMapChat = ({
 
         {/* Streaming message */}
         {isStreaming && streamingMessage && (
-          <div className="flex gap-3 sm:gap-4 justify-start animate-message-bounce-in">
-            <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-bold-2 rounded-full flex items-center justify-center shadow-lg glow-bold-blue ring-2 ring-primary/30 animate-pulse relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent animate-pulse rounded-full" />
-              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10 drop-shadow-lg" />
+          <div className="flex gap-3 sm:gap-4 justify-start">
+            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-full flex items-center justify-center">
+              <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </div>
-            <div className="relative max-w-[80%] sm:max-w-[75%] rounded-2xl rounded-tl-sm p-4 sm:p-5 bg-gradient-to-br from-muted via-muted/90 to-muted/70 border-2 border-gradient-bold shadow-lg hover:shadow-xl hover:shadow-primary/20">
-              {/* Animated border */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-flow opacity-30 animate-gradient-flow" style={{ 
-                clipPath: 'polygon(8px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 8px)',
-                backgroundSize: '300% 100%'
-              }} />
-              
+            <div className="relative max-w-[80%] sm:max-w-[75%] rounded-lg p-4 bg-muted shadow-sm">
               <p 
-                className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-medium relative z-10 message-content"
-                dangerouslySetInnerHTML={{ __html: formatMessageContent(streamingMessage) + '<span class="inline-block w-0.5 h-5 ml-1 bg-primary animate-pulse glow-bold-blue"></span>' }}
+                className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap message-content"
+                dangerouslySetInnerHTML={{ __html: formatMessageContent(streamingMessage) + '<span class="inline-block w-0.5 h-4 ml-1 bg-foreground animate-pulse"></span>' }}
               />
-              
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer-bold rounded-2xl pointer-events-none" />
             </div>
           </div>
         )}
 
         {/* Typing indicator */}
         {isTyping && !isStreaming && (
-          <div className="flex gap-3 sm:gap-4 justify-start animate-message-bounce-in">
-            <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-bold-2 rounded-full flex items-center justify-center shadow-lg glow-bold-blue ring-2 ring-primary/30 animate-pulse relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent animate-pulse rounded-full" />
-              <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10 drop-shadow-lg" />
+          <div className="flex gap-3 sm:gap-4 justify-start">
+            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-full flex items-center justify-center">
+              <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </div>
-            <div className="relative max-w-[80%] sm:max-w-[75%] rounded-2xl rounded-tl-sm p-4 sm:p-5 bg-gradient-to-br from-muted via-muted/90 to-muted/70 border-2 border-gradient-bold shadow-lg">
-              {/* Animated border */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-flow opacity-20 animate-gradient-flow" style={{ 
-                clipPath: 'polygon(8px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 8px)',
-                backgroundSize: '300% 100%'
-              }} />
-              
-              <div className="flex gap-2 relative z-10">
-                <div className="w-3 h-3 bg-primary rounded-full animate-bounce glow-bold-blue" style={{ animationDelay: "0ms" }} />
-                <div className="w-3 h-3 bg-primary rounded-full animate-bounce glow-bold-blue" style={{ animationDelay: "150ms" }} />
-                <div className="w-3 h-3 bg-primary rounded-full animate-bounce glow-bold-blue" style={{ animationDelay: "300ms" }} />
+            <div className="relative max-w-[80%] sm:max-w-[75%] rounded-lg p-4 bg-muted shadow-sm">
+              <div className="flex gap-2">
+                <div className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2 h-2 bg-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -554,9 +511,7 @@ export const BizMapChat = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t-2 border-gradient-bold p-3 sm:p-4 md:p-5 bg-gradient-to-br from-background/95 via-background/90 to-muted/30 backdrop-blur-sm relative overflow-hidden">
-        {/* Animated background gradient */}
-        <div className="absolute inset-0 bg-gradient-flow opacity-5 animate-gradient-flow pointer-events-none" style={{ backgroundSize: '300% 100%' }} />
+      <div className="border-t border-border p-3 sm:p-4 md:p-5 bg-background">
         {chatMode === 'freeform' && (
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -649,8 +604,8 @@ export const BizMapChat = ({
           </div>
         )}
 
-        <div className="flex gap-2 sm:gap-3 relative z-10">
-          <div className="flex-1 relative group">
+        <div className="flex gap-2 sm:gap-3">
+          <div className="flex-1">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -664,7 +619,7 @@ export const BizMapChat = ({
                 isTyping || 
                 isStreaming
               }
-              className="w-full bg-background/90 border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 text-sm sm:text-base min-h-[52px] sm:min-h-[52px] rounded-2xl px-4 py-3 font-medium placeholder:text-muted-foreground/60 hover:border-primary/60 hover:bg-background/95 focus:shadow-lg focus:shadow-primary/20 group-hover:border-primary/40 touch-manipulation text-base sm:text-base"
+              className="w-full bg-background border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm sm:text-base min-h-[44px] rounded-lg px-4 py-3 placeholder:text-muted-foreground"
               aria-label={
                 chatMode === 'freeform'
                   ? "Ask your AI co-founder a question about your business"
@@ -673,8 +628,6 @@ export const BizMapChat = ({
               aria-describedby="input-help-text"
               aria-required={currentStep < wizardSteps.length}
             />
-            {/* Gradient border effect on focus */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-flow opacity-0 group-focus-within:opacity-30 transition-opacity duration-300 pointer-events-none animate-gradient-flow" style={{ backgroundSize: '300% 100%', zIndex: -1 }} />
           </div>
           <span id="input-help-text" className="sr-only">
             {chatMode === 'freeform' 
@@ -698,23 +651,17 @@ export const BizMapChat = ({
               isStreaming
             }
             size="icon"
-            className="h-[52px] w-[52px] sm:h-[52px] sm:w-[52px] rounded-2xl bg-gradient-bold-2 shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 hover:scale-110 hover:rotate-3 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:rotate-0 disabled:hover:shadow-xl min-h-[52px] min-w-[52px] touch-manipulation relative overflow-hidden group"
+            className="h-[44px] w-[44px] rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             aria-label="Send message"
             aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
           >
-            {/* Animated background */}
-            <div className="absolute inset-0 bg-gradient-flow opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-gradient-flow" style={{ backgroundSize: '300% 100%' }} />
-            
-            {/* Ripple effect on click */}
-            <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-active:opacity-100 group-active:animate-ripple" />
-            
             {isTyping || isStreaming ? (
               <>
-                <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-white relative z-10 drop-shadow-lg" aria-hidden="true" />
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
                 <span id="sending-status" className="sr-only">Sending message, please wait</span>
               </>
             ) : (
-              <Send className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10 drop-shadow-lg group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" aria-hidden="true" />
+              <Send className="w-5 h-5" aria-hidden="true" />
             )}
           </Button>
         </div>
@@ -744,11 +691,10 @@ export const BizMapChat = ({
                 });
                 setShowShareDialog(true);
               }}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-xl border-2 border-primary/30 hover:border-primary hover:bg-primary/10 hover:text-primary font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20 group relative overflow-hidden"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg border border-border hover:bg-muted transition-colors"
             >
-              <div className="absolute inset-0 bg-gradient-flow opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-gradient-flow" style={{ backgroundSize: '300% 100%' }} />
-              <Share2 className="h-4 w-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="relative z-10">Share to Community</span>
+              <Share2 className="h-4 w-4" />
+              <span>Share to Community</span>
             </Button>
             <Button
               variant="outline"
@@ -757,11 +703,10 @@ export const BizMapChat = ({
                 // Trigger the examples modal in the parent component
                 window.dispatchEvent(new CustomEvent('openExamplesModal'));
               }}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-xl border-2 border-accent-bold/30 hover:border-accent-bold hover:bg-accent-bold/10 hover:text-accent-bold font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent-bold/20 group relative overflow-hidden"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg border border-border hover:bg-muted transition-colors"
             >
-              <div className="absolute inset-0 bg-gradient-flow opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-gradient-flow" style={{ backgroundSize: '300% 100%' }} />
-              <BookOpen className="h-4 w-4 relative z-10 group-hover:scale-110 transition-transform duration-300" />
-              <span className="relative z-10">See Examples</span>
+              <BookOpen className="h-4 w-4" />
+              <span>See Examples</span>
             </Button>
           </div>
         )}
