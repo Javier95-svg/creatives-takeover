@@ -768,10 +768,12 @@ export const BizMapChat = ({
             </Button>
           </div>
         )}
+        </div>
+      )}
         
-        {/* Share Dialog */}
-        {showShareDialog && shareData && (
-          <ShareToCommunityDialog
+      {/* Share Dialog */}
+      {showShareDialog && shareData && (
+        <ShareToCommunityDialog
             open={showShareDialog}
             onOpenChange={setShowShareDialog}
             reportData={shareData.reportData}
