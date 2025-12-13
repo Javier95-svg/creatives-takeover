@@ -407,6 +407,26 @@ export default {
 						filter: 'brightness(1.4) contrast(1.15)',
 						boxShadow: 'inset 0 0 25px rgba(255, 255, 255, 0.4), inset 0 0 15px rgba(59, 130, 246, 0.5), 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(59, 130, 246, 0.7), 0 0 60px rgba(239, 68, 68, 0.5), 0 0 80px rgba(16, 185, 129, 0.4), 0 0 100px rgba(59, 130, 246, 0.6), 0 0 120px rgba(255, 255, 255, 0.3)'
 					}
+				},
+				'slide-down': {
+					'0%': {
+						transform: 'translateY(-100%)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateY(100vh)',
+						opacity: '0'
+					}
+				},
+				'slide-right': {
+					'0%': {
+						transform: 'translateX(-100%)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateX(100vw)',
+						opacity: '0'
+					}
 				}
 			},
 			animation: {
@@ -435,7 +455,9 @@ export default {
 				'rgb-glow-rotate': 'rgb-glow-rotate 6s linear infinite',
 				'lightbulb-shine': 'lightbulb-shine 3s ease-in-out infinite',
 				'subtle-flicker': 'subtle-flicker 2.5s ease-in-out infinite',
-				'text-flicker': 'text-flicker 3s ease-in-out infinite'
+				'text-flicker': 'text-flicker 3s ease-in-out infinite',
+				'slide-down': 'slide-down 12s linear infinite',
+				'slide-right': 'slide-right 15s linear infinite'
 			}
 		}
 	},

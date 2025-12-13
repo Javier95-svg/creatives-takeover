@@ -43,7 +43,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Default to collapsed
   const { 
     sessions, 
     loading, 
@@ -195,7 +195,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
   return (
     <TooltipProvider>
       <div 
-        className={cn("h-[700px] border-r border-border bg-background flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
+        className={cn("h-full min-h-[600px] border-r border-border bg-background flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
         style={{ width: `${sidebarWidth}px` }}
       >
         {/* Toggle Button */}

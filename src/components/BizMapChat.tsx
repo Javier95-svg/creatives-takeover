@@ -18,6 +18,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { SourceCitation } from "./chatbot/SourceCitation";
 import { SearchResults } from "./chatbot/SearchResults";
+import { ModeSelector, ChatMode } from "./bizmap/ModeSelector";
+import BizMapHeroWallpaper from "./wallpapers/BizMapHeroWallpaper";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -149,6 +151,8 @@ export const BizMapChat = ({
   const [searchStatus, setSearchStatus] = useState<'searching' | 'found' | 'none'>('none');
   const [searchSourceCount, setSearchSourceCount] = useState(0);
   const [currentSources, setCurrentSources] = useState<any[]>([]);
+  const [chatMode, setChatMode] = useState<ChatMode>("strategy");
+  const [hasMessages, setHasMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -178,7 +182,7 @@ export const BizMapChat = ({
     streamingMessage, 
     isStreaming, 
     sendMessage,
-    chatMode,
+    chatMode: chatbotMode,
     switchToFreeform,
     conversionPromptShown,
     conversionPromptDismissed,
@@ -221,6 +225,13 @@ export const BizMapChat = ({
     scrollToBottom();
   }, [messages, streamingMessage]);
 
+  // Track if we have messages to show/hide messages area
+  useEffect(() => {
+    if (messages.length > 0 || isStreaming) {
+      setHasMessages(true);
+    }
+  }, [messages.length, isStreaming]);
+
   // Load prompt from Prompt Library or Example Template
   useEffect(() => {
     const savedPrompt = localStorage.getItem('bizmap_prompt');
@@ -261,7 +272,7 @@ export const BizMapChat = ({
       setShowModal(false);
       return;
     }
-  }, [currentStep, user, chatMode, trackConversionEvent]);
+  }, [currentStep, user, chatbotMode, trackConversionEvent]);
 
   // Fetch user avatar from profile
   useEffect(() => {
@@ -370,11 +381,9 @@ export const BizMapChat = ({
 
   return (
     <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden">
-      <div className="bizmap-chat-ambient" aria-hidden="true">
-        <div className="bizmap-chat-pattern" />
-        <div className="bizmap-chat-glow-layer" />
-        <div className="bizmap-chat-shimmer" />
-      </div>
+      {/* Animated Background */}
+      <BizMapHeroWallpaper />
+      
       <div className="relative z-10 flex h-full flex-col">
         {/* Personality Indicator */}
         {user && preferences && preferences.onboardingCompleted && (
@@ -383,14 +392,15 @@ export const BizMapChat = ({
           </div>
         )}
         
-      {/* Messages Area */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative"
-        role="log"
-        aria-label="Conversation messages"
-        aria-live="polite"
-        aria-atomic="false"
-      >
+      {/* Messages Area - Hidden until first message */}
+      {hasMessages && (
+        <div 
+          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative"
+          role="log"
+          aria-label="Conversation messages"
+          aria-live="polite"
+          aria-atomic="false"
+        >
         {/* Search Status Indicator */}
         {isStreaming && searchStatus !== 'none' && (
           <SearchResults status={searchStatus} sourceCount={searchSourceCount} />
@@ -474,11 +484,95 @@ export const BizMapChat = ({
         )}
 
         <div ref={messagesEndRef} />
-      </div>
+        </div>
+      )}
 
-      {/* Input Area */}
-      <div className="border-t border-border/50 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-background to-muted/20">
-        {chatMode === 'freeform' && (
+      {/* Hero Input Area - Centered when no messages */}
+      {!hasMessages ? (
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+          <div className="w-full max-w-4xl space-y-6">
+            {/* Hero Title */}
+            <div className="text-center space-y-2 animate-fade-in">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                Ask BizMap AI anything...
+              </h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Your AI co-founder is ready to help with strategy, research, analysis, and planning
+              </p>
+            </div>
+
+            {/* Centered Input Box */}
+            <div className="flex flex-col sm:flex-row gap-3 items-end sm:items-center">
+              <div className="flex-1 w-full">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask BizMap AI anything..."
+                  disabled={isTyping || isStreaming}
+                  className="w-full h-14 sm:h-16 text-base sm:text-lg bg-background/90 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 rounded-xl sm:rounded-2xl px-4 sm:px-6 shadow-lg"
+                  aria-label="Ask your AI co-founder a question"
+                  aria-describedby="input-help-text"
+                />
+                <span id="input-help-text" className="sr-only">
+                  Type your question and press Enter to send, or Shift+Enter for a new line
+                </span>
+              </div>
+              
+              {/* Mode Selector */}
+              <ModeSelector 
+                value={chatMode} 
+                onValueChange={setChatMode}
+                className="w-full sm:w-auto"
+              />
+              
+              {/* Send Button */}
+              <Button 
+                onClick={handleSend}
+                disabled={(!message.trim() && attachedFiles.length === 0) || isTyping || isStreaming}
+                size="lg"
+                className="h-14 sm:h-16 w-full sm:w-16 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 rounded-xl sm:rounded-2xl"
+                aria-label="Send message"
+              >
+                {isTyping || isStreaming ? (
+                  <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Send className="w-5 h-5" aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+
+            {/* File Attachment - Optional */}
+            {attachedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center">
+                {attachedFiles.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-background/80 backdrop-blur-sm rounded-lg border border-border text-xs"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span className="truncate max-w-[150px]">{file.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newFiles = attachedFiles.filter((_, i) => i !== index);
+                        setAttachedFiles(newFiles);
+                      }}
+                      className="h-5 w-5 p-0 hover:bg-destructive/10"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Input Area - When messages are visible */
+        <div className="border-t border-border/50 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-background/80 to-muted/20 backdrop-blur-sm">
+        {chatbotMode === 'freeform' && (
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Sparkles className="h-3 w-3 text-primary" />
@@ -490,7 +584,7 @@ export const BizMapChat = ({
             />
           </div>
         )}
-        {chatMode !== 'freeform' && currentStep < wizardSteps.length && (
+        {chatbotMode !== 'freeform' && currentStep < wizardSteps.length && (
           <div className="flex items-center justify-end mb-3">
             <HelpTooltip
               content={`Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || 'Business Planning'}. Answer the question to continue building your business plan.`}
@@ -500,7 +594,7 @@ export const BizMapChat = ({
         )}
         
         {/* Document Upload Section - Only in freeform mode */}
-        {chatMode === 'freeform' && (
+        {chatbotMode === 'freeform' && (
           <div className="mb-3">
             <DocumentUpload
               conversationId={sessionId}
@@ -570,65 +664,65 @@ export const BizMapChat = ({
           </div>
         )}
 
-        <div className="flex gap-2 sm:gap-3">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={
-              chatMode === 'freeform' 
-                ? "Ask me anything about your business..." 
-                : getCurrentPlaceholder()
-            }
-            disabled={
-              isTyping || 
-              isStreaming
-            }
-            className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base min-h-[44px]"
-            aria-label={
-              chatMode === 'freeform'
-                ? "Ask your AI co-founder a question about your business"
-                : `Answer the question: ${wizardSteps[currentStep]?.question || 'Continue your business planning'}`
-            }
-            aria-describedby="input-help-text"
-            aria-required={currentStep < wizardSteps.length}
-          />
-          <span id="input-help-text" className="sr-only">
-            {chatMode === 'freeform' 
-              ? "Type your question and press Enter to send, or Shift+Enter for a new line"
-              : `Step ${currentStep + 1} of ${wizardSteps.length}. Press Enter to submit your answer`}
-          </span>
-          <FileAttachment 
-            onFileSelect={setAttachedFiles}
-            currentFiles={attachedFiles}
-            maxFiles={5}
-            maxSizeMB={10}
-            acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
-            iconOnly
-            aria-label="Attach file to message"
-          />
-          <Button 
-            onClick={handleSend}
-            disabled={
-              (!message.trim() && attachedFiles.length === 0) || 
-              isTyping || 
-              isStreaming
-            }
-            size="icon"
-            className="h-11 w-11 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 min-h-[44px] min-w-[44px] touch-manipulation"
-            aria-label="Send message"
-            aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
-          >
-            {isTyping || isStreaming ? (
-              <>
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" aria-hidden="true" />
-                <span id="sending-status" className="sr-only">Sending message, please wait</span>
-              </>
-            ) : (
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-            )}
-          </Button>
-        </div>
+          <div className="flex gap-2 sm:gap-3">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={
+                chatbotMode === 'freeform' 
+                  ? "Ask me anything about your business..." 
+                  : getCurrentPlaceholder()
+              }
+              disabled={isTyping || isStreaming}
+              className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base min-h-[44px]"
+              aria-label={
+                chatbotMode === 'freeform'
+                  ? "Ask your AI co-founder a question about your business"
+                  : `Answer the question: ${wizardSteps[currentStep]?.question || 'Continue your business planning'}`
+              }
+              aria-describedby="input-help-text"
+              aria-required={currentStep < wizardSteps.length}
+            />
+            <span id="input-help-text" className="sr-only">
+              {chatbotMode === 'freeform' 
+                ? "Type your question and press Enter to send, or Shift+Enter for a new line"
+                : `Step ${currentStep + 1} of ${wizardSteps.length}. Press Enter to submit your answer`}
+            </span>
+            
+            {/* Mode Selector */}
+            <ModeSelector 
+              value={chatMode} 
+              onValueChange={setChatMode}
+            />
+            
+            <FileAttachment 
+              onFileSelect={setAttachedFiles}
+              currentFiles={attachedFiles}
+              maxFiles={5}
+              maxSizeMB={10}
+              acceptedTypes={["image/*", "application/pdf", "text/*", ".doc", ".docx"]}
+              iconOnly
+              aria-label="Attach file to message"
+            />
+            <Button 
+              onClick={handleSend}
+              disabled={(!message.trim() && attachedFiles.length === 0) || isTyping || isStreaming}
+              size="icon"
+              className="h-11 w-11 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 min-h-[44px] min-w-[44px] touch-manipulation"
+              aria-label="Send message"
+              aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
+            >
+              {isTyping || isStreaming ? (
+                <>
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" aria-hidden="true" />
+                  <span id="sending-status" className="sr-only">Sending message, please wait</span>
+                </>
+              ) : (
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              )}
+            </Button>
+          </div>
 
         {/* Share to Community and Examples Buttons - Shows when there are messages */}
         {messages.length > 0 && (
