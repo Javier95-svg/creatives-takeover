@@ -1215,17 +1215,18 @@ Subject: "Quick question about [their pain point]"
               </div>
 
               <TabsContent value="bizmap">
-                {/* Hero Layout Container - Below Navigation Bar */}
-                <div className="relative h-[calc(100vh-4rem-5rem)] min-h-[600px] flex flex-row gap-4 lg:gap-6 -mx-4 sm:-mx-6">
-                  {/* Chat Sidebar - Collapsible */}
+                {/* Chat Interface Container */}
+                <div className="flex flex-row gap-4 lg:gap-6 mb-6 sm:mb-8">
+                  {/* Chat Sidebar */}
                   <ChatSidebar 
                     onSessionSelect={handleSessionSelect}
                     onNewChat={handleNewChat}
                   />
 
-                  {/* Hero Chat Interface */}
-                  <div className="flex-1 h-full relative">
-                    <BizMapChat
+                  {/* Enhanced BizMapChat Component with 7 Principles */}
+                  <div className="flex-1 min-w-0">
+                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-sm h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
+                      <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
                           setCurrentStep(step + 1);
@@ -1305,6 +1306,7 @@ Subject: "Quick question about [their pain point]"
                           updateSession
                         }}
                       />
+                    </div>
                   </div>
                 </div>
 

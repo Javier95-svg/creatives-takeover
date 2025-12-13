@@ -1927,26 +1927,6 @@ All colors MUST be HSL.
   }
 }
 
-@keyframes mesh-move {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(100px, 100px);
-  }
-}
-
-@keyframes float-particle {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translate(20px, -30px) scale(1.2);
-    opacity: 0.8;
-  }
-}
-
 /* Screen reader only text utility */
 .sr-only {
   position: absolute;
