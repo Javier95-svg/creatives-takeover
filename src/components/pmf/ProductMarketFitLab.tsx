@@ -14,6 +14,9 @@ import { CREDIT_COSTS } from '@/config/constants';
 import { supabase } from '@/integrations/supabase/client';
 import PMFScore from './PMFScore';
 import PMFAnalysisResults from './PMFAnalysisResults';
+import CustomerSegments from './CustomerSegments';
+import ProblemSolutionFit from './ProblemSolutionFit';
+import ValidationExperiments from './ValidationExperiments';
 
 interface ProductMarketFitLabProps {
   businessPlanData?: {
@@ -119,6 +122,25 @@ interface PMFAnalysis {
     estimatedCost: string;
     priority: 'High' | 'Medium' | 'Low';
   }>;
+  problemSolutionFit?: {
+    alignmentScore: number;
+    reasoning: string;
+    gaps: string[];
+    strengths: string[];
+    weaknesses: string[];
+    recommendations: string[];
+  };
+  surveys?: {
+    primarySegment: string;
+    questions: string[];
+  };
+  interviewScripts?: {
+    opening: string[];
+    problemExploration: string[];
+    solutionValidation: string[];
+    pricingSensitivity: string[];
+    closing: string[];
+  };
 }
 
 const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({ 
@@ -149,6 +171,24 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PMFAnalysis | null>(null);
+  const [activeTab, setActiveTab] = useState('input');
+  const [selectedSegment, setSelectedSegment] = useState<string | undefined>();
+
+  const handleExportSurvey = () => {
+    console.log('Exporting survey:', analysis?.surveys);
+    toast({
+      title: "Survey Exported",
+      description: "Survey has been prepared for download.",
+    });
+  };
+
+  const handleExportInterviewScript = () => {
+    console.log('Exporting interview script:', analysis?.interviewScripts);
+    toast({
+      title: "Interview Script Exported",
+      description: "Interview script has been prepared for download.",
+    });
+  };
 
   const handleAnalyze = async () => {
     if (!user) {
@@ -250,8 +290,31 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!analysis ? (
-            <div className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="input">
+                <FileText className="w-4 h-4 mr-2" />
+                Input
+              </TabsTrigger>
+              <TabsTrigger value="segments" disabled={!analysis}>
+                <Users className="w-4 h-4 mr-2" />
+                Segments
+              </TabsTrigger>
+              <TabsTrigger value="fit" disabled={!analysis}>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Fit
+              </TabsTrigger>
+              <TabsTrigger value="score" disabled={!analysis}>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Score
+              </TabsTrigger>
+              <TabsTrigger value="experiments" disabled={!analysis}>
+                <FlaskConical className="w-4 h-4 mr-2" />
+                Experiments
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="input" className="mt-6">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="businessDescription">Business Description *</Label>
@@ -333,7 +396,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
             </TabsContent>
 
             <TabsContent value="fit" className="mt-6">
-              {analysis ? (
+              {analysis && analysis.problemSolutionFit && analysis.surveys && analysis.interviewScripts ? (
                 <ProblemSolutionFit
                   fit={analysis.problemSolutionFit}
                   surveys={analysis.surveys}
