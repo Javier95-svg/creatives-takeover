@@ -12,10 +12,8 @@ import { useCredits } from '@/hooks/useCredits';
 import { CreditGate } from '@/components/CreditGate';
 import { CREDIT_COSTS } from '@/config/constants';
 import { supabase } from '@/integrations/supabase/client';
-import CustomerSegments from './CustomerSegments';
-import ProblemSolutionFit from './ProblemSolutionFit';
 import PMFScore from './PMFScore';
-import ValidationExperiments from './ValidationExperiments';
+import PMFAnalysisResults from './PMFAnalysisResults';
 
 interface ProductMarketFitLabProps {
   businessPlanData?: {
@@ -40,7 +38,71 @@ interface ProductMarketFitLabProps {
 }
 
 interface PMFAnalysis {
-  customerSegments: Array<{
+  pmfScore: {
+    overall: number;
+    verdict: 'Strong Fit' | 'Moderate Fit' | 'Weak Fit';
+    subScores: {
+      demand: number;
+      differentiation: number;
+      timing: number;
+      executionRisk: number;
+    };
+    reasoning: string;
+  };
+  marketAnalysis: {
+    demand: {
+      assessment: string;
+      marketSize: string;
+      growthProjection: string;
+      trends: string[];
+    };
+    competitiveLandscape: {
+      directCompetitors: Array<{
+        name: string;
+        strengths: string[];
+        weaknesses: string[];
+      }>;
+      indirectCompetitors: string[];
+      marketPositioning: string;
+      competitiveIntensity: 'High' | 'Medium' | 'Low';
+    };
+    differentiation: {
+      uniqueValue: string;
+      competitiveAdvantages: string[];
+      moats: string[];
+      differentiationGaps: string[];
+    };
+    scalability: {
+      expansionPotential: string;
+      unitEconomics: string;
+      growthConstraints: string[];
+      scalabilityScore: string;
+    };
+    risks: {
+      marketRisks: Array<{
+        risk: string;
+        severity: 'High' | 'Medium' | 'Low';
+        mitigation: string;
+      }>;
+      executionRisks: Array<{
+        risk: string;
+        severity: 'High' | 'Medium' | 'Low';
+        mitigation: string;
+      }>;
+      timingRisks: Array<{
+        risk: string;
+        severity: 'High' | 'Medium' | 'Low';
+        mitigation: string;
+      }>;
+    };
+  };
+  nextSteps: Array<{
+    priority: 'High' | 'Medium' | 'Low';
+    action: string;
+    description: string;
+    estimatedTime?: string;
+  }>;
+  customerSegments?: Array<{
     name: string;
     demographics: string;
     psychographics: string;
@@ -48,26 +110,7 @@ interface PMFAnalysis {
     marketSize: string;
     accessibilityScore: number;
   }>;
-  problemSolutionFit: {
-    alignmentScore: number;
-    reasoning: string;
-    gaps: string[];
-    strengths: string[];
-    weaknesses: string[];
-    recommendations: string[];
-  };
-  surveys: {
-    primarySegment: string;
-    questions: string[];
-  };
-  interviewScripts: {
-    opening: string[];
-    problemExploration: string[];
-    solutionValidation: string[];
-    pricingSensitivity: string[];
-    closing: string[];
-  };
-  validationExperiments: Array<{
+  validationExperiments?: Array<{
     name: string;
     type: string;
     hypothesis: string;
@@ -75,23 +118,6 @@ interface PMFAnalysis {
     estimatedTime: string;
     estimatedCost: string;
     priority: 'High' | 'Medium' | 'Low';
-  }>;
-  pmfScore: {
-    overall: number;
-    breakdown: {
-      problemClarity: number;
-      solutionFit: number;
-      marketSize: number;
-      competitionAnalysis: number;
-      validationReadiness: number;
-      founderMarketFit: number;
-    };
-    reasoning: string;
-  };
-  nextSteps: Array<{
-    priority: 'High' | 'Medium' | 'Low';
-    action: string;
-    description: string;
   }>;
 }
 
@@ -104,18 +130,25 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const { hasCredits } = useCredits();
   const [creditGateOpen, setCreditGateOpen] = useState(false);
   
+  // Auto-prefill business description from business plan data
+  const getInitialBusinessDescription = () => {
+    if (businessPlanData?.answers) {
+      const parts = [];
+      if (businessPlanData.answers.overview) parts.push(businessPlanData.answers.overview);
+      if (businessPlanData.answers.problem) parts.push(`Problem: ${businessPlanData.answers.problem}`);
+      if (businessPlanData.answers.solution) parts.push(`Solution: ${businessPlanData.answers.solution}`);
+      return parts.join('\n\n');
+    }
+    return '';
+  };
+
   const [formData, setFormData] = useState({
-    businessConcept: businessPlanData?.answers?.overview || '',
+    businessDescription: getInitialBusinessDescription(),
     targetMarket: businessPlanData?.answers?.market || '',
-    problemStatement: businessPlanData?.answers?.problem || '',
-    solutionDescription: businessPlanData?.answers?.solution || '',
-    currentAssumptions: '',
   });
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PMFAnalysis | null>(null);
-  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('input');
 
   const handleAnalyze = async () => {
     if (!user) {
@@ -132,10 +165,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
       return;
     }
 
-    if (!formData.businessConcept.trim() || !formData.problemStatement.trim() || !formData.solutionDescription.trim()) {
+    if (!formData.businessDescription.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill in Business Concept, Problem Statement, and Solution Description",
+        description: "Please provide a business description",
         variant: "destructive",
       });
       return;
@@ -146,11 +179,8 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
       
       const { data, error } = await supabase.functions.invoke('pmf-analyzer', {
         body: {
-          businessConcept: formData.businessConcept,
-          targetMarket: formData.targetMarket,
-          problemStatement: formData.problemStatement,
-          solutionDescription: formData.solutionDescription,
-          currentAssumptions: formData.currentAssumptions,
+          businessDescription: formData.businessDescription,
+          targetMarket: formData.targetMarket || undefined,
           businessPlanData: businessPlanData ? {
             answers: businessPlanData.answers,
             launchReport: businessPlanData.launchReport
@@ -169,22 +199,20 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
 
       if (data?.success && data?.analysis) {
         setAnalysis(data.analysis);
-        setSelectedSegment(data.analysis.customerSegments[0]?.name || null);
-        setActiveTab('segments');
         
         // Export data back to business planner
-        if (onDataExport) {
+        if (onDataExport && data.analysis) {
           onDataExport({
-            selectedSegment: data.analysis.customerSegments[0]?.name,
-            refinedProblem: formData.problemStatement,
-            pmfScore: data.analysis.pmfScore.overall,
+            selectedSegment: data.analysis.customerSegments?.[0]?.name,
+            refinedProblem: formData.businessDescription,
+            pmfScore: data.analysis.pmfScore?.overall,
             experiments: data.analysis.validationExperiments,
           });
         }
 
         toast({
           title: "Analysis Complete!",
-          description: `Your PMF score is ${data.analysis.pmfScore.overall}/100. Review the insights below.`,
+          description: `Your PMF score is ${data.analysis.pmfScore?.overall || 'N/A'}/100 - ${data.analysis.pmfScore?.verdict || 'N/A'}. Review the insights below.`,
         });
       } else {
         throw new Error(data?.error || 'Analysis failed');
@@ -201,64 +229,6 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
     }
   };
 
-  const handleExportSurvey = () => {
-    if (!analysis?.surveys) return;
-    
-    const surveyText = `Product-Market Fit Survey
-Primary Segment: ${analysis.surveys.primarySegment}
-
-Questions:
-${analysis.surveys.questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-`;
-    
-    const blob = new Blob([surveyText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pmf-survey.txt';
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Survey Downloaded",
-      description: "Your PMF survey has been downloaded.",
-    });
-  };
-
-  const handleExportInterviewScript = () => {
-    if (!analysis?.interviewScripts) return;
-    
-    const scriptText = `Product-Market Fit Interview Script
-
-OPENING QUESTIONS:
-${analysis.interviewScripts.opening.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-
-PROBLEM EXPLORATION:
-${analysis.interviewScripts.problemExploration.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-
-SOLUTION VALIDATION:
-${analysis.interviewScripts.solutionValidation.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-
-PRICING SENSITIVITY:
-${analysis.interviewScripts.pricingSensitivity.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-
-CLOSING QUESTIONS:
-${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-`;
-    
-    const blob = new Blob([scriptText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pmf-interview-script.txt';
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Interview Script Downloaded",
-      description: "Your interview script has been downloaded.",
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -280,73 +250,35 @@ ${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="input">Input</TabsTrigger>
-              <TabsTrigger value="segments">Segments</TabsTrigger>
-              <TabsTrigger value="fit">Fit Analysis</TabsTrigger>
-              <TabsTrigger value="score">PMF Score</TabsTrigger>
-              <TabsTrigger value="experiments">Experiments</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="input" className="space-y-4 mt-6">
+          {!analysis ? (
+            <div className="space-y-4">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="businessConcept">Business Concept / Overview *</Label>
+                  <Label htmlFor="businessDescription">Business Description *</Label>
                   <Textarea
-                    id="businessConcept"
-                    value={formData.businessConcept}
-                    onChange={(e) => setFormData(prev => ({ ...prev, businessConcept: e.target.value }))}
-                    placeholder="Describe your business idea in a few sentences..."
-                    rows={4}
+                    id="businessDescription"
+                    value={formData.businessDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, businessDescription: e.target.value }))}
+                    placeholder="Describe your business idea, the problem you're solving, and your solution. Include key details about your target customers, value proposition, and any assumptions you're making..."
+                    rows={8}
                     className="resize-none"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Our AI will intelligently extract the problem, solution, market, and key assumptions from your description.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="targetMarket">Target Market</Label>
+                  <Label htmlFor="targetMarket">Target Market (Optional)</Label>
                   <Input
                     id="targetMarket"
                     value={formData.targetMarket}
                     onChange={(e) => setFormData(prev => ({ ...prev, targetMarket: e.target.value }))}
                     placeholder="Who is your target customer? (e.g., Small business owners, Students, etc.)"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="problemStatement">Problem Statement *</Label>
-                  <Textarea
-                    id="problemStatement"
-                    value={formData.problemStatement}
-                    onChange={(e) => setFormData(prev => ({ ...prev, problemStatement: e.target.value }))}
-                    placeholder="What problem are you solving? Be specific about the pain points..."
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="solutionDescription">Solution Description *</Label>
-                  <Textarea
-                    id="solutionDescription"
-                    value={formData.solutionDescription}
-                    onChange={(e) => setFormData(prev => ({ ...prev, solutionDescription: e.target.value }))}
-                    placeholder="How does your solution address the problem? Describe your product/service..."
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="currentAssumptions">Current Assumptions (Optional)</Label>
-                  <Textarea
-                    id="currentAssumptions"
-                    value={formData.currentAssumptions}
-                    onChange={(e) => setFormData(prev => ({ ...prev, currentAssumptions: e.target.value }))}
-                    placeholder="What assumptions are you making about your customers, market, or solution?"
-                    rows={3}
-                    className="resize-none"
-                  />
+                  <p className="text-xs text-muted-foreground">
+                    If not specified, we'll infer from your business description.
+                  </p>
                 </div>
 
                 {businessPlanData && (
@@ -358,7 +290,7 @@ ${analysis.interviewScripts.closing.map((q, i) => `${i + 1}. ${q}`).join('\n')}
 
                 <Button
                   onClick={handleAnalyze}
-                  disabled={isAnalyzing || !formData.businessConcept.trim() || !formData.problemStatement.trim() || !formData.solutionDescription.trim()}
+                  disabled={isAnalyzing || !formData.businessDescription.trim()}
                   className="w-full"
                   size="lg"
                 >

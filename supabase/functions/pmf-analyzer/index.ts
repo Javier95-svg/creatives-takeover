@@ -10,11 +10,8 @@ const corsHeaders = {
 };
 
 interface PMFAnalysisRequest {
-  businessConcept: string;
+  businessDescription: string; // Single field combining concept/problem/solution
   targetMarket?: string;
-  problemStatement: string;
-  solutionDescription: string;
-  currentAssumptions?: string;
   businessPlanData?: {
     answers?: any;
     launchReport?: string;
@@ -37,18 +34,15 @@ serve(async (req) => {
     }
 
     const {
-      businessConcept,
+      businessDescription,
       targetMarket,
-      problemStatement,
-      solutionDescription,
-      currentAssumptions,
       businessPlanData
     }: PMFAnalysisRequest = await req.json();
 
     // Validate required fields
-    if (!businessConcept || !problemStatement || !solutionDescription) {
+    if (!businessDescription || !businessDescription.trim()) {
       return new Response(JSON.stringify({ 
-        error: 'Missing required fields: businessConcept, problemStatement, solutionDescription' 
+        error: 'Missing required field: businessDescription' 
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -62,7 +56,7 @@ serve(async (req) => {
       creditCost,
       'PMF Analysis',
       undefined,
-      { businessConcept: businessConcept.substring(0, 100) }
+      { businessDescription: businessDescription.substring(0, 100) }
     );
 
     if (!creditResult.success) {
@@ -82,19 +76,32 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Build comprehensive prompt for PMF analysis
-    const prompt = `You are a Product-Market Fit (PMF) expert helping founders validate their startup ideas.
+    // Build comprehensive prompt for quality-focused PMF analysis
+    const prompt = `You are a Product-Market Fit (PMF) expert helping founders validate their startup ideas and accurately assess their success odds.
 
-BUSINESS CONTEXT:
-Business Concept: ${businessConcept}
-Target Market: ${targetMarket || 'Not specified'}
-Problem Statement: ${problemStatement}
-Solution Description: ${solutionDescription}
-Current Assumptions: ${currentAssumptions || 'None specified'}
+CRITICAL INSTRUCTIONS FOR QUALITY & ACCURACY:
+- Be thorough and accurate, not overly optimistic. Provide realistic assessments based on evidence.
+- Base all assessments on information provided - don't make assumptions not supported by the input.
+- Clearly identify information gaps and explain their impact on analysis confidence.
+- Provide detailed reasoning for all scores and assessments.
+- Focus on accurately evaluating the real odds of success based on comprehensive market analysis.
+
+BUSINESS DESCRIPTION:
+${businessDescription}
+
+TARGET MARKET: ${targetMarket || 'Not specified - please infer from business description'}
 
 ${businessPlanData?.launchReport ? `\nAdditional Business Plan Context:\n${businessPlanData.launchReport.substring(0, 2000)}` : ''}
 
-Analyze this startup idea and provide a comprehensive PMF analysis. Use the following structure:
+YOUR TASK:
+1. First, intelligently extract from the business description:
+   - Problem statement being solved
+   - Solution approach/product/service
+   - Target market and customer segments
+   - Business model and value proposition
+   - Key assumptions and hypotheses
+
+2. Then provide a comprehensive PMF analysis focused on accurately assessing success odds. Use the following structure:
 
 1. CUSTOMER SEGMENTS (3-5 segments):
    For each segment, provide:
@@ -137,22 +144,114 @@ Analyze this startup idea and provide a comprehensive PMF analysis. Use the foll
    - Estimated time/cost
    - Priority (High/Medium/Low)
 
-6. PMF SCORE:
-   Calculate an overall PMF score (0-100) based on:
-   - Problem clarity (0-20)
-   - Solution fit (0-20)
-   - Market size (0-15)
-   - Competition analysis (0-15)
-   - Validation readiness (0-15)
-   - Founder-market fit (0-15)
-   
-   Provide score breakdown and reasoning.
+6. MARKET ANALYSIS (2026-focused):
+   Provide comprehensive analysis of:
+   - Market Demand: Current trends, growth projections, addressable market size, demand indicators, market maturity for 2026
+   - Competitive Landscape: Direct/indirect competitors with strengths/weaknesses, market positioning, competitive intensity (High/Medium/Low), market share dynamics
+   - Differentiation: Unique value proposition strength, competitive advantages, competitive moats, differentiation gaps
+   - Scalability: Market expansion opportunities, unit economics viability, growth constraints, scalability risks and potential
+   - Risk Factors: 
+     * Market risks (with severity: High/Medium/Low and mitigation strategies)
+     * Execution risks (with severity and mitigation)
+     * Timing risks (with severity and mitigation)
 
-7. NEXT STEPS:
-   Provide prioritized action items (5-7 steps) based on the analysis.
+7. PMF SCORE (accurately reflecting success odds):
+   Calculate an overall PMF score (0-100) as a weighted composite that reflects realistic success probability.
+   
+   Sub-scores (each 0-100, based on multiple factors):
+   - Demand Score: Market demand strength for 2026 (considers market size, growth rate, demand indicators, market readiness)
+   - Differentiation Score: Competitive uniqueness and defensibility (unique value prop strength, competitive moats, differentiation clarity)
+   - Timing Score: Market timing and readiness (market maturity, timing factors, external conditions)
+   - Execution Risk Score: Execution feasibility (higher = lower risk, more executable; considers complexity, resource needs, market barriers)
+   
+   Overall Score: Weighted combination of sub-scores reflecting realistic success probability.
+   Verdict: "Strong Fit" (70+), "Moderate Fit" (50-69), or "Weak Fit" (<50)
+   
+   Provide detailed reasoning for each score component, explaining the factors considered.
+
+8. NEXT STEPS:
+   Provide prioritized action items (5-7 steps) to improve success odds, each with:
+   - Priority (High/Medium/Low)
+   - Action (specific action item)
+   - Description (why this matters)
+   - Estimated time (how long this might take)
 
 Return your analysis as a JSON object with this exact structure:
 {
+  "pmfScore": {
+    "overall": number,
+    "verdict": "Strong Fit" | "Moderate Fit" | "Weak Fit",
+    "subScores": {
+      "demand": number,
+      "differentiation": number,
+      "timing": number,
+      "executionRisk": number
+    },
+    "reasoning": "string"
+  },
+  "marketAnalysis": {
+    "demand": {
+      "assessment": "string",
+      "marketSize": "string",
+      "growthProjection": "string",
+      "trends": ["string"]
+    },
+    "competitiveLandscape": {
+      "directCompetitors": [
+        {
+          "name": "string",
+          "strengths": ["string"],
+          "weaknesses": ["string"]
+        }
+      ],
+      "indirectCompetitors": ["string"],
+      "marketPositioning": "string",
+      "competitiveIntensity": "High" | "Medium" | "Low"
+    },
+    "differentiation": {
+      "uniqueValue": "string",
+      "competitiveAdvantages": ["string"],
+      "moats": ["string"],
+      "differentiationGaps": ["string"]
+    },
+    "scalability": {
+      "expansionPotential": "string",
+      "unitEconomics": "string",
+      "growthConstraints": ["string"],
+      "scalabilityScore": "string"
+    },
+    "risks": {
+      "marketRisks": [
+        {
+          "risk": "string",
+          "severity": "High" | "Medium" | "Low",
+          "mitigation": "string"
+        }
+      ],
+      "executionRisks": [
+        {
+          "risk": "string",
+          "severity": "High" | "Medium" | "Low",
+          "mitigation": "string"
+        }
+      ],
+      "timingRisks": [
+        {
+          "risk": "string",
+          "severity": "High" | "Medium" | "Low",
+          "mitigation": "string"
+        }
+      ]
+    }
+  },
+  "nextSteps": [
+    {
+      "priority": "High" | "Medium" | "Low",
+      "action": "string",
+      "description": "string",
+      "estimatedTime": "string"
+    }
+  ],
   "customerSegments": [
     {
       "name": "string",
@@ -163,25 +262,6 @@ Return your analysis as a JSON object with this exact structure:
       "accessibilityScore": number
     }
   ],
-  "problemSolutionFit": {
-    "alignmentScore": number,
-    "reasoning": "string",
-    "gaps": ["string"],
-    "strengths": ["string"],
-    "weaknesses": ["string"],
-    "recommendations": ["string"]
-  },
-  "surveys": {
-    "primarySegment": "string",
-    "questions": ["string"]
-  },
-  "interviewScripts": {
-    "opening": ["string"],
-    "problemExploration": ["string"],
-    "solutionValidation": ["string"],
-    "pricingSensitivity": ["string"],
-    "closing": ["string"]
-  },
   "validationExperiments": [
     {
       "name": "string",
@@ -191,25 +271,6 @@ Return your analysis as a JSON object with this exact structure:
       "estimatedTime": "string",
       "estimatedCost": "string",
       "priority": "High" | "Medium" | "Low"
-    }
-  ],
-  "pmfScore": {
-    "overall": number,
-    "breakdown": {
-      "problemClarity": number,
-      "solutionFit": number,
-      "marketSize": number,
-      "competitionAnalysis": number,
-      "validationReadiness": number,
-      "founderMarketFit": number
-    },
-    "reasoning": "string"
-  },
-  "nextSteps": [
-    {
-      "priority": "High" | "Medium" | "Low",
-      "action": "string",
-      "description": "string"
     }
   ]
 }`;
@@ -226,7 +287,7 @@ Return your analysis as a JSON object with this exact structure:
         messages: [
           {
             role: 'system',
-            content: 'You are a Product-Market Fit expert. Always return valid JSON in the exact structure specified. Be thorough, actionable, and data-driven in your analysis.'
+            content: 'You are a Product-Market Fit expert focused on providing accurate, realistic assessments of success odds. Always return valid JSON in the exact structure specified. Be thorough, evidence-based, and realistic (not overly optimistic) in your analysis. Base assessments on provided information and clearly explain your reasoning.'
           },
           {
             role: 'user',
@@ -234,8 +295,8 @@ Return your analysis as a JSON object with this exact structure:
           }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.7,
-        max_tokens: 4000,
+        temperature: 0.6,
+        max_tokens: 6000,
       }),
     });
 
