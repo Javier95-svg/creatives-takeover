@@ -313,7 +313,20 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   }
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Separate message storage per mode for independent conversations
+  const [messagesByMode, setMessagesByMode] = useState<{
+    'wizard': ChatMessage[];
+    'gtm-strategy': ChatMessage[];
+    'freeform': ChatMessage[];
+    'tour-guide': ChatMessage[];
+  }>({
+    'wizard': [],
+    'gtm-strategy': [],
+    'freeform': [],
+    'tour-guide': []
+  });
+  // Current messages based on active mode
+  const messages = messagesByMode[chatMode] || [];
   const [isTyping, setIsTyping] = useState(false);
   const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -346,11 +359,39 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     }
   });
   
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  // Separate session IDs per mode for independent conversations
+  const [sessionIdsByMode, setSessionIdsByMode] = useState<{
+    'wizard': string;
+    'gtm-strategy': string;
+    'freeform': string;
+    'tour-guide': string;
+  }>({
+    'wizard': `session_wizard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    'gtm-strategy': `session_gtm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    'freeform': `session_freeform_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    'tour-guide': `session_tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  });
+  const sessionId = sessionIdsByMode[chatMode];
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
   const sessionCreationAttempted = useRef(false); // Track if we've attempted to create a session
+  
+  // Helper function to update messages for current mode
+  const updateMessages = useCallback((updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+    setMessagesByMode(prev => ({
+      ...prev,
+      [chatMode]: updater(prev[chatMode] || [])
+    }));
+  }, [chatMode]);
+  
+  // Helper function to set messages for current mode
+  const setMessagesForMode = useCallback((newMessages: ChatMessage[]) => {
+    setMessagesByMode(prev => ({
+      ...prev,
+      [chatMode]: newMessages
+    }));
+  }, [chatMode]);
   
   // Phase 3: Feedback Collection
   const [feedbackTriggerCount, setFeedbackTriggerCount] = useState(0);
@@ -501,15 +542,15 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
           isBot: true,
           timestamp: new Date()
         };
-        setMessages([firstMessage]);
+        setMessagesForMode([firstMessage]);
       } else {
         console.log('👋 Initializing with welcome message');
         const welcomeMessage = createWelcomeMessage();
-        setMessages([welcomeMessage]);
+        setMessagesForMode([welcomeMessage]);
       }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, messages.length]);
+  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, messages.length, chatMode, messagesByMode, setMessagesForMode]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
@@ -615,7 +656,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
         ]
       };
       
-      setMessages(prev => [...prev, feedbackMessage]);
+      updateMessages(prev => [...prev, feedbackMessage]);
     }
   }, [conversationState.messageCount]);
 
@@ -764,7 +805,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       // If no conversation exists, this is a new/empty session
       if (!conversation) {
         console.log('📭 No conversation found for session, starting fresh');
-        setMessages([]);
+        setMessagesForMode([]);
         setIsTyping(false);
         return;
       }
@@ -795,7 +836,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       }));
       
       console.log(`✅ Loaded ${loadedMessages.length} messages from session`);
-      setMessages(loadedMessages);
+      setMessagesForMode(loadedMessages);
       
       // Update conversation state based on loaded messages
       if (loadedMessages.length > 0) {
@@ -844,7 +885,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     } else if (!currentSessionId && previousSessionIdRef.current) {
       // Session was cleared, reset messages
       previousSessionIdRef.current = null;
-      setMessages([]);
+      setMessagesForMode([]);
     }
   }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession]);
 
@@ -1594,7 +1635,7 @@ What specific aspect of your business would you like to focus on first?`;
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    updateMessages(prev => [...prev, userMessage]);
     dispatch({ type: 'ADD_MESSAGE' });
 
     // Handle wizard mode with AI-enhanced responses
@@ -1630,7 +1671,7 @@ What specific aspect of your business would you like to focus on first?`;
             isBot: true,
             timestamp: new Date()
           };
-          setMessages(prev => [...prev, streamingMsg]);
+          updateMessages(prev => [...prev, streamingMsg]);
           setIsTyping(false);
           setIsStreaming(true);
           
@@ -1660,7 +1701,7 @@ What specific aspect of your business would you like to focus on first?`;
             (chunk) => setStreamingMessage(prev => prev + chunk),
             (fullMessage, quickActions, sources) => {
               // Replace streaming message with final message and add quick actions
-              setMessages(prev => prev.map(msg => 
+              updateMessages(prev => prev.map(msg => 
                 msg.id === 'streaming' 
                   ? { 
                       ...msg, 
@@ -1814,7 +1855,7 @@ What specific aspect of your business would you like to focus on first?`;
           sources: aiResponse.sources
         };
 
-        setMessages(prev => [...prev, botMessage]);
+        updateMessages(prev => [...prev, botMessage]);
 
         // Update conversation memory if provided
         if (aiResponse.memoryUpdate) {
@@ -1859,7 +1900,7 @@ What specific aspect of your business would you like to focus on first?`;
         ]
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      updateMessages(prev => [...prev, errorMessage]);
       handleError(error as Error, true);
     } finally {
       setIsTyping(false);
@@ -1983,7 +2024,7 @@ What specific aspect of your business would you like to focus on first?`;
     // Re-initialize with welcome message
     setTimeout(() => {
       const welcomeMessage = createWelcomeMessage();
-      setMessages([welcomeMessage]);
+      setMessagesForMode([welcomeMessage]);
     }, 100);
   }, []);
 
@@ -2205,7 +2246,7 @@ What specific aspect of your business would you like to focus on first?`;
         messageType: 'recommendation',
         confidence: 1.0
       };
-      setMessages(prev => [...prev, switchMessage]);
+      updateMessages(prev => [...prev, switchMessage]);
     }, []),
     
     // Conversion tracking
@@ -2230,31 +2271,45 @@ What specific aspect of your business would you like to focus on first?`;
       setChatMode('wizard');
     }, []),
     switchToGTMMode: useCallback(() => {
-      setChatMode('gtm-strategy');
-      // Add a system message about the mode switch
-      const switchMessage: ChatMessage = {
-        id: generateId(),
-        content: "🎯 You're now in **Go-To-Market Strategy** mode! I'll help you plan and execute your market entry strategy. We can work on customer segmentation, personas, positioning, pricing, channels, marketing tactics, launch planning, and KPIs. What would you like to start with?",
-        isBot: true,
-        timestamp: new Date(),
-        messageType: 'recommendation',
-        confidence: 1.0
-      };
-      setMessages(prev => [...prev, switchMessage]);
-    }, []),
+      const newMode: 'gtm-strategy' = 'gtm-strategy';
+      // Save current mode's messages before switching
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: messages
+      }));
+      // Switch to GTM mode
+      setChatMode(newMode);
+      // Initialize GTM mode if empty (using functional update to avoid dependency)
+      setMessagesByMode(prev => {
+        if (!prev[newMode] || prev[newMode].length === 0) {
+          const welcomeMessage: ChatMessage = {
+            id: generateId(),
+            content: "🎯 Welcome to **Go-To-Market Strategy** mode! I'll help you systematically build your market entry strategy by asking structured questions. Let's start with customer segmentation: Who are your target customer segments? Describe the different groups of people who would buy your product.",
+            isBot: true,
+            timestamp: new Date(),
+            messageType: 'recommendation',
+            confidence: 1.0
+          };
+          return {
+            ...prev,
+            [newMode]: [welcomeMessage]
+          };
+        }
+        return prev;
+      });
+    }, [chatMode, messages]),
     switchToPlanningMode: useCallback(() => {
-      setChatMode('wizard');
-      // Add a system message about the mode switch
-      const switchMessage: ChatMessage = {
-        id: generateId(),
-        content: "📋 You're now in **Business Planning** mode! I'll guide you through defining and structuring your business plan, including market analysis, value proposition, revenue models, and operational planning. Let's continue building your plan!",
-        isBot: true,
-        timestamp: new Date(),
-        messageType: 'recommendation',
-        confidence: 1.0
-      };
-      setMessages(prev => [...prev, switchMessage]);
-    }, []),
+      const newMode: 'wizard' = 'wizard';
+      // Save current mode's messages before switching
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: messages
+      }));
+      // Switch to Planning mode
+      setChatMode(newMode);
+      // Load Planning conversation (wizard mode will handle initialization)
+      // The wizard mode initialization logic will handle the first message
+    }, [chatMode, messages]),
     
     // Session ID for document uploads
     sessionId
