@@ -313,6 +313,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   }
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
   // Separate message storage per mode for independent conversations
   const [messagesByMode, setMessagesByMode] = useState<{
     'wizard': ChatMessage[];
@@ -325,18 +328,6 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'freeform': [],
     'tour-guide': []
   });
-  const [isTyping, setIsTyping] = useState(false);
-  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
-  // Current messages based on active mode - use useMemo to ensure stability (must be after chatMode declaration)
-  const messages = useMemo(() => {
-    try {
-      const modeMessages = messagesByMode[chatMode];
-      return Array.isArray(modeMessages) ? modeMessages : [];
-    } catch (error) {
-      console.error('Error accessing messages for mode:', chatMode, error);
-      return [];
-    }
-  }, [messagesByMode, chatMode]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
     totalMessages: 0,
@@ -379,30 +370,17 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'freeform': `session_freeform_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'tour-guide': `session_tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   });
-  // Memoize sessionId to ensure stability
-  const sessionId = useMemo(() => {
-    return sessionIdsByMode[chatMode] || `session_${chatMode}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }, [sessionIdsByMode, chatMode]);
+  const sessionId = sessionIdsByMode[chatMode];
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
   const sessionCreationAttempted = useRef(false); // Track if we've attempted to create a session
   
-  // Helper function to update messages for current mode
-  const updateMessages = useCallback((updater: (prev: ChatMessage[]) => ChatMessage[]) => {
-    setMessagesByMode(prev => ({
-      ...prev,
-      [chatMode]: updater(prev[chatMode] || [])
-    }));
-  }, [chatMode]);
-  
-  // Helper function to set messages for current mode
-  const setMessagesForMode = useCallback((newMessages: ChatMessage[]) => {
-    setMessagesByMode(prev => ({
-      ...prev,
-      [chatMode]: newMessages
-    }));
-  }, [chatMode]);
+  // Sync messages with messagesByMode when chatMode changes (one-way: mode change -> load messages)
+  useEffect(() => {
+    const modeMessages = messagesByMode[chatMode] || [];
+    setMessages(modeMessages);
+  }, [chatMode]); // Only sync when mode changes, not when messagesByMode updates
   
   // Phase 3: Feedback Collection
   const [feedbackTriggerCount, setFeedbackTriggerCount] = useState(0);
@@ -541,12 +519,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
 
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
-    // Only initialize if no session is selected and messages are empty for current mode
+    // Only initialize if no session is selected and messages are empty
     const currentSessionId = config.sessionManagement?.currentSessionId;
-    const currentModeMessages = messagesByMode[chatMode] || [];
-    if (!currentSessionId && currentModeMessages.length === 0) {
-      if (chatMode === 'wizard' && config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
-        // Initialize wizard mode with first question (Planning mode must follow 7-step wizard)
+    if (!currentSessionId && messages.length === 0) {
+      if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
+        // Initialize wizard mode with first question
         console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
         const firstMessage: ChatMessage = {
           id: generateId(),
@@ -554,14 +531,15 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
           isBot: true,
           timestamp: new Date()
         };
+        setMessages([firstMessage]);
         setMessagesByMode(prev => ({
           ...prev,
           [chatMode]: [firstMessage]
         }));
-      } else if (chatMode !== 'gtm-strategy') {
-        // Only initialize welcome message for non-GTM modes (GTM initializes on mode switch)
+      } else {
         console.log('👋 Initializing with welcome message');
         const welcomeMessage = createWelcomeMessage();
+        setMessages([welcomeMessage]);
         setMessagesByMode(prev => ({
           ...prev,
           [chatMode]: [welcomeMessage]
@@ -569,7 +547,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, chatMode, messagesByMode, updateConversationState]);
+  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, messages.length, chatMode]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
@@ -675,7 +653,12 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
         ]
       };
       
-      updateMessages(prev => [...prev, feedbackMessage]);
+      setMessages(prev => [...prev, feedbackMessage]);
+      // Also update messagesByMode to keep it in sync
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: [...(prev[chatMode] || []), feedbackMessage]
+      }));
     }
   }, [conversationState.messageCount]);
 
@@ -824,7 +807,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       // If no conversation exists, this is a new/empty session
       if (!conversation) {
         console.log('📭 No conversation found for session, starting fresh');
-        setMessagesForMode([]);
+        setMessages([]);
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: []
+        }));
         setIsTyping(false);
         return;
       }
@@ -855,7 +842,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       }));
       
       console.log(`✅ Loaded ${loadedMessages.length} messages from session`);
-      setMessagesForMode(loadedMessages);
+      setMessages(loadedMessages);
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: loadedMessages
+      }));
       
       // Update conversation state based on loaded messages
       if (loadedMessages.length > 0) {
@@ -1605,9 +1596,7 @@ What specific aspect of your business would you like to focus on first?`;
     
     if (user && sessionMgmt && !sessionMgmt.currentSessionId && !sessionCreationAttempted.current) {
       // Check if this is the first user message (not counting welcome/bot messages)
-      // Get current messages from state to avoid stale closure
-      const currentMessages = messagesByMode[chatMode] || [];
-      const userMessages = currentMessages.filter(msg => !msg.isBot);
+      const userMessages = messages.filter(msg => !msg.isBot);
       if (userMessages.length === 0) {
         sessionCreationAttempted.current = true; // Mark as attempted to prevent duplicates
         console.log('🆕 Auto-creating chat session for first user interaction');
@@ -1656,7 +1645,12 @@ What specific aspect of your business would you like to focus on first?`;
       timestamp: new Date()
     };
 
-    updateMessages(prev => [...prev, userMessage]);
+      setMessages(prev => [...prev, userMessage]);
+      // Also update messagesByMode to keep it in sync
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: [...(prev[chatMode] || []), userMessage]
+      }));
     dispatch({ type: 'ADD_MESSAGE' });
 
     // Handle wizard mode with AI-enhanced responses
@@ -1692,7 +1686,12 @@ What specific aspect of your business would you like to focus on first?`;
             isBot: true,
             timestamp: new Date()
           };
-          updateMessages(prev => [...prev, streamingMsg]);
+          setMessages(prev => [...prev, streamingMsg]);
+        // Also update messagesByMode to keep it in sync
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: [...(prev[chatMode] || []), streamingMsg]
+        }));
           setIsTyping(false);
           setIsStreaming(true);
           
@@ -1722,18 +1721,26 @@ What specific aspect of your business would you like to focus on first?`;
             (chunk) => setStreamingMessage(prev => prev + chunk),
             (fullMessage, quickActions, sources) => {
               // Replace streaming message with final message and add quick actions
-              updateMessages(prev => prev.map(msg => 
-                msg.id === 'streaming' 
-                  ? { 
-                      ...msg, 
-                      id: generateId(), 
-                      content: fullMessage,
-                      quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
-                      sources: sources?.map((s: any) => s.url || s.title) || [],
-                      sourceMetadata: sources
-                    }
-                  : msg
-              ));
+              setMessages(prev => {
+                const updated = prev.map(msg => 
+                  msg.id === 'streaming' 
+                    ? { 
+                        ...msg, 
+                        id: generateId(), 
+                        content: fullMessage,
+                        quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
+                        sources: sources?.map((s: any) => s.url || s.title) || [],
+                        sourceMetadata: sources
+                      }
+                    : msg
+                );
+                // Also update messagesByMode to keep it in sync
+                setMessagesByMode(prevMode => ({
+                  ...prevMode,
+                  [chatMode]: updated
+                }));
+                return updated;
+              });
               setStreamingMessage('');
               setIsStreaming(false);
             },
@@ -1779,14 +1786,17 @@ What specific aspect of your business would you like to focus on first?`;
           isBot: true,
           timestamp: new Date()
         };
-        updateMessages(prev => [...prev, streamingMsg]);
+        setMessages(prev => [...prev, streamingMsg]);
+        // Also update messagesByMode to keep it in sync
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: [...(prev[chatMode] || []), streamingMsg]
+        }));
         setIsTyping(false); // Remove typing indicator when streaming starts
 
         // 🚀 OPTIMIZATION: Prepare conversation history for API (reduced from 5 to 6 for better context, but still optimized)
         // Smart selection: prioritize important messages (bot responses with insights, user questions)
-        // Get current messages from state to avoid stale closure
-        const currentMessages = messagesByMode[chatMode] || [];
-        const importantMessages = currentMessages
+        const importantMessages = messages
           .filter(msg => msg.id !== 'streaming')
           .map((msg, idx) => ({
             msg,
@@ -1823,18 +1833,26 @@ What specific aspect of your business would you like to focus on first?`;
           (chunk) => setStreamingMessage(prev => prev + chunk),
           (fullMessage, quickActions, sources) => {
             // Replace streaming message with final message and add quick actions
-            updateMessages(prev => prev.map(msg => 
-              msg.id === 'streaming' 
-                ? { 
-                    ...msg, 
-                    id: generateId(), 
-                    content: fullMessage,
-                    quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
-                    sources: sources?.map((s: any) => s.url || s.title) || [],
-                    sourceMetadata: sources
-                  }
-                : msg
-            ));
+            setMessages(prev => {
+              const updated = prev.map(msg => 
+                msg.id === 'streaming' 
+                  ? { 
+                      ...msg, 
+                      id: generateId(), 
+                      content: fullMessage,
+                      quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
+                      sources: sources?.map((s: any) => s.url || s.title) || [],
+                      sourceMetadata: sources
+                    }
+                  : msg
+              );
+              // Also update messagesByMode to keep it in sync
+              setMessagesByMode(prevMode => ({
+                ...prevMode,
+                [chatMode]: updated
+              }));
+              return updated;
+            });
             setStreamingMessage('');
             setIsStreaming(false);
           },
@@ -1878,7 +1896,12 @@ What specific aspect of your business would you like to focus on first?`;
           sources: aiResponse.sources
         };
 
-        updateMessages(prev => [...prev, botMessage]);
+        setMessages(prev => [...prev, botMessage]);
+        // Also update messagesByMode to keep it in sync
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: [...(prev[chatMode] || []), botMessage]
+        }));
 
         // Update conversation memory if provided
         if (aiResponse.memoryUpdate) {
@@ -1923,14 +1946,19 @@ What specific aspect of your business would you like to focus on first?`;
         ]
       };
 
-      updateMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorMessage]);
+      // Also update messagesByMode to keep it in sync
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: [...(prev[chatMode] || []), errorMessage]
+      }));
       handleError(error as Error, true);
     } finally {
       setIsTyping(false);
       setIsStreaming(false);
       dispatch({ type: 'SET_PROCESSING', payload: false });
     }
-  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messagesByMode, updateMessages, wizardStep, wizardAnswers, chatMode, enableStreaming, userId]);
+  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messages, wizardStep, wizardAnswers, chatMode, enableStreaming]);
 
   // Handle quick action clicks - Compatible with ChatbotWidget expectations
   const handleQuickAction = useCallback(async (action: string, href?: string) => {
@@ -2002,7 +2030,7 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced clear conversation function with chatAnalytics reset
   const clearChat = useCallback(() => {
-    // Clear messages for current mode only
+    setMessages([]);
     setMessagesByMode(prev => ({
       ...prev,
       [chatMode]: []
@@ -2048,9 +2076,10 @@ What specific aspect of your business would you like to focus on first?`;
       retryTimeout.current = null;
     }
     
-    // Re-initialize with welcome message for current mode
+    // Re-initialize with welcome message
     setTimeout(() => {
       const welcomeMessage = createWelcomeMessage();
+      setMessages([welcomeMessage]);
       setMessagesByMode(prev => ({
         ...prev,
         [chatMode]: [welcomeMessage]
@@ -2066,10 +2095,8 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced export conversation data with chatAnalytics
   const exportConversation = useCallback(() => {
-    // Get current messages from state
-    const currentMessages = messagesByMode[chatMode] || [];
     const exportData = {
-      conversation: currentMessages.map(msg => ({
+      conversation: messages.map(msg => ({
         content: msg.content,
         isBot: msg.isBot,
         timestamp: msg.timestamp,
@@ -2278,7 +2305,12 @@ What specific aspect of your business would you like to focus on first?`;
         messageType: 'recommendation',
         confidence: 1.0
       };
-      updateMessages(prev => [...prev, switchMessage]);
+      setMessages(prev => [...prev, switchMessage]);
+      // Also update messagesByMode to keep it in sync
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: [...(prev[chatMode] || []), switchMessage]
+      }));
     }, []),
     
     // Conversion tracking
@@ -2339,9 +2371,27 @@ What specific aspect of your business would you like to focus on first?`;
       }));
       // Switch to Planning mode
       setChatMode(newMode);
-      // Load Planning conversation (wizard mode will handle initialization)
-      // The wizard mode initialization logic will handle the first message
-    }, [chatMode, messages]),
+      // Load Planning conversation
+      const planningMessages = messagesByMode[newMode] || [];
+      if (planningMessages.length === 0) {
+        // Initialize with first wizard question if available
+        if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
+          const firstMessage: ChatMessage = {
+            id: generateId(),
+            content: config.wizardMode.steps[0].question,
+            isBot: true,
+            timestamp: new Date()
+          };
+          setMessages([firstMessage]);
+          setMessagesByMode(prev => ({
+            ...prev,
+            [newMode]: [firstMessage]
+          }));
+        }
+      } else {
+        setMessages(planningMessages);
+      }
+    }, [chatMode, messages, messagesByMode, config.wizardMode]),
     
     // Session ID for document uploads
     sessionId
