@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Target, CheckCircle2, ArrowRight, AlertTriangle, Zap, Shield, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { TrendingUp, Target, CheckCircle2, ArrowRight, AlertTriangle, Zap, Shield, AlertCircle, Star, MessageSquare } from 'lucide-react';
+import OutcomeTracker from './OutcomeTracker';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface PMFAnalysis {
   pmfScore: {
@@ -99,9 +105,16 @@ interface PMFScoreProps {
     estimatedTime?: string;
   }>;
   analysis?: PMFAnalysis;
+  analysisId?: string | null;
 }
 
-const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis }) => {
+const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis, analysisId }) => {
+  const { toast } = useToast();
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const verdict = score.verdict || (score.overall >= 70 ? 'Strong Fit' : score.overall >= 50 ? 'Moderate Fit' : 'Weak Fit');
   
   const scoreColor = 
@@ -267,6 +280,40 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis }) 
 
   const strengths = aggregateStrengths();
   const weaknesses = aggregateWeaknesses();
+
+  const handleFeedbackSubmit = async () => {
+    if (!rating || !analysisId) return;
+
+    try {
+      setIsSubmittingFeedback(true);
+      
+      const { error } = await supabase
+        .from('pmf_analysis_results')
+        .update({
+          user_accuracy_rating: rating,
+          user_feedback_text: feedbackText || null,
+          feedback_submitted_at: new Date().toISOString()
+        })
+        .eq('id', analysisId);
+
+      if (error) throw error;
+
+      setFeedbackSubmitted(true);
+      toast({
+        title: "Thank you for your feedback!",
+        description: "Your feedback helps us improve the accuracy of PMF analysis.",
+      });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: "Feedback submission failed",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -455,6 +502,128 @@ const PMFScore: React.FC<PMFScoreProps> = ({ score, nextSteps = [], analysis }) 
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* User Feedback Section */}
+      {analysisId && !feedbackSubmitted && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Rate This Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!showFeedback ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  How accurate was this PMF analysis? Your feedback helps us improve.
+                </p>
+                <Button
+                  onClick={() => setShowFeedback(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Star className="w-4 h-4 mr-2" />
+                  Rate Analysis
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Accuracy Rating (1-5 stars)
+                  </Label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        className={cn(
+                          "p-2 rounded-md transition-colors",
+                          rating === star
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted hover:bg-muted/80"
+                        )}
+                      >
+                        <Star
+                          className={cn(
+                            "w-5 h-5",
+                            rating && rating >= star
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted-foreground"
+                          )}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="feedbackText" className="text-sm font-medium mb-2 block">
+                    Additional Feedback (Optional)
+                  </Label>
+                  <Textarea
+                    id="feedbackText"
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="What was helpful? What could be improved?"
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleFeedbackSubmit}
+                    disabled={!rating || isSubmittingFeedback}
+                    className="flex-1"
+                  >
+                    {isSubmittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowFeedback(false);
+                      setRating(null);
+                      setFeedbackText('');
+                    }}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {feedbackSubmitted && (
+        <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-green-800 dark:text-green-200">
+                  Thank you for your feedback!
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                  Your input helps us continuously improve the accuracy of PMF analysis.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Outcome Tracker */}
+      {analysisId && (
+        <OutcomeTracker
+          analysisId={analysisId}
+          predictedScore={score.overall}
+          predictedVerdict={score.verdict}
+        />
       )}
 
       {/* Next Steps */}

@@ -17,6 +17,7 @@ import PMFAnalysisResults from './PMFAnalysisResults';
 import CustomerSegments from './CustomerSegments';
 import ProblemSolutionFit from './ProblemSolutionFit';
 import ValidationExperiments from './ValidationExperiments';
+import PMFInputForm from './PMFInputForm';
 
 interface ProductMarketFitLabProps {
   businessPlanData?: {
@@ -152,25 +153,11 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const { hasCredits } = useCredits();
   const [creditGateOpen, setCreditGateOpen] = useState(false);
   
-  // Auto-prefill business description from business plan data
-  const getInitialBusinessDescription = () => {
-    if (businessPlanData?.answers) {
-      const parts = [];
-      if (businessPlanData.answers.overview) parts.push(businessPlanData.answers.overview);
-      if (businessPlanData.answers.problem) parts.push(`Problem: ${businessPlanData.answers.problem}`);
-      if (businessPlanData.answers.solution) parts.push(`Solution: ${businessPlanData.answers.solution}`);
-      return parts.join('\n\n');
-    }
-    return '';
-  };
-
-  const [formData, setFormData] = useState({
-    businessDescription: getInitialBusinessDescription(),
-    targetMarket: businessPlanData?.answers?.market || '',
-  });
+  const [structuredFormData, setStructuredFormData] = useState<any>(null);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PMFAnalysis | null>(null);
+  const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('input');
   const [selectedSegment, setSelectedSegment] = useState<string | undefined>();
 
@@ -190,7 +177,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
     });
   };
 
-  const handleAnalyze = async () => {
+  const handleStructuredFormSubmit = async (formData: any) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -205,22 +192,41 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
       return;
     }
 
-    if (!formData.businessDescription.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide a business description",
-        variant: "destructive",
-      });
-      return;
-    }
+    setStructuredFormData(formData);
 
     try {
       setIsAnalyzing(true);
       
+      // Build comprehensive business description from structured form
+      const businessDescriptionParts = [];
+      businessDescriptionParts.push(`Problem: ${formData.problemStatement}`);
+      businessDescriptionParts.push(`Solution: ${formData.solutionDescription}`);
+      if (formData.targetMarket) {
+        businessDescriptionParts.push(`Target Market: ${formData.targetMarket}`);
+      }
+      if (formData.industry) {
+        businessDescriptionParts.push(`Industry: ${formData.industry}`);
+      }
+      if (formData.businessModel) {
+        businessDescriptionParts.push(`Business Model: ${formData.businessModel}`);
+      }
+      if (formData.keyAssumptions.length > 0) {
+        businessDescriptionParts.push(`Key Assumptions:\n${formData.keyAssumptions.map((a: string, i: number) => `${i + 1}. ${a}`).join('\n')}`);
+      }
+      if (formData.competitiveLandscape) {
+        businessDescriptionParts.push(`Competitive Landscape: ${formData.competitiveLandscape}`);
+      }
+      if (formData.tractionValidation) {
+        businessDescriptionParts.push(`Traction/Validation: ${formData.tractionValidation}`);
+      }
+
+      const businessDescription = businessDescriptionParts.join('\n\n');
+      
       const { data, error } = await supabase.functions.invoke('pmf-analyzer', {
         body: {
-          businessDescription: formData.businessDescription,
+          businessDescription: businessDescription,
           targetMarket: formData.targetMarket || undefined,
+          industry: formData.industry || undefined,
           businessPlanData: businessPlanData ? {
             answers: businessPlanData.answers,
             launchReport: businessPlanData.launchReport
@@ -239,12 +245,13 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
 
       if (data?.success && data?.analysis) {
         setAnalysis(data.analysis);
+        setAnalysisId(data.analysisId || null);
         
         // Export data back to business planner
         if (onDataExport && data.analysis) {
           onDataExport({
             selectedSegment: data.analysis.customerSegments?.[0]?.name,
-            refinedProblem: formData.businessDescription,
+            refinedProblem: structuredFormData?.problemStatement || '',
             pmfScore: data.analysis.pmfScore?.overall,
             experiments: data.analysis.validationExperiments,
           });
@@ -315,61 +322,18 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
             </TabsList>
 
             <TabsContent value="input" className="mt-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="businessDescription">Business Description *</Label>
-                  <Textarea
-                    id="businessDescription"
-                    value={formData.businessDescription}
-                    onChange={(e) => setFormData(prev => ({ ...prev, businessDescription: e.target.value }))}
-                    placeholder="Describe your business idea, the problem you're solving, and your solution. Include key details about your target customers, value proposition, and any assumptions you're making..."
-                    rows={8}
-                    className="resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Our AI will intelligently extract the problem, solution, market, and key assumptions from your description.
-                  </p>
+              {businessPlanData && (
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border-l-4 border-primary mb-6">
+                  <p className="font-medium text-primary mb-1">✓ Business Plan Data Loaded</p>
+                  <p>Your business plan information has been pre-filled. You can edit or add more context.</p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="targetMarket">Target Market (Optional)</Label>
-                  <Input
-                    id="targetMarket"
-                    value={formData.targetMarket}
-                    onChange={(e) => setFormData(prev => ({ ...prev, targetMarket: e.target.value }))}
-                    placeholder="Who is your target customer? (e.g., Small business owners, Students, etc.)"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    If not specified, we'll infer from your business description.
-                  </p>
-                </div>
-
-                {businessPlanData && (
-                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border-l-4 border-primary">
-                    <p className="font-medium text-primary mb-1">✓ Business Plan Data Loaded</p>
-                    <p>Your business plan information has been pre-filled. You can edit or add more context.</p>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing || !formData.businessDescription.trim()}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing PMF...
-                    </>
-                  ) : (
-                    <>
-                      <Target className="w-4 h-4 mr-2" />
-                      Analyze Product-Market Fit
-                    </>
-                  )}
-                </Button>
-              </div>
+              )}
+              <PMFInputForm
+                initialData={structuredFormData}
+                businessPlanData={businessPlanData}
+                onSubmit={handleStructuredFormSubmit}
+                isSubmitting={isAnalyzing}
+              />
             </TabsContent>
 
             <TabsContent value="segments" className="mt-6">
@@ -447,6 +411,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                   score={analysis.pmfScore}
                   nextSteps={analysis.nextSteps}
                   analysis={analysis}
+                  analysisId={analysisId}
                 />
               ) : (
                 <Card>
