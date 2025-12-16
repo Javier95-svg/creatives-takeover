@@ -296,21 +296,21 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                 <FileText className="w-4 h-4 mr-2" />
                 Input
               </TabsTrigger>
-              <TabsTrigger value="segments" disabled={!analysis}>
+              <TabsTrigger value="segments">
                 <Users className="w-4 h-4 mr-2" />
                 Segments
               </TabsTrigger>
-              <TabsTrigger value="fit" disabled={!analysis}>
+              <TabsTrigger value="fit">
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Fit
               </TabsTrigger>
-              <TabsTrigger value="score" disabled={!analysis}>
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Score
-              </TabsTrigger>
-              <TabsTrigger value="experiments" disabled={!analysis}>
+              <TabsTrigger value="experiments">
                 <FlaskConical className="w-4 h-4 mr-2" />
                 Experiments
+              </TabsTrigger>
+              <TabsTrigger value="score">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Score
               </TabsTrigger>
             </TabsList>
 
@@ -420,28 +420,6 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
               )}
             </TabsContent>
 
-            <TabsContent value="score" className="mt-6">
-              {analysis ? (
-                <PMFScore
-                  score={analysis.pmfScore}
-                  nextSteps={analysis.nextSteps}
-                />
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
-                    <p className="text-muted-foreground mb-4 max-w-md">
-                      Run a PMF analysis first to see your PMF score. Go to the Input tab and click "Analyze Product-Market Fit".
-                    </p>
-                    <Button onClick={() => setActiveTab('input')}>
-                      Go to Input
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
             <TabsContent value="experiments" className="mt-6">
               {analysis ? (
                 <ValidationExperiments
@@ -454,6 +432,29 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
                     <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
                     <p className="text-muted-foreground mb-4 max-w-md">
                       Run a PMF analysis first to see validation experiments. Go to the Input tab and click "Analyze Product-Market Fit".
+                    </p>
+                    <Button onClick={() => setActiveTab('input')}>
+                      Go to Input
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="score" className="mt-6">
+              {analysis ? (
+                <PMFScore
+                  score={analysis.pmfScore}
+                  nextSteps={analysis.nextSteps}
+                  analysis={analysis}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Target className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md">
+                      Run a PMF analysis first to see your PMF score. Go to the Input tab and click "Analyze Product-Market Fit".
                     </p>
                     <Button onClick={() => setActiveTab('input')}>
                       Go to Input
