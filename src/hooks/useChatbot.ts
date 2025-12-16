@@ -325,8 +325,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'freeform': [],
     'tour-guide': []
   });
-  // Current messages based on active mode
-  const messages = messagesByMode[chatMode] || [];
+  // Current messages based on active mode - use useMemo to ensure stability
+  const messages = useMemo(() => {
+    const modeMessages = messagesByMode[chatMode];
+    return Array.isArray(modeMessages) ? modeMessages : [];
+  }, [messagesByMode, chatMode]);
   const [isTyping, setIsTyping] = useState(false);
   const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -530,11 +533,12 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
 
   // Initialize with welcome message - Compatible with ChatbotWidget expectations
   useEffect(() => {
-    // Only initialize if no session is selected and messages are empty
+    // Only initialize if no session is selected and messages are empty for current mode
     const currentSessionId = config.sessionManagement?.currentSessionId;
-    if (!currentSessionId && messages.length === 0) {
-      if (config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
-        // Initialize wizard mode with first question
+    const currentModeMessages = messagesByMode[chatMode] || [];
+    if (!currentSessionId && currentModeMessages.length === 0) {
+      if (chatMode === 'wizard' && config.wizardMode?.enabled && config.wizardMode.steps.length > 0) {
+        // Initialize wizard mode with first question (Planning mode must follow 7-step wizard)
         console.log('🚀 Initializing wizard mode with first question:', config.wizardMode.steps[0].question);
         const firstMessage: ChatMessage = {
           id: generateId(),
@@ -542,15 +546,22 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
           isBot: true,
           timestamp: new Date()
         };
-        setMessagesForMode([firstMessage]);
-      } else {
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: [firstMessage]
+        }));
+      } else if (chatMode !== 'gtm-strategy') {
+        // Only initialize welcome message for non-GTM modes (GTM initializes on mode switch)
         console.log('👋 Initializing with welcome message');
         const welcomeMessage = createWelcomeMessage();
-        setMessagesForMode([welcomeMessage]);
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: [welcomeMessage]
+        }));
       }
       updateConversationState({ context: ConversationContext.WELCOME });
     }
-  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, messages.length, chatMode, messagesByMode, setMessagesForMode]);
+  }, [location.pathname, config.wizardMode, config.sessionManagement?.currentSessionId, chatMode, messagesByMode, updateConversationState]);
 
   // Session tracking and chatAnalytics updates
   useEffect(() => {
@@ -1758,7 +1769,7 @@ What specific aspect of your business would you like to focus on first?`;
           isBot: true,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, streamingMsg]);
+        updateMessages(prev => [...prev, streamingMsg]);
         setIsTyping(false); // Remove typing indicator when streaming starts
 
         // 🚀 OPTIMIZATION: Prepare conversation history for API (reduced from 5 to 6 for better context, but still optimized)
@@ -1800,7 +1811,7 @@ What specific aspect of your business would you like to focus on first?`;
           (chunk) => setStreamingMessage(prev => prev + chunk),
           (fullMessage, quickActions, sources) => {
             // Replace streaming message with final message and add quick actions
-            setMessages(prev => prev.map(msg => 
+            updateMessages(prev => prev.map(msg => 
               msg.id === 'streaming' 
                 ? { 
                     ...msg, 
@@ -1979,7 +1990,11 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced clear conversation function with chatAnalytics reset
   const clearChat = useCallback(() => {
-    setMessages([]);
+    // Clear messages for current mode only
+    setMessagesByMode(prev => ({
+      ...prev,
+      [chatMode]: []
+    }));
     dispatch({ 
       type: 'UPDATE_STATE', 
       payload: {
@@ -2021,12 +2036,15 @@ What specific aspect of your business would you like to focus on first?`;
       retryTimeout.current = null;
     }
     
-    // Re-initialize with welcome message
+    // Re-initialize with welcome message for current mode
     setTimeout(() => {
       const welcomeMessage = createWelcomeMessage();
-      setMessagesForMode([welcomeMessage]);
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: [welcomeMessage]
+      }));
     }, 100);
-  }, []);
+  }, [chatMode]);
 
   const clearConversation = clearChat;
 
