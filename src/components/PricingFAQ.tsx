@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
+import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
 const PricingFAQ = () => {
   const [expandAll, setExpandAll] = useState(false);
@@ -96,24 +97,11 @@ We've successfully partnered with startup incubators, business consultancies, co
   };
 
   return (
-    <section className="py-20 relative overflow-hidden">
-      {/* Animated Wallpaper Background */}
-      <div className="absolute inset-0 z-0">
-        {/* Gradient Base */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-        
-        {/* Animated Floating Shapes */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        
-        {/* Grid Pattern Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
-      </div>
-
-      <div className="container mx-auto px-4 relative z-10">
+    <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
+      <PricingWallpaper />
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold mb-8 pb-2 gradient-text">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-8 pb-2 gradient-text">
             Pricing FAQ
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">

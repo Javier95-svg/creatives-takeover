@@ -110,9 +110,9 @@ const PricingComparison = () => {
     }
   };
   return (
-    <section className="relative py-20 lg:py-32 overflow-hidden">
+    <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
       <PricingWallpaper />
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <div className="mb-6">
