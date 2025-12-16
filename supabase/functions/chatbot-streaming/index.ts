@@ -1757,14 +1757,34 @@ function detectQueryComplexity(message: string, businessContext: BusinessContext
     return 'simple';
   }
   
-  // Complex queries: analysis, strategy, multi-step reasoning
-  const complexPatterns = /(analy[sz]e|strategy|plan|compare|evaluate|recommend|optimize|design|architecture|financial model|market analysis|business plan|competitive analysis|swot|pricing strategy|go-to-market|revenue model)/i;
-  const hasComplexKeywords = complexPatterns.test(message);
-  const isLongQuery = messageLength > 500;
-  const hasContext = Object.keys(businessContext).length > 2;
-  const hasHistory = historyLength > 3;
+  // Enhanced complex query detection for model escalation
+  // Multi-step reasoning indicators
+  const multiStepPatterns = /(step by step|break down|walk me through|outline the|create a plan|develop a|build a|design a|step 1|step 2|first.*then|after that|next steps)/i;
+  const hasMultiStepReasoning = multiStepPatterns.test(message);
   
-  if (hasComplexKeywords || (isLongQuery && hasContext) || (hasHistory && messageLength > 300)) {
+  // Deep domain knowledge requirements
+  const domainKnowledgePatterns = /(financial model|revenue model|unit economics|burn rate|runway|cac|ltv|customer lifetime value|market sizing|tam|sam|som|competitive analysis|swot|pricing strategy|go-to-market|gtm|business model canvas|lean canvas|value proposition|market analysis|competitive intelligence|customer segmentation|buyer persona|positioning strategy|distribution channels|sales funnel|conversion funnel|kpi|metrics|key performance indicators)/i;
+  const hasDomainKnowledge = domainKnowledgePatterns.test(message);
+  
+  // Strategic planning keywords
+  const strategicPatterns = /(business plan|strategic plan|launch plan|marketing plan|growth strategy|scaling strategy|expansion plan|roadmap|timeline|milestone|validation|experiment|test hypothesis|assumption|risk analysis|opportunity analysis)/i;
+  const hasStrategicPlanning = strategicPatterns.test(message);
+  
+  // Long-context synthesis indicators
+  const synthesisPatterns = /(synthesize|combine|integrate|consolidate|summarize|overview|big picture|holistic|comprehensive|complete|full|entire|all of the above|based on.*above|considering.*previous)/i;
+  const hasSynthesis = synthesisPatterns.test(message);
+  
+  // Context richness indicators
+  const isLongQuery = messageLength > 500;
+  const hasRichContext = Object.keys(businessContext).length > 3; // Industry, stage, budget, goals, etc.
+  const hasExtendedHistory = historyLength > 5;
+  const referencesHistory = /(earlier|previous|before|mentioned|said|discussed|we talked about)/i.test(text);
+  
+  // Complex query determination
+  const hasComplexKeywords = hasMultiStepReasoning || hasDomainKnowledge || hasStrategicPlanning || hasSynthesis;
+  const hasComplexContext = (isLongQuery && hasRichContext) || (hasExtendedHistory && (messageLength > 300 || referencesHistory));
+  
+  if (hasComplexKeywords || hasComplexContext) {
     return 'complex';
   }
   
@@ -1789,9 +1809,29 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // Planning and GTM modes → use Gemini 2.0 Flash for better strategic reasoning
-  if (chatMode === 'gtm-strategy' || chatMode === 'wizard') {
-    // Simple queries in planning/GTM → still use 2.0 Flash but with lower tokens
+  // GTM Strategy mode → always use Claude Sonnet 4 for accuracy and structured output
+  if (chatMode === 'gtm-strategy') {
+    return { 
+      model: 'anthropic/claude-sonnet-4-20250514', 
+      strategy: 'quality',
+      maxTokens: 700,
+      temperature: 0.7
+    };
+  }
+  
+  // Planning mode (wizard) → default to Gemini 2.0 Flash, escalate to Claude Sonnet 4 for complex queries
+  if (chatMode === 'wizard') {
+    // Complex queries → escalate to Claude Sonnet 4 for deep reasoning
+    if (complexity === 'complex') {
+      return { 
+        model: 'anthropic/claude-sonnet-4-20250514', 
+        strategy: 'quality',
+        maxTokens: 800,
+        temperature: 0.7
+      };
+    }
+    
+    // Simple queries → use Gemini 2.0 Flash (default, cost-efficient)
     if (complexity === 'simple') {
       return { 
         model: 'google/gemini-2.0-flash', 
@@ -1801,17 +1841,7 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
       };
     }
     
-    // Complex queries in planning/GTM → use 2.0 Flash with higher tokens
-    if (complexity === 'complex') {
-      return { 
-        model: 'google/gemini-2.0-flash', 
-        strategy: 'quality',
-        maxTokens: 800,
-        temperature: 0.7
-      };
-    }
-    
-    // Moderate queries in planning/GTM → use 2.0 Flash
+    // Moderate queries → use Gemini 2.0 Flash (default)
     return { 
       model: 'google/gemini-2.0-flash', 
       strategy: 'quality',
@@ -1906,10 +1936,102 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     
-    // 🚀 OPTIMIZATION: Fallback to simpler model on error
-    console.log(`⚠️ Model ${selectedModel} failed, trying fallback`);
-    if (selectedModel !== 'google/gemini-2.5-flash') {
-      // Retry with 2.5 Flash as fallback (fastest and most reliable)
+    // 🚀 OPTIMIZATION: Fallback chain - Claude Sonnet 4 → Gemini 2.0 Flash → Gemini 2.5 Flash
+    console.log(`⚠️ Model ${selectedModel} failed, trying fallback chain`);
+    
+    // If Claude Sonnet 4 fails, fallback to Gemini 2.0 Flash
+    if (selectedModel === 'anthropic/claude-sonnet-4-20250514') {
+      console.log('🔄 Falling back from Claude Sonnet 4 to Gemini 2.0 Flash');
+      const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          model: 'google/gemini-2.0-flash', 
+          messages, 
+          stream: true, 
+          temperature: finalTemperature,
+          max_tokens: Math.min(maxTokens, 600) // Cap at 600 for fallback
+        }),
+      });
+      
+      if (fallbackResponse.ok) {
+        const reader = fallbackResponse.body?.getReader();
+        if (reader) {
+          return new Response(
+            new ReadableStream({
+              async start(controller) {
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    controller.enqueue(value);
+                  }
+                  controller.close();
+                } catch (error) {
+                  controller.error(error);
+                }
+              }
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+              }
+            }
+          );
+        }
+      }
+      
+      // If Gemini 2.0 Flash also fails, try Gemini 2.5 Flash as final fallback
+      console.log('🔄 Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash');
+      const finalFallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          model: 'google/gemini-2.5-flash', 
+          messages, 
+          stream: true, 
+          temperature: finalTemperature,
+          max_tokens: Math.min(maxTokens, 500) // Cap at 500 for final fallback
+        }),
+      });
+      
+      if (finalFallbackResponse.ok) {
+        const reader = finalFallbackResponse.body?.getReader();
+        if (reader) {
+          return new Response(
+            new ReadableStream({
+              async start(controller) {
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    controller.enqueue(value);
+                  }
+                  controller.close();
+                } catch (error) {
+                  controller.error(error);
+                }
+              }
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+              }
+            }
+          );
+        }
+      }
+    }
+    
+    // If Gemini 2.0 Flash fails (and not already in fallback), fallback to Gemini 2.5 Flash
+    if (selectedModel === 'google/gemini-2.0-flash') {
+      console.log('🔄 Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash');
       const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -1923,62 +2045,37 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       });
       
       if (fallbackResponse.ok) {
-        // Use fallback response
         const reader = fallbackResponse.body?.getReader();
-        if (!reader) throw new Error('No response body');
-        
-        const stream = new ReadableStream({
-          async start(controller) {
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let fullMessage = '';
-            
-            try {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                buffer += decoder.decode(value, { stream: true });
-                let newlineIndex;
-                while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-                  const line = buffer.slice(0, newlineIndex);
-                  buffer = buffer.slice(newlineIndex + 1);
-                  
-                  if (!line.trim() || line.startsWith(':') || !line.startsWith('data: ')) continue;
-                  
-                  const data = line.slice(6).trim();
-                  if (data === '[DONE]') continue;
-                  
-                  try {
-                    const parsed = JSON.parse(data);
-                    const content = parsed.choices?.[0]?.delta?.content;
-                    if (content) {
-                      fullMessage += content;
-                      controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
-                    }
-                  } catch (e) {}
+        if (reader) {
+          return new Response(
+            new ReadableStream({
+              async start(controller) {
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    controller.enqueue(value);
+                  }
+                  controller.close();
+                } catch (error) {
+                  controller.error(error);
                 }
               }
-              
-              const stage = determineConversationStage(businessContext, conversationHistory.length);
-              controller.enqueue(new TextEncoder().encode(
-                `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, userMessage) })}\n\n`
-              ));
-              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-              controller.close();
-            } catch (e) {
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`));
-              controller.close();
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+              }
             }
-          }
-        });
-        
-        return new Response(stream, {
-          headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
-        });
+          );
+        }
       }
     }
     
+    // If all fallbacks fail, throw error
     throw new Error(`AI Error: ${aiResponse.status} - ${err}`);
   }
 
