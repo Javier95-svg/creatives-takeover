@@ -245,9 +245,20 @@ const CommunityFeed: React.FC = () => {
   }, [posts]);
 
   const filtered = useMemo(() => {
+    // #region agent log
+    const startTime = performance.now();
+    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CommunityFeed.tsx:247',message:'filtered useMemo start',data:{postCount:posts.length,search,sort,selectedTag,postType,engagement},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
+    // #region agent log
+    const searchLower = search.toLowerCase();
+    const searchStart = performance.now();
+    // #endregion
     let list = posts.filter((p) =>
-      (p.title + " " + p.content).toLowerCase().includes(search.toLowerCase())
+      (p.title + " " + p.content).toLowerCase().includes(searchLower)
     );
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CommunityFeed.tsx:252',message:'search filter',data:{duration:performance.now()-searchStart,postCount:posts.length,resultCount:list.length,searchLength:search.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
     
     // Tag filtering
     if (selectedTag) list = list.filter((p) => p.tags.includes(selectedTag));
@@ -286,15 +297,21 @@ const CommunityFeed: React.FC = () => {
       }
     }
 
+    // #region agent log
+    const sortStart = performance.now();
+    // #endregion
     // Sorting
+    let sortedList;
     switch (sort) {
       case "new":
-        return list.slice().sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+        sortedList = list.slice().sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+        break;
       case "top":
-        return list.slice().sort((a, b) => b.votes - a.votes);
+        sortedList = list.slice().sort((a, b) => b.votes - a.votes);
+        break;
       default:
         // hot (enhanced heuristic: votes + recency + AI insights bonus)
-        return list
+        sortedList = list
           .slice()
           .sort((a, b) => {
             const aScore = a.votes + (+new Date(a.createdAt) - Date.now()) / 1e7 + (a.aiSummary ? 2 : 0);
@@ -302,6 +319,11 @@ const CommunityFeed: React.FC = () => {
             return bScore - aScore;
           });
     }
+    // #region agent log
+    const totalDuration = performance.now() - startTime;
+    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CommunityFeed.tsx:305',message:'filtered useMemo complete',data:{totalDuration,sortDuration:performance.now()-sortStart,resultCount:sortedList.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
+    return sortedList;
   }, [posts, search, sort, selectedTag, postType, engagement]);
 
   async function handlePublish(payload: ComposerPayload) {

@@ -83,16 +83,31 @@ export const useMentors = () => {
     try {
       setLoading(true);
       
+      // #region agent log
+      const queryStart = performance.now();
+      fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:82',message:'database query start',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
       const { data, error } = await supabase
         .from('mentors')
         .select('*')
         .eq('is_active', true)
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
+      // #region agent log
+      const queryDuration = performance.now() - queryStart;
+      fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:92',message:'database query complete',data:{duration:queryDuration,resultCount:data?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
 
       if (error) throw error;
       
-      return (data || []).map(convertToMentor);
+      // #region agent log
+      const mapStart = performance.now();
+      // #endregion
+      const result = (data || []).map(convertToMentor);
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:96',message:'data mapping complete',data:{duration:performance.now()-mapStart,resultCount:result.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
+      return result;
     } catch (error: any) {
       console.error('Error fetching mentors:', {
         message: error?.message,
