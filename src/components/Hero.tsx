@@ -191,7 +191,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in">
-            Turn your bold idea into a thriving project. Get AI-powered planning, community support, and fundraising tools designed to guide pre-seed founders throughout their journey.
+            We blend technology, strategy and community to democratize startup formation, empowering pre-seed founders with AI-driven planning, community support, and fundraising tools.
           </p>
           
           {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
