@@ -1789,7 +1789,38 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // Simple queries → fastest, cheapest model
+  // Planning and GTM modes → use Gemini 2.0 Flash for better strategic reasoning
+  if (chatMode === 'gtm-strategy' || chatMode === 'wizard') {
+    // Simple queries in planning/GTM → still use 2.0 Flash but with lower tokens
+    if (complexity === 'simple') {
+      return { 
+        model: 'google/gemini-2.0-flash', 
+        strategy: 'quality',
+        maxTokens: 200,
+        temperature: 0.6
+      };
+    }
+    
+    // Complex queries in planning/GTM → use 2.0 Flash with higher tokens
+    if (complexity === 'complex') {
+      return { 
+        model: 'google/gemini-2.0-flash', 
+        strategy: 'quality',
+        maxTokens: 800,
+        temperature: 0.7
+      };
+    }
+    
+    // Moderate queries in planning/GTM → use 2.0 Flash
+    return { 
+      model: 'google/gemini-2.0-flash', 
+      strategy: 'quality',
+      maxTokens: 400,
+      temperature: 0.7
+    };
+  }
+  
+  // Freeform mode and other modes → use 2.0 Flash for moderate/complex, 2.5 Flash for simple
   if (complexity === 'simple') {
     return { 
       model: 'google/gemini-2.5-flash', 
@@ -1799,22 +1830,21 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // Complex queries → better model for quality
+  // Complex queries → use 2.0 Flash for better quality
   if (complexity === 'complex') {
-    // Use flash with higher tokens for complex queries (fallback if better model unavailable)
     return { 
-      model: 'google/gemini-2.5-flash', // Use flash with more tokens for complex queries
+      model: 'google/gemini-2.0-flash', 
       strategy: 'quality',
       maxTokens: 800,
       temperature: 0.7
     };
   }
   
-  // Moderate → balanced
+  // Moderate → use 2.0 Flash for better balance
   return { 
-    model: 'google/gemini-2.5-flash', 
+    model: 'google/gemini-2.0-flash', 
     strategy: 'balanced',
-    maxTokens: 300,
+    maxTokens: 400,
     temperature: 0.6
   };
 }
@@ -1879,7 +1909,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     // 🚀 OPTIMIZATION: Fallback to simpler model on error
     console.log(`⚠️ Model ${selectedModel} failed, trying fallback`);
     if (selectedModel !== 'google/gemini-2.5-flash') {
-      // Retry with flash model
+      // Retry with 2.5 Flash as fallback (fastest and most reliable)
       const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
