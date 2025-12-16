@@ -25,9 +25,7 @@ const MentorDiscover = () => {
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
-    priceRange: [0, 500000],
-    stage: [],
-    availableNow: false,
+    coachingFormat: [],
   });
 
   useEffect(() => {
@@ -92,21 +90,14 @@ const MentorDiscover = () => {
         if (!hasExpertise) return false;
       }
 
-      // Price range filter
-      if (
-        mentor.hourly_rate < filters.priceRange[0] ||
-        mentor.hourly_rate > filters.priceRange[1]
-      ) {
-        return false;
+      // Coaching Format filter
+      if (filters.coachingFormat.length > 0) {
+        const mentorNameLower = mentor.name.toLowerCase();
+        const isMarcBright = mentorNameLower.includes('marc') && mentorNameLower.includes('bright');
+        const mentorFormat = isMarcBright ? 'Hourly Rate Basis' : '8 Week Coaching Program';
+        const hasFormat = filters.coachingFormat.includes(mentorFormat);
+        if (!hasFormat) return false;
       }
-
-      // Available now filter
-      if (filters.availableNow && mentor.is_active === false) {
-        return false;
-      }
-
-      // Stage filter (if we add it to mentor data later)
-      // For now, we'll skip this as mentors don't have stage data
 
       return true;
     });

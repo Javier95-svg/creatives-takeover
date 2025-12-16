@@ -3,14 +3,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Filter, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface MentorFilters {
   expertise: string[];
-  priceRange: [number, number]; // In cents [min, max]
-  stage: string[];
-  availableNow: boolean;
+  coachingFormat: string[]; // "8 Week Coaching Program" or "Hourly Rate Basis"
 }
 
 interface FilterSidebarProps {
@@ -18,7 +16,7 @@ interface FilterSidebarProps {
   onFiltersChange: (filters: MentorFilters) => void;
   availableExpertise: string[];
   availableStages: string[];
-  priceRangeMax: number; // Maximum hourly rate in cents
+  priceRangeMax: number; // Maximum hourly rate in cents (kept for compatibility but not used)
   className?: string;
 }
 
@@ -37,20 +35,17 @@ const EXPERTISE_OPTIONS = [
   "Content Creation",
 ];
 
-const STAGE_OPTIONS = [
-  "Idea Stage",
-  "Pre-Seed",
-  "Seed",
-  "Series A",
-  "Series B+",
+const COACHING_FORMAT_OPTIONS = [
+  "8 Week Coaching Program",
+  "Hourly Rate Basis",
 ];
 
 export const FilterSidebar = ({
   filters,
   onFiltersChange,
   availableExpertise = EXPERTISE_OPTIONS,
-  availableStages = STAGE_OPTIONS,
-  priceRangeMax = 500000, // $5000 max for 8-week program
+  availableStages = [],
+  priceRangeMax = 500000, // Kept for compatibility but not used
   className,
 }: FilterSidebarProps) => {
   const handleExpertiseToggle = (expertise: string) => {
@@ -64,72 +59,27 @@ export const FilterSidebar = ({
     });
   };
 
-  const handleStageToggle = (stage: string) => {
-    const newStage = filters.stage.includes(stage)
-      ? filters.stage.filter((s) => s !== stage)
-      : [...filters.stage, stage];
+  const handleCoachingFormatToggle = (format: string) => {
+    const newFormat = filters.coachingFormat.includes(format)
+      ? filters.coachingFormat.filter((f) => f !== format)
+      : [...filters.coachingFormat, format];
     
     onFiltersChange({
       ...filters,
-      stage: newStage,
-    });
-  };
-
-  const handleScrollUp = () => {
-    // Move to higher budget range
-    const step = 10000; // $100 increment
-    const rangeSize = filters.priceRange[1] - filters.priceRange[0];
-    const newMin = Math.max(0, Math.min(filters.priceRange[0] + step, priceRangeMax - rangeSize));
-    const newMax = newMin + rangeSize;
-    if (newMax <= priceRangeMax) {
-      onFiltersChange({
-        ...filters,
-        priceRange: [newMin, newMax],
-      });
-    }
-  };
-
-  const handleScrollDown = () => {
-    // Move to lower budget range
-    const step = 10000; // $100 increment
-    const rangeSize = filters.priceRange[1] - filters.priceRange[0];
-    const newMin = Math.max(0, filters.priceRange[0] - step);
-    const newMax = newMin + rangeSize;
-    if (newMin >= 0) {
-      onFiltersChange({
-        ...filters,
-        priceRange: [newMin, newMax],
-      });
-    }
-  };
-
-  const handleAvailableNowToggle = (checked: boolean) => {
-    onFiltersChange({
-      ...filters,
-      availableNow: checked,
+      coachingFormat: newFormat,
     });
   };
 
   const clearAllFilters = () => {
     onFiltersChange({
       expertise: [],
-      priceRange: [0, priceRangeMax],
-      stage: [],
-      availableNow: false,
+      coachingFormat: [],
     });
   };
 
   const hasActiveFilters =
     filters.expertise.length > 0 ||
-    filters.stage.length > 0 ||
-    filters.availableNow ||
-    filters.priceRange[0] > 0 ||
-    filters.priceRange[1] < priceRangeMax;
-
-  const priceRangeDisplay = [
-    `$${(filters.priceRange[0] / 100).toFixed(0)}`,
-    `$${(filters.priceRange[1] / 100).toFixed(0)}`,
-  ].join(" - ");
+    filters.coachingFormat.length > 0;
 
   return (
     <Card className={cn("sticky top-4", className)}>
@@ -154,49 +104,6 @@ export const FilterSidebar = ({
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Price Range */}
-        <div>
-          <Label className="text-sm font-semibold mb-3 block">
-            Coaching Program Fee
-          </Label>
-          <div className="space-y-3">
-            {/* Scroll Button at Top/Beginning */}
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              onClick={handleScrollUp}
-              disabled={filters.priceRange[1] >= priceRangeMax}
-              className="w-full h-10 flex items-center justify-center"
-            >
-              <ChevronUp className="h-4 w-4 mr-2" />
-              Scroll to Higher Range
-            </Button>
-            
-            {/* Range Display */}
-            <div className="text-center py-3 px-4 bg-muted/50 rounded-md">
-              <span className="text-base font-semibold text-foreground">
-                {priceRangeDisplay}
-              </span>
-            </div>
-
-            {/* Scroll Button at Bottom/End */}
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              onClick={handleScrollDown}
-              disabled={filters.priceRange[0] <= 0}
-              className="w-full h-10 flex items-center justify-center"
-            >
-              <ChevronDown className="h-4 w-4 mr-2" />
-              Scroll to Lower Range
-            </Button>
-          </div>
-        </div>
-
-        <Separator />
-
         {/* Expertise */}
         <div>
           <Label className="text-sm font-semibold mb-3 block">
@@ -226,49 +133,30 @@ export const FilterSidebar = ({
 
         <Separator />
 
-        {/* Stage */}
+        {/* Coaching Format */}
         <div>
           <Label className="text-sm font-semibold mb-3 block">
-            Stage Focus
+            Coaching Format
           </Label>
           <div className="space-y-2">
-            {availableStages.map((stage) => (
+            {COACHING_FORMAT_OPTIONS.map((format) => (
               <div
-                key={stage}
+                key={format}
                 className="flex items-center space-x-2 p-2 rounded hover:bg-accent/50"
               >
                 <Checkbox
-                  id={`stage-${stage}`}
-                  checked={filters.stage.includes(stage)}
-                  onCheckedChange={() => handleStageToggle(stage)}
+                  id={`coaching-format-${format}`}
+                  checked={filters.coachingFormat.includes(format)}
+                  onCheckedChange={() => handleCoachingFormatToggle(format)}
                 />
                 <Label
-                  htmlFor={`stage-${stage}`}
+                  htmlFor={`coaching-format-${format}`}
                   className="cursor-pointer flex-1 font-normal text-sm"
                 >
-                  {stage}
+                  {format}
                 </Label>
               </div>
             ))}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Availability */}
-        <div>
-          <div className="flex items-center space-x-2 p-2 rounded hover:bg-accent/50">
-            <Checkbox
-              id="available-now"
-              checked={filters.availableNow}
-              onCheckedChange={handleAvailableNowToggle}
-            />
-            <Label
-              htmlFor="available-now"
-              className="cursor-pointer flex-1 font-normal text-sm"
-            >
-              Available Now
-            </Label>
           </div>
         </div>
       </CardContent>

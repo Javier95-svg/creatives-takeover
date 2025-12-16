@@ -9,8 +9,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { MentorFilters } from "./FilterSidebar";
 import { cn } from "@/lib/utils";
 
@@ -50,56 +48,26 @@ export const TopFilterBar = ({
     onFiltersChange({ ...filters, expertise: newExpertise });
   };
 
-  const handleStageToggle = (stage: string) => {
-    const newStages = filters.stage.includes(stage)
-      ? filters.stage.filter((s) => s !== stage)
-      : [...filters.stage, stage];
-    onFiltersChange({ ...filters, stage: newStages });
-  };
-
-  const handlePriceRangeChange = (values: number[]) => {
-    onFiltersChange({ ...filters, priceRange: [values[0], values[1]] });
-  };
-
-  const handleMinPriceChange = (newMin: number) => {
-    const clampedMin = Math.max(0, Math.min(newMin, filters.priceRange[1] - 100));
-    onFiltersChange({
-      ...filters,
-      priceRange: [clampedMin, filters.priceRange[1]],
-    });
-  };
-
-  const handleMaxPriceChange = (newMax: number) => {
-    const clampedMax = Math.max(filters.priceRange[0] + 100, Math.min(newMax, priceRangeMax));
-    onFiltersChange({
-      ...filters,
-      priceRange: [filters.priceRange[0], clampedMax],
-    });
-  };
-
-  const handleAvailableNowToggle = (checked: boolean) => {
-    onFiltersChange({ ...filters, availableNow: checked });
+  const handleCoachingFormatToggle = (format: string) => {
+    const newFormat = filters.coachingFormat.includes(format)
+      ? filters.coachingFormat.filter((f) => f !== format)
+      : [...filters.coachingFormat, format];
+    onFiltersChange({ ...filters, coachingFormat: newFormat });
   };
 
   const clearAllFilters = () => {
     onFiltersChange({
       expertise: [],
-      priceRange: [0, priceRangeMax],
-      stage: [],
-      availableNow: false,
+      coachingFormat: [],
     });
   };
 
   const hasActiveFilters =
     filters.expertise.length > 0 ||
-    filters.stage.length > 0 ||
-    filters.availableNow ||
-    filters.priceRange[0] > 0 ||
-    filters.priceRange[1] < priceRangeMax;
+    filters.coachingFormat.length > 0;
 
   const expertiseCount = filters.expertise.length;
-  const stageCount = filters.stage.length;
-  const hasPriceFilter = filters.priceRange[0] > 0 || filters.priceRange[1] < priceRangeMax;
+  const coachingFormatCount = filters.coachingFormat.length;
 
   return (
     <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -163,192 +131,20 @@ export const TopFilterBar = ({
         </PopoverContent>
       </Popover>
 
-      {/* Price Filter */}
+      {/* Coaching Format Filter */}
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
               "h-9",
-              hasPriceFilter && "border-primary bg-primary/5"
+              coachingFormatCount > 0 && "border-primary bg-primary/5"
             )}
           >
-            Program Fee
-            {hasPriceFilter && (
+            Coaching Format
+            {coachingFormatCount > 0 && (
               <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                {`$${(filters.priceRange[0] / 100).toFixed(0)} - $${(filters.priceRange[1] / 100).toFixed(0)}`}
-              </Badge>
-            )}
-            <ChevronDown className="h-4 w-4 ml-2" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80" align="start">
-          <div className="space-y-4">
-            <Label className="font-semibold">Coaching Program Fee</Label>
-            <Separator />
-            <div className="space-y-4">
-              {/* Price Inputs with Scroll Buttons */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Minimum Price */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Min Budget</Label>
-                  <div className="flex items-center gap-1">
-                    <div className="flex flex-col">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-8 rounded-b-none border-b-0 p-0"
-                        onClick={() => handleMinPriceChange(filters.priceRange[0] + 100)}
-                        disabled={filters.priceRange[0] >= filters.priceRange[1] - 100}
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-8 rounded-t-none p-0"
-                        onClick={() => handleMinPriceChange(filters.priceRange[0] - 100)}
-                        disabled={filters.priceRange[0] <= 0}
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                      <Input
-                        type="number"
-                        value={(filters.priceRange[0] / 100).toFixed(0)}
-                        onChange={(e) => {
-                          const value = Math.max(0, Math.min(parseInt(e.target.value) || 0, (filters.priceRange[1] / 100) - 1));
-                          handleMinPriceChange(value * 100);
-                        }}
-                        min={0}
-                        max={(filters.priceRange[1] / 100) - 1}
-                        className="pl-7 h-10 text-sm"
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Maximum Price */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Max Budget</Label>
-                  <div className="flex items-center gap-1">
-                    <div className="flex flex-col">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-8 rounded-b-none border-b-0 p-0"
-                        onClick={() => handleMaxPriceChange(filters.priceRange[1] + 100)}
-                        disabled={filters.priceRange[1] >= priceRangeMax}
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-8 rounded-t-none p-0"
-                        onClick={() => handleMaxPriceChange(filters.priceRange[1] - 100)}
-                        disabled={filters.priceRange[1] <= filters.priceRange[0] + 100}
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                      <Input
-                        type="number"
-                        value={(filters.priceRange[1] / 100).toFixed(0)}
-                        onChange={(e) => {
-                          const value = Math.max((filters.priceRange[0] / 100) + 1, Math.min(parseInt(e.target.value) || priceRangeMax / 100, priceRangeMax / 100));
-                          handleMaxPriceChange(value * 100);
-                        }}
-                        min={(filters.priceRange[0] / 100) + 1}
-                        max={priceRangeMax / 100}
-                        className="pl-7 h-10 text-sm"
-                        placeholder="5000"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Range Display */}
-              <div className="text-center py-2 px-3 bg-muted/50 rounded-md">
-                <span className="text-sm font-medium text-foreground">
-                  ${(filters.priceRange[0] / 100).toFixed(0)} - ${(filters.priceRange[1] / 100).toFixed(0)}
-                </span>
-              </div>
-
-              {/* Slider */}
-              <Slider
-                value={filters.priceRange}
-                onValueChange={handlePriceRangeChange}
-                min={0}
-                max={priceRangeMax}
-                step={100}
-              />
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {/* Availability Filter */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "h-9",
-              filters.availableNow && "border-primary bg-primary/5"
-            )}
-          >
-            Availability
-            {filters.availableNow && (
-              <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                Available now
-              </Badge>
-            )}
-            <ChevronDown className="h-4 w-4 ml-2" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-64" align="start">
-          <div className="space-y-4">
-            <Label className="font-semibold">Availability</Label>
-            <Separator />
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-available"
-                checked={filters.availableNow}
-                onCheckedChange={handleAvailableNowToggle}
-              />
-              <Label htmlFor="filter-available" className="font-normal cursor-pointer">
-                Available Now
-              </Label>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {/* Stage Filter */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "h-9",
-              stageCount > 0 && "border-primary bg-primary/5"
-            )}
-          >
-            Stage
-            {stageCount > 0 && (
-              <Badge variant="secondary" className="ml-2 h-5 px-1.5">
-                {stageCount}
+                {coachingFormatCount}
               </Badge>
             )}
             <ChevronDown className="h-4 w-4 ml-2" />
@@ -357,12 +153,12 @@ export const TopFilterBar = ({
         <PopoverContent className="w-64" align="start">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="font-semibold">Stage Focus</Label>
-              {stageCount > 0 && (
+              <Label className="font-semibold">Coaching Format</Label>
+              {coachingFormatCount > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onFiltersChange({ ...filters, stage: [] })}
+                  onClick={() => onFiltersChange({ ...filters, coachingFormat: [] })}
                 >
                   Clear
                 </Button>
@@ -370,21 +166,32 @@ export const TopFilterBar = ({
             </div>
             <Separator />
             <div className="space-y-2">
-              {availableStages.map((stage) => (
-                <div key={stage} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`filter-stage-${stage}`}
-                    checked={filters.stage.includes(stage)}
-                    onCheckedChange={() => handleStageToggle(stage)}
-                  />
-                  <Label
-                    htmlFor={`filter-stage-${stage}`}
-                    className="font-normal cursor-pointer flex-1"
-                  >
-                    {stage}
-                  </Label>
-                </div>
-              ))}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-format-8week"
+                  checked={filters.coachingFormat.includes("8 Week Coaching Program")}
+                  onCheckedChange={() => handleCoachingFormatToggle("8 Week Coaching Program")}
+                />
+                <Label
+                  htmlFor="filter-format-8week"
+                  className="font-normal cursor-pointer flex-1"
+                >
+                  8 Week Coaching Program
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="filter-format-hourly"
+                  checked={filters.coachingFormat.includes("Hourly Rate Basis")}
+                  onCheckedChange={() => handleCoachingFormatToggle("Hourly Rate Basis")}
+                />
+                <Label
+                  htmlFor="filter-format-hourly"
+                  className="font-normal cursor-pointer flex-1"
+                >
+                  Hourly Rate Basis
+                </Label>
+              </div>
             </div>
           </div>
         </PopoverContent>
