@@ -174,7 +174,7 @@ const MentorMarketplaceHub = () => {
   }, [mentors]);
 
   // Typing animation for description
-  const descriptionText = "Match with vetted startup coaches for hands-on guidance from first idea to first funding, tailored to the realities of pre-seed founders who are still figuring things out. \n\nBook focused 1-on-1 sessions, get actionable feedback on your roadmap, pitch, and go-to-market, and leave each call with clear next steps you can execute immediately.";
+  const descriptionText = "Work with startup mentors from all over the globe who have built, launched, and raised at the earliest stages. Expect clear, grounded advice that fits the reality of pre seed founders, not theory from later stage playbooks. \n\nBook focused one to one sessions, stress test your roadmap, pitch, and go to market, and leave each call with a short list of concrete next steps. Move from uncertainty to a plan you can actually execute, with someone beside you who has already been through it.";
   const { displayedText, isTyping } = useTypingAnimation({
     text: descriptionText,
     speed: 20,
