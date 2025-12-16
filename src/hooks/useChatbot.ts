@@ -325,13 +325,18 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'freeform': [],
     'tour-guide': []
   });
-  // Current messages based on active mode - use useMemo to ensure stability
-  const messages = useMemo(() => {
-    const modeMessages = messagesByMode[chatMode];
-    return Array.isArray(modeMessages) ? modeMessages : [];
-  }, [messagesByMode, chatMode]);
   const [isTyping, setIsTyping] = useState(false);
   const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
+  // Current messages based on active mode - use useMemo to ensure stability (must be after chatMode declaration)
+  const messages = useMemo(() => {
+    try {
+      const modeMessages = messagesByMode[chatMode];
+      return Array.isArray(modeMessages) ? modeMessages : [];
+    } catch (error) {
+      console.error('Error accessing messages for mode:', chatMode, error);
+      return [];
+    }
+  }, [messagesByMode, chatMode]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
     totalMessages: 0,
@@ -374,7 +379,10 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'freeform': `session_freeform_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'tour-guide': `session_tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   });
-  const sessionId = sessionIdsByMode[chatMode];
+  // Memoize sessionId to ensure stability
+  const sessionId = useMemo(() => {
+    return sessionIdsByMode[chatMode] || `session_${chatMode}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }, [sessionIdsByMode, chatMode]);
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
@@ -1597,7 +1605,9 @@ What specific aspect of your business would you like to focus on first?`;
     
     if (user && sessionMgmt && !sessionMgmt.currentSessionId && !sessionCreationAttempted.current) {
       // Check if this is the first user message (not counting welcome/bot messages)
-      const userMessages = messages.filter(msg => !msg.isBot);
+      // Get current messages from state to avoid stale closure
+      const currentMessages = messagesByMode[chatMode] || [];
+      const userMessages = currentMessages.filter(msg => !msg.isBot);
       if (userMessages.length === 0) {
         sessionCreationAttempted.current = true; // Mark as attempted to prevent duplicates
         console.log('🆕 Auto-creating chat session for first user interaction');
@@ -1774,7 +1784,9 @@ What specific aspect of your business would you like to focus on first?`;
 
         // 🚀 OPTIMIZATION: Prepare conversation history for API (reduced from 5 to 6 for better context, but still optimized)
         // Smart selection: prioritize important messages (bot responses with insights, user questions)
-        const importantMessages = messages
+        // Get current messages from state to avoid stale closure
+        const currentMessages = messagesByMode[chatMode] || [];
+        const importantMessages = currentMessages
           .filter(msg => msg.id !== 'streaming')
           .map((msg, idx) => ({
             msg,
@@ -1918,7 +1930,7 @@ What specific aspect of your business would you like to focus on first?`;
       setIsStreaming(false);
       dispatch({ type: 'SET_PROCESSING', payload: false });
     }
-  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messages, wizardStep, wizardAnswers, chatMode, enableStreaming]);
+  }, [conversationState, trackUserInteraction, generateAIResponse, updateConversationState, clearError, handleError, config, nlu, chatAnalytics, sessionId, messagesByMode, updateMessages, wizardStep, wizardAnswers, chatMode, enableStreaming, userId]);
 
   // Handle quick action clicks - Compatible with ChatbotWidget expectations
   const handleQuickAction = useCallback(async (action: string, href?: string) => {
@@ -2054,8 +2066,10 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced export conversation data with chatAnalytics
   const exportConversation = useCallback(() => {
+    // Get current messages from state
+    const currentMessages = messagesByMode[chatMode] || [];
     const exportData = {
-      conversation: messages.map(msg => ({
+      conversation: currentMessages.map(msg => ({
         content: msg.content,
         isBot: msg.isBot,
         timestamp: msg.timestamp,

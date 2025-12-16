@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Loader2, Sparkles, Wand2, Share2, Paperclip, BookOpen, X, FileText, Image as ImageIcon } from "lucide-react";
@@ -78,6 +78,11 @@ const categorizeMessageImportance = (content: string): number => {
 
 // Helper function to extract key content for sharing
 const extractKeyContent = (messages: ChatMessage[], businessContext: Record<string, unknown>) => {
+  // Safety check: ensure messages is an array
+  if (!Array.isArray(messages)) {
+    return { summary: '', keyPoints: [] };
+  }
+  
   const botMessages = messages.filter(m => m.isBot);
   
   if (botMessages.length === 0) {
@@ -342,6 +347,7 @@ export const BizMapChat = ({
   
   // Monitor messages for sources to update search status
   useEffect(() => {
+    if (!Array.isArray(messages)) return;
     const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
     if (lastBotMessage?.sourceMetadata && lastBotMessage.sourceMetadata.length > 0) {
       setSearchStatus('found');
@@ -374,16 +380,23 @@ export const BizMapChat = ({
     return "Ask about your business plan...";
   };
   
-  // Determine active mode for ModeSelector
-  const activeModeForSelector = chatMode === 'wizard' ? 'planning' : 'gtm';
+  // Determine active mode for ModeSelector - with safety check
+  const activeModeForSelector = useMemo(() => {
+    if (!chatMode) return 'planning'; // Default to planning if chatMode is undefined
+    return chatMode === 'wizard' ? 'planning' : 'gtm';
+  }, [chatMode]);
   
-  const handleModeChange = (mode: 'planning' | 'gtm') => {
+  const handleModeChange = useCallback((mode: 'planning' | 'gtm') => {
+    if (!switchToPlanningMode || !switchToGTMMode) {
+      console.error('Mode switching functions not available');
+      return;
+    }
     if (mode === 'planning') {
       switchToPlanningMode();
     } else {
       switchToGTMMode();
     }
-  };
+  }, [switchToPlanningMode, switchToGTMMode]);
 
   return (
     <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden">
@@ -413,7 +426,7 @@ export const BizMapChat = ({
           <SearchResults status={searchStatus} sourceCount={searchSourceCount} />
         )}
         
-        {messages.map((msg, index) => (
+        {Array.isArray(messages) && messages.map((msg, index) => (
           <div key={msg.id} className="space-y-2">
             <div
               className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
