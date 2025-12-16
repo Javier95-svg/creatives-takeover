@@ -57,7 +57,16 @@ export enum ConversationContext {
   LEGAL_COMPLIANCE = 'legal_compliance',
   GROWTH_PLANNING = 'growth_planning',
   TROUBLESHOOTING = 'troubleshooting',
-  FAQ = 'faq'
+  FAQ = 'faq',
+  // GTM Strategy contexts
+  GTM_SEGMENTATION = 'gtm_segmentation',
+  GTM_PERSONAS = 'gtm_personas',
+  GTM_POSITIONING = 'gtm_positioning',
+  GTM_PRICING = 'gtm_pricing',
+  GTM_CHANNELS = 'gtm_channels',
+  GTM_TACTICS = 'gtm_tactics',
+  GTM_LAUNCH = 'gtm_launch',
+  GTM_METRICS = 'gtm_metrics'
 }
 
 export interface BusinessContext {
@@ -306,7 +315,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide'>('wizard');
+  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
     totalMessages: 0,
@@ -1150,6 +1159,42 @@ This will help us strengthen your business logic and ensure you're building on s
 
     if (context === ConversationContext.FINANCIAL_PLANNING || lowerMessage.includes('financial') || lowerMessage.includes('money') || lowerMessage.includes('revenue')) {
       return generateFinancialPlanningResponse(userMessage, extractedInfo);
+    }
+
+    // GTM Strategy context detection (when in GTM mode)
+    if (chatMode === 'gtm-strategy') {
+      // Customer segmentation
+      if (lowerMessage.includes('segment') || lowerMessage.includes('customer group') || lowerMessage.includes('target audience') || lowerMessage.includes('demographic')) {
+        updateConversationState({ context: ConversationContext.GTM_SEGMENTATION });
+      }
+      // Personas
+      else if (lowerMessage.includes('persona') || lowerMessage.includes('buyer profile') || lowerMessage.includes('ideal customer') || lowerMessage.includes('icp')) {
+        updateConversationState({ context: ConversationContext.GTM_PERSONAS });
+      }
+      // Positioning
+      else if (lowerMessage.includes('positioning') || lowerMessage.includes('differentiation') || lowerMessage.includes('value prop') || lowerMessage.includes('messaging')) {
+        updateConversationState({ context: ConversationContext.GTM_POSITIONING });
+      }
+      // Pricing
+      else if (lowerMessage.includes('pricing') || lowerMessage.includes('price point') || lowerMessage.includes('revenue model') || lowerMessage.includes('monetization')) {
+        updateConversationState({ context: ConversationContext.GTM_PRICING });
+      }
+      // Channels
+      else if (lowerMessage.includes('channel') || lowerMessage.includes('distribution') || lowerMessage.includes('marketing channel') || lowerMessage.includes('sales channel')) {
+        updateConversationState({ context: ConversationContext.GTM_CHANNELS });
+      }
+      // Tactics
+      else if (lowerMessage.includes('marketing tactic') || lowerMessage.includes('acquisition') || lowerMessage.includes('conversion') || lowerMessage.includes('funnel')) {
+        updateConversationState({ context: ConversationContext.GTM_TACTICS });
+      }
+      // Launch
+      else if (lowerMessage.includes('launch') || lowerMessage.includes('go-live') || lowerMessage.includes('rollout') || lowerMessage.includes('release')) {
+        updateConversationState({ context: ConversationContext.GTM_LAUNCH });
+      }
+      // KPIs
+      else if (lowerMessage.includes('kpi') || lowerMessage.includes('metric') || lowerMessage.includes('success metric') || lowerMessage.includes('measurement')) {
+        updateConversationState({ context: ConversationContext.GTM_METRICS });
+      }
     }
 
     // Industry-specific guidance
@@ -2183,6 +2228,32 @@ What specific aspect of your business would you like to focus on first?`;
     }, []),
     switchToWizard: useCallback(() => {
       setChatMode('wizard');
+    }, []),
+    switchToGTMMode: useCallback(() => {
+      setChatMode('gtm-strategy');
+      // Add a system message about the mode switch
+      const switchMessage: ChatMessage = {
+        id: generateId(),
+        content: "🎯 You're now in **Go-To-Market Strategy** mode! I'll help you plan and execute your market entry strategy. We can work on customer segmentation, personas, positioning, pricing, channels, marketing tactics, launch planning, and KPIs. What would you like to start with?",
+        isBot: true,
+        timestamp: new Date(),
+        messageType: 'recommendation',
+        confidence: 1.0
+      };
+      setMessages(prev => [...prev, switchMessage]);
+    }, []),
+    switchToPlanningMode: useCallback(() => {
+      setChatMode('wizard');
+      // Add a system message about the mode switch
+      const switchMessage: ChatMessage = {
+        id: generateId(),
+        content: "📋 You're now in **Business Planning** mode! I'll guide you through defining and structuring your business plan, including market analysis, value proposition, revenue models, and operational planning. Let's continue building your plan!",
+        isBot: true,
+        timestamp: new Date(),
+        messageType: 'recommendation',
+        confidence: 1.0
+      };
+      setMessages(prev => [...prev, switchMessage]);
     }, []),
     
     // Session ID for document uploads

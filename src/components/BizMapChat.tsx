@@ -18,6 +18,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { SourceCitation } from "./chatbot/SourceCitation";
 import { SearchResults } from "./chatbot/SearchResults";
+import { ModeSelector } from "./chatbot/ModeSelector";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -180,6 +181,8 @@ export const BizMapChat = ({
     sendMessage,
     chatMode,
     switchToFreeform,
+    switchToGTMMode,
+    switchToPlanningMode,
     conversionPromptShown,
     conversionPromptDismissed,
     trackConversionEvent,
@@ -362,10 +365,24 @@ export const BizMapChat = ({
   };
 
   const getCurrentPlaceholder = () => {
+    if (chatMode === 'gtm-strategy') {
+      return "Ask about your go-to-market strategy...";
+    }
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder || "Type your answer here...";
     }
-    return "Type your message...";
+    return "Ask about your business plan...";
+  };
+  
+  // Determine active mode for ModeSelector
+  const activeModeForSelector = chatMode === 'wizard' ? 'planning' : 'gtm';
+  
+  const handleModeChange = (mode: 'planning' | 'gtm') => {
+    if (mode === 'planning') {
+      switchToPlanningMode();
+    } else {
+      switchToGTMMode();
+    }
   };
 
   return (
@@ -630,50 +647,13 @@ export const BizMapChat = ({
           </Button>
         </div>
 
-        {/* Share to Community and Examples Buttons - Shows when there are messages */}
-        {messages.length > 0 && (
-          <div className="mt-3 flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const lastBotMessage = messages.filter(m => m.isBot).slice(-1)[0];
-                const context: any = typeof lastBotMessage?.businessContext === 'object' ? lastBotMessage.businessContext : {};
-                const extractedContent = extractKeyContent(messages, context);
-                
-                setShareData({
-                  conversationId: user?.id,
-                  reportType: context?.industry || context?.targetMarket ? 'business_plan' : 'conversation',
-                  reportData: {
-                    ...context,
-                    extractedContent
-                  },
-                  defaultTitle: context?.industry 
-                    ? `${context.industry} Business Plan`
-                    : 'My Business Journey',
-                  defaultContent: extractedContent.summary,
-                });
-                setShowShareDialog(true);
-              }}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              Share to Community
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                // Trigger the examples modal in the parent component
-                window.dispatchEvent(new CustomEvent('openExamplesModal'));
-              }}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2"
-            >
-              <BookOpen className="h-4 w-4" />
-              See Examples
-            </Button>
-          </div>
-        )}
+        {/* Mode Selector - Replaces Share/Examples buttons */}
+        <div className="mt-3">
+          <ModeSelector
+            activeMode={activeModeForSelector}
+            onModeChange={handleModeChange}
+          />
+        </div>
       </div>
       
       {/* Share Dialog */}
