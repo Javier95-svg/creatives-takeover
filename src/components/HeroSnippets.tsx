@@ -45,7 +45,7 @@ const platformSnippets: PlatformSnippet[] = [
     color: "insighta" // purple - contrasts with yellow
   },
   {
-    name: "BizMap AI Chat",
+    name: "BizMap AI",
     description: "Get strategic business advice from your AI co-founder through conversation",
     icon: MessageSquare,
     route: "/bizmap-ai",
