@@ -297,9 +297,11 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
               </div>
             )}
 
-            {/* 8 Week Coaching Program */}
+            {/* 8 Week Coaching Program / Hourly Rate Basis */}
             <div className="text-xs lg:text-sm text-muted-foreground">
-              8 Week Coaching Program
+              {mentor.name.toLowerCase().includes('marc') && mentor.name.toLowerCase().includes('bright')
+                ? 'Hourly Rate Basis'
+                : '8 Week Coaching Program'}
             </div>
 
                 {/* Action Buttons */}
