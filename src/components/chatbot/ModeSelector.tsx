@@ -33,10 +33,10 @@ export const ModeSelector = ({ activeMode, onModeChange }: ModeSelectorProps) =>
 
   return (
     <TooltipProvider>
-      <div className="relative w-full">
-        {/* Horizontal scrolling container with proper padding to prevent clipping */}
-        <div className="overflow-x-auto scrollbar-hide scroll-smooth px-1 -mx-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/50 min-w-fit">
+      <div className="relative w-full flex justify-center">
+        {/* Centered container with proper padding to prevent clipping */}
+        <div className="w-full max-w-full px-2">
+          <div className="flex items-center justify-center gap-2 p-1.5 bg-muted/30 rounded-xl border border-border/50 backdrop-blur-sm">
             {modes.map((mode) => {
               const Icon = mode.icon;
               const isActive = activeMode === mode.id;
@@ -49,9 +49,9 @@ export const ModeSelector = ({ activeMode, onModeChange }: ModeSelectorProps) =>
                       size="sm"
                       onClick={() => onModeChange(mode.id)}
                       className={cn(
-                        "flex items-center justify-center gap-2 h-9 px-4 whitespace-nowrap transition-all duration-200 flex-shrink-0 min-w-fit",
+                        "flex items-center justify-center gap-2 h-10 px-5 whitespace-nowrap transition-all duration-200 flex-shrink-0",
                         isActive
-                          ? "bg-background text-foreground shadow-sm border border-border/50"
+                          ? "bg-background text-foreground shadow-md border border-border/50 font-semibold"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       )}
                       aria-pressed={isActive}

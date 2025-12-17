@@ -600,6 +600,16 @@ export const BizMapChat = ({
           </div>
         )}
 
+        {/* Mode Selector - Centered above input area */}
+        <div className="mb-4 flex justify-center w-full">
+          <div className="w-full max-w-md">
+            <ModeSelector
+              activeMode={activeModeForSelector}
+              onModeChange={handleModeChange}
+            />
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <Input
             value={message}
@@ -658,14 +668,6 @@ export const BizMapChat = ({
               <Send className="w-5 h-5" aria-hidden="true" />
             )}
           </Button>
-        </div>
-
-        {/* Mode Selector - Replaces Share/Examples buttons */}
-        <div className="mt-3 w-full">
-          <ModeSelector
-            activeMode={activeModeForSelector}
-            onModeChange={handleModeChange}
-          />
         </div>
       </div>
       
