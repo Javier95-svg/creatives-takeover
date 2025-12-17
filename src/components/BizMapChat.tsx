@@ -418,13 +418,6 @@ export const BizMapChat = ({
         <div className="bizmap-chat-shimmer" />
       </div>
       <div className="relative z-10 flex h-full flex-col">
-        {/* Personality Indicator */}
-        {user && preferences && preferences.onboardingCompleted && (
-          <div className="absolute top-4 right-4 z-20">
-            <PersonalityIndicator personality={preferences.aiPersonality} />
-          </div>
-        )}
-        
       {/* Messages Area */}
       <div 
         className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 relative"
