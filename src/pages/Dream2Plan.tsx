@@ -1185,7 +1185,7 @@ Subject: "Quick question about [their pain point]"
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 takeover-gradient creatives-font animate-fade-in leading-tight pb-2 overflow-visible">
                 BizMap AI
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 pb-2 overflow-visible" style={{ animationDelay: '0.3s', lineHeight: '1.7' }}>
                 {activeTab === 'pmf' ? (
                   <>Test your product in the market and uncover whether there's <span className="gradient-text font-semibold">genuine demand waiting for you.</span></>
                 ) : (
