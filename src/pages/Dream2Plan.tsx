@@ -1215,17 +1215,20 @@ Subject: "Quick question about [their pain point]"
               </div>
 
               <TabsContent value="bizmap">
-                {/* Chat Interface Container */}
-                <div className="flex flex-row gap-4 lg:gap-6 mb-6 sm:mb-8">
-                  {/* Chat Sidebar */}
-                  <ChatSidebar 
-                    onSessionSelect={handleSessionSelect}
-                    onNewChat={handleNewChat}
-                  />
+                {/* Unified Chat Interface Container */}
+                <div className="chat-unified-frame mb-6 sm:mb-8 h-[700px] rounded-xl lg:rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="flex flex-row h-full">
+                    {/* Chat Sidebar */}
+                    <ChatSidebar 
+                      onSessionSelect={handleSessionSelect}
+                      onNewChat={handleNewChat}
+                    />
 
-                  {/* Enhanced BizMapChat Component with 7 Principles */}
-                  <div className="flex-1 min-w-0">
-                    <div className="glass-card border border-primary/30 shadow-2xl backdrop-blur-sm h-[700px] hover-lift transition-all duration-500 hover:shadow-primary/20 rounded-xl lg:rounded-2xl overflow-hidden">
+                    {/* Internal Divider */}
+                    <div className="w-px bg-border/40 flex-shrink-0" />
+
+                    {/* Enhanced BizMapChat Component with 7 Principles */}
+                    <div className="flex-1 min-w-0 h-full overflow-hidden">
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {

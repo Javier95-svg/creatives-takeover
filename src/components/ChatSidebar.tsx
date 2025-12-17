@@ -140,7 +140,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
     return (
       <TooltipProvider>
         <div 
-          className={cn("h-[700px] border-r border-border/50 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
+          className={cn("h-full border-r-0 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
           style={{ width: `${sidebarWidth}px` }}
         >
           {/* Toggle Button */}
@@ -195,7 +195,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
   return (
     <TooltipProvider>
       <div 
-        className={cn("h-[700px] border-r border-border/50 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
+        className={cn("h-full border-r-0 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
         style={{ width: `${sidebarWidth}px` }}
       >
         {/* Toggle Button */}
