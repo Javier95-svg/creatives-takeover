@@ -1187,9 +1187,9 @@ Subject: "Quick question about [their pain point]"
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '2.2', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
                 {activeTab === 'pmf' ? (
-                  <>Test your product in the market and uncover whether there's <span className="gradient-text font-semibold" style={{ lineHeight: 'inherit' }}>genuine demand waiting for you.</span></>
+                  <>Test your product in the market and uncover whether there's<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> genuine demand waiting for you.</span></>
                 ) : (
-                  <>Your AI powered business planner in chatbot form, <span className="gradient-text font-semibold" style={{ lineHeight: 'inherit' }}>ready to turn your vision into action.</span></>
+                  <>Your AI powered business planner in chatbot form,<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> ready to turn your vision into action.</span></>
                 )}
               </p>
             </div>
