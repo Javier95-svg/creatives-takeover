@@ -148,16 +148,20 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
           className={cn("h-full border-r-0 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
           style={{ width: `${sidebarWidth}px` }}
         >
-          {/* Toggle Button - Centered on right edge */}
+          {/* Toggle Button - Modern design above divider */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-50 rounded-full w-7 h-7 p-0 glass-chat-button border border-border/40 shadow-md hover:scale-110 hover:shadow-lg transition-all duration-300"
+                className="absolute right-3 top-3 z-50 rounded-xl w-9 h-9 p-0 glass-chat border border-border/30 backdrop-blur-xl bg-background/60 hover:bg-background/80 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
               >
-                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+                {isCollapsed ? (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -202,16 +206,20 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
         className={cn("h-full border-r-0 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
         style={{ width: `${sidebarWidth}px` }}
       >
-        {/* Toggle Button - Centered on right edge */}
+        {/* Toggle Button - Modern design above divider */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-50 rounded-full w-7 h-7 p-0 glass-chat-button border border-border/40 shadow-md hover:scale-110 hover:shadow-lg transition-all duration-300"
+              className="absolute right-3 top-3 z-50 rounded-xl w-9 h-9 p-0 glass-chat border border-border/30 backdrop-blur-xl bg-background/60 hover:bg-background/80 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
             >
-              {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+              {isCollapsed ? (
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
