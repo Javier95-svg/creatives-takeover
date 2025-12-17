@@ -671,6 +671,14 @@ export const BizMapChat = ({
             )}
           </Button>
         </div>
+
+        {/* Mode Selector - Underneath the typing bar */}
+        <div className="mt-3 w-full">
+          <ModeSelector
+            activeMode={activeModeForSelector}
+            onModeChange={handleModeChange}
+          />
+        </div>
       </div>
       
       {/* Share Dialog */}

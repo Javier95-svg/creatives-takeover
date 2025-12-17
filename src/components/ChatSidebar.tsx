@@ -170,20 +170,18 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
               <div className="flex-1 flex items-center justify-center p-6 text-center">
                 <div>
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-4">
                     Sign in to save your chat history
                   </p>
+                  {/* Sign In Button right after the text */}
+                  <Button
+                    onClick={() => navigate('/login')}
+                    className="rounded-xl h-11 glass-chat-button hover:shadow-lg transition-all duration-300"
+                    size="lg"
+                  >
+                    Sign In
+                  </Button>
                 </div>
-              </div>
-              {/* Sign In Button at Bottom */}
-              <div className="border-t border-border/30 p-4">
-                <Button
-                  onClick={() => navigate('/login')}
-                  className="w-full rounded-xl h-11 glass-chat-button hover:shadow-lg transition-all duration-300"
-                  size="lg"
-                >
-                  Sign In
-                </Button>
               </div>
             </div>
           )}
@@ -369,16 +367,6 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                 )}
               </div>
             </ScrollArea>
-
-            {/* Mode Selector - At bottom above user footer */}
-            {modeInfo && (
-              <div className="border-t border-border/30 p-4">
-                <ModeSelector
-                  activeMode={modeInfo.activeMode}
-                  onModeChange={modeInfo.onModeChange}
-                />
-              </div>
-            )}
 
             {/* User Footer */}
             <div className="border-t border-border/30 p-4">
