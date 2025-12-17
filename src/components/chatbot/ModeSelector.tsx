@@ -33,43 +33,48 @@ export const ModeSelector = ({ activeMode, onModeChange }: ModeSelectorProps) =>
 
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/50">
-        {modes.map((mode) => {
-          const Icon = mode.icon;
-          const isActive = activeMode === mode.id;
-          
-          return (
-            <Tooltip key={mode.id}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onModeChange(mode.id)}
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 h-9 px-3 transition-all duration-200",
-                    isActive
-                      ? "bg-background text-foreground shadow-sm border border-border/50"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                  aria-pressed={isActive}
-                  aria-label={`${mode.label} mode${isActive ? ' (active)' : ''}`}
-                >
-                  <Icon className={cn(
-                    "h-4 w-4 transition-colors",
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  )} />
-                  <span className="text-sm font-medium">{mode.label}</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="max-w-xs p-3 text-sm bg-popover border border-border shadow-lg"
-              >
-                <p>{mode.tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
+      <div className="relative w-full">
+        {/* Horizontal scrolling container with proper padding to prevent clipping */}
+        <div className="overflow-x-auto scrollbar-hide scroll-smooth px-1 -mx-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/50 min-w-fit">
+            {modes.map((mode) => {
+              const Icon = mode.icon;
+              const isActive = activeMode === mode.id;
+              
+              return (
+                <Tooltip key={mode.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onModeChange(mode.id)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 h-9 px-4 whitespace-nowrap transition-all duration-200 flex-shrink-0 min-w-fit",
+                        isActive
+                          ? "bg-background text-foreground shadow-sm border border-border/50"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                      aria-pressed={isActive}
+                      aria-label={`${mode.label} mode${isActive ? ' (active)' : ''}`}
+                    >
+                      <Icon className={cn(
+                        "h-4 w-4 transition-colors flex-shrink-0",
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <span className="text-sm font-medium">{mode.label}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="max-w-xs p-3 text-sm bg-popover border border-border shadow-lg"
+                  >
+                    <p>{mode.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </TooltipProvider>
   );

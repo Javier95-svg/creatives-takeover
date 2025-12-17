@@ -661,7 +661,7 @@ export const BizMapChat = ({
         </div>
 
         {/* Mode Selector - Replaces Share/Examples buttons */}
-        <div className="mt-3">
+        <div className="mt-3 w-full">
           <ModeSelector
             activeMode={activeModeForSelector}
             onModeChange={handleModeChange}

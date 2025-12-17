@@ -161,16 +161,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
           </Tooltip>
 
           {!isCollapsed && (
-            <div className="animate-fade-in">
-              <div className="p-4 border-b border-border/30">
-                <Button
-                  onClick={() => navigate('/login')}
-                  className="w-full rounded-xl h-11 glass-chat-button hover:shadow-lg transition-all duration-300"
-                  size="lg"
-                >
-                  Sign In
-                </Button>
-              </div>
+            <div className="animate-fade-in flex flex-col h-full">
               <div className="flex-1 flex items-center justify-center p-6 text-center">
                 <div>
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
@@ -178,6 +169,16 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                     Sign in to save your chat history
                   </p>
                 </div>
+              </div>
+              {/* Sign In Button at Bottom */}
+              <div className="border-t border-border/30 p-4">
+                <Button
+                  onClick={() => navigate('/login')}
+                  className="w-full rounded-xl h-11 glass-chat-button hover:shadow-lg transition-all duration-300"
+                  size="lg"
+                >
+                  Sign In
+                </Button>
               </div>
             </div>
           )}
