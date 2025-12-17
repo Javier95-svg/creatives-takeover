@@ -1196,7 +1196,7 @@ Subject: "Quick question about [their pain point]"
 
             {/* Enhanced Tab Navigation */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="flex justify-center mb-6 sm:mb-8">
+              <div className="flex justify-center mb-6 sm:mb-8 mt-8 sm:mt-10">
                 <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-1 sm:p-2 animate-fade-in w-full sm:w-auto max-w-md sm:max-w-none" style={{ animationDelay: '0.5s' }}>
                   <TabsTrigger 
                     value="bizmap" 
