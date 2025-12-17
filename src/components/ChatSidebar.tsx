@@ -148,16 +148,16 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
           className={cn("h-full border-r-0 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
           style={{ width: `${sidebarWidth}px` }}
         >
-          {/* Toggle Button */}
+          {/* Toggle Button - Centered on right edge */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute right-0 top-4 z-50 rounded-full w-9 h-9 p-0 glass-chat-button border border-border/40 shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 translate-x-1/2"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-50 rounded-full w-7 h-7 p-0 glass-chat-button border border-border/40 shadow-md hover:scale-110 hover:shadow-lg transition-all duration-300"
               >
-                {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -202,16 +202,16 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
         className={cn("h-full border-r-0 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
         style={{ width: `${sidebarWidth}px` }}
       >
-        {/* Toggle Button */}
+        {/* Toggle Button - Centered on right edge */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="absolute right-0 top-4 z-50 rounded-full w-9 h-9 p-0 glass-chat-button border border-border/40 shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 translate-x-1/2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-50 rounded-full w-7 h-7 p-0 glass-chat-button border border-border/40 shadow-md hover:scale-110 hover:shadow-lg transition-all duration-300"
             >
-              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
