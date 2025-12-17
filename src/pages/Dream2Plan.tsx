@@ -1186,7 +1186,11 @@ Subject: "Quick question about [their pain point]"
                 BizMap AI
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-                Your AI powered business planner in chatbot form, <span className="gradient-text font-semibold">ready to turn your vision into action</span>
+                {activeTab === 'pmf' ? (
+                  <>Test your product in the market and uncover whether there's <span className="gradient-text font-semibold">genuine demand waiting for you.</span></>
+                ) : (
+                  <>Your AI powered business planner in chatbot form, <span className="gradient-text font-semibold">ready to turn your vision into action</span></>
+                )}
               </p>
             </div>
 
