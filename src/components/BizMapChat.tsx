@@ -525,14 +525,6 @@ export const BizMapChat = ({
             />
           </div>
         )}
-        {chatMode !== 'freeform' && currentStep < wizardSteps.length && (
-          <div className="flex items-center justify-end mb-4">
-            <HelpTooltip
-              content={`Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || 'Business Planning'}. Answer the question to continue building your business plan.`}
-              side="top"
-            />
-          </div>
-        )}
         
         {/* Document Upload Section - Only in freeform mode */}
         {chatMode === 'freeform' && (
