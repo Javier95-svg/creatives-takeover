@@ -140,7 +140,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
     return (
       <TooltipProvider>
         <div 
-          className={cn("h-[700px] border-r border-border bg-background flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
+          className={cn("h-[700px] border-r border-border/50 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
           style={{ width: `${sidebarWidth}px` }}
         >
           {/* Toggle Button */}
@@ -150,7 +150,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute right-0 top-4 z-50 rounded-full w-8 h-8 p-0 bg-background border-2 border-border shadow-lg hover:scale-110 transition-transform translate-x-1/2"
+                className="absolute right-0 top-4 z-50 rounded-full w-9 h-9 p-0 glass-chat-button border border-border/40 shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 translate-x-1/2"
               >
                 {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </Button>
@@ -162,10 +162,10 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
 
           {!isCollapsed && (
             <div className="animate-fade-in">
-              <div className="p-4 border-b border-border">
+              <div className="p-4 border-b border-border/30">
                 <Button
                   onClick={() => navigate('/login')}
-                  className="w-full"
+                  className="w-full rounded-xl h-11 glass-chat-button hover:shadow-lg transition-all duration-300"
                   size="lg"
                 >
                   Sign In
@@ -195,7 +195,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
   return (
     <TooltipProvider>
       <div 
-        className={cn("h-[700px] border-r border-border bg-background flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
+        className={cn("h-[700px] border-r border-border/50 glass-sidebar flex flex-col relative transition-all duration-300 ease-in-out overflow-hidden", className)}
         style={{ width: `${sidebarWidth}px` }}
       >
         {/* Toggle Button */}
@@ -205,7 +205,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
               variant="ghost"
               size="icon"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="absolute right-0 top-4 z-50 rounded-full w-8 h-8 p-0 bg-background border-2 border-border shadow-lg hover:scale-110 transition-transform translate-x-1/2"
+              className="absolute right-0 top-4 z-50 rounded-full w-9 h-9 p-0 glass-chat-button border border-border/40 shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300 translate-x-1/2"
             >
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
@@ -216,14 +216,14 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
         </Tooltip>
         {/* Collapsed State - Mini Icons */}
         {isCollapsed && (
-          <div className="p-2 space-y-2 pt-14 animate-fade-in">
+          <div className="p-3 space-y-2 pt-16 animate-fade-in">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleNewChat}
-                  className="w-full h-10 hover:bg-muted/50"
+                  className="w-full h-11 rounded-xl hover:bg-muted/60 hover:shadow-md transition-all duration-300"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -231,7 +231,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
               <TooltipContent side="right">New Chat</TooltipContent>
             </Tooltip>
 
-            <div className="h-px bg-border my-2" />
+            <div className="h-px bg-border/50 my-2" />
 
             {sortedSessions.slice(0, 5).map((session) => (
               <Tooltip key={session.id}>
@@ -240,8 +240,8 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "w-full h-10 hover:bg-muted/50",
-                      currentSessionId === session.id && "bg-muted"
+                      "w-full h-11 rounded-xl hover:bg-muted/60 hover:shadow-md transition-all duration-300",
+                      currentSessionId === session.id && "bg-primary/10 border border-primary/20"
                     )}
                     onClick={() => handleSessionClick(session)}
                   >
@@ -260,10 +260,10 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
         {!isCollapsed && (
           <div className="animate-fade-in">
             {/* Header - New Chat */}
-            <div className="p-3 border-b border-border">
+            <div className="p-4 border-b border-border/30">
               <Button
                 onClick={handleNewChat}
-                className="w-full justify-start gap-2"
+                className="w-full justify-start gap-2 glass-chat-button rounded-xl h-11 hover:shadow-lg transition-all duration-300"
                 variant="outline"
               >
                 <Plus className="w-4 h-4" />
@@ -272,25 +272,25 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
             </div>
 
             {/* Search */}
-            <div className="p-3 border-b border-border">
+            <div className="p-4 border-b border-border/30">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                 <Input
                   placeholder="Search chats..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9"
+                  className="pl-9 h-10 glass-chat-input border-border/40 rounded-xl backdrop-blur-xl bg-background/60 hover:bg-background/80 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                 />
               </div>
             </div>
 
             {/* Chat List */}
             <ScrollArea className="flex-1">
-              <div className="p-2">
+              <div className="p-3">
                 {loading ? (
                   <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-14 bg-muted/30 rounded animate-pulse" />
+                      <div key={i} className="h-16 bg-muted/30 rounded-xl animate-pulse" />
                     ))}
                   </div>
                 ) : sortedSessions.length === 0 ? (
@@ -301,14 +301,14 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {sortedSessions.map((session) => (
                       <div
                         key={session.id}
                         className={cn(
-                          "group relative p-3 rounded-lg cursor-pointer transition-all",
-                          "hover:bg-muted/50",
-                          currentSessionId === session.id && "bg-muted"
+                          "group relative p-3 rounded-xl cursor-pointer transition-all duration-300",
+                          "hover:bg-muted/60 hover:shadow-md hover:-translate-y-0.5",
+                          currentSessionId === session.id && "bg-primary/10 border border-primary/20 shadow-sm"
                         )}
                         onClick={() => handleSessionClick(session)}
                       >
@@ -319,7 +319,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                                 {session.title}
                               </h4>
                               {session.is_pinned && (
-                                <Pin className="w-3 h-3 text-primary flex-shrink-0" />
+                                <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground whitespace-nowrap">
@@ -333,7 +333,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 flex-shrink-0"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-8 w-8 p-0 flex-shrink-0 rounded-lg"
                               >
                                 <span className="text-lg leading-none">⋯</span>
                               </Button>
@@ -365,12 +365,12 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
             </ScrollArea>
 
             {/* User Footer */}
-            <div className="border-t border-border p-3">
+            <div className="border-t border-border/30 p-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                  <Button variant="ghost" className="w-full justify-start p-3 h-auto rounded-xl hover:bg-muted/60 transition-all duration-300">
                     <div className="flex items-center gap-3 w-full">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-9 w-9 ring-2 ring-primary/20">
                         <AvatarImage src={user.user_metadata?.avatar_url} />
                         <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                           {user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || 'U'}

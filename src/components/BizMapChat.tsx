@@ -415,7 +415,7 @@ export const BizMapChat = ({
         
       {/* Messages Area */}
       <div 
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 relative"
         role="log"
         aria-label="Conversation messages"
         aria-live="polite"
@@ -429,35 +429,35 @@ export const BizMapChat = ({
         {Array.isArray(messages) && messages.map((msg, index) => (
           <div key={msg.id} className="space-y-2">
             <div
-              className={`flex gap-3 sm:gap-4 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
+              className={`flex gap-4 sm:gap-5 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
               style={{ animationDelay: `${index * 50}ms` }}
               role="article"
               aria-label={msg.isBot ? "AI assistant message" : "Your message"}
             >
               {msg.isBot && (
                 <div 
-                  className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10"
+                  className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/25 ring-1 ring-primary/20 backdrop-blur-sm"
                   aria-hidden="true"
                 >
                   <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                 </div>
               )}
               <div
-                className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg ${
+                className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 transition-all duration-300 ${
                   msg.isBot
-                    ? 'bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm hover:shadow-primary/5'
-                    : 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
+                    ? 'message-bot glass-chat border border-primary/10 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10'
+                    : 'message-user bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                 }`}
               >
-                <p className="text-xs sm:text-sm md:text-base leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
+                <p className="text-sm sm:text-base md:text-[15px] leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
               </div>
               {!msg.isBot && (
                 <Avatar 
-                  className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 shadow-lg shadow-primary/30 ring-2 ring-primary/20"
+                  className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 shadow-lg shadow-primary/25 ring-1 ring-primary/20"
                   aria-hidden="true"
                 >
                   <AvatarImage src={userAvatarUrl || undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground flex items-center justify-center">
+                  <AvatarFallback className="bg-primary text-primary-foreground flex items-center justify-center">
                     {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
@@ -465,7 +465,7 @@ export const BizMapChat = ({
             </div>
             {/* Display sources for bot messages */}
             {msg.isBot && msg.sourceMetadata && msg.sourceMetadata.length > 0 && (
-              <div className="ml-12 sm:ml-14">
+              <div className="ml-14 sm:ml-16">
                 <SourceCitation sources={msg.sourceMetadata} />
               </div>
             )}
@@ -474,12 +474,12 @@ export const BizMapChat = ({
 
         {/* Streaming message */}
         {isStreaming && streamingMessage && (
-          <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
-            <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10 animate-pulse">
+          <div className="flex gap-4 sm:gap-5 justify-start animate-fade-in">
+            <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/25 ring-1 ring-primary/20 backdrop-blur-sm animate-pulse">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
             </div>
-            <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm">
-              <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+            <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 message-bot glass-chat border border-primary/10 shadow-lg shadow-black/5">
+              <p className="text-sm sm:text-base md:text-[15px] leading-relaxed whitespace-pre-wrap">
                 {streamingMessage}
                 <span className="inline-block w-0.5 h-5 ml-1 bg-primary animate-pulse" />
               </p>
@@ -489,15 +489,15 @@ export const BizMapChat = ({
 
         {/* Typing indicator */}
         {isTyping && !isStreaming && (
-          <div className="flex gap-3 sm:gap-4 justify-start animate-fade-in">
-            <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-primary/10">
+          <div className="flex gap-4 sm:gap-5 justify-start animate-fade-in">
+            <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/25 ring-1 ring-primary/20 backdrop-blur-sm">
               <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground animate-pulse" />
             </div>
-            <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-muted to-muted/80 border border-border/50 shadow-sm">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="max-w-[80%] sm:max-w-[75%] rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 message-bot glass-chat border border-primary/10 shadow-lg shadow-black/5">
+              <div className="flex gap-2">
+                <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -507,9 +507,9 @@ export const BizMapChat = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-border/50 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-background to-muted/20">
+      <div className="border-t border-border/30 p-4 sm:p-5 md:p-6 bg-gradient-to-br from-background/95 via-background/90 to-muted/10 backdrop-blur-xl">
         {chatMode === 'freeform' && (
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Sparkles className="h-3 w-3 text-primary" />
               I remember your business context and journey
@@ -521,7 +521,7 @@ export const BizMapChat = ({
           </div>
         )}
         {chatMode !== 'freeform' && currentStep < wizardSteps.length && (
-          <div className="flex items-center justify-end mb-3">
+          <div className="flex items-center justify-end mb-4">
             <HelpTooltip
               content={`Step ${currentStep + 1} of ${wizardSteps.length}: ${wizardSteps[currentStep]?.title || 'Business Planning'}. Answer the question to continue building your business plan.`}
               side="top"
@@ -531,7 +531,7 @@ export const BizMapChat = ({
         
         {/* Document Upload Section - Only in freeform mode */}
         {chatMode === 'freeform' && (
-          <div className="mb-3">
+          <div className="mb-4">
             <DocumentUpload
               conversationId={sessionId}
               onDocumentUploaded={(doc) => {
@@ -545,7 +545,7 @@ export const BizMapChat = ({
         
         {/* Attached Files Display */}
         {attachedFiles.length > 0 && (
-          <div className="mb-3">
+          <div className="mb-4">
             <div className="space-y-2">
               {attachedFiles.map((file, index) => {
                 const isImage = file.type.startsWith('image/');
@@ -555,10 +555,10 @@ export const BizMapChat = ({
                 return (
                   <div
                     key={`${file.name}-${index}`}
-                    className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border border-border text-xs"
+                    className="flex items-center gap-3 p-3 bg-muted/40 backdrop-blur-sm rounded-xl border border-border/50 text-xs"
                   >
                     {/* Thumbnail */}
-                    <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-background border border-border flex items-center justify-center">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-background border border-border/50 flex items-center justify-center">
                       {isImage && previewUrl ? (
                         <img 
                           src={previewUrl} 
@@ -589,7 +589,7 @@ export const BizMapChat = ({
                         const newFiles = attachedFiles.filter((_, i) => i !== index);
                         setAttachedFiles(newFiles);
                       }}
-                      className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -600,7 +600,7 @@ export const BizMapChat = ({
           </div>
         )}
 
-        <div className="flex gap-2 sm:gap-3">
+        <div className="flex gap-3">
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -614,7 +614,7 @@ export const BizMapChat = ({
               isTyping || 
               isStreaming
             }
-            className="flex-1 bg-background/80 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-sm sm:text-base min-h-[44px]"
+            className="flex-1 glass-chat-input border-border/40 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all duration-300 text-sm sm:text-base min-h-[52px] rounded-2xl backdrop-blur-xl bg-background/60 hover:bg-background/80"
             aria-label={
               chatMode === 'freeform'
                 ? "Ask your AI co-founder a question about your business"
@@ -645,17 +645,17 @@ export const BizMapChat = ({
               isStreaming
             }
             size="icon"
-            className="h-11 w-11 sm:h-11 sm:w-11 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 min-h-[44px] min-w-[44px] touch-manipulation"
+            className="h-[52px] w-[52px] rounded-2xl glass-chat-button shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed touch-manipulation"
             aria-label="Send message"
             aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
           >
             {isTyping || isStreaming ? (
               <>
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" aria-hidden="true" />
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
                 <span id="sending-status" className="sr-only">Sending message, please wait</span>
               </>
             ) : (
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              <Send className="w-5 h-5" aria-hidden="true" />
             )}
           </Button>
         </div>
