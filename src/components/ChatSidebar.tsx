@@ -31,14 +31,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { ModeSelector } from '@/components/chatbot/ModeSelector';
 
 interface ChatSidebarProps {
   onSessionSelect: (session: ChatSession | null) => void;
   onNewChat: () => void;
   className?: string;
+  modeInfo?: {
+    activeMode: 'planning' | 'gtm';
+    onModeChange: (mode: 'planning' | 'gtm') => void;
+  };
 }
 
-export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSidebarProps) => {
+export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }: ChatSidebarProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -364,6 +369,16 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className }: ChatSideb
                 )}
               </div>
             </ScrollArea>
+
+            {/* Mode Selector - At bottom above user footer */}
+            {modeInfo && (
+              <div className="border-t border-border/30 p-4">
+                <ModeSelector
+                  activeMode={modeInfo.activeMode}
+                  onModeChange={modeInfo.onModeChange}
+                />
+              </div>
+            )}
 
             {/* User Footer */}
             <div className="border-t border-border/30 p-4">

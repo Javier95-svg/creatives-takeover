@@ -58,6 +58,7 @@ const BizMapAI = () => {
   const [switchToFreeformFunc, setSwitchToFreeformFunc] = useState<(() => void) | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [validationScore, setValidationScore] = useState<any>(null);
+  const [modeInfo, setModeInfo] = useState<{ activeMode: 'planning' | 'gtm', onModeChange: (mode: 'planning' | 'gtm') => void } | undefined>(undefined);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -1222,6 +1223,7 @@ Subject: "Quick question about [their pain point]"
                     <ChatSidebar 
                       onSessionSelect={handleSessionSelect}
                       onNewChat={handleNewChat}
+                      modeInfo={modeInfo}
                     />
 
                     {/* Internal Divider */}
@@ -1301,6 +1303,9 @@ Subject: "Quick question about [their pain point]"
                         answers={userAnswers}
                         onChatModeReady={(switchToFreeform) => {
                           setSwitchToFreeformFunc(() => switchToFreeform);
+                        }}
+                        onModeInfoReady={(info) => {
+                          setModeInfo(info);
                         }}
                         sessionManagement={{
                           currentSessionId,

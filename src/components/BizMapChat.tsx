@@ -144,6 +144,7 @@ export const BizMapChat = ({
   currentStep,
   answers,
   onChatModeReady,
+  onModeInfoReady,
   sessionManagement
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
@@ -260,6 +261,16 @@ export const BizMapChat = ({
       onChatModeReady(switchToFreeform);
     }
   }, [switchToFreeform, onChatModeReady]);
+
+  // Expose mode info to parent for sidebar
+  useEffect(() => {
+    if (onModeInfoReady) {
+      onModeInfoReady({
+        activeMode: activeModeForSelector,
+        onModeChange: handleModeChange
+      });
+    }
+  }, [activeModeForSelector, handleModeChange, onModeInfoReady]);
 
   // Conversion prompt logic
   useEffect(() => {
@@ -599,16 +610,6 @@ export const BizMapChat = ({
             </div>
           </div>
         )}
-
-        {/* Mode Selector - Centered above input area */}
-        <div className="mb-4 flex justify-center w-full">
-          <div className="w-full max-w-md">
-            <ModeSelector
-              activeMode={activeModeForSelector}
-              onModeChange={handleModeChange}
-            />
-          </div>
-        </div>
 
         <div className="flex gap-3">
           <Input
