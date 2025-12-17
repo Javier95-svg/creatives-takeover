@@ -33,6 +33,7 @@ interface BizMapChatProps {
   currentStep: number;
   answers: Record<string, string>;
   onChatModeReady?: (switchToFreeform: () => void) => void;
+  onModeInfoReady?: (info: { activeMode: 'planning' | 'gtm', onModeChange: (mode: 'planning' | 'gtm') => void }) => void;
   sessionManagement?: {
     currentSessionId: string | null;
     createNewSession: (title?: string) => Promise<string | null>;
@@ -262,16 +263,6 @@ export const BizMapChat = ({
     }
   }, [switchToFreeform, onChatModeReady]);
 
-  // Expose mode info to parent for sidebar
-  useEffect(() => {
-    if (onModeInfoReady) {
-      onModeInfoReady({
-        activeMode: activeModeForSelector,
-        onModeChange: handleModeChange
-      });
-    }
-  }, [activeModeForSelector, handleModeChange, onModeInfoReady]);
-
   // Conversion prompt logic
   useEffect(() => {
     if (user) {
@@ -408,6 +399,16 @@ export const BizMapChat = ({
       switchToGTMMode();
     }
   }, [switchToPlanningMode, switchToGTMMode]);
+
+  // Expose mode info to parent for sidebar (after definitions)
+  useEffect(() => {
+    if (onModeInfoReady) {
+      onModeInfoReady({
+        activeMode: activeModeForSelector,
+        onModeChange: handleModeChange
+      });
+    }
+  }, [activeModeForSelector, handleModeChange, onModeInfoReady]);
 
   return (
     <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden">
