@@ -1181,15 +1181,15 @@ Subject: "Quick question about [their pain point]"
         
         <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-6 sm:mb-8 overflow-visible">
+            <div className="text-center mb-6 sm:mb-8 overflow-visible" style={{ overflow: 'visible' }}>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2 overflow-visible">
                 BizMap AI
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '2', paddingBottom: '1.25rem', paddingTop: '0.5rem' }}>
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '2.2', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
                 {activeTab === 'pmf' ? (
-                  <>Test your product in the market and uncover whether there's <span className="gradient-text font-semibold">genuine demand waiting for you.</span></>
+                  <>Test your product in the market and uncover whether there's <span className="gradient-text font-semibold" style={{ lineHeight: 'inherit' }}>genuine demand waiting for you.</span></>
                 ) : (
-                  <>Your AI powered business planner in chatbot form, <span className="gradient-text font-semibold">ready to turn your vision into action.</span></>
+                  <>Your AI powered business planner in chatbot form, <span className="gradient-text font-semibold" style={{ lineHeight: 'inherit' }}>ready to turn your vision into action.</span></>
                 )}
               </p>
             </div>
