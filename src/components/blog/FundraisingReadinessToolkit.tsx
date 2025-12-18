@@ -310,7 +310,7 @@ const FundraisingReadinessToolkit = () => {
           <div className="inline-flex items-center gap-2 mb-6">
             <Rocket className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Fundraising Readiness Toolkit
+              Insighta Test
             </h2>
             <span className="text-4xl md:text-5xl">🎯</span>
           </div>
