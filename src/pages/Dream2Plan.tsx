@@ -1250,6 +1250,12 @@ Subject: "Quick question about [their pain point]"
 
                     {/* Enhanced BizMapChat Component with 7 Principles */}
                     <div className="flex-1 min-w-0 h-full overflow-hidden">
+                      {/* #region agent log */}
+                      {(() => {
+                        fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:1253',message:'BizMapChat render start',data:{currentStep,currentGTMStep,gtmAnswersCount:Object.keys(gtmAnswers||{}).length,defaultGTMStepsExists:!!defaultGTMSteps,defaultGTMStepsLength:defaultGTMSteps?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                        return null;
+                      })()}
+                      {/* #endregion */}
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
@@ -1321,7 +1327,13 @@ Subject: "Quick question about [their pain point]"
                         currentStep={currentStep}
                         answers={userAnswers}
                         onGTMStepComplete={(step, answer) => {
+                          // #region agent log
+                          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:1323',message:'onGTMStepComplete called',data:{step,answerLength:answer?.length,defaultGTMStepsExists:!!defaultGTMSteps,defaultGTMStepsLength:defaultGTMSteps?.length,stepInBounds:step>=0&&step<(defaultGTMSteps?.length||0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                          // #endregion
                           setCurrentGTMStep(step + 1);
+                          // #region agent log
+                          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:1327',message:'onGTMStepComplete - before array access',data:{step,defaultGTMStepsStepExists:!!defaultGTMSteps?.[step],stepKey:defaultGTMSteps?.[step]?.key},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                          // #endregion
                           setGtmAnswers(prev => ({
                             ...prev,
                             [defaultGTMSteps[step].key]: answer

@@ -11,7 +11,13 @@ interface GTMProgressProps {
 }
 
 export const GTMProgress = ({ currentStep, totalSteps, steps }: GTMProgressProps) => {
-  const progressPercentage = (currentStep / totalSteps) * 100;
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GTMProgress.tsx:13',message:'GTMProgress render',data:{currentStep,totalSteps,stepsLength:steps?.length,stepsExists:!!steps,isValidStep:currentStep>=0&&currentStep<totalSteps,stepsIsArray:Array.isArray(steps)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
+  const progressPercentage = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GTMProgress.tsx:16',message:'GTMProgress - after percentage calc',data:{progressPercentage,willRenderSteps:steps?.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
 
   return (
     <div className="w-full space-y-4">
@@ -31,13 +37,13 @@ export const GTMProgress = ({ currentStep, totalSteps, steps }: GTMProgressProps
 
       {/* Step List */}
       <div className="space-y-2">
-        {steps.map((step, index) => {
+        {steps && Array.isArray(steps) && steps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
           
           return (
             <div
-              key={step.key}
+              key={step?.key || `step-${index}`}
               className={cn(
                 "flex items-center gap-3 p-2 rounded-md transition-colors",
                 isCurrent && "bg-primary/10 border border-primary/20",
@@ -60,7 +66,7 @@ export const GTMProgress = ({ currentStep, totalSteps, steps }: GTMProgressProps
                   isCurrent && "text-primary",
                   isCompleted && "line-through"
                 )}>
-                  {index + 1}. {step.title}
+                  {index + 1}. {step?.title || `Step ${index + 1}`}
                 </div>
               </div>
             </div>

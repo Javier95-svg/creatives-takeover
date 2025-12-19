@@ -265,6 +265,10 @@ export const BizMapChat = ({
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:266',message:'BizMapChat component render start',data:{currentStep,currentGTMStep,gtmStepsLength:gtmSteps?.length,hasGtmAnswers:Object.keys(gtmAnswers||{}).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+
   const { 
     messages, 
     isTyping, 
@@ -318,6 +322,10 @@ export const BizMapChat = ({
       }
     } : undefined
   });
+
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:324',message:'useChatbot hook returned',data:{chatMode,gtmModeExists:!!gtmMode,gtmModeCurrentStep:gtmMode?.currentStep,gtmModeTotalSteps:gtmMode?.totalSteps,hasMessages:!!messages,gtmModeType:typeof gtmMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ 
@@ -473,8 +481,18 @@ export const BizMapChat = ({
   };
 
   const getCurrentPlaceholder = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:475',message:'getCurrentPlaceholder called',data:{chatMode,gtmModeExists:!!gtmMode,gtmModeCurrentStep:gtmMode?.currentStep,currentGTMStep,gtmStepsLength:gtmSteps?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     if (chatMode === 'gtm-strategy') {
-      const currentGTMStepData = gtmSteps[gtmMode?.currentStep || currentGTMStep];
+      const stepIndex = gtmMode?.currentStep || currentGTMStep;
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:478',message:'GTM mode placeholder - before array access',data:{stepIndex,gtmStepsLength:gtmSteps?.length,isValidIndex:stepIndex>=0&&stepIndex<(gtmSteps?.length||0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      const currentGTMStepData = gtmSteps[stepIndex];
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:481',message:'GTM mode placeholder - after array access',data:{stepDataExists:!!currentGTMStepData,hasPlaceholder:!!currentGTMStepData?.placeholder},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       return currentGTMStepData?.placeholder || "Type your answer here...";
     }
     if (currentStep < wizardSteps.length) {
@@ -533,15 +551,20 @@ export const BizMapChat = ({
         )}
         
         {/* GTM Progress Indicator */}
-        {chatMode === 'gtm-strategy' && gtmMode && (
-          <div className="mb-4 p-4 bg-muted/30 rounded-lg border border-border/50">
-            <GTMProgress 
-              currentStep={gtmMode.currentStep || currentGTMStep}
-              totalSteps={gtmSteps.length}
-              steps={gtmSteps}
-            />
-          </div>
-        )}
+        {chatMode === 'gtm-strategy' && gtmMode && (() => {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:536',message:'GTM Progress render - before component',data:{gtmModeCurrentStep:gtmMode?.currentStep,currentGTMStep,gtmStepsLength:gtmSteps?.length,gtmStepsExists:!!gtmSteps},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
+          return (
+            <div className="mb-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+              <GTMProgress 
+                currentStep={gtmMode.currentStep || currentGTMStep}
+                totalSteps={gtmSteps.length}
+                steps={gtmSteps}
+              />
+            </div>
+          );
+        })()}
         
         {Array.isArray(messages) && messages.map((msg, index) => (
           <div key={msg.id} className="space-y-2">

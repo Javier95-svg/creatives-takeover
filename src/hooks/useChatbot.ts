@@ -2374,13 +2374,18 @@ What specific aspect of your business would you like to focus on first?`;
     } : null,
     
     // GTM mode properties
-    gtmMode: config.gtmMode?.enabled ? {
-      currentStep: gtmStep,
-      totalSteps: config.gtmMode.steps.length,
-      answers: gtmAnswers,
-      setGtmStep,
-      isComplete: gtmStep >= (config.gtmMode.steps.length || 0)
-    } : null,
+    gtmMode: (() => {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:2377',message:'GTM mode return value calculation',data:{gtmModeEnabled:config.gtmMode?.enabled,gtmStep,gtmModeStepsLength:config.gtmMode?.steps?.length,gtmAnswersCount:Object.keys(gtmAnswers||{}).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      return config.gtmMode?.enabled ? {
+        currentStep: gtmStep,
+        totalSteps: config.gtmMode.steps.length,
+        answers: gtmAnswers,
+        setGtmStep,
+        isComplete: gtmStep >= (config.gtmMode.steps.length || 0)
+      } : null;
+    })(),
     
     // Enhanced business planning features
     conversationState,
