@@ -28,7 +28,15 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logError('React Error Boundary caught error', error, {
       componentStack: errorInfo.componentStack,
+      errorStack: error.stack,
     });
+
+    // Log to console in development for easier debugging
+    if (import.meta.env.DEV) {
+      console.error('ErrorBoundary caught error:', error);
+      console.error('Error info:', errorInfo);
+      console.error('Component stack:', errorInfo.componentStack);
+    }
 
     this.props.onError?.(error, errorInfo);
   }
@@ -61,8 +69,15 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4">
               {import.meta.env.DEV && this.state.error && (
-                <div className="p-3 bg-muted rounded-md text-sm font-mono overflow-auto max-h-40">
-                  {this.state.error.message}
+                <div className="p-3 bg-muted rounded-md text-sm font-mono overflow-auto max-h-60">
+                  <div className="font-semibold mb-2 text-foreground">Error Message:</div>
+                  <div className="mb-3 text-destructive">{this.state.error.message}</div>
+                  {this.state.error.stack && (
+                    <>
+                      <div className="font-semibold mb-2 text-foreground">Stack Trace:</div>
+                      <div className="text-xs whitespace-pre-wrap text-muted-foreground">{this.state.error.stack}</div>
+                    </>
+                  )}
                 </div>
               )}
               <div className="flex gap-2">

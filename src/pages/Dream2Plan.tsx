@@ -188,23 +188,29 @@ const BizMapAI = () => {
   // Sync currentSessionId changes from useChatSessions
   useEffect(() => {
     if (currentSessionId) {
-      const session = getSession(currentSessionId);
-      if (session) {
-        console.log('🟢 Dream2Plan: Syncing session state for', currentSessionId);
-        // Map session answers to userAnswers structure  
-        const mappedAnswers = {
-          overview: session.answers.overview || "",
-          market: session.answers.market || "",
-          problem: session.answers.problem || "",
-          solution: session.answers.solution || "",
-          channels: session.answers.channels || "",
-          pricing: session.answers.pricing || "",
-          goals: session.answers.goals || ""
-        };
-        
-        setUserAnswers(mappedAnswers);
-        setCurrentStep(session.current_step);
-        setLaunchReport(session.launch_report || "");
+      try {
+        const session = getSession(currentSessionId);
+        if (session && session.answers) {
+          console.log('🟢 Dream2Plan: Syncing session state for', currentSessionId);
+          // Map session answers to userAnswers structure with safe access
+          const answers = session.answers || {};
+          const mappedAnswers = {
+            overview: answers.overview || "",
+            market: answers.market || "",
+            problem: answers.problem || "",
+            solution: answers.solution || "",
+            channels: answers.channels || "",
+            pricing: answers.pricing || "",
+            goals: answers.goals || ""
+          };
+          
+          setUserAnswers(mappedAnswers);
+          setCurrentStep(session.current_step || 0);
+          setLaunchReport(session.launch_report || "");
+        }
+      } catch (error) {
+        console.error('Error syncing session state:', error);
+        // Don't throw - just log the error
       }
     }
   }, [currentSessionId, getSession]);
@@ -213,36 +219,41 @@ const BizMapAI = () => {
   const handleSessionSelect = (session: ChatSession | null) => {
     console.log('🟢 Dream2Plan: handleSessionSelect called', session?.id);
     if (session) {
-      console.log('🟢 Setting currentSessionId to:', session.id);
-      setIsLoadingSession(true);
-      
-      // Set the current session ID - this will trigger message loading in useChatbot
-      // Use the setCurrentSessionId from useChatSessions to ensure state sync
-      setCurrentSessionId(session.id);
-      
-      // Properly map session answers to userAnswers structure  
-      const mappedAnswers = {
-        overview: session.answers.overview || "",
-        market: session.answers.market || "",
-        problem: session.answers.problem || "",
-        solution: session.answers.solution || "",
-        channels: session.answers.channels || "",
-        pricing: session.answers.pricing || "",
-        goals: session.answers.goals || ""
-      };
-      
-      setUserAnswers(mappedAnswers);
-      setCurrentStep(session.current_step);
-      setLaunchReport(session.launch_report || "");
-      
-      // Clear existing messages immediately to show loading state
-      setMessages([]);
-      
-      // Reset loading state after a short delay to allow messages to load
-      setTimeout(() => setIsLoadingSession(false), 1000);
-      
-      // Messages will be loaded automatically by useChatbot hook when currentSessionId changes
-      // The useEffect in useChatbot will detect the change and call loadMessagesFromSession
+      try {
+        console.log('🟢 Setting currentSessionId to:', session.id);
+        setIsLoadingSession(true);
+        
+        // Set the current session ID - this will trigger message loading in useChatbot
+        // Use the setCurrentSessionId from useChatSessions to ensure state sync
+        setCurrentSessionId(session.id);
+        
+        // Properly map session answers to userAnswers structure with safe access
+        const answers = session.answers || {};
+        const mappedAnswers = {
+          overview: answers.overview || "",
+          market: answers.market || "",
+          problem: answers.problem || "",
+          solution: answers.solution || "",
+          channels: answers.channels || "",
+          pricing: answers.pricing || "",
+          goals: answers.goals || ""
+        };
+        
+        setUserAnswers(mappedAnswers);
+        setCurrentStep(session.current_step || 0);
+        setLaunchReport(session.launch_report || "");
+        
+        // Clear existing messages immediately to show loading state
+        setMessages([]);
+        
+        // Messages will be loaded automatically by useChatbot hook when currentSessionId changes
+        // The useEffect in useChatbot will detect the change and call loadMessagesFromSession
+        // Loading state is managed by useChatbot's isTyping state
+      } catch (error) {
+        console.error('Error in handleSessionSelect:', error);
+        toast.error('Failed to load session');
+        setIsLoadingSession(false);
+      }
     } else {
       // Reset for new chat
       setCurrentSessionId(null);
