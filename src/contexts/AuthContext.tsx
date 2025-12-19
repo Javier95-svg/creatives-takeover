@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logError, logInfo } from '@/lib/logger';
@@ -28,6 +28,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // Track timeout IDs to prevent memory leaks
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -44,13 +46,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);
           if (pendingCalendlyUrl) {
             // Small delay to ensure UI is ready, then redirect
-            setTimeout(() => {
+            const calendlyTimeout = setTimeout(() => {
               localStorage.removeItem(CALENDLY_REDIRECT_KEY);
               window.open(pendingCalendlyUrl, '_blank', 'noopener,noreferrer');
+              timeoutRefs.current.delete(calendlyTimeout);
             }, 1000);
+            timeoutRefs.current.add(calendlyTimeout);
           }
           
-          setTimeout(async () => {
+          const profileTimeout = setTimeout(async () => {
             // Verify profile exists or create it
             let profileExists = false;
             let isNewProfile = false;
@@ -192,7 +196,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } else {
               logError('Profile does not exist after sign in - user may experience issues', null, { userId: session.user.id });
             }
+            timeoutRefs.current.delete(profileTimeout);
           }, 0);
+          timeoutRefs.current.add(profileTimeout);
         }
       }
     );
@@ -204,7 +210,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      // Clear all pending timeouts to prevent memory leaks
+      timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+      timeoutRefs.current.clear();
+    };
   }, []);
 
   const createUserProfile = async (user: User): Promise<boolean> => {

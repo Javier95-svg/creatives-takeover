@@ -23,6 +23,7 @@ import { PicturesGallery } from "@/components/profile/PicturesGallery";
 import { useProfileData } from "@/hooks/useProfileData";
 import { toast } from "sonner";
 import { logError } from "@/lib/logger";
+import DOMPurify from "dompurify";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
@@ -386,7 +387,10 @@ const Profile = () => {
                       <div 
                         className="text-muted-foreground mb-4 prose prose-sm max-w-none"
                         dangerouslySetInnerHTML={{ 
-                          __html: profile.bio_html || profile.bio || '' 
+                          __html: DOMPurify.sanitize(profile.bio_html || profile.bio || '', {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
+                            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+                          })
                         }}
                       />
                     )}

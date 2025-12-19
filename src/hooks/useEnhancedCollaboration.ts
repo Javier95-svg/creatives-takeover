@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { logError } from '@/lib/logger';
 
 export interface CollaborationMessage {
   id: string;
@@ -181,7 +182,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       });
 
     if (error) {
-      console.error('Error sending message:', error);
+      logError('Error sending message', error);
     }
 
     // Log activity
@@ -204,7 +205,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       });
 
     if (error) {
-      console.error('Error updating user status:', error);
+      logError('Error updating user status', error);
     }
   }, [user]);
 
@@ -216,7 +217,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       .eq('id', notificationId);
 
     if (error) {
-      console.error('Error marking notification as read:', error);
+      logError('Error marking notification as read', error);
     }
   }, []);
 
@@ -234,7 +235,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       });
 
     if (error) {
-      console.error('Error logging activity:', error);
+      logError('Error logging activity', error);
     }
   }, [user, sessionId]);
 
@@ -254,7 +255,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       .single();
 
     if (error) {
-      console.error('Error starting call:', error);
+      logError('Error starting call', error);
       return;
     }
 
@@ -280,7 +281,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
       .eq('id', callId);
 
     if (error) {
-      console.error('Error ending call:', error);
+      logError('Error ending call', error);
       return;
     }
 
@@ -419,7 +420,7 @@ export const useEnhancedCollaboration = (sessionId: string) => {
         }
       } catch (error) {
         if (!signal.aborted) {
-          console.error('Error initializing collaboration:', error);
+          logError('Error initializing collaboration', error);
           setLoading(false);
         }
       }

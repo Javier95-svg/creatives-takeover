@@ -5,7 +5,7 @@ import App from './App.tsx'
 import './index.css'
 import posthog from 'posthog-js'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { logError } from './lib/logger'
+import { logError, logInfo, logWarn } from './lib/logger'
 
 const helmetContext = {};
 
@@ -58,20 +58,21 @@ if (import.meta.env.VITE_POSTHOG_API_KEY) {
       api_host: (import.meta.env.VITE_POSTHOG_API_HOST as string) || 'https://app.posthog.com',
       autocapture: true,
     })
-    // Debug helpers: confirm init and send a test event (remove in production)
-    // eslint-disable-next-line no-console
-    console.log('PostHog init OK — test event will be sent. Masked key:', (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...')
+    // Debug helpers: confirm init and send a test event (only in development)
+    if (import.meta.env.DEV) {
+      logInfo('PostHog init OK — test event will be sent', { 
+        maskedKey: (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...' 
+      });
+    }
     try {
       posthog.capture('debug_posthog_init')
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('PostHog capture debug event failed:', err)
+      logWarn('PostHog capture debug event failed', { error: err })
     }
   } catch (e) {
     // Fail silently in case posthog init causes issues during build or runtime.
     // This prevents a crash if PostHog isn't available in some environments.
-    // eslint-disable-next-line no-console
-    console.warn('PostHog init failed:', e)
+    logWarn('PostHog init failed', { error: e })
   }
 }
 
