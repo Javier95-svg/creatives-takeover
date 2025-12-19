@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
-import { withErrorBoundary, logInfo, logWarn, logError } from "../_shared/logger.ts";
+import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
 
@@ -37,7 +37,7 @@ export class CreditService {
       .single();
 
     if (error) {
-      logError('Error fetching credit balance', { error, userId });
+      console.error('Error fetching credit balance:', error);
       return null;
     }
     return data;
@@ -53,19 +53,16 @@ export class CreditService {
   }
 
   // Deduct credits for API operations
-  // Uses atomic update pattern to prevent race conditions
   async deductCredits(transaction: CreditTransaction): Promise<{ success: boolean; newBalance?: number; error?: string }> {
     if (transaction.amount > 0) {
       transaction.amount = -transaction.amount; // Ensure negative for deduction
     }
 
-    const deductionAmount = Math.abs(transaction.amount);
-
     try {
-      // Read current balance (for validation and atomic check)
+      // Start transaction
       const { data: currentCredits, error: fetchError } = await this.supabase
         .from('user_credits')
-        .select('balance, monthly_quota')
+        .select('balance')
         .eq('user_id', transaction.user_id)
         .single();
 
@@ -73,111 +70,36 @@ export class CreditService {
         return { success: false, error: 'User credit record not found' };
       }
 
-      // Check if user has sufficient credits
-      const totalAvailable = (currentCredits.balance || 0) + (currentCredits.monthly_quota || 0);
-      if (totalAvailable < deductionAmount) {
+      const newBalance = currentCredits.balance + transaction.amount; // amount is negative
+      if (newBalance < 0) {
         return { success: false, error: 'Insufficient credits' };
       }
 
-      // Calculate new values (deduct from balance first, then quota)
-      let newBalance = currentCredits.balance;
-      let newQuota = currentCredits.monthly_quota;
-      let usedFromBalance = 0;
-      let usedFromQuota = 0;
-
-      if (currentCredits.balance >= deductionAmount) {
-        // Use balance only
-        usedFromBalance = deductionAmount;
-        newBalance = currentCredits.balance - usedFromBalance;
-      } else {
-        // Use balance + quota
-        usedFromBalance = currentCredits.balance;
-        usedFromQuota = deductionAmount - usedFromBalance;
-        newBalance = 0;
-        newQuota = currentCredits.monthly_quota - usedFromQuota;
-      }
-
-      // ATOMIC UPDATE: Update with WHERE clause to ensure balance hasn't changed
-      // This prevents race conditions - if balance changed, no rows will be updated
-      const { data: updateResult, error: updateError } = await this.supabase
+      // Update balance
+      const { error: updateError } = await this.supabase
         .from('user_credits')
-        .update({ 
-          balance: newBalance,
-          monthly_quota: newQuota
-        })
-        .eq('user_id', transaction.user_id)
-        .gte('balance', currentCredits.balance - usedFromBalance) // Ensure balance hasn't decreased
-        .gte('monthly_quota', currentCredits.monthly_quota - usedFromQuota) // Ensure quota hasn't decreased
-        .select('balance, monthly_quota')
-        .single();
+        .update({ balance: newBalance })
+        .eq('user_id', transaction.user_id);
 
       if (updateError) {
-        logError('Error updating credit balance', { error: updateError, userId: transaction.user_id, amount: deductionAmount });
+        console.error('Error updating credit balance:', updateError);
         return { success: false, error: 'Failed to update balance' };
       }
 
-      // If no rows were updated, balance was changed concurrently
-      if (!updateResult) {
-        // Re-check to provide better error message
-        const { data: recheck } = await this.supabase
-          .from('user_credits')
-          .select('balance, monthly_quota')
-          .eq('user_id', transaction.user_id)
-          .single();
+      // Log transaction
+      const { error: logError } = await this.supabase
+        .from('credit_transactions')
+        .insert([transaction]);
 
-        if (recheck) {
-          const recheckTotal = (recheck.balance || 0) + (recheck.monthly_quota || 0);
-          if (recheckTotal < deductionAmount) {
-            return { success: false, error: 'Insufficient credits (balance may have changed)' };
-          }
-        }
-
-        logWarn('Concurrent credit modification detected', { userId: transaction.user_id, amount: deductionAmount });
-        return { success: false, error: 'Concurrent modification detected. Please try again.' };
+      if (logError) {
+        console.error('Error logging credit transaction:', logError);
+        // Don't fail the operation for logging errors
       }
 
-      // Success - log transaction (non-blocking with retry)
-      const logTransaction = async (retries = 3): Promise<void> => {
-        for (let attempt = 0; attempt < retries; attempt++) {
-          const { error: logErr } = await this.supabase
-            .from('credit_transactions')
-            .insert([{
-              ...transaction,
-              metadata: {
-                ...transaction.metadata,
-                usedFromBalance,
-                usedFromQuota,
-                previousBalance: currentCredits.balance,
-                previousQuota: currentCredits.monthly_quota
-              }
-            }]);
-
-          if (!logErr) return;
-
-          if (attempt < retries - 1) {
-            const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } else {
-            // Final attempt failed - log to error tracking
-            logError('CRITICAL: Failed to log credit transaction after retries', { 
-              error: logErr, 
-              userId: transaction.user_id, 
-              attempts: retries,
-              transaction 
-            });
-          }
-        }
-      };
-
-      // Log transaction asynchronously (don't block response)
-      logTransaction().catch(err => {
-        logError('Non-critical: Transaction log failed', { error: err, userId: transaction.user_id });
-      });
-
-      return { success: true, newBalance: updateResult.balance };
+      return { success: true, newBalance };
 
     } catch (error) {
-      logError('Error in deductCredits', { error, userId: transaction.user_id, amount: deductionAmount });
+      console.error('Error in deductCredits:', error);
       return { success: false, error: 'Transaction failed' };
     }
   }
@@ -208,23 +130,23 @@ export class CreditService {
         .eq('user_id', transaction.user_id);
 
       if (updateError) {
-        logError('Error updating credit balance', { error: updateError, userId: transaction.user_id });
+        console.error('Error updating credit balance:', updateError);
         return { success: false, error: 'Failed to update balance' };
       }
 
       // Log transaction
-      const { error: logErr } = await this.supabase
+      const { error: logError } = await this.supabase
         .from('credit_transactions')
         .insert([transaction]);
 
-      if (logErr) {
-        logError('Error logging credit transaction', { error: logErr, userId: transaction.user_id });
+      if (logError) {
+        console.error('Error logging credit transaction:', logError);
       }
 
       return { success: true, newBalance };
 
     } catch (error) {
-      logError('Error in addCredits', { error, userId: transaction.user_id });
+      console.error('Error in addCredits:', error);
       return { success: false, error: 'Transaction failed' };
     }
   }
@@ -239,7 +161,7 @@ export class CreditService {
       .limit(limit);
 
     if (error) {
-      logError('Error fetching transaction history', { error, userId, limit });
+      console.error('Error fetching transaction history:', error);
       return [];
     }
     return data || [];
@@ -253,7 +175,7 @@ export class CreditService {
       
       // If user already has a record (even with 0 balance), don't overwrite
       if (existing !== null) {
-        logInfo('User already has credit record, skipping initialization', { 
+        console.log('User already has credit record, skipping initialization', { 
           userId, 
           existingBalance: existing.balance 
         });
@@ -291,10 +213,10 @@ export class CreditService {
       // If insert failed due to conflict (race condition), user already exists
       if (insertError) {
         if (insertError.code === '23505') { // Unique violation
-          logInfo('Credit record already exists (race condition), skipping initialization', { userId });
+          console.log('Credit record already exists (race condition), skipping initialization', { userId });
           return { success: true, isNewUser: false };
         }
-        logError('Error initializing user credits', { error: insertError, userId });
+        console.error('Error initializing user credits:', insertError);
         return { success: false, isNewUser: false };
       }
 
@@ -311,14 +233,14 @@ export class CreditService {
           }]);
 
         if (txError) {
-          logError('Error logging welcome transaction', { error: txError, userId });
+          console.error('Error logging welcome transaction:', txError);
           // Don't fail initialization if transaction logging fails
         }
       }
 
       return { success: true, isNewUser };
     } catch (error) {
-      logError('Error in initializeUserCredits', { error, userId });
+      console.error('Error in initializeUserCredits:', error);
       return { success: false, isNewUser: false };
     }
   }
@@ -402,7 +324,7 @@ export default withErrorBoundary(async function handler(req: Request) {
     }
 
   } catch (error) {
-    logError('Error in credit-service function', { error });
+    console.error('Error in credit-service function:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

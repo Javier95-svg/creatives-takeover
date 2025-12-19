@@ -19,7 +19,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { SourceCitation } from "./chatbot/SourceCitation";
 import { SearchResults } from "./chatbot/SearchResults";
 import { ModeSelector } from "./chatbot/ModeSelector";
-import { GTMProgress } from "./GTMProgress";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -41,18 +40,6 @@ interface BizMapChatProps {
     setCurrentSessionId: (sessionId: string | null) => void;
     updateSession: (sessionId: string, updates: any) => Promise<void>;
   };
-  // GTM mode props
-  gtmSteps?: Array<{
-    key: string;
-    title?: string;
-    question: string;
-    transition?: string;
-    placeholder?: string;
-  }>;
-  onGTMStepComplete?: (step: number, answer: string) => void;
-  onGTMComplete?: (answers: Record<string, string>) => void;
-  currentGTMStep?: number;
-  gtmAnswers?: Record<string, string>;
 }
 
 // Helper function to categorize message importance
@@ -151,73 +138,6 @@ const extractKeyContent = (messages: ChatMessage[], businessContext: Record<stri
   };
 };
 
-// Define GTM steps - exported for use in Dream2Plan
-export const defaultGTMSteps = [
-  {
-    key: "customer_segmentation",
-    title: "Customer Segmentation",
-    question: "Who are your target customer segments? Describe the different groups of people who would buy your product.",
-    placeholder: "Example: Small business owners, freelancers, and creative professionals...",
-    transition: "Great segmentation! Now let's create detailed buyer personas..."
-  },
-  {
-    key: "buyer_personas",
-    title: "Buyer Personas",
-    question: "For your primary segment, create a detailed buyer persona. What are their demographics, pain points, goals, and behaviors?",
-    placeholder: "Example: Sarah, 32, marketing manager, struggles with time management...",
-    transition: "Excellent persona! Now let's define your market positioning..."
-  },
-  {
-    key: "positioning",
-    title: "Positioning",
-    question: "How do you want to be positioned in the market? What makes you different from competitors?",
-    placeholder: "Example: The fastest, most affordable solution for busy professionals...",
-    transition: "Strong positioning! Let's determine your pricing strategy..."
-  },
-  {
-    key: "pricing_strategy",
-    title: "Pricing Strategy",
-    question: "What's your pricing model? How did you arrive at this price point?",
-    placeholder: "Example: $29/month subscription, based on competitor analysis and value proposition...",
-    transition: "Smart pricing! Now let's plan your distribution channels..."
-  },
-  {
-    key: "distribution_channels",
-    title: "Distribution Channels",
-    question: "How will customers discover and purchase your product? What channels will you use?",
-    placeholder: "Example: Direct website sales, social media marketing, and partner referrals...",
-    transition: "Great channel mix! Let's outline your marketing tactics..."
-  },
-  {
-    key: "marketing_tactics",
-    title: "Marketing Tactics",
-    question: "What specific marketing tactics will you use to acquire customers? List 3-5 tactics.",
-    placeholder: "Example: Content marketing, paid social ads, email campaigns, webinars, and SEO...",
-    transition: "Solid tactics! Now let's design your sales process..."
-  },
-  {
-    key: "sales_process",
-    title: "Sales Process",
-    question: "How will you convert leads to customers? Describe your sales funnel.",
-    placeholder: "Example: Lead magnet → Email nurture → Free trial → Demo call → Conversion...",
-    transition: "Clear sales process! Let's create your launch plan..."
-  },
-  {
-    key: "launch_plan",
-    title: "Launch Plan",
-    question: "What's your launch timeline? When and how will you go to market?",
-    placeholder: "Example: Soft launch in 2 weeks, beta with 50 users, full launch in 6 weeks...",
-    transition: "Exciting launch plan! Finally, let's define your success metrics..."
-  },
-  {
-    key: "kpis_metrics",
-    title: "KPIs & Metrics",
-    question: "How will you measure success? What are your key performance indicators?",
-    placeholder: "Example: CAC < $50, LTV > $500, 20% conversion rate, 5% monthly churn...",
-    transition: "Perfect! Your GTM strategy is complete. Generating your strategy document..."
-  }
-];
-
 export const BizMapChat = ({ 
   wizardSteps, 
   onStepComplete, 
@@ -226,12 +146,7 @@ export const BizMapChat = ({
   answers,
   onChatModeReady,
   onModeInfoReady,
-  sessionManagement,
-  gtmSteps = defaultGTMSteps,
-  onGTMStepComplete,
-  onGTMComplete,
-  currentGTMStep = 0,
-  gtmAnswers = {}
+  sessionManagement
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -265,13 +180,6 @@ export const BizMapChat = ({
 
   console.log('🎯 BizMapChat initialized:', { currentStep, totalSteps: wizardSteps.length, hasAnswers: Object.keys(answers).length });
 
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:266',message:'BizMapChat component render start',data:{currentStep,currentGTMStep,gtmStepsLength:gtmSteps?.length,hasGtmAnswers:Object.keys(gtmAnswers||{}).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-
-  // Determine initial mode - default to wizard/planning mode
-  // We can't use chatMode from useChatbot here because it creates a circular dependency
-  // Instead, we'll enable both modes and let the hook manage the active mode
   const { 
     messages, 
     isTyping, 
@@ -285,8 +193,7 @@ export const BizMapChat = ({
     conversionPromptShown,
     conversionPromptDismissed,
     trackConversionEvent,
-    sessionId,
-    gtmMode
+    sessionId
   } = useChatbot({
     enableNLU: true,
     enableDynamicFAQ: false,
@@ -294,7 +201,6 @@ export const BizMapChat = ({
     enablePersonalization: true,
     enableAIGeneratedAnswers: false,
     sessionManagement,
-    // Enable wizard mode by default (planning mode)
     wizardMode: {
       enabled: true,
       currentStep,
@@ -310,27 +216,8 @@ export const BizMapChat = ({
         onStepComplete(step, answer);
       },
       onWizardComplete
-    },
-    // Enable GTM mode as well (will be active when chatMode switches to 'gtm-strategy')
-    gtmMode: {
-      enabled: true,
-      currentStep: currentGTMStep,
-      steps: gtmSteps,
-      answers: gtmAnswers,
-      onStepComplete: (step, answer) => {
-        // Call parent handler
-        onGTMStepComplete?.(step, answer);
-      },
-      onGTMComplete: (finalAnswers) => {
-        // Call parent handler
-        onGTMComplete?.(finalAnswers);
-      }
     }
   });
-
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:324',message:'useChatbot hook returned',data:{chatMode,gtmModeExists:!!gtmMode,gtmModeCurrentStep:gtmMode?.currentStep,gtmModeTotalSteps:gtmMode?.totalSteps,hasMessages:!!messages,gtmModeType:typeof gtmMode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ 
@@ -486,23 +373,8 @@ export const BizMapChat = ({
   };
 
   const getCurrentPlaceholder = () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:475',message:'getCurrentPlaceholder called',data:{chatMode,gtmModeExists:!!gtmMode,gtmModeCurrentStep:gtmMode?.currentStep,currentGTMStep,gtmStepsLength:gtmSteps?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     if (chatMode === 'gtm-strategy') {
-      const stepIndex = gtmMode?.currentStep ?? currentGTMStep ?? 0;
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:478',message:'GTM mode placeholder - before array access',data:{stepIndex,gtmStepsLength:gtmSteps?.length,isValidIndex:stepIndex>=0&&stepIndex<(gtmSteps?.length||0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      // Defensive check: ensure gtmSteps exists and stepIndex is valid
-      if (!gtmSteps || !Array.isArray(gtmSteps) || stepIndex < 0 || stepIndex >= gtmSteps.length) {
-        return "Type your answer here...";
-      }
-      const currentGTMStepData = gtmSteps[stepIndex];
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:481',message:'GTM mode placeholder - after array access',data:{stepDataExists:!!currentGTMStepData,hasPlaceholder:!!currentGTMStepData?.placeholder},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      return currentGTMStepData?.placeholder || "Type your answer here...";
+      return "Ask about your go-to-market strategy...";
     }
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder || "Type your answer here...";
@@ -558,27 +430,6 @@ export const BizMapChat = ({
         {isStreaming && searchStatus !== 'none' && (
           <SearchResults status={searchStatus} sourceCount={searchSourceCount} />
         )}
-        
-        {/* GTM Progress Indicator */}
-        {chatMode === 'gtm-strategy' && gtmMode && (() => {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:536',message:'GTM Progress render - before component',data:{gtmModeCurrentStep:gtmMode?.currentStep,currentGTMStep,gtmStepsLength:gtmSteps?.length,gtmStepsExists:!!gtmSteps},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          // #endregion
-          // Defensive check: ensure gtmSteps exists and is valid before rendering
-          if (!gtmSteps || !Array.isArray(gtmSteps) || gtmSteps.length === 0) {
-            return null;
-          }
-          const safeCurrentStep = Math.max(0, Math.min(gtmMode?.currentStep ?? currentGTMStep ?? 0, gtmSteps.length - 1));
-          return (
-            <div className="mb-4 p-4 bg-muted/30 rounded-lg border border-border/50">
-              <GTMProgress 
-                currentStep={safeCurrentStep}
-                totalSteps={gtmSteps.length}
-                steps={gtmSteps}
-              />
-            </div>
-          );
-        })()}
         
         {Array.isArray(messages) && messages.map((msg, index) => (
           <div key={msg.id} className="space-y-2">

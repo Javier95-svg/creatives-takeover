@@ -41,13 +41,6 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-interface GTMMode {
-  enabled: boolean;
-  currentStep: number;
-  steps: any[];
-  answers: Record<string, string>;
-}
-
 export const streamChat = async (
   message: string,
   sessionId: string,
@@ -61,9 +54,7 @@ export const streamChat = async (
   onChunk?: (chunk: string) => void,
   onComplete?: (fullMessage: string, quickActions?: Array<{text: string, id: string}>, sources?: any[]) => void,
   onSources?: (sources: any[]) => void,
-  onError?: (error: Error) => void,
-  gtmMode?: GTMMode | null,
-  gtmStep?: number | null
+  onError?: (error: Error) => void
 ): Promise<string> => {
   const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
 
@@ -125,8 +116,6 @@ export const streamChat = async (
             userId,
             wizardMode,
             currentStep,
-            gtmMode,
-            gtmStep,
             chatMode,
             attachments
           }),
