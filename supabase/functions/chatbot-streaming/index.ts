@@ -2,6 +2,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { logInfo, logWarn, logError } from '../_shared/logger.ts';
+import { fetchWithRetry } from '../_shared/api-retry.ts';
+import { getCachedResponse, saveResponseCache as saveSharedResponseCache, getCacheTTL } from '../_shared/cache.ts';
+import { validateResponseStructure, scoreResponseQuality, postProcessResponse, extractStructuredResponse } from '../_shared/response-validator.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -212,7 +216,7 @@ serve(async (req) => {
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
     const matchedTemplate = matchTemplate(message, businessContext);
     if (matchedTemplate) {
-      console.log('⚡ Template match - returning instant response');
+      logInfo('Template match - returning instant response', { messageLength: message.length });
       const templateResponse = matchedTemplate.response;
       // User message save is already in progress, return immediately
       const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode, supabase);
@@ -233,7 +237,7 @@ serve(async (req) => {
     // Check response cache (DB query)
     const cachedResponse = await checkResponseCache(supabase, cacheKey, message);
     if (cachedResponse) {
-      console.log('⚡ Cache hit - returning cached response');
+      logInfo('Cache hit - returning cached response', { cacheKey });
       // User message save is already in progress, return immediately
       const response = createCachedStream(cachedResponse, message, conversation, businessContext, conversationHistory, chatMode, supabase);
       // Don't cache Response objects - they're streams that can only be consumed once
@@ -255,7 +259,7 @@ serve(async (req) => {
       );
 
       if (!creditCheck.success) {
-        console.log(`❌ Credit check failed: ${creditCheck.errorCode} - ${creditCheck.error}`);
+        logWarn('Credit check failed', { errorCode: creditCheck.errorCode, error: creditCheck.error });
         
         // Return error stream for insufficient credits
         const errorStream = new ReadableStream({
@@ -277,15 +281,15 @@ serve(async (req) => {
         });
       }
       
-      console.log(`✅ Credits deducted: ${creditCost} credit(s), new balance: ${creditCheck.newBalance}`);
+      logInfo('Credits deducted', { creditCost, newBalance: creditCheck.newBalance });
     }
 
-    // 🚀 OPTIMIZATION: Reduce conversation history from 10 to 6 messages
-    const optimizedHistory = conversationHistory.slice(-6);
+    // 🚀 OPTIMIZATION: Increase conversation history from 6 to 10 messages for better context
+    const optimizedHistory = conversationHistory.slice(-10);
     
     // 🔍 SEARCH INTENT DETECTION: Classify query for routing
     const searchIntent = detectSearchIntent(message, businessContext, chatMode);
-    console.log(`🔍 Search intent detected: ${searchIntent}`);
+    logInfo('Search intent detected', { searchIntent, messageLength: message.length });
     
     // 🔀 HYBRID ROUTING: Detect if query needs knowledge base lookup
     const needsKnowledge = detectKnowledgeQuery(message, businessContext);
@@ -317,24 +321,31 @@ serve(async (req) => {
     if (webSearchData?.success && webSearchData.answer) {
       const webSearchContext = formatWebSearchForPrompt(webSearchData);
       systemPrompt = `${systemPrompt}\n\nREAL-TIME WEB SEARCH RESULTS:\n${webSearchContext}\n\nUse this real-time information to provide current, accurate answers. Always cite sources using [Source X] format.`;
-      console.log(`🌐 Injected web search results with ${webSearchData.sources?.length || 0} sources`);
+      logInfo('Injected web search results', { sourceCount: webSearchData.sources?.length || 0 });
     }
     
     // Add market data if available
     if (marketData && marketData.data && marketData.data.length > 0) {
       const marketInsights = formatMarketDataForPrompt(marketData);
       systemPrompt = `${systemPrompt}\n\nREAL-TIME MARKET INTELLIGENCE:\n${marketInsights}\n\nUse this market data to provide current, relevant insights when answering the user's question.`;
-      console.log(`📊 Injected ${marketData.data.length} market insights into prompt`);
+      logInfo('Injected market insights', { insightCount: marketData.data.length });
     }
+    
+    // 🚀 OPTIMIZATION: Trim and compress messages to optimize token usage
+    const compressedHistory = optimizeMessageHistory(optimizedHistory, businessContext);
     
     let messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...optimizedHistory,
+      ...compressedHistory,
       { role: 'user', content: message }
     ];
 
     // Process file attachments if present
     messages = await processAttachments(messages, attachments);
+    
+    // Log token usage estimate
+    const estimatedTokens = estimateTokenCount(messages);
+    logInfo('Message token estimate', { requestId, estimatedTokens, messageCount: messages.length });
 
     // For general search queries, prioritize web search results
     if (searchIntent === 'general' && webSearchData?.success && webSearchData.answer) {
@@ -374,15 +385,24 @@ serve(async (req) => {
       return response;
     }
 
-    console.log('💬 Using conversational Lovable AI');
+    logInfo('Using conversational Lovable AI', { chatMode, messageLength: message.length });
     const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey, message);
     // Don't cache Response objects - they're streams that can only be consumed once
     return response;
 
-  } catch (error) {
-    console.error('Chatbot Streaming Error:', error);
-    return new Response(JSON.stringify({ 
+  } catch (error: any) {
+    logError('Chatbot Streaming Error', {
       error: error.message,
+      stack: error.stack,
+      chatMode,
+      messageLength: message.length,
+    });
+    
+    // Track error metrics
+    trackPerformanceMetrics(supabase, `req_${Date.now()}`, 0, 0, 'unknown', false, 1).catch(() => {});
+    
+    return new Response(JSON.stringify({ 
+      error: "I'm experiencing technical difficulties. Please try again.",
       fallbackMessage: "I'm experiencing technical difficulties. Please try again."
     }), {
       status: 500,
@@ -643,6 +663,11 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
 
 // 🚀 OPTIMIZATION: Create stream from cached response with faster streaming
 function createCachedStream(cachedContent: string, message: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any): Response {
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const startTime = Date.now();
+  
+  logInfo('Cache hit - serving cached response', { requestId, messageLength: message.length });
+  
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -661,6 +686,12 @@ function createCachedStream(cachedContent: string, message: string, conversation
         
         // Complete
         const stage = determineConversationStage(businessContext, conversationHistory.length);
+        const latency = Date.now() - startTime;
+        const tokenCount = cachedContent.split(/\s+/).length;
+        
+        // Track cache hit metrics
+        trackPerformanceMetrics(supabase, requestId, latency, tokenCount, 'cached', true, 0).catch(() => {});
+        
         controller.enqueue(new TextEncoder().encode(
           `data: ${JSON.stringify({ type: 'complete', conversationId: conversation.id, quickActions: generateQuickActions(stage, chatMode, message), cached: true })}\n\n`
         ));
@@ -745,12 +776,24 @@ CRITICAL RULES:
 ${contextString}
 
 RESPONSE PROTOCOL:
+You MUST structure responses in this format (even in wizard mode):
+
+**Problem:** [What challenge they're facing related to current step]
+**Insight:** [Why this matters for their business - show you understand their situation]
+**Recommendation:** [Specific guidance for the current step]
+**Next Actions:** [What they should do next - either complete current step or move to next]
+
 1. **Acknowledge their answer positively** - Build confidence ("That's a solid start!" or "I love this direction!")
 2. **Extract key insights** - Show you understand deeply ("So you're targeting [X] who struggle with [Y]...")
 3. **Ask clarifying follow-up** if needed (1 focused question about the CURRENT step only)
-4. **Keep it conversational** - 2-3 sentences max, under 60 words
+4. **Keep it conversational** - 2-3 sentences per section, under 100 words total
 5. **Be encouraging** - They're building something amazing
 6. **Move to next step** - Once answered, transition to the next wizard step
+
+HALLUCINATION PREVENTION:
+• Don't make up specific statistics or data
+• If unsure about industry benchmarks, say "I recommend researching [specific source] for accurate data"
+• Focus on strategic guidance rather than fabricated facts
 
 FEW-SHOT EXAMPLES:
 
@@ -793,12 +836,24 @@ GTM STRATEGY FRAMEWORK - Ask questions in this EXACT order:
 ${contextString}
 
 RESPONSE PROTOCOL:
+You MUST structure responses in this format:
+
+**Problem:** [What GTM challenge they're facing at this step]
+**Insight:** [Why this step matters for their go-to-market strategy]
+**Recommendation:** [Specific guidance for answering the current question]
+**Next Actions:** [The current question they need to answer, then move to next step]
+
 - Ask ONE question at a time from the framework above
 - Wait for user's complete answer before moving to next question
 - Acknowledge their answer, extract key insights, then ask the next question
-- Be conversational but structured (2-3 sentences, 60 words max)
+- Be conversational but structured (2-3 sentences per section, 80 words max total)
 - Use GTM-specific terminology (CAC, LTV, conversion funnel, etc.)
 - Provide brief context for why each question matters
+
+HALLUCINATION PREVENTION:
+• Don't fabricate market data or competitor information
+• If asked about specific benchmarks, provide ranges with sources: "CAC typically ranges $X-$Y for [industry] [Source 1]"
+• Focus on strategic guidance based on their answers, not made-up statistics
 
 DO NOT:
 - Ask multiple questions at once
@@ -833,12 +888,62 @@ YOUR EXPERTISE:
 • Product Strategy - MVP Definition, Feature Prioritization, Product-Market Fit
 • Creative Industries - Design, Media, Content, SaaS, Marketplaces
 
+**CRITICAL: RESPONSE FORMAT REQUIREMENT**
+You MUST structure ALL responses in this exact format:
+
+**Problem:** [What challenge or issue the founder is facing - be specific]
+**Insight:** [Why this matters, what data/trends show, or strategic context - cite sources when providing facts]
+**Recommendation:** [Specific, actionable advice tailored to their situation]
+**Next Actions:** [Concrete steps they can take immediately - use numbered list or bullets]
+
+HALLUCINATION PREVENTION RULES:
+• NEVER fabricate specific statistics, company names, or market data without sources
+• If you don't know something, say "I don't have current data on [X]. Here's how to find reliable sources: [specific steps]"
+• ALWAYS distinguish between verified facts (with [Source X]) and strategic insights (your recommendations)
+• For market data, pricing, or benchmarks, provide ranges with clear assumptions: "For [industry] in [region], [metric] typically ranges between $X–$Y based on [assumption]. To verify: check [specific sources]"
+• If asked about specific companies or products you're unsure about, say "I don't have verified information about [X]. I recommend checking [specific source] for accurate data."
+
 SOURCE CITATION REQUIREMENTS:
 • When using real-time web search results or market data, ALWAYS cite sources inline using [Source 1], [Source 2] format
 • Distinguish between verified facts (from sources) and your own strategic insights
 • For time-sensitive information (current trends, recent news, latest data), mention when the information is from
 • If referencing specific statistics, studies, or reports, cite the source
 • When combining multiple sources, clearly indicate which insights come from which sources
+
+FEW-SHOT EXAMPLES (Follow these exact patterns):
+
+Example 1 - Market Validation:
+User: "How do I know if people want my product?"
+
+**Problem:** Building a product without confirming market demand risks creating something nobody wants.
+**Insight:** According to CB Insights [Source 1], 70% of startup failures are due to lack of market need. For SaaS specifically, validation before building reduces failure risk by 60% [Source 2].
+**Recommendation:** Run a 2-week validation sprint: 1) Create a landing page describing your solution, 2) Interview 10 target customers asking "What's your biggest pain with [problem]?", 3) Offer pre-sales at 50% discount to gauge willingness to pay.
+**Next Actions:**
+- Today: Set up landing page (use Carrd or Webflow, ~2 hours)
+- This week: Find 10 customers via LinkedIn/communities
+- Next week: Conduct interviews and analyze results
+
+Example 2 - Pricing Strategy:
+User: "What should I charge?"
+
+**Problem:** Pricing too high or too low can kill your business before it starts.
+**Insight:** For SaaS tools in North America, monthly pricing typically ranges $15–$50 per user based on similar B2B software [Source 1]. The price where 60%+ of test customers choose it is usually the sweet spot.
+**Recommendation:** Test 3 price points with 5 potential customers each. Ask: "Which would you choose: $X, $Y, or $Z?" The price with 60%+ selection is your starting point.
+**Next Actions:**
+- Create 3 pricing options based on your cost structure
+- Survey 5 potential customers this week
+- Analyze results and set initial price
+
+Example 3 - Launch Strategy:
+User: "Where should I launch?"
+
+**Problem:** Launching everywhere dilutes your efforts and wastes resources.
+**Insight:** Recent data shows [channel] has 30% higher conversion for [industry] startups [Source 1]. Focusing on ONE channel first allows you to master it before expanding.
+**Recommendation:** Start where your customers already gather. If they're on LinkedIn → post there. If they're in Facebook groups → engage there. Pick ONE channel, master it, then expand.
+**Next Actions:**
+- Identify where your ideal customers spend time (this week)
+- Create content for that ONE channel
+- Post consistently for 2 weeks, then analyze engagement
 
 REASONING FRAMEWORK:
 When answering complex questions, use this approach:
@@ -847,23 +952,9 @@ When answering complex questions, use this approach:
 3. **Synthesize** - Provide actionable recommendations
 4. **Validate** - Suggest how to test assumptions
 
-FEW-SHOT EXAMPLES (Learn from these patterns):
-
-Example 1 - Market Validation (with sources):
-User: "How do I know if people want my product?"
-You: "Great question! Start with 10 customer interviews this week. Ask: 'What's your biggest frustration with [problem]?' If 7+ people say they'd pay for a solution, you have validation. According to [Source 1], 70% of successful startups validate before building. Want help crafting interview questions?"
-
-Example 2 - Pricing Strategy (with current data):
-User: "What should I charge?"
-You: "For [industry], typical pricing ranges $X-$Y based on recent market analysis [Source 1]. But test it! Create 3 price points and ask 5 potential customers which they'd choose. The price where 60%+ choose it is your sweet spot. What's your cost structure?"
-
-Example 3 - Launch Strategy (with real-time trends):
-User: "Where should I launch?"
-You: "Start where your customers already gather. Recent data shows [channel] has 30% higher conversion for [industry] [Source 1]. If they're on LinkedIn → post there. If they're in Facebook groups → engage there. Pick ONE channel, master it, then expand. Where do your ideal customers spend time?"
-
 RESPONSE STYLE:
-• Be conversational but insightful (2-4 sentences, 80 words max)
-• Ask strategic follow-up questions when needed
+• ALWAYS use the Problem → Insight → Recommendation → Next Actions format
+• Be conversational but structured (2-4 sentences per section)
 • Provide specific, actionable advice with numbers/examples
 • Reference best practices from successful businesses
 • Build confidence while being realistic
@@ -871,14 +962,16 @@ RESPONSE STYLE:
 • **Always cite sources** when providing facts, statistics, or current information
 
 CRITICAL RULES:
+- ALWAYS structure responses as Problem → Insight → Recommendation → Next Actions
 - If they ask about competitors, market size, or trends → Use real-time web search results and cite sources [Source X]
 - If they share detailed plans → Provide strategic feedback on assumptions and risks
 - If they're stuck → Help break down the problem into smaller, manageable steps
 - Always be encouraging yet practical
 - For complex queries, show your reasoning process briefly
 - **Distinguish verified facts from strategic insights** - mark facts with [Source X]
+- **If you don't know something, admit it and guide them to find the answer**
 
-You're not just answering questions - you're their strategic partner in building a successful business. Always back up factual claims with citations.`;
+You're not just answering questions - you're their strategic partner in building a successful business. Always back up factual claims with citations and structure every response clearly.`;
 }
 
 async function processAttachments(messages: ChatMessage[], attachments: any[]): Promise<ChatMessage[]> {
@@ -1879,36 +1972,163 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
   };
 }
 
-// 🚀 OPTIMIZATION: Dynamic temperature based on query type
+// 🚀 OPTIMIZATION: Optimize message history to reduce token usage
+function optimizeMessageHistory(history: ChatMessage[], businessContext: BusinessContext): ChatMessage[] {
+  if (history.length <= 10) {
+    return history; // No optimization needed for short histories
+  }
+  
+  // Keep most recent 5 messages
+  const recentMessages = history.slice(-5);
+  
+  // Summarize older messages if needed (for very long conversations)
+  if (history.length > 15) {
+    // For now, just keep recent messages - can add summarization later
+    return recentMessages;
+  }
+  
+  return history;
+}
+
+// 🚀 OPTIMIZATION: Estimate token count (rough approximation: 1 token ≈ 4 characters)
+function estimateTokenCount(messages: ChatMessage[]): number {
+  const totalChars = messages.reduce((sum, msg) => sum + (msg.content?.length || 0), 0);
+  return Math.ceil(totalChars / 4); // Rough estimate
+}
+
+// 🚀 OPTIMIZATION: Track quality metrics and failure patterns
+async function trackQualityMetrics(
+  supabase: any,
+  requestId: string,
+  quality: any,
+  latency: number,
+  model: string,
+  chatMode: string,
+  error?: any
+): Promise<void> {
+  try {
+    const metrics = {
+      request_id: requestId,
+      quality_score: quality.score,
+      completeness: quality.completeness,
+      relevance: quality.relevance,
+      actionability: quality.actionability,
+      structure: quality.structure,
+      latency_ms: latency,
+      model,
+      chat_mode: chatMode,
+      has_issues: quality.issues.length > 0,
+      issues: quality.issues,
+      error_type: error?.type || null,
+      error_message: error?.message || null,
+      timestamp: new Date().toISOString(),
+    };
+    
+    // Log to console for now (can be stored in DB later)
+    if (quality.score < 0.6) {
+      logWarn('Low quality response tracked', metrics);
+    }
+    
+    // Track common failure patterns
+    if (error) {
+      logError('Request error tracked', {
+        requestId,
+        errorType: error.type,
+        errorMessage: error.message,
+        model,
+        chatMode,
+      });
+    }
+  } catch (e) {
+    // Don't fail if metrics tracking fails
+    console.error('Metrics tracking error:', e);
+  }
+}
+
+// 🚀 OPTIMIZATION: Track performance metrics
+async function trackPerformanceMetrics(
+  supabase: any,
+  requestId: string,
+  latency: number,
+  tokenCount: number,
+  model: string,
+  cacheHit: boolean,
+  errorRate: number
+): Promise<void> {
+  try {
+    const metrics = {
+      request_id: requestId,
+      latency_ms: latency,
+      token_count: tokenCount,
+      model,
+      cache_hit: cacheHit,
+      error_rate: errorRate,
+      timestamp: new Date().toISOString(),
+    };
+    
+    logInfo('Performance metrics', metrics);
+    
+    // Alert on slow responses
+    if (latency > 10000) {
+      logWarn('Slow response detected', { requestId, latency, model });
+    }
+    
+    // Alert on high error rates
+    if (errorRate > 0.05) {
+      logWarn('High error rate detected', { requestId, errorRate, model });
+    }
+  } catch (e) {
+    console.error('Performance tracking error:', e);
+  }
+}
+
+// 🚀 OPTIMIZATION: Dynamic temperature based on query type (optimized for accuracy)
 function determineTemperature(message: string, complexity: 'simple' | 'moderate' | 'complex', chatMode: string): number {
   const lowerMessage = message.toLowerCase();
   
-  // Factual queries → lower temperature
-  if (/^(what|when|where|who|how many|how much|which|list|show)/i.test(message) && 
-      !/(think|feel|suggest|recommend|creative|strategy)/i.test(lowerMessage)) {
-    return 0.2;
+  // Factual queries → very low temperature for accuracy (0.2-0.3)
+  if (/^(what|when|where|who|how many|how much|which|list|show|tell me about)/i.test(message) && 
+      !/(think|feel|suggest|recommend|creative|strategy|plan|design|idea|brainstorm)/i.test(lowerMessage)) {
+    return 0.2; // Very low for factual accuracy
   }
   
-  // Creative/strategy queries → higher temperature
-  if (/(suggest|recommend|creative|strategy|plan|design|idea|brainstorm|think)/i.test(lowerMessage)) {
-    return 0.8;
+  // Strategic/advice queries → medium temperature (0.5-0.6)
+  if (/(how should|what should|recommend|advice|strategy|plan|help me|guide|suggest)/i.test(lowerMessage)) {
+    return 0.5; // Balanced for strategic advice
   }
   
-  // Conversational → medium temperature
-  if (/(how are you|tell me|explain|help|advice)/i.test(lowerMessage)) {
-    return 0.6;
+  // Creative/brainstorming queries → higher temperature (0.7-0.8)
+  if (/(creative|brainstorm|idea|think|design|imagine|come up with)/i.test(lowerMessage)) {
+    return 0.7; // Higher for creativity
   }
   
-  // Use complexity-based default
-  if (complexity === 'simple') return 0.5;
-  if (complexity === 'complex') return 0.7;
-  return 0.6;
+  // Conversational → medium temperature (0.5-0.6)
+  if (/(how are you|tell me|explain|help)/i.test(lowerMessage)) {
+    return 0.5;
+  }
+  
+  // Use complexity-based default (optimized)
+  if (complexity === 'simple') return 0.3; // Lower for simple queries (more accurate)
+  if (complexity === 'complex') return 0.6; // Medium for complex (balanced reasoning)
+  return 0.5; // Default moderate temperature
 }
 
 // 💬 Create Lovable AI stream response with intelligent routing
 async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any, cacheKey?: string, originalMessage?: string): Promise<Response> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+
+  const startTime = Date.now();
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // 🚀 OPTIMIZATION: Check cache first
+  if (cacheKey) {
+    const cached = await getCachedResponse(supabase, cacheKey);
+    if (cached) {
+      logInfo('Cache hit', { requestId, cacheKey, model: cached.model });
+      return createCachedStream(cached.content, userMessage, conversation, businessContext, conversationHistory, chatMode, supabase);
+    }
+  }
 
   // 🚀 OPTIMIZATION: Detect complexity and select optimal model
   const complexity = detectQueryComplexity(userMessage, businessContext, conversationHistory);
@@ -1917,27 +2137,108 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
   // 🚀 OPTIMIZATION: Dynamic temperature tuning based on query type
   const finalTemperature = determineTemperature(userMessage, complexity, chatMode);
   
-  console.log(`🎯 Query complexity: ${complexity}, model: ${selectedModel}, tokens: ${maxTokens}, temp: ${finalTemperature}, strategy: ${strategy}`);
-
-  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      model: selectedModel, 
-      messages, 
-      stream: true, 
-      temperature: finalTemperature,
-      max_tokens: maxTokens
-    }),
+  logInfo('AI request initiated', { 
+    requestId,
+    complexity, 
+    model: selectedModel, 
+    maxTokens, 
+    temperature: finalTemperature, 
+    strategy,
+    chatMode,
+    messageLength: userMessage.length
   });
+
+  // 🚀 OPTIMIZATION: Use retry logic with exponential backoff and timeout
+  let aiResponse: Response;
+  try {
+    aiResponse = await fetchWithRetry(
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`, 
+          'Content-Type': 'application/json',
+          'X-Request-ID': requestId
+        },
+        body: JSON.stringify({ 
+          model: selectedModel, 
+          messages, 
+          stream: true, 
+          temperature: finalTemperature,
+          max_tokens: maxTokens
+        }),
+        timeout: 30000, // 30 second timeout
+        retryOptions: {
+          maxAttempts: 3,
+          initialDelay: 1000,
+          maxDelay: 4000,
+          backoffMultiplier: 2,
+          retryableStatuses: [429, 500, 502, 503, 504],
+        }
+      }
+    );
+  } catch (error: any) {
+    logError('API request failed after retries', { 
+      requestId,
+      error: error.message,
+      status: error.status,
+      timeout: error.timeout,
+      model: selectedModel
+    });
+    
+    // Return user-friendly error message
+    const errorMessage = error.timeout 
+      ? "I'm taking longer than usual to respond. Please try again in a moment."
+      : error.status === 429
+      ? "I'm receiving too many requests right now. Please wait a moment and try again."
+      : "I encountered an error processing your request. Please try again.";
+    
+    return new Response(
+      JSON.stringify({ error: errorMessage, requestId }),
+      { 
+        status: error.status || 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
 
   if (!aiResponse.ok) {
     const err = await aiResponse.text();
-    if (aiResponse.status === 429) return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    if (aiResponse.status === 402) return new Response(JSON.stringify({ error: 'Payment required' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const status = aiResponse.status;
     
-    // 🚀 OPTIMIZATION: Fallback chain - Claude Sonnet 4 → Gemini 2.0 Flash → Gemini 2.5 Flash
-    console.log(`⚠️ Model ${selectedModel} failed, trying fallback chain`);
+    // 🚀 OPTIMIZATION: Enhanced error handling for all HTTP status codes
+    const errorMessages: Record<number, string> = {
+      400: "I couldn't understand your request. Please try rephrasing your question.",
+      401: "Authentication error. Please contact support.",
+      403: "Access denied. Please check your permissions.",
+      404: "The requested service is not available. Please try again later.",
+      429: "I'm receiving too many requests right now. Please wait a moment and try again.",
+      500: "I encountered a server error. Please try again in a moment.",
+      502: "The service is temporarily unavailable. Please try again shortly.",
+      503: "The service is temporarily overloaded. Please try again in a moment.",
+      504: "The request timed out. Please try again.",
+    };
+    
+    const userMessage = errorMessages[status] || "I encountered an error processing your request. Please try again.";
+    
+    logError('API response error', { 
+      requestId,
+      status,
+      error: err,
+      model: selectedModel,
+      userMessage
+    });
+    
+    // Return error for non-retryable status codes
+    if ([400, 401, 403, 404, 402].includes(status)) {
+      return new Response(
+        JSON.stringify({ error: userMessage, requestId }),
+        { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // 🚀 OPTIMIZATION: Fallback chain for retryable errors - Claude Sonnet 4 → Gemini 2.0 Flash → Gemini 2.5 Flash
+    logWarn('Model failed, trying fallback chain', { requestId, model: selectedModel, status });
     
     // If Claude Sonnet 4 fails, fallback to Gemini 2.0 Flash
     if (selectedModel === 'anthropic/claude-sonnet-4-20250514') {
@@ -1985,7 +2286,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       }
       
       // If Gemini 2.0 Flash also fails, try Gemini 2.5 Flash as final fallback
-      console.log('🔄 Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash');
+      logInfo('Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash', { requestId });
       const finalFallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -2031,7 +2332,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     
     // If Gemini 2.0 Flash fails (and not already in fallback), fallback to Gemini 2.5 Flash
     if (selectedModel === 'google/gemini-2.0-flash') {
-      console.log('🔄 Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash');
+      logInfo('Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash', { requestId });
       const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -2131,22 +2432,82 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
           }
         }
 
-        // 🚀 OPTIMIZATION: Save to cache and DB in background (non-blocking)
-        if (cacheKey && fullMessage) {
-          saveResponseCache(supabase, cacheKey, fullMessage, 'lovable', selectedModel, originalMessage || userMessage, businessContext).catch(() => {});
+        // 🚀 OPTIMIZATION: Post-process and validate response
+        let processedMessage = fullMessage;
+        const quality = scoreResponseQuality(fullMessage, userMessage, businessContext);
+        
+        // Log quality metrics
+        const latency = Date.now() - startTime;
+        logInfo('Response quality scored', {
+          requestId,
+          qualityScore: quality.score,
+          completeness: quality.completeness,
+          relevance: quality.relevance,
+          actionability: quality.actionability,
+          structure: quality.structure,
+          latency,
+          messageLength: fullMessage.length,
+          issues: quality.issues
+        });
+        
+        // If quality is low, try to improve it
+        if (quality.score < 0.6 && quality.issues.length > 0) {
+          logWarn('Low quality response detected, attempting post-processing', {
+            requestId,
+            qualityScore: quality.score,
+            issues: quality.issues
+          });
+          processedMessage = postProcessResponse(fullMessage);
+          
+          // Re-score after post-processing
+          const newQuality = scoreResponseQuality(processedMessage, userMessage, businessContext);
+          if (newQuality.score > quality.score) {
+            logInfo('Post-processing improved quality', {
+              requestId,
+              oldScore: quality.score,
+              newScore: newQuality.score
+            });
+            fullMessage = processedMessage;
+          }
         }
         
-        // Background: Save message and update context
+        // Validate structure
+        const validation = validateResponseStructure(fullMessage);
+        if (!validation.valid) {
+          logWarn('Response structure validation failed', {
+            requestId,
+            issues: validation.issues,
+            qualityScore: quality.score
+          });
+        }
+        
+        // 🚀 OPTIMIZATION: Save to cache and DB in background (non-blocking)
+        if (cacheKey && fullMessage) {
+          const ttl = getCacheTTL(userMessage, chatMode);
+          saveSharedResponseCache(supabase, cacheKey, fullMessage, selectedModel, originalMessage || userMessage, businessContext, ttl).catch(() => {});
+        }
+        
+        // Background: Save message, update context, and log metrics
         queueMicrotask(async () => {
           try {
             const updatedContext = await extractBusinessContext(userMessage, fullMessage, businessContext);
             const stage = determineConversationStage(updatedContext, conversationHistory.length);
+            const tokenCount = fullMessage.split(/\s+/).length; // Approximate token count
+            
             await Promise.all([
               supabase.from('chatbot_messages').insert({
                 conversation_id: conversation.id,
                 role: 'assistant',
                 content: fullMessage,
-                metadata: { timestamp: new Date().toISOString(), streaming: true }
+                metadata: { 
+                  timestamp: new Date().toISOString(), 
+                  streaming: true,
+                  quality: quality.score,
+                  requestId,
+                  model: selectedModel,
+                  latency,
+                  tokenCount
+                }
               }),
               supabase.from('chatbot_conversations').update({
                 business_context: updatedContext,
@@ -2154,8 +2515,14 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
                 updated_at: new Date().toISOString()
               }).eq('id', conversation.id)
             ]);
+            
+            // Track quality and performance metrics
+            await Promise.all([
+              trackQualityMetrics(supabase, requestId, quality, latency, selectedModel, chatMode),
+              trackPerformanceMetrics(supabase, requestId, latency, tokenCount, selectedModel, false, 0)
+            ]);
           } catch (e) {
-            console.error('Background save error:', e);
+            logError('Background save error', { requestId, error: e.message });
           }
         });
 
