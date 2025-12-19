@@ -374,7 +374,7 @@ serve(async (req) => {
             excerpt: s.snippet || '',
             url: s.url,
             sourceType: 'web'
-          }))) }
+          }))] }
         : ragData;
       
       const response = createRAGStream(enhancedRagData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
