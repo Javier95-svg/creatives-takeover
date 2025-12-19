@@ -1912,9 +1912,9 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // Planning mode (wizard) → default to Gemini 2.0 Flash, escalate to Claude Sonnet 4 for complex queries
+  // Planning mode (wizard) → use Claude Sonnet 4 for all queries for maximum accuracy
   if (chatMode === 'wizard') {
-    // Complex queries → escalate to Claude Sonnet 4 for deep reasoning
+    // All queries use Claude Sonnet 4 with complexity-based token limits
     if (complexity === 'complex') {
       return { 
         model: 'anthropic/claude-sonnet-4-20250514', 
@@ -1924,49 +1924,49 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
       };
     }
     
-    // Simple queries → use Gemini 2.0 Flash (default, cost-efficient)
+    // Simple queries → Claude Sonnet 4 with lower token limit
     if (complexity === 'simple') {
       return { 
-        model: 'google/gemini-2.0-flash', 
+        model: 'anthropic/claude-sonnet-4-20250514', 
         strategy: 'quality',
         maxTokens: 200,
         temperature: 0.6
       };
     }
     
-    // Moderate queries → use Gemini 2.0 Flash (default)
+    // Moderate queries → Claude Sonnet 4
     return { 
-      model: 'google/gemini-2.0-flash', 
+      model: 'anthropic/claude-sonnet-4-20250514', 
       strategy: 'quality',
       maxTokens: 400,
       temperature: 0.7
     };
   }
   
-  // Freeform mode and other modes → use 2.0 Flash for moderate/complex, 2.5 Flash for simple
+  // Freeform mode and other modes → use Claude Sonnet 4 for all queries for maximum accuracy
   if (complexity === 'simple') {
     return { 
-      model: 'google/gemini-2.5-flash', 
-      strategy: 'speed',
-      maxTokens: 150,
+      model: 'anthropic/claude-sonnet-4-20250514', 
+      strategy: 'quality',
+      maxTokens: 200,
       temperature: 0.5
     };
   }
   
-  // Complex queries → use 2.0 Flash for better quality
+  // Complex queries → Claude Sonnet 4 for best quality
   if (complexity === 'complex') {
     return { 
-      model: 'google/gemini-2.0-flash', 
+      model: 'anthropic/claude-sonnet-4-20250514', 
       strategy: 'quality',
       maxTokens: 800,
       temperature: 0.7
     };
   }
   
-  // Moderate → use 2.0 Flash for better balance
+  // Moderate → Claude Sonnet 4 for balanced quality
   return { 
-    model: 'google/gemini-2.0-flash', 
-    strategy: 'balanced',
+    model: 'anthropic/claude-sonnet-4-20250514', 
+    strategy: 'quality',
     maxTokens: 400,
     temperature: 0.6
   };
@@ -2237,25 +2237,34 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       );
     }
     
-    // 🚀 OPTIMIZATION: Fallback chain for retryable errors - Claude Sonnet 4 → Gemini 2.0 Flash → Gemini 2.5 Flash
+    // 🚀 OPTIMIZATION: Fallback chain prioritizing Claude models - Claude Sonnet 4 → Claude Sonnet 3.5 → Claude Haiku → Gemini (last resort)
     logWarn('Model failed, trying fallback chain', { requestId, model: selectedModel, status });
     
-    // If Claude Sonnet 4 fails, fallback to Gemini 2.0 Flash
+    // If Claude Sonnet 4 fails, try Claude Sonnet 3.5 (maintains Claude accuracy)
     if (selectedModel === 'anthropic/claude-sonnet-4-20250514') {
-      console.log('🔄 Falling back from Claude Sonnet 4 to Gemini 2.0 Flash');
-      const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          model: 'google/gemini-2.0-flash', 
-          messages, 
-          stream: true, 
-          temperature: finalTemperature,
-          max_tokens: Math.min(maxTokens, 600) // Cap at 600 for fallback
-        }),
-      });
+      logInfo('Falling back from Claude Sonnet 4 to Claude Sonnet 3.5', { requestId });
+      const fallbackResponse = await fetchWithRetry(
+        'https://ai.gateway.lovable.dev/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            model: 'anthropic/claude-3-5-sonnet-20241022', 
+            messages, 
+            stream: true, 
+            temperature: finalTemperature,
+            max_tokens: Math.min(maxTokens, 700) // Cap at 700 for fallback
+          }),
+          timeout: 30000,
+          retryOptions: {
+            maxAttempts: 2, // Fewer retries for fallback
+            initialDelay: 1000,
+            maxDelay: 2000,
+          }
+        }
+      ).catch(() => null);
       
-      if (fallbackResponse.ok) {
+      if (fallbackResponse?.ok) {
         const reader = fallbackResponse.body?.getReader();
         if (reader) {
           return new Response(
@@ -2285,13 +2294,66 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         }
       }
       
-      // If Gemini 2.0 Flash also fails, try Gemini 2.5 Flash as final fallback
-      logInfo('Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash', { requestId });
-      const finalFallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      // If Claude Sonnet 3.5 also fails, try Claude Haiku (faster, cheaper, still Claude)
+      logInfo('Falling back from Claude Sonnet 3.5 to Claude Haiku', { requestId });
+      const haikuFallbackResponse = await fetchWithRetry(
+        'https://ai.gateway.lovable.dev/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            model: 'anthropic/claude-3-5-haiku-20241022', 
+            messages, 
+            stream: true, 
+            temperature: finalTemperature,
+            max_tokens: Math.min(maxTokens, 600) // Cap at 600 for Haiku fallback
+          }),
+          timeout: 30000,
+          retryOptions: {
+            maxAttempts: 2,
+            initialDelay: 1000,
+            maxDelay: 2000,
+          }
+        }
+      ).catch(() => null);
+      
+      if (haikuFallbackResponse?.ok) {
+        const reader = haikuFallbackResponse.body?.getReader();
+        if (reader) {
+          return new Response(
+            new ReadableStream({
+              async start(controller) {
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    controller.enqueue(value);
+                  }
+                  controller.close();
+                } catch (error) {
+                  controller.error(error);
+                }
+              }
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+              }
+            }
+          );
+        }
+      }
+      
+      // Final fallback: Gemini 2.0 Flash (last resort, only if all Claude models fail)
+      logWarn('All Claude models failed, using Gemini as last resort', { requestId });
+      const geminiFallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          model: 'google/gemini-2.5-flash', 
+          model: 'google/gemini-2.0-flash', 
           messages, 
           stream: true, 
           temperature: finalTemperature,
@@ -2299,8 +2361,8 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         }),
       });
       
-      if (finalFallbackResponse.ok) {
-        const reader = finalFallbackResponse.body?.getReader();
+      if (geminiFallbackResponse.ok) {
+        const reader = geminiFallbackResponse.body?.getReader();
         if (reader) {
           return new Response(
             new ReadableStream({
@@ -2330,23 +2392,77 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       }
     }
     
-    // If Gemini 2.0 Flash fails (and not already in fallback), fallback to Gemini 2.5 Flash
-    if (selectedModel === 'google/gemini-2.0-flash') {
-      logInfo('Falling back from Gemini 2.0 Flash to Gemini 2.5 Flash', { requestId });
-      const fallbackResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Note: Gemini models are only used for tour-guide mode now
+    // If a Gemini model fails (should be rare), try Claude Haiku for better accuracy
+    if (selectedModel === 'google/gemini-2.0-flash' || selectedModel === 'google/gemini-2.5-flash') {
+      logInfo('Gemini model failed, trying Claude Haiku for better accuracy', { requestId, model: selectedModel });
+      const claudeHaikuFallback = await fetchWithRetry(
+        'https://ai.gateway.lovable.dev/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            model: 'anthropic/claude-3-5-haiku-20241022', 
+            messages, 
+            stream: true, 
+            temperature: finalTemperature,
+            max_tokens: Math.min(maxTokens, 600)
+          }),
+          timeout: 30000,
+          retryOptions: {
+            maxAttempts: 2,
+            initialDelay: 1000,
+            maxDelay: 2000,
+          }
+        }
+      ).catch(() => null);
+      
+      if (claudeHaikuFallback?.ok) {
+        const reader = claudeHaikuFallback.body?.getReader();
+        if (reader) {
+          return new Response(
+            new ReadableStream({
+              async start(controller) {
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    controller.enqueue(value);
+                  }
+                  controller.close();
+                } catch (error) {
+                  controller.error(error);
+                }
+              }
+            }),
+            {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+              }
+            }
+          );
+        }
+      }
+      
+      // Final fallback: try other Gemini model (only if Claude Haiku fails)
+      logWarn('Claude Haiku fallback failed, trying alternative Gemini model', { requestId });
+      const geminiAltFallback = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          model: 'google/gemini-2.5-flash', 
+          model: selectedModel === 'google/gemini-2.0-flash' ? 'google/gemini-2.5-flash' : 'google/gemini-2.0-flash', 
           messages, 
           stream: true, 
           temperature: finalTemperature,
-          max_tokens: Math.min(maxTokens, 500) // Cap at 500 for fallback
+          max_tokens: Math.min(maxTokens, 500)
         }),
       });
       
-      if (fallbackResponse.ok) {
-        const reader = fallbackResponse.body?.getReader();
+      if (geminiAltFallback.ok) {
+        const reader = geminiAltFallback.body?.getReader();
         if (reader) {
           return new Response(
             new ReadableStream({
