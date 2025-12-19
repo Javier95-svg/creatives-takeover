@@ -988,6 +988,8 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   useEffect(() => {
     const currentSessionId = config.sessionManagement?.currentSessionId;
     
+    console.log('🔍 useChatbot useEffect: currentSessionId =', currentSessionId, 'previous =', previousSessionIdRef.current);
+    
     // Only load if sessionId changed and is not null
     if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
       previousSessionIdRef.current = currentSessionId;
@@ -995,11 +997,12 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       loadMessagesFromSession(currentSessionId);
     } else if (!currentSessionId && previousSessionIdRef.current) {
       // Session was cleared, reset messages
+      console.log('🔄 Session cleared, resetting messages');
       previousSessionIdRef.current = null;
       setMessagesForMode([]);
       setMessages([]);
     }
-  }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession]);
+  }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession, chatMode]);
 
   const createWelcomeMessage = (): ChatMessage => {
     const path = location.pathname;

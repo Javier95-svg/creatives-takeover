@@ -119,6 +119,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
   };
 
   const handleSessionClick = (session: ChatSession) => {
+    console.log('🔵 Sidebar: Clicked session', session.id, session.title);
     setCurrentSessionId(session.id);
     onSessionSelect(session);
   };

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -186,7 +186,9 @@ const BizMapAI = () => {
 
   // Session Management Functions
   const handleSessionSelect = (session: ChatSession | null) => {
+    console.log('🟢 Dream2Plan: handleSessionSelect called', session?.id);
     if (session) {
+      console.log('🟢 Setting currentSessionId to:', session.id);
       // Set the current session ID - this will trigger message loading in useChatbot
       // Use the setCurrentSessionId from useChatSessions to ensure state sync
       setCurrentSessionId(session.id);
@@ -1315,12 +1317,12 @@ Subject: "Quick question about [their pain point]"
                         onModeInfoReady={(info) => {
                           setModeInfo(info);
                         }}
-                        sessionManagement={{
+                        sessionManagement={useMemo(() => ({
                           currentSessionId,
                           createNewSession,
                           setCurrentSessionId,
                           updateSession
-                        }}
+                        }), [currentSessionId, createNewSession, setCurrentSessionId, updateSession])}
                       />
                     </div>
                   </div>
