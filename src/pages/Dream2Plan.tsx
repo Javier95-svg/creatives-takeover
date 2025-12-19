@@ -25,9 +25,7 @@ import SuccessScore from "@/components/SuccessScore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, FlaskConical } from "lucide-react";
 
-import { BizMapChat, defaultGTMSteps } from "@/components/BizMapChat";
-import { GTMProgress } from "@/components/GTMProgress";
-import { generateGTMStrategyDocument } from "@/utils/gtmReportGenerator";
+import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { ReportDisplay } from "@/components/ReportDisplay";
 import { ExampleConversations } from "@/components/bizmap/ExampleConversations";
@@ -61,12 +59,6 @@ const BizMapAI = () => {
   const [showReport, setShowReport] = useState(false);
   const [validationScore, setValidationScore] = useState<any>(null);
   const [modeInfo, setModeInfo] = useState<{ activeMode: 'planning' | 'gtm', onModeChange: (mode: 'planning' | 'gtm') => void } | undefined>(undefined);
-  
-  // GTM Mode states
-  const [currentGTMStep, setCurrentGTMStep] = useState(0);
-  const [gtmAnswers, setGtmAnswers] = useState<Record<string, string>>({});
-  const [gtmStrategyDocument, setGtmStrategyDocument] = useState("");
-  const [showGTMReport, setShowGTMReport] = useState(false);
   
   // Simplified states - no more research complexity
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -263,9 +255,6 @@ const BizMapAI = () => {
         if (userAnswers.overview && userAnswers.overview.length > 10) {
           const words = userAnswers.overview.split(' ').slice(0, 6);
           title = words.join(' ') + (userAnswers.overview.split(' ').length > 6 ? '...' : '');
-        } else if (gtmAnswers.customer_segmentation && gtmAnswers.customer_segmentation.length > 10) {
-          const words = gtmAnswers.customer_segmentation.split(' ').slice(0, 6);
-          title = words.join(' ') + (gtmAnswers.customer_segmentation.split(' ').length > 6 ? '...' : '');
         }
 
         await updateSession(currentSessionId, {
@@ -273,11 +262,7 @@ const BizMapAI = () => {
           current_step: currentStep,
           answers: userAnswers,
           is_completed: !!launchReport,
-          launch_report: launchReport,
-          // GTM mode data
-          gtm_step: currentGTMStep,
-          gtm_answers: gtmAnswers,
-          gtm_strategy_document: gtmStrategyDocument
+          launch_report: launchReport
         });
       }
     }
@@ -285,11 +270,11 @@ const BizMapAI = () => {
 
   // Auto-save when important state changes
   useEffect(() => {
-    if (currentSessionId && user && (Object.values(userAnswers).some(answer => answer) || Object.values(gtmAnswers).some(answer => answer))) {
+    if (currentSessionId && user && (Object.values(userAnswers).some(answer => answer))) {
       const timeoutId = setTimeout(saveSessionProgress, 1000); // Debounce saves
       return () => clearTimeout(timeoutId);
     }
-  }, [userAnswers, currentStep, launchReport, currentSessionId, user, gtmAnswers, currentGTMStep, gtmStrategyDocument]);
+  }, [userAnswers, currentStep, launchReport, currentSessionId, user]);
 
   // Restore saved progress for new users
   useEffect(() => {
@@ -1250,12 +1235,6 @@ Subject: "Quick question about [their pain point]"
 
                     {/* Enhanced BizMapChat Component with 7 Principles */}
                     <div className="flex-1 min-w-0 h-full overflow-hidden">
-                      {/* #region agent log */}
-                      {(() => {
-                        fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:1253',message:'BizMapChat render start',data:{currentStep,currentGTMStep,gtmAnswersCount:Object.keys(gtmAnswers||{}).length,defaultGTMStepsExists:!!defaultGTMSteps,defaultGTMStepsLength:defaultGTMSteps?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                        return null;
-                      })()}
-                      {/* #endregion */}
                       <BizMapChat
                         wizardSteps={wizardSteps}
                         onStepComplete={(step, answer) => {
@@ -1326,37 +1305,6 @@ Subject: "Quick question about [their pain point]"
                         }}
                         currentStep={currentStep}
                         answers={userAnswers}
-                        onGTMStepComplete={(step, answer) => {
-                          // #region agent log
-                          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:1323',message:'onGTMStepComplete called',data:{step,answerLength:answer?.length,defaultGTMStepsExists:!!defaultGTMSteps,defaultGTMStepsLength:defaultGTMSteps?.length,stepInBounds:step>=0&&step<(defaultGTMSteps?.length||0)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                          // #endregion
-                          setCurrentGTMStep(step + 1);
-                          // #region agent log
-                          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:1327',message:'onGTMStepComplete - before array access',data:{step,defaultGTMStepsStepExists:!!defaultGTMSteps?.[step],stepKey:defaultGTMSteps?.[step]?.key},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                          // #endregion
-                          setGtmAnswers(prev => ({
-                            ...prev,
-                            [defaultGTMSteps[step].key]: answer
-                          }));
-                        }}
-                        onGTMComplete={(finalAnswers) => {
-                          // Save answers to parent state
-                          setGtmAnswers(prev => ({ ...prev, ...finalAnswers }));
-                          
-                          // Generate GTM strategy document
-                          const strategyDoc = generateGTMStrategyDocument(finalAnswers);
-                          setGtmStrategyDocument(strategyDoc);
-                          setShowGTMReport(true);
-                          
-                          toast.success('🎉 Your GTM Strategy Document is ready!', {
-                            action: {
-                              label: 'View',
-                              onClick: () => setShowGTMReport(true),
-                            },
-                          });
-                        }}
-                        currentGTMStep={currentGTMStep}
-                        gtmAnswers={gtmAnswers}
                         onChatModeReady={(switchToFreeform) => {
                           setSwitchToFreeformFunc(() => switchToFreeform);
                         }}
@@ -1373,17 +1321,6 @@ Subject: "Quick question about [their pain point]"
                     </div>
                   </div>
                 </div>
-
-                {/* GTM Strategy Document Display */}
-                {showGTMReport && gtmStrategyDocument && (
-                  <div className="mb-8 animate-fade-in">
-                    <ReportDisplay 
-                      report={gtmStrategyDocument}
-                      title="GTM Strategy Document"
-                      onClose={() => setShowGTMReport(false)}
-                    />
-                  </div>
-                )}
 
                 {/* Smart Recommendations */}
                 {currentStep >= wizardSteps.length && (
