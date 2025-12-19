@@ -271,6 +271,19 @@ export interface WizardMode {
   onWizardComplete?: (answers: Record<string, string>) => void;
 }
 
+export interface GTMMode {
+  enabled: boolean;
+  currentStep: number;
+  steps: Array<{
+    key: string;
+    question: string;
+    transition?: string;
+  }>;
+  answers: Record<string, string>;
+  onStepComplete?: (step: number, answer: string) => void;
+  onGTMComplete?: (answers: Record<string, string>) => void;
+}
+
 export interface SessionManagement {
   currentSessionId: string | null;
   createNewSession: (title?: string) => Promise<string | null>;
@@ -280,6 +293,7 @@ export interface SessionManagement {
 
 export const useChatbot = (config: EnhancedChatbotConfig & { 
   wizardMode?: WizardMode;
+  gtmMode?: GTMMode;
   sessionManagement?: SessionManagement;
 } = {
   enableNLU: true,
@@ -374,6 +388,8 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
+  const [gtmStep, setGtmStep] = useState(config.gtmMode?.currentStep || 0);
+  const [gtmAnswers, setGtmAnswers] = useState<Record<string, string>>(config.gtmMode?.answers || {});
   const sessionCreationAttempted = useRef(false); // Track if we've attempted to create a session
   
   // Sync messages with messagesByMode when chatMode changes (one-way: mode change -> load messages)
@@ -1619,6 +1635,13 @@ What specific aspect of your business would you like to focus on first?`;
                 answers: config.wizardMode.answers || {}
               });
             }
+            // Update session with initial GTM state if in GTM mode
+            if (config.gtmMode?.enabled) {
+              await sessionMgmt.updateSession(newSessionId, {
+                gtm_step: config.gtmMode.currentStep || 0,
+                gtm_answers: config.gtmMode.answers || {}
+              });
+            }
           } else {
             // Reset flag if creation failed so we can try again
             sessionCreationAttempted.current = false;
@@ -1763,6 +1786,125 @@ What specific aspect of your business would you like to focus on first?`;
         } catch (error) {
           console.error('Wizard mode streaming error:', error);
           handleError(error instanceof Error ? error : new Error('Unknown wizard error'));
+        }
+        
+        return;
+      }
+    }
+
+    // Handle GTM mode with structured step tracking
+    if (config.gtmMode?.enabled && config.gtmMode.steps && chatMode === 'gtm-strategy') {
+      console.log('🎯 GTM mode active, processing step:', gtmStep);
+      const currentStepData = config.gtmMode.steps[gtmStep];
+      if (currentStepData) {
+        // Save the answer
+        const newAnswers = { ...gtmAnswers, [currentStepData.key]: content.trim() };
+        setGtmAnswers(newAnswers);
+        
+        // Show typing indicator for AI response
+        simulateTyping();
+        
+        try {
+          // Get user ID
+          const { data: { user } } = await supabase.auth.getUser();
+          const userId = user?.id || null;
+          
+          // Prepare conversation history (optimized - only last 5 messages)
+          const conversationHistory = messages
+            .filter(msg => msg.id !== 'streaming')
+            .slice(-5)
+            .map(msg => ({
+              role: msg.isBot ? 'assistant' as const : 'user' as const,
+              content: msg.content
+            }));
+          
+          // Add placeholder streaming message
+          const streamingMsg: ChatMessage = {
+            id: 'streaming',
+            content: '',
+            isBot: true,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, streamingMsg]);
+          // Also update messagesByMode to keep it in sync
+          setMessagesByMode(prev => ({
+            ...prev,
+            [chatMode]: [...(prev[chatMode] || []), streamingMsg]
+          }));
+          setIsTyping(false);
+          setIsStreaming(true);
+          
+          console.log('📞 Calling streamChat function for GTM with:', {
+            sessionId,
+            historyLength: conversationHistory.length,
+            gtmStep,
+            chatMode
+          });
+          
+          // Stream AI response with GTM context
+          await streamChat(
+            content,
+            sessionId,
+            conversationHistory,
+            conversationState.businessContext,
+            userId,
+            null, // No wizard mode for GTM
+            null, // No wizard step for GTM
+            chatMode,
+            messageAttachments,
+            (chunk) => setStreamingMessage(prev => prev + chunk),
+            (fullMessage, quickActions, sources) => {
+              // Replace streaming message with final message and add quick actions
+              setMessages(prev => {
+                const updated = prev.map(msg => 
+                  msg.id === 'streaming' 
+                    ? { 
+                        ...msg, 
+                        id: generateId(), 
+                        content: fullMessage,
+                        quickActions: quickActions?.map(qa => ({ text: qa.text, id: qa.id, action: qa.text })),
+                        sources: sources?.map((s: any) => s.url || s.title) || [],
+                        sourceMetadata: sources
+                      }
+                    : msg
+                );
+                // Also update messagesByMode to keep it in sync
+                setMessagesByMode(prevMode => ({
+                  ...prevMode,
+                  [chatMode]: updated
+                }));
+                return updated;
+              });
+              setStreamingMessage('');
+              setIsStreaming(false);
+            },
+            (sources) => {
+              // Handle sources as they arrive
+            },
+            undefined, // onError
+            config.gtmMode ? {
+              enabled: true,
+              currentStep: gtmStep,
+              steps: config.gtmMode.steps,
+              answers: newAnswers
+            } : null,
+            gtmStep
+          );
+          
+          // Notify parent of step completion
+          config.gtmMode.onStepComplete?.(gtmStep, content.trim());
+          
+          // Move to next step
+          setGtmStep(gtmStep + 1);
+          
+          // Check if GTM complete
+          if (gtmStep + 1 >= config.gtmMode.steps.length) {
+            config.gtmMode.onGTMComplete?.(newAnswers);
+          }
+          
+        } catch (error) {
+          console.error('GTM mode streaming error:', error);
+          handleError(error instanceof Error ? error : new Error('Unknown GTM error'));
         }
         
         return;
@@ -2229,6 +2371,15 @@ What specific aspect of your business would you like to focus on first?`;
       answers: wizardAnswers,
       setWizardStep,
       isComplete: wizardStep >= (config.wizardMode.steps.length || 0)
+    } : null,
+    
+    // GTM mode properties
+    gtmMode: config.gtmMode?.enabled ? {
+      currentStep: gtmStep,
+      totalSteps: config.gtmMode.steps.length,
+      answers: gtmAnswers,
+      setGtmStep,
+      isComplete: gtmStep >= (config.gtmMode.steps.length || 0)
     } : null,
     
     // Enhanced business planning features

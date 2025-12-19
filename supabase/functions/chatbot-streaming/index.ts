@@ -157,6 +157,8 @@ serve(async (req) => {
       userId = null,
       wizardMode = null,
       currentStep = null,
+      gtmMode = null,
+      gtmStep = null,
       chatMode = 'wizard',
       attachments = []
     } = await req.json();
@@ -311,7 +313,7 @@ serve(async (req) => {
     ]);
     
     // 🚀 OPTIMIZATION: Build system prompt with market data and web search if available
-    let systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+    let systemPrompt = getCachedSystemPrompt(businessContext, wizardMode, currentStep, gtmMode, gtmStep, chatMode);
     
     // Add web search results if available
     if (webSearchData?.success && webSearchData.answer) {
@@ -533,7 +535,7 @@ function getCachedSystemPrompt(businessContext: BusinessContext, wizardMode: any
     return cached.prompt;
   }
   
-  const prompt = buildSystemPrompt(businessContext, wizardMode, currentStep, chatMode);
+  const prompt = buildSystemPrompt(businessContext, wizardMode, currentStep, chatMode, gtmMode, gtmStep);
   SYSTEM_PROMPT_CACHE.set(promptKey, { prompt, timestamp: Date.now() });
   
   // Clean old cache entries (keep last 50)
@@ -692,7 +694,7 @@ function createCachedStream(cachedContent: string, message: string, conversation
   });
 }
 
-function buildSystemPrompt(businessContext: BusinessContext, wizardMode: any = null, currentStep: number | null = null, chatMode: string = 'wizard'): string {
+function buildSystemPrompt(businessContext: BusinessContext, wizardMode: any = null, currentStep: number | null = null, gtmMode: any = null, gtmStep: number | null = null, chatMode: string = 'wizard'): string {
   // Tour guide mode - ultra concise platform help
   if (chatMode === 'tour-guide') {
     return `You are Creatives Takeover Assistant. Help visitors explore the platform.
@@ -1809,12 +1811,31 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // GTM Strategy mode → always use Claude Sonnet 4 for accuracy and structured output
+  // GTM Strategy mode → use complexity-based routing for better performance
   if (chatMode === 'gtm-strategy') {
+    // Simple queries (early steps, short answers) → use Gemini Flash for speed
+    if (complexity === 'simple') {
+      return { 
+        model: 'google/gemini-2.0-flash', 
+        strategy: 'speed',
+        maxTokens: 200,
+        temperature: 0.6
+      };
+    }
+    // Complex queries (later steps, strategic questions) → use Claude Sonnet 4 for quality
+    if (complexity === 'complex') {
+      return { 
+        model: 'anthropic/claude-sonnet-4-20250514', 
+        strategy: 'quality',
+        maxTokens: 700,
+        temperature: 0.7
+      };
+    }
+    // Moderate queries → default to Gemini Flash (balanced)
     return { 
-      model: 'anthropic/claude-sonnet-4-20250514', 
+      model: 'google/gemini-2.0-flash', 
       strategy: 'quality',
-      maxTokens: 700,
+      maxTokens: 400,
       temperature: 0.7
     };
   }

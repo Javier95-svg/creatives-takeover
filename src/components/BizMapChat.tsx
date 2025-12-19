@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SourceCitation } from "./chatbot/SourceCitation";
 import { SearchResults } from "./chatbot/SearchResults";
 import { ModeSelector } from "./chatbot/ModeSelector";
+import { GTMProgress } from "./GTMProgress";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -40,6 +41,18 @@ interface BizMapChatProps {
     setCurrentSessionId: (sessionId: string | null) => void;
     updateSession: (sessionId: string, updates: any) => Promise<void>;
   };
+  // GTM mode props
+  gtmSteps?: Array<{
+    key: string;
+    title?: string;
+    question: string;
+    transition?: string;
+    placeholder?: string;
+  }>;
+  onGTMStepComplete?: (step: number, answer: string) => void;
+  onGTMComplete?: (answers: Record<string, string>) => void;
+  currentGTMStep?: number;
+  gtmAnswers?: Record<string, string>;
 }
 
 // Helper function to categorize message importance
@@ -138,6 +151,73 @@ const extractKeyContent = (messages: ChatMessage[], businessContext: Record<stri
   };
 };
 
+// Define GTM steps - exported for use in Dream2Plan
+export const defaultGTMSteps = [
+  {
+    key: "customer_segmentation",
+    title: "Customer Segmentation",
+    question: "Who are your target customer segments? Describe the different groups of people who would buy your product.",
+    placeholder: "Example: Small business owners, freelancers, and creative professionals...",
+    transition: "Great segmentation! Now let's create detailed buyer personas..."
+  },
+  {
+    key: "buyer_personas",
+    title: "Buyer Personas",
+    question: "For your primary segment, create a detailed buyer persona. What are their demographics, pain points, goals, and behaviors?",
+    placeholder: "Example: Sarah, 32, marketing manager, struggles with time management...",
+    transition: "Excellent persona! Now let's define your market positioning..."
+  },
+  {
+    key: "positioning",
+    title: "Positioning",
+    question: "How do you want to be positioned in the market? What makes you different from competitors?",
+    placeholder: "Example: The fastest, most affordable solution for busy professionals...",
+    transition: "Strong positioning! Let's determine your pricing strategy..."
+  },
+  {
+    key: "pricing_strategy",
+    title: "Pricing Strategy",
+    question: "What's your pricing model? How did you arrive at this price point?",
+    placeholder: "Example: $29/month subscription, based on competitor analysis and value proposition...",
+    transition: "Smart pricing! Now let's plan your distribution channels..."
+  },
+  {
+    key: "distribution_channels",
+    title: "Distribution Channels",
+    question: "How will customers discover and purchase your product? What channels will you use?",
+    placeholder: "Example: Direct website sales, social media marketing, and partner referrals...",
+    transition: "Great channel mix! Let's outline your marketing tactics..."
+  },
+  {
+    key: "marketing_tactics",
+    title: "Marketing Tactics",
+    question: "What specific marketing tactics will you use to acquire customers? List 3-5 tactics.",
+    placeholder: "Example: Content marketing, paid social ads, email campaigns, webinars, and SEO...",
+    transition: "Solid tactics! Now let's design your sales process..."
+  },
+  {
+    key: "sales_process",
+    title: "Sales Process",
+    question: "How will you convert leads to customers? Describe your sales funnel.",
+    placeholder: "Example: Lead magnet → Email nurture → Free trial → Demo call → Conversion...",
+    transition: "Clear sales process! Let's create your launch plan..."
+  },
+  {
+    key: "launch_plan",
+    title: "Launch Plan",
+    question: "What's your launch timeline? When and how will you go to market?",
+    placeholder: "Example: Soft launch in 2 weeks, beta with 50 users, full launch in 6 weeks...",
+    transition: "Exciting launch plan! Finally, let's define your success metrics..."
+  },
+  {
+    key: "kpis_metrics",
+    title: "KPIs & Metrics",
+    question: "How will you measure success? What are your key performance indicators?",
+    placeholder: "Example: CAC < $50, LTV > $500, 20% conversion rate, 5% monthly churn...",
+    transition: "Perfect! Your GTM strategy is complete. Generating your strategy document..."
+  }
+];
+
 export const BizMapChat = ({ 
   wizardSteps, 
   onStepComplete, 
@@ -146,7 +226,12 @@ export const BizMapChat = ({
   answers,
   onChatModeReady,
   onModeInfoReady,
-  sessionManagement
+  sessionManagement,
+  gtmSteps = defaultGTMSteps,
+  onGTMStepComplete,
+  onGTMComplete,
+  currentGTMStep = 0,
+  gtmAnswers = {}
 }: BizMapChatProps) => {
   const [message, setMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -193,7 +278,8 @@ export const BizMapChat = ({
     conversionPromptShown,
     conversionPromptDismissed,
     trackConversionEvent,
-    sessionId
+    sessionId,
+    gtmMode
   } = useChatbot({
     enableNLU: true,
     enableDynamicFAQ: false,
@@ -201,7 +287,7 @@ export const BizMapChat = ({
     enablePersonalization: true,
     enableAIGeneratedAnswers: false,
     sessionManagement,
-    wizardMode: {
+    wizardMode: chatMode === 'wizard' ? {
       enabled: true,
       currentStep,
       steps: wizardSteps,
@@ -216,7 +302,21 @@ export const BizMapChat = ({
         onStepComplete(step, answer);
       },
       onWizardComplete
-    }
+    } : undefined,
+    gtmMode: chatMode === 'gtm-strategy' ? {
+      enabled: true,
+      currentStep: currentGTMStep,
+      steps: gtmSteps,
+      answers: gtmAnswers,
+      onStepComplete: (step, answer) => {
+        // Call parent handler
+        onGTMStepComplete?.(step, answer);
+      },
+      onGTMComplete: (finalAnswers) => {
+        // Call parent handler
+        onGTMComplete?.(finalAnswers);
+      }
+    } : undefined
   });
 
   const scrollToBottom = () => {
@@ -374,7 +474,8 @@ export const BizMapChat = ({
 
   const getCurrentPlaceholder = () => {
     if (chatMode === 'gtm-strategy') {
-      return "Ask about your go-to-market strategy...";
+      const currentGTMStepData = gtmSteps[gtmMode?.currentStep || currentGTMStep];
+      return currentGTMStepData?.placeholder || "Type your answer here...";
     }
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder || "Type your answer here...";
@@ -429,6 +530,17 @@ export const BizMapChat = ({
         {/* Search Status Indicator */}
         {isStreaming && searchStatus !== 'none' && (
           <SearchResults status={searchStatus} sourceCount={searchSourceCount} />
+        )}
+        
+        {/* GTM Progress Indicator */}
+        {chatMode === 'gtm-strategy' && gtmMode && (
+          <div className="mb-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+            <GTMProgress 
+              currentStep={gtmMode.currentStep || currentGTMStep}
+              totalSteps={gtmSteps.length}
+              steps={gtmSteps}
+            />
+          </div>
         )}
         
         {Array.isArray(messages) && messages.map((msg, index) => (
