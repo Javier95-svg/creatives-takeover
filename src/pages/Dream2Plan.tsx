@@ -183,12 +183,39 @@ const BizMapAI = () => {
   const [followUpState, setFollowUpState] = useState<{ active: boolean; stepKey: string | null; initialAnswer: string }>(
     { active: false, stepKey: null, initialAnswer: "" }
   );
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
+
+  // Sync currentSessionId changes from useChatSessions
+  useEffect(() => {
+    if (currentSessionId) {
+      const session = getSession(currentSessionId);
+      if (session) {
+        console.log('🟢 Dream2Plan: Syncing session state for', currentSessionId);
+        // Map session answers to userAnswers structure  
+        const mappedAnswers = {
+          overview: session.answers.overview || "",
+          market: session.answers.market || "",
+          problem: session.answers.problem || "",
+          solution: session.answers.solution || "",
+          channels: session.answers.channels || "",
+          pricing: session.answers.pricing || "",
+          goals: session.answers.goals || ""
+        };
+        
+        setUserAnswers(mappedAnswers);
+        setCurrentStep(session.current_step);
+        setLaunchReport(session.launch_report || "");
+      }
+    }
+  }, [currentSessionId, getSession]);
 
   // Session Management Functions
   const handleSessionSelect = (session: ChatSession | null) => {
     console.log('🟢 Dream2Plan: handleSessionSelect called', session?.id);
     if (session) {
       console.log('🟢 Setting currentSessionId to:', session.id);
+      setIsLoadingSession(true);
+      
       // Set the current session ID - this will trigger message loading in useChatbot
       // Use the setCurrentSessionId from useChatSessions to ensure state sync
       setCurrentSessionId(session.id);
@@ -211,12 +238,16 @@ const BizMapAI = () => {
       // Clear existing messages immediately to show loading state
       setMessages([]);
       
+      // Reset loading state after a short delay to allow messages to load
+      setTimeout(() => setIsLoadingSession(false), 1000);
+      
       // Messages will be loaded automatically by useChatbot hook when currentSessionId changes
       // The useEffect in useChatbot will detect the change and call loadMessagesFromSession
     } else {
       // Reset for new chat
       setCurrentSessionId(null);
       resetChat();
+      setIsLoadingSession(false);
     }
   };
 

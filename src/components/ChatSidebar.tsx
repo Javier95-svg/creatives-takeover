@@ -120,6 +120,11 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
 
   const handleSessionClick = (session: ChatSession) => {
     console.log('🔵 Sidebar: Clicked session', session.id, session.title);
+    // Don't do anything if clicking the same session
+    if (currentSessionId === session.id) {
+      console.log('🔵 Session already selected, skipping');
+      return;
+    }
     setCurrentSessionId(session.id);
     onSessionSelect(session);
   };
@@ -138,7 +143,12 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
 
   const handlePinSession = async (sessionId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    await togglePinSession(sessionId);
+    try {
+      await togglePinSession(sessionId);
+    } catch (error) {
+      console.error('Error pinning session:', error);
+      toast.error('Failed to update chat');
+    }
   };
 
   const handleDeleteClick = (sessionId: string, e?: React.MouseEvent) => {
@@ -148,10 +158,18 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
   };
 
   const confirmDelete = async () => {
-    if (sessionToDelete) {
+    if (!sessionToDelete || isDeleting) return;
+    
+    setIsDeleting(true);
+    try {
       await deleteSession(sessionToDelete);
       setDeleteDialogOpen(false);
       setSessionToDelete(null);
+    } catch (error) {
+      console.error('Error in confirmDelete:', error);
+      toast.error('Failed to delete chat. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -304,9 +322,9 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
 
         {/* Expanded State - Full Content */}
         {!isCollapsed && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in flex flex-col h-full">
             {/* Header - New Chat */}
-            <div className="p-4 border-b border-border/30">
+            <div className="flex-shrink-0 p-4 border-b border-border/30">
               <Button
                 onClick={handleNewChat}
                 className="w-full justify-start gap-2 glass-chat-button rounded-xl h-11 hover:shadow-lg transition-all duration-300"
@@ -318,7 +336,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
             </div>
 
             {/* Search */}
-            <div className="p-4 border-b border-border/30">
+            <div className="flex-shrink-0 p-4 border-b border-border/30">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                 <Input
@@ -330,8 +348,8 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
               </div>
             </div>
 
-            {/* Chat List */}
-            <ScrollArea className="flex-1">
+            {/* Chat List - Scrollable */}
+            <ScrollArea className="flex-1 min-h-0">
               <div className="p-3">
                 {loading ? (
                   <div className="space-y-2">
@@ -418,7 +436,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
             </ScrollArea>
 
             {/* User Footer */}
-            <div className="border-t border-border/30 p-4">
+            <div className="flex-shrink-0 border-t border-border/30 p-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-start p-3 h-auto rounded-xl hover:bg-muted/60 transition-all duration-300">
@@ -461,9 +479,10 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
               >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

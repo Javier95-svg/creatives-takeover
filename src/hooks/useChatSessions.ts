@@ -135,9 +135,22 @@ export const useChatSessions = () => {
   }, [user]);
 
   const deleteSession = useCallback(async (sessionId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Please sign in to delete chats');
+      return;
+    }
 
     try {
+      // If deleted session was current, clear it first
+      const wasCurrentSession = currentSessionId === sessionId;
+      if (wasCurrentSession) {
+        setCurrentSessionId(null);
+      }
+
+      // Optimistically update local state immediately for better UX
+      setSessions(prev => prev.filter(session => session.id !== sessionId));
+
+      // Delete from database
       const { error } = await supabase
         .from('chat_sessions')
         .delete()
@@ -146,39 +159,47 @@ export const useChatSessions = () => {
 
       if (error) {
         console.error('Error deleting session:', error);
-        toast.error('Failed to delete chat');
-        return;
+        // Revert optimistic update on error
+        await loadSessions();
+        throw new Error(error.message || 'Failed to delete chat');
       }
 
-      // If deleted session was current, clear it first
-      if (currentSessionId === sessionId) {
-        setCurrentSessionId(null);
-      }
-
-      // Optimistically update local state
-      setSessions(prev => prev.filter(session => session.id !== sessionId));
-      
       // Reload sessions from database to ensure consistency
       await loadSessions();
 
       toast.success('Chat deleted');
     } catch (error) {
       console.error('Error deleting session:', error);
-      toast.error('Failed to delete chat');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete chat';
+      toast.error(errorMessage);
       // Reload on error to ensure UI consistency
       await loadSessions();
+      throw error; // Re-throw so caller can handle it
     }
   }, [user, currentSessionId, loadSessions]);
 
   const togglePinSession = useCallback(async (sessionId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Please sign in to pin chats');
+      return;
+    }
 
     const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
+    if (!session) {
+      toast.error('Session not found');
+      return;
+    }
 
     const newPinnedState = !session.is_pinned;
 
     try {
+      // Optimistically update UI
+      setSessions(prev =>
+        prev.map(s =>
+          s.id === sessionId ? { ...s, is_pinned: newPinnedState } : s
+        )
+      );
+
       const { error } = await supabase
         .from('chat_sessions')
         .update({ is_pinned: newPinnedState })
@@ -187,19 +208,25 @@ export const useChatSessions = () => {
 
       if (error) {
         console.error('Error toggling pin:', error);
+        // Revert optimistic update
+        setSessions(prev =>
+          prev.map(s =>
+            s.id === sessionId ? { ...s, is_pinned: !newPinnedState } : s
+          )
+        );
         toast.error('Failed to update chat');
         return;
       }
 
-      setSessions(prev =>
-        prev.map(s =>
-          s.id === sessionId ? { ...s, is_pinned: newPinnedState } : s
-        )
-      );
-
       toast.success(newPinnedState ? 'Chat pinned' : 'Chat unpinned');
     } catch (error) {
       console.error('Error toggling pin:', error);
+      // Revert optimistic update
+      setSessions(prev =>
+        prev.map(s =>
+          s.id === sessionId ? { ...s, is_pinned: !newPinnedState } : s
+        )
+      );
       toast.error('Failed to update chat');
     }
   }, [user, sessions]);

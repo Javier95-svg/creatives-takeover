@@ -994,7 +994,20 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
       previousSessionIdRef.current = currentSessionId;
       console.log('🔄 Session changed, loading messages:', currentSessionId);
-      loadMessagesFromSession(currentSessionId);
+      // Clear messages first to show loading state
+      setMessages([]);
+      setMessagesByMode(prev => ({
+        ...prev,
+        [chatMode]: []
+      }));
+      // Load messages
+      loadMessagesFromSession(currentSessionId).catch((error) => {
+        console.error('Failed to load messages:', error);
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: `Failed to load messages: ${error instanceof Error ? error.message : 'Unknown error'}` 
+        });
+      });
     } else if (!currentSessionId && previousSessionIdRef.current) {
       // Session was cleared, reset messages
       console.log('🔄 Session cleared, resetting messages');
