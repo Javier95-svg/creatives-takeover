@@ -61,8 +61,8 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
   } = useChatSessions();
   const { user, signOut } = useAuth();
 
-  // Filter and sort sessions - pinned first, then by date
-  const sortedSessions = useMemo(() => {
+  // Group sessions by date (Today, Yesterday, This Week, Older)
+  const groupedSessions = useMemo(() => {
     let filtered = sessions.filter(session =>
       session.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -74,7 +74,40 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
       return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
     });
 
-    return filtered;
+    // Group by date
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const thisWeek = new Date(today);
+    thisWeek.setDate(thisWeek.getDate() - 7);
+
+    const groups: {
+      label: string;
+      sessions: typeof filtered;
+    }[] = [
+      { label: 'Today', sessions: [] },
+      { label: 'Yesterday', sessions: [] },
+      { label: 'This Week', sessions: [] },
+      { label: 'Older', sessions: [] }
+    ];
+
+    filtered.forEach(session => {
+      const sessionDate = new Date(session.updated_at);
+      
+      if (sessionDate >= today) {
+        groups[0].sessions.push(session);
+      } else if (sessionDate >= yesterday) {
+        groups[1].sessions.push(session);
+      } else if (sessionDate >= thisWeek) {
+        groups[2].sessions.push(session);
+      } else {
+        groups[3].sessions.push(session);
+      }
+    });
+
+    // Filter out empty groups
+    return groups.filter(group => group.sessions.length > 0);
   }, [sessions, searchQuery]);
 
   const handleNewChat = async () => {
@@ -245,7 +278,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
 
             <div className="h-px bg-border/50 my-2" />
 
-            {sortedSessions.slice(0, 5).map((session) => (
+            {groupedSessions.flatMap(group => group.sessions).slice(0, 5).map((session) => (
               <Tooltip key={session.id}>
                 <TooltipTrigger asChild>
                   <Button
@@ -305,7 +338,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                       <div key={i} className="h-16 bg-muted/30 rounded-xl animate-pulse" />
                     ))}
                   </div>
-                ) : sortedSessions.length === 0 ? (
+                ) : groupedSessions.length === 0 ? (
                   <div className="text-center py-8 px-4">
                     <MessageSquare className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
@@ -313,62 +346,69 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    {sortedSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        className={cn(
-                          "group relative p-3 rounded-xl cursor-pointer transition-all duration-300",
-                          "hover:bg-muted/60 hover:shadow-md hover:-translate-y-0.5",
-                          currentSessionId === session.id && "bg-primary/10 border border-primary/20 shadow-sm"
-                        )}
-                        onClick={() => handleSessionClick(session)}
-                      >
-                        <div className="flex items-start gap-2">
-                          <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-sm whitespace-nowrap flex-1">
-                                {session.title}
-                              </h4>
-                              {session.is_pinned && (
-                                <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground whitespace-nowrap">
-                              {formatDate(session.updated_at)}
-                            </p>
-                          </div>
+                  <div className="space-y-4">
+                    {groupedSessions.map((group) => (
+                      <div key={group.label} className="space-y-2">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">
+                          {group.label}
+                        </h3>
+                        {group.sessions.map((session) => (
+                          <div
+                            key={session.id}
+                            className={cn(
+                              "group relative p-3 rounded-xl cursor-pointer transition-all duration-300",
+                              "hover:bg-muted/60 hover:shadow-md hover:-translate-y-0.5",
+                              currentSessionId === session.id && "bg-primary/10 border border-primary/20 shadow-sm"
+                            )}
+                            onClick={() => handleSessionClick(session)}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-sm whitespace-nowrap flex-1">
+                                    {session.title}
+                                  </h4>
+                                  {session.is_pinned && (
+                                    <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {formatDate(session.updated_at)}
+                                </p>
+                              </div>
 
-                          {/* Actions Menu */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-8 w-8 p-0 flex-shrink-0 rounded-lg"
-                              >
-                                <span className="text-lg leading-none">⋯</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem onClick={(e) => handlePinSession(session.id, e)}>
-                                <Pin className="w-4 h-4 mr-2" />
-                                {session.is_pinned ? 'Unpin' : 'Pin'}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => handleRenameSession(session.id, e)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Rename
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive"
-                                onClick={(e) => handleDeleteClick(session.id, e)}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                              {/* Actions Menu */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-8 w-8 p-0 flex-shrink-0 rounded-lg"
+                                  >
+                                    <span className="text-lg leading-none">⋯</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={(e) => handlePinSession(session.id, e)}>
+                                    <Pin className="w-4 h-4 mr-2" />
+                                    {session.is_pinned ? 'Unpin' : 'Pin'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => handleRenameSession(session.id, e)}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Rename
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={(e) => handleDeleteClick(session.id, e)}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>

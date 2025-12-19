@@ -784,7 +784,10 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
 
   // Load messages from a session when it's selected
   const loadMessagesFromSession = useCallback(async (sessionId: string) => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      console.warn('⚠️ loadMessagesFromSession called with empty sessionId');
+      return;
+    }
     
     try {
       setIsTyping(true);
@@ -799,8 +802,12 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       
       if (convError) {
         console.error('Error loading conversation:', convError);
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to load conversation history' });
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: `Failed to load conversation: ${convError.message || 'Unknown error'}` 
+        });
         setIsTyping(false);
+        // Don't clear messages on error - keep existing state
         return;
       }
       
@@ -812,6 +819,13 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
           ...prev,
           [chatMode]: []
         }));
+        dispatch({ 
+          type: 'UPDATE_STATE', 
+          payload: { 
+            messageCount: 0,
+            context: ConversationContext.WELCOME
+          } 
+        });
         setIsTyping(false);
         return;
       }
@@ -825,31 +839,109 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       
       if (messagesError) {
         console.error('Error loading messages:', messagesError);
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to load messages' });
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: `Failed to load messages: ${messagesError.message || 'Unknown error'}` 
+        });
+        setIsTyping(false);
+        // Don't clear messages on error - keep existing state
+        return;
+      }
+      
+      // Handle empty messages array
+      if (!dbMessages || dbMessages.length === 0) {
+        console.log('📭 No messages found for conversation');
+        setMessages([]);
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: []
+        }));
+        dispatch({ 
+          type: 'UPDATE_STATE', 
+          payload: { 
+            messageCount: 0,
+            context: ConversationContext.WELCOME
+          } 
+        });
         setIsTyping(false);
         return;
       }
       
-      // Convert database messages to ChatMessage format
-      const loadedMessages: ChatMessage[] = (dbMessages || []).map((msg) => ({
-        id: msg.id || generateId(),
-        content: msg.content || '',
-        isBot: msg.role === 'assistant',
-        timestamp: new Date(msg.created_at || Date.now()),
-        businessContext: typeof msg.metadata === 'object' && msg.metadata !== null 
-          ? (msg.metadata as any).businessContext 
-          : undefined
-      }));
+      // Convert database messages to ChatMessage format with error handling
+      const loadedMessages: ChatMessage[] = dbMessages
+        .filter((msg) => {
+          // Filter out invalid messages
+          if (!msg.id || !msg.content) {
+            console.warn('⚠️ Skipping invalid message:', msg);
+            return false;
+          }
+          return true;
+        })
+        .map((msg) => {
+          try {
+            const metadata = typeof msg.metadata === 'object' && msg.metadata !== null 
+              ? (msg.metadata as any) 
+              : {};
+            
+            // Safely parse timestamp
+            let timestamp: Date;
+            try {
+              timestamp = msg.created_at ? new Date(msg.created_at) : new Date();
+              // Validate date
+              if (isNaN(timestamp.getTime())) {
+                timestamp = new Date();
+              }
+            } catch {
+              timestamp = new Date();
+            }
+            
+            return {
+              id: msg.id || generateId(),
+              content: msg.content || '',
+              isBot: msg.role === 'assistant',
+              timestamp,
+              businessContext: metadata.businessContext,
+              messageType: metadata.messageType || 'text',
+              confidence: metadata.confidence,
+              sources: Array.isArray(metadata.sources) ? metadata.sources : undefined,
+              sourceMetadata: Array.isArray(metadata.sourceMetadata) 
+                ? metadata.sourceMetadata 
+                : (Array.isArray(metadata.sources) 
+                  ? metadata.sources.map((s: any) => ({
+                      title: s.title || s.name || '',
+                      url: s.url || s.link,
+                      source: s.source,
+                      sourceType: s.sourceType || 'knowledge',
+                      snippet: s.snippet || s.excerpt,
+                      relevance: s.relevance || s.similarity,
+                      publishedDate: s.publishedDate
+                    }))
+                  : undefined),
+              quickActions: Array.isArray(metadata.quickActions) ? metadata.quickActions : undefined,
+              attachments: Array.isArray(metadata.attachments) ? metadata.attachments : undefined
+            };
+          } catch (error) {
+            console.error('Error converting message:', error, msg);
+            // Return a minimal valid message
+            return {
+              id: msg.id || generateId(),
+              content: msg.content || 'Error loading message',
+              isBot: msg.role === 'assistant',
+              timestamp: new Date(msg.created_at || Date.now())
+            };
+          }
+        });
       
       console.log(`✅ Loaded ${loadedMessages.length} messages from session`);
-      setMessages(loadedMessages);
-      setMessagesByMode(prev => ({
-        ...prev,
-        [chatMode]: loadedMessages
-      }));
       
-      // Update conversation state based on loaded messages
+      // Only update state if we have valid messages
       if (loadedMessages.length > 0) {
+        setMessages(loadedMessages);
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: loadedMessages
+        }));
+        
         const userMessages = loadedMessages.filter(m => !m.isBot);
         dispatch({ 
           type: 'UPDATE_STATE', 
@@ -861,7 +953,12 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
           } 
         });
       } else {
-        // Empty conversation - reset to welcome state
+        // No valid messages - reset to empty
+        setMessages([]);
+        setMessagesByMode(prev => ({
+          ...prev,
+          [chatMode]: []
+        }));
         dispatch({ 
           type: 'UPDATE_STATE', 
           payload: { 
@@ -873,14 +970,18 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       
     } catch (error) {
       console.error('Error loading messages from session:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error loading messages';
       dispatch({ 
         type: 'SET_ERROR', 
-        payload: error instanceof Error ? error.message : 'Unknown error loading messages' 
+        payload: errorMessage
       });
+      // Don't clear messages on error - keep existing state
     } finally {
       setIsTyping(false);
     }
-  }, []);
+  }, [chatMode]);
 
   // Load messages when session is selected (must be after loadMessagesFromSession is defined)
   const previousSessionIdRef = useRef<string | null>(null);
@@ -896,6 +997,7 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       // Session was cleared, reset messages
       previousSessionIdRef.current = null;
       setMessagesForMode([]);
+      setMessages([]);
     }
   }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession]);
 

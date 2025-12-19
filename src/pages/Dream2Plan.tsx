@@ -188,6 +188,7 @@ const BizMapAI = () => {
   const handleSessionSelect = (session: ChatSession | null) => {
     if (session) {
       // Set the current session ID - this will trigger message loading in useChatbot
+      // Use the setCurrentSessionId from useChatSessions to ensure state sync
       setCurrentSessionId(session.id);
       
       // Properly map session answers to userAnswers structure  
@@ -205,8 +206,11 @@ const BizMapAI = () => {
       setCurrentStep(session.current_step);
       setLaunchReport(session.launch_report || "");
       
+      // Clear existing messages immediately to show loading state
+      setMessages([]);
+      
       // Messages will be loaded automatically by useChatbot hook when currentSessionId changes
-      // No need to reconstruct messages here
+      // The useEffect in useChatbot will detect the change and call loadMessagesFromSession
     } else {
       // Reset for new chat
       setCurrentSessionId(null);

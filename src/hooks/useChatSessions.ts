@@ -150,18 +150,25 @@ export const useChatSessions = () => {
         return;
       }
 
-      setSessions(prev => prev.filter(session => session.id !== sessionId));
-      
+      // If deleted session was current, clear it first
       if (currentSessionId === sessionId) {
         setCurrentSessionId(null);
       }
+
+      // Optimistically update local state
+      setSessions(prev => prev.filter(session => session.id !== sessionId));
+      
+      // Reload sessions from database to ensure consistency
+      await loadSessions();
 
       toast.success('Chat deleted');
     } catch (error) {
       console.error('Error deleting session:', error);
       toast.error('Failed to delete chat');
+      // Reload on error to ensure UI consistency
+      await loadSessions();
     }
-  }, [user, currentSessionId]);
+  }, [user, currentSessionId, loadSessions]);
 
   const togglePinSession = useCallback(async (sessionId: string) => {
     if (!user) return;
