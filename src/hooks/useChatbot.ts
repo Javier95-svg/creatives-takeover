@@ -1795,6 +1795,12 @@ What specific aspect of your business would you like to focus on first?`;
     // Handle GTM mode with structured step tracking
     if (config.gtmMode?.enabled && config.gtmMode.steps && chatMode === 'gtm-strategy') {
       console.log('🎯 GTM mode active, processing step:', gtmStep);
+      // Defensive check: ensure gtmStep is within bounds
+      if (gtmStep < 0 || gtmStep >= config.gtmMode.steps.length) {
+        console.error('GTM step index out of bounds:', { gtmStep, stepsLength: config.gtmMode.steps.length });
+        handleError(new Error(`Invalid GTM step index: ${gtmStep}`));
+        return;
+      }
       const currentStepData = config.gtmMode.steps[gtmStep];
       if (currentStepData) {
         // Save the answer
@@ -2378,7 +2384,11 @@ What specific aspect of your business would you like to focus on first?`;
       // #region agent log
       fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:2377',message:'GTM mode return value calculation',data:{gtmModeEnabled:config.gtmMode?.enabled,gtmStep,gtmModeStepsLength:config.gtmMode?.steps?.length,gtmAnswersCount:Object.keys(gtmAnswers||{}).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
       // #endregion
-      return config.gtmMode?.enabled ? {
+      // Defensive check: ensure gtmMode config exists and has valid steps
+      if (!config.gtmMode?.enabled || !config.gtmMode.steps || !Array.isArray(config.gtmMode.steps) || config.gtmMode.steps.length === 0) {
+        return null;
+      }
+      return {
         currentStep: gtmStep,
         totalSteps: config.gtmMode.steps.length,
         answers: gtmAnswers,
