@@ -2394,7 +2394,7 @@ What specific aspect of your business would you like to focus on first?`;
         answers: gtmAnswers,
         setGtmStep,
         isComplete: gtmStep >= (config.gtmMode.steps.length || 0)
-      } : null;
+      };
     })(),
     
     // Enhanced business planning features
