@@ -254,76 +254,105 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // Ensure uniqueness by checking database
+      // Use retry pattern with unique constraint to handle race conditions
       let finalUsername = username;
       let counter = 1;
-      let isUnique = false;
+      const maxAttempts = 10;
+      let insertSuccess = false;
       
-      while (!isUnique) {
-        const { data: existing } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('username', finalUsername)
-          .maybeSingle();
-        
-        if (!existing) {
-          isUnique = true;
-        } else {
+      // Check if this is the admin account
+      const isAdmin = user.email?.toLowerCase() === 'admin@creatives-takeover.com';
+      
+      // Attempt to insert profile with retry on duplicate username
+      for (let attempt = 0; attempt < maxAttempts && !insertSuccess; attempt++) {
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              full_name: fullName || '',
+              avatar_url: user.user_metadata?.avatar_url || '',
+              date_of_birth: user.user_metadata?.date_of_birth || null,
+              username: finalUsername,
+              subscription_tier: isAdmin ? 'professional' : 'free',
+            });
+
+          if (!error) {
+            insertSuccess = true;
+            break;
+          }
+
+          // If duplicate key error on username, try next username
+          if (error.code === '23505' && error.message?.includes('username')) {
+            finalUsername = username + counter.toString();
+            counter++;
+            continue;
+          }
+
+          // Other errors should be handled below
+          throw error;
+        } catch (insertError: any) {
+          // If not a username conflict, break and handle below
+          if (insertError.code !== '23505' || !insertError.message?.includes('username')) {
+            throw insertError;
+          }
+          // Continue to next attempt with incremented username
           finalUsername = username + counter.toString();
           counter++;
         }
       }
       
-      // Check if this is the admin account
-      const isAdmin = user.email?.toLowerCase() === 'admin@creatives-takeover.com';
-      
-      // Attempt to insert profile
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          full_name: fullName || '',
-          avatar_url: user.user_metadata?.avatar_url || '',
-          date_of_birth: user.user_metadata?.date_of_birth || null,
-          username: finalUsername,
-          subscription_tier: isAdmin ? 'professional' : 'free',
-        });
-      
-      // Handle insert errors gracefully
-      if (error) {
-        // Check if error is due to duplicate key (race condition with trigger)
-        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
-          // Profile was likely created by trigger in the meantime - verify it exists
-          const { data: profileAfterError } = await supabase
+      // If all attempts failed due to username conflicts, use UUID-based fallback
+      if (!insertSuccess) {
+        // Fallback: use UUID-based username (guaranteed unique)
+        finalUsername = 'user' + user.id.substring(0, 8);
+        const { error: fallbackError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: fullName || '',
+            avatar_url: user.user_metadata?.avatar_url || '',
+            date_of_birth: user.user_metadata?.date_of_birth || null,
+            username: finalUsername,
+            subscription_tier: isAdmin ? 'professional' : 'free',
+          });
+        
+        if (fallbackError) {
+          // Check if error is due to duplicate key (race condition with trigger)
+          if (fallbackError.code === '23505' || fallbackError.message?.includes('duplicate key') || fallbackError.message?.includes('already exists')) {
+            // Profile was likely created by trigger - verify it exists
+            const { data: profileAfterError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            if (profileAfterError) {
+              logInfo('Profile created by trigger after race condition', { userId: user.id });
+              return false; // Not a NEW profile
+            }
+          }
+          
+          // Log other errors
+          logError('Error creating profile with fallback username', fallbackError, { userId: user.id, errorCode: fallbackError.code });
+          
+          // Final check: verify if profile exists despite the error
+          const { data: profileCheck } = await supabase
             .from('profiles')
             .select('id')
             .eq('id', user.id)
             .maybeSingle();
           
-          if (profileAfterError) {
-            // Profile exists now, so success (trigger created it)
-            logInfo('Profile created by trigger after race condition', { userId: user.id });
-            return false; // Return false because it's not a NEW profile (trigger created it)
+          if (profileCheck) {
+            logInfo('Profile exists despite insert error (likely created by trigger)', { userId: user.id });
+            return false;
           }
+          
+          return false;
         }
         
-        // Log other errors but don't fail completely
-        logError('Error creating profile', error, { userId: user.id, errorCode: error.code });
-        
-        // Double-check if profile exists despite the error (might have been created by trigger)
-        const { data: profileCheck } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-        
-        if (profileCheck) {
-          // Profile exists, so it's fine
-          logInfo('Profile exists despite insert error (likely created by trigger)', { userId: user.id });
-          return false; // Return false because it's not a NEW profile
-        }
-        
-        // Profile doesn't exist and insert failed - return false
-        return false;
+        // Fallback insert succeeded
+        return true;
       }
       
       // Insert succeeded - this is a new profile

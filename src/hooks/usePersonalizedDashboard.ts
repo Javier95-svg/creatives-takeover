@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError } from '@/lib/logger';
 
 export interface PersonalizedRecommendation {
   id: string;
@@ -119,56 +120,63 @@ export const usePersonalizedDashboard = () => {
       isLoadingRef.current = true;
       setLoading(true);
 
-      // Load profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      // Load recommendations
-      const { data: recommendations } = await supabase
-        .from('personalized_recommendations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_dismissed', false)
-        .gte('expires_at', new Date().toISOString())
-        .order('priority', { ascending: false })
-        .limit(5);
-
-      // Load widgets
-      const { data: widgets } = await supabase
-        .from('dashboard_widgets')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_visible', true)
-        .order('position');
-
-      // Load real stats
-      const { count: activeSprints } = await supabase
-        .from('sprints')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'active');
-
-      const { count: completedSessions } = await supabase
-        .from('chat_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_completed', true);
-
-      const { count: totalCheckIns } = await supabase
-        .from('daily_check_ins')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Calculate current streak
-      const { data: checkIns } = await supabase
-        .from('daily_check_ins')
-        .select('check_in_date')
-        .eq('user_id', user.id)
-        .order('check_in_date', { ascending: false })
-        .limit(100);
+      // Execute all independent queries in parallel for better performance
+      const [
+        { data: profile },
+        { data: recommendations },
+        { data: widgets },
+        { count: activeSprints },
+        { count: completedSessions },
+        { count: totalCheckIns },
+        { data: checkIns }
+      ] = await Promise.all([
+        // Load profile
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single(),
+        // Load recommendations
+        supabase
+          .from('personalized_recommendations')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_dismissed', false)
+          .gte('expires_at', new Date().toISOString())
+          .order('priority', { ascending: false })
+          .limit(5),
+        // Load widgets
+        supabase
+          .from('dashboard_widgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_visible', true)
+          .order('position'),
+        // Load real stats - active sprints count
+        supabase
+          .from('sprints')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('status', 'active'),
+        // Load real stats - completed sessions count
+        supabase
+          .from('chat_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_completed', true),
+        // Load real stats - total check-ins count
+        supabase
+          .from('daily_check_ins')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id),
+        // Calculate current streak - get check-ins for streak calculation
+        supabase
+          .from('daily_check_ins')
+          .select('check_in_date')
+          .eq('user_id', user.id)
+          .order('check_in_date', { ascending: false })
+          .limit(100)
+      ]);
 
       let currentStreak = 0;
       if (checkIns && checkIns.length > 0) {
