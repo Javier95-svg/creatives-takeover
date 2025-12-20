@@ -187,10 +187,18 @@ const BizMapAI = () => {
 
   // Sync currentSessionId changes from useChatSessions
   useEffect(() => {
-    if (currentSessionId) {
+    if (!currentSessionId) return;
+    
+    // Wait a tick to ensure getSession is available
+    const timeoutId = setTimeout(() => {
       try {
+        if (typeof getSession !== 'function') {
+          console.warn('getSession is not a function yet');
+          return;
+        }
+        
         const session = getSession(currentSessionId);
-        if (session && session.answers) {
+        if (session) {
           console.log('🟢 Dream2Plan: Syncing session state for', currentSessionId);
           // Map session answers to userAnswers structure with safe access
           const answers = session.answers || {};
@@ -210,9 +218,11 @@ const BizMapAI = () => {
         }
       } catch (error) {
         console.error('Error syncing session state:', error);
-        // Don't throw - just log the error
+        // Don't throw - just log the error to prevent crash
       }
-    }
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
   }, [currentSessionId, getSession]);
 
   // Session Management Functions
