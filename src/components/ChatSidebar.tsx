@@ -3,7 +3,7 @@ import { Plus, MessageSquare, Trash2, Search, Edit, Pin, LogOut, ChevronLeft, Ch
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -351,7 +351,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
 
             {/* Chat List - Scrollable */}
             <ScrollArea className="flex-1 min-h-0">
-              <div className="p-3">
+              <div className="p-3 min-w-fit">
                 {loading ? (
                   <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
@@ -366,7 +366,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 min-w-fit">
                     {groupedSessions.map((group) => (
                       <div key={group.label} className="space-y-2">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">
@@ -434,6 +434,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
                   </div>
                 )}
               </div>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
 
             {/* User Footer */}
