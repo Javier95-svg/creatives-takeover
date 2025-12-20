@@ -315,18 +315,20 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy'>('wizard');
+  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy' | 'bizmap-structured'>('wizard');
   // Separate message storage per mode for independent conversations
   const [messagesByMode, setMessagesByMode] = useState<{
     'wizard': ChatMessage[];
     'gtm-strategy': ChatMessage[];
     'freeform': ChatMessage[];
     'tour-guide': ChatMessage[];
+    'bizmap-structured': ChatMessage[];
   }>({
     'wizard': [],
     'gtm-strategy': [],
     'freeform': [],
-    'tour-guide': []
+    'tour-guide': [],
+    'bizmap-structured': []
   });
   const [attachments, setAttachments] = useState<File[]>([]);
   const [chatAnalytics, setChatAnalytics] = useState<ChatAnalytics>({
@@ -364,11 +366,13 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'gtm-strategy': string;
     'freeform': string;
     'tour-guide': string;
+    'bizmap-structured': string;
   }>({
     'wizard': `session_wizard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'gtm-strategy': `session_gtm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'freeform': `session_freeform_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    'tour-guide': `session_tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    'tour-guide': `session_tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    'bizmap-structured': `session_structured_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   });
   const sessionId = sessionIdsByMode[chatMode];
   const [enableStreaming] = useState(true); // Enable streaming by default

@@ -173,6 +173,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // 🎯 ROUTE: If bizmap-structured mode, route to structured system
+    if (chatMode === 'bizmap-structured') {
+      return routeToStructuredSystem(req, supabase, sessionId, message, userId);
+    }
+
     // Get/create conversation first (fast DB query with index)
     const convResult = await supabase
       .from('chatbot_conversations')
@@ -395,7 +400,7 @@ serve(async (req) => {
       error: error.message,
       stack: error.stack,
       chatMode,
-      messageLength: message.length,
+      messageLength: message?.length || 0,
     });
     
     // Track error metrics
@@ -410,6 +415,140 @@ serve(async (req) => {
     });
   }
 });
+
+// 🎯 Route to structured BizMap system
+async function routeToStructuredSystem(
+  req: Request,
+  supabase: any,
+  sessionId: string,
+  message: string,
+  userId: string | null
+): Promise<Response> {
+  try {
+    // Get or create bizmap session
+    let { data: bizmapSession } = await supabase
+      .from('bizmap_sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .maybeSingle();
+
+    if (!bizmapSession) {
+      // Create new session
+      const { data: newSession, error: createError } = await supabase
+        .from('bizmap_sessions')
+        .insert({
+          id: sessionId, // Use chat sessionId as bizmap sessionId
+          user_id: userId,
+          status: 'draft',
+          completion_percentage: 0,
+          current_component: 'problem'
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      bizmapSession = newSession;
+    }
+
+    // Get existing components for context
+    const { data: existingComponents } = await supabase
+      .from('bizmap_components')
+      .select('component_type, component_data')
+      .eq('session_id', sessionId);
+
+    const collectedComponents: Record<string, any> = {};
+    existingComponents?.forEach((comp: any) => {
+      collectedComponents[comp.component_type] = comp.component_data;
+    });
+
+    // Call structured system API
+    const structuredResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/bizmap-structured/answer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        component_type: bizmapSession.current_component || 'problem',
+        answer: message,
+        context: collectedComponents
+      })
+    });
+
+    if (!structuredResponse.ok) {
+      throw new Error(`Structured system error: ${structuredResponse.status}`);
+    }
+
+    const structuredData = await structuredResponse.json();
+
+    // Convert structured response to streaming format for compatibility
+    const stream = new ReadableStream({
+      start(controller) {
+        // Send the question/response as a delta
+        const responseText = structuredData.question || 'Processing...';
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ type: 'delta', content: responseText })}\n\n`
+        ));
+        
+        // Send completion
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ 
+            type: 'complete', 
+            conversationId: sessionId,
+            structuredData: {
+              currentComponent: structuredData.currentComponent,
+              completionPercentage: structuredData.completionPercentage,
+              validationErrors: structuredData.validationErrors
+            }
+          })}\n\n`
+        ));
+        
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+
+  } catch (error: any) {
+    logError('Structured System Routing Error', {
+      error: error.message,
+      stack: error.stack,
+      sessionId
+    });
+
+    const errorStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({ 
+            type: 'error', 
+            error: error.message || 'Failed to process structured request' 
+          })}\n\n`
+        ));
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        controller.close();
+      }
+    });
+
+    return new Response(errorStream, {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+  }
+}
 
 // 🚀 OPTIMIZATION: Generate cache key for response caching with semantic normalization
 async function generateCacheKey(message: string, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string): Promise<string> {
