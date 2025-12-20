@@ -55,7 +55,13 @@ const templates: Template[] = [
   
   // Pricing questions
   {
-    patterns: [/how much (does|do|is|cost|costs)/i, /what.*price/i, /is (this|it) free/i, /(free|pricing|cost)/i],
+    patterns: [
+      /^how much (does|do|is|cost|costs)/i,  // Only at start
+      /^what.*price/i,                        // Only at start  
+      /^is (this|it|bizmap) free/i,           // Only at start with context
+      /(^|\.|\s)(is|are) (bizmap|this|it) (free|cost|pricing)/i,  // Contextual match
+      /how (much|do) (you|bizmap|this) (charge|cost)/i  // Direct pricing question
+    ],
     response: "BizMap AI is free to use! You can complete the full 7-step wizard and get your Launch Report at no cost. Some advanced features like detailed market analysis may use credits, but the core planning experience is completely free.\n\nWant to start your free business plan?",
     quickActions: [
       { text: "Start free plan", id: "start_planning" },
@@ -107,6 +113,11 @@ const templates: Template[] = [
 function matchTemplate(message: string, businessContext?: any): Template | null {
   const normalizedMessage = message.trim().toLowerCase();
   
+  // Skip template matching for detailed business idea descriptions
+  if (isBusinessIdeaDescription(message)) {
+    return null;
+  }
+  
   for (const template of templates) {
     for (const pattern of template.patterns) {
       if (pattern.test(normalizedMessage)) {
@@ -124,6 +135,42 @@ function matchTemplate(message: string, businessContext?: any): Template | null 
   }
   
   return null;
+}
+
+// Detect if a message is a detailed business idea description
+function isBusinessIdeaDescription(message: string): boolean {
+  const text = message.trim();
+  const lowerText = text.toLowerCase();
+  
+  // Must be reasonably long (detailed descriptions)
+  if (text.length < 100) return false;
+  
+  // Business idea indicators
+  const businessIdeaPatterns = [
+    /(want to|going to|planning to|starting|creating|building).*(business|startup|company|product|service)/i,
+    /(business idea|business plan|startup idea|venture)/i,
+    /(problem.*solving|solving.*problem|solution for|helping.*business)/i,
+    /(target (market|customer|user|audience)|ideal customer)/i,
+    /(revenue model|pricing model|business model|monetization)/i,
+    /(budget|investment|funding|capital|costs?|expenses?)/i
+  ];
+  
+  // Must contain multiple business-related terms
+  const businessKeywords = [
+    'business', 'startup', 'company', 'product', 'service', 
+    'customer', 'market', 'revenue', 'problem', 'solution',
+    'target', 'budget', 'cost', 'pricing'
+  ];
+  
+  const keywordCount = businessKeywords.filter(keyword => 
+    lowerText.includes(keyword)
+  ).length;
+  
+  // At least 2 business idea patterns OR 4+ business keywords
+  const patternMatch = businessIdeaPatterns.filter(p => p.test(text)).length >= 2;
+  const keywordMatch = keywordCount >= 4;
+  
+  return patternMatch || keywordMatch;
 }
 // ========== END INLINED TEMPLATE MATCHING ==========
 
@@ -219,9 +266,13 @@ serve(async (req) => {
       });
 
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
+    // Skip for detailed business ideas
     const matchedTemplate = matchTemplate(message, businessContext);
     if (matchedTemplate) {
-      logInfo('Template match - returning instant response', { messageLength: message.length });
+      logInfo('Template match - returning instant response', { 
+        messageLength: message.length,
+        templateType: matchedTemplate.response.substring(0, 50)
+      });
       const templateResponse = matchedTemplate.response;
       // User message save is already in progress, return immediately
       const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode, supabase);
