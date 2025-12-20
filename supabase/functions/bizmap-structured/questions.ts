@@ -201,3 +201,47 @@ export function getValidationHint(componentType: ComponentType): string {
   }
 }
 
+// Generate user-friendly response message explaining what happened
+export function generateResponseMessage(
+  componentType: ComponentType,
+  validationResult: { valid: boolean; errors: any[]; warnings: any[] },
+  crossValidationResult: { valid: boolean; errors: any[]; warnings: any[] },
+  nextComponent: ComponentType | null,
+  completionPercentage: number
+): string {
+  const componentNames: Record<ComponentType, string> = {
+    'problem': 'problem',
+    'target_user': 'target user',
+    'value_prop': 'value proposition',
+    'revenue': 'revenue model',
+    'distribution': 'distribution strategy',
+    'costs': 'cost structure',
+    'risks': 'risks',
+    'assumptions': 'assumptions'
+  };
+
+  const componentName = componentNames[componentType] || componentType;
+  const allErrors = [...validationResult.errors, ...crossValidationResult.errors];
+  const allWarnings = [...validationResult.warnings, ...crossValidationResult.warnings];
+
+  // If validation failed, explain what needs to be fixed
+  if (allErrors.length > 0) {
+    const errorMessages = allErrors.slice(0, 3).map(e => e.message || e).join(', ');
+    const moreErrors = allErrors.length > 3 ? ` (and ${allErrors.length - 3} more issue${allErrors.length - 3 > 1 ? 's' : ''})` : '';
+    return `I captured your ${componentName}, but I noticed some issues: ${errorMessages}${moreErrors}. Could you please clarify or provide more details?`;
+  }
+
+  // If there are warnings but no errors, acknowledge and move forward
+  if (allWarnings.length > 0 && validationResult.valid && crossValidationResult.valid) {
+    return `Great! I've captured your ${componentName}. I noticed a few things to keep in mind: ${allWarnings[0].message || ''}. Let's continue!`;
+  }
+
+  // Success case - component validated successfully
+  if (nextComponent) {
+    const nextComponentName = componentNames[nextComponent] || nextComponent;
+    return `Excellent! I've successfully captured your ${componentName}. You're ${completionPercentage}% complete. Now let's move on to the ${nextComponentName}.`;
+  } else {
+    return `Perfect! I've captured your ${componentName}. Your business map is now complete! 🎉 You've successfully defined all 8 key components of your business plan.`;
+  }
+}
+

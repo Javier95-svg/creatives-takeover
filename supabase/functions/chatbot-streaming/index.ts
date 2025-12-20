@@ -477,35 +477,99 @@ async function routeToStructuredSystem(
     });
 
     if (!structuredResponse.ok) {
-      throw new Error(`Structured system error: ${structuredResponse.status}`);
+      let errorMessage = `Structured system error: ${structuredResponse.status}`;
+      try {
+        const errorData = await structuredResponse.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch {
+        // If response isn't JSON, use status text
+        errorMessage = structuredResponse.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
-    const structuredData = await structuredResponse.json();
+    let structuredData;
+    try {
+      structuredData = await structuredResponse.json();
+    } catch (parseError: any) {
+      throw new Error(`Failed to parse structured system response: ${parseError.message}`);
+    }
+
+    // Build the full response message combining response_message and question
+    let fullResponseText = '';
+    
+    // Use response_message if available (user-friendly explanation)
+    if (structuredData.response_message) {
+      fullResponseText = structuredData.response_message;
+      
+      // Add question on new line if available and different from response
+      if (structuredData.question && 
+          structuredData.question !== fullResponseText && 
+          !fullResponseText.includes(structuredData.question.substring(0, 50))) {
+        fullResponseText += '\n\n' + structuredData.question;
+      }
+    } else if (structuredData.question) {
+      // Fallback to question if no response_message
+      fullResponseText = structuredData.question;
+    } else if (structuredData.error) {
+      // If there's an error message, use it
+      fullResponseText = structuredData.error;
+    } else {
+      // Last resort fallback
+      fullResponseText = 'Processing your business idea...';
+    }
+
+    // Add validation errors if present (in a readable format)
+    if (structuredData.validationErrors && structuredData.validationErrors.length > 0) {
+      const errorMessages = structuredData.validationErrors
+        .slice(0, 3)
+        .map((err: any) => `• ${err.message || err}`)
+        .join('\n');
+      if (errorMessages) {
+        fullResponseText += '\n\n' + errorMessages;
+      }
+    }
 
     // Convert structured response to streaming format for compatibility
+    // Stream word-by-word like other responses for better UX
     const stream = new ReadableStream({
-      start(controller) {
-        // Send the question/response as a delta
-        const responseText = structuredData.question || 'Processing...';
-        controller.enqueue(new TextEncoder().encode(
-          `data: ${JSON.stringify({ type: 'delta', content: responseText })}\n\n`
-        ));
-        
-        // Send completion
-        controller.enqueue(new TextEncoder().encode(
-          `data: ${JSON.stringify({ 
-            type: 'complete', 
-            conversationId: sessionId,
-            structuredData: {
-              currentComponent: structuredData.currentComponent,
-              completionPercentage: structuredData.completionPercentage,
-              validationErrors: structuredData.validationErrors
-            }
-          })}\n\n`
-        ));
-        
-        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-        controller.close();
+      async start(controller) {
+        try {
+          // Stream response word by word (same pattern as createRAGStream)
+          const words = fullResponseText.split(' ');
+          for (let i = 0; i < words.length; i++) {
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+            ));
+            await new Promise(r => setTimeout(r, 20)); // Balanced delay for smooth streaming
+          }
+          
+          // Send completion with structured data metadata
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ 
+              type: 'complete',
+              conversationId: sessionId,
+              structuredData: {
+                currentComponent: structuredData.currentComponent,
+                completionPercentage: structuredData.completionPercentage,
+                validationErrors: structuredData.validationErrors || [],
+                status: structuredData.status
+              }
+            })}\n\n`
+          ));
+          
+          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+          controller.close();
+        } catch (streamError: any) {
+          controller.enqueue(new TextEncoder().encode(
+            `data: ${JSON.stringify({ 
+              type: 'error', 
+              error: streamError.message || 'Error streaming response' 
+            })}\n\n`
+          ));
+          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+          controller.close();
+        }
       }
     });
 

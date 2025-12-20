@@ -199,6 +199,7 @@ export interface BizMapStructuredResponse {
   status: 'collecting' | 'validating' | 'complete' | 'error';
   currentComponent: ComponentType | null;
   question: string;
+  response_message: string; // User-friendly explanation of what happened
   collectedComponents: Partial<Record<ComponentType, BizMapComponent>>;
   validationErrors: ValidationError[];
   completionPercentage: number;

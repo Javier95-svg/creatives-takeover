@@ -15,7 +15,7 @@ import { validateComponent } from './validators.ts';
 import { crossValidateComponents } from './cross-validator.ts';
 import { validateWithExternalData } from './external-validator.ts';
 import { getNextState, isValidComponentOrder } from './state-machine.ts';
-import { getQuestionForComponent } from './questions.ts';
+import { getQuestionForComponent, generateResponseMessage } from './questions.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,6 +69,7 @@ serve(async (req) => {
         status: 'error',
         error: error.message || 'Unknown error occurred',
         question: 'Please try again or contact support.',
+        response_message: 'I encountered an error processing your request. Please try again or contact support if the issue persists.',
         collectedComponents: {},
         validationErrors: [],
         completionPercentage: 0
@@ -109,6 +110,7 @@ async function handleStart(
       status: 'collecting',
       currentComponent: 'problem',
       question,
+      response_message: 'Welcome! Let\'s start building your business map. I\'ll guide you through 8 key components to create a comprehensive business plan.',
       collectedComponents: {},
       validationErrors: [],
       completionPercentage: 0,
@@ -169,12 +171,14 @@ async function handleAnswer(
 
   // Validate component order
   if (!isValidComponentOrder(component_type, collectedComponents)) {
+    const errorMessage = `Please complete the prerequisite components first. We're currently working on: ${session.current_component || 'problem'}.`;
     return new Response(
       JSON.stringify({
         status: 'error',
         error: `Component ${component_type} cannot be collected yet. Please complete prerequisite components first.`,
         currentComponent: session.current_component,
         question: getQuestionForComponent(session.current_component as ComponentType, collectedComponents),
+        response_message: errorMessage,
         collectedComponents,
         validationErrors: [],
         completionPercentage: session.completion_percentage
@@ -195,12 +199,15 @@ async function handleAnswer(
   );
 
   if (!extractionResult.success) {
+    const errorResponseMessage = `I had trouble understanding your ${component_type} component: ${extractionResult.errors.join(', ')}. Could you please rephrase or provide more details?`;
+
     return new Response(
       JSON.stringify({
         status: 'error',
         error: `Failed to extract ${component_type} component: ${extractionResult.errors.join(', ')}`,
         currentComponent: component_type,
         question: getQuestionForComponent(component_type, collectedComponents),
+        response_message: errorResponseMessage,
         collectedComponents,
         validationErrors: extractionResult.errors.map(err => ({
           component: component_type,
@@ -289,11 +296,21 @@ async function handleAnswer(
     ? getQuestionForComponent(nextState.nextComponent, collectedComponents)
     : 'All components collected! Your business map is complete.';
 
+  // Generate user-friendly response message
+  const responseMessage = generateResponseMessage(
+    component_type,
+    validationResult,
+    crossValidationResult,
+    nextState.nextComponent,
+    nextState.completionPercentage
+  );
+
   return new Response(
     JSON.stringify({
       status: nextState.status,
       currentComponent: nextState.nextComponent,
       question,
+      response_message: responseMessage,
       collectedComponents,
       validationErrors: allValidationErrors,
       completionPercentage: nextState.completionPercentage,
@@ -358,11 +375,22 @@ async function handleStatus(
     ? getQuestionForComponent(session.current_component as ComponentType, collectedComponents)
     : 'All components collected!';
 
+  // Generate appropriate response message based on status
+  let responseMessage = '';
+  if (session.status === 'complete') {
+    responseMessage = 'Your business map is complete! All components have been successfully collected.';
+  } else if (session.current_component) {
+    responseMessage = `You're ${session.completion_percentage}% complete. We're currently working on the ${session.current_component.replace('_', ' ')} component.`;
+  } else {
+    responseMessage = 'Ready to continue building your business map.';
+  }
+
   return new Response(
     JSON.stringify({
       status: session.status as any,
       currentComponent: session.current_component as ComponentType | null,
       question,
+      response_message: responseMessage,
       collectedComponents,
       validationErrors,
       completionPercentage: session.completion_percentage,
