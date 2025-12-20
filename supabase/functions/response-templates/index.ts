@@ -41,9 +41,18 @@ const templates: Template[] = [
     ]
   },
   
-  // Pricing questions
+  // Pricing questions - Only match when explicitly asking about BizMap/service pricing
   {
-    patterns: [/how much (does|do|is|cost|costs)/i, /what.*price/i, /is (this|it) free/i, /(free|pricing|cost)/i],
+    patterns: [
+      // Explicit BizMap pricing questions
+      /^(how much|what).*(does|do|is).*(bizmap|biz map|this (service|tool|platform|app)|creatives takeover).*(cost|price|free|pricing)/i,
+      /^(is|are).*(bizmap|biz map|this (service|tool|platform|app)|creatives takeover).*(free|cost|pricing)/i,
+      /^(how much|what).*(do|does).*(you|bizmap|biz map|creatives takeover).*(charge|cost)/i,
+      // Direct questions about the service being free
+      /^(is|are).*(bizmap|biz map|this|it).*free/i,
+      // Questions explicitly about using BizMap
+      /.*(bizmap|biz map|this (service|tool|platform|app)).*(cost|price|free|pricing|charge).*/i
+    ],
     response: "BizMap AI is free to use! You can complete the full 7-step wizard and get your Launch Report at no cost. Some advanced features like detailed market analysis may use credits, but the core planning experience is completely free.\n\nWant to start your free business plan?",
     quickActions: [
       { text: "Start free plan", id: "start_planning" },
@@ -92,11 +101,41 @@ const templates: Template[] = [
   }
 ];
 
+// Validate that pricing questions are actually about BizMap, not business/product pricing
+function isBizMapPricingQuestion(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  
+  // Must contain service/platform references
+  const serviceKeywords = ['bizmap', 'biz map', 'this service', 'this tool', 'this platform', 'this app', 'creatives takeover'];
+  const hasServiceReference = serviceKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Pricing keywords
+  const pricingKeywords = ['cost', 'price', 'free', 'pricing', 'charge', 'paid'];
+  const hasPricingKeyword = pricingKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Exclude business/product pricing questions
+  const businessPricingPatterns = [
+    /(my|our|their|the).*(product|service|business|company).*(cost|price|pricing)/i,
+    /(what|how much).*(should|do|does).*(i|we|they).*(charge|price|cost)/i,
+    /(pricing|price|cost).*(for|of).*(my|our|their|the).*(product|service|business)/i
+  ];
+  const isBusinessPricing = businessPricingPatterns.some(pattern => pattern.test(message));
+  
+  return hasServiceReference && hasPricingKeyword && !isBusinessPricing;
+}
+
 export function matchTemplate(message: string, businessContext?: any): Template | null {
   const normalizedMessage = message.trim().toLowerCase();
   
   // Check each template
   for (const template of templates) {
+    // Special handling for pricing template - require explicit BizMap context
+    if (template.response.includes("BizMap AI is free to use")) {
+      if (!isBizMapPricingQuestion(message)) {
+        continue; // Skip pricing template if not actually about BizMap pricing
+      }
+    }
+    
     for (const pattern of template.patterns) {
       if (pattern.test(normalizedMessage)) {
         // Check context requirements if any

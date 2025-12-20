@@ -53,14 +53,17 @@ const templates: Template[] = [
     ]
   },
   
-  // Pricing questions
+  // Pricing questions - Only match when explicitly asking about BizMap/service pricing
   {
     patterns: [
-      /^how much (does|do|is|cost|costs)/i,  // Only at start
-      /^what.*price/i,                        // Only at start  
-      /^is (this|it|bizmap) free/i,           // Only at start with context
-      /(^|\.|\s)(is|are) (bizmap|this|it) (free|cost|pricing)/i,  // Contextual match
-      /how (much|do) (you|bizmap|this) (charge|cost)/i  // Direct pricing question
+      // Explicit BizMap pricing questions
+      /^(how much|what).*(does|do|is).*(bizmap|biz map|this (service|tool|platform|app)|creatives takeover).*(cost|price|free|pricing)/i,
+      /^(is|are).*(bizmap|biz map|this (service|tool|platform|app)|creatives takeover).*(free|cost|pricing)/i,
+      /^(how much|what).*(do|does).*(you|bizmap|biz map|creatives takeover).*(charge|cost)/i,
+      // Direct questions about the service being free
+      /^(is|are).*(bizmap|biz map|this|it).*free/i,
+      // Questions explicitly about using BizMap
+      /.*(bizmap|biz map|this (service|tool|platform|app)).*(cost|price|free|pricing|charge).*/i
     ],
     response: "BizMap AI is free to use! You can complete the full 7-step wizard and get your Launch Report at no cost. Some advanced features like detailed market analysis may use credits, but the core planning experience is completely free.\n\nWant to start your free business plan?",
     quickActions: [
@@ -119,6 +122,13 @@ function matchTemplate(message: string, businessContext?: any): Template | null 
   }
   
   for (const template of templates) {
+    // Special handling for pricing template - require explicit BizMap context
+    if (template.response.includes("BizMap AI is free to use")) {
+      if (!isBizMapPricingQuestion(message)) {
+        continue; // Skip pricing template if not actually about BizMap pricing
+      }
+    }
+    
     for (const pattern of template.patterns) {
       if (pattern.test(normalizedMessage)) {
         if (template.context) {
@@ -135,6 +145,29 @@ function matchTemplate(message: string, businessContext?: any): Template | null 
   }
   
   return null;
+}
+
+// Validate that pricing questions are actually about BizMap, not business/product pricing
+function isBizMapPricingQuestion(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  
+  // Must contain service/platform references
+  const serviceKeywords = ['bizmap', 'biz map', 'this service', 'this tool', 'this platform', 'this app', 'creatives takeover'];
+  const hasServiceReference = serviceKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Pricing keywords
+  const pricingKeywords = ['cost', 'price', 'free', 'pricing', 'charge', 'paid'];
+  const hasPricingKeyword = pricingKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Exclude business/product pricing questions
+  const businessPricingPatterns = [
+    /(my|our|their|the).*(product|service|business|company).*(cost|price|pricing)/i,
+    /(what|how much).*(should|do|does).*(i|we|they).*(charge|price|cost)/i,
+    /(pricing|price|cost).*(for|of).*(my|our|their|the).*(product|service|business)/i
+  ];
+  const isBusinessPricing = businessPricingPatterns.some(pattern => pattern.test(message));
+  
+  return hasServiceReference && hasPricingKeyword && !isBusinessPricing;
 }
 
 // Detect if a message is a detailed business idea description
@@ -269,9 +302,20 @@ serve(async (req) => {
     // Skip for detailed business ideas
     const matchedTemplate = matchTemplate(message, businessContext);
     if (matchedTemplate) {
+      // Determine which template type matched
+      const templateType = matchedTemplate.response.includes("BizMap AI is free to use") 
+        ? 'pricing' 
+        : matchedTemplate.response.includes("Hi there") 
+        ? 'greeting'
+        : matchedTemplate.response.includes("It's simple") 
+        ? 'how-it-works'
+        : 'other';
+      
       logInfo('Template match - returning instant response', { 
         messageLength: message.length,
-        templateType: matchedTemplate.response.substring(0, 50)
+        templateType: matchedTemplate.response.substring(0, 50),
+        matchedPattern: templateType,
+        messagePreview: message.substring(0, 100)
       });
       const templateResponse = matchedTemplate.response;
       // User message save is already in progress, return immediately
