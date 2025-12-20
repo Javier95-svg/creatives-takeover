@@ -49,6 +49,7 @@ export const ChatSidebar = ({ onSessionSelect, onNewChat, className, modeInfo }:
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { 
     sessions, 
     loading, 
