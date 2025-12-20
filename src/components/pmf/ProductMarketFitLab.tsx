@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -160,6 +160,27 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('input');
   const [selectedSegment, setSelectedSegment] = useState<string | undefined>();
+
+  // Validate required contexts on mount to catch initialization errors early
+  useEffect(() => {
+    try {
+      if (!toast) {
+        console.error('[PMF Lab] Toast context not available');
+        throw new Error('Toast context is required for Product Market Fit Lab');
+      }
+      if (!hasCredits) {
+        console.error('[PMF Lab] Credits hook not available');
+      }
+      console.log('[PMF Lab] Component initialized successfully', { 
+        hasUser: !!user, 
+        hasToast: !!toast,
+        hasCredits: typeof hasCredits === 'boolean'
+      });
+    } catch (error) {
+      console.error('[PMF Lab] Initialization error:', error);
+      throw error;
+    }
+  }, []);
 
   const handleExportSurvey = () => {
     console.log('Exporting survey:', analysis?.surveys);
