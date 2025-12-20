@@ -116,40 +116,69 @@ const templates: Template[] = [
 function matchTemplate(message: string, businessContext?: any): Template | null {
   const normalizedMessage = message.trim().toLowerCase();
   
+  logInfo('🔍 DEBUG: matchTemplate entry', { messageLength: message.length });
+  
   // Skip template matching for detailed business idea descriptions
   if (isBusinessIdeaDescription(message)) {
+    logInfo('🔍 DEBUG: Is business idea description, skipping templates');
     return null;
   }
   
+  let templateIndex = 0;
   for (const template of templates) {
+    const isPricingTemplate = template.response.includes("BizMap AI is free to use");
+    logInfo('🔍 DEBUG: Checking template', { 
+      templateIndex, 
+      isPricing: isPricingTemplate, 
+      patternCount: template.patterns.length 
+    });
+    
     // Special handling for pricing template - require explicit BizMap context
-    if (template.response.includes("BizMap AI is free to use")) {
-      if (!isBizMapPricingQuestion(message)) {
+    if (isPricingTemplate) {
+      const isValidPricing = isBizMapPricingQuestion(message);
+      logInfo('🔍 DEBUG: Pricing validation result', { isValidPricing });
+      if (!isValidPricing) {
+        logInfo('🔍 DEBUG: Skipping pricing template - validation failed');
         continue; // Skip pricing template if not actually about BizMap pricing
       }
     }
     
+    let patternIndex = 0;
     for (const pattern of template.patterns) {
-      if (pattern.test(normalizedMessage)) {
+      const patternMatch = pattern.test(normalizedMessage);
+      logInfo('🔍 DEBUG: Pattern test', { 
+        templateIndex, 
+        patternIndex, 
+        patternMatch, 
+        pattern: pattern.toString().substring(0, 50) 
+      });
+      if (patternMatch) {
         if (template.context) {
           const hasContext = template.context.some(ctx => 
             businessContext && businessContext[ctx]
           );
           if (!hasContext && template.context.length > 0) {
+            logInfo('🔍 DEBUG: Template matched but context missing', { templateIndex });
             continue;
           }
         }
+        logInfo('🔍 DEBUG: Template matched!', { templateIndex });
         return template;
       }
+      patternIndex++;
     }
+    templateIndex++;
   }
   
+  logInfo('🔍 DEBUG: No template matched', { totalTemplates: templates.length });
   return null;
 }
 
 // Validate that pricing questions are actually about BizMap, not business/product pricing
 function isBizMapPricingQuestion(message: string): boolean {
   const lowerMessage = message.toLowerCase();
+  
+  logInfo('🔍 DEBUG: isBizMapPricingQuestion entry', { message: message.substring(0, 50) });
   
   // Must contain service/platform references
   const serviceKeywords = ['bizmap', 'biz map', 'this service', 'this tool', 'this platform', 'this app', 'creatives takeover'];
@@ -167,7 +196,15 @@ function isBizMapPricingQuestion(message: string): boolean {
   ];
   const isBusinessPricing = businessPricingPatterns.some(pattern => pattern.test(message));
   
-  return hasServiceReference && hasPricingKeyword && !isBusinessPricing;
+  const result = hasServiceReference && hasPricingKeyword && !isBusinessPricing;
+  logInfo('🔍 DEBUG: isBizMapPricingQuestion result', { 
+    hasServiceReference, 
+    hasPricingKeyword, 
+    isBusinessPricing, 
+    result 
+  });
+  
+  return result;
 }
 
 // Detect if a message is a detailed business idea description
@@ -233,6 +270,8 @@ serve(async (req) => {
   }
 
   try {
+    logInfo('🔍 DEBUG: Request received', { method: req.method, hasBody: !!req.body });
+    
     const { 
       message, 
       sessionId, 
@@ -245,7 +284,15 @@ serve(async (req) => {
       attachments = []
     } = await req.json();
 
+    logInfo('🔍 DEBUG: Request parsed', { 
+      messageLength: message?.length || 0, 
+      hasSessionId: !!sessionId, 
+      chatMode,
+      messagePreview: message?.substring(0, 50) || 'NO MESSAGE'
+    });
+
     if (!message || !sessionId) {
+      logError('🔍 DEBUG: Missing required fields', { hasMessage: !!message, hasSessionId: !!sessionId });
       throw new Error('Message and sessionId are required');
     }
 
@@ -300,7 +347,13 @@ serve(async (req) => {
 
     // 🚀 OPTIMIZATION: Check template match first (fastest path, synchronous, no crypto needed)
     // Skip for detailed business ideas
+    logInfo('🔍 DEBUG: Before template match', { message: message.substring(0, 50) });
     const matchedTemplate = matchTemplate(message, businessContext);
+    logInfo('🔍 DEBUG: After template match', { 
+      matched: !!matchedTemplate, 
+      hasResponse: !!matchedTemplate?.response,
+      responsePreview: matchedTemplate?.response?.substring(0, 50) || 'NO RESPONSE'
+    });
     if (matchedTemplate) {
       // Determine which template type matched
       const templateType = matchedTemplate.response.includes("BizMap AI is free to use") 
@@ -317,12 +370,15 @@ serve(async (req) => {
         matchedPattern: templateType,
         messagePreview: message.substring(0, 100)
       });
+      logInfo('🔍 DEBUG: Creating template stream', { templateType, responseLength: matchedTemplate.response.length });
       const templateResponse = matchedTemplate.response;
       // User message save is already in progress, return immediately
       const response = createTemplateStream(templateResponse, matchedTemplate.quickActions || [], conversation, businessContext, conversationHistory, chatMode, supabase);
+      logInfo('🔍 DEBUG: Template response created', { hasResponse: !!response });
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
     }
+    logInfo('🔍 DEBUG: No template match, proceeding to AI generation');
 
     // 🚀 OPTIMIZATION: Generate cache keys in parallel (only if template didn't match)
     const [requestFingerprint, cacheKey] = await Promise.all([
@@ -386,6 +442,9 @@ serve(async (req) => {
 
     // 🚀 OPTIMIZATION: Increase conversation history from 6 to 10 messages for better context
     const optimizedHistory = conversationHistory.slice(-10);
+    
+    // Generate request ID for tracking
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // 🔍 SEARCH INTENT DETECTION: Classify query for routing
     const searchIntent = detectSearchIntent(message, businessContext, chatMode);
@@ -486,11 +545,23 @@ serve(async (req) => {
     }
 
     logInfo('Using conversational Lovable AI', { chatMode, messageLength: message.length });
+    logInfo('🔍 DEBUG: Before createAIStream', { messageCount: messages.length });
     const response = await createAIStream(messages, message, conversation, businessContext, optimizedHistory, chatMode, supabase, cacheKey, message);
+    logInfo('🔍 DEBUG: After createAIStream', { 
+      hasResponse: !!response, 
+      responseType: response?.constructor?.name,
+      responseStatus: response?.status
+    });
     // Don't cache Response objects - they're streams that can only be consumed once
     return response;
 
   } catch (error: any) {
+    logError('🔍 DEBUG: Error caught in main handler', {
+      errorMessage: error?.message,
+      errorStack: error?.stack?.substring(0, 500),
+      chatMode,
+      messageLength: message?.length || 0,
+    });
     logError('Chatbot Streaming Error', {
       error: error.message,
       stack: error.stack,
