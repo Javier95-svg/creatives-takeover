@@ -1795,58 +1795,9 @@ function detectSearchIntent(message: string, context: BusinessContext, chatMode:
 }
 
 function detectKnowledgeQuery(message: string, context: BusinessContext): boolean {
-  const lowerMessage = message.toLowerCase();
-  
-  // 🚀 OPTIMIZATION: Skip RAG for simple conversational queries
-  const isSimpleConversational = /^(hi|hello|hey|thanks|thank you|yes|no|ok|sure|got it|bye|goodbye)[\s!.,]*$/i.test(message.trim());
-  if (isSimpleConversational) {
-    return false; // Templates will handle these
-  }
-  
-  // 🚀 OPTIMIZATION: Skip RAG for very short queries (likely conversational)
-  if (message.trim().length < 30 && !/(what|how|when|where|which|who|show|give|provide|list|example|template)/i.test(message)) {
-    return false;
-  }
-  
-  // Factual query patterns that benefit from RAG
-  const knowledgePatterns = [
-    // Direct questions about templates, examples, guides
-    /what (is|are) (the|a|an)? ?(typical|average|common|standard|best|normal)/i,
-    /show me (a|an|some)? ?(example|template|sample|guide|format)/i,
-    /how (much|many|often|long) (does|do|is|are|should|typically)/i,
-    
-    // Industry-specific information requests
-    /in (the )?(technology|healthcare|retail|food|creative|education) industry/i,
-    /for (technology|healthcare|retail|food|creative|education) (startups|businesses)/i,
-    
-    // Legal, compliance, or regulatory questions
-    /(legal|compliance|regulation|law|permit|license|tax|incorporation) (requirement|process|need|how)/i,
-    
-    // Financial templates or specific models
-    /financial (projection|model|template|statement|plan|forecast)/i,
-    /(profit|p&l|income statement|balance sheet|cash flow) (template|example|format)/i,
-    
-    // Business plan sections
-    /business plan (section|template|example|format|structure)/i,
-    /(executive summary|market analysis|competitive analysis) (template|example|format)/i,
-    
-    // Specific metrics or benchmarks
-    /(benchmark|industry (standard|average|metric)|conversion rate|churn rate|typical|average) (for|in|of)/i,
-    
-    // Case studies or success stories
-    /(case study|success story|example of|companies that|businesses that) (in|for|with)/i,
-  ];
-  
-  // Check if message matches knowledge patterns
-  const isKnowledgeQuery = knowledgePatterns.some(pattern => pattern.test(lowerMessage));
-  
-  // Additional heuristics - must be specific factual request
-  const hasQuestionWords = /^(what|how|when|where|which|who|show|give|provide|list)/i.test(message);
-  const requestsSpecifics = /(specific|example|template|guide|list|steps|process|format|structure|benchmark|typical|average|standard)/i.test(lowerMessage);
-  const hasIndustryContext = Boolean(context.industry);
-  
-  // Only use RAG if it's a clear factual/knowledge request
-  return isKnowledgeQuery || (hasQuestionWords && requestsSpecifics && hasIndustryContext);
+  // DISABLED: Always use direct API calls instead of RAG
+  // RAG system has been disabled to provide direct API responses
+  return false;
 }
 
 // 📚 Create RAG stream response with sources
