@@ -1696,6 +1696,9 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced message sending function with NLU, personalization, and chatAnalytics
   const sendMessage = useCallback(async (content: string, messageAttachments: File[] = []) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1698',message:'sendMessage entry',data:{contentLength:content.length,isProcessing:conversationState.isProcessing,enableStreaming,wizardModeEnabled:config.wizardMode?.enabled,sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     console.log('🎬 sendMessage called:', { 
       content: content.substring(0, 50), 
       isProcessing: conversationState.isProcessing,
@@ -1704,6 +1707,9 @@ What specific aspect of your business would you like to focus on first?`;
     });
     
     if (!content.trim() || conversationState.isProcessing) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1706',message:'sendMessage blocked',data:{hasContent:!!content.trim(),isProcessing:conversationState.isProcessing},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('❌ Blocked: content empty or already processing');
       return;
     }
@@ -1711,6 +1717,10 @@ What specific aspect of your business would you like to focus on first?`;
     // Auto-create session if user is authenticated and no session exists
     const { data: { user } } = await supabase.auth.getUser();
     const sessionMgmt = config.sessionManagement;
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1713',message:'session check before send',data:{hasUser:!!user,hasSessionMgmt:!!sessionMgmt,currentSessionId:sessionMgmt?.currentSessionId,sessionCreationAttempted:sessionCreationAttempted.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     if (user && sessionMgmt && !sessionMgmt.currentSessionId && !sessionCreationAttempted.current) {
       // Check if this is the first user message (not counting welcome/bot messages)
@@ -1726,6 +1736,9 @@ What specific aspect of your business would you like to focus on first?`;
         
         try {
           const newSessionId = await sessionMgmt.createNewSession(title);
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1728',message:'session creation result',data:{newSessionId,success:!!newSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           if (newSessionId) {
             sessionMgmt.setCurrentSessionId(newSessionId);
             console.log('✅ Chat session created:', newSessionId);
@@ -1813,6 +1826,9 @@ What specific aspect of your business would you like to focus on first?`;
           setIsTyping(false);
           setIsStreaming(true);
           
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1816',message:'calling streamChat wizard mode',data:{sessionId,historyLength:conversationHistory.length,wizardStep,chatMode,hasSessionId:!!sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           console.log('📞 Calling streamChat function with:', {
             sessionId,
             historyLength: conversationHistory.length,
@@ -1836,8 +1852,16 @@ What specific aspect of your business would you like to focus on first?`;
             wizardStep,
             chatMode,
             messageAttachments,
-            (chunk) => setStreamingMessage(prev => prev + chunk),
+            (chunk) => {
+              // #region agent log
+              fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1839',message:'streamChat chunk received',data:{chunkLength:chunk.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
+              setStreamingMessage(prev => prev + chunk);
+            },
             (fullMessage, quickActions, sources) => {
+              // #region agent log
+              fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1840',message:'streamChat complete',data:{fullMessageLength:fullMessage.length,hasQuickActions:!!quickActions,hasSources:!!sources},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
               // Replace streaming message with final message and add quick actions
               setMessages(prev => {
                 const updated = prev.map(msg => 
@@ -1868,6 +1892,9 @@ What specific aspect of your business would you like to focus on first?`;
           );
           
           // Notify parent of step completion
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1871',message:'wizard step completion',data:{wizardStep,nextStep:wizardStep+1,totalSteps:config.wizardMode.steps.length,willComplete:wizardStep+1>=config.wizardMode.steps.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+          // #endregion
           config.wizardMode.onStepComplete?.(wizardStep, content.trim());
           
           // Move to next step

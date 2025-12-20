@@ -58,6 +58,9 @@ export const streamChat = async (
 ): Promise<string> => {
   const STREAM_URL = `https://rcjlaybjnozqbsoxzboa.supabase.co/functions/v1/chatbot-streaming`;
 
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStreamingChat.ts:61',message:'streamChat entry',data:{sessionId,messageLength:message.length,wizardModeEnabled:wizardMode?.enabled,currentStep,filesCount:files?.length||0,hasSessionId:!!sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   console.log('🚀 Starting SSE streaming chat:', { 
     sessionId, 
     messageLength: message.length,
@@ -120,6 +123,9 @@ export const streamChat = async (
             attachments
           }),
         }).then(async (response) => {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStreamingChat.ts:122',message:'streamChat response received',data:{status:response.status,ok:response.ok,hasBody:!!response.body},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
@@ -166,6 +172,9 @@ export const streamChat = async (
                   try {
                     const parsed = JSON.parse(data);
                     if (parsed.type === 'delta' && parsed.content) {
+                      // #region agent log
+                      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStreamingChat.ts:168',message:'streamChat delta chunk',data:{chunkLength:parsed.content.length,fullMessageLength:fullMessage.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                      // #endregion
                       fullMessage += parsed.content;
                       onChunk?.(parsed.content);
                     } else if (parsed.type === 'sources' && parsed.sources) {
@@ -173,6 +182,9 @@ export const streamChat = async (
                       console.log('📚 Received sources:', parsed.sources.length);
                       onSources?.(parsed.sources);
                     } else if (parsed.type === 'complete') {
+                      // #region agent log
+                      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStreamingChat.ts:175',message:'streamChat complete type',data:{fullMessageLength:fullMessage.length,hasQuickActions:!!parsed.quickActions,hasSources:!!parsed.sources},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                      // #endregion
                       console.log('✅ Stream complete with quick actions and sources');
                       onComplete?.(fullMessage, parsed.quickActions, parsed.sources);
                     } else if (parsed.type === 'error') {
