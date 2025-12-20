@@ -1,6 +1,9 @@
 -- Add admin exception to chat_sessions DELETE RLS policy
 -- This ensures admins can delete chat sessions, following the pattern used in other tables
 
+-- Drop policy if it exists (idempotent)
+DROP POLICY IF EXISTS "Admins can delete any chat session" ON public.chat_sessions;
+
 -- Add policy for admins to delete any chat session
 CREATE POLICY "Admins can delete any chat session"
 ON public.chat_sessions

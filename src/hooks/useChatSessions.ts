@@ -151,11 +151,12 @@ export const useChatSessions = () => {
       setSessions(prev => prev.filter(session => session.id !== sessionId));
 
       // Delete from database
+      // Note: We don't filter by user_id here - RLS policies handle permissions
+      // Regular users can only delete their own chats, admins can delete any chat
       const { error } = await supabase
         .from('chat_sessions')
         .delete()
-        .eq('id', sessionId)
-        .eq('user_id', user.id);
+        .eq('id', sessionId);
 
       if (error) {
         console.error('Error deleting session:', error);
