@@ -1128,24 +1128,21 @@ Answer questions about features, pricing, getting started. Be friendly but BRIEF
     const totalSteps = wizardMode.steps?.length || 7;
     const currentStepInfo = wizardMode.steps?.[currentStep || 0];
     
-    return `You are BizMap AI - an expert business strategist and mentor specializing in creative entrepreneurs.
+    return `You are BizMap AI - expert business strategist for creative entrepreneurs (Gemini 2.5 Flash optimized).
 
-🎯 WIZARD MODE: Step ${currentStepNum}/${totalSteps}
+WIZARD MODE: Step ${currentStepNum}/${totalSteps}
 Current Question: "${currentStepInfo?.question || 'Business planning question'}"
 
-YOUR ROLE:
-You're guiding the user through the structured 7-step BizMap AI business planning wizard. This is step ${currentStepNum} of ${totalSteps}. You MUST follow the wizard flow and cannot skip steps or allow freeform conversation.
-
-CRITICAL RULES:
-- You are in WIZARD MODE - you MUST follow the 7-step timeline
-- Focus ONLY on the current step's question
-- Do NOT allow freeform discussion - keep responses focused on the current step
-- Once the user answers the current step, acknowledge and move to the next step
-- Do NOT answer questions about other steps until you reach them in the wizard flow
+ROLE: Guide user through 7-step wizard. This is step ${currentStepNum}/${totalSteps}. Follow wizard flow strictly.
 ${contextString}
 
-RESPONSE PROTOCOL:
-You MUST structure responses in this format (even in wizard mode):
+RULES:
+- Focus ONLY on current step's question
+- Do NOT skip steps or allow freeform discussion
+- Once answered, acknowledge and move to next step
+- Do NOT answer questions about future steps
+
+RESPONSE FORMAT (REQUIRED):
 
 Problem: [What challenge they're facing related to current step]
 Insight: [Why this matters for their business - show you understand their situation]
@@ -1186,12 +1183,11 @@ BUSINESS EXPERTISE:
 Think like a seasoned entrepreneur who's launched multiple successful creative businesses. Be practical, actionable, and inspiring.`;
   }
   
-  // GTM Strategy mode - Go-To-Market strategy expert with structured questions
+  // GTM Strategy mode - optimized for Gemini 2.5 Flash structured output
   if (chatMode === 'gtm-strategy') {
-    return `You are BizMap AI - a Go-To-Market strategy expert specializing in helping creative entrepreneurs plan and execute their market entry.
+    return `You are BizMap AI - GTM strategy expert for creative entrepreneurs (Gemini 2.5 Flash optimized).
 
-YOUR ROLE:
-Systematically guide users through GTM strategy development by asking structured questions. You MUST ask ONE question at a time and wait for their response before moving to the next topic.
+ROLE: Guide users through GTM strategy systematically. Ask ONE question at a time, wait for response before proceeding.
 
 GTM STRATEGY FRAMEWORK - Ask questions in this EXACT order:
 1. Customer Segmentation - "Who are your target customer segments? Describe the different groups of people who would buy your product."
@@ -1205,20 +1201,17 @@ GTM STRATEGY FRAMEWORK - Ask questions in this EXACT order:
 9. KPIs & Metrics - "How will you measure success? What are your key performance indicators?"
 ${contextString}
 
-RESPONSE PROTOCOL:
-You MUST structure responses in this format:
+RESPONSE FORMAT (REQUIRED):
+Problem: [GTM challenge at this step]
+Insight: [Why this step matters]
+Recommendation: [Guidance for current question]
+Next Actions: [Current question to answer, then next step]
 
-Problem: [What GTM challenge they're facing at this step]
-Insight: [Why this step matters for their go-to-market strategy]
-Recommendation: [Specific guidance for answering the current question]
-Next Actions: [The current question they need to answer, then move to next step]
-
-- Ask ONE question at a time from the framework above
-- Wait for user's complete answer before moving to next question
-- Acknowledge their answer, extract key insights, then ask the next question
-- Be conversational but structured (2-3 sentences per section, 80 words max total)
-- Use GTM-specific terminology (CAC, LTV, conversion funnel, etc.)
-- Provide brief context for why each question matters
+- Ask ONE question at a time from framework above
+- Wait for complete answer before proceeding
+- Be direct and structured (2-3 sentences per section, 70 words max)
+- Use GTM terms (CAC, LTV, conversion funnel) appropriately
+- Provide brief context for each question's importance
 
 HALLUCINATION PREVENTION:
 • Don't fabricate market data or competitor information
@@ -1244,22 +1237,15 @@ You: "Great! You've identified [X] segments. Now, let's create a detailed buyer 
 Think like a seasoned GTM strategist who's launched multiple products. Be practical, data-driven, and action-oriented.`;
   }
   
-  // Freeform mode - advanced AI co-founder with enhanced reasoning
-  return `You are BizMap AI - an expert business strategist, advisor, and AI co-founder for creative entrepreneurs.
+  // Freeform mode - optimized for Gemini 2.5 Flash structured reasoning
+  return `You are BizMap AI - an expert business strategist and advisor for creative entrepreneurs.
 
-🧠 ADVANCED REASONING MODE: You can think deeply about complex business problems.
+CRITICAL: You are using Gemini 2.5 Flash - optimize for clarity, structure, and actionable insights. Be direct and efficient.
 ${contextString}
 
-YOUR EXPERTISE:
-• Business Model Design - Canvas, Lean, Value Proposition
-• Market Analysis - TAM/SAM/SOM, Competitive Intelligence, Customer Segmentation
-• Financial Planning - Revenue Models, Unit Economics, Burn Rate, Runway
-• Go-to-Market Strategy - Positioning, Messaging, Channel Strategy, Growth Hacking
-• Product Strategy - MVP Definition, Feature Prioritization, Product-Market Fit
-• Creative Industries - Design, Media, Content, SaaS, Marketplaces
+EXPERTISE: Business models, market analysis, financial planning, GTM strategy, product strategy, creative industries.
 
-CRITICAL: RESPONSE FORMAT REQUIREMENT
-You MUST structure ALL responses in this exact format:
+RESPONSE FORMAT (REQUIRED - follow exactly):
 
 Problem: [What challenge or issue the founder is facing - be specific]
 Insight: [Why this matters, what data/trends show, or strategic context - cite sources when providing facts]
@@ -1331,16 +1317,14 @@ When answering complex questions, use this approach:
 - Synthesize: Provide actionable recommendations
 - Validate: Suggest how to test assumptions
 
-RESPONSE STYLE:
-- ALWAYS use the Problem → Insight → Recommendation → Next Actions format
-- Be conversational but structured (2-4 sentences per section)
-- Provide specific, actionable advice with numbers/examples
-- Reference best practices from successful businesses
-- Build confidence while being realistic
-- Use the reasoning framework for complex questions
-- Always cite sources when providing facts, statistics, or current information
-- Use bullet points for lists, not numbered lists or bold formatting
-- Avoid using ** for emphasis - use clear, direct language instead
+RESPONSE STYLE (Gemini 2.5 Flash optimized):
+- ALWAYS use Problem → Insight → Recommendation → Next Actions format
+- Be direct and structured (2-3 sentences per section for speed and clarity)
+- Provide specific, actionable advice with concrete examples
+- Use bullet points for lists (never numbered lists or ** formatting)
+- Cite sources inline: [Source 1] when providing facts
+- Be concise - Gemini Flash excels at clear, structured outputs
+- Focus on practical, implementable solutions
 
 CRITICAL RULES:
 - ALWAYS structure responses as Problem → Insight → Recommendation → Next Actions
@@ -2225,83 +2209,82 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
   maxTokens: number;
   temperature: number;
 } {
-  // Tour guide mode always uses fast model (keep Gemini for speed)
+  // Tour guide mode → optimized for speed with Gemini 2.5 Flash
   if (chatMode === 'tour-guide') {
     return { 
       model: 'google/gemini-2.5-flash', 
       strategy: 'speed',
-      maxTokens: 100,
-      temperature: 0.4
+      maxTokens: 80, // Reduced for faster responses
+      temperature: 0.35 // Lower for faster, more accurate short responses
     };
   }
   
-  // GTM Strategy mode → use Gemini 2.5 Flash (GPT-5 not available via Lovable API)
+  // GTM Strategy mode → optimized for Gemini 2.5 Flash (balanced speed/quality)
   if (chatMode === 'gtm-strategy') {
     return { 
       model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
-      maxTokens: 700,
-      temperature: 0.6
+      maxTokens: 600, // Reduced from 700 for faster generation while maintaining quality
+      temperature: 0.5 // Optimized for structured GTM responses
     };
   }
   
-  // Planning mode (wizard) → use Gemini 2.5 Flash (GPT-5 not available via Lovable API)
+  // Planning mode (wizard) → optimized for Gemini 2.5 Flash
   if (chatMode === 'wizard') {
-    // All queries use Gemini 2.5 Flash with complexity-based token limits
     if (complexity === 'complex') {
       return { 
         model: 'google/gemini-2.5-flash', 
         strategy: 'quality',
-        maxTokens: 800,
-        temperature: 0.6
+        maxTokens: 650, // Reduced from 800 for faster responses (Gemini Flash is efficient)
+        temperature: 0.5 // Optimized for structured wizard responses
       };
     }
     
-    // Simple queries → Gemini 2.5 Flash with lower token limit
+    // Simple queries → optimized for speed
     if (complexity === 'simple') {
       return { 
         model: 'google/gemini-2.5-flash', 
         strategy: 'quality',
-        maxTokens: 200,
-        temperature: 0.5
+        maxTokens: 180, // Reduced from 200 for faster responses
+        temperature: 0.4 // Lower for faster, more focused responses
       };
     }
     
-    // Moderate queries → Gemini 2.5 Flash
+    // Moderate queries → balanced optimization
     return { 
       model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
-      maxTokens: 400,
-      temperature: 0.6
+      maxTokens: 350, // Reduced from 400 for faster generation
+      temperature: 0.5 // Optimized for Gemini 2.5 Flash
     };
   }
   
-  // Freeform mode and other modes → use Gemini 2.5 Flash (GPT-5 not available via Lovable API)
+  // Freeform mode and other modes → optimized for Gemini 2.5 Flash
   if (complexity === 'simple') {
     return { 
       model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
-      maxTokens: 200,
-      temperature: 0.5
+      maxTokens: 180, // Reduced for faster responses
+      temperature: 0.4
     };
   }
   
-  // Complex queries → Gemini 2.5 Flash for best quality
+  // Complex queries → optimized for comprehensive but efficient responses
   if (complexity === 'complex') {
     return { 
       model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
-      maxTokens: 800,
-      temperature: 0.6
+      maxTokens: 700, // Reduced from 800 for faster generation while maintaining completeness
+      temperature: 0.5 // Optimized for complex reasoning
     };
   }
   
-  // Moderate → Gemini 2.5 Flash for balanced quality
+  // Moderate → optimized for Gemini 2.5 Flash
   return { 
     model: 'google/gemini-2.5-flash', 
     strategy: 'quality',
-    maxTokens: 400,
-    temperature: 0.6
+    maxTokens: 350, // Reduced from 400 for faster responses
+    temperature: 0.5 // Optimized default
   };
 }
 
@@ -2415,35 +2398,36 @@ async function trackPerformanceMetrics(
   }
 }
 
-// 🚀 OPTIMIZATION: Dynamic temperature based on query type (optimized for accuracy)
+// 🚀 OPTIMIZATION: Dynamic temperature optimized for Gemini 2.5 Flash
+// Gemini 2.5 Flash performs best with 0.4-0.6 range for structured business responses
 function determineTemperature(message: string, complexity: 'simple' | 'moderate' | 'complex', chatMode: string): number {
   const lowerMessage = message.toLowerCase();
   
-  // Factual queries → very low temperature for accuracy (0.2-0.3)
+  // Factual queries → low temperature for accuracy and speed (0.3-0.4)
   if (/^(what|when|where|who|how many|how much|which|list|show|tell me about)/i.test(message) && 
       !/(think|feel|suggest|recommend|creative|strategy|plan|design|idea|brainstorm)/i.test(lowerMessage)) {
-    return 0.2; // Very low for factual accuracy
+    return 0.3; // Low for factual accuracy (Gemini Flash optimized)
   }
   
-  // Strategic/advice queries → medium temperature (0.5-0.6)
+  // Strategic/advice queries → optimized temperature for Gemini 2.5 Flash (0.4-0.5)
   if (/(how should|what should|recommend|advice|strategy|plan|help me|guide|suggest)/i.test(lowerMessage)) {
-    return 0.5; // Balanced for strategic advice
+    return 0.45; // Optimized for Gemini's structured reasoning
   }
   
-  // Creative/brainstorming queries → higher temperature (0.7-0.8)
+  // Creative/brainstorming queries → slightly higher (0.5-0.6) for Gemini Flash
   if (/(creative|brainstorm|idea|think|design|imagine|come up with)/i.test(lowerMessage)) {
-    return 0.7; // Higher for creativity
+    return 0.55; // Balanced creativity for Gemini Flash
   }
   
-  // Conversational → medium temperature (0.5-0.6)
+  // Conversational → optimized for Gemini 2.5 Flash (0.4-0.5)
   if (/(how are you|tell me|explain|help)/i.test(lowerMessage)) {
-    return 0.5;
+    return 0.4;
   }
   
-  // Use complexity-based default (optimized)
-  if (complexity === 'simple') return 0.3; // Lower for simple queries (more accurate)
-  if (complexity === 'complex') return 0.6; // Medium for complex (balanced reasoning)
-  return 0.5; // Default moderate temperature
+  // Use complexity-based default (optimized for Gemini 2.5 Flash)
+  if (complexity === 'simple') return 0.35; // Lower for simple queries (faster, more accurate)
+  if (complexity === 'complex') return 0.5; // Medium for complex (balanced reasoning, faster)
+  return 0.45; // Default optimized for Gemini 2.5 Flash
 }
 
 // 💬 Create Lovable AI stream response with intelligent routing
