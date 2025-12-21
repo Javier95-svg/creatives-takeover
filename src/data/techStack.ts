@@ -328,7 +328,7 @@ export const techStackData: TechStackData = [
           'Less suitable for marketing analytics'
         ],
         price: 'Free / Usage-based',
-        logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"%3E%3Cpath d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2.4c5.302 0 9.6 4.298 9.6 9.6S17.302 21.6 12 21.6 2.4 17.302 2.4 12 6.698 2.4 12 2.4zm-1.2 4.8v9.6h2.4V7.2h-2.4zm-3.6 3.6v6h2.4v-6H7.2zm7.2 0v6h2.4v-6h-2.4z"/%3E%3C/svg%3E'
+        logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Ccircle cx="12" cy="12" r="12" fill="%2300D4FF"/%3E%3Cpath d="M8.2 17.2C8.3 17.1 8.4 17 12 7.5C15.6 17 15.7 17.1 15.8 17.2M10.2 13.2C10.3 13.1 11.2 10.8 11.5 10.5C11.8 10.8 12.7 13.1 12.8 13.2" stroke="%23000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/%3E%3Cpath d="M9.5 12.2C9.8 12.1 10.5 11.8 11.5 11.8C12.5 11.8 13.2 12.1 13.5 12.2" stroke="%23000000" stroke-width="2.2" stroke-linecap="round" fill="none"/%3E%3C/svg%3E'
       },
       {
         id: 'posthog',
