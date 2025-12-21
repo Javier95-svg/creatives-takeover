@@ -18,7 +18,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { SourceCitation } from "./chatbot/SourceCitation";
 import { SearchResults } from "./chatbot/SearchResults";
-import { ModeSelector } from "./chatbot/ModeSelector";
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -389,31 +388,6 @@ export const BizMapChat = ({
     }
     return "Ask about your business plan...";
   };
-  
-  // Determine active mode for ModeSelector - always planning (wizard mode)
-  const activeModeForSelector = useMemo(() => {
-    return 'planning';
-  }, []);
-  
-  const handleModeChange = useCallback((mode: 'planning') => {
-    if (!switchToPlanningMode) {
-      console.error('Mode switching functions not available');
-      return;
-    }
-    if (mode === 'planning') {
-      switchToPlanningMode();
-    }
-  }, [switchToPlanningMode]);
-
-  // Expose mode info to parent for sidebar (after definitions)
-  useEffect(() => {
-    if (onModeInfoReady) {
-      onModeInfoReady({
-        activeMode: activeModeForSelector,
-        onModeChange: handleModeChange
-      });
-    }
-  }, [activeModeForSelector, handleModeChange, onModeInfoReady]);
 
   return (
     <div className="bizmap-chat-shell relative flex h-full flex-col overflow-hidden">
@@ -660,14 +634,6 @@ export const BizMapChat = ({
               <Send className="w-5 h-5" aria-hidden="true" />
             )}
           </Button>
-        </div>
-
-        {/* Mode Selector - Underneath the typing bar */}
-        <div className="mt-3 w-full">
-          <ModeSelector
-            activeMode={activeModeForSelector}
-            onModeChange={handleModeChange}
-          />
         </div>
       </div>
       
