@@ -161,11 +161,11 @@ const CategorySection: React.FC<CategorySectionProps> = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-2xl flex items-center gap-2">
+          {category.name}
           {(() => {
             const IconComponent = iconMap[category.icon];
             return IconComponent ? <IconComponent className="w-6 h-6 text-primary" /> : null;
           })()}
-          {category.name}
         </CardTitle>
         <CardDescription>
           {category.description}
