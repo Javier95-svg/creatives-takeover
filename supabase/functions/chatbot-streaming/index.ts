@@ -538,7 +538,7 @@ serve(async (req) => {
       
       const response = createRAGStream(enhancedRagData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
       // Cache the response content (not the Response object - streams can only be consumed once)
-      const ragModel = ragData.model || 'google/gemini-2.5-flash';
+      const ragModel = ragData.model || 'anthropic/claude-sonnet-4-20250514';
       await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
@@ -959,7 +959,7 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
         userId,
         matchCount: 8, // Increased to include document chunks
         filter: userId ? undefined : filter, // Don't filter by source if user has documents
-        model: 'google/gemini-2.5-flash',
+        model: 'anthropic/claude-sonnet-4-20250514',
         temperature: 0.3,
       }
     });
@@ -2225,7 +2225,7 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
   maxTokens: number;
   temperature: number;
 } {
-  // Tour guide mode always uses fast model
+  // Tour guide mode always uses fast model (keep Gemini for speed)
   if (chatMode === 'tour-guide') {
     return { 
       model: 'google/gemini-2.5-flash', 
@@ -2235,70 +2235,70 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // GTM Strategy mode → use Gemini 2.5 Flash for reliable responses and structured output
+  // GTM Strategy mode → use Claude Sonnet 4 for superior reasoning and structured output
   if (chatMode === 'gtm-strategy') {
     return { 
-      model: 'google/gemini-2.5-flash', 
+      model: 'anthropic/claude-sonnet-4-20250514', 
       strategy: 'quality',
       maxTokens: 700,
-      temperature: 0.7
+      temperature: 0.6
     };
   }
   
-  // Planning mode (wizard) → use Gemini 2.5 Flash for all queries for reliable accuracy
+  // Planning mode (wizard) → use Claude Sonnet 4 for superior logical consistency and context retention
   if (chatMode === 'wizard') {
-    // All queries use Gemini 2.5 Flash with complexity-based token limits
+    // All queries use Claude Sonnet 4 with complexity-based token limits
     if (complexity === 'complex') {
       return { 
-        model: 'google/gemini-2.5-flash', 
+        model: 'anthropic/claude-sonnet-4-20250514', 
         strategy: 'quality',
         maxTokens: 800,
-        temperature: 0.7
-      };
-    }
-    
-    // Simple queries → Gemini 2.5 Flash with lower token limit
-    if (complexity === 'simple') {
-      return { 
-        model: 'google/gemini-2.5-flash', 
-        strategy: 'quality',
-        maxTokens: 200,
         temperature: 0.6
       };
     }
     
-    // Moderate queries → Gemini 2.5 Flash
+    // Simple queries → Claude Sonnet 4 with lower token limit
+    if (complexity === 'simple') {
+      return { 
+        model: 'anthropic/claude-sonnet-4-20250514', 
+        strategy: 'quality',
+        maxTokens: 200,
+        temperature: 0.5
+      };
+    }
+    
+    // Moderate queries → Claude Sonnet 4
     return { 
-      model: 'google/gemini-2.5-flash', 
+      model: 'anthropic/claude-sonnet-4-20250514', 
       strategy: 'quality',
       maxTokens: 400,
-      temperature: 0.7
+      temperature: 0.6
     };
   }
   
-  // Freeform mode and other modes → use Gemini 2.5 Flash for all queries for reliable accuracy
+  // Freeform mode and other modes → use Claude Sonnet 4 for superior quality and context retention
   if (complexity === 'simple') {
     return { 
-      model: 'google/gemini-2.5-flash', 
+      model: 'anthropic/claude-sonnet-4-20250514', 
       strategy: 'quality',
       maxTokens: 200,
       temperature: 0.5
     };
   }
   
-  // Complex queries → Gemini 2.5 Flash for best quality
+  // Complex queries → Claude Sonnet 4 for best quality and reasoning
   if (complexity === 'complex') {
     return { 
-      model: 'google/gemini-2.5-flash', 
+      model: 'anthropic/claude-sonnet-4-20250514', 
       strategy: 'quality',
       maxTokens: 800,
-      temperature: 0.7
+      temperature: 0.6
     };
   }
   
-  // Moderate → Gemini 2.5 Flash for balanced quality
+  // Moderate → Claude Sonnet 4 for balanced quality
   return { 
-    model: 'google/gemini-2.5-flash', 
+    model: 'anthropic/claude-sonnet-4-20250514', 
     strategy: 'quality',
     maxTokens: 400,
     temperature: 0.6
@@ -2570,23 +2570,21 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       );
     }
     
-    // 🚀 OPTIMIZATION: Fallback chain for Gemini models - try alternate Gemini model if primary fails
-    logWarn('Model failed, trying Gemini fallback', { requestId, model: selectedModel, status });
+    // 🚀 OPTIMIZATION: Fallback chain - if Claude fails, try Gemini Flash as backup
+    logWarn('Model failed, trying fallback', { requestId, model: selectedModel, status });
     
-    // If a Gemini model fails, try the alternate Gemini model
-    if (selectedModel === 'google/gemini-2.0-flash' || selectedModel === 'google/gemini-2.5-flash') {
-      const alternateModel = selectedModel === 'google/gemini-2.0-flash' 
-        ? 'google/gemini-2.5-flash' 
-        : 'google/gemini-2.0-flash';
+    // If Claude Sonnet 4 fails, fall back to Gemini Flash for reliability
+    if (selectedModel === 'anthropic/claude-sonnet-4-20250514') {
+      const fallbackModel = 'google/gemini-2.5-flash';
       
-      logInfo('Falling back to alternate Gemini model', { requestId, originalModel: selectedModel, fallbackModel: alternateModel });
-      const geminiFallbackResponse = await fetchWithRetry(
+      logInfo('Falling back to Gemini Flash', { requestId, originalModel: selectedModel, fallbackModel });
+      const fallbackResponse = await fetchWithRetry(
         'https://ai.gateway.lovable.dev/v1/chat/completions',
         {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            model: alternateModel, 
+            model: fallbackModel, 
             messages, 
             stream: true, 
             temperature: finalTemperature,
@@ -2601,8 +2599,8 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         }
       ).catch(() => null);
       
-      if (geminiFallbackResponse?.ok) {
-        const reader = geminiFallbackResponse.body?.getReader();
+      if (fallbackResponse?.ok) {
+        const reader = fallbackResponse.body?.getReader();
         if (reader) {
           return new Response(
             new ReadableStream({
