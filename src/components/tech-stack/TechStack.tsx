@@ -151,7 +151,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
       <CardHeader>
         <CardTitle className="text-2xl">{category.name}</CardTitle>
         <CardDescription>
-          Select one product from this category for your tech stack
+          {category.description}
         </CardDescription>
       </CardHeader>
       <CardContent>
