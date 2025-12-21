@@ -579,8 +579,7 @@ export const techStackData: TechStackData = [
           'Limited to LinkedIn data',
           'Can be time-consuming'
         ],
-        price: '$79/month',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg'
+        price: '$79/month'
       },
       {
         id: 'hunter',
