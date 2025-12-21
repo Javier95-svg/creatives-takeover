@@ -538,7 +538,7 @@ serve(async (req) => {
       
       const response = createRAGStream(enhancedRagData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
       // Cache the response content (not the Response object - streams can only be consumed once)
-      const ragModel = ragData.model || 'anthropic/claude-sonnet-4-20250514';
+      const ragModel = ragData.model || 'openai/gpt-5-2025-08-07';
       await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
@@ -959,7 +959,7 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
         userId,
         matchCount: 8, // Increased to include document chunks
         filter: userId ? undefined : filter, // Don't filter by source if user has documents
-        model: 'anthropic/claude-sonnet-4-20250514',
+        model: 'openai/gpt-5-2025-08-07',
         temperature: 0.3,
       }
     });
@@ -2235,70 +2235,70 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // GTM Strategy mode → use Claude Sonnet 4 for superior reasoning and structured output
+  // GTM Strategy mode → use GPT-5 for superior reasoning and structured output
   if (chatMode === 'gtm-strategy') {
     return { 
-      model: 'anthropic/claude-sonnet-4-20250514', 
+      model: 'openai/gpt-5-2025-08-07', 
       strategy: 'quality',
       maxTokens: 700,
       temperature: 0.6
     };
   }
   
-  // Planning mode (wizard) → use Claude Sonnet 4 for superior logical consistency and context retention
+  // Planning mode (wizard) → use GPT-5 for superior logical consistency and context retention
   if (chatMode === 'wizard') {
-    // All queries use Claude Sonnet 4 with complexity-based token limits
+    // All queries use GPT-5 with complexity-based token limits
     if (complexity === 'complex') {
       return { 
-        model: 'anthropic/claude-sonnet-4-20250514', 
+        model: 'openai/gpt-5-2025-08-07', 
         strategy: 'quality',
         maxTokens: 800,
         temperature: 0.6
       };
     }
     
-    // Simple queries → Claude Sonnet 4 with lower token limit
+    // Simple queries → GPT-5 with lower token limit
     if (complexity === 'simple') {
       return { 
-        model: 'anthropic/claude-sonnet-4-20250514', 
+        model: 'openai/gpt-5-2025-08-07', 
         strategy: 'quality',
         maxTokens: 200,
         temperature: 0.5
       };
     }
     
-    // Moderate queries → Claude Sonnet 4
+    // Moderate queries → GPT-5
     return { 
-      model: 'anthropic/claude-sonnet-4-20250514', 
+      model: 'openai/gpt-5-2025-08-07', 
       strategy: 'quality',
       maxTokens: 400,
       temperature: 0.6
     };
   }
   
-  // Freeform mode and other modes → use Claude Sonnet 4 for superior quality and context retention
+  // Freeform mode and other modes → use GPT-5 for superior quality and context retention
   if (complexity === 'simple') {
     return { 
-      model: 'anthropic/claude-sonnet-4-20250514', 
+      model: 'openai/gpt-5-2025-08-07', 
       strategy: 'quality',
       maxTokens: 200,
       temperature: 0.5
     };
   }
   
-  // Complex queries → Claude Sonnet 4 for best quality and reasoning
+  // Complex queries → GPT-5 for best quality and reasoning
   if (complexity === 'complex') {
     return { 
-      model: 'anthropic/claude-sonnet-4-20250514', 
+      model: 'openai/gpt-5-2025-08-07', 
       strategy: 'quality',
       maxTokens: 800,
       temperature: 0.6
     };
   }
   
-  // Moderate → Claude Sonnet 4 for balanced quality
+  // Moderate → GPT-5 for balanced quality
   return { 
-    model: 'anthropic/claude-sonnet-4-20250514', 
+    model: 'openai/gpt-5-2025-08-07', 
     strategy: 'quality',
     maxTokens: 400,
     temperature: 0.6
@@ -2570,11 +2570,11 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       );
     }
     
-    // 🚀 OPTIMIZATION: Fallback chain - if Claude fails, try Gemini Flash as backup
+    // 🚀 OPTIMIZATION: Fallback chain - if GPT-5 fails, try Gemini Flash as backup
     logWarn('Model failed, trying fallback', { requestId, model: selectedModel, status });
     
-    // If Claude Sonnet 4 fails, fall back to Gemini Flash for reliability
-    if (selectedModel === 'anthropic/claude-sonnet-4-20250514') {
+    // If GPT-5 fails, fall back to Gemini Flash for reliability
+    if (selectedModel === 'openai/gpt-5-2025-08-07') {
       const fallbackModel = 'google/gemini-2.5-flash';
       
       logInfo('Falling back to Gemini Flash', { requestId, originalModel: selectedModel, fallbackModel });
