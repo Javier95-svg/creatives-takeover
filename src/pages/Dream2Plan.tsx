@@ -1256,6 +1256,8 @@ Subject: "Quick question about [their pain point]"
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '2.2', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
                 {activeTab === 'pmf' ? (
                   <>Test your product in the market and uncover whether there's<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> genuine demand waiting for you.</span></>
+                ) : activeTab === 'tech-stack' ? (
+                  <>Compare and select the most suitable tools to build and scale your startup.<br className="hidden sm:block" /> Choose one product per category to create a clear, cost-aware tech stack<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> tailored to your needs.</span></>
                 ) : (
                   <>Your AI powered business planner in chatbot form,<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> ready to turn your vision into action.</span></>
                 )}
