@@ -328,7 +328,7 @@ export const techStackData: TechStackData = [
           'Less suitable for marketing analytics'
         ],
         price: 'Free / Usage-based',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amplitude.svg'
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amplitudeanalytics.svg'
       },
       {
         id: 'posthog',
@@ -431,7 +431,7 @@ export const techStackData: TechStackData = [
           'Smaller ecosystem'
         ],
         price: '5% + $0.50 per transaction',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/paddle.svg'
+        logo: 'https://logo.clearbit.com/paddle.com'
       }
     ]
   },
@@ -458,7 +458,7 @@ export const techStackData: TechStackData = [
           'Limited template options'
         ],
         price: 'Free / Usage-based',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/sendgrid.svg'
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/twiliosendgrid.svg'
       },
       {
         id: 'mailchimp',
@@ -496,7 +496,7 @@ export const techStackData: TechStackData = [
           'Fewer integrations'
         ],
         price: 'Free / Usage-based',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/resend.svg'
+        logo: 'https://logo.clearbit.com/resend.com'
       },
       {
         id: 'postmark',
@@ -515,7 +515,7 @@ export const techStackData: TechStackData = [
           'Less feature-rich than competitors'
         ],
         price: '$15/month',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/postmark.svg'
+        logo: 'https://logo.clearbit.com/postmarkapp.com'
       }
     ]
   },
@@ -542,7 +542,7 @@ export const techStackData: TechStackData = [
           'Requires compliance awareness'
         ],
         price: '$49/month',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/apollo.svg'
+        logo: 'https://logo.clearbit.com/apollo.io'
       },
       {
         id: 'liskit',
@@ -561,7 +561,7 @@ export const techStackData: TechStackData = [
           'Newer platform'
         ],
         price: '$29/month',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg'
+        logo: 'https://logo.clearbit.com/liskit.com'
       },
       {
         id: 'linkedin-sales',
@@ -599,7 +599,7 @@ export const techStackData: TechStackData = [
           'Less comprehensive than full platforms'
         ],
         price: 'Free / Usage-based',
-        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/hunter.svg'
+        logo: 'https://logo.clearbit.com/hunter.io'
       }
     ]
   }
