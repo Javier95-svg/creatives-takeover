@@ -1672,7 +1672,7 @@ Subject: "Quick question about [their pain point]"
                             {/* Step 7 */}
                             <div className="border border-border/60 rounded-xl p-4 sm:p-5 bg-background/80 hover:border-primary/40 transition-all duration-300">
                               <p className="text-xs font-semibold tracking-wide text-primary uppercase mb-2">
-                                Step 7 · Goals & 30-Day Roadmap
+                                Step 7 · Launch Plan
                               </p>
                               <h3 className="text-lg sm:text-xl font-semibold mb-3">
                                 Lock in a focused launch plan you can actually follow
