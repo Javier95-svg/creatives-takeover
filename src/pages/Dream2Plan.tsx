@@ -23,7 +23,7 @@ import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import SuccessScore from "@/components/SuccessScore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FlaskConical } from "lucide-react";
+import { ArrowLeft, FlaskConical, Code } from "lucide-react";
 
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
@@ -38,6 +38,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Lazy load heavy components for better performance
 const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
+const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -1283,6 +1284,15 @@ Subject: "Quick question about [their pain point]"
                     <span className="hidden sm:inline">Product Market Fit Lab</span>
                     <span className="sm:hidden">PMF Lab</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="tech-stack" 
+                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
+                    aria-label="Tech Stack tab - Compare and select tools for your startup"
+                  >
+                    <Code className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" aria-hidden="true" />
+                    <span className="hidden sm:inline">Tech Stack</span>
+                    <span className="sm:hidden leading-tight pb-0.5">Stack</span>
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -1719,6 +1729,37 @@ Subject: "Quick question about [their pain point]"
                     } : undefined}
                     onDataExport={handlePMFDataExport}
                   />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="tech-stack">
+                <div className="flex items-center gap-4 mb-6">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setActiveTab("bizmap")}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to BizMap
+                  </Button>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold">Tech Stack</h2>
+                    <p className="text-muted-foreground">Compare and select the most suitable tools for building and scaling your startup</p>
+                  </div>
+                </div>
+                
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-4">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                        <p className="text-muted-foreground">Loading Tech Stack...</p>
+                      </div>
+                    </div>
+                  }
+                >
+                  <TechStack />
                 </Suspense>
               </TabsContent>
             </Tabs>
