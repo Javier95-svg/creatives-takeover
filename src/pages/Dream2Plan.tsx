@@ -1265,33 +1265,86 @@ Subject: "Quick question about [their pain point]"
             {/* Enhanced Tab Navigation */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex justify-center mb-6 sm:mb-8 mt-8 sm:mt-10">
-                <TabsList className="glass-card border border-primary/20 shadow-xl backdrop-blur-xl p-1 sm:p-2 animate-fade-in w-full sm:w-auto max-w-md sm:max-w-none" style={{ animationDelay: '0.5s' }}>
+                <TabsList className="relative glass-card border-2 border-primary/30 shadow-2xl shadow-primary/10 backdrop-blur-xl bg-background/80 p-1.5 sm:p-2.5 animate-fade-in w-full sm:w-auto max-w-4xl sm:max-w-none rounded-2xl overflow-visible" style={{ animationDelay: '0.5s' }}>
+                  {/* Subtle glow effect for active tab indicator */}
+                  <div 
+                    className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 opacity-0 transition-opacity duration-500 pointer-events-none"
+                    style={{
+                      opacity: activeTab === 'bizmap' ? 1 : activeTab === 'pmf' ? 1 : activeTab === 'tech-stack' ? 1 : 0
+                    }}
+                  />
+                  
                   <TabsTrigger 
                     value="bizmap" 
-                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
+                    className="relative flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-3.5 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/25 data-[state=active]:via-primary/20 data-[state=active]:to-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 data-[state=active]:scale-105 transition-all duration-300 hover:bg-primary/8 hover:scale-[1.02] rounded-xl font-semibold text-xs sm:text-sm leading-normal overflow-visible border border-transparent data-[state=active]:border-primary/30 data-[state=active]:backdrop-blur-sm"
                     aria-label="Business Planning tab - AI-powered business planning wizard"
                   >
-                    <Lightbulb className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="hidden sm:inline">Business Planning</span>
-                    <span className="sm:hidden leading-tight pb-0.5">Planning</span>
+                    <div className="relative">
+                      <Lightbulb 
+                        className={`w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0 transition-all duration-300 ${
+                          activeTab === 'bizmap' 
+                            ? 'scale-110 text-primary drop-shadow-lg' 
+                            : ''
+                        }`} 
+                        aria-hidden="true" 
+                      />
+                      {activeTab === 'bizmap' && (
+                        <div className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                    <span className="hidden sm:inline font-medium">Business Planning</span>
+                    <span className="sm:hidden leading-tight pb-0.5 font-medium">Planning</span>
+                    {activeTab === 'bizmap' && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full animate-pulse" />
+                    )}
                   </TabsTrigger>
                   <TabsTrigger 
                     value="pmf" 
-                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
+                    className="relative flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-3.5 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/25 data-[state=active]:via-primary/20 data-[state=active]:to-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 data-[state=active]:scale-105 transition-all duration-300 hover:bg-primary/8 hover:scale-[1.02] rounded-xl font-semibold text-xs sm:text-sm leading-normal overflow-visible border border-transparent data-[state=active]:border-primary/30 data-[state=active]:backdrop-blur-sm"
                     aria-label="Product Market Fit Lab tab - Validate product-market fit"
                   >
-                    <FlaskConical className="w-4 sm:w-5 h-4 sm:h-5" aria-hidden="true" />
-                    <span className="hidden sm:inline">Product Market Fit Lab</span>
-                    <span className="sm:hidden">PMF Lab</span>
+                    <div className="relative">
+                      <FlaskConical 
+                        className={`w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0 transition-all duration-300 ${
+                          activeTab === 'pmf' 
+                            ? 'scale-110 text-primary drop-shadow-lg' 
+                            : ''
+                        }`} 
+                        aria-hidden="true" 
+                      />
+                      {activeTab === 'pmf' && (
+                        <div className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                    <span className="hidden sm:inline font-medium">Product Market Fit Lab</span>
+                    <span className="sm:hidden font-medium">PMF Lab</span>
+                    {activeTab === 'pmf' && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full animate-pulse" />
+                    )}
                   </TabsTrigger>
                   <TabsTrigger 
                     value="tech-stack" 
-                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary transition-all duration-300 hover:bg-primary/5 rounded-lg font-medium text-xs sm:text-sm leading-normal overflow-visible"
+                    className="relative flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-3.5 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/25 data-[state=active]:via-primary/20 data-[state=active]:to-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 data-[state=active]:scale-105 transition-all duration-300 hover:bg-primary/8 hover:scale-[1.02] rounded-xl font-semibold text-xs sm:text-sm leading-normal overflow-visible border border-transparent data-[state=active]:border-primary/30 data-[state=active]:backdrop-blur-sm"
                     aria-label="Tech Stack tab - Compare and select tools for your startup"
                   >
-                    <Code className="w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="hidden sm:inline">Tech Stack</span>
-                    <span className="sm:hidden leading-tight pb-0.5">Stack</span>
+                    <div className="relative">
+                      <Code 
+                        className={`w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0 transition-all duration-300 ${
+                          activeTab === 'tech-stack' 
+                            ? 'scale-110 text-primary drop-shadow-lg' 
+                            : ''
+                        }`} 
+                        aria-hidden="true" 
+                      />
+                      {activeTab === 'tech-stack' && (
+                        <div className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                    <span className="hidden sm:inline font-medium">Tech Stack</span>
+                    <span className="sm:hidden leading-tight pb-0.5 font-medium">Stack</span>
+                    {activeTab === 'tech-stack' && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full animate-pulse" />
+                    )}
                   </TabsTrigger>
                 </TabsList>
               </div>
