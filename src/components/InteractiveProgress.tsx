@@ -48,7 +48,7 @@ const stepConfig = [
   },
   {
     icon: Rocket,
-    name: "ROADMAP",
+    name: "LAUNCH PLAN",
     description: "Lock in your focused 30-day launch plan.",
     days: "Days 26-30"
   }
