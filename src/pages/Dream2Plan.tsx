@@ -1242,9 +1242,9 @@ Subject: "Quick question about [their pain point]"
           structuredData={structuredData}
         />
         
-        <BizmapWallpaper />
+        {activeTab === 'bizmap' && <BizmapWallpaper />}
         
-        <div className="relative z-10 bg-background">
+        <div className={`relative z-10 ${activeTab === 'bizmap' ? 'bg-transparent' : 'bg-background'}`}>
           <Navigation />
           
           {/* Feature Tour for New Users */}

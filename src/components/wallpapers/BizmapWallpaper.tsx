@@ -106,7 +106,7 @@ const BizmapWallpaper = () => {
       ))}
 
       {/* Soft overlay for text readability - theme-aware */}
-      <div className="absolute inset-0 bg-gradient-to-b dark:from-background/75 dark:via-background/45 dark:to-background/88 from-background/92 via-background/96 to-background/92" />
+      <div className="absolute inset-0 bg-gradient-to-b dark:from-background/60 dark:via-background/35 dark:to-background/75 from-background/85 via-background/90 to-background/85" />
     </div>
   );
 };
