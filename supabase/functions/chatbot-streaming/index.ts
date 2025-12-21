@@ -2174,7 +2174,19 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
   }
   
   // Complex queries → optimized for comprehensive but efficient responses
+  // Option to use DeepSeek Reasoner for complex reasoning tasks
   if (complexity === 'complex') {
+    // Check if DeepSeek API key is available for testing
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+    if (DEEPSEEK_API_KEY) {
+      // Use DeepSeek Reasoner for complex queries when available
+      return { 
+        model: 'deepseek-reasoner', 
+        strategy: 'quality',
+        maxTokens: 700,
+        temperature: 0.5
+      };
+    }
     return { 
       model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
@@ -2334,10 +2346,85 @@ function determineTemperature(message: string, complexity: 'simple' | 'moderate'
   return 0.45; // Default optimized for Gemini 2.5 Flash
 }
 
+// 💬 Call DeepSeek API directly with streaming support
+async function callDeepSeekAPI(
+  messages: ChatMessage[],
+  model: string,
+  temperature: number,
+  maxTokens: number,
+  requestId: string
+): Promise<Response> {
+  const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+  if (!DEEPSEEK_API_KEY) {
+    throw new Error('DEEPSEEK_API_KEY not configured');
+  }
+
+  logInfo('Calling DeepSeek API', {
+    requestId,
+    model,
+    temperature,
+    maxTokens,
+    messageCount: messages.length
+  });
+
+  try {
+    const response = await fetchWithRetry(
+      'https://api.deepseek.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json',
+          'X-Request-ID': requestId
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          stream: true,
+          temperature: temperature,
+          max_tokens: maxTokens
+        }),
+        timeout: 30000,
+        retryOptions: {
+          maxAttempts: 3,
+          initialDelay: 1000,
+          maxDelay: 4000,
+          backoffMultiplier: 2,
+          retryableStatuses: [429, 500, 502, 503, 504],
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logError('DeepSeek API error', {
+        requestId,
+        status: response.status,
+        error: errorText,
+        model
+      });
+      throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
+    }
+
+    return response;
+  } catch (error: any) {
+    logError('DeepSeek API request failed', {
+      requestId,
+      error: error.message,
+      status: error.status,
+      timeout: error.timeout,
+      model
+    });
+    throw error;
+  }
+}
+
 // 💬 Create Lovable AI stream response with intelligent routing
 async function createAIStream(messages: ChatMessage[], userMessage: string, conversation: any, businessContext: BusinessContext, conversationHistory: ChatMessage[], chatMode: string, supabase: any, cacheKey?: string, originalMessage?: string): Promise<Response> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+  
+  const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
   const startTime = Date.now();
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -2372,37 +2459,46 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
   // 🚀 OPTIMIZATION: Use retry logic with exponential backoff and timeout
   let aiResponse: Response;
   
+  // Check if DeepSeek model is selected
+  const isDeepSeekModel = selectedModel.startsWith('deepseek-');
+  
   // #region agent log
-  fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2487',message:'Before API call',data:{model:selectedModel,hasApiKey:!!LOVABLE_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2487',message:'Before API call',data:{model:selectedModel,hasApiKey:!!LOVABLE_API_KEY,isDeepSeek:isDeepSeekModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
   // #endregion
   
   try {
-    aiResponse = await fetchWithRetry(
-      'https://ai.gateway.lovable.dev/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`, 
-          'Content-Type': 'application/json',
-          'X-Request-ID': requestId
-        },
-        body: JSON.stringify({ 
-          model: selectedModel, 
-          messages, 
-          stream: true, 
-          temperature: finalTemperature,
-          max_tokens: maxTokens
-        }),
-        timeout: 30000, // 30 second timeout
-        retryOptions: {
-          maxAttempts: 3,
-          initialDelay: 1000,
-          maxDelay: 4000,
-          backoffMultiplier: 2,
-          retryableStatuses: [429, 500, 502, 503, 504],
+    // Use DeepSeek API directly if DeepSeek model is selected
+    if (isDeepSeekModel) {
+      aiResponse = await callDeepSeekAPI(messages, selectedModel, finalTemperature, maxTokens, requestId);
+    } else {
+      // Use Lovable gateway for other models (Gemini, GPT-5, Claude)
+      aiResponse = await fetchWithRetry(
+        'https://ai.gateway.lovable.dev/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`, 
+            'Content-Type': 'application/json',
+            'X-Request-ID': requestId
+          },
+          body: JSON.stringify({ 
+            model: selectedModel, 
+            messages, 
+            stream: true, 
+            temperature: finalTemperature,
+            max_tokens: maxTokens
+          }),
+          timeout: 30000, // 30 second timeout
+          retryOptions: {
+            maxAttempts: 3,
+            initialDelay: 1000,
+            maxDelay: 4000,
+            backoffMultiplier: 2,
+            retryableStatuses: [429, 500, 502, 503, 504],
+          }
         }
-      }
-    );
+      );
+    }
     
     // #region agent log
     fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2512',message:'API call completed',data:{isOk:aiResponse.ok,status:aiResponse.status,model:selectedModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -2418,6 +2514,71 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       timeout: error.timeout,
       model: selectedModel
     });
+    
+    // Try fallback if primary model failed
+    const isDeepSeek = selectedModel.startsWith('deepseek-');
+    const isGemini = selectedModel.includes('gemini');
+    
+    // If DeepSeek fails, try Gemini as fallback
+    if (isDeepSeek && !isGemini) {
+      logWarn('🔍 DEBUG: DeepSeek failed, trying Gemini fallback', { requestId, model: selectedModel });
+      try {
+        const fallbackModel = 'google/gemini-2.5-flash';
+        const fallbackResponse = await fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              model: fallbackModel, 
+              messages, 
+              stream: true, 
+              temperature: finalTemperature,
+              max_tokens: Math.min(maxTokens, 500)
+            }),
+            timeout: 30000,
+            retryOptions: {
+              maxAttempts: 2,
+              initialDelay: 1000,
+              maxDelay: 2000,
+            }
+          }
+        ).catch(() => null);
+        
+        if (fallbackResponse?.ok) {
+          logInfo('🔍 DEBUG: Gemini fallback succeeded after DeepSeek failure', { requestId });
+          const reader = fallbackResponse.body?.getReader();
+          if (reader) {
+            return new Response(
+              new ReadableStream({
+                async start(controller) {
+                  try {
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      controller.enqueue(value);
+                    }
+                    controller.close();
+                  } catch (error) {
+                    controller.error(error);
+                  }
+                }
+              }),
+              {
+                headers: {
+                  ...corsHeaders,
+                  'Content-Type': 'text/event-stream',
+                  'Cache-Control': 'no-cache',
+                  'Connection': 'keep-alive'
+                }
+              }
+            );
+          }
+        }
+      } catch (fallbackError: any) {
+        logError('🔍 DEBUG: Gemini fallback also failed', { requestId, error: fallbackError?.message });
+      }
+    }
     
     // Return user-friendly error message
     const errorMessage = error.timeout 
@@ -2467,104 +2628,157 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       fullError: err
     });
     
-    // 🚀 OPTIMIZATION: Fallback chain - if GPT-5 fails (especially 400/404 model not found), try Gemini Flash immediately
+    // 🚀 OPTIMIZATION: Fallback chain - Gemini → DeepSeek → GPT-5 → Claude
     // #region agent log
     fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2565',message:'API error detected',data:{selectedModel,status,isModelNotFound:status===400||status===404,errorPreview:err.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
     
-    // If GPT-5 fails (especially model not found errors), immediately fall back to Gemini
     const isGPT5 = selectedModel === 'openai/gpt-5-2025-08-07' || selectedModel.includes('gpt-5');
+    const isDeepSeek = selectedModel.startsWith('deepseek-');
+    const isGemini = selectedModel.includes('gemini');
     const isModelNotFound = status === 400 || status === 404;
     
-    // For model not found errors with GPT-5, skip error return and go straight to fallback
-    if (isModelNotFound && isGPT5) {
-      logWarn('🔍 DEBUG: GPT-5 model not found, falling back to Gemini', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
-    } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5) {
-      // Only return error immediately for non-GPT-5 models
+    // For model not found errors, skip error return and go straight to fallback
+    if (isModelNotFound && (isGPT5 || isDeepSeek)) {
+      logWarn('🔍 DEBUG: Model not found, falling back', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
+    } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5 && !isDeepSeek) {
+      // Only return error immediately for non-GPT-5/DeepSeek models
       return new Response(
         JSON.stringify({ error: userMessage, requestId }),
         { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // 🚀 OPTIMIZATION: Fallback chain - if GPT-5 fails, try Gemini Flash as backup
+    // 🚀 OPTIMIZATION: Fallback chain - try next model in sequence
     logWarn('🔍 DEBUG: Model failed, trying fallback', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
     
     // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2574',message:'Attempting fallback',data:{selectedModel,status,isGPT5},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2574',message:'Attempting fallback',data:{selectedModel,status,isGPT5,isDeepSeek,isGemini},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
     // #endregion
     
-    // Fallback logic (currently not needed since we're using Gemini, but kept for future model switches)
-    // If any model fails and we have a fallback available, use it
-    if (isGPT5) {
-      // This branch won't execute since we're back to Gemini, but kept for future use
-      const fallbackModel = 'google/gemini-2.5-flash';
+    // Fallback chain: Gemini → DeepSeek → GPT-5 → Claude
+    let fallbackModel: string | null = null;
+    let fallbackResponse: Response | null = null;
+    
+    // If Gemini fails, try DeepSeek
+    if (isGemini && DEEPSEEK_API_KEY) {
+      fallbackModel = 'deepseek-chat';
+      logInfo('🔍 DEBUG: Falling back to DeepSeek', { requestId, originalModel: selectedModel, fallbackModel, reason: 'Gemini failed' });
       
-      logInfo('🔍 DEBUG: Falling back to Gemini Flash', { requestId, originalModel: selectedModel, fallbackModel, reason: 'GPT-5 failed' });
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2580',message:'Fallback to Gemini initiated',data:{fallbackModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      const fallbackResponse = await fetchWithRetry(
-        'https://ai.gateway.lovable.dev/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            model: fallbackModel, 
-            messages, 
-            stream: true, 
-            temperature: finalTemperature,
-            max_tokens: Math.min(maxTokens, 500) // Cap at 500 for fallback
-          }),
-          timeout: 30000,
-          retryOptions: {
-            maxAttempts: 2,
-            initialDelay: 1000,
-            maxDelay: 2000,
-          }
-        }
-      ).catch((fallbackError) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2600',message:'Fallback also failed',data:{fallbackError:fallbackError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
-        logError('🔍 DEBUG: Fallback to Gemini also failed', { requestId, fallbackError: fallbackError?.message });
-        return null;
-      });
+      try {
+        fallbackResponse = await callDeepSeekAPI(messages, fallbackModel, finalTemperature, Math.min(maxTokens, 500), requestId);
+      } catch (deepSeekError: any) {
+        logError('🔍 DEBUG: DeepSeek fallback failed', { requestId, error: deepSeekError?.message });
+        fallbackResponse = null;
+      }
+    }
+    
+    // If DeepSeek fails or wasn't available, try GPT-5
+    if (!fallbackResponse?.ok && !isGPT5) {
+      fallbackModel = 'openai/gpt-5-2025-08-07';
+      logInfo('🔍 DEBUG: Falling back to GPT-5', { requestId, originalModel: selectedModel, fallbackModel });
       
       // #region agent log
-      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2602',message:'Fallback response received',data:{hasResponse:!!fallbackResponse,isOk:fallbackResponse?.ok,status:fallbackResponse?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2580',message:'Fallback to GPT-5 initiated',data:{fallbackModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
       // #endregion
       
-      if (fallbackResponse?.ok) {
-        logInfo('🔍 DEBUG: Fallback to Gemini succeeded', { requestId });
-        const reader = fallbackResponse.body?.getReader();
-        if (reader) {
-          return new Response(
-            new ReadableStream({
-              async start(controller) {
-                try {
-                  while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    controller.enqueue(value);
-                  }
-                  controller.close();
-                } catch (error) {
-                  controller.error(error);
-                }
-              }
+      try {
+        fallbackResponse = await fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              model: fallbackModel, 
+              messages, 
+              stream: true, 
+              temperature: finalTemperature,
+              max_tokens: Math.min(maxTokens, 500)
             }),
-            {
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive'
+            timeout: 30000,
+            retryOptions: {
+              maxAttempts: 2,
+              initialDelay: 1000,
+              maxDelay: 2000,
+            }
+          }
+        ).catch((fallbackError) => {
+          logError('🔍 DEBUG: GPT-5 fallback failed', { requestId, fallbackError: fallbackError?.message });
+          return null;
+        });
+      } catch (gpt5Error: any) {
+        logError('🔍 DEBUG: GPT-5 fallback exception', { requestId, error: gpt5Error?.message });
+        fallbackResponse = null;
+      }
+    }
+    
+    // If GPT-5 fails, try Gemini as final fallback
+    if (!fallbackResponse?.ok && !isGemini) {
+      fallbackModel = 'google/gemini-2.5-flash';
+      logInfo('🔍 DEBUG: Falling back to Gemini Flash', { requestId, originalModel: selectedModel, fallbackModel, reason: 'Previous fallback failed' });
+      
+      try {
+        fallbackResponse = await fetchWithRetry(
+          'https://ai.gateway.lovable.dev/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              model: fallbackModel, 
+              messages, 
+              stream: true, 
+              temperature: finalTemperature,
+              max_tokens: Math.min(maxTokens, 500)
+            }),
+            timeout: 30000,
+            retryOptions: {
+              maxAttempts: 2,
+              initialDelay: 1000,
+              maxDelay: 2000,
+            }
+          }
+        ).catch((fallbackError) => {
+          logError('🔍 DEBUG: Gemini fallback failed', { requestId, fallbackError: fallbackError?.message });
+          return null;
+        });
+      } catch (geminiError: any) {
+        logError('🔍 DEBUG: Gemini fallback exception', { requestId, error: geminiError?.message });
+        fallbackResponse = null;
+      }
+    }
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2602',message:'Fallback response received',data:{hasResponse:!!fallbackResponse,isOk:fallbackResponse?.ok,status:fallbackResponse?.status,fallbackModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
+    if (fallbackResponse?.ok) {
+      logInfo('🔍 DEBUG: Fallback succeeded', { requestId, fallbackModel });
+      const reader = fallbackResponse.body?.getReader();
+      if (reader) {
+        return new Response(
+          new ReadableStream({
+            async start(controller) {
+              try {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  controller.enqueue(value);
+                }
+                controller.close();
+              } catch (error) {
+                controller.error(error);
               }
             }
-          );
-        }
+          }),
+          {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive'
+            }
+          }
+        );
       }
     }
     
@@ -2581,6 +2795,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
       let fullMessage = '';
       let buffer = '';
       let firstTokenReceived = false;
+      let timeToFirstToken: number | null = null;
       const startTime = Date.now();
 
       try {
@@ -2609,7 +2824,7 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
                 if (content) {
                   if (!firstTokenReceived) {
                     firstTokenReceived = true;
-                    const timeToFirstToken = Date.now() - startTime;
+                    timeToFirstToken = Date.now() - startTime;
                     console.log(`⚡ First token received in ${timeToFirstToken}ms`);
                     // 🚀 OPTIMIZATION: Stream first token immediately without delay
                   }
@@ -2639,8 +2854,21 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
           structure: quality.structure,
           latency,
           messageLength: fullMessage.length,
-          issues: quality.issues
+          issues: quality.issues,
+          model: selectedModel
         });
+        
+        // Track DeepSeek performance for comparison
+        if (selectedModel.startsWith('deepseek-')) {
+          logInfo('DeepSeek performance metrics', {
+            requestId,
+            model: selectedModel,
+            latency,
+            messageLength: fullMessage.length,
+            qualityScore: quality.score,
+            timeToFirstToken: timeToFirstToken
+          });
+        }
         
         // If quality is low, try to improve it
         if (quality.score < 0.6 && quality.issues.length > 0) {
