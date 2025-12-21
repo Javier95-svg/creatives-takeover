@@ -35,6 +35,7 @@ import { FounderOSIntegration } from "@/components/bizmap/FounderOSIntegration";
 import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 import { BizMapTour } from "@/components/onboarding/BizMapTour";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import BizmapWallpaper from "@/components/wallpapers/BizmapWallpaper";
 
 // Lazy load heavy components for better performance
 const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
@@ -1232,7 +1233,7 @@ Subject: "Quick question about [their pain point]"
 
   return (
     <ErrorBoundary>
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen overflow-hidden">
         <SEO
           title="BizMap AI - Founder Idea Validation + 30-Day Launch OS"
           description="Validate your startup idea with AI-powered market analysis, get a 30-day launch roadmap, and join founder cohorts. Free market validation and personalized sprint planning."
@@ -1240,6 +1241,8 @@ Subject: "Quick question about [their pain point]"
           url="/bizmap-ai"
           structuredData={structuredData}
         />
+        
+        <BizmapWallpaper />
         
         <div className="relative z-10 bg-background">
           <Navigation />
