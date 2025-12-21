@@ -1803,7 +1803,7 @@ Subject: "Quick question about [their pain point]"
                   </Button>
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold">Tech Stack</h2>
-                    <p className="text-muted-foreground">Compare and select the most suitable tools for building and scaling your startup</p>
+                    <p className="text-muted-foreground">Select one product in each category to create an ecosystem that works seamlessly together to build, run, and scale your startup.</p>
                   </div>
                 </div>
                 
