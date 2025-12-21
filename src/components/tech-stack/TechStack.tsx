@@ -89,14 +89,6 @@ const TechStack: React.FC = () => {
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-8">
-      <div className="text-center space-y-2 px-4">
-        <h2 className="text-2xl sm:text-3xl font-bold">Tech Stack</h2>
-        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-          Compare and select the most suitable tools for building and scaling your startup. 
-          Choose one product per category to build your stack.
-        </p>
-      </div>
-
       {techStackData.map((category) => (
         <CategorySection
           key={category.id}
