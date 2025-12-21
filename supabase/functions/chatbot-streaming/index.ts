@@ -538,7 +538,7 @@ serve(async (req) => {
       
       const response = createRAGStream(enhancedRagData, message, conversation, businessContext, optimizedHistory, chatMode, supabase);
       // Cache the response content (not the Response object - streams can only be consumed once)
-      const ragModel = ragData.model || 'openai/gpt-5-2025-08-07';
+      const ragModel = ragData.model || 'google/gemini-2.5-flash';
       await saveResponseCache(supabase, cacheKey, ragData.answer, 'rag-chat', ragModel, message, businessContext);
       // Don't cache Response objects - they're streams that can only be consumed once
       return response;
@@ -959,7 +959,7 @@ async function fetchRAGData(supabase: any, messages: ChatMessage[], userId: stri
         userId,
         matchCount: 8, // Increased to include document chunks
         filter: userId ? undefined : filter, // Don't filter by source if user has documents
-        model: 'openai/gpt-5-2025-08-07',
+        model: 'google/gemini-2.5-flash',
         temperature: 0.3,
       }
     });
@@ -2235,70 +2235,70 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     };
   }
   
-  // GTM Strategy mode → use GPT-5 for superior reasoning and structured output
+  // GTM Strategy mode → use Gemini 2.5 Flash (GPT-5 not available via Lovable API)
   if (chatMode === 'gtm-strategy') {
     return { 
-      model: 'openai/gpt-5-2025-08-07', 
+      model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
       maxTokens: 700,
       temperature: 0.6
     };
   }
   
-  // Planning mode (wizard) → use GPT-5 for superior logical consistency and context retention
+  // Planning mode (wizard) → use Gemini 2.5 Flash (GPT-5 not available via Lovable API)
   if (chatMode === 'wizard') {
-    // All queries use GPT-5 with complexity-based token limits
+    // All queries use Gemini 2.5 Flash with complexity-based token limits
     if (complexity === 'complex') {
       return { 
-        model: 'openai/gpt-5-2025-08-07', 
+        model: 'google/gemini-2.5-flash', 
         strategy: 'quality',
         maxTokens: 800,
         temperature: 0.6
       };
     }
     
-    // Simple queries → GPT-5 with lower token limit
+    // Simple queries → Gemini 2.5 Flash with lower token limit
     if (complexity === 'simple') {
       return { 
-        model: 'openai/gpt-5-2025-08-07', 
+        model: 'google/gemini-2.5-flash', 
         strategy: 'quality',
         maxTokens: 200,
         temperature: 0.5
       };
     }
     
-    // Moderate queries → GPT-5
+    // Moderate queries → Gemini 2.5 Flash
     return { 
-      model: 'openai/gpt-5-2025-08-07', 
+      model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
       maxTokens: 400,
       temperature: 0.6
     };
   }
   
-  // Freeform mode and other modes → use GPT-5 for superior quality and context retention
+  // Freeform mode and other modes → use Gemini 2.5 Flash (GPT-5 not available via Lovable API)
   if (complexity === 'simple') {
     return { 
-      model: 'openai/gpt-5-2025-08-07', 
+      model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
       maxTokens: 200,
       temperature: 0.5
     };
   }
   
-  // Complex queries → GPT-5 for best quality and reasoning
+  // Complex queries → Gemini 2.5 Flash for best quality
   if (complexity === 'complex') {
     return { 
-      model: 'openai/gpt-5-2025-08-07', 
+      model: 'google/gemini-2.5-flash', 
       strategy: 'quality',
       maxTokens: 800,
       temperature: 0.6
     };
   }
   
-  // Moderate → GPT-5 for balanced quality
+  // Moderate → Gemini 2.5 Flash for balanced quality
   return { 
-    model: 'openai/gpt-5-2025-08-07', 
+    model: 'google/gemini-2.5-flash', 
     strategy: 'quality',
     maxTokens: 400,
     temperature: 0.6
@@ -2483,6 +2483,11 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
 
   // 🚀 OPTIMIZATION: Use retry logic with exponential backoff and timeout
   let aiResponse: Response;
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2487',message:'Before API call',data:{model:selectedModel,hasApiKey:!!LOVABLE_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
+  
   try {
     aiResponse = await fetchWithRetry(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -2510,7 +2515,14 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
         }
       }
     );
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2512',message:'API call completed',data:{isOk:aiResponse.ok,status:aiResponse.status,model:selectedModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
   } catch (error: any) {
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2513',message:'API call exception',data:{errorMessage:error?.message,model:selectedModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     logError('API request failed after retries', { 
       requestId,
       error: error.message,
@@ -2539,6 +2551,10 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     const err = await aiResponse.text();
     const status = aiResponse.status;
     
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2538',message:'API response not OK',data:{status,model:selectedModel,errorPreview:err.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     // 🚀 OPTIMIZATION: Enhanced error handling for all HTTP status codes
     const errorMessages: Record<number, string> = {
       400: "I couldn't understand your request. Please try rephrasing your question.",
@@ -2554,16 +2570,29 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     
     const userMessage = errorMessages[status] || "I encountered an error processing your request. Please try again.";
     
-    logError('API response error', { 
+    logError('🔍 DEBUG: API response error', { 
       requestId,
       status,
       error: err,
       model: selectedModel,
-      userMessage
+      userMessage,
+      fullError: err
     });
     
-    // Return error for non-retryable status codes
-    if ([400, 401, 403, 404, 402].includes(status)) {
+    // 🚀 OPTIMIZATION: Fallback chain - if GPT-5 fails (especially 400/404 model not found), try Gemini Flash immediately
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2565',message:'API error detected',data:{selectedModel,status,isModelNotFound:status===400||status===404,errorPreview:err.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    // If GPT-5 fails (especially model not found errors), immediately fall back to Gemini
+    const isGPT5 = selectedModel === 'openai/gpt-5-2025-08-07' || selectedModel.includes('gpt-5');
+    const isModelNotFound = status === 400 || status === 404;
+    
+    // For model not found errors with GPT-5, skip error return and go straight to fallback
+    if (isModelNotFound && isGPT5) {
+      logWarn('🔍 DEBUG: GPT-5 model not found, falling back to Gemini', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
+    } else if ([400, 401, 403, 404, 402].includes(status) && !isGPT5) {
+      // Only return error immediately for non-GPT-5 models
       return new Response(
         JSON.stringify({ error: userMessage, requestId }),
         { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -2571,13 +2600,23 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
     }
     
     // 🚀 OPTIMIZATION: Fallback chain - if GPT-5 fails, try Gemini Flash as backup
-    logWarn('Model failed, trying fallback', { requestId, model: selectedModel, status });
+    logWarn('🔍 DEBUG: Model failed, trying fallback', { requestId, model: selectedModel, status, error: err.substring(0, 300) });
     
-    // If GPT-5 fails, fall back to Gemini Flash for reliability
-    if (selectedModel === 'openai/gpt-5-2025-08-07') {
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2574',message:'Attempting fallback',data:{selectedModel,status,isGPT5},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
+    // Fallback logic (currently not needed since we're using Gemini, but kept for future model switches)
+    // If any model fails and we have a fallback available, use it
+    if (isGPT5) {
+      // This branch won't execute since we're back to Gemini, but kept for future use
       const fallbackModel = 'google/gemini-2.5-flash';
       
-      logInfo('Falling back to Gemini Flash', { requestId, originalModel: selectedModel, fallbackModel });
+      logInfo('🔍 DEBUG: Falling back to Gemini Flash', { requestId, originalModel: selectedModel, fallbackModel, reason: 'GPT-5 failed' });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2580',message:'Fallback to Gemini initiated',data:{fallbackModel},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       const fallbackResponse = await fetchWithRetry(
         'https://ai.gateway.lovable.dev/v1/chat/completions',
         {
@@ -2597,9 +2636,20 @@ async function createAIStream(messages: ChatMessage[], userMessage: string, conv
             maxDelay: 2000,
           }
         }
-      ).catch(() => null);
+      ).catch((fallbackError) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2600',message:'Fallback also failed',data:{fallbackError:fallbackError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+        logError('🔍 DEBUG: Fallback to Gemini also failed', { requestId, fallbackError: fallbackError?.message });
+        return null;
+      });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chatbot-streaming/index.ts:2602',message:'Fallback response received',data:{hasResponse:!!fallbackResponse,isOk:fallbackResponse?.ok,status:fallbackResponse?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       
       if (fallbackResponse?.ok) {
+        logInfo('🔍 DEBUG: Fallback to Gemini succeeded', { requestId });
         const reader = fallbackResponse.body?.getReader();
         if (reader) {
           return new Response(
