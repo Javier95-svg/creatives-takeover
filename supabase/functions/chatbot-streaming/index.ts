@@ -1183,67 +1183,13 @@ BUSINESS EXPERTISE:
 Think like a seasoned entrepreneur who's launched multiple successful creative businesses. Be practical, actionable, and inspiring.`;
   }
   
-  // GTM Strategy mode - optimized for Gemini 2.5 Flash structured output
-  if (chatMode === 'gtm-strategy') {
-    return `You are BizMap AI - GTM strategy expert for creative entrepreneurs (Gemini 2.5 Flash optimized).
-
-ROLE: Guide users through GTM strategy systematically. Ask ONE question at a time, wait for response before proceeding.
-
-GTM STRATEGY FRAMEWORK - Ask questions in this EXACT order:
-1. Customer Segmentation - "Who are your target customer segments? Describe the different groups of people who would buy your product."
-2. Buyer Personas - "For your primary segment, create a detailed buyer persona. What are their demographics, pain points, goals, and behaviors?"
-3. Positioning - "How do you want to be positioned in the market? What makes you different from competitors?"
-4. Pricing Strategy - "What's your pricing model? How did you arrive at this price point?"
-5. Distribution Channels - "How will customers discover and purchase your product? What channels will you use?"
-6. Marketing Tactics - "What specific marketing tactics will you use to acquire customers? List 3-5 tactics."
-7. Sales Process - "How will you convert leads to customers? Describe your sales funnel."
-8. Launch Plan - "What's your launch timeline? When and how will you go to market?"
-9. KPIs & Metrics - "How will you measure success? What are your key performance indicators?"
-${contextString}
-
-RESPONSE FORMAT (REQUIRED):
-Problem: [GTM challenge at this step]
-Insight: [Why this step matters]
-Recommendation: [Guidance for current question]
-Next Actions: [Current question to answer, then next step]
-
-- Ask ONE question at a time from framework above
-- Wait for complete answer before proceeding
-- Be direct and structured (2-3 sentences per section, 70 words max)
-- Use GTM terms (CAC, LTV, conversion funnel) appropriately
-- Provide brief context for each question's importance
-
-HALLUCINATION PREVENTION:
-• Don't fabricate market data or competitor information
-• If asked about specific benchmarks, provide ranges with sources: "CAC typically ranges $X-$Y for [industry] [Source 1]"
-• Focus on strategic guidance based on their answers, not made-up statistics
-
-DO NOT:
-- Ask multiple questions at once
-- Skip ahead in the framework
-- Allow freeform discussion without structure
-- Move to next question until current one is answered
-- Provide long explanations - keep it brief and focused
-
-EXAMPLE FLOW:
-You: "Let's build your Go-To-Market strategy. First, who are your target customer segments? Describe the different groups of people who would buy your product."
-
-[User responds]
-
-You: "Great! You've identified [X] segments. Now, let's create a detailed buyer persona for your primary segment. What are their demographics, pain points, goals, and behaviors?"
-
-[Continue through all 9 questions systematically]
-
-Think like a seasoned GTM strategist who's launched multiple products. Be practical, data-driven, and action-oriented.`;
-  }
-  
   // Freeform mode - optimized for Gemini 2.5 Flash structured reasoning
   return `You are BizMap AI - an expert business strategist and advisor for creative entrepreneurs.
 
 CRITICAL: You are using Gemini 2.5 Flash - optimize for clarity, structure, and actionable insights. Be direct and efficient.
 ${contextString}
 
-EXPERTISE: Business models, market analysis, financial planning, GTM strategy, product strategy, creative industries.
+EXPERTISE: Business models, market analysis, financial planning, product strategy, creative industries.
 
 RESPONSE FORMAT (REQUIRED - follow exactly):
 
@@ -1548,38 +1494,6 @@ function generateQuickActions(stage: string, chatMode: string, userMessage: stri
       { text: "Try BizMap AI", id: "navigate_bizmap" },
       { text: "Try Insighta", id: "navigate_insighta" },
       { text: "View pricing", id: "navigate_pricing" }
-    ];
-  }
-  
-  // GTM Strategy mode suggestions
-  if (chatMode === 'gtm-strategy') {
-    // Context-aware GTM quick actions based on conversation stage
-    if (stage === 'discovery' || stage === 'exploration') {
-      return [
-        { text: "Define customer segments", id: "gtm_segments" },
-        { text: "Create buyer personas", id: "gtm_personas" },
-        { text: "Develop positioning", id: "gtm_positioning" }
-      ];
-    }
-    if (stage === 'validation' || stage === 'planning') {
-      return [
-        { text: "Set pricing strategy", id: "gtm_pricing" },
-        { text: "Plan distribution channels", id: "gtm_channels" },
-        { text: "Marketing tactics", id: "gtm_tactics" }
-      ];
-    }
-    if (stage === 'execution' || stage === 'refinement') {
-      return [
-        { text: "Launch timeline", id: "gtm_launch" },
-        { text: "Define KPIs", id: "gtm_kpis" },
-        { text: "Review strategy", id: "gtm_review" }
-      ];
-    }
-    // Default GTM actions
-    return [
-      { text: "Customer segmentation", id: "gtm_segments" },
-      { text: "Pricing strategy", id: "gtm_pricing" },
-      { text: "Launch planning", id: "gtm_launch" }
     ];
   }
   
@@ -2216,16 +2130,6 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
       strategy: 'speed',
       maxTokens: 80, // Reduced for faster responses
       temperature: 0.35 // Lower for faster, more accurate short responses
-    };
-  }
-  
-  // GTM Strategy mode → optimized for Gemini 2.5 Flash (balanced speed/quality)
-  if (chatMode === 'gtm-strategy') {
-    return { 
-      model: 'google/gemini-2.5-flash', 
-      strategy: 'quality',
-      maxTokens: 600, // Reduced from 700 for faster generation while maintaining quality
-      temperature: 0.5 // Optimized for structured GTM responses
     };
   }
   

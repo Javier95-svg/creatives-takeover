@@ -315,17 +315,15 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'gtm-strategy' | 'bizmap-structured'>('wizard');
+  const [chatMode, setChatMode] = useState<'wizard' | 'freeform' | 'tour-guide' | 'bizmap-structured'>('wizard');
   // Separate message storage per mode for independent conversations
   const [messagesByMode, setMessagesByMode] = useState<{
     'wizard': ChatMessage[];
-    'gtm-strategy': ChatMessage[];
     'freeform': ChatMessage[];
     'tour-guide': ChatMessage[];
     'bizmap-structured': ChatMessage[];
   }>({
     'wizard': [],
-    'gtm-strategy': [],
     'freeform': [],
     'tour-guide': [],
     'bizmap-structured': []
@@ -363,13 +361,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   // Separate session IDs per mode for independent conversations
   const [sessionIdsByMode, setSessionIdsByMode] = useState<{
     'wizard': string;
-    'gtm-strategy': string;
     'freeform': string;
     'tour-guide': string;
     'bizmap-structured': string;
   }>({
     'wizard': `session_wizard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    'gtm-strategy': `session_gtm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'freeform': `session_freeform_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'tour-guide': `session_tour_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     'bizmap-structured': `session_structured_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -1332,42 +1328,6 @@ This will help us strengthen your business logic and ensure you're building on s
 
     if (context === ConversationContext.FINANCIAL_PLANNING || lowerMessage.includes('financial') || lowerMessage.includes('money') || lowerMessage.includes('revenue')) {
       return generateFinancialPlanningResponse(userMessage, extractedInfo);
-    }
-
-    // GTM Strategy context detection (when in GTM mode)
-    if (chatMode === 'gtm-strategy') {
-      // Customer segmentation
-      if (lowerMessage.includes('segment') || lowerMessage.includes('customer group') || lowerMessage.includes('target audience') || lowerMessage.includes('demographic')) {
-        updateConversationState({ context: ConversationContext.GTM_SEGMENTATION });
-      }
-      // Personas
-      else if (lowerMessage.includes('persona') || lowerMessage.includes('buyer profile') || lowerMessage.includes('ideal customer') || lowerMessage.includes('icp')) {
-        updateConversationState({ context: ConversationContext.GTM_PERSONAS });
-      }
-      // Positioning
-      else if (lowerMessage.includes('positioning') || lowerMessage.includes('differentiation') || lowerMessage.includes('value prop') || lowerMessage.includes('messaging')) {
-        updateConversationState({ context: ConversationContext.GTM_POSITIONING });
-      }
-      // Pricing
-      else if (lowerMessage.includes('pricing') || lowerMessage.includes('price point') || lowerMessage.includes('revenue model') || lowerMessage.includes('monetization')) {
-        updateConversationState({ context: ConversationContext.GTM_PRICING });
-      }
-      // Channels
-      else if (lowerMessage.includes('channel') || lowerMessage.includes('distribution') || lowerMessage.includes('marketing channel') || lowerMessage.includes('sales channel')) {
-        updateConversationState({ context: ConversationContext.GTM_CHANNELS });
-      }
-      // Tactics
-      else if (lowerMessage.includes('marketing tactic') || lowerMessage.includes('acquisition') || lowerMessage.includes('conversion') || lowerMessage.includes('funnel')) {
-        updateConversationState({ context: ConversationContext.GTM_TACTICS });
-      }
-      // Launch
-      else if (lowerMessage.includes('launch') || lowerMessage.includes('go-live') || lowerMessage.includes('rollout') || lowerMessage.includes('release')) {
-        updateConversationState({ context: ConversationContext.GTM_LAUNCH });
-      }
-      // KPIs
-      else if (lowerMessage.includes('kpi') || lowerMessage.includes('metric') || lowerMessage.includes('success metric') || lowerMessage.includes('measurement')) {
-        updateConversationState({ context: ConversationContext.GTM_METRICS });
-      }
     }
 
     // Industry-specific guidance
@@ -2483,34 +2443,6 @@ What specific aspect of your business would you like to focus on first?`;
     switchToWizard: useCallback(() => {
       setChatMode('wizard');
     }, []),
-    switchToGTMMode: useCallback(() => {
-      const newMode: 'gtm-strategy' = 'gtm-strategy';
-      // Save current mode's messages before switching
-      setMessagesByMode(prev => ({
-        ...prev,
-        [chatMode]: messages
-      }));
-      // Switch to GTM mode
-      setChatMode(newMode);
-      // Initialize GTM mode if empty (using functional update to avoid dependency)
-      setMessagesByMode(prev => {
-        if (!prev[newMode] || prev[newMode].length === 0) {
-          const welcomeMessage: ChatMessage = {
-            id: generateId(),
-            content: "🎯 Welcome to **Go-To-Market Strategy** mode! I'll help you systematically build your market entry strategy by asking structured questions. Let's start with customer segmentation: Who are your target customer segments? Describe the different groups of people who would buy your product.",
-            isBot: true,
-            timestamp: new Date(),
-            messageType: 'recommendation',
-            confidence: 1.0
-          };
-          return {
-            ...prev,
-            [newMode]: [welcomeMessage]
-          };
-        }
-        return prev;
-      });
-    }, [chatMode, messages]),
     switchToPlanningMode: useCallback(() => {
       const newMode: 'wizard' = 'wizard';
       // Save current mode's messages before switching

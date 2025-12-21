@@ -1,9 +1,9 @@
-import { FileText, Target } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-export type ChatMode = 'planning' | 'gtm';
+export type ChatMode = 'planning';
 
 interface ModeSelectorProps {
   activeMode: ChatMode;
@@ -22,12 +22,6 @@ export const ModeSelector = ({ activeMode, onModeChange }: ModeSelectorProps) =>
       label: 'Planning',
       icon: FileText,
       tooltip: 'Business Planning mode helps you define, structure, and refine your business plans. Get guidance on market analysis, value proposition, revenue models, and operational planning.'
-    },
-    {
-      id: 'gtm',
-      label: 'Go-To-Market',
-      icon: Target,
-      tooltip: 'Go-To-Market mode helps you plan and execute your market entry strategy. Get guidance on customer segmentation, target personas, positioning, pricing, distribution channels, marketing tactics, launch planning, and KPIs.'
     }
   ];
 

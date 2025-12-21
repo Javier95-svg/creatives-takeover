@@ -188,7 +188,6 @@ export const BizMapChat = ({
     sendMessage,
     chatMode,
     switchToFreeform,
-    switchToGTMMode,
     switchToPlanningMode,
     conversionPromptShown,
     conversionPromptDismissed,
@@ -385,32 +384,26 @@ export const BizMapChat = ({
   };
 
   const getCurrentPlaceholder = () => {
-    if (chatMode === 'gtm-strategy') {
-      return "Ask about your go-to-market strategy...";
-    }
     if (currentStep < wizardSteps.length) {
       return wizardSteps[currentStep].placeholder || "Type your answer here...";
     }
     return "Ask about your business plan...";
   };
   
-  // Determine active mode for ModeSelector - with safety check
+  // Determine active mode for ModeSelector - always planning (wizard mode)
   const activeModeForSelector = useMemo(() => {
-    if (!chatMode) return 'planning'; // Default to planning if chatMode is undefined
-    return chatMode === 'wizard' ? 'planning' : 'gtm';
-  }, [chatMode]);
+    return 'planning';
+  }, []);
   
-  const handleModeChange = useCallback((mode: 'planning' | 'gtm') => {
-    if (!switchToPlanningMode || !switchToGTMMode) {
+  const handleModeChange = useCallback((mode: 'planning') => {
+    if (!switchToPlanningMode) {
       console.error('Mode switching functions not available');
       return;
     }
     if (mode === 'planning') {
       switchToPlanningMode();
-    } else {
-      switchToGTMMode();
     }
-  }, [switchToPlanningMode, switchToGTMMode]);
+  }, [switchToPlanningMode]);
 
   // Expose mode info to parent for sidebar (after definitions)
   useEffect(() => {
