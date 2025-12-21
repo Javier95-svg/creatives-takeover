@@ -1,107 +1,100 @@
 const BizmapWallpaper = () => {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      {/* Base gradient backdrop - matches FAQ section */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
-      
-      {/* Modern Geometric Animated Background - matches FAQ section */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* Subtle Mesh Grid */}
-        <div className="absolute inset-0 opacity-[0.06]">
-          <div className="absolute inset-0" style={{
+      {/* Stock-inspired animated wallpaper - matches Insighta tab */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient base - theme-aware */}
+        <div className="absolute inset-0 
+          bg-gradient-to-br 
+          dark:from-[#030914] dark:via-[#071322] dark:to-[#0b1f33] 
+          from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0]" />
+
+        {/* Market grid - theme-aware */}
+        <div
+          className="absolute inset-0 
+            dark:opacity-[0.18] opacity-[0.12]"
+          style={{
             backgroundImage: `
-              radial-gradient(circle at 2px 2px, hsl(var(--primary) / 0.15) 1px, transparent 1px)
+              linear-gradient(90deg, rgba(59,130,246,0.25) 1px, transparent 1px),
+              linear-gradient(0deg, rgba(59,130,246,0.25) 1px, transparent 1px)
             `,
-            backgroundSize: '48px 48px'
-          }} />
-        </div>
+            backgroundSize: '120px 120px'
+          }}
+        />
 
-        {/* Animated Gradient Orbs */}
-        <div className="absolute top-20 left-[15%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-primary/20 via-accent/10 to-transparent blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute bottom-20 right-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-secondary/15 via-primary/8 to-transparent blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-r from-accent/12 to-transparent blur-2xl" style={{ animation: 'spin 20s linear infinite' }} />
-
-        {/* Floating Geometric Shapes */}
-        <div className="absolute top-[15%] left-[8%]">
-          <div className="relative w-32 h-32">
-            <div className="absolute inset-0 border-2 border-primary/20 rounded-lg" style={{ 
-              animation: 'spin 15s linear infinite',
-              transformOrigin: 'center'
-            }} />
-            <div className="absolute inset-4 border-2 border-accent/15 rounded-lg" style={{ 
-              animation: 'spin 12s linear infinite reverse',
-              transformOrigin: 'center'
-            }} />
-            <div className="absolute inset-8 border-2 border-secondary/12 rounded-lg" style={{ 
-              animation: 'spin 18s linear infinite',
-              transformOrigin: 'center'
-            }} />
-          </div>
-        </div>
-
-        <div className="absolute top-[60%] right-[12%]">
-          <div className="relative w-28 h-28">
-            <div className="absolute inset-0 rounded-full border-2 border-primary/15" style={{ 
-              animation: 'scale-in 6s ease-in-out infinite alternate'
-            }} />
-            <div className="absolute inset-3 rounded-full border-2 border-accent/12" style={{ 
-              animation: 'scale-in 8s ease-in-out infinite alternate',
-              animationDelay: '1s'
-            }} />
-            <div className="absolute inset-6 rounded-full border-2 border-secondary/10" style={{ 
-              animation: 'scale-in 7s ease-in-out infinite alternate',
-              animationDelay: '2s'
-            }} />
-          </div>
-        </div>
-
-        <div className="absolute bottom-[25%] left-[18%]">
-          <div className="relative w-24 h-24" style={{ animation: 'float 12s ease-in-out infinite' }}>
-            <div className="absolute inset-0" style={{
-              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-              background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--accent) / 0.08))',
-              animation: 'spin 20s linear infinite'
-            }} />
-          </div>
-        </div>
-
-        {/* Animated Connection Lines Network */}
-        <svg className="absolute inset-0 w-full h-full opacity-20" style={{ pointerEvents: 'none' }}>
+        {/* Animated line charts - theme-aware */}
+        <svg className="absolute inset-0 w-full h-full 
+          dark:opacity-35 opacity-25" 
+          viewBox="0 0 1440 900">
           <defs>
-            <linearGradient id="bizmapGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
-              <stop offset="50%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.6 }} />
-              <stop offset="100%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0 }} />
+            <linearGradient id="bizmap-line-1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(59,130,246,0)" />
+              <stop offset="50%" stopColor="rgba(59,130,246,0.6)" />
+              <stop offset="100%" stopColor="rgba(59,130,246,0)" />
             </linearGradient>
-            <linearGradient id="bizmapGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0 }} />
-              <stop offset="50%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0.5 }} />
-              <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0 }} />
+            <linearGradient id="bizmap-line-2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(16,185,129,0)" />
+              <stop offset="50%" stopColor="rgba(16,185,129,0.6)" />
+              <stop offset="100%" stopColor="rgba(16,185,129,0)" />
             </linearGradient>
           </defs>
-          
-          {/* Animated paths */}
-          <path d="M 10% 20% Q 30% 40%, 50% 35%" stroke="url(#bizmapGrad1)" strokeWidth="2" fill="none">
-            <animate attributeName="d" 
-              values="M 10% 20% Q 30% 40%, 50% 35%; M 10% 25% Q 35% 38%, 50% 40%; M 10% 20% Q 30% 40%, 50% 35%"
-              dur="15s" repeatCount="indefinite" />
-          </path>
-          <path d="M 90% 30% Q 70% 50%, 50% 45%" stroke="url(#bizmapGrad2)" strokeWidth="2" fill="none">
-            <animate attributeName="d" 
-              values="M 90% 30% Q 70% 50%, 50% 45%; M 90% 35% Q 65% 48%, 50% 50%; M 90% 30% Q 70% 50%, 50% 45%"
-              dur="18s" repeatCount="indefinite" />
-          </path>
-          <path d="M 20% 80% Q 40% 60%, 60% 65%" stroke="url(#bizmapGrad1)" strokeWidth="2" fill="none">
-            <animate attributeName="d" 
-              values="M 20% 80% Q 40% 60%, 60% 65%; M 20% 75% Q 45% 58%, 60% 70%; M 20% 80% Q 40% 60%, 60% 65%"
-              dur="20s" repeatCount="indefinite" />
-          </path>
-          <path d="M 80% 70% Q 60% 60%, 50% 55%" stroke="url(#bizmapGrad2)" strokeWidth="2" fill="none">
-            <animate attributeName="d" 
-              values="M 80% 70% Q 60% 60%, 50% 55%; M 80% 75% Q 55% 58%, 50% 60%; M 80% 70% Q 60% 60%, 50% 55%"
-              dur="16s" repeatCount="indefinite" />
-          </path>
+          {/* Primary trend line */}
+          <path
+            d="M120 540 Q240 420 360 460 T600 400 Q780 360 900 460 T1200 380"
+            fill="none"
+            stroke="url(#bizmap-line-1)"
+            strokeWidth="2"
+            strokeDasharray="10 20"
+          />
+          {/* Secondary trend line */}
+          <path
+            d="M160 640 Q320 620 460 520 T720 560 Q900 600 1080 540 T1300 600"
+            fill="none"
+            stroke="url(#bizmap-line-2)"
+            strokeWidth="1.6"
+            strokeDasharray="14 24"
+          />
         </svg>
+
+        {/* Rotating data discs - theme-aware */}
+        <div className="absolute -top-32 right-1/4 w-[32rem] h-[32rem] rounded-full 
+          border 
+          dark:border-sky-400/20 border-sky-400/15 
+          blur-[1px] 
+          animate-[spin_36s_linear_infinite]" />
+        <div className="absolute top-1/3 -left-28 w-[28rem] h-[28rem] rounded-full 
+          border 
+          dark:border-emerald-300/20 border-emerald-300/15 
+          blur-[1px] 
+          animate-[spin_28s_linear_infinite_reverse]" />
+
+        {/* Pulsing data nodes - theme-aware */}
+        {[
+          { top: '24%', left: '28%' },
+          { top: '40%', left: '50%' },
+          { top: '58%', left: '34%' },
+          { top: '48%', left: '66%' },
+          { top: '32%', left: '74%' },
+          { top: '62%', left: '78%' }
+        ].map((pos, index) => (
+          <div
+            key={`bizmap-node-${index}`}
+            className="absolute w-2.5 h-2.5 rounded-full 
+              dark:bg-cyan-300/80 dark:shadow-[0_0_14px_rgba(56,189,248,0.6)]
+              bg-cyan-500/60 shadow-[0_0_12px_rgba(59,130,246,0.5)]"
+            style={{
+              ...pos,
+              animation: 'pulse 2.8s ease-in-out infinite',
+              animationDelay: `${index * 0.5}s`
+            }}
+          />
+        ))}
+
+        {/* Readability overlay - theme-aware */}
+        <div className="absolute inset-0 
+          bg-gradient-to-b 
+          dark:from-background/72 dark:via-background/45 dark:to-background/78 
+          from-background/80 from-background/85 to-background/82" />
       </div>
     </div>
   );
