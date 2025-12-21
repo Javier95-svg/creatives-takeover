@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { techStackData, TechStackCategory } from '@/data/techStack';
-import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users } from 'lucide-react';
+import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, Lock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -28,6 +30,8 @@ interface BudgetBreakdown {
 }
 
 const TechStack: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
 
@@ -93,6 +97,10 @@ const TechStack: React.FC = () => {
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
 
   const handleSeeBudget = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     setShowBudget(true);
   };
 
@@ -125,15 +133,24 @@ const TechStack: React.FC = () => {
                 className="w-full sm:w-auto min-w-[140px]"
                 disabled={selectedCount === 0}
               >
-                <Calculator className="w-4 h-4 mr-2" />
-                See Budget
+                {user ? (
+                  <>
+                    <Calculator className="w-4 h-4 mr-2" />
+                    See Budget
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Sign In to View Budget
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {showBudget && (
+      {showBudget && user && (
         <BudgetDisplay
           budget={budget}
           selectedProducts={selectedProducts}
