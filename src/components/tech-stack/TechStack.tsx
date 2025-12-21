@@ -214,10 +214,23 @@ const CategorySection: React.FC<CategorySectionProps> = ({
                     }`}
                   >
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {product.name}
-                        {selected && (
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {product.name}
+                          {selected && (
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                        {product.logo && (
+                          <img 
+                            src={product.logo} 
+                            alt={`${product.name} logo`}
+                            className="w-6 h-6 object-contain flex-shrink-0"
+                            onError={(e) => {
+                              // Hide image if it fails to load
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                         )}
                       </div>
                     </TableCell>

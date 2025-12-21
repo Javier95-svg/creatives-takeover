@@ -5,6 +5,7 @@ export interface TechStackProduct {
   pros: string[];
   cons: string[];
   price: string;
+  logo?: string; // Logo URL or image path
 }
 
 export interface TechStackCategory {
@@ -39,7 +40,8 @@ export const techStackData: TechStackData = [
           'Requires additional libraries for routing and state management',
           'Frequent updates can cause breaking changes'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/react.svg'
       },
       {
         id: 'vue',
@@ -56,7 +58,8 @@ export const techStackData: TechStackData = [
           'Less corporate backing',
           'Fewer job opportunities in some markets'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/vuedotjs.svg'
       },
       {
         id: 'nextjs',
@@ -73,7 +76,8 @@ export const techStackData: TechStackData = [
           'Can be overkill for simple projects',
           'Learning curve for SSR concepts'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg'
       },
       {
         id: 'angular',
@@ -91,7 +95,8 @@ export const techStackData: TechStackData = [
           'More opinionated and less flexible',
           'Slower development for small projects'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/angular.svg'
       }
     ]
   },
@@ -116,7 +121,8 @@ export const techStackData: TechStackData = [
           'Callback hell without proper async patterns',
           'Less mature than traditional backend languages'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nodedotjs.svg'
       },
       {
         id: 'django',
@@ -134,7 +140,8 @@ export const techStackData: TechStackData = [
           'Steeper learning curve for beginners',
           'Monolithic structure'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/django.svg'
       },
       {
         id: 'supabase',
@@ -152,7 +159,8 @@ export const techStackData: TechStackData = [
           'Vendor lock-in concerns',
           'Limited serverless function support'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/supabase.svg'
       },
       {
         id: 'firebase',
@@ -170,7 +178,8 @@ export const techStackData: TechStackData = [
           'Can become expensive at scale',
           'Less flexible than custom backends'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/firebase.svg'
       }
     ]
   },
@@ -196,7 +205,8 @@ export const techStackData: TechStackData = [
           'Can be expensive at scale',
           'Vendor lock-in for optimal features'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/vercel.svg'
       },
       {
         id: 'aws',
@@ -214,7 +224,8 @@ export const techStackData: TechStackData = [
           'Can be overwhelming for beginners',
           'Costs can spiral without monitoring'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazonaws.svg'
       },
       {
         id: 'railway',
@@ -232,7 +243,8 @@ export const techStackData: TechStackData = [
           'Newer platform with less documentation',
           'Limited service offerings'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/railway.svg'
       },
       {
         id: 'render',
@@ -250,7 +262,8 @@ export const techStackData: TechStackData = [
           'Can be slower than competitors',
           'Smaller community support'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/render.svg'
       }
     ]
   },
@@ -276,7 +289,8 @@ export const techStackData: TechStackData = [
           'Data sampling on free tier',
           'Requires cookie consent in many regions'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/googleanalytics.svg'
       },
       {
         id: 'mixpanel',
@@ -294,7 +308,8 @@ export const techStackData: TechStackData = [
           'Requires implementation effort',
           'Can be overkill for simple sites'
         ],
-        price: '$25/month'
+        price: '$25/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mixpanel.svg'
       },
       {
         id: 'amplitude',
@@ -312,7 +327,8 @@ export const techStackData: TechStackData = [
           'Requires technical knowledge',
           'Less suitable for marketing analytics'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amplitude.svg'
       },
       {
         id: 'posthog',
@@ -330,7 +346,8 @@ export const techStackData: TechStackData = [
           'Less mature than established players',
           'Limited third-party integrations'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/posthog.svg'
       }
     ]
   },
@@ -356,7 +373,8 @@ export const techStackData: TechStackData = [
           'Account approval process',
           'Less suitable for physical retail'
         ],
-        price: '2.9% + $0.30 per transaction'
+        price: '2.9% + $0.30 per transaction',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/stripe.svg'
       },
       {
         id: 'paypal',
@@ -374,7 +392,8 @@ export const techStackData: TechStackData = [
           'Account holds and freezes possible',
           'Limited customization options'
         ],
-        price: '2.9% + $0.30 per transaction'
+        price: '2.9% + $0.30 per transaction',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/paypal.svg'
       },
       {
         id: 'square',
@@ -392,7 +411,8 @@ export const techStackData: TechStackData = [
           'Fewer advanced features',
           'Less suitable for complex use cases'
         ],
-        price: '2.6% + $0.10 per transaction'
+        price: '2.6% + $0.10 per transaction',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/square.svg'
       },
       {
         id: 'paddle',
@@ -410,7 +430,8 @@ export const techStackData: TechStackData = [
           'Limited customization',
           'Smaller ecosystem'
         ],
-        price: '5% + $0.50 per transaction'
+        price: '5% + $0.50 per transaction',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/paddle.svg'
       }
     ]
   },
@@ -436,7 +457,8 @@ export const techStackData: TechStackData = [
           'Less user-friendly interface',
           'Limited template options'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/sendgrid.svg'
       },
       {
         id: 'mailchimp',
@@ -454,7 +476,8 @@ export const techStackData: TechStackData = [
           'Can be slow for high volume',
           'Limited API flexibility'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/mailchimp.svg'
       },
       {
         id: 'resend',
@@ -472,7 +495,8 @@ export const techStackData: TechStackData = [
           'Smaller ecosystem',
           'Fewer integrations'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/resend.svg'
       },
       {
         id: 'postmark',
@@ -490,7 +514,8 @@ export const techStackData: TechStackData = [
           'Limited free tier',
           'Less feature-rich than competitors'
         ],
-        price: '$15/month'
+        price: '$15/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/postmark.svg'
       }
     ]
   },
@@ -516,7 +541,8 @@ export const techStackData: TechStackData = [
           'Can feel spammy if misused',
           'Requires compliance awareness'
         ],
-        price: '$49/month'
+        price: '$49/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/apollo.svg'
       },
       {
         id: 'liskit',
@@ -534,7 +560,8 @@ export const techStackData: TechStackData = [
           'Limited integrations',
           'Newer platform'
         ],
-        price: '$29/month'
+        price: '$29/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg'
       },
       {
         id: 'linkedin-sales',
@@ -552,7 +579,8 @@ export const techStackData: TechStackData = [
           'Limited to LinkedIn data',
           'Can be time-consuming'
         ],
-        price: '$79/month'
+        price: '$79/month',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg'
       },
       {
         id: 'hunter',
@@ -570,7 +598,8 @@ export const techStackData: TechStackData = [
           'Rate limits on free tier',
           'Less comprehensive than full platforms'
         ],
-        price: 'Free / Usage-based'
+        price: 'Free / Usage-based',
+        logo: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/hunter.svg'
       }
     ]
   }
