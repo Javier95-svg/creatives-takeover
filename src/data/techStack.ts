@@ -431,7 +431,7 @@ export const techStackData: TechStackData = [
           'Smaller ecosystem'
         ],
         price: '5% + $0.50 per transaction',
-        logo: 'https://logo.clearbit.com/paddle.com'
+        logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"%3E%3Cpath d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm0 22.8C6.04 22.8 1.2 17.96 1.2 12S6.04 1.2 12 1.2 22.8 6.04 22.8 12 17.96 22.8 12 22.8zm-1.2-6.6h2.4v-7.2h-2.4v7.2zm0-8.4h2.4V6h-2.4v1.8z"/%3E%3C/svg%3E'
       }
     ]
   },
