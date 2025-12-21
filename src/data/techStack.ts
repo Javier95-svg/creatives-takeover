@@ -11,6 +11,7 @@ export interface TechStackCategory {
   id: string;
   name: string;
   description: string;
+  icon: string; // Icon name from lucide-react
   products: TechStackProduct[];
 }
 
@@ -21,6 +22,7 @@ export const techStackData: TechStackData = [
     id: 'frontend',
     name: 'Frontend',
     description: 'The user interface layer of your application. Your frontend framework determines how users interact with your product and affects development speed, user experience, and scalability.',
+    icon: 'Monitor',
     products: [
       {
         id: 'react',
@@ -97,6 +99,7 @@ export const techStackData: TechStackData = [
     id: 'backend',
     name: 'Backend',
     description: 'The server-side logic that powers your application. Your backend handles data processing, business logic, and API endpoints. Critical for security, performance, and scalability.',
+    icon: 'Server',
     products: [
       {
         id: 'nodejs',
@@ -175,6 +178,7 @@ export const techStackData: TechStackData = [
     id: 'hosting',
     name: 'Hosting / Infrastructure',
     description: 'Where your application lives and runs. Infrastructure choices impact uptime, performance, global reach, and operational complexity. Essential for delivering a reliable product experience.',
+    icon: 'Cloud',
     products: [
       {
         id: 'vercel',
@@ -254,6 +258,7 @@ export const techStackData: TechStackData = [
     id: 'analytics',
     name: 'Analytics',
     description: 'Tools to understand user behavior and product performance. Analytics help you make data-driven decisions, identify growth opportunities, and optimize your product based on real usage patterns.',
+    icon: 'BarChart',
     products: [
       {
         id: 'google-analytics',
@@ -333,6 +338,7 @@ export const techStackData: TechStackData = [
     id: 'payments',
     name: 'Payments',
     description: 'How you accept money from customers. Payment processing is critical for revenue generation. The right solution balances ease of integration, transaction fees, and global reach.',
+    icon: 'CreditCard',
     products: [
       {
         id: 'stripe',
@@ -412,6 +418,7 @@ export const techStackData: TechStackData = [
     id: 'email',
     name: 'Email',
     description: 'Email delivery for transactional messages and user communication. Reliable email infrastructure ensures users receive important notifications, password resets, and updates, directly impacting user trust and engagement.',
+    icon: 'Mail',
     products: [
       {
         id: 'sendgrid',
@@ -491,6 +498,7 @@ export const techStackData: TechStackData = [
     id: 'lead-generation',
     name: 'Lead Generation',
     description: 'Tools to find and connect with potential customers. Lead generation platforms help you identify prospects, gather contact information, and initiate sales conversations, accelerating your go-to-market efforts.',
+    icon: 'Users',
     products: [
       {
         id: 'apollo',

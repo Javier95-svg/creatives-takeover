@@ -3,7 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { techStackData, TechStackCategory } from '@/data/techStack';
-import { CheckCircle2, Calculator, DollarSign } from 'lucide-react';
+import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users } from 'lucide-react';
+
+// Icon mapping
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Monitor,
+  Server,
+  Cloud,
+  BarChart,
+  CreditCard,
+  Mail,
+  Users,
+};
 
 interface SelectedProducts {
   [categoryId: string]: string | null;
@@ -149,7 +160,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">{category.name}</CardTitle>
+        <CardTitle className="text-2xl flex items-center gap-2">
+          {(() => {
+            const IconComponent = iconMap[category.icon];
+            return IconComponent ? <IconComponent className="w-6 h-6 text-primary" /> : null;
+          })()}
+          {category.name}
+        </CardTitle>
         <CardDescription>
           {category.description}
         </CardDescription>
