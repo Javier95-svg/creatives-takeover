@@ -7,8 +7,6 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import heroPlanningFlatlay from "@/assets/hero-planning-flatlay.svg";
-import heroFounderWorkspace from "@/assets/hero-founder-workspace.svg";
 
 interface HeroImage {
   position: number;
@@ -611,9 +609,12 @@ const Hero = () => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
                 const optimisticPreview = optimisticPreviews[position];
                 const image = heroImages.find(img => img.position === position);
-                const imageSrc = optimisticPreview || image?.image_url || (position === 1 ? heroFounderWorkspace : position === 2 ? heroPlanningFlatlay : '');
-                const altText = image?.alt_text || (position === 1 ? 'Founder working at night with Creatives Takeover dashboard' : `Business planning illustration ${position}`);
+                // Top row (positions 1 and 2) - no default fallback images, must be uploaded
+                const imageSrc = optimisticPreview || image?.image_url || '';
+                const altText = image?.alt_text || `Hero image ${position}`;
                 const isUploadingPosition = uploading === position;
+                // Top row loads immediately, bottom row can lazy load
+                const shouldLoadEagerly = position <= 2 || !!optimisticPreview;
 
                 if (!imageSrc) {
                   return (
@@ -683,7 +684,8 @@ const Hero = () => {
                       style={{
                         filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
                       }}
-                      loading={optimisticPreview ? "eager" : "lazy"}
+                      loading={shouldLoadEagerly ? "eager" : "lazy"}
+                      fetchPriority={shouldLoadEagerly ? "high" : "auto"}
                       key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
