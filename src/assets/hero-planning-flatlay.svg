@@ -1,0 +1,78 @@
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - textured grey surface -->
+  <rect width="800" height="800" fill="#e5e7eb" opacity="0.3"/>
+  
+  <!-- Notebook in top left -->
+  <g transform="translate(50, 50)">
+    <rect x="0" y="0" width="120" height="160" fill="#ffffff" rx="4"/>
+    <rect x="0" y="0" width="120" height="160" fill="none" stroke="#d1d5db" stroke-width="2" rx="4"/>
+    <!-- Grid pattern on cover -->
+    <defs>
+      <pattern id="grid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect x="5" y="5" width="110" height="150" fill="url(#grid)"/>
+    <!-- Colorful page edges -->
+    <rect x="115" y="10" width="8" height="20" fill="#fbbf24" rx="2"/>
+    <rect x="115" y="35" width="8" height="20" fill="#ec4899" rx="2"/>
+    <rect x="115" y="60" width="8" height="20" fill="#3b82f6" rx="2"/>
+    <rect x="115" y="85" width="8" height="20" fill="#10b981" rx="2"/>
+  </g>
+  
+  <!-- Binder clip top right -->
+  <g transform="translate(650, 80)">
+    <rect x="0" y="0" width="30" height="8" fill="#1f2937" rx="2"/>
+    <circle cx="15" cy="4" r="3" fill="#6b7280"/>
+  </g>
+  
+  <!-- Pastel sticky notes stack (bottom right) -->
+  <g transform="translate(600, 550)">
+    <rect x="0" y="0" width="80" height="80" fill="#fce7f3" rx="4" transform="rotate(-5)"/>
+    <rect x="5" y="5" width="80" height="80" fill="#fef3c7" rx="4" transform="rotate(-2)"/>
+    <rect x="10" y="10" width="80" height="80" fill="#dbeafe" rx="4" transform="rotate(2)"/>
+    <rect x="15" y="15" width="80" height="80" fill="#d1fae5" rx="4" transform="rotate(5)"/>
+  </g>
+  
+  <!-- Pink paper clips -->
+  <g transform="translate(380, 620)">
+    <path d="M 0,0 Q 15,5 30,0 Q 45,5 30,20 Q 15,25 0,20 Q -15,15 0,0" fill="#ec4899" stroke="#c026d3" stroke-width="1"/>
+  </g>
+  <g transform="translate(420, 640)">
+    <path d="M 0,0 Q 12,4 24,0 Q 36,4 24,16 Q 12,20 0,16 Q -12,12 0,0" fill="#ec4899" stroke="#c026d3" stroke-width="1"/>
+  </g>
+  
+  <!-- SUCCESS sticky note (top center) -->
+  <rect x="280" y="180" width="140" height="140" fill="#ec4899" rx="8"/>
+  <text x="350" y="260" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#1f2937" text-anchor="middle">SUCCESS</text>
+  
+  <!-- PLAN sticky note (center) - under magnifying glass -->
+  <rect x="300" y="350" width="140" height="140" fill="#ec4899" rx="8"/>
+  <text x="370" y="430" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#1f2937" text-anchor="middle">PLAN</text>
+  
+  <!-- Magnifying glass (black, over PLAN note) -->
+  <g transform="translate(320, 320)">
+    <!-- Handle -->
+    <rect x="100" y="100" width="8" height="80" fill="#1f2937" rx="4" transform="rotate(45 104 140)"/>
+    <!-- Glass circle -->
+    <circle cx="100" cy="100" r="60" fill="none" stroke="#1f2937" stroke-width="6"/>
+    <circle cx="100" cy="100" r="55" fill="#ffffff" opacity="0.3"/>
+    <!-- Magnified PLAN text inside glass -->
+    <text x="100" y="110" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#1f2937" text-anchor="middle" opacity="0.8">PLAN</text>
+  </g>
+  
+  <!-- Binder clip bottom left -->
+  <g transform="translate(100, 600)">
+    <rect x="0" y="0" width="30" height="8" fill="#1f2937" rx="2"/>
+    <circle cx="15" cy="4" r="3" fill="#6b7280"/>
+  </g>
+  
+  <!-- Subtle texture overlay -->
+  <defs>
+    <filter id="texture">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2"/>
+    </filter>
+  </defs>
+</svg>
+

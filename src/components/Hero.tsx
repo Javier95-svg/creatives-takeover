@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef } from "react";
-import aiBusinessPlanning from "@/assets/ai-business-planning.jpg";
+import heroPlanningFlatlay from "@/assets/hero-planning-flatlay.svg";
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
@@ -328,9 +328,9 @@ const Hero = () => {
           {/* Right Section - 4-Pic Grid Layout */}
           <div className="hidden md:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30">
                 <img 
-                  src={aiBusinessPlanning}
+                  src={heroPlanningFlatlay}
                   alt="Business planning flat lay with magnifying glass focusing on PLAN sticky note"
                   className="w-full h-auto object-cover aspect-square"
                   style={{
