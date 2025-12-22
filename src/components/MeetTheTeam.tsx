@@ -2,14 +2,14 @@ import { Card } from "@/components/ui/card";
 import { Linkedin } from "lucide-react";
 
 import javierPhoto from "@/assets/team-javier-pena.png";
-import aamirPhoto from "@/assets/team-aamir-khan.png";
+import domagojPhoto from "@/assets/team-domagoj-markota.png";
 import danielaPhoto from "@/assets/team-daniela-hagg.png";
 
 type TeamMember = {
   name: string;
   role: string;
   bio: string;
-  linkedin: string;
+  linkedin?: string;
   photo: string;
 };
 
@@ -22,11 +22,10 @@ const teamMembers: TeamMember[] = [
     photo: javierPhoto,
   },
   {
-    name: "Aamir Khan",
-    role: "Chief Technology Officer",
+    name: "Domagoj Markota",
+    role: "Fractional CTO",
     bio: "Product-minded technologist building resilient AI systems that keep founders shipping fast and learning faster.",
-    linkedin: "https://www.linkedin.com/in/akgigyani/",
-    photo: aamirPhoto,
+    photo: domagojPhoto,
   },
   {
     name: "Daniela Hägg",
@@ -93,16 +92,18 @@ const MeetTheTeam = () => {
                   {member.bio}
                 </p>
 
-                <a
-                  href={member.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                  aria-label={`Connect with ${member.name} on LinkedIn`}
-                >
-                  <Linkedin className="h-5 w-5" />
-                  <span>Connect on LinkedIn</span>
-                </a>
+                {member.linkedin && (
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    aria-label={`Connect with ${member.name} on LinkedIn`}
+                  >
+                    <Linkedin className="h-5 w-5" />
+                    <span>Connect on LinkedIn</span>
+                  </a>
+                )}
               </div>
             </Card>
           ))}
