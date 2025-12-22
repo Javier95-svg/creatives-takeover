@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import HeroSnippets from "@/components/HeroSnippets";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef } from "react";
 
@@ -323,26 +322,59 @@ const Hero = () => {
                 </>
               )}
             </div>
-
-            {/* Platform Snippets - Horizontal Scrollable */}
-            <HeroSnippets />
           </div>
 
-          {/* Right Section - Image */}
+          {/* Right Section - 4-Pic Grid Layout */}
           <div className="hidden md:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="relative w-full h-auto">
-              <img 
-                src="/images/hero-image.jpg" 
-                alt="Business planning illustration showing idea generation and strategy"
-                className="w-full h-auto rounded-lg shadow-2xl dark:shadow-primary/20 transition-all duration-300"
-                style={{
-                  filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                }}
-              />
-              {/* Theme-aware overlay to blend with design */}
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-transparent to-transparent dark:from-primary/10 pointer-events-none" />
-              {/* Subtle border for integration */}
-              <div className="absolute inset-0 rounded-lg border border-border/20 dark:border-border/30 pointer-events-none" />
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
+                <img 
+                  src="/images/hero-image.jpg" 
+                  alt="Business planning illustration 1"
+                  className="w-full h-auto object-cover aspect-square"
+                  style={{
+                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                  }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
+                <img 
+                  src="/images/hero-image.jpg" 
+                  alt="Business planning illustration 2"
+                  className="w-full h-auto object-cover aspect-square"
+                  style={{
+                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                  }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
+                <img 
+                  src="/images/hero-image.jpg" 
+                  alt="Business planning illustration 3"
+                  className="w-full h-auto object-cover aspect-square"
+                  style={{
+                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                  }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
+                <img 
+                  src="/images/hero-image.jpg" 
+                  alt="Business planning illustration 4"
+                  className="w-full h-auto object-cover aspect-square"
+                  style={{
+                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                  }}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+              </div>
             </div>
           </div>
         </div>
