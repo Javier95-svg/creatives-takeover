@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play, Image as ImageIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import heroPlanningFlatlay from "@/assets/hero-planning-flatlay.svg";
 import heroFounderWorkspace from "@/assets/hero-founder-workspace.svg";
 
@@ -15,11 +17,15 @@ interface HeroImage {
 }
 
 const Hero = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { trackTriggerView, trackEngagement, trackSignupStarted } = useConversionTracking();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
+  const [uploading, setUploading] = useState<number | null>(null);
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  
+  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
   // Fetch hero images from database
   useEffect(() => {
@@ -51,6 +57,129 @@ const Hero = () => {
 
     fetchHeroImages();
   }, []);
+
+  // Handle image upload for admin
+  const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) {
+      toast.error('Only admins can upload hero images');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
+      return;
+    }
+
+    // Validate file size (5MB = 5242880 bytes)
+    const maxSize = 5242880;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 5MB limit. Please upload a smaller image.');
+      return;
+    }
+
+    try {
+      setUploading(position);
+      toast.loading('Uploading image...', { id: `upload-hero-${position}` });
+
+      // Upload to storage with folder structure: {position}/{timestamp}.{ext}
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${position}/${Date.now()}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('hero-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type
+        });
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        toast.error(`Upload failed: ${uploadError.message || 'Storage error'}`, { id: `upload-hero-${position}` });
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('hero-images')
+        .getPublicUrl(fileName);
+
+      // Save to database
+      const existingImage = heroImages.find(img => img.position === position);
+      const imageData = {
+        position,
+        image_url: publicUrl,
+        alt_text: `Hero image ${position}`,
+        is_active: true
+      };
+
+      if (existingImage) {
+        // Update existing - need to fetch the ID first
+        const { data: existingData, error: fetchError } = await supabase
+          .from('hero_images')
+          .select('id')
+          .eq('position', position)
+          .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          throw fetchError;
+        }
+
+        if (existingData?.id) {
+          const { error: updateError } = await supabase
+            .from('hero_images')
+            .update(imageData)
+            .eq('id', existingData.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+        } else {
+          // Insert if no existing record found
+          const { error: insertError } = await supabase
+            .from('hero_images')
+            .insert(imageData);
+
+          if (insertError) {
+            throw insertError;
+          }
+        }
+      } else {
+        // Insert new
+        const { error: insertError } = await supabase
+          .from('hero_images')
+          .insert(imageData);
+
+        if (insertError) {
+          throw insertError;
+        }
+      }
+
+      toast.success(`Image ${position} uploaded successfully!`, { id: `upload-hero-${position}` });
+      
+      // Reload images
+      const { data, error } = await supabase
+        .from('hero_images')
+        .select('position, image_url, alt_text')
+        .eq('is_active', true)
+        .order('position', { ascending: true });
+
+      if (!error && data) {
+        setHeroImages(data);
+      }
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast.error(`Failed to upload image: ${error?.message || 'Unknown error'}`, { id: `upload-hero-${position}` });
+    } finally {
+      setUploading(null);
+      // Reset file input
+      if (event?.target) {
+        event.target.value = '';
+      }
+    }
+  };
   // RGB colored particles for brand identity
   const creativeParticles = [
     { top: "18%", left: "16%", size: 8, color: "hsl(var(--blue-primary))", delay: "0s" },
@@ -372,14 +501,60 @@ const Hero = () => {
                 const image = heroImages.find(img => img.position === position);
                 const imageSrc = image?.image_url || (position === 1 ? heroFounderWorkspace : position === 2 ? heroPlanningFlatlay : '');
                 const altText = image?.alt_text || (position === 1 ? 'Founder working at night with Creatives Takeover dashboard' : `Business planning illustration ${position}`);
+                const isUploadingPosition = uploading === position;
 
                 if (!imageSrc) {
                   return (
                     <div
                       key={position}
-                      className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square flex items-center justify-center"
+                      className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square flex flex-col items-center justify-center gap-3 p-4"
                     >
                       <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+                      {isAdmin && (
+                        <div className="w-full space-y-2">
+                          <Input
+                            ref={(el) => {
+                              fileInputRefs.current[position] = el;
+                            }}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleImageUpload(position, file, e);
+                              }
+                            }}
+                            disabled={isUploadingPosition}
+                            className="hidden"
+                            id={`hero-upload-${position}`}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const fileInput = fileInputRefs.current[position];
+                              if (fileInput) {
+                                fileInput.click();
+                              }
+                            }}
+                            disabled={isUploadingPosition}
+                            className="w-full"
+                          >
+                            {isUploadingPosition ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Choose File
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -387,7 +562,7 @@ const Hero = () => {
                 return (
                   <div
                     key={position}
-                    className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30"
+                    className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 group"
                   >
                     <img
                       src={imageSrc}
@@ -399,6 +574,53 @@ const Hero = () => {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+                    {isAdmin && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                        <div className="space-y-2 w-full px-4">
+                          <Input
+                            ref={(el) => {
+                              fileInputRefs.current[position] = el;
+                            }}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleImageUpload(position, file, e);
+                              }
+                            }}
+                            disabled={isUploadingPosition}
+                            className="hidden"
+                            id={`hero-upload-${position}`}
+                          />
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              const fileInput = fileInputRefs.current[position];
+                              if (fileInput) {
+                                fileInput.click();
+                              }
+                            }}
+                            disabled={isUploadingPosition}
+                            className="w-full"
+                          >
+                            {isUploadingPosition ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Choose File
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
