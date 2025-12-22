@@ -96,10 +96,10 @@ const AdminHeroImages = () => {
   };
 
   const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    // Validate file type - only JPG and PNG
+    const allowedTypes = ['image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Please upload a JPEG, PNG, WebP, GIF, or SVG image.');
+      toast.error('Invalid file type. Please upload a JPG or PNG image.');
       return;
     }
 
@@ -383,17 +383,20 @@ const AdminHeroImages = () => {
                         </div>
                       )}
 
-                      {/* Upload Area - Matching mentor editor pattern */}
+                      {/* Upload Area - Matching Stories banner pattern */}
                       <div className="space-y-2">
-                        <Label htmlFor={`upload-${position}`}>Upload Image</Label>
-                        <div className="flex gap-2">
+                        <Label htmlFor={`upload-${position}`} className="flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" />
+                          Upload Picture
+                        </Label>
+                        <div className="flex items-center gap-2">
                           <Input
                             id={`upload-${position}`}
                             ref={(el) => {
                               fileInputRefs.current[position] = el;
                             }}
                             type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                            accept="image/jpeg,image/png"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
@@ -418,13 +421,13 @@ const AdminHeroImages = () => {
                             ) : (
                               <>
                                 <Upload className="h-4 w-4 mr-2" />
-                                Upload Image
+                                Upload Picture
                               </>
                             )}
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Upload a hero image (max 5MB). Supported: JPEG, PNG, WebP, GIF, SVG.
+                          Upload a hero image (max 5MB). Supported formats: JPG, PNG.
                         </p>
                       </div>
 
