@@ -1023,14 +1023,16 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
         });
       });
     } else if (!currentSessionId && previousSessionIdRef.current) {
-      // Session was cleared, reset messages
+      // Session was cleared, but only reset if we have messages to preserve
+      // If messages exist, they might be from an anonymous session - preserve them
+      // Only clear if explicitly switching to null (user selected "New Chat")
       // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1011',message:'session cleared resetting messages',data:{previousSessionId:previousSessionIdRef.current,messagesCountBefore:messages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1024',message:'session cleared but preserving messages',data:{previousSessionId:previousSessionIdRef.current,messagesCount:messages.length,willPreserve:messages.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
-      console.log('🔄 Session cleared, resetting messages');
+      console.log('🔄 Session cleared, but preserving existing messages');
       previousSessionIdRef.current = null;
-      setMessagesForMode([]);
-      setMessages([]);
+      // Don't clear messages - they might be from anonymous session that should persist
+      // Only clear if user explicitly selects "New Chat" which sets currentSessionId to null
     }
   }, [config.sessionManagement?.currentSessionId, loadMessagesFromSession, chatMode]);
 
