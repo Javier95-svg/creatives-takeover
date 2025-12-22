@@ -403,10 +403,10 @@ const Hero = () => {
       <div className="container mx-auto relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Section - All existing content */}
-          <div className="text-left">
+          <div className="text-center">
             {/* Main Headline */}
             <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
-              <span className="gradient-unified animate-fade-in">
+              <span className="gradient-unified animate-fade-in animate-flicker">
                 The Zero to One Platform
               </span>
             </h1>
