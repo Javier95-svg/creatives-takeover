@@ -33,14 +33,23 @@ const AdminHeroImages = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:35',message:'checkAdminStatus called',data:{authLoading,hasUser:!!user,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       if (authLoading) return;
       
       if (!user) {
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:40',message:'No user, redirecting to login',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
         navigate('/login');
         return;
       }
 
       const adminCheck = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:44',message:'Admin check result',data:{userEmail:user?.email,adminCheck},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       setIsAdmin(adminCheck);
       setChecking(false);
 
@@ -96,9 +105,15 @@ const AdminHeroImages = () => {
   };
 
   const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:98',message:'handleImageUpload called',data:{position,fileName:file.name,fileType:file.type,fileSize:file.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
     // Validate file type - only JPG and PNG
     const allowedTypes = ['image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:102',message:'File type validation failed',data:{fileType:file.type,allowedTypes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
+      // #endregion
       toast.error('Invalid file type. Please upload a JPG or PNG image.');
       return;
     }
@@ -106,6 +121,9 @@ const AdminHeroImages = () => {
     // Validate file size (5MB = 5242880 bytes)
     const maxSize = 5242880;
     if (file.size > maxSize) {
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:109',message:'File size validation failed',data:{fileSize:file.size,maxSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
+      // #endregion
       toast.error('File size exceeds 5MB limit. Please upload a smaller image.');
       return;
     }
@@ -113,10 +131,16 @@ const AdminHeroImages = () => {
     try {
       setUploading(position);
       toast.loading('Uploading image...', { id: `upload-image-${position}` });
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:114',message:'Starting upload process',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
 
       // Show immediate preview using FileReader (base64)
       const reader = new FileReader();
       reader.onloadend = () => {
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:120',message:'Preview loaded',data:{position,hasPreview:!!reader.result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(()=>{});
+        // #endregion
         setPreviews(prev => ({
           ...prev,
           [position]: reader.result as string
@@ -135,6 +159,9 @@ const AdminHeroImages = () => {
         fileSize: file.size,
         fileType: file.type
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:131',message:'Before storage upload',data:{fileName,bucket:'hero-images',position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
+      // #endregion
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('hero-images')
@@ -146,11 +173,17 @@ const AdminHeroImages = () => {
 
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:147',message:'Storage upload error',data:{error:uploadError.message,code:uploadError.statusCode,errorDetails:uploadError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
+        // #endregion
         toast.error(`Upload failed: ${uploadError.message || 'Storage error'}`, { id: `upload-image-${position}` });
         throw uploadError;
       }
 
       console.log('File uploaded to storage', { path: uploadData.path });
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:153',message:'Storage upload success',data:{path:uploadData.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
+      // #endregion
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -158,6 +191,9 @@ const AdminHeroImages = () => {
         .getPublicUrl(fileName);
 
       console.log('Public URL generated', { publicUrl });
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:156',message:'Public URL generated',data:{publicUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H7'})}).catch(()=>{});
+      // #endregion
 
       // Update preview with public URL (replaces base64 preview)
       setPreviews(prev => ({
@@ -173,6 +209,9 @@ const AdminHeroImages = () => {
         alt_text: `Hero image ${position}`,
         is_active: true
       };
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:169',message:'Before database save',data:{position,hasExistingImage:!!existingImage?.id,existingImageId:existingImage?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H8'})}).catch(()=>{});
+      // #endregion
 
       if (existingImage?.id) {
         // Update existing
@@ -183,11 +222,17 @@ const AdminHeroImages = () => {
 
         if (updateError) {
           console.error('Database update error:', updateError);
+          // #region agent log
+          fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:179',message:'Database update error',data:{error:updateError.message,code:updateError.code,errorDetails:updateError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H8'})}).catch(()=>{});
+          // #endregion
           toast.error(`Failed to save image: ${updateError.message || 'Database error'}`, { id: `upload-image-${position}` });
           throw updateError;
         }
 
         console.log('Image saved to database', { position, imageId: existingImage.id });
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:190',message:'Database update success',data:{position,imageId:existingImage.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H8'})}).catch(()=>{});
+        // #endregion
       } else {
         // Insert new
         const { error: insertError } = await supabase
@@ -196,17 +241,29 @@ const AdminHeroImages = () => {
 
         if (insertError) {
           console.error('Database insert error:', insertError);
+          // #region agent log
+          fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:197',message:'Database insert error',data:{error:insertError.message,code:insertError.code,errorDetails:insertError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H8'})}).catch(()=>{});
+          // #endregion
           toast.error(`Failed to save image: ${insertError.message || 'Database error'}`, { id: `upload-image-${position}` });
           throw insertError;
         }
 
         console.log('Image inserted to database', { position });
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:203',message:'Database insert success',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H8'})}).catch(()=>{});
+        // #endregion
       }
 
       toast.success(`Image ${position} uploaded successfully!`, { id: `upload-image-${position}` });
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:206',message:'Upload complete, reloading images',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H9'})}).catch(()=>{});
+      // #endregion
       await loadHeroImages();
     } catch (error: any) {
       console.error('Error uploading image:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:208',message:'Upload catch error',data:{error:error?.message,errorType:error?.constructor?.name,errorStack:error?.stack,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H10'})}).catch(()=>{});
+      // #endregion
       const errorMessage = error?.message || 'Unknown error occurred';
       toast.error(`Failed to upload image: ${errorMessage}`, { id: `upload-image-${position}` });
       
@@ -398,6 +455,9 @@ const AdminHeroImages = () => {
                             type="file"
                             accept="image/jpeg,image/png"
                             onChange={(e) => {
+                              // #region agent log
+                              fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:400',message:'File input onChange triggered',data:{position,hasFile:!!e.target.files?.[0],fileName:e.target.files?.[0]?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+                              // #endregion
                               const file = e.target.files?.[0];
                               if (file) {
                                 handleImageUpload(position, file, e);
@@ -409,7 +469,12 @@ const AdminHeroImages = () => {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => fileInputRefs.current[position]?.click()}
+                            onClick={() => {
+                              // #region agent log
+                              fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:409',message:'Upload button clicked',data:{position,hasFileInput:!!fileInputRefs.current[position]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+                              // #endregion
+                              fileInputRefs.current[position]?.click();
+                            }}
                             disabled={isUploading}
                             className="flex-1"
                           >
