@@ -1,16 +1,50 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play, Image as ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroPlanningFlatlay from "@/assets/hero-planning-flatlay.svg";
+
+interface HeroImage {
+  position: number;
+  image_url: string;
+  alt_text: string | null;
+}
 
 const Hero = () => {
   const { isAuthenticated } = useAuth();
   const { trackTriggerView, trackEngagement, trackSignupStarted } = useConversionTracking();
   const heroRef = useRef<HTMLElement>(null);
   const hasTrackedView = useRef(false);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
+
+  // Fetch hero images from database
+  useEffect(() => {
+    const fetchHeroImages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('hero_images')
+          .select('position, image_url, alt_text')
+          .eq('is_active', true)
+          .order('position', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching hero images:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setHeroImages(data);
+        }
+      } catch (error) {
+        console.error('Error fetching hero images:', error);
+      }
+    };
+
+    fetchHeroImages();
+  }, []);
   // RGB colored particles for brand identity
   const creativeParticles = [
     { top: "18%", left: "16%", size: 8, color: "hsl(var(--blue-primary))", delay: "0s" },
@@ -328,54 +362,40 @@ const Hero = () => {
           {/* Right Section - 4-Pic Grid Layout */}
           <div className="hidden md:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30">
-                <img 
-                  src={heroPlanningFlatlay}
-                  alt="Business planning flat lay with magnifying glass focusing on PLAN sticky note"
-                  className="w-full h-auto object-cover aspect-square"
-                  style={{
-                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                  }}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-              </div>
-              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img 
-                  src="/images/hero-image.jpg" 
-                  alt="Business planning illustration 2"
-                  className="w-full h-auto object-cover aspect-square"
-                  style={{
-                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                  }}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-              </div>
-              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img 
-                  src="/images/hero-image.jpg" 
-                  alt="Business planning illustration 3"
-                  className="w-full h-auto object-cover aspect-square"
-                  style={{
-                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                  }}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-              </div>
-              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img 
-                  src="/images/hero-image.jpg" 
-                  alt="Business planning illustration 4"
-                  className="w-full h-auto object-cover aspect-square"
-                  style={{
-                    filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                  }}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-              </div>
+              {[1, 2, 3, 4].map((position) => {
+                const image = heroImages.find(img => img.position === position);
+                const imageSrc = image?.image_url || (position === 1 ? heroPlanningFlatlay : '');
+                const altText = image?.alt_text || `Business planning illustration ${position}`;
+
+                if (!imageSrc) {
+                  return (
+                    <div
+                      key={position}
+                      className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square flex items-center justify-center"
+                    >
+                      <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={position}
+                    className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30"
+                  >
+                    <img
+                      src={imageSrc}
+                      alt={altText}
+                      className="w-full h-auto object-cover aspect-square"
+                      style={{
+                        filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                      }}
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

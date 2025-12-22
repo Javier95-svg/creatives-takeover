@@ -7,8 +7,9 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Shield, AlertTriangle } from "lucide-react";
+import { Loader2, Shield, AlertTriangle, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const AdminTools = () => {
   const { user, loading: authLoading } = useAuth();
@@ -100,6 +101,28 @@ const AdminTools = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Manage and maintain the Insighta article catalogue
             </p>
+          </div>
+
+          {/* Admin Quick Links */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <Image className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1">Hero Images</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Manage the 4 images in the homepage hero section
+                    </p>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/admin/hero-images">Manage Images</Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <ArticleGenerator />

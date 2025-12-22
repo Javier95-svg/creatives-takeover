@@ -36,6 +36,7 @@ import Stories from "./pages/Stories";
 import StoryArticle from "./pages/StoryArticle";
 import StoryTagPage from "./pages/StoryTagPage";
 import AdminStoryEditor from "./pages/AdminStoryEditor";
+import AdminHeroImages from "./pages/AdminHeroImages";
 import StoriesRSS from "./pages/StoriesRSS";
 import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
@@ -106,6 +107,7 @@ function App() {
                   <Route path="/stories/:slug" element={<StoryArticle />} />
                   <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
                   <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
+                  <Route path="/admin/hero-images" element={<AdminHeroImages />} />
                   <Route path="/careers" element={<Careers />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
