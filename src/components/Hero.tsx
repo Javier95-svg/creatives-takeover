@@ -516,7 +516,7 @@ const Hero = () => {
             <div className="mb-8 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               {isAuthenticated ? (
                 /* Authenticated User CTAs: Open Dashboard + Explore Features */
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
                 {/* Primary CTA - Open Dashboard with Animation */}
                 <Button 
                   size="lg" 
@@ -569,7 +569,7 @@ const Hero = () => {
                 </div>
 
                   {/* Secondary & Tertiary CTAs */}
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
                   {/* Secondary CTA - Exploration */}
                   <Button 
                     variant="outline"
