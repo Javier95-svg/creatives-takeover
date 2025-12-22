@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Linkedin } from "lucide-react";
 
 import javierPhoto from "@/assets/team-javier-pena.png";
+import domagojPhoto from "@/assets/team-domagoj-markota.png";
 import danielaPhoto from "@/assets/team-daniela-hagg.png";
 
 type TeamMember = {
@@ -19,6 +20,12 @@ const teamMembers: TeamMember[] = [
     bio: "Serial entrepreneur focused on empowering creatives with trustworthy automation and accessible startup playbooks.",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
     photo: javierPhoto,
+  },
+  {
+    name: "Domagoj Markota",
+    role: "Fractional CTO",
+    bio: "",
+    photo: domagojPhoto,
   },
   {
     name: "Daniela Hägg",
