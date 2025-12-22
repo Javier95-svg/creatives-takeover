@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield, AlertTriangle, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, Shield, AlertTriangle, Image as ImageIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface HeroImage {
@@ -94,7 +94,7 @@ const AdminHeroImages = () => {
     }
   };
 
-  const handleImageUpload = async (position: number, file: File) => {
+  const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
@@ -111,8 +111,9 @@ const AdminHeroImages = () => {
 
     try {
       setUploading(position);
-      
-      // Show preview
+      toast.loading('Uploading image...', { id: `upload-image-${position}` });
+
+      // Show immediate preview using FileReader (base64)
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviews(prev => ({
@@ -122,11 +123,19 @@ const AdminHeroImages = () => {
       };
       reader.readAsDataURL(file);
 
-      // Upload to storage
+      // Upload to storage with folder structure: {position}/{timestamp}.{ext}
       const fileExt = file.name.split('.').pop() || 'jpg';
-      const fileName = `hero-${position}-${Date.now()}.${fileExt}`;
+      const fileName = `${position}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading to storage', { 
+        fileName, 
+        bucket: 'hero-images',
+        position,
+        fileSize: file.size,
+        fileType: file.type
+      });
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('hero-images')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -134,12 +143,26 @@ const AdminHeroImages = () => {
           contentType: file.type
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        toast.error(`Upload failed: ${uploadError.message || 'Storage error'}`, { id: `upload-image-${position}` });
+        throw uploadError;
+      }
+
+      console.log('File uploaded to storage', { path: uploadData.path });
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('hero-images')
         .getPublicUrl(fileName);
+
+      console.log('Public URL generated', { publicUrl });
+
+      // Update preview with public URL (replaces base64 preview)
+      setPreviews(prev => ({
+        ...prev,
+        [position]: publicUrl
+      }));
 
       // Save to database
       const existingImage = heroImages.find(img => img.position === position);
@@ -157,45 +180,93 @@ const AdminHeroImages = () => {
           .update(imageData)
           .eq('id', existingImage.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Database update error:', updateError);
+          toast.error(`Failed to save image: ${updateError.message || 'Database error'}`, { id: `upload-image-${position}` });
+          throw updateError;
+        }
+
+        console.log('Image saved to database', { position, imageId: existingImage.id });
       } else {
         // Insert new
         const { error: insertError } = await supabase
           .from('hero_images')
           .insert(imageData);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Database insert error:', insertError);
+          toast.error(`Failed to save image: ${insertError.message || 'Database error'}`, { id: `upload-image-${position}` });
+          throw insertError;
+        }
+
+        console.log('Image inserted to database', { position });
       }
 
-      toast.success(`Image ${position} uploaded successfully`);
+      toast.success(`Image ${position} uploaded successfully!`, { id: `upload-image-${position}` });
       await loadHeroImages();
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      toast.error(`Failed to upload image: ${error.message}`);
+      const errorMessage = error?.message || 'Unknown error occurred';
+      toast.error(`Failed to upload image: ${errorMessage}`, { id: `upload-image-${position}` });
+      
+      // Reset preview on error
+      const existingImage = heroImages.find(img => img.position === position);
+      if (existingImage?.image_url) {
+        setPreviews(prev => ({
+          ...prev,
+          [position]: existingImage.image_url
+        }));
+      } else {
+        setPreviews(prev => {
+          const newPreviews = { ...prev };
+          delete newPreviews[position];
+          return newPreviews;
+        });
+      }
     } finally {
       setUploading(null);
+      // Clear the file input
+      if (event?.target) {
+        event.target.value = '';
+      }
     }
   };
 
   const handleRemoveImage = async (position: number) => {
     const image = heroImages.find(img => img.position === position);
-    if (!image?.id) return;
+    if (!image?.id) {
+      // If no image in database, just clear preview
+      setPreviews(prev => {
+        const newPreviews = { ...prev };
+        delete newPreviews[position];
+        return newPreviews;
+      });
+      toast.success('Preview removed');
+      return;
+    }
 
     try {
+      toast.loading('Removing image...', { id: `remove-image-${position}` });
+
       const { error } = await supabase
         .from('hero_images')
-        .update({ is_active: false, image_url: '' })
+        .update({ is_active: false })
         .eq('id', image.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing image:', error);
+        toast.error(`Failed to remove image: ${error.message}`, { id: `remove-image-${position}` });
+        throw error;
+      }
 
+      // Clear preview state
       setPreviews(prev => {
         const newPreviews = { ...prev };
         delete newPreviews[position];
         return newPreviews;
       });
 
-      toast.success(`Image ${position} removed`);
+      toast.success(`Image ${position} removed`, { id: `remove-image-${position}` });
       await loadHeroImages();
     } catch (error: any) {
       console.error('Error removing image:', error);
@@ -270,36 +341,40 @@ const AdminHeroImages = () => {
                 return (
                   <Card key={position} className="overflow-hidden">
                     <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>Image {position}</span>
-                        {preview && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveImage(position)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </CardTitle>
+                      <CardTitle>Image {position}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Preview */}
+                      {/* Preview - Matching Hero.tsx styling */}
                       {preview && (
-                        <div className="relative aspect-square w-full rounded-lg overflow-hidden border border-border bg-muted">
+                        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square">
                           <img
                             src={preview}
                             alt={`Hero image ${position} preview`}
                             className="w-full h-full object-cover"
+                            style={{
+                              filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                            }}
                           />
+                          <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+                          {/* Remove button overlay */}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={() => handleRemoveImage(position)}
+                            disabled={isUploading}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Remove
+                          </Button>
                         </div>
                       )}
 
-                      {/* Upload Area */}
+                      {/* Upload Area - Matching mentor editor pattern */}
                       <div className="space-y-2">
                         <Label htmlFor={`upload-${position}`}>Upload Image</Label>
-                        <div className="flex items-center gap-2">
+                        <div className="flex gap-2">
                           <Input
                             id={`upload-${position}`}
                             type="file"
@@ -307,18 +382,18 @@ const AdminHeroImages = () => {
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                handleImageUpload(position, file);
+                                handleImageUpload(position, file, e);
                               }
                             }}
                             disabled={isUploading}
-                            className="flex-1"
+                            className="cursor-pointer flex-1"
                           />
                           {isUploading && (
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <Loader2 className="h-4 w-4 animate-spin text-primary self-center" />
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Max 5MB • JPEG, PNG, WebP, GIF, or SVG
+                          Upload a hero image (max 5MB). Supported: JPEG, PNG, WebP, GIF, SVG.
                         </p>
                       </div>
 
