@@ -458,9 +458,9 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-b dark:from-background/50 dark:via-background/35 dark:to-background/75 from-background/90 via-background/95 to-background/90" />
 
       <div className="container mx-auto relative z-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-start md:items-center">
           {/* Left Section - All existing content */}
-          <div className="text-center">
+          <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
             <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
               <span className="gradient-unified animate-fade-in animate-flicker">
@@ -603,8 +603,8 @@ const Hero = () => {
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="hidden md:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <div className="hidden md:flex md:items-center md:justify-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-w-md">
               {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
                 const optimisticPreview = optimisticPreviews[position];
