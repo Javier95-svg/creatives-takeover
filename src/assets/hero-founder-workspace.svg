@@ -1,0 +1,94 @@
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - Dark night workspace -->
+  <rect width="800" height="800" fill="#0a0f1a"/>
+  
+  <!-- Window with city lights in background -->
+  <rect x="0" y="0" width="800" height="500" fill="#030914"/>
+  <circle cx="150" cy="80" r="3" fill="#22d3ee" opacity="0.6"/>
+  <circle cx="200" cy="120" r="2" fill="#22d3ee" opacity="0.4"/>
+  <circle cx="250" cy="100" r="2.5" fill="#3b82f6" opacity="0.5"/>
+  <circle cx="300" cy="90" r="2" fill="#22d3ee" opacity="0.6"/>
+  <circle cx="350" cy="110" r="3" fill="#3b82f6" opacity="0.4"/>
+  <circle cx="400" cy="85" r="2.5" fill="#22d3ee" opacity="0.5"/>
+  <circle cx="450" cy="105" r="2" fill="#3b82f6" opacity="0.6"/>
+  <circle cx="500" cy="95" r="2.5" fill="#22d3ee" opacity="0.4"/>
+  <circle cx="550" cy="115" r="2" fill="#3b82f6" opacity="0.5"/>
+  <circle cx="600" cy="100" r="3" fill="#22d3ee" opacity="0.6"/>
+  <circle cx="650" cy="90" r="2" fill="#3b82f6" opacity="0.4"/>
+  <circle cx="700" cy="110" r="2.5" fill="#22d3ee" opacity="0.5"/>
+  
+  <!-- Desk surface -->
+  <rect x="0" y="500" width="800" height="300" fill="#0f172a"/>
+  <rect x="0" y="500" width="800" height="5" fill="#1e293b"/>
+  
+  <!-- Laptop base -->
+  <rect x="200" y="550" width="400" height="20" rx="2" fill="#1e293b"/>
+  <rect x="210" y="555" width="380" height="10" rx="1" fill="#0f172a"/>
+  
+  <!-- Laptop screen -->
+  <rect x="200" y="300" width="400" height="250" rx="4" fill="#0a0f1a" stroke="#1e293b" stroke-width="2"/>
+  <rect x="210" y="310" width="380" height="230" fill="#030914"/>
+  
+  <!-- Dashboard mockup on screen -->
+  <!-- Header bar -->
+  <rect x="210" y="310" width="380" height="40" fill="#0f172a"/>
+  <rect x="220" y="320" width="100" height="20" rx="2" fill="#1e40af"/>
+  <circle cx="340" cy="330" r="6" fill="#22d3ee" opacity="0.8"/>
+  <circle cx="360" cy="330" r="6" fill="#3b82f6" opacity="0.8"/>
+  <circle cx="380" cy="330" r="6" fill="#8b5cf6" opacity="0.8"/>
+  
+  <!-- Dashboard content -->
+  <rect x="220" y="360" width="160" height="60" rx="3" fill="#1e293b"/>
+  <rect x="220" y="360" width="160" height="15" rx="2" fill="#3b82f6" opacity="0.3"/>
+  <rect x="220" y="380" width="120" height="8" rx="1" fill="#475569" opacity="0.5"/>
+  <rect x="220" y="395" width="100" height="8" rx="1" fill="#475569" opacity="0.5"/>
+  <rect x="220" y="410" width="140" height="8" rx="1" fill="#22d3ee" opacity="0.4"/>
+  
+  <rect x="390" y="360" width="160" height="60" rx="3" fill="#1e293b"/>
+  <rect x="390" y="360" width="160" height="15" rx="2" fill="#8b5cf6" opacity="0.3"/>
+  <rect x="390" y="380" width="130" height="8" rx="1" fill="#475569" opacity="0.5"/>
+  <rect x="390" y="395" width="110" height="8" rx="1" fill="#475569" opacity="0.5"/>
+  <rect x="390" y="410" width="150" height="8" rx="1" fill="#22d3ee" opacity="0.4"/>
+  
+  <!-- Chart/graph area -->
+  <rect x="220" y="430" width="330" height="100" rx="3" fill="#0f172a"/>
+  <rect x="220" y="430" width="330" height="20" rx="2" fill="#1e293b"/>
+  <!-- Chart lines -->
+  <path d="M 230 500 L 250 480 L 270 490 L 290 470 L 310 475 L 330 460 L 350 465 L 370 450 L 390 455 L 410 440 L 430 445 L 450 430 L 470 435 L 490 420 L 510 425 L 530 410" 
+        stroke="#22d3ee" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M 230 510 L 250 500 L 270 510 L 290 490 L 310 500 L 330 480 L 350 490 L 370 470 L 390 480 L 410 460 L 430 470 L 450 450 L 470 460 L 490 440 L 510 450 L 530 430" 
+        stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.6"/>
+  
+  <!-- Coffee cup -->
+  <ellipse cx="650" cy="580" rx="25" ry="30" fill="#1e293b"/>
+  <ellipse cx="650" cy="580" rx="20" ry="25" fill="#0f172a"/>
+  <rect x="640" y="550" width="20" height="30" rx="2" fill="#1e293b"/>
+  <ellipse cx="650" cy="550" rx="10" ry="3" fill="#475569"/>
+  <!-- Steam -->
+  <path d="M 645 540 Q 650 535 655 540" stroke="#475569" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <path d="M 650 540 Q 655 535 660 540" stroke="#475569" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <path d="M 655 540 Q 660 535 665 540" stroke="#475569" stroke-width="1.5" fill="none" opacity="0.4"/>
+  
+  <!-- Notes/notebook -->
+  <rect x="100" y="570" width="80" height="100" rx="2" fill="#1e293b" transform="rotate(-5 140 620)"/>
+  <rect x="105" y="575" width="70" height="90" fill="#0f172a" transform="rotate(-5 140 620)"/>
+  <!-- Lines on notebook -->
+  <line x1="110" y1="585" x2="170" y2="590" stroke="#475569" stroke-width="0.5" opacity="0.3" transform="rotate(-5 140 620)"/>
+  <line x1="110" y1="600" x2="170" y2="605" stroke="#475569" stroke-width="0.5" opacity="0.3" transform="rotate(-5 140 620)"/>
+  <line x1="110" y1="615" x2="170" y2="620" stroke="#475569" stroke-width="0.5" opacity="0.3" transform="rotate(-5 140 620)"/>
+  <line x1="110" y1="630" x2="150" y2="635" stroke="#22d3ee" stroke-width="1.5" opacity="0.5" transform="rotate(-5 140 620)"/>
+  <line x1="110" y1="645" x2="170" y2="650" stroke="#475569" stroke-width="0.5" opacity="0.3" transform="rotate(-5 140 620)"/>
+  
+  <!-- Subtle glow from screen -->
+  <ellipse cx="400" cy="425" rx="250" ry="150" fill="#22d3ee" opacity="0.05"/>
+  
+  <!-- Ambient lighting -->
+  <defs>
+    <radialGradient id="deskGlow" cx="400" cy="600" r="400">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0a0f1a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="400" cy="600" rx="400" ry="200" fill="url(#deskGlow)"/>
+</svg>
+

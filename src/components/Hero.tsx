@@ -6,6 +6,7 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import heroPlanningFlatlay from "@/assets/hero-planning-flatlay.svg";
+import heroFounderWorkspace from "@/assets/hero-founder-workspace.svg";
 
 interface HeroImage {
   position: number;
@@ -364,8 +365,8 @@ const Hero = () => {
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
               {[1, 2, 3, 4].map((position) => {
                 const image = heroImages.find(img => img.position === position);
-                const imageSrc = image?.image_url || (position === 1 ? heroPlanningFlatlay : '');
-                const altText = image?.alt_text || `Business planning illustration ${position}`;
+                const imageSrc = image?.image_url || (position === 1 ? heroFounderWorkspace : position === 2 ? heroPlanningFlatlay : '');
+                const altText = image?.alt_text || (position === 1 ? 'Founder working at night with Creatives Takeover dashboard' : `Business planning illustration ${position}`);
 
                 if (!imageSrc) {
                   return (
