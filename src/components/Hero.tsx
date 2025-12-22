@@ -469,12 +469,12 @@ const Hero = () => {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl leading-relaxed animate-fade-in">
+            <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed animate-fade-in">
               We blend technology, strategy and community to democratize startup formation, empowering pre-seed founders with AI-driven planning, community support, and fundraising tools.
             </p>
             
             {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10">
             {/* Community - Meet Founders & Mentors */}
             <Link 
               to="/community" 
