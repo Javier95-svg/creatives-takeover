@@ -262,7 +262,7 @@ const EntrepreneurProblems = () => {
             Big Challenges, Bold Solutions
           </Badge>
           <h2 id="roadblocks-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-            <span className="gradient-unified">Common Roadblocks Pre-Seed Founders Face</span>
+            <span className="gradient-unified">Common Roadblocks Founders Face</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Discover how the right tools, frameworks, and community support help you navigate these obstacles and build with confidence.
