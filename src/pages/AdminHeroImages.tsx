@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -29,6 +29,7 @@ const AdminHeroImages = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<number | null>(null);
   const [previews, setPreviews] = useState<Record<number, string>>({});
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -345,7 +346,7 @@ const AdminHeroImages = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Preview - Matching Hero.tsx styling */}
-                      {preview && (
+                      {preview ? (
                         <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square">
                           <img
                             src={preview}
@@ -369,6 +370,17 @@ const AdminHeroImages = () => {
                             Remove
                           </Button>
                         </div>
+                      ) : (
+                        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square flex items-center justify-center">
+                          <div className="text-center p-6">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <ImageIcon className="w-8 h-8 text-primary/50" />
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              No image uploaded
+                            </p>
+                          </div>
+                        </div>
                       )}
 
                       {/* Upload Area - Matching mentor editor pattern */}
@@ -377,6 +389,9 @@ const AdminHeroImages = () => {
                         <div className="flex gap-2">
                           <Input
                             id={`upload-${position}`}
+                            ref={(el) => {
+                              fileInputRefs.current[position] = el;
+                            }}
                             type="file"
                             accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
                             onChange={(e) => {
@@ -386,11 +401,27 @@ const AdminHeroImages = () => {
                               }
                             }}
                             disabled={isUploading}
-                            className="cursor-pointer flex-1"
+                            className="hidden"
                           />
-                          {isUploading && (
-                            <Loader2 className="h-4 w-4 animate-spin text-primary self-center" />
-                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => fileInputRefs.current[position]?.click()}
+                            disabled={isUploading}
+                            className="flex-1"
+                          >
+                            {isUploading ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload Image
+                              </>
+                            )}
+                          </Button>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Upload a hero image (max 5MB). Supported: JPEG, PNG, WebP, GIF, SVG.
