@@ -329,8 +329,8 @@ const Hero = () => {
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
                 <img 
-                  src="/images/hero-image.jpg" 
-                  alt="Business planning illustration 1"
+                  src="/images/hero-image-1.jpg" 
+                  alt="Business planning flat lay with magnifying glass focusing on PLAN sticky note"
                   className="w-full h-auto object-cover aspect-square"
                   style={{
                     filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
