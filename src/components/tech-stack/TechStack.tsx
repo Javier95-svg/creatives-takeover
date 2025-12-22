@@ -216,20 +216,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({
                     <TableCell className="font-medium">
                       <div className="flex items-center">
                         <span className="whitespace-nowrap">{product.name}</span>
-                        {product.logo && (
-                          <img 
-                            src={product.logo} 
-                            alt={`${product.name} logo`}
-                            className="w-5 h-5 object-contain flex-shrink-0 ml-0.5
-                              dark:brightness-0 dark:invert 
-                              brightness-0 opacity-70"
-                            style={{ marginLeft: '2px' }}
-                            onError={(e) => {
-                              // Hide image if it fails to load
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        )}
                         {selected && (
                           <CheckCircle2 className="w-4 h-4 text-primary ml-1.5" />
                         )}
