@@ -25,6 +25,7 @@ const Hero = () => {
   useEffect(() => {
     const fetchHeroImages = async () => {
       try {
+        console.log('🖼️ Fetching hero images from database...');
         const { data, error } = await supabase
           .from('hero_images')
           .select('position, image_url, alt_text')
@@ -32,15 +33,19 @@ const Hero = () => {
           .order('position', { ascending: true });
 
         if (error) {
-          console.error('Error fetching hero images:', error);
+          console.error('❌ Error fetching hero images:', error);
           return;
         }
 
+        console.log('✅ Hero images fetched:', data);
         if (data && data.length > 0) {
+          console.log(`📸 Found ${data.length} active hero images:`, data);
           setHeroImages(data);
+        } else {
+          console.log('⚠️ No active hero images found in database');
         }
       } catch (error) {
-        console.error('Error fetching hero images:', error);
+        console.error('❌ Error fetching hero images:', error);
       }
     };
 

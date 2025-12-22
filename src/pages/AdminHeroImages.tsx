@@ -148,6 +148,21 @@ const AdminHeroImages = () => {
       };
       reader.readAsDataURL(file);
 
+      // Check if bucket exists first
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      console.log('Available buckets:', buckets?.map(b => b.id));
+      if (bucketError) {
+        console.error('Error checking buckets:', bucketError);
+      }
+      const bucketExists = buckets?.some(b => b.id === 'hero-images' || b.name === 'hero-images');
+      console.log('hero-images bucket exists:', bucketExists);
+      if (!bucketExists) {
+        const errorMsg = 'Storage bucket "hero-images" does not exist. Please run the SQL migration to create it.';
+        console.error(errorMsg);
+        toast.error(errorMsg, { id: `upload-image-${position}` });
+        throw new Error(errorMsg);
+      }
+
       // Upload to storage with folder structure: {position}/{timestamp}.{ext}
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${position}/${Date.now()}.${fileExt}`;
@@ -255,10 +270,26 @@ const AdminHeroImages = () => {
       }
 
       toast.success(`Image ${position} uploaded successfully!`, { id: `upload-image-${position}` });
+      console.log('✅ Upload complete! Reloading images...', { position, publicUrl, imageData });
       // #region agent log
       fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:206',message:'Upload complete, reloading images',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H9'})}).catch(()=>{});
       // #endregion
       await loadHeroImages();
+      
+      // Verify the image was saved correctly
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('hero_images')
+        .select('*')
+        .eq('position', position)
+        .eq('is_active', true)
+        .single();
+      
+      console.log('Verification query result:', { verifyData, verifyError });
+      if (verifyData) {
+        console.log('✅ Image verified in database:', verifyData);
+      } else if (verifyError) {
+        console.error('❌ Verification failed:', verifyError);
+      }
     } catch (error: any) {
       console.error('Error uploading image:', error);
       // #region agent log
