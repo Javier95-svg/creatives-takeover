@@ -23,6 +23,7 @@ const Hero = () => {
   const hasTrackedView = useRef(false);
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [uploading, setUploading] = useState<number | null>(null);
+  const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
   
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
@@ -82,6 +83,29 @@ const Hero = () => {
       return;
     }
 
+    // Capture current state for error rollback
+    const previousImages = [...heroImages];
+    const previousImage = previousImages.find(img => img.position === position);
+
+    // OPTIMISTIC UI: Show preview immediately using FileReader
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const previewUrl = reader.result as string;
+      setOptimisticPreviews(prev => ({ ...prev, [position]: previewUrl }));
+      // Also update heroImages state immediately for instant rendering
+      setHeroImages(prev => {
+        const updated = [...prev];
+        const existingIndex = updated.findIndex(img => img.position === position);
+        if (existingIndex >= 0) {
+          updated[existingIndex] = { ...updated[existingIndex], image_url: previewUrl };
+        } else {
+          updated.push({ position, image_url: previewUrl, alt_text: `Hero image ${position}` });
+        }
+        return updated;
+      });
+    };
+    reader.readAsDataURL(file);
+
     try {
       setUploading(position);
       toast.loading('Uploading image...', { id: `upload-hero-${position}` });
@@ -121,7 +145,26 @@ const Hero = () => {
       fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:108',message:'Public URL generated',data:{publicUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
       // #endregion
 
-      // Save to database
+      // OPTIMISTIC UI: Update state immediately with public URL (replaces preview)
+      setOptimisticPreviews(prev => {
+        const updated = { ...prev };
+        updated[position] = publicUrl;
+        return updated;
+      });
+      
+      // Update heroImages state immediately for instant rendering
+      setHeroImages(prev => {
+        const updated = [...prev];
+        const existingIndex = updated.findIndex(img => img.position === position);
+        if (existingIndex >= 0) {
+          updated[existingIndex] = { ...updated[existingIndex], image_url: publicUrl };
+        } else {
+          updated.push({ position, image_url: publicUrl, alt_text: `Hero image ${position}` });
+        }
+        return updated;
+      });
+
+      // Save to database (async, doesn't block UI)
       const existingImage = heroImages.find(img => img.position === position);
       const imageData = {
         position,
@@ -204,24 +247,40 @@ const Hero = () => {
       toast.success(`Image ${position} uploaded successfully!`, { id: `upload-hero-${position}` });
       
       // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:167',message:'Upload success, reloading images',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:167',message:'Upload success, database saved',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
       // #endregion
       
-      // Reload images
-      const { data, error } = await supabase
-        .from('hero_images')
-        .select('position, image_url, alt_text')
-        .eq('is_active', true)
-        .order('position', { ascending: true });
-
-      if (!error && data) {
-        setHeroImages(data);
-      }
+      // Note: State already updated optimistically above, no need to reload from database
     } catch (error: any) {
       console.error('Error uploading image:', error);
       // #region agent log
       fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:179',message:'Upload catch error',data:{errorMessage:error?.message,errorCode:error?.code,errorStatus:error?.statusCode,errorDetails:error,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1,H2'})}).catch(()=>{});
       // #endregion
+      
+      // Revert optimistic update on error
+      setOptimisticPreviews(prev => {
+        const updated = { ...prev };
+        delete updated[position];
+        return updated;
+      });
+      
+      // Revert heroImages state to previous value
+      if (previousImage) {
+        setHeroImages(prev => {
+          const updated = [...prev];
+          const existingIndex = updated.findIndex(img => img.position === position);
+          if (existingIndex >= 0) {
+            updated[existingIndex] = previousImage;
+          } else {
+            updated.push(previousImage);
+          }
+          return updated;
+        });
+      } else {
+        // Remove if it was a new image
+        setHeroImages(prev => prev.filter(img => img.position !== position));
+      }
+      
       toast.error(`Failed to upload image: ${error?.message || 'Unknown error'}`, { id: `upload-hero-${position}` });
     } finally {
       setUploading(null);
@@ -549,8 +608,10 @@ const Hero = () => {
           <div className="hidden md:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
               {[1, 2, 3, 4].map((position) => {
+                // Use optimistic preview if available (instant rendering), otherwise use database image
+                const optimisticPreview = optimisticPreviews[position];
                 const image = heroImages.find(img => img.position === position);
-                const imageSrc = image?.image_url || (position === 1 ? heroFounderWorkspace : position === 2 ? heroPlanningFlatlay : '');
+                const imageSrc = optimisticPreview || image?.image_url || (position === 1 ? heroFounderWorkspace : position === 2 ? heroPlanningFlatlay : '');
                 const altText = image?.alt_text || (position === 1 ? 'Founder working at night with Creatives Takeover dashboard' : `Business planning illustration ${position}`);
                 const isUploadingPosition = uploading === position;
 
@@ -622,7 +683,8 @@ const Hero = () => {
                       style={{
                         filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
                       }}
-                      loading="lazy"
+                      loading={optimisticPreview ? "eager" : "lazy"}
+                      key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
                     {isAdmin && (
