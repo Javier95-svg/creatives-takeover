@@ -57,6 +57,65 @@ const Hero = () => {
     fetchHeroImages();
   }, []);
 
+  // Preload critical hero images (top row - positions 1 and 2) for faster loading
+  useEffect(() => {
+    const topRowImages = heroImages.filter(img => img.position <= 2 && img.image_url);
+    if (topRowImages.length === 0) return;
+
+    // Extract storage domain from first image URL for preconnect
+    try {
+      const firstImageUrl = topRowImages[0]?.image_url;
+      if (firstImageUrl) {
+        const imageUrl = new URL(firstImageUrl);
+        const storageDomain = imageUrl.origin;
+        
+        // Add preconnect link if it doesn't exist
+        let preconnectLink = document.querySelector(`link[rel="preconnect"][href="${storageDomain}"]`);
+        if (!preconnectLink) {
+          preconnectLink = document.createElement('link');
+          preconnectLink.setAttribute('rel', 'preconnect');
+          preconnectLink.setAttribute('href', storageDomain);
+          preconnectLink.setAttribute('crossorigin', 'anonymous');
+          document.head.appendChild(preconnectLink);
+        }
+      }
+    } catch (e) {
+      // If URL parsing fails, skip preconnect
+      console.warn('Could not parse image URL for preconnect:', e);
+    }
+
+    // Preload top row images
+    topRowImages.forEach((image) => {
+      const linkId = `hero-preload-${image.position}`;
+      let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
+      
+      if (!preloadLink) {
+        preloadLink = document.createElement('link');
+        preloadLink.id = linkId;
+        preloadLink.setAttribute('rel', 'preload');
+        preloadLink.setAttribute('as', 'image');
+        document.head.appendChild(preloadLink);
+      }
+      
+      preloadLink.setAttribute('href', image.image_url);
+      // Add fetchpriority for critical images
+      if (image.position <= 2) {
+        preloadLink.setAttribute('fetchpriority', 'high');
+      }
+    });
+
+    // Cleanup function to remove preload links when component unmounts or images change
+    return () => {
+      topRowImages.forEach((image) => {
+        const linkId = `hero-preload-${image.position}`;
+        const preloadLink = document.getElementById(linkId);
+        if (preloadLink) {
+          preloadLink.remove();
+        }
+      });
+    };
+  }, [heroImages]);
+
   // Handle image upload for admin
   const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
     // #region agent log
@@ -686,6 +745,9 @@ const Hero = () => {
                       }}
                       loading={shouldLoadEagerly ? "eager" : "lazy"}
                       fetchPriority={shouldLoadEagerly ? "high" : "auto"}
+                      decoding="async"
+                      width="800"
+                      height="800"
                       key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
