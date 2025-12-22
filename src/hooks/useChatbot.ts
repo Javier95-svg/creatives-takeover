@@ -371,6 +371,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'bizmap-structured': `session_structured_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   });
   const sessionId = sessionIdsByMode[chatMode];
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:373',message:'sessionId initialized',data:{chatbotSessionId:sessionId,chatMode,currentSessionId:config.sessionManagement?.currentSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  }, [sessionId, chatMode, config.sessionManagement?.currentSessionId]);
+  // #endregion
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
@@ -988,11 +993,17 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   useEffect(() => {
     const currentSessionId = config.sessionManagement?.currentSessionId;
     
+    // #region agent log
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:989',message:'session effect triggered',data:{currentSessionId,previousSessionId:previousSessionIdRef.current,chatbotSessionId:sessionId,messagesCount:messages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     console.log('🔍 useChatbot useEffect: currentSessionId =', currentSessionId, 'previous =', previousSessionIdRef.current);
     
     // Only load if sessionId changed and is not null
     if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
       previousSessionIdRef.current = currentSessionId;
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:994',message:'session changed clearing messages',data:{currentSessionId,previousSessionId:previousSessionIdRef.current,messagesCountBefore:messages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       console.log('🔄 Session changed, loading messages:', currentSessionId);
       // Clear messages first to show loading state
       setMessages([]);
@@ -1002,6 +1013,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       }));
       // Load messages
       loadMessagesFromSession(currentSessionId).catch((error) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1004',message:'loadMessagesFromSession failed',data:{currentSessionId,error:error instanceof Error?error.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         console.error('Failed to load messages:', error);
         dispatch({ 
           type: 'SET_ERROR', 
@@ -1010,6 +1024,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       });
     } else if (!currentSessionId && previousSessionIdRef.current) {
       // Session was cleared, reset messages
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1011',message:'session cleared resetting messages',data:{previousSessionId:previousSessionIdRef.current,messagesCountBefore:messages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       console.log('🔄 Session cleared, resetting messages');
       previousSessionIdRef.current = null;
       setMessagesForMode([]);

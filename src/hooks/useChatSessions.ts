@@ -22,13 +22,28 @@ export interface ChatSession {
 export const useChatSessions = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [currentSessionIdState, setCurrentSessionIdState] = useState<string | null>(null);
   const { user } = useAuth();
+  
+  const setCurrentSessionId = useCallback((sessionId: string | null) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:25',message:'setCurrentSessionId called',data:{newSessionId:sessionId,previousSessionId:currentSessionIdState,hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    setCurrentSessionIdState(sessionId);
+  }, [currentSessionIdState, user]);
+  
+  const currentSessionId = currentSessionIdState;
 
   const loadSessions = useCallback(async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:28',message:'loadSessions called',data:{hasUser:!!user,userId:user?.id,currentSessionIdBefore:currentSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!user) {
       setSessions([]);
       setLoading(false);
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:30',message:'loadSessions no user',data:{currentSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return;
     }
 
@@ -42,6 +57,9 @@ export const useChatSessions = () => {
       if (error) {
         console.error('Error loading chat sessions:', error);
         toast.error('Failed to load chat history');
+        // #region agent log
+        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:42',message:'loadSessions error',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         return;
       }
 
@@ -51,6 +69,9 @@ export const useChatSessions = () => {
         answers: (session.answers as Record<string, string>) || {},
         launch_report: session.launch_report || undefined
       }));
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:54',message:'loadSessions success',data:{sessionCount:transformedData.length,currentSessionIdBefore:currentSessionId,willSetToNull:transformedData.length===0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       setSessions(transformedData);
     } catch (error) {
       console.error('Error loading sessions:', error);
@@ -92,7 +113,7 @@ export const useChatSessions = () => {
         launch_report: data.launch_report || undefined
       };
       setSessions(prev => [transformedSession, ...prev]);
-      setCurrentSessionId(data.id);
+      setCurrentSessionIdState(data.id);
       return data.id;
     } catch (error) {
       console.error('Error creating session:', error);
@@ -144,7 +165,7 @@ export const useChatSessions = () => {
       // If deleted session was current, clear it first
       const wasCurrentSession = currentSessionId === sessionId;
       if (wasCurrentSession) {
-        setCurrentSessionId(null);
+        setCurrentSessionIdState(null);
       }
 
       // Optimistically update local state immediately for better UX
@@ -241,14 +262,23 @@ export const useChatSessions = () => {
   const lastUserIdRef = useRef<string | null>(null);
   
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:243',message:'user effect triggered',data:{hasUser:!!user,userId:user?.id,currentSessionId,hasLoaded:hasLoadedRef.current,lastUserId:lastUserIdRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // Only load if user changed or we haven't loaded before
     if (user && (!hasLoadedRef.current || lastUserIdRef.current !== user.id)) {
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:246',message:'calling loadSessions from effect',data:{userId:user.id,currentSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       loadSessions();
       hasLoadedRef.current = true;
       lastUserIdRef.current = user.id;
     } else if (!user) {
       hasLoadedRef.current = false;
       lastUserIdRef.current = null;
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatSessions.ts:252',message:'user cleared',data:{currentSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
     }
   }, [user?.id]); // Only depend on user id
 
