@@ -181,21 +181,23 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-b dark:from-background/50 dark:via-background/35 dark:to-background/75 from-background/90 via-background/95 to-background/90" />
 
       <div className="container mx-auto relative z-20">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Main Headline */}
-          <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
-            <span className="gradient-unified animate-fade-in">
-              The Zero to One Platform
-            </span>
-          </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Left Section - All existing content */}
+          <div className="text-left">
+            {/* Main Headline */}
+            <h1 className="text-headline-lg sm:text-headline-xl font-bold mb-6 takeover-title creatives-font leading-[1.1]">
+              <span className="gradient-unified animate-fade-in">
+                The Zero to One Platform
+              </span>
+            </h1>
 
-          {/* Subheadline */}
-          <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl mx-auto leading-relaxed px-4 animate-fade-in">
-            We blend technology, strategy and community to democratize startup formation, empowering pre-seed founders with AI-driven planning, community support, and fundraising tools.
-          </p>
-          
-          {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10 px-4">
+            {/* Subheadline */}
+            <p className="text-body sm:text-body-lg text-foreground/85 mb-6 max-w-2xl leading-relaxed animate-fade-in">
+              We blend technology, strategy and community to democratize startup formation, empowering pre-seed founders with AI-driven planning, community support, and fundraising tools.
+            </p>
+            
+            {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
             {/* Community - Meet Founders & Mentors */}
             <Link 
               to="/community" 
@@ -233,11 +235,11 @@ const Hero = () => {
             </Link>
           </div>
 
-          {/* Enhanced CTA Section */}
-          <div className="mb-8 sm:mb-12 px-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            {isAuthenticated ? (
-              /* Authenticated User CTAs: Open Dashboard + Explore Features */
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+            {/* Enhanced CTA Section */}
+            <div className="mb-8 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              {isAuthenticated ? (
+                /* Authenticated User CTAs: Open Dashboard + Explore Features */
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
                 {/* Primary CTA - Open Dashboard with Animation */}
                 <Button 
                   size="lg" 
@@ -289,8 +291,8 @@ const Hero = () => {
                   </Button>
                 </div>
 
-                {/* Secondary & Tertiary CTAs */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                  {/* Secondary & Tertiary CTAs */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
                   {/* Secondary CTA - Exploration */}
                   <Button 
                     variant="outline"
@@ -317,14 +319,32 @@ const Hero = () => {
                       <ArrowRight className="ml-1.5 w-4 h-4" />
                     </Link>
                   </Button>
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Platform Snippets - Horizontal Scrollable */}
+            <HeroSnippets />
           </div>
 
-          {/* Platform Snippets - Horizontal Scrollable */}
-          <HeroSnippets />
-
+          {/* Right Section - Image */}
+          <div className="hidden md:block animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="relative w-full h-auto">
+              <img 
+                src="/images/hero-image.jpg" 
+                alt="Business planning illustration showing idea generation and strategy"
+                className="w-full h-auto rounded-lg shadow-2xl dark:shadow-primary/20 transition-all duration-300"
+                style={{
+                  filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                }}
+              />
+              {/* Theme-aware overlay to blend with design */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/5 via-transparent to-transparent dark:from-primary/10 pointer-events-none" />
+              {/* Subtle border for integration */}
+              <div className="absolute inset-0 rounded-lg border border-border/20 dark:border-border/30 pointer-events-none" />
+            </div>
+          </div>
         </div>
       </div>
     </section>
