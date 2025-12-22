@@ -433,43 +433,83 @@ const AdminHeroImages = () => {
                       <CardTitle>Image {position}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Preview - Matching Hero.tsx styling */}
-                      {preview ? (
-                        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square">
-                          <img
-                            src={preview}
-                            alt={`Hero image ${position} preview`}
-                            className="w-full h-full object-cover"
-                            style={{
-                              filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-                          {/* Remove button overlay */}
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={() => handleRemoveImage(position)}
-                            disabled={isUploading}
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Remove
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square flex items-center justify-center">
-                          <div className="text-center p-6">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <ImageIcon className="w-8 h-8 text-primary/50" />
+                      {/* Preview - Clickable upload area */}
+                      <div 
+                        className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square cursor-pointer group"
+                        onClick={() => {
+                          // #region agent log
+                          fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:437',message:'Preview box clicked',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+                          // #endregion
+                          console.log('🖼️ Preview box clicked for position', position);
+                          console.log('📁 File input ref:', fileInputRefs.current[position]);
+                          const fileInput = fileInputRefs.current[position];
+                          if (fileInput) {
+                            console.log('✅ File input found, triggering click');
+                            fileInput.click();
+                          } else {
+                            console.error('❌ File input ref not found for position', position);
+                            console.log('Available refs:', Object.keys(fileInputRefs.current));
+                            // Try to find by ID as fallback
+                            const inputById = document.getElementById(`upload-${position}`) as HTMLInputElement;
+                            if (inputById) {
+                              console.log('✅ Found input by ID, triggering click');
+                              inputById.click();
+                            } else {
+                              console.error('❌ Could not find file input by ID either');
+                            }
+                          }
+                        }}
+                      >
+                        {preview ? (
+                          <>
+                            <img
+                              src={preview}
+                              alt={`Hero image ${position} preview`}
+                              className="w-full h-full object-cover"
+                              style={{
+                                filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+                            {/* Remove button overlay */}
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2 z-10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveImage(position);
+                              }}
+                              disabled={isUploading}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Remove
+                            </Button>
+                            {/* Upload overlay on hover */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-0">
+                              <div className="text-white text-center">
+                                <Upload className="w-8 h-8 mx-auto mb-2" />
+                                <p className="text-sm font-medium">Click to replace</p>
+                              </div>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              No image uploaded
-                            </p>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-center p-6">
+                              <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                <ImageIcon className="w-8 h-8 text-primary/50 group-hover:text-primary/70 transition-colors" />
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2 group-hover:text-foreground transition-colors">
+                                No image uploaded
+                              </p>
+                              <p className="text-xs text-muted-foreground group-hover:text-foreground/70 transition-colors">
+                                Click to upload
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
                       {/* Upload Area - Matching Stories banner pattern */}
                       <div className="space-y-2">
@@ -481,7 +521,13 @@ const AdminHeroImages = () => {
                           <Input
                             id={`upload-${position}`}
                             ref={(el) => {
+                              console.log(`📎 Setting file input ref for position ${position}:`, el);
                               fileInputRefs.current[position] = el;
+                              if (el) {
+                                console.log(`✅ File input ref set successfully for position ${position}`);
+                              } else {
+                                console.warn(`⚠️ File input ref is null for position ${position}`);
+                              }
                             }}
                             type="file"
                             accept="image/jpeg,image/png"
@@ -489,9 +535,13 @@ const AdminHeroImages = () => {
                               // #region agent log
                               fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:400',message:'File input onChange triggered',data:{position,hasFile:!!e.target.files?.[0],fileName:e.target.files?.[0]?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
                               // #endregion
+                              console.log('📂 File input onChange triggered for position', position);
                               const file = e.target.files?.[0];
                               if (file) {
+                                console.log('📄 File selected:', file.name, file.type, file.size);
                                 handleImageUpload(position, file, e);
+                              } else {
+                                console.warn('⚠️ No file selected');
                               }
                             }}
                             disabled={isUploading}
@@ -504,7 +554,22 @@ const AdminHeroImages = () => {
                               // #region agent log
                               fetch('http://127.0.0.1:7247/ingest/7f5d4e2e-0919-470e-91bc-f49c54e31856',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AdminHeroImages.tsx:409',message:'Upload button clicked',data:{position,hasFileInput:!!fileInputRefs.current[position]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
                               // #endregion
-                              fileInputRefs.current[position]?.click();
+                              console.log('🔘 Upload button clicked for position', position);
+                              const fileInput = fileInputRefs.current[position];
+                              if (fileInput) {
+                                console.log('✅ File input found, triggering click');
+                                fileInput.click();
+                              } else {
+                                console.error('❌ File input ref not found, trying by ID');
+                                const inputById = document.getElementById(`upload-${position}`) as HTMLInputElement;
+                                if (inputById) {
+                                  console.log('✅ Found input by ID, triggering click');
+                                  inputById.click();
+                                } else {
+                                  console.error('❌ Could not find file input');
+                                  toast.error('File input not found. Please refresh the page.');
+                                }
+                              }
                             }}
                             disabled={isUploading}
                             className="flex-1"
