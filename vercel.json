@@ -1,7 +1,9 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "redirects": [
+    {
+      "source": "/old-path/:splat",
+      "destination": "/new-path/:splat",
+      "permanent": true
+    }
   ]
 }
