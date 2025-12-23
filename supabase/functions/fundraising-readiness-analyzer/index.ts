@@ -9,6 +9,9 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // #region agent log
+  await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:11',message:'Edge function called',data:{method:req.method,hasAuth:!!req.headers.get('Authorization')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,8 +20,14 @@ serve(async (req) => {
     let requestBody;
     try {
       requestBody = await req.json();
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:19',message:'Request body parsed',data:{hasBody:!!requestBody,scoreKeys:requestBody?Object.keys(requestBody):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
     } catch (jsonError) {
       console.error('Failed to parse request JSON:', jsonError);
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:22',message:'JSON parse error',data:{error:jsonError instanceof Error?jsonError.message:String(jsonError)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body' }),
         { 
@@ -127,8 +136,17 @@ serve(async (req) => {
     }
 
     // Authenticate user
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:130',message:'Before auth check',data:{hasAuthHeader:!!req.headers.get('Authorization')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     const user = await getUserFromAuth(req);
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:131',message:'After auth check',data:{hasUser:!!user,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     if (!user) {
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:132',message:'Auth failed - returning 401',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       return new Response(
         JSON.stringify({ error: 'Authentication required' }),
         { 
@@ -140,13 +158,21 @@ serve(async (req) => {
 
     // Check and deduct credits before processing
     const creditCost = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:142',message:'Before credit check',data:{userId:user.id,creditCost},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     const creditCheck = await checkAndDeductCredits(
       user.id,
       creditCost,
       'Fundraising Readiness Analysis'
     );
-
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:147',message:'After credit check',data:{success:creditCheck.success,error:creditCheck.error,errorCode:creditCheck.errorCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     if (!creditCheck.success) {
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:149',message:'Credit check failed - returning error',data:{error:creditCheck.error,errorCode:creditCheck.errorCode,status:creditCheck.errorCode==='INSUFFICIENT_CREDITS'?402:400},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       return new Response(
         JSON.stringify({ 
           error: creditCheck.error || 'Insufficient credits',
@@ -161,9 +187,14 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:162',message:'Checking env vars',data:{hasSupabaseUrl:!!supabaseUrl,hasSupabaseKey:!!supabaseKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase configuration');
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:165',message:'Missing env vars - returning 500',data:{hasSupabaseUrl:!!supabaseUrl,hasSupabaseKey:!!supabaseKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { 
@@ -190,8 +221,14 @@ serve(async (req) => {
 
     // Use Lovable AI to analyze the results
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:192',message:'Checking LOVABLE_API_KEY',data:{hasLovableKey:!!LOVABLE_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!LOVABLE_API_KEY) {
       console.error('LOVABLE_API_KEY not configured');
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:194',message:'Missing LOVABLE_API_KEY - returning 500',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return new Response(
         JSON.stringify({ error: 'AI service not configured. Please contact support.' }),
         { 
@@ -242,6 +279,9 @@ Provide a JSON response with this exact structure:
 }`;
 
     let aiResponse;
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:245',message:'Before AI API call',data:{hasKey:!!LOVABLE_API_KEY,promptLength:prompt.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     try {
       aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -259,7 +299,13 @@ Provide a JSON response with this exact structure:
         max_tokens: 1000
       }),
       });
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:261',message:'AI API response received',data:{status:aiResponse.status,statusText:aiResponse.statusText,ok:aiResponse.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
     } catch (fetchError) {
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:262',message:'AI API fetch error',data:{error:fetchError instanceof Error?fetchError.message:String(fetchError)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       console.error('=== FETCH ERROR ===');
       console.error('Error type:', fetchError?.constructor?.name);
       console.error('Error message:', fetchError instanceof Error ? fetchError.message : String(fetchError));
@@ -361,6 +407,9 @@ Provide a JSON response with this exact structure:
 
     // Save assessment to database (optional - completely skip if it fails)
     // This is non-critical, so we don't let it affect the response
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:364',message:'Before DB insert',data:{userId:user.id,hasAnalysis:!!analysis},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     try {
       const insertResult = await supabase
         .from('fundraising_readiness_assessments')
@@ -381,13 +430,18 @@ Provide a JSON response with this exact structure:
           analysis_data: analysis,
           created_at: new Date().toISOString()
         });
-      
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:385',message:'After DB insert',data:{hasError:!!insertResult.error,error:insertResult.error?.message,hasData:!!insertResult.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       if (insertResult.error) {
         console.warn('Database insert failed (non-critical):', insertResult.error.message);
         // Continue anyway - database save is optional
       }
     } catch (dbError) {
       // Ignore database errors completely - this is optional
+      // #region agent log
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:389',message:'DB insert exception',data:{error:dbError instanceof Error?dbError.message:String(dbError)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       console.warn('Database insert exception (ignored):', dbError);
     }
 
@@ -412,6 +466,9 @@ Provide a JSON response with this exact structure:
     console.error('Error type:', error?.constructor?.name);
     console.error('Error message:', error instanceof Error ? error.message : String(error));
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    // #region agent log
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:409',message:'Unhandled exception',data:{error:error instanceof Error?error.message:String(error),errorType:error?.constructor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+    // #endregion
     
     const errorMessage = error instanceof Error 
       ? error.message 

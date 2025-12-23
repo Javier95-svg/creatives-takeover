@@ -624,10 +624,15 @@ const FundraisingReadinessToolkit = () => {
         throw new Error('Invalid scores. Please ensure all questions are answered with valid scores.');
       }
 
+      // #region agent log
+      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:627',message:'Before function invoke',data:{requestBody,allScored,isAuthenticated:!!isAuthenticated},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       const { data, error: invokeError } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
         body: requestBody
       });
-
+      // #region agent log
+      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:631',message:'After function invoke',data:{hasError:!!invokeError,hasData:!!data,errorStatus:invokeError?.status,errorMessage:invokeError?.message,dataKeys:data&&typeof data==='object'?Object.keys(data):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'})}).catch(()=>{});
+      // #endregion
       console.log('Function invoke response:', { 
         hasError: !!invokeError, 
         hasData: !!data, 
