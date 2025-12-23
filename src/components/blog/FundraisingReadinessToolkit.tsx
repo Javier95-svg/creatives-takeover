@@ -620,39 +620,48 @@ const FundraisingReadinessToolkit = () => {
         dataValue: data
       });
 
-      // When Supabase functions return non-2xx, error is set AND data may contain the error response body
-      // Check data.error first (this is the actual error message from the edge function)
-      
-      // Handle case where data is a string (JSON stringified error response)
-      if (data && typeof data === 'string') {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.error) {
-            const errorMsg = parsed.error;
-            console.error('Error parsed from string data:', errorMsg);
-            
-            if (errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
-              setCreditGateOpen(true);
-              setAnalysisError('Insufficient credits');
-              toast.error('Insufficient credits');
-              return;
-            }
-            
-            setAnalysisError(errorMsg);
-            toast.error(errorMsg);
-            return;
-          }
-        } catch (e) {
-          // If it's not JSON, treat the string itself as an error
-          console.error('Data is non-JSON string:', data);
-          setAnalysisError(data);
-          toast.error(data);
+      // Check Supabase error object first (HTTP-level errors - happens when status is non-2xx)
+      if (invokeError) {
+        console.error('Supabase function error:', invokeError);
+        
+        // Handle credit errors specifically
+        if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
+          setCreditGateOpen(true);
+          setAnalysisError('Insufficient credits');
           return;
         }
+        
+        // When invokeError exists, data might contain the error response body
+        let errorMsg = invokeError.message || 'Failed to analyze readiness. Please try again.';
+        
+        // Try to extract actual error from data if available
+        if (data) {
+          if (typeof data === 'string') {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.error) {
+                errorMsg = parsed.error;
+              }
+            } catch (e) {
+              // If not JSON, use the string itself
+              errorMsg = data;
+            }
+          } else if (typeof data === 'object' && 'error' in data) {
+            const dataError = (data as any).error;
+            if (dataError) {
+              errorMsg = typeof dataError === 'string' ? dataError : String(dataError);
+            }
+          }
+        }
+        
+        setAnalysisError(errorMsg);
+        toast.error(errorMsg);
+        return;
       }
-      
-      // Handle case where data is an object with error field
-      if (data && typeof data === 'object' && 'error' in data) {
+
+      // If no invokeError, check if data contains an error (edge function returned 200 but with error in body)
+      // IMPORTANT: Only treat as error if it has 'error' field AND no 'verdict' field (successful responses have 'verdict')
+      if (data && typeof data === 'object' && 'error' in data && !('verdict' in data)) {
         const errorFromData = (data as any).error;
         console.error('Error in response data:', errorFromData);
         
@@ -671,42 +680,8 @@ const FundraisingReadinessToolkit = () => {
         }
       }
 
-      // Check Supabase error object (HTTP-level errors)
-      if (invokeError) {
-        console.error('Supabase function error:', invokeError);
-        console.error('Full error object:', JSON.stringify(invokeError, null, 2));
-        
-        // Handle credit errors specifically
-        if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
-          setCreditGateOpen(true);
-          setAnalysisError('Insufficient credits');
-          return;
-        }
-        
-        // Extract error message - prioritize data.error if available, otherwise use invokeError.message
-        let errorMsg = invokeError.message || 'Failed to analyze readiness. Please try again.';
-        
-        // If data exists and has error, use that instead
-        if (data && typeof data === 'object' && 'error' in data) {
-          const dataError = (data as any).error;
-          if (dataError) {
-            errorMsg = typeof dataError === 'string' ? dataError : String(dataError);
-          }
-        }
-        
-        setAnalysisError(errorMsg);
-        toast.error(errorMsg);
-        return;
-      }
-
-      // Final validation - ensure we have valid response data
-      if (!data) {
-        console.error('No response data received');
-        throw new Error('No response received from analysis service. Please try again.');
-      }
-
-      // Handle case where data might be a string (shouldn't happen, but be safe)
-      if (typeof data === 'string') {
+      // Handle case where data is a string (shouldn't happen for success, but handle it)
+      if (data && typeof data === 'string') {
         try {
           const parsed = JSON.parse(data);
           if (parsed.error) {
@@ -714,7 +689,7 @@ const FundraisingReadinessToolkit = () => {
             toast.error(parsed.error);
             return;
           }
-          // If parsed successfully but no error, use it as data
+          // If parsed successfully and has verdict, use it
           if (parsed.verdict) {
             setAiAnalysis(parsed as AIAnalysis);
             toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
@@ -724,6 +699,12 @@ const FundraisingReadinessToolkit = () => {
           console.error('Failed to parse string response:', e);
           throw new Error('Invalid response format from analysis service. Please try again.');
         }
+      }
+
+      // Final validation - ensure we have valid response data
+      if (!data) {
+        console.error('No response data received');
+        throw new Error('No response received from analysis service. Please try again.');
       }
 
       if (!data.verdict) {
