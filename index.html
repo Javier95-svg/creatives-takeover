@@ -1,25 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="https://t.contentsquare.net/uxa/3ef0f84e50f77.js"></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);} 
-      gtag('js', new Date());
-
-      gtag('config', 'G-SBVWSWCNX8');
-    </script>
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="b6a9bcb8-c6ac-41c5-b624-75b3f6957742"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Creatives Takeover – Showcase Creative Work</title>
     <meta name="description" content="The all-in-one platform for rookie entrepreneurs and founders.">
     <meta name="author" content="Javier Alonso" />
     <link rel="canonical" href="https://creatives-takeover.com/" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+    
+    <!-- Preconnect to external domains for faster resource loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="preconnect" href="https://t.contentsquare.net" crossorigin>
+    <link rel="preconnect" href="https://cloud.umami.is" crossorigin>
+    
+    <!-- Load fonts asynchronously with font-display swap for better performance -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+    </noscript>
+    
+    <!-- Defer non-critical analytics scripts to improve initial load -->
+    <script>
+      // Defer ContentSquare loading
+      window.addEventListener('load', function() {
+        var script = document.createElement('script');
+        script.src = 'https://t.contentsquare.net/uxa/3ef0f84e50f77.js';
+        script.async = true;
+        document.head.appendChild(script);
+      });
+    </script>
+    <!-- Google tag (gtag.js) - deferred -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);} 
+      gtag('js', new Date());
+      gtag('config', 'G-SBVWSWCNX8');
+      
+      // Load gtag script after page load
+      window.addEventListener('load', function() {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8';
+        document.head.appendChild(script);
+      });
+    </script>
+    <!-- Umami analytics - already deferred -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="b6a9bcb8-c6ac-41c5-b624-75b3f6957742"></script>
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
