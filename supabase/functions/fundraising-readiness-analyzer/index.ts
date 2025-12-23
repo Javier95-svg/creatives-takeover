@@ -14,17 +14,38 @@ serve(async (req) => {
   }
 
   try {
-    const { mvp_score, feedback_score, team_score, runway_score } = await req.json();
+    const { 
+      team_complementary_score,
+      team_experience_score,
+      traction_revenue_score,
+      milestone_achieved_score,
+      mvp_working_score,
+      product_live_score,
+      market_size_score,
+      demand_validated_score,
+      pitch_deck_score,
+      funding_defined_score
+    } = await req.json();
 
     // Validate scores
-    if (
-      typeof mvp_score !== 'number' || mvp_score < 0 || mvp_score > 10 ||
-      typeof feedback_score !== 'number' || feedback_score < 0 || feedback_score > 10 ||
-      typeof team_score !== 'number' || team_score < 0 || team_score > 10 ||
-      typeof runway_score !== 'number' || runway_score < 0 || runway_score > 10
-    ) {
+    const scores = {
+      team_complementary: team_complementary_score,
+      team_experience: team_experience_score,
+      traction_revenue: traction_revenue_score,
+      milestone_achieved: milestone_achieved_score,
+      mvp_working: mvp_working_score,
+      product_live: product_live_score,
+      market_size: market_size_score,
+      demand_validated: demand_validated_score,
+      pitch_deck: pitch_deck_score,
+      funding_defined: funding_defined_score
+    };
+
+    // Validate all scores are numbers between 0-10
+    const scoreValues = Object.values(scores);
+    if (scoreValues.length !== 10 || scoreValues.some(score => typeof score !== 'number' || score < 0 || score > 10)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid scores. All scores must be between 0 and 10.' }),
+        JSON.stringify({ error: 'Invalid scores. All 10 scores must be numbers between 0 and 10.' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -69,8 +90,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Calculate average score
-    const averageScore = (mvp_score + feedback_score + team_score + runway_score) / 4;
+    // Calculate average score across all 10 questions
+    const averageScore = scoreValues.reduce((sum, score) => sum + score, 0) / 10;
     const isReady = averageScore >= 7.0;
 
     // Use Lovable AI to analyze the results
@@ -93,18 +114,41 @@ serve(async (req) => {
       10: 'Complete'
     };
 
-    const prompt = `You are a fundraising readiness expert analyzing a pre-seed startup's readiness assessment.
+    const prompt = `You are a fundraising readiness expert analyzing a pre-seed startup's comprehensive readiness assessment.
 
-Assessment Scores (0-10 scale):
-- MVP Complete: ${mvp_score} (${scoreLabels[mvp_score as keyof typeof scoreLabels]})
-- Customer Feedback: ${feedback_score} (${scoreLabels[feedback_score as keyof typeof scoreLabels]})
-- Team in Place: ${team_score} (${scoreLabels[team_score as keyof typeof scoreLabels]})
-- Runway Secured: ${runway_score} (${scoreLabels[runway_score as keyof typeof scoreLabels]})
+Assessment Scores (0-10 scale) organized by category:
+
+**1. Strong Team (2 questions):**
+- Complementary Founding Team (tech + business): ${scores.team_complementary} (${scoreLabels[scores.team_complementary as keyof typeof scoreLabels]})
+- Previous Startup Experience: ${scores.team_experience} (${scoreLabels[scores.team_experience as keyof typeof scoreLabels]})
+
+**2. Traction & Validation (4 questions):**
+- Revenue or User Traction: ${scores.traction_revenue} (${scoreLabels[scores.traction_revenue as keyof typeof scoreLabels]})
+- Key Growth Milestone Achieved: ${scores.milestone_achieved} (${scoreLabels[scores.milestone_achieved as keyof typeof scoreLabels]})
+- Working MVP or Prototype: ${scores.mvp_working} (${scoreLabels[scores.mvp_working as keyof typeof scoreLabels]})
+- Customer Demand Validated: ${scores.demand_validated} (${scoreLabels[scores.demand_validated as keyof typeof scoreLabels]})
+
+**3. Market Opportunity (1 question):**
+- Large & Growing Market ($1B+): ${scores.market_size} (${scoreLabels[scores.market_size as keyof typeof scoreLabels]})
+
+**4. Scalable Operations (1 question):**
+- Product Live and in Use: ${scores.product_live} (${scoreLabels[scores.product_live as keyof typeof scoreLabels]})
+
+**5. Preparation (2 questions):**
+- Pitch Deck Ready: ${scores.pitch_deck} (${scoreLabels[scores.pitch_deck as keyof typeof scoreLabels]})
+- Funding Amount & Use Defined: ${scores.funding_defined} (${scoreLabels[scores.funding_defined as keyof typeof scoreLabels]})
 
 Average Score: ${averageScore.toFixed(1)}/10.0
 Current Status: ${isReady ? 'Ready' : 'Not Ready'}
 
-Provide a comprehensive, actionable analysis for a first-time entrepreneur. Be encouraging but realistic.`;
+Provide a comprehensive, actionable analysis organized by these 5 categories. Focus on:
+- Traction & Validation is typically most important for investors
+- Strong Team reduces execution risk
+- Market Opportunity determines upside potential
+- Scalable Operations shows ability to grow
+- Preparation shows professionalism and readiness
+
+Be encouraging but realistic. Provide specific, actionable feedback for a first-time entrepreneur.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -219,10 +263,16 @@ Provide a comprehensive, actionable analysis for a first-time entrepreneur. Be e
         .from('fundraising_readiness_assessments')
         .insert({
           user_id: user.id,
-          mvp_score,
-          feedback_score,
-          team_score,
-          runway_score,
+          team_complementary_score: scores.team_complementary,
+          team_experience_score: scores.team_experience,
+          traction_revenue_score: scores.traction_revenue,
+          milestone_achieved_score: scores.milestone_achieved,
+          mvp_working_score: scores.mvp_working,
+          product_live_score: scores.product_live,
+          market_size_score: scores.market_size,
+          demand_validated_score: scores.demand_validated,
+          pitch_deck_score: scores.pitch_deck,
+          funding_defined_score: scores.funding_defined,
           average_score: averageScore,
           verdict: analysis.verdict,
           analysis_data: analysis,
@@ -238,10 +288,16 @@ Provide a comprehensive, actionable analysis for a first-time entrepreneur. Be e
         ...analysis,
         average_score: averageScore,
         scores: {
-          mvp: mvp_score,
-          feedback: feedback_score,
-          team: team_score,
-          runway: runway_score
+          team_complementary: scores.team_complementary,
+          team_experience: scores.team_experience,
+          traction_revenue: scores.traction_revenue,
+          milestone_achieved: scores.milestone_achieved,
+          mvp_working: scores.mvp_working,
+          product_live: scores.product_live,
+          market_size: scores.market_size,
+          demand_validated: scores.demand_validated,
+          pitch_deck: scores.pitch_deck,
+          funding_defined: scores.funding_defined
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
