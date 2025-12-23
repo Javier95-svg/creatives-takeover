@@ -312,7 +312,7 @@ const FundraisingReadinessToolkit = () => {
             <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
               Insighta Test
             </h2>
-            <span className="text-4xl md:text-5xl">🎯</span>
+            <span className="text-4xl md:text-5xl">🧪</span>
           </div>
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
             Take our comprehensive self-assessment to understand your startup's fundraising readiness.
