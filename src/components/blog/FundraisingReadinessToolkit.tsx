@@ -194,6 +194,7 @@ const FundraisingReadinessToolkit = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const averageScore = useMemo(() => {
     const scoreValues = Object.values(scores);
@@ -205,6 +206,24 @@ const FundraisingReadinessToolkit = () => {
   const allScored = useMemo(() => {
     return Object.values(scores).every(score => score > 0);
   }, [scores]);
+
+  const currentQuestion = criteria[currentQuestionIndex];
+  const currentQuestionScore = scores[currentQuestion.id] || 0;
+  const isCurrentQuestionAnswered = currentQuestionScore > 0;
+  const totalQuestions = criteria.length;
+  const progressPercentage = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+
+  const handleNext = () => {
+    if (currentQuestionIndex < totalQuestions - 1 && isCurrentQuestionAnswered) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
 
   const handleScoreChange = (criterionId: string, value: number[]) => {
     const newScore = value[0];
@@ -323,114 +342,152 @@ const FundraisingReadinessToolkit = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-4xl text-primary animate-pulse">How ready are you?</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-8">
+          <CardContent className="space-y-6">
+            {/* Progress Indicator */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-muted-foreground">
+                  Question {currentQuestionIndex + 1} of {totalQuestions}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {Math.round(progressPercentage)}% Complete
+                </span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+            </div>
+
+            {/* Current Question */}
             <TooltipProvider>
-            {criteria.map((criterion) => {
-              const currentScore = scores[criterion.id] || 0;
-              const isHelpExpanded = expandedHelp[criterion.id];
-
-              return (
-                <div key={criterion.id} className="space-y-4">
-                  {/* Criterion Header */}
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary mt-1">
-                      {criterion.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold">{criterion.title}</h3>
-                        {currentScore > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {scoreLabels[currentScore]}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {criterion.description}
-                      </p>
-                      
-                      {/* Help Text */}
-                      <Collapsible open={isHelpExpanded} onOpenChange={() => toggleHelp(criterion.id)}>
-                        <CollapsibleTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            <HelpCircle className="h-3 w-3 mr-1" />
-                            {isHelpExpanded ? "Hide help" : "What does this mean?"}
-                            {isHelpExpanded ? (
-                              <ChevronUp className="h-3 w-3 ml-1" />
-                            ) : (
-                              <ChevronDown className="h-3 w-3 ml-1" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="text-sm text-muted-foreground mt-2 pl-4 border-l-2 border-primary/20 space-y-2 whitespace-pre-line">
-                          {criterion.helpText}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </div>
+              <div className="space-y-4">
+                {/* Criterion Header */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary mt-1">
+                    {currentQuestion.icon}
                   </div>
-
-                  {/* Slider */}
-                  <div className="space-y-3 pl-12">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Score: {currentScore} / 10</span>
-                      <span className="text-xs text-muted-foreground">{scoreLabels[currentScore]}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold">{currentQuestion.title}</h3>
+                      {currentQuestionScore > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {scoreLabels[currentQuestionScore]}
+                        </Badge>
+                      )}
                     </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className={cn(
-                            "relative",
-                            !isAuthenticated && "cursor-not-allowed"
-                          )}>
-                            <Slider
-                              value={[currentScore]}
-                              onValueChange={(value) => {
-                                if (isAuthenticated) {
-                                  handleScoreChange(criterion.id, value);
-                                }
-                              }}
-                              min={0}
-                              max={10}
-                              step={1}
-                              disabled={!isAuthenticated}
-                              className={cn(
-                                "w-full",
-                                !isAuthenticated && "opacity-60"
-                              )}
-                            />
-                            {!isAuthenticated && (
-                              <div className="absolute inset-0 cursor-not-allowed z-10" />
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        {!isAuthenticated && (
-                          <TooltipContent>
-                            <p>Sign in to adjust this score</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>0</span>
-                      <span>2</span>
-                      <span>4</span>
-                      <span>6</span>
-                      <span>8</span>
-                      <span>10</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {currentQuestion.description}
+                    </p>
                     
-                    {/* Progress Bar */}
-                    {currentScore > 0 && (
-                      <div className="space-y-1">
-                        <Progress value={(currentScore / 10) * 100} className="h-2" />
-                      </div>
-                    )}
+                    {/* Help Text */}
+                    <Collapsible 
+                      open={expandedHelp[currentQuestion.id]} 
+                      onOpenChange={() => toggleHelp(currentQuestion.id)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <HelpCircle className="h-3 w-3 mr-1" />
+                          {expandedHelp[currentQuestion.id] ? "Hide help" : "What does this mean?"}
+                          {expandedHelp[currentQuestion.id] ? (
+                            <ChevronUp className="h-3 w-3 ml-1" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="text-sm text-muted-foreground mt-2 pl-4 border-l-2 border-primary/20 space-y-2 whitespace-pre-line">
+                        {currentQuestion.helpText}
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
                 </div>
-              );
-            })}
+
+                {/* Slider */}
+                <div className="space-y-3 pl-12">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Score: {currentQuestionScore} / 10</span>
+                    <span className="text-xs text-muted-foreground">{scoreLabels[currentQuestionScore]}</span>
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={cn(
+                        "relative",
+                        !isAuthenticated && "cursor-not-allowed"
+                      )}>
+                        <Slider
+                          value={[currentQuestionScore]}
+                          onValueChange={(value) => {
+                            if (isAuthenticated) {
+                              handleScoreChange(currentQuestion.id, value);
+                            }
+                          }}
+                          min={0}
+                          max={10}
+                          step={1}
+                          disabled={!isAuthenticated}
+                          className={cn(
+                            "w-full",
+                            !isAuthenticated && "opacity-60"
+                          )}
+                        />
+                        {!isAuthenticated && (
+                          <div className="absolute inset-0 cursor-not-allowed z-10" />
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    {!isAuthenticated && (
+                      <TooltipContent>
+                        <p>Sign in to adjust this score</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0</span>
+                    <span>2</span>
+                    <span>4</span>
+                    <span>6</span>
+                    <span>8</span>
+                    <span>10</span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  {currentQuestionScore > 0 && (
+                    <div className="space-y-1">
+                      <Progress value={(currentQuestionScore / 10) * 100} className="h-2" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Buttons */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={currentQuestionIndex === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <ChevronUp className="h-4 w-4 rotate-90" />
+                    Previous
+                  </Button>
+                  
+                  {currentQuestionIndex < totalQuestions - 1 ? (
+                    <Button
+                      onClick={handleNext}
+                      disabled={!isCurrentQuestionAnswered || !isAuthenticated}
+                      className="flex items-center gap-2"
+                    >
+                      Next
+                      <ChevronDown className="h-4 w-4 -rotate-90" />
+                    </Button>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      {isCurrentQuestionAnswered ? "All questions answered!" : "Answer this question to complete"}
+                    </div>
+                  )}
+                </div>
+              </div>
             </TooltipProvider>
           </CardContent>
         </Card>
