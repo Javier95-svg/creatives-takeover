@@ -74,20 +74,8 @@ export default defineConfig(({ mode }) => {
       },
       // Increase chunk size warning limit
       chunkSizeWarningLimit: 1000,
-      // Disable sourcemaps in production for faster builds and smaller bundle
+      // Disable sourcemaps in production for faster builds
       sourcemap: false,
-      // Enable minification with terser for better compression
-      minify: mode === 'production' ? 'terser' : false,
-      terserOptions: mode === 'production' ? {
-        compress: {
-          drop_console: true, // Remove console.log in production
-          drop_debugger: true,
-        },
-      } : undefined,
-      // Enable CSS code splitting
-      cssCodeSplit: true,
-      // Report compressed size
-      reportCompressedSize: true,
     },
   };
 });

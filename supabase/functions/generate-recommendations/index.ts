@@ -23,57 +23,58 @@ serve(async (req) => {
       throw new Error("user_id is required");
     }
 
-    // 🚀 OPTIMIZATION: Parallelize all data fetching queries (including delete)
-    const [
-      { data: profile },
-      { data: scores },
-      { data: sessions },
-      { data: sprints },
-      { data: checkIns },
-      { data: activity },
-      deleteResult
-    ] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("creative_niche, business_stage, onboarding_completed")
-        .eq("id", user_id)
-        .single(),
-      supabase
-        .from("business_success_scores")
-        .select("*")
-        .eq("user_id", user_id)
-        .order("created_at", { ascending: false })
-        .limit(1),
-      supabase
-        .from("chat_sessions")
-        .select("*")
-        .eq("user_id", user_id)
-        .order("updated_at", { ascending: false }),
-      supabase
-        .from("sprints")
-        .select("*")
-        .eq("user_id", user_id)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("daily_check_ins")
-        .select("*")
-        .eq("user_id", user_id)
-        .order("created_at", { ascending: false })
-        .limit(7),
-      supabase
-        .from("user_activity_log")
-        .select("*")
-        .eq("user_id", user_id)
-        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .order("created_at", { ascending: false }),
-      // Delete old/expired recommendations in parallel
-      supabase
-        .from("personalized_recommendations")
-        .delete()
-        .eq("user_id", user_id)
-        .or("is_dismissed.eq.true,expires_at.lt." + new Date().toISOString())
-    ]);
+    // Delete old/expired recommendations first
+    await supabase
+      .from("personalized_recommendations")
+      .delete()
+      .eq("user_id", user_id)
+      .or("is_dismissed.eq.true,expires_at.lt." + new Date().toISOString());
+
+    // Fetch user context
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("creative_niche, business_stage, onboarding_completed")
+      .eq("id", user_id)
+      .single();
+
+    // Fetch business scores
+    const { data: scores } = await supabase
+      .from("business_success_scores")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    // Fetch chat sessions
+    const { data: sessions } = await supabase
+      .from("chat_sessions")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("updated_at", { ascending: false });
+
+    // Fetch sprints
+    const { data: sprints } = await supabase
+      .from("sprints")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    // Fetch check-ins
+    const { data: checkIns } = await supabase
+      .from("daily_check_ins")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false })
+      .limit(7);
+
+    // Fetch activity
+    const { data: activity } = await supabase
+      .from("user_activity_log")
+      .select("*")
+      .eq("user_id", user_id)
+      .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .order("created_at", { ascending: false });
 
     // Fetch commitments
     const { data: commitments } = await supabase
