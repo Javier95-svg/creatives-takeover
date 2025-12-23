@@ -1,21 +1,178 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { checkAndDeductCredits, getUserFromAuth } from '../_shared/credit-deduction.ts';
-import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+
+// ============================================================================
+// INLINED SHARED DEPENDENCIES (for Editor deployment compatibility)
+// ============================================================================
+
+// Credit constants (from _shared/credit-constants.ts)
+const CREDIT_COSTS = {
+  FUNDRAISING_READINESS_ANALYSIS: 8,
+} as const;
+
+// Credit deduction result interface
+interface CreditDeductionResult {
+  success: boolean;
+  newBalance?: number;
+  newQuota?: number;
+  usedFromQuota?: number;
+  usedFromBalance?: number;
+  error?: string;
+  errorCode?: 'INSUFFICIENT_CREDITS' | 'USER_NOT_FOUND' | 'DEDUCTION_FAILED';
+}
+
+// Get user from authorization header (from _shared/credit-deduction.ts)
+async function getUserFromAuth(req: Request): Promise<{ id: string } | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null;
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false }
+  });
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return null;
+  }
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (error || !user) {
+      return null;
+    }
+
+    return { id: user.id };
+  } catch (error) {
+    console.error('Error getting user from auth:', error);
+    return null;
+  }
+}
+
+// Check and deduct credits (simplified version from _shared/credit-deduction.ts)
+async function checkAndDeductCredits(
+  userId: string,
+  amount: number,
+  feature: string
+): Promise<CreditDeductionResult> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return {
+      success: false,
+      error: 'Supabase configuration missing',
+      errorCode: 'DEDUCTION_FAILED'
+    };
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false }
+  });
+
+  try {
+    const { data: credits, error: fetchError } = await supabase
+      .from('user_credits')
+      .select('balance, monthly_quota')
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !credits) {
+      return {
+        success: false,
+        error: 'User credit record not found',
+        errorCode: 'USER_NOT_FOUND'
+      };
+    }
+
+    const totalAvailable = (credits.monthly_quota || 0) + (credits.balance || 0);
+
+    if (totalAvailable < amount) {
+      return {
+        success: false,
+        error: 'Insufficient credits',
+        errorCode: 'INSUFFICIENT_CREDITS'
+      };
+    }
+
+    let usedFromQuota = 0;
+    let usedFromBalance = 0;
+    let newQuota = credits.monthly_quota || 0;
+    let newBalance = credits.balance || 0;
+
+    if (newQuota >= amount) {
+      usedFromQuota = amount;
+      newQuota = newQuota - amount;
+    } else {
+      usedFromQuota = newQuota;
+      usedFromBalance = amount - newQuota;
+      newQuota = 0;
+      newBalance = newBalance - usedFromBalance;
+    }
+
+    const { error: updateError } = await supabase
+      .from('user_credits')
+      .update({ 
+        monthly_quota: newQuota,
+        balance: newBalance
+      })
+      .eq('user_id', userId)
+      .gte('balance', credits.balance - usedFromBalance)
+      .gte('monthly_quota', credits.monthly_quota - usedFromQuota);
+
+    if (updateError) {
+      return {
+        success: false,
+        error: 'Failed to update credit balance',
+        errorCode: 'DEDUCTION_FAILED'
+      };
+    }
+
+    await supabase
+      .from('credit_transactions')
+      .insert([{
+        user_id: userId,
+        amount: -amount,
+        tx_type: 'deduct',
+        reason: `Used ${amount} credits for ${feature}`,
+        feature,
+        metadata: {
+          usedFromQuota,
+          usedFromBalance
+        }
+      }]);
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Transaction failed',
+      errorCode: 'DEDUCTION_FAILED'
+    };
+  }
+}
+
+// ============================================================================
+// MAIN FUNCTION
+// ============================================================================
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to create timeout promise
 function createTimeout(ms: number): Promise<never> {
   return new Promise((_, reject) => {
     setTimeout(() => reject(new Error(`Request timeout after ${ms}ms`)), ms);
   });
 }
 
-// Helper function to create timeout-wrapped fetch
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 30000): Promise<Response> {
   return Promise.race([
     fetch(url, options),
@@ -27,31 +184,25 @@ serve(async (req) => {
   const startTime = Date.now();
   const requestId = `req_${startTime}_${Math.random().toString(36).substr(2, 9)}`;
   
-  // Exhaustive logging: Function entry
   console.log(`[${requestId}] === FUNDRAISING READINESS ANALYZER V2 START ===`);
   console.log(`[${requestId}] Request method: ${req.method}`);
   console.log(`[${requestId}] Request URL: ${req.url}`);
   console.log(`[${requestId}] Has Authorization header: ${!!req.headers.get('Authorization')}`);
   console.log(`[${requestId}] Has Content-Type header: ${!!req.headers.get('Content-Type')}`);
   
-  // Handle OPTIONS request
   if (req.method === 'OPTIONS') {
     console.log(`[${requestId}] OPTIONS request - returning CORS headers`);
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Wrap entire function in try-catch to ensure Response is always returned
   try {
-    // Step 1: Safely parse request body (never crash on invalid/missing body)
     console.log(`[${requestId}] Step 1: Parsing request body...`);
     let requestBody: any = {};
     
     try {
-      // Check if request has body - handle empty body gracefully
       const contentType = req.headers.get('Content-Type');
       console.log(`[${requestId}] Content-Type: ${contentType || 'not set'}`);
       
-      // Only require JSON content-type if body exists
       const hasBody = req.body !== null && req.body !== undefined;
       if (hasBody && contentType && !contentType.includes('application/json')) {
         console.error(`[${requestId}] Invalid Content-Type: ${contentType}`);
@@ -64,13 +215,11 @@ serve(async (req) => {
         );
       }
       
-      // Try to parse JSON - handle empty body gracefully
       if (hasBody) {
         try {
           requestBody = await req.json();
           console.log(`[${requestId}] Request body parsed successfully`);
         } catch (jsonParseError) {
-          // If JSON parsing fails, try to get text first for better error message
           try {
             const textBody = await req.text();
             console.error(`[${requestId}] Failed to parse JSON, raw body: ${textBody.substring(0, 200)}`);
@@ -92,7 +241,6 @@ serve(async (req) => {
       console.error(`[${requestId}] JSON error type: ${jsonError?.constructor?.name}`);
       console.error(`[${requestId}] JSON error message: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
       
-      // Return valid JSON response instead of crashing
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body. Please ensure the request body is valid JSON.' }),
         { 
@@ -102,12 +250,11 @@ serve(async (req) => {
       );
     }
 
-    // Step 2: Validate request body exists and is an object
-    console.log(`[${requestId}] Step 2: Validating request body...`);
+    console.log(`[${requestId}] Step 2: Validating request body exists and is an object...`);
     if (!requestBody || typeof requestBody !== 'object' || Array.isArray(requestBody)) {
       console.error(`[${requestId}] Request body is missing, not an object, or is an array`);
       return new Response(
-        JSON.stringify({ error: 'Request body must be a JSON object with score data' }),
+        JSON.stringify({ error: 'Request body is required and must be a JSON object with score data' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -116,11 +263,8 @@ serve(async (req) => {
     }
     console.log(`[${requestId}] Request body validation passed`);
 
-    // Step 3: Extract and validate 10-question scores (native support, no backward compatibility)
-    console.log(`[${requestId}] Step 3: Validating 10-question scores...`);
-    
-    // Required 10-question format keys
-    const requiredScoreKeys = [
+    console.log(`[${requestId}] Step 3: Validating all 10 required scores for V2...`);
+    const requiredScoresKeys = [
       'team_complementary_score',
       'team_experience_score',
       'traction_revenue_score',
@@ -132,23 +276,25 @@ serve(async (req) => {
       'pitch_deck_score',
       'funding_defined_score'
     ];
-    
-    // Check that all required scores are present
-    const missingScores = requiredScoreKeys.filter(key => {
+
+    const rawScores: { [key: string]: any } = {};
+    const missingScores: string[] = [];
+
+    for (const key of requiredScoresKeys) {
       const value = requestBody[key];
-      const isMissing = value === undefined || value === null || value === '';
-      if (isMissing) {
-        console.error(`[${requestId}] Missing score: ${key} (value: ${value})`);
+      if (value === undefined || value === null || value === '') {
+        missingScores.push(key);
+        console.error(`[${requestId}] Missing score: ${key}`);
+      } else {
+        rawScores[key] = value;
       }
-      return isMissing;
-    });
+    }
     
     if (missingScores.length > 0) {
-      console.error(`[${requestId}] Missing scores: ${missingScores.join(', ')}`);
-      console.error(`[${requestId}] Total missing: ${missingScores.length} out of ${requiredScoreKeys.length}`);
+      console.error(`[${requestId}] Missing required scores: ${missingScores.join(', ')}`);
       return new Response(
         JSON.stringify({ 
-          error: `Missing required scores: ${missingScores.join(', ')}. Please ensure all 10 questions are answered.`,
+          error: `Missing required scores for 10-question format: ${missingScores.join(', ')}. Please ensure all 10 questions are answered.`,
           missingScores 
         }),
         { 
@@ -157,20 +303,15 @@ serve(async (req) => {
         }
       );
     }
-    console.log(`[${requestId}] All required scores present`);
+    console.log(`[${requestId}] All 10 required scores present`);
 
-    // Step 4: Convert scores to numbers and validate
     console.log(`[${requestId}] Step 4: Converting and validating scores...`);
     const scores: { [key: string]: number } = {};
     const invalidScores: Array<{ key: string; value: any; reason: string }> = [];
     
-    for (const key of requiredScoreKeys) {
-      const rawValue = requestBody[key];
-      
-      // Convert to number (handles string numbers like "5")
+    for (const [key, rawValue] of Object.entries(rawScores)) {
       const numValue = Number(rawValue);
       
-      // Check if conversion resulted in NaN
       if (isNaN(numValue)) {
         invalidScores.push({ 
           key, 
@@ -181,7 +322,6 @@ serve(async (req) => {
         continue;
       }
       
-      // Check if out of range
       if (numValue < 0 || numValue > 10) {
         invalidScores.push({ 
           key, 
@@ -192,27 +332,22 @@ serve(async (req) => {
         continue;
       }
       
-      // Round to integer (scores should be whole numbers)
       const roundedValue = Math.round(numValue);
-      // Store with normalized key (remove _score suffix for consistency)
-      const normalizedKey = key.replace('_score', '');
-      scores[normalizedKey] = roundedValue;
-      console.log(`[${requestId}] Valid score ${key}: ${rawValue} → ${roundedValue} (stored as ${normalizedKey})`);
+      scores[key.replace('_score', '')] = roundedValue;
+      console.log(`[${requestId}] Valid score ${key}: ${rawValue} → ${roundedValue} (stored as ${key.replace('_score', '')})`);
     }
 
-    // Validate we have exactly 10 valid scores
-    const scoreValues = Object.values(scores);
-    if (scoreValues.length !== 10 || invalidScores.length > 0) {
+    if (Object.keys(scores).length !== 10 || invalidScores.length > 0) {
       console.error(`[${requestId}] Score validation failed:`);
-      console.error(`[${requestId}] - Valid scores count: ${scoreValues.length} (expected: 10)`);
+      console.error(`[${requestId}] - Valid scores count: ${Object.keys(scores).length} (expected: 10)`);
       console.error(`[${requestId}] - Invalid scores: ${invalidScores.length}`);
       console.error(`[${requestId}] - Invalid score details:`, invalidScores);
       
       const errorDetails = invalidScores.map(s => `${s.key}: ${s.value} (${s.reason})`).join(', ');
       return new Response(
         JSON.stringify({ 
-          error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${scoreValues.length} valid scores instead of 10`}`,
-          invalidScores
+          error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${Object.keys(scores).length} valid scores instead of 10`}`,
+          invalidScores 
         }),
         { 
           status: 400,
@@ -223,7 +358,6 @@ serve(async (req) => {
     
     console.log(`[${requestId}] All scores validated successfully:`, scores);
 
-    // Step 5: Authentication (optional)
     console.log(`[${requestId}] Step 5: Attempting authentication (optional)...`);
     let user: { id: string } | null = null;
     
@@ -240,7 +374,6 @@ serve(async (req) => {
       user = null;
     }
 
-    // Step 6: Credit check (only if authenticated)
     let creditCheck = { success: true };
     if (user) {
       console.log(`[${requestId}] Step 6: Checking credits for user ${user.id}...`);
@@ -290,7 +423,6 @@ serve(async (req) => {
       console.log(`[${requestId}] Step 6: Skipping credit check (no authentication)`);
     }
 
-    // Step 7: Check environment variables
     console.log(`[${requestId}] Step 7: Checking environment variables...`);
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -316,19 +448,18 @@ serve(async (req) => {
     
     if (!OPENAI_API_KEY) {
       console.error(`[${requestId}] OPENAI_API_KEY not configured`);
-      // Don't fail - we'll use fallback analysis
       console.warn(`[${requestId}] Proceeding without OpenAI API - will use fallback analysis`);
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     console.log(`[${requestId}] Supabase client created`);
 
-    // Step 8: Calculate average score and verdict
     console.log(`[${requestId}] Step 8: Calculating average score and verdict...`);
-    const averageScore = scoreValues.reduce((sum, score) => sum + score, 0) / 10;
-    console.log(`[${requestId}] Average score: ${averageScore.toFixed(2)}`);
+    const scoreValues = Object.values(scores);
+    const scoreCount = scoreValues.length;
+    const averageScore = scoreCount > 0 ? scoreValues.reduce((sum, score) => sum + score, 0) / scoreCount : 0;
+    console.log(`[${requestId}] Average score: ${averageScore.toFixed(2)} (from ${scoreCount} scores)`);
     
-    // Determine verdict based on score thresholds
     let verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
     if (averageScore >= 7.0) {
       verdict = 'Ready';
@@ -339,7 +470,6 @@ serve(async (req) => {
     }
     console.log(`[${requestId}] Verdict: ${verdict} (threshold: ${averageScore >= 7.0 ? '>=7.0' : averageScore >= 5.5 ? '>=5.5' : '<5.5'})`);
 
-    // Step 9: Generate AI analysis (with guards and fallback)
     console.log(`[${requestId}] Step 9: Generating AI analysis...`);
     let analysis: {
       verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
@@ -354,16 +484,16 @@ serve(async (req) => {
         const prompt = `Analyze this fundraising readiness assessment and provide a clear, actionable analysis.
 
 Assessment Scores (0-10 scale):
-- Complementary Founding Team: ${scores.team_complementary}/10
-- Previous Startup Experience: ${scores.team_experience}/10
-- Revenue or User Traction: ${scores.traction_revenue}/10
-- Key Growth Milestone: ${scores.milestone_achieved}/10
-- Working MVP: ${scores.mvp_working}/10
-- Product Live: ${scores.product_live}/10
-- Large Market ($1B+): ${scores.market_size}/10
-- Demand Validated: ${scores.demand_validated}/10
-- Pitch Deck Ready: ${scores.pitch_deck}/10
-- Funding Defined: ${scores.funding_defined}/10
+- Complementary Founding Team: ${scores.team_complementary || 0}/10
+- Previous Startup Experience: ${scores.team_experience || 0}/10
+- Revenue or User Traction: ${scores.traction_revenue || 0}/10
+- Key Growth Milestone: ${scores.milestone_achieved || 0}/10
+- Working MVP: ${scores.mvp_working || 0}/10
+- Product Live: ${scores.product_live || 0}/10
+- Large Market ($1B+): ${scores.market_size || 0}/10
+- Demand Validated: ${scores.demand_validated || 0}/10
+- Pitch Deck Ready: ${scores.pitch_deck || 0}/10
+- Funding Defined: ${scores.funding_defined || 0}/10
 
 Average Score: ${averageScore.toFixed(1)}/10.0
 Verdict: ${verdict} (Ready if >=7.0, Almost Ready if >=5.5, Not Ready if <5.5)
@@ -381,7 +511,6 @@ Provide a JSON response with this exact structure:
         console.log(`[${requestId}] Prompt length: ${prompt.length} characters`);
         const aiCallStartTime = Date.now();
         
-        // Guard AI call with timeout
         const aiResponse = await fetchWithTimeout(
           'https://api.openai.com/v1/chat/completions',
           {
@@ -401,7 +530,7 @@ Provide a JSON response with this exact structure:
               response_format: { type: 'json_object' }
             }),
           },
-          30000 // 30 second timeout
+          30000 
         );
         
         const aiCallDuration = Date.now() - aiCallStartTime;
@@ -420,7 +549,6 @@ Provide a JSON response with this exact structure:
           throw new Error(`OpenAI API error (${aiResponse.status}): ${errorText || aiResponse.statusText}`);
         }
 
-        // Parse AI response
         console.log(`[${requestId}] Parsing AI response...`);
         let aiData: any;
         try {
@@ -433,7 +561,6 @@ Provide a JSON response with this exact structure:
           throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`);
         }
 
-        // Extract and validate response content
         const responseContent = aiData.choices?.[0]?.message?.content || '';
         console.log(`[${requestId}] AI response content length: ${responseContent.length}`);
         console.log(`[${requestId}] AI response content preview: ${responseContent.substring(0, 200)}...`);
@@ -443,12 +570,9 @@ Provide a JSON response with this exact structure:
           throw new Error('AI response content is empty');
         }
 
-        // Parse JSON from response
         try {
           let jsonText = responseContent.trim();
-          // Remove markdown code blocks if present
           jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-          // Try to find JSON object in the text
           const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             jsonText = jsonMatch[0];
@@ -457,14 +581,12 @@ Provide a JSON response with this exact structure:
           const parsedAnalysis = JSON.parse(jsonText);
           console.log(`[${requestId}] AI analysis JSON parsed successfully`);
           
-          // Validate structure
           if (typeof parsedAnalysis !== 'object' || parsedAnalysis === null) {
             throw new Error('AI response is not a valid object');
           }
           
-          // Ensure verdict matches score threshold (override AI verdict with calculated one)
           analysis = {
-            verdict: verdict, // Use calculated verdict, not AI's
+            verdict: verdict, 
             summary: parsedAnalysis.summary || '',
             strengths: Array.isArray(parsedAnalysis.strengths) ? parsedAnalysis.strengths : [],
             critical_gaps: Array.isArray(parsedAnalysis.critical_gaps) ? parsedAnalysis.critical_gaps : [],
@@ -489,7 +611,6 @@ Provide a JSON response with this exact structure:
         console.error(`[${requestId}] AI error message: ${aiError instanceof Error ? aiError.message : String(aiError)}`);
         console.warn(`[${requestId}] Using fallback analysis due to AI error`);
         
-        // Fallback: create simple response based on score thresholds
         const fallbackSummary = verdict === 'Ready' 
           ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
           : verdict === 'Almost Ready'
@@ -509,7 +630,6 @@ Provide a JSON response with this exact structure:
     } else {
       console.warn(`[${requestId}] OpenAI API key not available - using fallback analysis`);
       
-      // Fallback: create simple response based on score thresholds
       const fallbackSummary = verdict === 'Ready' 
         ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
         : verdict === 'Almost Ready'
@@ -527,12 +647,15 @@ Provide a JSON response with this exact structure:
       console.log(`[${requestId}] Fallback analysis generated (no API key)`);
     }
 
-    // Step 10: Save to database (optional, only if authenticated)
     if (user) {
       console.log(`[${requestId}] Step 10: Saving assessment to database for user ${user.id}...`);
       try {
-        const insertPayload = {
+        const insertPayload: any = {
           user_id: user.id,
+          average_score: averageScore,
+          verdict: analysis.verdict,
+          analysis_data: analysis,
+          created_at: new Date().toISOString(),
           team_complementary_score: scores.team_complementary,
           team_experience_score: scores.team_experience,
           traction_revenue_score: scores.traction_revenue,
@@ -543,11 +666,9 @@ Provide a JSON response with this exact structure:
           demand_validated_score: scores.demand_validated,
           pitch_deck_score: scores.pitch_deck,
           funding_defined_score: scores.funding_defined,
-          average_score: averageScore,
-          verdict: analysis.verdict,
-          analysis_data: analysis,
-          created_at: new Date().toISOString()
         };
+        
+        console.log(`[${requestId}] Inserting with new 10-question format`);
         
         const insertResult = await supabase
           .from('fundraising_readiness_assessments')
@@ -557,7 +678,6 @@ Provide a JSON response with this exact structure:
           console.warn(`[${requestId}] Database insert failed (non-critical):`, insertResult.error.message);
           console.warn(`[${requestId}] Database error code: ${insertResult.error.code || 'N/A'}`);
           console.warn(`[${requestId}] Database error details: ${insertResult.error.details || 'N/A'}`);
-          // Continue anyway - database save is optional
         } else {
           console.log(`[${requestId}] Assessment saved to database successfully`);
           if (insertResult.data) {
@@ -568,26 +688,23 @@ Provide a JSON response with this exact structure:
         console.warn(`[${requestId}] Database insert exception (ignored):`, dbError);
         console.warn(`[${requestId}] Database error type: ${dbError?.constructor?.name}`);
         console.warn(`[${requestId}] Database error message: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
-        // Ignore database errors completely - this is optional
       }
     } else {
       console.log(`[${requestId}] Step 10: Skipping database save (no authentication)`);
     }
 
-    // Step 11: Build final response
     console.log(`[${requestId}] Step 11: Building final response...`);
     
-    // Ensure we have all required fields with defaults
     const response = {
       verdict: analysis.verdict || verdict,
       summary: analysis.summary || 'Assessment completed. Review your scores to understand your fundraising readiness.',
+      extra_info: analysis.extra_info || '',
       strengths: Array.isArray(analysis.strengths) ? analysis.strengths : [],
       critical_gaps: Array.isArray(analysis.critical_gaps) ? analysis.critical_gaps : [],
       next_steps: Array.isArray(analysis.next_steps) ? analysis.next_steps : [],
       average_score: averageScore
     };
     
-    // Validate response structure
     if (!response.verdict || !response.summary) {
       console.error(`[${requestId}] Response validation failed - missing required fields`);
       return new Response(
@@ -614,13 +731,12 @@ Provide a JSON response with this exact structure:
     );
 
   } catch (error) {
-    // Final catch-all error handler - ensures Response is always returned
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.error(`[${requestId}] === UNHANDLED ERROR IN FUNDRAISING READINESS ANALYZER V2 ===`);
-    console.error(`[${requestId}] Error:`, error);
-    console.error(`[${requestId}] Error type: ${error?.constructor?.name}`);
-    console.error(`[${requestId}] Error message: ${error instanceof Error ? error.message : String(error)}`);
-    console.error(`[${requestId}] Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}`);
+    const currentRequestId = requestId;
+    console.error(`[${currentRequestId}] === UNHANDLED ERROR IN FUNDRAISING READINESS ANALYZER V2 ===`);
+    console.error(`[${currentRequestId}] Error:`, error);
+    console.error(`[${currentRequestId}] Error type: ${error?.constructor?.name}`);
+    console.error(`[${currentRequestId}] Error message: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`[${currentRequestId}] Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}`);
     
     const errorMessage = error instanceof Error 
       ? error.message 
@@ -628,7 +744,6 @@ Provide a JSON response with this exact structure:
         ? error 
         : 'An unexpected error occurred during analysis. Please try again.';
     
-    // Return a user-friendly error message
     const userFriendlyMessage = errorMessage.includes('API') || errorMessage.includes('fetch') || errorMessage.includes('timeout')
       ? 'AI analysis service is temporarily unavailable. Please try again in a moment.'
       : errorMessage || 'An unexpected error occurred. Please try again.';
@@ -644,4 +759,3 @@ Provide a JSON response with this exact structure:
     );
   }
 });
-
