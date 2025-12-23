@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- DNS prefetch and preconnect for faster external resource loading -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://cloud.umami.is">
+    <link rel="dns-prefetch" href="https://t.contentsquare.net">
+    
+    <!-- Preconnect for critical external resources (with CORS) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://cloud.umami.is">
+    <link rel="preconnect" href="https://t.contentsquare.net">
+    <!-- Note: Supabase preconnect is handled dynamically in Hero component based on env vars -->
+    
     <script src="https://t.contentsquare.net/uxa/3ef0f84e50f77.js"></script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-SBVWSWCNX8"></script>
