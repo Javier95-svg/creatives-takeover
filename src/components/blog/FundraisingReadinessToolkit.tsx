@@ -603,32 +603,77 @@ const FundraisingReadinessToolkit = () => {
     setIsAnalyzing(true);
     setAnalysisError(null);
 
+    // #region agent log
+    fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:603',message:'analyzeReadiness start',data:{scores:scores,allScored:allScored,averageScore:averageScore,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
     try {
+      const requestBody = {
+        team_complementary_score: scores.team_complementary,
+        team_experience_score: scores.team_experience,
+        traction_revenue_score: scores.traction_revenue,
+        milestone_achieved_score: scores.milestone_achieved,
+        mvp_working_score: scores.mvp_working,
+        product_live_score: scores.product_live,
+        market_size_score: scores.market_size,
+        demand_validated_score: scores.demand_validated,
+        pitch_deck_score: scores.pitch_deck,
+        funding_defined_score: scores.funding_defined
+      };
+
+      // #region agent log
+      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:620',message:'request body prepared',data:{requestBody:requestBody},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+
       const { data, error } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
-        body: {
-          team_complementary_score: scores.team_complementary,
-          team_experience_score: scores.team_experience,
-          traction_revenue_score: scores.traction_revenue,
-          milestone_achieved_score: scores.milestone_achieved,
-          mvp_working_score: scores.mvp_working,
-          product_live_score: scores.product_live,
-          market_size_score: scores.market_size,
-          demand_validated_score: scores.demand_validated,
-          pitch_deck_score: scores.pitch_deck,
-          funding_defined_score: scores.funding_defined
-        }
+        body: requestBody
       });
 
+      // #region agent log
+      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:627',message:'function invoke response',data:{hasError:!!error,hasData:!!data,errorType:error?.constructor?.name,errorKeys:error?Object.keys(error):[],dataKeys:data?Object.keys(data):[],errorStatus:error?.status,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+
       if (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:632',message:'error object details',data:{error:error,errorString:JSON.stringify(error),status:error?.status,message:error?.message,context:error?.context,errorContext:error?.context?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        
+        // Extract error message from various possible error formats
+        let errorMsg = 'Failed to analyze readiness';
+        if (error.message) {
+          errorMsg = error.message;
+        } else if (error.context?.message) {
+          errorMsg = error.context.message;
+        } else if (typeof error === 'string') {
+          errorMsg = error;
+        }
+        
         // Handle credit errors specifically
-        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
+        if (error.status === 402 || errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
           setCreditGateOpen(true);
           throw new Error('Insufficient credits');
         }
-        throw error;
+        
+        // Try to extract error from context if available
+        if (error.context?.body) {
+          try {
+            const errorBody = typeof error.context.body === 'string' ? JSON.parse(error.context.body) : error.context.body;
+            if (errorBody.error) {
+              errorMsg = errorBody.error;
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        
+        throw new Error(errorMsg);
       }
 
       if (data?.error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:642',message:'data contains error',data:{dataError:data.error,dataRequired:data.required},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        
         if (data.error.includes('credits') || data.required) {
           setCreditGateOpen(true);
           throw new Error('Insufficient credits');
@@ -636,10 +681,19 @@ const FundraisingReadinessToolkit = () => {
         throw new Error(data.error);
       }
 
+      // #region agent log
+      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:652',message:'success - setting analysis',data:{hasVerdict:!!data?.verdict,hasStrengths:!!data?.strengths,hasGaps:!!data?.critical_gaps},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+
       setAiAnalysis(data as AIAnalysis);
       toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
     } catch (error) {
       console.error('Analysis error:', error);
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:661',message:'catch block error',data:{errorType:error?.constructor?.name,errorMessage:error?.message,errorString:String(error),isErrorInstance:error instanceof Error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+      // #endregion
+      
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
       setAnalysisError(errorMessage);
       if (!errorMessage.includes('credits')) {
