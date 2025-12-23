@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Loader2, LogIn, ArrowRight, Briefcase, TrendingUp, Zap, Globe, FileText, BarChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -508,6 +508,8 @@ const FundraisingReadinessToolkit = () => {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [creditGateOpen, setCreditGateOpen] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const resultsCardRef = useRef<HTMLDivElement>(null);
 
   const averageScore = useMemo(() => {
     const scoreValues = Object.values(scores);
@@ -520,6 +522,22 @@ const FundraisingReadinessToolkit = () => {
     return Object.values(scores).every(score => score > 0);
   }, [scores]);
 
+  // Detect when quiz is completed and scroll to results
+  useEffect(() => {
+    if (allScored && !quizCompleted && isAuthenticated) {
+      setQuizCompleted(true);
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        if (resultsCardRef.current) {
+          resultsCardRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 300);
+    }
+  }, [allScored, quizCompleted, isAuthenticated]);
+
   const handleScoreChange = (criterionId: string, value: number[]) => {
     const newScore = value[0];
     setScores(prev => ({
@@ -530,6 +548,7 @@ const FundraisingReadinessToolkit = () => {
     if (aiAnalysis) {
       setAiAnalysis(null);
       setAnalysisError(null);
+      setQuizCompleted(false);
     }
   };
 
@@ -570,7 +589,7 @@ const FundraisingReadinessToolkit = () => {
     }
 
     if (!allScored) {
-      toast.error("Please set all scores before analyzing");
+      toast.error("Please answer all questions before analyzing");
       return;
     }
 
@@ -714,6 +733,14 @@ const FundraisingReadinessToolkit = () => {
 
       setAiAnalysis(data as AIAnalysis);
       toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
+      
+      // Scroll to analysis results after successful analysis
+      setTimeout(() => {
+        const analysisCard = document.getElementById('analysis-results');
+        if (analysisCard) {
+          analysisCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
     } catch (error) {
       console.error('=== ANALYSIS ERROR CAUGHT ===');
       console.error('Error:', error);
@@ -924,7 +951,13 @@ const FundraisingReadinessToolkit = () => {
 
         {/* Average Score Display (when all questions answered) */}
         {allScored && (
-          <Card className="mb-8">
+          <Card 
+            ref={resultsCardRef}
+            className={cn(
+              "mb-8 transition-all duration-500",
+              quizCompleted && "ring-2 ring-primary/50 shadow-lg"
+            )}
+          >
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
                   <div className="space-y-2">
@@ -937,7 +970,7 @@ const FundraisingReadinessToolkit = () => {
                     onClick={analyzeReadiness}
                     disabled={isAnalyzing}
                       size="lg"
-                    className="w-full sm:w-auto min-w-[200px]"
+                    className="w-full sm:w-auto min-w-[200px] bg-primary hover:bg-primary/90"
                   >
                     {isAnalyzing ? (
                       <>
@@ -1003,12 +1036,15 @@ const FundraisingReadinessToolkit = () => {
 
         {/* AI Analysis Results */}
         {aiAnalysis && (
-          <Card className={cn(
-            "border-2",
-            aiAnalysis.verdict === 'Ready' ? "border-green-500/50 bg-green-500/5" : 
-            aiAnalysis.verdict === 'Almost Ready' ? "border-yellow-500/50 bg-yellow-500/5" :
-            "border-orange-500/50 bg-orange-500/5"
-          )}>
+          <Card 
+            id="analysis-results"
+            className={cn(
+              "border-2 mb-8",
+              aiAnalysis.verdict === 'Ready' ? "border-green-500/50 bg-green-500/5" : 
+              aiAnalysis.verdict === 'Almost Ready' ? "border-yellow-500/50 bg-yellow-500/5" :
+              "border-orange-500/50 bg-orange-500/5"
+            )}
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 {aiAnalysis.verdict === 'Ready' ? (
