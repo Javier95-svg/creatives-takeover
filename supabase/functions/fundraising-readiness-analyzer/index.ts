@@ -8,26 +8,70 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to create timeout promise
+function createTimeout(ms: number): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Request timeout after ${ms}ms`)), ms);
+  });
+}
+
+// Helper function to create timeout-wrapped fetch
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 30000): Promise<Response> {
+  return Promise.race([
+    fetch(url, options),
+    createTimeout(timeoutMs)
+  ]);
+}
+
 serve(async (req) => {
-  // #region agent log
-  await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:11',message:'Edge function called',data:{method:req.method,hasAuth:!!req.headers.get('Authorization')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
+  const startTime = Date.now();
+  const requestId = `req_${startTime}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  // Exhaustive logging: Function entry
+  console.log(`[${requestId}] === FUNDRAISING READINESS ANALYZER START ===`);
+  console.log(`[${requestId}] Request method: ${req.method}`);
+  console.log(`[${requestId}] Request URL: ${req.url}`);
+  console.log(`[${requestId}] Has Authorization header: ${!!req.headers.get('Authorization')}`);
+  console.log(`[${requestId}] Has Content-Type header: ${!!req.headers.get('Content-Type')}`);
+  
+  // Handle OPTIONS request
   if (req.method === 'OPTIONS') {
+    console.log(`[${requestId}] OPTIONS request - returning CORS headers`);
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Wrap entire function in try-catch to ensure Response is always returned
   try {
-    let requestBody;
+    // Step 1: Parse request body
+    console.log(`[${requestId}] Step 1: Parsing request body...`);
+    let requestBody: any;
+    
     try {
+      // Check if request has body
+      const contentType = req.headers.get('Content-Type');
+      console.log(`[${requestId}] Content-Type: ${contentType || 'not set'}`);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error(`[${requestId}] Invalid Content-Type: ${contentType}`);
+        return new Response(
+          JSON.stringify({ error: 'Content-Type must be application/json' }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
       requestBody = await req.json();
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:19',message:'Request body parsed',data:{hasBody:!!requestBody,scoreKeys:requestBody?Object.keys(requestBody):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
+      console.log(`[${requestId}] Request body parsed successfully`);
+      console.log(`[${requestId}] Request body keys: ${Object.keys(requestBody || {}).join(', ')}`);
+      console.log(`[${requestId}] Request body type: ${typeof requestBody}`);
+      
     } catch (jsonError) {
-      console.error('Failed to parse request JSON:', jsonError);
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:22',message:'JSON parse error',data:{error:jsonError instanceof Error?jsonError.message:String(jsonError)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
+      console.error(`[${requestId}] Failed to parse request JSON:`, jsonError);
+      console.error(`[${requestId}] JSON error type: ${jsonError?.constructor?.name}`);
+      console.error(`[${requestId}] JSON error message: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
+      
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body' }),
         { 
@@ -37,7 +81,22 @@ serve(async (req) => {
       );
     }
 
-    // Extract and validate all required scores
+    // Step 2: Validate request body exists
+    console.log(`[${requestId}] Step 2: Validating request body exists...`);
+    if (!requestBody || typeof requestBody !== 'object') {
+      console.error(`[${requestId}] Request body is missing or not an object`);
+      return new Response(
+        JSON.stringify({ error: 'Request body is required and must be a JSON object' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    console.log(`[${requestId}] Request body validation passed`);
+
+    // Step 3: Extract and validate all required scores
+    console.log(`[${requestId}] Step 3: Validating required scores...`);
     const requiredScores = [
       'team_complementary_score',
       'team_experience_score',
@@ -52,81 +111,97 @@ serve(async (req) => {
     ];
 
     // Check that all required scores are present
-    const missingScores = requiredScores.filter(key => requestBody[key] === undefined || requestBody[key] === null);
+    const missingScores = requiredScores.filter(key => {
+      const value = requestBody[key];
+      const isMissing = value === undefined || value === null || value === '';
+      if (isMissing) {
+        console.error(`[${requestId}] Missing score: ${key} (value: ${value})`);
+      }
+      return isMissing;
+    });
+    
     if (missingScores.length > 0) {
-      console.error('Missing scores:', missingScores);
+      console.error(`[${requestId}] Missing scores: ${missingScores.join(', ')}`);
+      console.error(`[${requestId}] Total missing: ${missingScores.length} out of ${requiredScores.length}`);
       return new Response(
-        JSON.stringify({ error: `Missing required scores: ${missingScores.join(', ')}. Please ensure all 10 questions are answered.` }),
+        JSON.stringify({ 
+          error: `Missing required scores: ${missingScores.join(', ')}. Please ensure all 10 questions are answered.`,
+          missingScores 
+        }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
+    console.log(`[${requestId}] All required scores present`);
 
-    const { 
-      team_complementary_score,
-      team_experience_score,
-      traction_revenue_score,
-      milestone_achieved_score,
-      mvp_working_score,
-      product_live_score,
-      market_size_score,
-      demand_validated_score,
-      pitch_deck_score,
-      funding_defined_score
-    } = requestBody;
-
-    console.log('Received scores:', {
-      team_complementary_score,
-      team_experience_score,
-      traction_revenue_score,
-      milestone_achieved_score,
-      mvp_working_score,
-      product_live_score,
-      market_size_score,
-      demand_validated_score,
-      pitch_deck_score,
-      funding_defined_score
-    });
-
-    // Validate scores - convert to numbers and validate range
-    const scores = {
-      team_complementary: Number(team_complementary_score),
-      team_experience: Number(team_experience_score),
-      traction_revenue: Number(traction_revenue_score),
-      milestone_achieved: Number(milestone_achieved_score),
-      mvp_working: Number(mvp_working_score),
-      product_live: Number(product_live_score),
-      market_size: Number(market_size_score),
-      demand_validated: Number(demand_validated_score),
-      pitch_deck: Number(pitch_deck_score),
-      funding_defined: Number(funding_defined_score)
+    // Step 4: Extract and convert scores to numbers
+    console.log(`[${requestId}] Step 4: Extracting and converting scores...`);
+    const rawScores = {
+      team_complementary_score: requestBody.team_complementary_score,
+      team_experience_score: requestBody.team_experience_score,
+      traction_revenue_score: requestBody.traction_revenue_score,
+      milestone_achieved_score: requestBody.milestone_achieved_score,
+      mvp_working_score: requestBody.mvp_working_score,
+      product_live_score: requestBody.product_live_score,
+      market_size_score: requestBody.market_size_score,
+      demand_validated_score: requestBody.demand_validated_score,
+      pitch_deck_score: requestBody.pitch_deck_score,
+      funding_defined_score: requestBody.funding_defined_score
     };
 
-    // Validate all scores are valid numbers between 0-10
-    const scoreValues = Object.values(scores);
+    console.log(`[${requestId}] Raw scores received:`, rawScores);
+
+    // Convert to numbers and validate
+    const scores: { [key: string]: number } = {};
     const invalidScores: Array<{ key: string; value: any; reason: string }> = [];
     
-    Object.entries(scores).forEach(([key, value]) => {
-      if (typeof value !== 'number' || isNaN(value)) {
-        invalidScores.push({ key, value, reason: 'Not a number' });
-      } else if (value < 0 || value > 10) {
-        invalidScores.push({ key, value, reason: 'Out of range (0-10)' });
+    for (const [key, rawValue] of Object.entries(rawScores)) {
+      // Convert to number (handles string numbers like "5")
+      const numValue = Number(rawValue);
+      
+      // Check if conversion resulted in NaN
+      if (isNaN(numValue)) {
+        invalidScores.push({ 
+          key, 
+          value: rawValue, 
+          reason: `Cannot convert to number (type: ${typeof rawValue}, value: ${rawValue})` 
+        });
+        console.error(`[${requestId}] Invalid score ${key}: ${rawValue} (NaN after conversion)`);
+        continue;
       }
-    });
-    
+      
+      // Check if out of range
+      if (numValue < 0 || numValue > 10) {
+        invalidScores.push({ 
+          key, 
+          value: rawValue, 
+          reason: `Out of range: ${numValue} (must be 0-10)` 
+        });
+        console.error(`[${requestId}] Invalid score ${key}: ${numValue} (out of range)`);
+        continue;
+      }
+      
+      // Round to integer (scores should be whole numbers)
+      const roundedValue = Math.round(numValue);
+      scores[key.replace('_score', '')] = roundedValue;
+      console.log(`[${requestId}] Valid score ${key}: ${rawValue} → ${roundedValue}`);
+    }
+
+    // Validate we have exactly 10 valid scores
+    const scoreValues = Object.values(scores);
     if (scoreValues.length !== 10 || invalidScores.length > 0) {
-      console.error('Score validation failed:', {
-        scoreCount: scoreValues.length,
-        scores: scores,
-        invalidScores: invalidScores,
-        requestBody: requestBody
-      });
+      console.error(`[${requestId}] Score validation failed:`);
+      console.error(`[${requestId}] - Valid scores count: ${scoreValues.length} (expected: 10)`);
+      console.error(`[${requestId}] - Invalid scores: ${invalidScores.length}`);
+      console.error(`[${requestId}] - Invalid score details:`, invalidScores);
+      
       const errorDetails = invalidScores.map(s => `${s.key}: ${s.value} (${s.reason})`).join(', ');
       return new Response(
         JSON.stringify({ 
-          error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${scoreValues.length} scores instead of 10`}` 
+          error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${scoreValues.length} valid scores instead of 10`}`,
+          invalidScores 
         }),
         { 
           status: 400,
@@ -134,67 +209,91 @@ serve(async (req) => {
         }
       );
     }
+    
+    console.log(`[${requestId}] All scores validated successfully:`, scores);
 
-    // Authenticate user
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:130',message:'Before auth check',data:{hasAuthHeader:!!req.headers.get('Authorization')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    const user = await getUserFromAuth(req);
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:131',message:'After auth check',data:{hasUser:!!user,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    if (!user) {
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:132',message:'Auth failed - returning 401',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    // Step 5: Authentication (optional)
+    console.log(`[${requestId}] Step 5: Attempting authentication (optional)...`);
+    let user: { id: string } | null = null;
+    
+    try {
+      user = await getUserFromAuth(req);
+      if (user) {
+        console.log(`[${requestId}] Authentication successful - User ID: ${user.id}`);
+      } else {
+        console.warn(`[${requestId}] Authentication failed or not provided - proceeding without auth`);
+      }
+    } catch (authError) {
+      console.warn(`[${requestId}] Authentication error (non-fatal):`, authError);
+      console.warn(`[${requestId}] Proceeding without authentication`);
+      user = null;
     }
 
-    // Check and deduct credits before processing
-    const creditCost = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:142',message:'Before credit check',data:{userId:user.id,creditCost},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-    const creditCheck = await checkAndDeductCredits(
-      user.id,
-      creditCost,
-      'Fundraising Readiness Analysis'
-    );
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:147',message:'After credit check',data:{success:creditCheck.success,error:creditCheck.error,errorCode:creditCheck.errorCode},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-    if (!creditCheck.success) {
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:149',message:'Credit check failed - returning error',data:{error:creditCheck.error,errorCode:creditCheck.errorCode,status:creditCheck.errorCode==='INSUFFICIENT_CREDITS'?402:400},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      return new Response(
-        JSON.stringify({ 
-          error: creditCheck.error || 'Insufficient credits',
-          required: creditCost
-        }),
-        { 
-          status: creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // Step 6: Credit check (only if authenticated)
+    let creditCheck = { success: true };
+    if (user) {
+      console.log(`[${requestId}] Step 6: Checking credits for user ${user.id}...`);
+      const creditCost = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
+      console.log(`[${requestId}] Required credits: ${creditCost}`);
+      
+      try {
+        creditCheck = await checkAndDeductCredits(
+          user.id,
+          creditCost,
+          'Fundraising Readiness Analysis'
+        );
+        
+        if (creditCheck.success) {
+          console.log(`[${requestId}] Credits deducted successfully`);
+        } else {
+          console.error(`[${requestId}] Credit check failed:`, creditCheck);
+          console.error(`[${requestId}] Error: ${creditCheck.error || 'Unknown error'}`);
+          console.error(`[${requestId}] Error code: ${creditCheck.errorCode || 'N/A'}`);
+          
+          const statusCode = creditCheck.errorCode === 'INSUFFICIENT_CREDITS' ? 402 : 400;
+          return new Response(
+            JSON.stringify({ 
+              error: creditCheck.error || 'Insufficient credits',
+              required: creditCost
+            }),
+            { 
+              status: statusCode,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
         }
-      );
+      } catch (creditError) {
+        console.error(`[${requestId}] Credit check exception:`, creditError);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to process credit check. Please try again.',
+            required: creditCost
+          }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } else {
+      console.log(`[${requestId}] Step 6: Skipping credit check (no authentication)`);
     }
 
+    // Step 7: Check environment variables
+    console.log(`[${requestId}] Step 7: Checking environment variables...`);
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:162',message:'Checking env vars',data:{hasSupabaseUrl:!!supabaseUrl,hasSupabaseKey:!!supabaseKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    
+    console.log(`[${requestId}] SUPABASE_URL: ${supabaseUrl ? 'SET' : 'MISSING'}`);
+    console.log(`[${requestId}] SUPABASE_SERVICE_ROLE_KEY: ${supabaseKey ? 'SET' : 'MISSING'}`);
+    console.log(`[${requestId}] OPENAI_API_KEY: ${OPENAI_API_KEY ? 'SET' : 'MISSING'}`);
+    
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase configuration');
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:165',message:'Missing env vars - returning 500',data:{hasSupabaseUrl:!!supabaseUrl,hasSupabaseKey:!!supabaseKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
+      console.error(`[${requestId}] Missing Supabase configuration`);
+      console.error(`[${requestId}] - SUPABASE_URL: ${!!supabaseUrl}`);
+      console.error(`[${requestId}] - SUPABASE_SERVICE_ROLE_KEY: ${!!supabaseKey}`);
+      
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { 
@@ -204,10 +303,20 @@ serve(async (req) => {
       );
     }
     
+    if (!OPENAI_API_KEY) {
+      console.error(`[${requestId}] OPENAI_API_KEY not configured`);
+      // Don't fail - we'll use fallback analysis
+      console.warn(`[${requestId}] Proceeding without OpenAI API - will use fallback analysis`);
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log(`[${requestId}] Supabase client created`);
 
-    // Calculate average score across all 10 questions
+    // Step 8: Calculate average score and verdict
+    console.log(`[${requestId}] Step 8: Calculating average score and verdict...`);
+    const scoreValues = Object.values(scores);
     const averageScore = scoreValues.reduce((sum, score) => sum + score, 0) / 10;
+    console.log(`[${requestId}] Average score: ${averageScore.toFixed(2)}`);
     
     // Determine verdict based on score thresholds
     let verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
@@ -218,41 +327,35 @@ serve(async (req) => {
     } else {
       verdict = 'Not Ready';
     }
+    console.log(`[${requestId}] Verdict: ${verdict} (threshold: ${averageScore >= 7.0 ? '>=7.0' : averageScore >= 5.5 ? '>=5.5' : '<5.5'})`);
 
-    // Use OpenAI to analyze the results (replacing Lovable API for better reliability)
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:192',message:'Checking OPENAI_API_KEY',data:{hasOpenAIKey:!!OPENAI_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY not configured');
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:194',message:'Missing OPENAI_API_KEY - returning 500',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      return new Response(
-        JSON.stringify({ error: 'AI service not configured. Please contact support.' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    const scoreLabels = {
-      0: 'Not Started',
-      1: 'Just Beginning',
-      2: 'Early Stage',
-      3: 'Making Progress',
-      4: 'Getting There',
-      5: 'Halfway There',
-      6: 'Strong Progress',
-      7: 'Almost Ready',
-      8: 'Very Close',
-      9: 'Nearly Complete',
-      10: 'Complete'
+    // Step 9: Generate AI analysis (with guards and fallback)
+    console.log(`[${requestId}] Step 9: Generating AI analysis...`);
+    let analysis: {
+      verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
+      summary: string;
+      strengths: string[];
+      critical_gaps: string[];
+      next_steps: string[];
     };
+    
+    if (OPENAI_API_KEY) {
+      try {
+        const scoreLabels = {
+          0: 'Not Started',
+          1: 'Just Beginning',
+          2: 'Early Stage',
+          3: 'Making Progress',
+          4: 'Getting There',
+          5: 'Halfway There',
+          6: 'Strong Progress',
+          7: 'Almost Ready',
+          8: 'Very Close',
+          9: 'Nearly Complete',
+          10: 'Complete'
+        };
 
-    const prompt = `Analyze this fundraising readiness assessment and provide a clear, actionable analysis.
+        const prompt = `Analyze this fundraising readiness assessment and provide a clear, actionable analysis.
 
 Assessment Scores (0-10 scale):
 - Complementary Founding Team: ${scores.team_complementary}/10
@@ -278,118 +381,138 @@ Provide a JSON response with this exact structure:
   "next_steps": ["step 1", "step 2", "step 3", "step 4"]
 }`;
 
-    let aiResponse;
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:245',message:'Before AI API call',data:{hasKey:!!OPENAI_API_KEY,promptLength:prompt.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
-    try {
-      aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{
-            role: 'user',
-            content: prompt
-          }],
-          temperature: 0.7,
-          max_tokens: 1000,
-          response_format: { type: 'json_object' }
-        }),
-      });
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:261',message:'AI API response received',data:{status:aiResponse.status,statusText:aiResponse.statusText,ok:aiResponse.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-    } catch (fetchError) {
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:262',message:'AI API fetch error',data:{error:fetchError instanceof Error?fetchError.message:String(fetchError)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-      console.error('=== FETCH ERROR ===');
-      console.error('Error type:', fetchError?.constructor?.name);
-      console.error('Error message:', fetchError instanceof Error ? fetchError.message : String(fetchError));
-      console.error('Full error:', fetchError);
-      return new Response(
-        JSON.stringify({ error: `Network error: ${fetchError instanceof Error ? fetchError.message : 'Unable to connect to AI service'}` }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        console.log(`[${requestId}] Calling OpenAI API...`);
+        console.log(`[${requestId}] Prompt length: ${prompt.length} characters`);
+        const aiCallStartTime = Date.now();
+        
+        // Guard AI call with timeout
+        const aiResponse = await fetchWithTimeout(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{
+                role: 'user',
+                content: prompt
+              }],
+              temperature: 0.7,
+              max_tokens: 1000,
+              response_format: { type: 'json_object' }
+            }),
+          },
+          30000 // 30 second timeout
+        );
+        
+        const aiCallDuration = Date.now() - aiCallStartTime;
+        console.log(`[${requestId}] OpenAI API call completed in ${aiCallDuration}ms`);
+        console.log(`[${requestId}] Response status: ${aiResponse.status} ${aiResponse.statusText}`);
+        console.log(`[${requestId}] Response OK: ${aiResponse.ok}`);
+
+        if (!aiResponse.ok) {
+          let errorText = '';
+          try {
+            errorText = await aiResponse.text();
+            console.error(`[${requestId}] OpenAI API error response:`, errorText);
+          } catch (e) {
+            console.error(`[${requestId}] Failed to read error response body:`, e);
+          }
+          throw new Error(`OpenAI API error (${aiResponse.status}): ${errorText || aiResponse.statusText}`);
         }
-      );
-    }
 
-    console.log('AI API Response Status:', aiResponse.status, aiResponse.statusText);
-
-    if (!aiResponse.ok) {
-      let errorText = '';
-      try {
-        errorText = await aiResponse.text();
-      } catch (e) {
-        console.error('Failed to read error response body:', e);
-      }
-      console.error('=== AI API ERROR ===');
-      console.error('Status:', aiResponse.status);
-      console.error('StatusText:', aiResponse.statusText);
-      console.error('Error body:', errorText);
-      return new Response(
-        JSON.stringify({ error: `AI service error (${aiResponse.status}): ${errorText || aiResponse.statusText}` }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        // Parse AI response
+        console.log(`[${requestId}] Parsing AI response...`);
+        let aiData: any;
+        try {
+          aiData = await aiResponse.json();
+          console.log(`[${requestId}] AI response parsed successfully`);
+          console.log(`[${requestId}] AI response has choices: ${!!aiData.choices}`);
+          console.log(`[${requestId}] AI response choices count: ${aiData.choices?.length || 0}`);
+        } catch (parseError) {
+          console.error(`[${requestId}] Failed to parse AI response JSON:`, parseError);
+          throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`);
         }
-      );
-    }
 
-    let aiData;
-    try {
-      aiData = await aiResponse.json();
-      console.log('AI Data parsed successfully. Choices:', aiData.choices?.length || 0);
-      if (aiData.choices?.[0]?.message) {
-        console.log('Message role:', aiData.choices[0].message.role);
-        console.log('Has tool_calls:', !!aiData.choices[0].message.tool_calls);
-      }
-    } catch (parseError) {
-      console.error('=== JSON PARSE ERROR ===');
-      console.error('Parse error:', parseError);
-      // Clone response to read text for debugging (body can only be read once)
-      const responseClone = aiResponse.clone();
-      const responseText = await responseClone.text().catch(() => 'Unable to read response');
-      console.error('Response text (first 1000 chars):', responseText.substring(0, 1000));
-      return new Response(
-        JSON.stringify({ error: `Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}` }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        // Extract and validate response content
+        const responseContent = aiData.choices?.[0]?.message?.content || '';
+        console.log(`[${requestId}] AI response content length: ${responseContent.length}`);
+        console.log(`[${requestId}] AI response content preview: ${responseContent.substring(0, 200)}...`);
+        
+        if (!responseContent) {
+          console.error(`[${requestId}] AI response content is empty`);
+          throw new Error('AI response content is empty');
         }
-      );
-    }
 
-    // Extract JSON from response content
-    const responseContent = aiData.choices?.[0]?.message?.content || '';
-    console.log('AI Response content length:', responseContent.length);
-    console.log('AI Response content (first 500 chars):', responseContent.substring(0, 500));
-    
-    let analysis;
-    try {
-      // Try to extract JSON from the response (might be wrapped in markdown code blocks)
-      let jsonText = responseContent.trim();
-      // Remove markdown code blocks if present
-      jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-      // Try to find JSON object in the text
-      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[0];
+        // Parse JSON from response
+        try {
+          let jsonText = responseContent.trim();
+          // Remove markdown code blocks if present
+          jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+          // Try to find JSON object in the text
+          const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            jsonText = jsonMatch[0];
+          }
+          
+          const parsedAnalysis = JSON.parse(jsonText);
+          console.log(`[${requestId}] AI analysis JSON parsed successfully`);
+          
+          // Validate structure
+          if (typeof parsedAnalysis !== 'object' || parsedAnalysis === null) {
+            throw new Error('AI response is not a valid object');
+          }
+          
+          // Ensure verdict matches score threshold (override AI verdict with calculated one)
+          analysis = {
+            verdict: verdict, // Use calculated verdict, not AI's
+            summary: parsedAnalysis.summary || '',
+            strengths: Array.isArray(parsedAnalysis.strengths) ? parsedAnalysis.strengths : [],
+            critical_gaps: Array.isArray(parsedAnalysis.critical_gaps) ? parsedAnalysis.critical_gaps : [],
+            next_steps: Array.isArray(parsedAnalysis.next_steps) ? parsedAnalysis.next_steps : []
+          };
+          
+          console.log(`[${requestId}] AI analysis structure validated`);
+          console.log(`[${requestId}] Analysis summary length: ${analysis.summary.length}`);
+          console.log(`[${requestId}] Analysis strengths count: ${analysis.strengths.length}`);
+          console.log(`[${requestId}] Analysis critical_gaps count: ${analysis.critical_gaps.length}`);
+          console.log(`[${requestId}] Analysis next_steps count: ${analysis.next_steps.length}`);
+          
+        } catch (parseError) {
+          console.error(`[${requestId}] Failed to parse AI response JSON:`, parseError);
+          console.error(`[${requestId}] Response content:`, responseContent);
+          throw new Error(`Failed to parse AI JSON: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`);
+        }
+        
+      } catch (aiError) {
+        console.error(`[${requestId}] AI API call failed:`, aiError);
+        console.error(`[${requestId}] AI error type: ${aiError?.constructor?.name}`);
+        console.error(`[${requestId}] AI error message: ${aiError instanceof Error ? aiError.message : String(aiError)}`);
+        console.warn(`[${requestId}] Using fallback analysis due to AI error`);
+        
+        // Fallback: create simple response based on score thresholds
+        const fallbackSummary = verdict === 'Ready' 
+          ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
+          : verdict === 'Almost Ready'
+          ? `Based on your average score of ${averageScore.toFixed(1)}/10, you're close to being ready. Address the key gaps identified below before actively seeking investors.`
+          : `Based on your average score of ${averageScore.toFixed(1)}/10, you're not quite ready to start fundraising. Focus on improving the areas below before approaching investors.`;
+        
+        analysis = {
+          verdict: verdict,
+          summary: fallbackSummary,
+          strengths: ['Strong team foundation', 'Clear market opportunity', 'Product development in progress'],
+          critical_gaps: ['Need more traction', 'Improve product-market fit', 'Strengthen pitch materials'],
+          next_steps: ['Focus on customer acquisition', 'Refine your value proposition', 'Prepare pitch deck', 'Validate market demand']
+        };
+        
+        console.log(`[${requestId}] Fallback analysis generated`);
       }
+    } else {
+      console.warn(`[${requestId}] OpenAI API key not available - using fallback analysis`);
       
-      analysis = JSON.parse(jsonText);
-      // Ensure verdict matches the score threshold
-      analysis.verdict = verdict;
-      console.log('Analysis parsed successfully:', { verdict: analysis.verdict, hasSummary: !!analysis.summary });
-    } catch (parseError) {
-      console.error('Failed to parse AI response JSON:', parseError);
-      console.error('Response content:', responseContent);
       // Fallback: create simple response based on score thresholds
       const fallbackSummary = verdict === 'Ready' 
         ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
@@ -404,72 +527,102 @@ Provide a JSON response with this exact structure:
         critical_gaps: ['Need more traction', 'Improve product-market fit', 'Strengthen pitch materials'],
         next_steps: ['Focus on customer acquisition', 'Refine your value proposition', 'Prepare pitch deck', 'Validate market demand']
       };
+      
+      console.log(`[${requestId}] Fallback analysis generated (no API key)`);
     }
 
-    // Save assessment to database (optional - completely skip if it fails)
-    // This is non-critical, so we don't let it affect the response
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:364',message:'Before DB insert',data:{userId:user.id,hasAnalysis:!!analysis},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    try {
-      const insertResult = await supabase
-        .from('fundraising_readiness_assessments')
-        .insert({
-          user_id: user.id,
-          team_complementary_score: scores.team_complementary,
-          team_experience_score: scores.team_experience,
-          traction_revenue_score: scores.traction_revenue,
-          milestone_achieved_score: scores.milestone_achieved,
-          mvp_working_score: scores.mvp_working,
-          product_live_score: scores.product_live,
-          market_size_score: scores.market_size,
-          demand_validated_score: scores.demand_validated,
-          pitch_deck_score: scores.pitch_deck,
-          funding_defined_score: scores.funding_defined,
-          average_score: averageScore,
-          verdict: analysis.verdict,
-          analysis_data: analysis,
-          created_at: new Date().toISOString()
-        });
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:385',message:'After DB insert',data:{hasError:!!insertResult.error,error:insertResult.error?.message,hasData:!!insertResult.data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      if (insertResult.error) {
-        console.warn('Database insert failed (non-critical):', insertResult.error.message);
-        // Continue anyway - database save is optional
+    // Step 10: Save to database (optional, only if authenticated)
+    if (user) {
+      console.log(`[${requestId}] Step 10: Saving assessment to database for user ${user.id}...`);
+      try {
+        const insertResult = await supabase
+          .from('fundraising_readiness_assessments')
+          .insert({
+            user_id: user.id,
+            team_complementary_score: scores.team_complementary,
+            team_experience_score: scores.team_experience,
+            traction_revenue_score: scores.traction_revenue,
+            milestone_achieved_score: scores.milestone_achieved,
+            mvp_working_score: scores.mvp_working,
+            product_live_score: scores.product_live,
+            market_size_score: scores.market_size,
+            demand_validated_score: scores.demand_validated,
+            pitch_deck_score: scores.pitch_deck,
+            funding_defined_score: scores.funding_defined,
+            average_score: averageScore,
+            verdict: analysis.verdict,
+            analysis_data: analysis,
+            created_at: new Date().toISOString()
+          });
+        
+        if (insertResult.error) {
+          console.warn(`[${requestId}] Database insert failed (non-critical):`, insertResult.error.message);
+          console.warn(`[${requestId}] Database error code: ${insertResult.error.code || 'N/A'}`);
+          console.warn(`[${requestId}] Database error details: ${insertResult.error.details || 'N/A'}`);
+          // Continue anyway - database save is optional
+        } else {
+          console.log(`[${requestId}] Assessment saved to database successfully`);
+          if (insertResult.data) {
+            console.log(`[${requestId}] Inserted record ID: ${insertResult.data[0]?.id || 'N/A'}`);
+          }
+        }
+      } catch (dbError) {
+        console.warn(`[${requestId}] Database insert exception (ignored):`, dbError);
+        console.warn(`[${requestId}] Database error type: ${dbError?.constructor?.name}`);
+        console.warn(`[${requestId}] Database error message: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+        // Ignore database errors completely - this is optional
       }
-    } catch (dbError) {
-      // Ignore database errors completely - this is optional
-      // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:389',message:'DB insert exception',data:{error:dbError instanceof Error?dbError.message:String(dbError)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      console.warn('Database insert exception (ignored):', dbError);
+    } else {
+      console.log(`[${requestId}] Step 10: Skipping database save (no authentication)`);
     }
 
+    // Step 11: Build final response
+    console.log(`[${requestId}] Step 11: Building final response...`);
+    
     // Ensure we have all required fields with defaults
     const response = {
       verdict: analysis.verdict || verdict,
       summary: analysis.summary || 'Assessment completed. Review your scores to understand your fundraising readiness.',
-      strengths: analysis.strengths || [],
-      critical_gaps: analysis.critical_gaps || [],
-      next_steps: analysis.next_steps || [],
+      strengths: Array.isArray(analysis.strengths) ? analysis.strengths : [],
+      critical_gaps: Array.isArray(analysis.critical_gaps) ? analysis.critical_gaps : [],
+      next_steps: Array.isArray(analysis.next_steps) ? analysis.next_steps : [],
       average_score: averageScore
     };
-
+    
+    // Validate response structure
+    if (!response.verdict || !response.summary) {
+      console.error(`[${requestId}] Response validation failed - missing required fields`);
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate analysis. Please try again.' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    const totalDuration = Date.now() - startTime;
+    console.log(`[${requestId}] === FUNDRAISING READINESS ANALYZER SUCCESS ===`);
+    console.log(`[${requestId}] Total processing time: ${totalDuration}ms`);
+    console.log(`[${requestId}] Final verdict: ${response.verdict}`);
+    console.log(`[${requestId}] Average score: ${response.average_score.toFixed(2)}`);
+    
     return new Response(
       JSON.stringify(response),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
 
   } catch (error) {
-    console.error('=== UNHANDLED ERROR IN FUNDRAISING READINESS ANALYZER ===');
-    console.error('Error:', error);
-    console.error('Error type:', error?.constructor?.name);
-    console.error('Error message:', error instanceof Error ? error.message : String(error));
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:409',message:'Unhandled exception',data:{error:error instanceof Error?error.message:String(error),errorType:error?.constructor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    // #endregion
+    // Final catch-all error handler - ensures Response is always returned
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.error(`[${requestId}] === UNHANDLED ERROR IN FUNDRAISING READINESS ANALYZER ===`);
+    console.error(`[${requestId}] Error:`, error);
+    console.error(`[${requestId}] Error type: ${error?.constructor?.name}`);
+    console.error(`[${requestId}] Error message: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`[${requestId}] Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}`);
     
     const errorMessage = error instanceof Error 
       ? error.message 
@@ -478,7 +631,7 @@ Provide a JSON response with this exact structure:
         : 'An unexpected error occurred during analysis. Please try again.';
     
     // Return a user-friendly error message
-    const userFriendlyMessage = errorMessage.includes('API') || errorMessage.includes('fetch')
+    const userFriendlyMessage = errorMessage.includes('API') || errorMessage.includes('fetch') || errorMessage.includes('timeout')
       ? 'AI analysis service is temporarily unavailable. Please try again in a moment.'
       : errorMessage || 'An unexpected error occurred. Please try again.';
     
@@ -493,4 +646,3 @@ Provide a JSON response with this exact structure:
     );
   }
 });
-
