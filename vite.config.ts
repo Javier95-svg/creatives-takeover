@@ -52,40 +52,12 @@ export default defineConfig(({ mode }) => {
           entryFileNames: `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,
           assetFileNames: `assets/[name].[hash].[ext]`,
-          // Optimize chunk splitting for better caching and parallel loading
-          manualChunks: (id) => {
-            // Split vendor chunks for better caching
-            if (id.includes('node_modules')) {
-              // Separate large libraries into their own chunks
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react';
-              }
-              if (id.includes('@radix-ui')) {
-                return 'vendor-radix';
-              }
-              if (id.includes('@tanstack')) {
-                return 'vendor-query';
-              }
-              if (id.includes('supabase')) {
-                return 'vendor-supabase';
-              }
-              if (id.includes('fabric') || id.includes('mapbox')) {
-                return 'vendor-heavy';
-              }
-              // All other node_modules
-              return 'vendor';
-            }
-          },
         },
       },
       // Increase chunk size warning limit
       chunkSizeWarningLimit: 1000,
       // Add sourcemap for debugging (can be disabled in production)
       sourcemap: false,
-      // Enable minification
-      minify: 'esbuild',
-      // Optimize asset inlining threshold (small assets will be inlined)
-      assetsInlineLimit: 4096,
     },
   };
 });

@@ -1,35 +1,5 @@
 import { logInfo, logError } from "./logger.ts";
 
-// Allowed origins for CORS - restrict to your domain
-const ALLOWED_ORIGINS = [
-  'https://creatives-takeover.com',
-  'https://www.creatives-takeover.com',
-  // Add development origins if needed (remove in production)
-  ...(Deno.env.get('ENVIRONMENT') === 'development' ? [
-    'http://localhost:8080',
-    'http://localhost:3000',
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:3000'
-  ] : [])
-];
-
-/**
- * Get CORS headers based on request origin
- */
-export function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('origin');
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : '';
-  
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400', // 24 hours
-  };
-}
-
-// Legacy export for backward compatibility (deprecated - use getCorsHeaders instead)
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -40,7 +10,7 @@ export const corsHeaders = {
  */
 export async function handleCORS(req: Request): Promise<Response | null> {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: getCorsHeaders(req) });
+    return new Response(null, { headers: corsHeaders });
   }
   return null;
 }
@@ -81,7 +51,7 @@ export async function withAuth(
   if (error || !userId) {
     return new Response(
       JSON.stringify({ ok: false, error: error || 'Unauthorized', code: 'AUTH_REQUIRED' }),
-      { status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
   
@@ -92,7 +62,6 @@ export async function withAuth(
  * Global error handler wrapper
  */
 export async function withErrorHandler<T>(
-  req: Request,
   fn: () => Promise<T>,
   context?: Record<string, unknown>
 ): Promise<Response> {
@@ -106,7 +75,7 @@ export async function withErrorHandler<T>(
       }),
       { 
         status: 200, 
-        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   } catch (error: any) {
@@ -125,7 +94,7 @@ export async function withErrorHandler<T>(
       }),
       { 
         status: statusCode, 
-        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }

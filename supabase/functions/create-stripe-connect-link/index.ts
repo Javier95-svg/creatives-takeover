@@ -34,22 +34,7 @@ serve(withErrorBoundary(async (req: Request) => {
     if (userError || !user) throw new Error("User not authenticated");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    // Validate and whitelist origins for security
-    const allowedOrigins = [
-      'https://creatives-takeover.com',
-      'https://www.creatives-takeover.com',
-      ...(Deno.env.get('ENVIRONMENT') === 'development' ? [
-        'http://localhost:3000',
-        'http://localhost:8080',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:8080'
-      ] : [])
-    ];
-    
-    const origin = req.headers.get("origin");
-    const validOrigin = origin && allowedOrigins.includes(origin) 
-      ? origin 
-      : (Deno.env.get('ENVIRONMENT') === 'development' ? 'http://localhost:3000' : 'https://creatives-takeover.com');
+    const origin = req.headers.get("origin") || "http://localhost:3000";
 
     // Create Stripe Connect account
     const account = await stripe.accounts.create({
@@ -66,8 +51,8 @@ serve(withErrorBoundary(async (req: Request) => {
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${validOrigin}/account?stripe_refresh=true`,
-      return_url: `${validOrigin}/account?stripe_success=true`,
+      refresh_url: `${origin}/account?stripe_refresh=true`,
+      return_url: `${origin}/account?stripe_success=true`,
       type: "account_onboarding",
     });
 

@@ -17,12 +17,6 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   console.warn('Missing Supabase env vars: VITE_SUPABASE_URL or VITE_SUPABASE_KEY. Falling back to empty strings.');
 }
 
-// Security: Ensure HTTPS is used in production
-if (SUPABASE_URL && !SUPABASE_URL.startsWith('https://') && import.meta.env.PROD) {
-  console.error('Security Error: Supabase URL must use HTTPS in production');
-  throw new Error('Supabase URL must use HTTPS in production');
-}
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,

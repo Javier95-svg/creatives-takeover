@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,53 +12,45 @@ import FloatingFeedbackWidget from "@/components/FloatingFeedbackWidget";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Index from "./pages/Index";
+import About from "./pages/About";
+import PricingPage from "./pages/PricingPage";
+import CommunityPage from "./pages/CommunityPage";
+import NotFound from "./pages/NotFound";
+import Careers from "./pages/Careers";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import Signup from "./pages/Signup";
+import Dream2Plan from "./pages/Dream2Plan";
+import Onboarding from "./pages/Onboarding";
+
+import Login from "./pages/Login";
+import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import PromptLibrary from "./pages/PromptLibrary";
+import Dashboard from "./pages/Dashboard";
+import Blog from "./pages/Blog";
+import Stories from "./pages/Stories";
+import StoryArticle from "./pages/StoryArticle";
+import StoryTagPage from "./pages/StoryTagPage";
+import AdminStoryEditor from "./pages/AdminStoryEditor";
+import AdminHeroImages from "./pages/AdminHeroImages";
+import StoriesRSS from "./pages/StoriesRSS";
 import ScrollToTop from "./components/ScrollToTop";
+import Demo from "./pages/Demo";
+import Profile from "./pages/Profile";
+import Account from "./pages/Account";
+import Messages from "./pages/Messages";
+import CreativesTakeover from "./pages/CreativesTakeover";
+import RAGTest from "./pages/RAGTest";
+import MentorMarketplaceHub from "./pages/community/MentorMarketplaceHub";
+import MentorProfilePage from "./pages/community/MentorProfilePage";
+import MentorBookingPage from "./pages/community/MentorBookingPage";
+import MyBookings from "./pages/community/MyBookings";
+import AdminMentorEditor from "./pages/community/AdminMentorEditor";
 import { Analytics } from '@vercel/analytics/react';
-
-// Lazy load all page components for route-based code splitting
-const Index = lazy(() => import("./pages/Index"));
-const About = lazy(() => import("./pages/About"));
-const PricingPage = lazy(() => import("./pages/PricingPage"));
-const CommunityPage = lazy(() => import("./pages/CommunityPage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Careers = lazy(() => import("./pages/Careers"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Signup = lazy(() => import("./pages/Signup"));
-const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Login = lazy(() => import("./pages/Login"));
-const Auth = lazy(() => import("./pages/Auth"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const PromptLibrary = lazy(() => import("./pages/PromptLibrary"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Blog = lazy(() => import("./pages/Blog"));
-const Stories = lazy(() => import("./pages/Stories"));
-const StoryArticle = lazy(() => import("./pages/StoryArticle"));
-const StoryTagPage = lazy(() => import("./pages/StoryTagPage"));
-const AdminStoryEditor = lazy(() => import("./pages/AdminStoryEditor"));
-const AdminHeroImages = lazy(() => import("./pages/AdminHeroImages"));
-const StoriesRSS = lazy(() => import("./pages/StoriesRSS"));
-const Demo = lazy(() => import("./pages/Demo"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Account = lazy(() => import("./pages/Account"));
-const Messages = lazy(() => import("./pages/Messages"));
-const CreativesTakeover = lazy(() => import("./pages/CreativesTakeover"));
-const RAGTest = lazy(() => import("./pages/RAGTest"));
-const MentorMarketplaceHub = lazy(() => import("./pages/community/MentorMarketplaceHub"));
-const MentorProfilePage = lazy(() => import("./pages/community/MentorProfilePage"));
-const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
-const MyBookings = lazy(() => import("./pages/community/MyBookings"));
-const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
-
-// Loading fallback component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-  </div>
-);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,50 +91,48 @@ function App() {
               <BrowserRouter>
                 <ScrollToTop />
                 <FeedbackWidgetWrapper />
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/community" element={<CommunityPage />} />
-                    <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
-                    <Route path="/community/book/:id" element={<MentorBookingPage />} />
-                    <Route path="/community/my-bookings" element={<MyBookings />} />
-                    <Route path="/community/admin/new" element={<AdminMentorEditor />} />
-                    <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
-                    <Route path="/stories" element={<Stories />} />
-                    <Route path="/stories/rss.xml" element={<StoriesRSS />} />
-                    <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
-                    <Route path="/stories/:slug" element={<StoryArticle />} />
-                    <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
-                    <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
-                    <Route path="/admin/hero-images" element={<AdminHeroImages />} />
-                    <Route path="/careers" element={<Careers />} />
-                    <Route path="/prompt-library" element={<PromptLibrary />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                    
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/account" element={<Account />} />
-                    <Route path="/insighta" element={<Blog />} />
-                    <Route path="/demo" element={<Demo />} />
-                    <Route path="/messages/:username" element={<Messages />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/profile/:username" element={<Profile />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/creatives-takeover" element={<CreativesTakeover />} />
-                    <Route path="/rag-test" element={<RAGTest />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/community" element={<CommunityPage />} />
+                  <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
+                  <Route path="/community/book/:id" element={<MentorBookingPage />} />
+                  <Route path="/community/my-bookings" element={<MyBookings />} />
+                  <Route path="/community/admin/new" element={<AdminMentorEditor />} />
+                  <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
+                  <Route path="/stories" element={<Stories />} />
+                  <Route path="/stories/rss.xml" element={<StoriesRSS />} />
+                  <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
+                  <Route path="/stories/:slug" element={<StoryArticle />} />
+                  <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
+                  <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
+                  <Route path="/admin/hero-images" element={<AdminHeroImages />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/prompt-library" element={<PromptLibrary />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/bizmap-ai" element={<Dream2Plan />} />
+                  
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="/insighta" element={<Blog />} />
+                  <Route path="/demo" element={<Demo />} />
+                  <Route path="/messages/:username" element={<Messages />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/profile/:username" element={<Profile />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/creatives-takeover" element={<CreativesTakeover />} />
+                  <Route path="/rag-test" element={<RAGTest />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
                 <MobileBottomNav />
               </BrowserRouter>
             </TooltipProvider>
