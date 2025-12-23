@@ -42,16 +42,18 @@ serve(async (req) => {
 
   // Wrap entire function in try-catch to ensure Response is always returned
   try {
-    // Step 1: Parse request body
+    // Step 1: Safely parse request body (never crash on invalid/missing body)
     console.log(`[${requestId}] Step 1: Parsing request body...`);
-    let requestBody: any;
+    let requestBody: any = {};
     
     try {
-      // Check if request has body
+      // Check if request has body - handle empty body gracefully
       const contentType = req.headers.get('Content-Type');
       console.log(`[${requestId}] Content-Type: ${contentType || 'not set'}`);
       
-      if (!contentType || !contentType.includes('application/json')) {
+      // Only require JSON content-type if body exists
+      const hasBody = req.body !== null && req.body !== undefined;
+      if (hasBody && contentType && !contentType.includes('application/json')) {
         console.error(`[${requestId}] Invalid Content-Type: ${contentType}`);
         return new Response(
           JSON.stringify({ error: 'Content-Type must be application/json' }),
@@ -62,8 +64,26 @@ serve(async (req) => {
         );
       }
       
-      requestBody = await req.json();
-      console.log(`[${requestId}] Request body parsed successfully`);
+      // Try to parse JSON - handle empty body gracefully
+      if (hasBody) {
+        try {
+          requestBody = await req.json();
+          console.log(`[${requestId}] Request body parsed successfully`);
+        } catch (jsonParseError) {
+          // If JSON parsing fails, try to get text first for better error message
+          try {
+            const textBody = await req.text();
+            console.error(`[${requestId}] Failed to parse JSON, raw body: ${textBody.substring(0, 200)}`);
+          } catch (textError) {
+            console.error(`[${requestId}] Failed to read body as text`);
+          }
+          throw jsonParseError;
+        }
+      } else {
+        console.log(`[${requestId}] Request has no body - using empty object`);
+        requestBody = {};
+      }
+      
       console.log(`[${requestId}] Request body keys: ${Object.keys(requestBody || {}).join(', ')}`);
       console.log(`[${requestId}] Request body type: ${typeof requestBody}`);
       
@@ -72,8 +92,9 @@ serve(async (req) => {
       console.error(`[${requestId}] JSON error type: ${jsonError?.constructor?.name}`);
       console.error(`[${requestId}] JSON error message: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
       
+      // Return valid JSON response instead of crashing
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        JSON.stringify({ error: 'Invalid JSON in request body. Please ensure the request body is valid JSON.' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -81,12 +102,12 @@ serve(async (req) => {
       );
     }
 
-    // Step 2: Validate request body exists
-    console.log(`[${requestId}] Step 2: Validating request body exists...`);
-    if (!requestBody || typeof requestBody !== 'object') {
-      console.error(`[${requestId}] Request body is missing or not an object`);
+    // Step 2: Validate request body exists and is an object
+    console.log(`[${requestId}] Step 2: Validating request body...`);
+    if (!requestBody || typeof requestBody !== 'object' || Array.isArray(requestBody)) {
+      console.error(`[${requestId}] Request body is missing, not an object, or is an array`);
       return new Response(
-        JSON.stringify({ error: 'Request body is required and must be a JSON object' }),
+        JSON.stringify({ error: 'Request body must be a JSON object with score data' }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -95,9 +116,13 @@ serve(async (req) => {
     }
     console.log(`[${requestId}] Request body validation passed`);
 
-    // Step 3: Extract and validate all required scores
-    console.log(`[${requestId}] Step 3: Validating required scores...`);
-    const requiredScores = [
+    // Step 3: Detect payload format and extract scores (backward-compatible)
+    console.log(`[${requestId}] Step 3: Detecting payload format and extracting scores...`);
+    
+    // Old 4-question format keys
+    const oldFormatKeys = ['mvp_score', 'feedback_score', 'team_score', 'runway_score'];
+    // New 10-question format keys
+    const newFormatKeys = [
       'team_complementary_score',
       'team_experience_score',
       'traction_revenue_score',
@@ -109,24 +134,42 @@ serve(async (req) => {
       'pitch_deck_score',
       'funding_defined_score'
     ];
-
-    // Check that all required scores are present
-    const missingScores = requiredScores.filter(key => {
-      const value = requestBody[key];
-      const isMissing = value === undefined || value === null || value === '';
-      if (isMissing) {
-        console.error(`[${requestId}] Missing score: ${key} (value: ${value})`);
-      }
-      return isMissing;
-    });
     
-    if (missingScores.length > 0) {
-      console.error(`[${requestId}] Missing scores: ${missingScores.join(', ')}`);
-      console.error(`[${requestId}] Total missing: ${missingScores.length} out of ${requiredScores.length}`);
+    // Detect which format is being used
+    const hasOldFormat = oldFormatKeys.some(key => requestBody[key] !== undefined && requestBody[key] !== null);
+    const hasNewFormat = newFormatKeys.some(key => requestBody[key] !== undefined && requestBody[key] !== null);
+    
+    console.log(`[${requestId}] Format detection - Has old format: ${hasOldFormat}, Has new format: ${hasNewFormat}`);
+    
+    // Extract scores based on detected format
+    const rawScores: { [key: string]: any } = {};
+    let expectedScoreCount = 0;
+    let formatType = 'unknown';
+    
+    if (hasNewFormat) {
+      // New 10-question format
+      formatType = 'new_10_question';
+      expectedScoreCount = 10;
+      for (const key of newFormatKeys) {
+        rawScores[key] = requestBody[key];
+      }
+      console.log(`[${requestId}] Using new 10-question format`);
+    } else if (hasOldFormat) {
+      // Old 4-question format
+      formatType = 'old_4_question';
+      expectedScoreCount = 4;
+      for (const key of oldFormatKeys) {
+        rawScores[key] = requestBody[key];
+      }
+      console.log(`[${requestId}] Using old 4-question format (backward compatibility)`);
+    } else {
+      // No recognized format
+      console.error(`[${requestId}] No recognized score format found`);
+      console.error(`[${requestId}] Available keys: ${Object.keys(requestBody).join(', ')}`);
       return new Response(
         JSON.stringify({ 
-          error: `Missing required scores: ${missingScores.join(', ')}. Please ensure all 10 questions are answered.`,
-          missingScores 
+          error: 'Invalid payload format. Expected either old 4-question format (mvp_score, feedback_score, team_score, runway_score) or new 10-question format (team_complementary_score, etc.).',
+          receivedKeys: Object.keys(requestBody)
         }),
         { 
           status: 400,
@@ -134,30 +177,26 @@ serve(async (req) => {
         }
       );
     }
-    console.log(`[${requestId}] All required scores present`);
 
-    // Step 4: Extract and convert scores to numbers
-    console.log(`[${requestId}] Step 4: Extracting and converting scores...`);
-    const rawScores = {
-      team_complementary_score: requestBody.team_complementary_score,
-      team_experience_score: requestBody.team_experience_score,
-      traction_revenue_score: requestBody.traction_revenue_score,
-      milestone_achieved_score: requestBody.milestone_achieved_score,
-      mvp_working_score: requestBody.mvp_working_score,
-      product_live_score: requestBody.product_live_score,
-      market_size_score: requestBody.market_size_score,
-      demand_validated_score: requestBody.demand_validated_score,
-      pitch_deck_score: requestBody.pitch_deck_score,
-      funding_defined_score: requestBody.funding_defined_score
-    };
+    console.log(`[${requestId}] Raw scores extracted (${formatType}):`, rawScores);
 
-    console.log(`[${requestId}] Raw scores received:`, rawScores);
-
-    // Convert to numbers and validate
+    // Step 4: Convert scores to numbers and validate
+    console.log(`[${requestId}] Step 4: Converting and validating scores...`);
     const scores: { [key: string]: number } = {};
     const invalidScores: Array<{ key: string; value: any; reason: string }> = [];
     
     for (const [key, rawValue] of Object.entries(rawScores)) {
+      // Skip if value is explicitly undefined/null/empty (but allow 0)
+      if (rawValue === undefined || rawValue === null || rawValue === '') {
+        invalidScores.push({ 
+          key, 
+          value: rawValue, 
+          reason: `Missing or null value` 
+        });
+        console.error(`[${requestId}] Missing score ${key}`);
+        continue;
+      }
+      
       // Convert to number (handles string numbers like "5")
       const numValue = Number(rawValue);
       
@@ -185,23 +224,27 @@ serve(async (req) => {
       
       // Round to integer (scores should be whole numbers)
       const roundedValue = Math.round(numValue);
-      scores[key.replace('_score', '')] = roundedValue;
-      console.log(`[${requestId}] Valid score ${key}: ${rawValue} → ${roundedValue}`);
+      // Store with normalized key (remove _score suffix for consistency)
+      const normalizedKey = key.replace('_score', '');
+      scores[normalizedKey] = roundedValue;
+      console.log(`[${requestId}] Valid score ${key}: ${rawValue} → ${roundedValue} (stored as ${normalizedKey})`);
     }
 
-    // Validate we have exactly 10 valid scores
+    // Validate we have the expected number of valid scores
     const scoreValues = Object.values(scores);
-    if (scoreValues.length !== 10 || invalidScores.length > 0) {
+    if (scoreValues.length !== expectedScoreCount || invalidScores.length > 0) {
       console.error(`[${requestId}] Score validation failed:`);
-      console.error(`[${requestId}] - Valid scores count: ${scoreValues.length} (expected: 10)`);
+      console.error(`[${requestId}] - Format: ${formatType}`);
+      console.error(`[${requestId}] - Valid scores count: ${scoreValues.length} (expected: ${expectedScoreCount})`);
       console.error(`[${requestId}] - Invalid scores: ${invalidScores.length}`);
       console.error(`[${requestId}] - Invalid score details:`, invalidScores);
       
       const errorDetails = invalidScores.map(s => `${s.key}: ${s.value} (${s.reason})`).join(', ');
       return new Response(
         JSON.stringify({ 
-          error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${scoreValues.length} valid scores instead of 10`}`,
-          invalidScores 
+          error: `Invalid scores. All ${expectedScoreCount} scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${scoreValues.length} valid scores instead of ${expectedScoreCount}`}`,
+          invalidScores,
+          format: formatType
         }),
         { 
           status: 400,
@@ -210,7 +253,7 @@ serve(async (req) => {
       );
     }
     
-    console.log(`[${requestId}] All scores validated successfully:`, scores);
+    console.log(`[${requestId}] All scores validated successfully (${formatType}):`, scores);
 
     // Step 5: Authentication (optional)
     console.log(`[${requestId}] Step 5: Attempting authentication (optional)...`);
@@ -312,11 +355,12 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     console.log(`[${requestId}] Supabase client created`);
 
-    // Step 8: Calculate average score and verdict
+    // Step 8: Calculate average score and verdict (normalized for both formats)
     console.log(`[${requestId}] Step 8: Calculating average score and verdict...`);
     const scoreValues = Object.values(scores);
-    const averageScore = scoreValues.reduce((sum, score) => sum + score, 0) / 10;
-    console.log(`[${requestId}] Average score: ${averageScore.toFixed(2)}`);
+    const scoreCount = scoreValues.length;
+    const averageScore = scoreCount > 0 ? scoreValues.reduce((sum, score) => sum + score, 0) / scoreCount : 0;
+    console.log(`[${requestId}] Average score: ${averageScore.toFixed(2)} (from ${scoreCount} scores)`);
     
     // Determine verdict based on score thresholds
     let verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
@@ -355,31 +399,41 @@ serve(async (req) => {
           10: 'Complete'
         };
 
-        const prompt = `Analyze this fundraising readiness assessment and provide a clear, actionable analysis.
-
-Assessment Scores (0-10 scale):
-- Complementary Founding Team: ${scores.team_complementary}/10
-- Previous Startup Experience: ${scores.team_experience}/10
-- Revenue or User Traction: ${scores.traction_revenue}/10
-- Key Growth Milestone: ${scores.milestone_achieved}/10
-- Working MVP: ${scores.mvp_working}/10
-- Product Live: ${scores.product_live}/10
-- Large Market ($1B+): ${scores.market_size}/10
-- Demand Validated: ${scores.demand_validated}/10
-- Pitch Deck Ready: ${scores.pitch_deck}/10
-- Funding Defined: ${scores.funding_defined}/10
-
-Average Score: ${averageScore.toFixed(1)}/10.0
-Verdict: ${verdict} (Ready if >=7.0, Almost Ready if >=5.5, Not Ready if <5.5)
-
-Provide a JSON response with this exact structure:
-{
-  "verdict": "${verdict}",
-  "summary": "2-3 sentence summary stating if ready to fundraise",
-  "strengths": ["strength 1", "strength 2", "strength 3"],
-  "critical_gaps": ["gap 1", "gap 2", "gap 3"],
-  "next_steps": ["step 1", "step 2", "step 3", "step 4"]
-}`;
+        // Build prompt based on detected format
+        let prompt = `Analyze this fundraising readiness assessment and provide a clear, actionable analysis.\n\n`;
+        
+        if (formatType === 'new_10_question') {
+          // New 10-question format
+          prompt += `Assessment Scores (0-10 scale):\n`;
+          prompt += `- Complementary Founding Team: ${scores.team_complementary || 0}/10\n`;
+          prompt += `- Previous Startup Experience: ${scores.team_experience || 0}/10\n`;
+          prompt += `- Revenue or User Traction: ${scores.traction_revenue || 0}/10\n`;
+          prompt += `- Key Growth Milestone: ${scores.milestone_achieved || 0}/10\n`;
+          prompt += `- Working MVP: ${scores.mvp_working || 0}/10\n`;
+          prompt += `- Product Live: ${scores.product_live || 0}/10\n`;
+          prompt += `- Large Market ($1B+): ${scores.market_size || 0}/10\n`;
+          prompt += `- Demand Validated: ${scores.demand_validated || 0}/10\n`;
+          prompt += `- Pitch Deck Ready: ${scores.pitch_deck || 0}/10\n`;
+          prompt += `- Funding Defined: ${scores.funding_defined || 0}/10\n\n`;
+        } else {
+          // Old 4-question format
+          prompt += `Assessment Scores (0-10 scale):\n`;
+          prompt += `- MVP Development: ${scores.mvp || 0}/10\n`;
+          prompt += `- Customer Feedback: ${scores.feedback || 0}/10\n`;
+          prompt += `- Team Strength: ${scores.team || 0}/10\n`;
+          prompt += `- Financial Runway: ${scores.runway || 0}/10\n\n`;
+        }
+        
+        prompt += `Average Score: ${averageScore.toFixed(1)}/10.0\n`;
+        prompt += `Verdict: ${verdict} (Ready if >=7.0, Almost Ready if >=5.5, Not Ready if <5.5)\n\n`;
+        prompt += `Provide a JSON response with this exact structure:\n`;
+        prompt += `{\n`;
+        prompt += `  "verdict": "${verdict}",\n`;
+        prompt += `  "summary": "2-3 sentence summary stating if ready to fundraise",\n`;
+        prompt += `  "strengths": ["strength 1", "strength 2", "strength 3"],\n`;
+        prompt += `  "critical_gaps": ["gap 1", "gap 2", "gap 3"],\n`;
+        prompt += `  "next_steps": ["step 1", "step 2", "step 3", "step 4"]\n`;
+        prompt += `}`;
 
         console.log(`[${requestId}] Calling OpenAI API...`);
         console.log(`[${requestId}] Prompt length: ${prompt.length} characters`);
@@ -535,25 +589,41 @@ Provide a JSON response with this exact structure:
     if (user) {
       console.log(`[${requestId}] Step 10: Saving assessment to database for user ${user.id}...`);
       try {
+        // Build insert payload based on format type
+        const insertPayload: any = {
+          user_id: user.id,
+          average_score: averageScore,
+          verdict: analysis.verdict,
+          analysis_data: analysis,
+          created_at: new Date().toISOString()
+        };
+        
+        // Add scores based on format
+        if (formatType === 'new_10_question') {
+          // New 10-question format
+          insertPayload.team_complementary_score = scores.team_complementary;
+          insertPayload.team_experience_score = scores.team_experience;
+          insertPayload.traction_revenue_score = scores.traction_revenue;
+          insertPayload.milestone_achieved_score = scores.milestone_achieved;
+          insertPayload.mvp_working_score = scores.mvp_working;
+          insertPayload.product_live_score = scores.product_live;
+          insertPayload.market_size_score = scores.market_size;
+          insertPayload.demand_validated_score = scores.demand_validated;
+          insertPayload.pitch_deck_score = scores.pitch_deck;
+          insertPayload.funding_defined_score = scores.funding_defined;
+          console.log(`[${requestId}] Inserting with new 10-question format`);
+        } else if (formatType === 'old_4_question') {
+          // Old 4-question format
+          insertPayload.mvp_score = scores.mvp;
+          insertPayload.feedback_score = scores.feedback;
+          insertPayload.team_score = scores.team;
+          insertPayload.runway_score = scores.runway;
+          console.log(`[${requestId}] Inserting with old 4-question format`);
+        }
+        
         const insertResult = await supabase
           .from('fundraising_readiness_assessments')
-          .insert({
-            user_id: user.id,
-            team_complementary_score: scores.team_complementary,
-            team_experience_score: scores.team_experience,
-            traction_revenue_score: scores.traction_revenue,
-            milestone_achieved_score: scores.milestone_achieved,
-            mvp_working_score: scores.mvp_working,
-            product_live_score: scores.product_live,
-            market_size_score: scores.market_size,
-            demand_validated_score: scores.demand_validated,
-            pitch_deck_score: scores.pitch_deck,
-            funding_defined_score: scores.funding_defined,
-            average_score: averageScore,
-            verdict: analysis.verdict,
-            analysis_data: analysis,
-            created_at: new Date().toISOString()
-          });
+          .insert(insertPayload);
         
         if (insertResult.error) {
           console.warn(`[${requestId}] Database insert failed (non-critical):`, insertResult.error.message);
