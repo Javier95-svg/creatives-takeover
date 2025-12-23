@@ -52,12 +52,42 @@ export default defineConfig(({ mode }) => {
           entryFileNames: `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,
           assetFileNames: `assets/[name].[hash].[ext]`,
+          // Optimize chunk splitting for better caching
+          manualChunks: (id) => {
+            // Split vendor chunks for better caching
+            if (id.includes('node_modules')) {
+              // Separate large libraries into their own chunks
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@supabase')) {
+                return 'supabase-vendor';
+              }
+              if (id.includes('lucide-react')) {
+                return 'icons-vendor';
+              }
+              // All other node_modules go into vendor chunk
+              return 'vendor';
+            }
+          },
         },
       },
       // Increase chunk size warning limit
       chunkSizeWarningLimit: 1000,
-      // Add sourcemap for debugging (can be disabled in production)
+      // Disable sourcemaps in production for faster builds and smaller bundle
       sourcemap: false,
+      // Enable minification with terser for better compression
+      minify: mode === 'production' ? 'terser' : false,
+      terserOptions: mode === 'production' ? {
+        compress: {
+          drop_console: true, // Remove console.log in production
+          drop_debugger: true,
+        },
+      } : undefined,
+      // Enable CSS code splitting
+      cssCodeSplit: true,
+      // Report compressed size
+      reportCompressedSize: true,
     },
   };
 });
