@@ -519,7 +519,11 @@ const FundraisingReadinessToolkit = () => {
   }, [scores]);
 
   const allScored = useMemo(() => {
-    return Object.values(scores).every(score => score > 0);
+    const result = Object.values(scores).every(score => score > 0);
+    // #region agent log
+    fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:522',message:'allScored calculation',data:{allScored:result,scores,scoreValues:Object.values(scores),scoreCount:Object.values(scores).length,zeroScores:Object.entries(scores).filter(([k,v])=>v===0).map(([k])=>k)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    return result;
   }, [scores]);
 
   // Detect when quiz is completed and scroll to results
@@ -582,20 +586,36 @@ const FundraisingReadinessToolkit = () => {
   const canProceed = currentScore > 0;
 
   const analyzeReadiness = async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:584',message:'analyzeReadiness called',data:{isAuthenticated:!!isAuthenticated,hasUser:!!user,allScored,scores,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     if (!isAuthenticated || !user) {
+      // #region agent log
+      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:586',message:'Auth check failed',data:{isAuthenticated:!!isAuthenticated,hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       toast.error("Please sign in to analyze your readiness");
       navigate('/login', { state: { returnTo: '/insighta' } });
       return;
     }
 
     if (!allScored) {
+      // #region agent log
+      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:591',message:'allScored check failed',data:{allScored,scores,zeroScores:Object.entries(scores).filter(([k,v])=>v===0).map(([k])=>k)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       toast.error("Please answer all questions before analyzing");
       return;
     }
 
     // Check credits before proceeding
     const requiredCredits = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
-    if (!hasCredits(requiredCredits)) {
+    const hasCreditsResult = hasCredits(requiredCredits);
+    // #region agent log
+    fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:598',message:'Credit check',data:{hasCredits:hasCreditsResult,requiredCredits,balance,userEmail:user?.email,isAdmin:user?.email?.toLowerCase()==='admin@creatives-takeover.com'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    if (!hasCreditsResult) {
+      // #region agent log
+      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:599',message:'Credit check failed - opening gate',data:{requiredCredits,balance},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       setCreditGateOpen(true);
       return;
     }
@@ -955,45 +975,50 @@ const FundraisingReadinessToolkit = () => {
         </Card>
 
         {/* Average Score Display (when all questions answered) */}
-        {allScored && (
-          <Card 
-            ref={resultsCardRef}
-            className={cn(
-              "mb-8 transition-all duration-500",
-              quizCompleted && "ring-2 ring-primary/50 shadow-lg"
-            )}
-          >
-            <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Average Score</p>
-                    <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
-                  </div>
-                {/* Insighta Test Results Button */}
-                {isAuthenticated && (
-                    <Button
-                    onClick={analyzeReadiness}
-                    disabled={isAnalyzing}
-                      size="lg"
-                    className="w-full sm:w-auto min-w-[200px] bg-primary hover:bg-primary/90"
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Rocket className="h-4 w-4 mr-2" />
-                        Insighta Test Results
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {(() => {
+          // #region agent log
+          fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:958',message:'Button render check',data:{allScored,isAuthenticated:!!isAuthenticated,willRender:allScored,willShowButton:allScored&&isAuthenticated},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+          // #endregion
+          return allScored && (
+            <Card 
+              ref={resultsCardRef}
+              className={cn(
+                "mb-8 transition-all duration-500",
+                quizCompleted && "ring-2 ring-primary/50 shadow-lg"
+              )}
+            >
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Average Score</p>
+                      <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
+                    </div>
+                  {/* Insighta Test Results Button */}
+                  {isAuthenticated && (
+                      <Button
+                      onClick={analyzeReadiness}
+                      disabled={isAnalyzing}
+                        size="lg"
+                      className="w-full sm:w-auto min-w-[200px] bg-primary hover:bg-primary/90"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="h-4 w-4 mr-2" />
+                          Insighta Test Results
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Sign In Prompt (if not authenticated) */}
         {!isAuthenticated && (
