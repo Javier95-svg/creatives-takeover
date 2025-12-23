@@ -28,6 +28,33 @@ serve(async (req) => {
       );
     }
 
+    // Extract and validate all required scores
+    const requiredScores = [
+      'team_complementary_score',
+      'team_experience_score',
+      'traction_revenue_score',
+      'milestone_achieved_score',
+      'mvp_working_score',
+      'product_live_score',
+      'market_size_score',
+      'demand_validated_score',
+      'pitch_deck_score',
+      'funding_defined_score'
+    ];
+
+    // Check that all required scores are present
+    const missingScores = requiredScores.filter(key => requestBody[key] === undefined || requestBody[key] === null);
+    if (missingScores.length > 0) {
+      console.error('Missing scores:', missingScores);
+      return new Response(
+        JSON.stringify({ error: `Missing required scores: ${missingScores.join(', ')}. Please ensure all 10 questions are answered.` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const { 
       team_complementary_score,
       team_experience_score,
@@ -54,32 +81,44 @@ serve(async (req) => {
       funding_defined_score
     });
 
-    // Validate scores
+    // Validate scores - convert to numbers and validate range
     const scores = {
-      team_complementary: team_complementary_score,
-      team_experience: team_experience_score,
-      traction_revenue: traction_revenue_score,
-      milestone_achieved: milestone_achieved_score,
-      mvp_working: mvp_working_score,
-      product_live: product_live_score,
-      market_size: market_size_score,
-      demand_validated: demand_validated_score,
-      pitch_deck: pitch_deck_score,
-      funding_defined: funding_defined_score
+      team_complementary: Number(team_complementary_score),
+      team_experience: Number(team_experience_score),
+      traction_revenue: Number(traction_revenue_score),
+      milestone_achieved: Number(milestone_achieved_score),
+      mvp_working: Number(mvp_working_score),
+      product_live: Number(product_live_score),
+      market_size: Number(market_size_score),
+      demand_validated: Number(demand_validated_score),
+      pitch_deck: Number(pitch_deck_score),
+      funding_defined: Number(funding_defined_score)
     };
 
-    // Validate all scores are numbers between 0-10
+    // Validate all scores are valid numbers between 0-10
     const scoreValues = Object.values(scores);
-    const invalidScores = scoreValues.filter(score => typeof score !== 'number' || isNaN(score) || score < 0 || score > 10);
+    const invalidScores: Array<{ key: string; value: any; reason: string }> = [];
+    
+    Object.entries(scores).forEach(([key, value]) => {
+      if (typeof value !== 'number' || isNaN(value)) {
+        invalidScores.push({ key, value, reason: 'Not a number' });
+      } else if (value < 0 || value > 10) {
+        invalidScores.push({ key, value, reason: 'Out of range (0-10)' });
+      }
+    });
     
     if (scoreValues.length !== 10 || invalidScores.length > 0) {
       console.error('Score validation failed:', {
         scoreCount: scoreValues.length,
         scores: scores,
-        invalidScores: invalidScores
+        invalidScores: invalidScores,
+        requestBody: requestBody
       });
+      const errorDetails = invalidScores.map(s => `${s.key}: ${s.value} (${s.reason})`).join(', ');
       return new Response(
-        JSON.stringify({ error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Received ${scoreValues.length} scores.` }),
+        JSON.stringify({ 
+          error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Issues: ${errorDetails || `Received ${scoreValues.length} scores instead of 10`}` 
+        }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

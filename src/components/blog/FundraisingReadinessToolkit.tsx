@@ -622,23 +622,27 @@ const FundraisingReadinessToolkit = () => {
         dataString: data ? JSON.stringify(data) : null
       });
 
-      // Check if data contains error (sometimes Supabase includes response body in data even when error exists)
-      if (data?.error) {
-        const errorFromData = data.error as string;
+      // When Supabase functions return non-2xx, the response body is often in 'data' field
+      // Check data.error first (this is the actual error from the edge function)
+      if (data && typeof data === 'object' && 'error' in data && !('verdict' in data)) {
+        const errorFromData = (data as any).error as string;
         console.error('Error in response data:', errorFromData);
         
-        if (errorFromData.includes('credits') || data.required) {
+        if (errorFromData && (errorFromData.includes('credits') || errorFromData.includes('Insufficient'))) {
           setCreditGateOpen(true);
           setAnalysisError('Insufficient credits');
           toast.error('Insufficient credits');
           return;
         }
         
-        setAnalysisError(errorFromData);
-        toast.error(errorFromData);
-        return;
+        if (errorFromData) {
+          setAnalysisError(errorFromData);
+          toast.error(errorFromData);
+          return;
+        }
       }
 
+      // Check Supabase error object (this is the HTTP-level error)
       if (error) {
         console.error('Supabase function error:', error);
         console.error('Error status:', error?.status);
@@ -652,14 +656,24 @@ const FundraisingReadinessToolkit = () => {
           return;
         }
         
-        // Extract error message
+        // Extract error message - try to get actual error from data first
         let errorMsg = error.message || 'Failed to analyze readiness. Please try again.';
         
-        // If it's the generic "non-2xx" message, try to get actual error from response
-        if (errorMsg.includes('non-2xx')) {
+        // If it's the generic "non-2xx" message, try to get actual error from response body
+        if (errorMsg.includes('non-2xx') || errorMsg.includes('Edge Function')) {
           // Check if we have data with error field
           if (data && typeof data === 'object' && 'error' in data) {
             errorMsg = (data as any).error || errorMsg;
+          } else if (data && typeof data === 'string') {
+            // Sometimes the error message is the data itself
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.error) {
+                errorMsg = parsed.error;
+              }
+            } catch {
+              errorMsg = data;
+            }
           } else {
             // Provide a more helpful generic message
             errorMsg = 'The analysis service encountered an error. Please try again in a moment.';
@@ -671,15 +685,7 @@ const FundraisingReadinessToolkit = () => {
         return;
       }
 
-      if (data?.error) {
-        console.error('Error in response data:', data.error);
-        if (data.error.includes('credits') || data.required) {
-          setCreditGateOpen(true);
-          throw new Error('Insufficient credits');
-        }
-        throw new Error(data.error);
-      }
-
+      // Final validation - ensure we have valid response data
       if (!data || !data.verdict) {
         console.error('Invalid response data:', data);
         throw new Error('Invalid response from analysis service. Please try again.');
