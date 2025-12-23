@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Linkedin } from "lucide-react";
+import { Linkedin, Mail } from "lucide-react";
 
 import javierPhoto from "@/assets/team-javier-pena.png";
 import domagojPhoto from "@/assets/team-domagoj-markota.png";
@@ -14,6 +14,7 @@ type TeamMember = {
   role: string;
   bio: string;
   linkedin?: string;
+  email?: string;
   photo: string;
 };
 
@@ -28,7 +29,8 @@ const teamMembers: TeamMember[] = [
   {
     name: "Domagoj Markota",
     role: "Fractional CTO",
-    bio: "",
+    bio: "Domagoj is a founder and senior software engineer specializing in AI, machine learning, and scalable systems, with a strong track record of building deep-tech products, leading international engineering teams, and turning complex technology into market-ready solutions.",
+    email: "domagoj.markota@gmail.com",
     photo: domagojPhoto,
   },
   {
@@ -107,16 +109,25 @@ const MeetTheTeam = () => {
                   {member.bio}
                 </p>
 
-                {member.linkedin && (
+                {(member.linkedin || member.email) && (
                   <a
-                    href={member.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={member.email ? `mailto:${member.email}` : member.linkedin}
+                    target={member.email ? undefined : "_blank"}
+                    rel={member.email ? undefined : "noopener noreferrer"}
                     className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                    aria-label={`Connect with ${member.name} on LinkedIn`}
+                    aria-label={member.email ? `Send a message to ${member.name}` : `Connect with ${member.name} on LinkedIn`}
                   >
-                    <Linkedin className="h-5 w-5" />
-                    <span>Connect on LinkedIn</span>
+                    {member.email ? (
+                      <>
+                        <Mail className="h-5 w-5" />
+                        <span>Send a Message</span>
+                      </>
+                    ) : (
+                      <>
+                        <Linkedin className="h-5 w-5" />
+                        <span>Connect on LinkedIn</span>
+                      </>
+                    )}
                   </a>
                 )}
               </div>
