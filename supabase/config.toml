@@ -83,3 +83,6 @@ verify_jwt = true
 
 [functions.community-feedback-analyzer]
 verify_jwt = true
+
+[functions.fundraising-readiness-analyzer-v2]
+verify_jwt = false
