@@ -379,7 +379,7 @@ serve(async (req) => {
     if (requestData.assessment_id) {
       const { data: assessment } = await supabase
         .from('fundraising_readiness_assessments')
-        .select('verdict, mvp_score, feedback_score, team_score, runway_score, team_complementary_score, team_experience_score, traction_revenue_score, milestone_achieved_score, mvp_working_score, product_live_score, market_size_score, demand_validated_score, pitch_deck_score, funding_defined_score, analysis_data')
+        .select('verdict, mvp_score, feedback_score, team_score, runway_score, analysis_data')
         .eq('id', requestData.assessment_id)
         .eq('user_id', user.id)
         .single();
@@ -397,31 +397,13 @@ serve(async (req) => {
           requestData.critical_gaps = analysis.critical_gaps;
         }
         
-        // Use new 10-question format if available, otherwise fall back to old 4-question format
         if (!requestData.readiness_scores) {
-          if (assessment.team_complementary_score !== null && assessment.team_complementary_score !== undefined) {
-            // New format
-            requestData.readiness_scores = {
-              team_complementary: assessment.team_complementary_score,
-              team_experience: assessment.team_experience_score,
-              traction_revenue: assessment.traction_revenue_score,
-              milestone_achieved: assessment.milestone_achieved_score,
-              mvp_working: assessment.mvp_working_score,
-              product_live: assessment.product_live_score,
-              market_size: assessment.market_size_score,
-              demand_validated: assessment.demand_validated_score,
-              pitch_deck: assessment.pitch_deck_score,
-              funding_defined: assessment.funding_defined_score
-            } as any;
-          } else if (assessment.mvp_score !== null && assessment.mvp_score !== undefined) {
-            // Old format for backward compatibility
-            requestData.readiness_scores = {
-              mvp: assessment.mvp_score,
-              feedback: assessment.feedback_score,
-              team: assessment.team_score,
-              runway: assessment.runway_score
-            } as any;
-          }
+          requestData.readiness_scores = {
+            mvp: assessment.mvp_score,
+            feedback: assessment.feedback_score,
+            team: assessment.team_score,
+            runway: assessment.runway_score
+          };
         }
       }
     }
