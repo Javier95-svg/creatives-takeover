@@ -21,7 +21,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Javier Peña",
     role: "Founder & CEO",
-    bio: "Serial entrepreneur focused on empowering creatives with trustworthy automation and accessible startup playbooks.",
+    bio: "As a founder myself, my mission is to support my peers in building and scaling successful startups by giving visibility to ideas, connecting founders with investors, and accelerating growth through community-driven execution.",
     linkedin: "https://www.linkedin.com/in/javier-digital-marketing/",
     photo: javierPhoto,
   },
