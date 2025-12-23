@@ -341,6 +341,9 @@ const FundraisingReadinessToolkit = () => {
         <Card className="mb-8">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl text-primary animate-pulse">How ready are you?</CardTitle>
+            <CardDescription className="mt-2 text-base">
+              Answer each question honestly by moving the slider from 1 (Lowest) to 10 (Highest).
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Progress Indicator */}
