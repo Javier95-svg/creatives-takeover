@@ -462,15 +462,18 @@ const FundraisingReadinessToolkit = () => {
 
                 {/* Navigation Buttons */}
                 <div className="flex items-center justify-between pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={handlePrevious}
-                    disabled={currentQuestionIndex === 0}
-                    className="flex items-center gap-2"
-                  >
-                    <ChevronUp className="h-4 w-4 rotate-90" />
-                    Previous
-                  </Button>
+                  {currentQuestionIndex > 0 ? (
+                    <Button
+                      variant="outline"
+                      onClick={handlePrevious}
+                      className="flex items-center gap-2"
+                    >
+                      <ChevronUp className="h-4 w-4 rotate-90" />
+                      Previous
+                    </Button>
+                  ) : (
+                    <div></div>
+                  )}
                   
                   {currentQuestionIndex < totalQuestions - 1 ? (
                     <Button
