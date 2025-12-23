@@ -615,12 +615,66 @@ const FundraisingReadinessToolkit = () => {
         errorType: invokeError?.constructor?.name,
         errorStatus: invokeError?.status,
         errorMessage: invokeError?.message,
-        dataKeys: data ? Object.keys(data) : []
+        dataType: typeof data,
+        dataKeys: data && typeof data === 'object' ? Object.keys(data) : [],
+        dataValue: data
       });
 
-      // Check Supabase error object first (HTTP-level errors)
+      // When Supabase functions return non-2xx, error is set AND data may contain the error response body
+      // Check data.error first (this is the actual error message from the edge function)
+      
+      // Handle case where data is a string (JSON stringified error response)
+      if (data && typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) {
+            const errorMsg = parsed.error;
+            console.error('Error parsed from string data:', errorMsg);
+            
+            if (errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
+              setCreditGateOpen(true);
+              setAnalysisError('Insufficient credits');
+              toast.error('Insufficient credits');
+              return;
+            }
+            
+            setAnalysisError(errorMsg);
+            toast.error(errorMsg);
+            return;
+          }
+        } catch (e) {
+          // If it's not JSON, treat the string itself as an error
+          console.error('Data is non-JSON string:', data);
+          setAnalysisError(data);
+          toast.error(data);
+          return;
+        }
+      }
+      
+      // Handle case where data is an object with error field
+      if (data && typeof data === 'object' && 'error' in data) {
+        const errorFromData = (data as any).error;
+        console.error('Error in response data:', errorFromData);
+        
+        if (errorFromData && (typeof errorFromData === 'string' && (errorFromData.includes('credits') || errorFromData.includes('Insufficient')))) {
+          setCreditGateOpen(true);
+          setAnalysisError('Insufficient credits');
+          toast.error('Insufficient credits');
+          return;
+        }
+        
+        if (errorFromData) {
+          const errorMsg = typeof errorFromData === 'string' ? errorFromData : String(errorFromData);
+          setAnalysisError(errorMsg);
+          toast.error(errorMsg);
+          return;
+        }
+      }
+
+      // Check Supabase error object (HTTP-level errors)
       if (invokeError) {
         console.error('Supabase function error:', invokeError);
+        console.error('Full error object:', JSON.stringify(invokeError, null, 2));
         
         // Handle credit errors specifically
         if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
@@ -629,10 +683,15 @@ const FundraisingReadinessToolkit = () => {
           return;
         }
         
-        // Try to extract actual error from data if available
+        // Extract error message - prioritize data.error if available, otherwise use invokeError.message
         let errorMsg = invokeError.message || 'Failed to analyze readiness. Please try again.';
+        
+        // If data exists and has error, use that instead
         if (data && typeof data === 'object' && 'error' in data) {
-          errorMsg = (data as any).error || errorMsg;
+          const dataError = (data as any).error;
+          if (dataError) {
+            errorMsg = typeof dataError === 'string' ? dataError : String(dataError);
+          }
         }
         
         setAnalysisError(errorMsg);
@@ -640,32 +699,57 @@ const FundraisingReadinessToolkit = () => {
         return;
       }
 
-      // Check for error in response data (edge function error messages)
-      if (data?.error) {
-        console.error('Error in response data:', data.error);
-        
-        if (data.error.includes('credits') || data.required) {
-          setCreditGateOpen(true);
-          setAnalysisError('Insufficient credits');
-          return;
-        }
-        
-        setAnalysisError(data.error);
-        toast.error(data.error);
-        return;
+      // Final validation - ensure we have valid response data
+      if (!data) {
+        console.error('No response data received');
+        throw new Error('No response received from analysis service. Please try again.');
       }
 
-      // Final validation - ensure we have valid response data
-      if (!data || !data.verdict) {
-        console.error('Invalid response data:', data);
+      // Handle case where data might be a string (shouldn't happen, but be safe)
+      if (typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) {
+            setAnalysisError(parsed.error);
+            toast.error(parsed.error);
+            return;
+          }
+          // If parsed successfully but no error, use it as data
+          if (parsed.verdict) {
+            setAiAnalysis(parsed as AIAnalysis);
+            toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to parse string response:', e);
+          throw new Error('Invalid response format from analysis service. Please try again.');
+        }
+      }
+
+      if (!data.verdict) {
+        console.error('Invalid response data - missing verdict:', data);
         throw new Error('Invalid response from analysis service. Please try again.');
       }
 
       setAiAnalysis(data as AIAnalysis);
       toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
     } catch (error) {
-      console.error('Analysis error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
+      console.error('=== ANALYSIS ERROR CAUGHT ===');
+      console.error('Error:', error);
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+      
+      let errorMessage = 'Failed to analyze readiness. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as any).message);
+      }
+      
       setAnalysisError(errorMessage);
       if (!errorMessage.includes('credits')) {
         toast.error(errorMessage);
