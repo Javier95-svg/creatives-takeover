@@ -1,46 +1,22 @@
 {
   "redirects": [
     {
-      "source": "/old-path/:splat",
-      "destination": "/new-path/:splat",
+      "source": "/blog/:splat*",
+      "destination": "/posts/:splat",
       "permanent": true
     }
   ],
   "headers": [
     {
-      "source": "/assets/(.*)",
+      "source": "/:path*.js",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/(.*\\.(js|css))",
+      "source": "/:path*.css",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/(.*\\.(jpg|jpeg|png|gif|webp|svg|ico))",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=2592000, stale-while-revalidate=86400"
-        }
-      ]
-    },
-    {
-      "source": "/(.*\\.(woff|woff2|ttf|otf|eot))",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
   ]
