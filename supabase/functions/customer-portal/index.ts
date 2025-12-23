@@ -54,12 +54,27 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    const origin = req.headers.get("origin") || "https://your-domain.com";
+    // Validate and whitelist origins for security
+    const allowedOrigins = [
+      'https://creatives-takeover.com',
+      'https://www.creatives-takeover.com',
+      ...(Deno.env.get('ENVIRONMENT') === 'development' ? [
+        'http://localhost:3000',
+        'http://localhost:8080',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:8080'
+      ] : [])
+    ];
+    
+    const origin = req.headers.get("origin");
+    const validOrigin = origin && allowedOrigins.includes(origin) 
+      ? origin 
+      : 'https://creatives-takeover.com';
     
     // Create customer portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/account`,
+      return_url: `${validOrigin}/account`,
     });
     
     logStep("Customer portal session created", { 

@@ -41,7 +41,23 @@ serve(withErrorBoundary(async (req: Request) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    
+    // Validate and whitelist origins for security
+    const allowedOrigins = [
+      'https://creatives-takeover.com',
+      'https://www.creatives-takeover.com',
+      ...(Deno.env.get('ENVIRONMENT') === 'development' ? [
+        'http://localhost:3000',
+        'http://localhost:8080',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:8080'
+      ] : [])
+    ];
+    
+    const origin = req.headers.get("origin");
+    const validOrigin = origin && allowedOrigins.includes(origin) 
+      ? origin 
+      : (Deno.env.get('ENVIRONMENT') === 'development' ? 'http://localhost:3000' : 'https://creatives-takeover.com');
 
     const sessionAmount = Math.round(hourly_rate); // hourly_rate is in cents
     const platformFee = Math.round(sessionAmount * 0.1); // 10% platform fee
@@ -70,8 +86,8 @@ serve(withErrorBoundary(async (req: Request) => {
           destination: mentor_stripe_account_id,
         },
       },
-      success_url: `${origin}/community/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/community/mentors/${mentor_id}`,
+      success_url: `${validOrigin}/community/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${validOrigin}/community/mentors/${mentor_id}`,
       metadata: {
         mentor_id,
         founder_id: user.id,
