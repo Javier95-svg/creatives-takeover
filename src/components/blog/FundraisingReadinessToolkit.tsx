@@ -817,25 +817,7 @@ const FundraisingReadinessToolkit = () => {
               )}
               {isFirstQuestion && <div />}
 
-              {isLastQuestion && canProceed && isAuthenticated ? (
-                  <Button
-                    onClick={analyzeReadiness}
-                    disabled={isAnalyzing || !allScored}
-                  className="min-w-[150px]"
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Rocket className="h-4 w-4 mr-2" />
-                        Get AI Analysis
-                      </>
-                    )}
-                  </Button>
-              ) : (
+              {!isLastQuestion && (
                 <Button
                   onClick={goToNext}
                   disabled={!canProceed || !isAuthenticated}
@@ -845,6 +827,7 @@ const FundraisingReadinessToolkit = () => {
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               )}
+              {isLastQuestion && <div />}
             </div>
           </CardContent>
         </Card>
@@ -853,9 +836,32 @@ const FundraisingReadinessToolkit = () => {
         {allScored && (
           <Card className="mb-8">
             <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Average Score</p>
-                <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
+              <div className="text-center space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Average Score</p>
+                  <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
+                </div>
+                {/* Insighta Test Results Button */}
+                {isAuthenticated && (
+                  <Button
+                    onClick={analyzeReadiness}
+                    disabled={isAnalyzing}
+                    size="lg"
+                    className="w-full sm:w-auto min-w-[200px]"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="h-4 w-4 mr-2" />
+                        Insighta Test Results
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -866,17 +872,17 @@ const FundraisingReadinessToolkit = () => {
           <Card className="mb-8">
             <CardContent className="pt-6">
               <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                   Sign in to complete the assessment and get AI-powered analysis of your fundraising readiness
-                </p>
-                <Button
-                  size="lg"
-                  onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
-                  className="w-full md:w-auto min-w-[200px]"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
+                    </p>
+                    <Button
+                      size="lg"
+                      onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
+                      className="w-full md:w-auto min-w-[200px]"
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
                   Sign In to Continue
-                </Button>
+                    </Button>
               </div>
             </CardContent>
           </Card>
