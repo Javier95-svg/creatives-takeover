@@ -36,7 +36,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Daniela Hägg",
     role: "Growth Associate",
-    bio: "Customer advocate obsessed with clear positioning, data-backed experiments, and building community trust at every touchpoint.",
+    bio: "Daniela is a growth-driven operations leader who helps startups scale efficiently by building the systems, processes, and execution frameworks that enable teams to move faster and grow sustainably.",
     linkedin: "https://www.linkedin.com/in/daniela-h-72752914b/",
     photo: danielaPhoto,
   },
