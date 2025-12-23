@@ -605,83 +605,53 @@ const FundraisingReadinessToolkit = () => {
         throw new Error('Invalid scores. Please ensure all questions are answered with valid scores.');
       }
 
-      const { data, error } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
+      const { data, error: invokeError } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
         body: requestBody
       });
 
       console.log('Function invoke response:', { 
-        hasError: !!error, 
+        hasError: !!invokeError, 
         hasData: !!data, 
-        errorType: error?.constructor?.name,
-        errorKeys: error ? Object.keys(error) : [],
-        errorString: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null,
-        errorStatus: error?.status,
-        errorMessage: error?.message,
-        errorContext: error?.context,
-        dataKeys: data ? Object.keys(data) : [],
-        dataString: data ? JSON.stringify(data) : null
+        errorType: invokeError?.constructor?.name,
+        errorStatus: invokeError?.status,
+        errorMessage: invokeError?.message,
+        dataKeys: data ? Object.keys(data) : []
       });
 
-      // When Supabase functions return non-2xx, the response body is often in 'data' field
-      // Check data.error first (this is the actual error from the edge function)
-      if (data && typeof data === 'object' && 'error' in data && !('verdict' in data)) {
-        const errorFromData = (data as any).error as string;
-        console.error('Error in response data:', errorFromData);
-        
-        if (errorFromData && (errorFromData.includes('credits') || errorFromData.includes('Insufficient'))) {
-          setCreditGateOpen(true);
-          setAnalysisError('Insufficient credits');
-          toast.error('Insufficient credits');
-          return;
-        }
-        
-        if (errorFromData) {
-          setAnalysisError(errorFromData);
-          toast.error(errorFromData);
-          return;
-        }
-      }
-
-      // Check Supabase error object (this is the HTTP-level error)
-      if (error) {
-        console.error('Supabase function error:', error);
-        console.error('Error status:', error?.status);
-        console.error('Error message:', error?.message);
-        console.error('Response data (if any):', data);
+      // Check Supabase error object first (HTTP-level errors)
+      if (invokeError) {
+        console.error('Supabase function error:', invokeError);
         
         // Handle credit errors specifically
-        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
+        if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
           setCreditGateOpen(true);
           setAnalysisError('Insufficient credits');
           return;
         }
         
-        // Extract error message - try to get actual error from data first
-        let errorMsg = error.message || 'Failed to analyze readiness. Please try again.';
-        
-        // If it's the generic "non-2xx" message, try to get actual error from response body
-        if (errorMsg.includes('non-2xx') || errorMsg.includes('Edge Function')) {
-          // Check if we have data with error field
-          if (data && typeof data === 'object' && 'error' in data) {
-            errorMsg = (data as any).error || errorMsg;
-          } else if (data && typeof data === 'string') {
-            // Sometimes the error message is the data itself
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.error) {
-                errorMsg = parsed.error;
-              }
-            } catch {
-              errorMsg = data;
-            }
-          } else {
-            // Provide a more helpful generic message
-            errorMsg = 'The analysis service encountered an error. Please try again in a moment.';
-          }
+        // Try to extract actual error from data if available
+        let errorMsg = invokeError.message || 'Failed to analyze readiness. Please try again.';
+        if (data && typeof data === 'object' && 'error' in data) {
+          errorMsg = (data as any).error || errorMsg;
         }
         
         setAnalysisError(errorMsg);
         toast.error(errorMsg);
+        return;
+      }
+
+      // Check for error in response data (edge function error messages)
+      if (data?.error) {
+        console.error('Error in response data:', data.error);
+        
+        if (data.error.includes('credits') || data.required) {
+          setCreditGateOpen(true);
+          setAnalysisError('Insufficient credits');
+          return;
+        }
+        
+        setAnalysisError(data.error);
+        toast.error(data.error);
         return;
       }
 
