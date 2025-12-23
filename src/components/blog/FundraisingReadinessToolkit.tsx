@@ -609,19 +609,39 @@ const FundraisingReadinessToolkit = () => {
         body: requestBody
       });
 
+      console.log('Function invoke response:', { hasError: !!error, hasData: !!data, error, data });
+
       if (error) {
+        console.error('Supabase function error:', error);
+        
+        // Try to extract error from error object
+        let errorMsg = error.message || 'Failed to analyze readiness';
+        
         // Handle credit errors specifically
-        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
+        if (error.status === 402 || errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
           setCreditGateOpen(true);
           throw new Error('Insufficient credits');
         }
         
-        // Extract error message
-        const errorMsg = error.message || 'Failed to analyze readiness. Please try again.';
+        // If error has context, try to extract error message from there
+        if (error.context) {
+          try {
+            const errorContext = typeof error.context === 'string' ? JSON.parse(error.context) : error.context;
+            if (errorContext.error) {
+              errorMsg = errorContext.error;
+            } else if (errorContext.message) {
+              errorMsg = errorContext.message;
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        
         throw new Error(errorMsg);
       }
 
       if (data?.error) {
+        console.error('Error in response data:', data.error);
         if (data.error.includes('credits') || data.required) {
           setCreditGateOpen(true);
           throw new Error('Insufficient credits');
@@ -630,6 +650,7 @@ const FundraisingReadinessToolkit = () => {
       }
 
       if (!data || !data.verdict) {
+        console.error('Invalid response data:', data);
         throw new Error('Invalid response from analysis service. Please try again.');
       }
 

@@ -14,6 +14,20 @@ serve(async (req) => {
   }
 
   try {
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (jsonError) {
+      console.error('Failed to parse request JSON:', jsonError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const { 
       team_complementary_score,
       team_experience_score,
@@ -25,7 +39,20 @@ serve(async (req) => {
       demand_validated_score,
       pitch_deck_score,
       funding_defined_score
-    } = await req.json();
+    } = requestBody;
+
+    console.log('Received scores:', {
+      team_complementary_score,
+      team_experience_score,
+      traction_revenue_score,
+      milestone_achieved_score,
+      mvp_working_score,
+      product_live_score,
+      market_size_score,
+      demand_validated_score,
+      pitch_deck_score,
+      funding_defined_score
+    });
 
     // Validate scores
     const scores = {
@@ -43,9 +70,16 @@ serve(async (req) => {
 
     // Validate all scores are numbers between 0-10
     const scoreValues = Object.values(scores);
-    if (scoreValues.length !== 10 || scoreValues.some(score => typeof score !== 'number' || score < 0 || score > 10)) {
+    const invalidScores = scoreValues.filter(score => typeof score !== 'number' || isNaN(score) || score < 0 || score > 10);
+    
+    if (scoreValues.length !== 10 || invalidScores.length > 0) {
+      console.error('Score validation failed:', {
+        scoreCount: scoreValues.length,
+        scores: scores,
+        invalidScores: invalidScores
+      });
       return new Response(
-        JSON.stringify({ error: 'Invalid scores. All 10 scores must be numbers between 0 and 10.' }),
+        JSON.stringify({ error: `Invalid scores. All 10 scores must be numbers between 0 and 10. Received ${scoreValues.length} scores.` }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -86,8 +120,20 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase configuration');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Calculate average score across all 10 questions
@@ -211,14 +257,38 @@ Keep the analysis focused and investor-focused.`;
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('AI API Error:', errorText);
-      throw new Error(`AI API Error: ${aiResponse.status}`);
+      console.error('AI API Error:', {
+        status: aiResponse.status,
+        statusText: aiResponse.statusText,
+        body: errorText
+      });
+      return new Response(
+        JSON.stringify({ error: `AI analysis failed: ${aiResponse.status} ${aiResponse.statusText}` }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
+    let aiData;
+    try {
+      aiData = await aiResponse.json();
+    } catch (parseError) {
+      console.error('Failed to parse AI response JSON:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse AI response' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
+      console.warn('No tool call in AI response, using fallback');
       // Fallback: create simple response based on score thresholds
       const fallbackSummary = verdict === 'Ready' 
         ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
@@ -243,9 +313,16 @@ Keep the analysis focused and investor-focused.`;
       analysis = JSON.parse(toolCall.function.arguments);
       // Ensure verdict matches the score threshold
       analysis.verdict = verdict;
+      console.log('Analysis parsed successfully:', { verdict: analysis.verdict, hasSummary: !!analysis.summary });
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('Failed to parse AI analysis response');
+      console.error('Failed to parse AI tool call arguments:', parseError, toolCall.function.arguments);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse AI analysis response' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Save assessment to database (optional)
@@ -290,8 +367,15 @@ Keep the analysis focused and investor-focused.`;
     );
 
   } catch (error) {
-    console.error('Error in fundraising-readiness-analyzer:', error);
+    console.error('Unhandled error in fundraising-readiness-analyzer:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    const errorStack = error instanceof Error ? error.stack : String(error);
+    
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      errorType: error?.constructor?.name
+    });
     
     return new Response(
       JSON.stringify({ 
