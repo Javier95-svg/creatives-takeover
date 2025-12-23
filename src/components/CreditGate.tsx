@@ -62,7 +62,7 @@ export function CreditGate({
             Insufficient Credits
           </DialogTitle>
           <DialogDescription>
-            You need {requiredCredits} credits to use {feature}, but you only have {balance} credits available.
+            You need {requiredCredits} credits to use {feature}, but you only have {balance} credits available. Upgrade to get more credits and unlock additional features!
           </DialogDescription>
         </DialogHeader>
 

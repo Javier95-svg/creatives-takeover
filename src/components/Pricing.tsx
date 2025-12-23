@@ -38,8 +38,9 @@ const Pricing = () => {
   const getFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
-        "5 BizMap AI conversations per month",
+        "10 BizMap AI conversations per month",
         "Community read-only access",
+        "Prompt library (view only)",
         "1 active sprint",
         "Funding opportunities (view only)",
         "Job board (view only)",

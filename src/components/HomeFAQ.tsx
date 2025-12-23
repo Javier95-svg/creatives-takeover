@@ -48,7 +48,7 @@ const HomeFAQ = () => {
     },
     {
       question: "How much does it cost and what happens next?",
-      answer: "New users get 5 free credits to test the platform and see how it works for their specific needs. Credits are used for Launch Reports (BizMap AI business plans), sprint task generation, and premium AI features.\n\nYou get free forever access to templates, community access, basic planning tools, browsing Insighta, and networking opportunities. Subscribers get monthly credit resets and can earn bonus credits by participating in feedback surveys.\n\nCheck our transparent pricing page for exact costs with no hidden fees. Start free today and upgrade when you're ready to see even more value."
+      answer: "New users get 10 free credits per month to test the platform and see how it works for their specific needs. Credits are used for Launch Reports (BizMap AI business plans), sprint task generation, and premium AI features.\n\nYou get free forever access to templates, community access, basic planning tools, browsing Insighta, and networking opportunities. Subscribers get monthly credit resets (50 credits for Creator, 150 for Professional) and can earn bonus credits by participating in feedback surveys.\n\nCheck our transparent pricing page for exact costs with no hidden fees. Start free today and upgrade when you're ready to see even more value."
     }
   ];
 

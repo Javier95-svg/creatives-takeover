@@ -29,7 +29,7 @@ export function useFeatureGating() {
       // BizMap AI conversation limits
       case 'bizmap_conversation':
         const conversationLimits = {
-          free: 5,
+          free: 10,
           creator: 50,
           professional: 150
         };
@@ -228,20 +228,22 @@ export function useFeatureGating() {
   const getConversationLimit = (): number => {
     const tier = subscriptionData.subscription_tier;
     const limits = {
-      free: 5,
+      free: 10,
       creator: 50,
       professional: 150
     };
-    return limits[tier as keyof typeof limits] || 5;
+    return limits[tier as keyof typeof limits] || 10;
   };
 
   const getTierFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
-        '5 BizMap AI conversations per month',
+        '10 BizMap AI conversations per month',
         'Community read-only access',
         'Prompt library (view only)',
         '1 active sprint',
+        'Funding opportunities (view only)',
+        'Job board (view only)',
         'Community forum support'
       ],
       creator: [

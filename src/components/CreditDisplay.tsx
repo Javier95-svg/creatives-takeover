@@ -44,7 +44,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
 
   const getBalanceColor = () => {
     if (totalAvailable <= 0) return "destructive";
-    if (totalAvailable <= 5) return "secondary";
+    if (totalAvailable <= 2) return "secondary"; // Low credit warning at 20% remaining for 10 credit free tier
     return "default";
   };
 
@@ -181,10 +181,10 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
             </div>
           </div>
           
-          {totalAvailable <= 5 && (
+          {totalAvailable <= 2 && (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mt-3">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                ⚠️ Low credit balance. Consider purchasing more credits to continue using all features.
+                ⚠️ Low credit balance. Upgrade to get more credits and unlock additional features.
               </p>
             </div>
           )}

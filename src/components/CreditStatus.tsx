@@ -36,12 +36,12 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       };
     }
 
-    if (totalAvailable <= 5) {
+    if (totalAvailable <= 2) {
       return {
         type: 'low',
         icon: Info,
         variant: 'default' as const,
-        message: `You have ${totalAvailable} credits remaining (${monthlyQuota} monthly quota + ${balance} purchased). Consider purchasing more to avoid interruption.`
+        message: `You have ${totalAvailable} credits remaining (${monthlyQuota} monthly quota + ${balance} purchased). Upgrade to get more credits and avoid interruption.`
       };
     }
 
@@ -132,7 +132,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
             <span className="text-sm font-medium">Total Available:</span>
           </div>
           <Badge 
-            variant={totalAvailable <= 0 ? 'destructive' : totalAvailable <= 5 ? 'secondary' : 'default'}
+            variant={totalAvailable <= 0 ? 'destructive' : totalAvailable <= 2 ? 'secondary' : 'default'}
           >
             {totalAvailable} credits
           </Badge>

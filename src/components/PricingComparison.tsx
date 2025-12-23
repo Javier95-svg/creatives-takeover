@@ -12,7 +12,7 @@ const PricingComparison = () => {
     {
       category: "BizMap AI Conversations",
       items: [
-        { feature: "Monthly Credits", free: "5 Credits", creator: "50 Credits", professional: "150 Credits" }
+        { feature: "Monthly Credits", free: "10 Credits", creator: "50 Credits", professional: "150 Credits" }
       ]
     },
     {
