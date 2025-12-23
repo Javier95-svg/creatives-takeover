@@ -92,7 +92,16 @@ serve(async (req) => {
 
     // Calculate average score across all 10 questions
     const averageScore = scoreValues.reduce((sum, score) => sum + score, 0) / 10;
-    const isReady = averageScore >= 7.0;
+    
+    // Determine verdict based on score thresholds
+    let verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
+    if (averageScore >= 7.0) {
+      verdict = 'Ready';
+    } else if (averageScore >= 5.5) {
+      verdict = 'Almost Ready';
+    } else {
+      verdict = 'Not Ready';
+    }
 
     // Use Lovable AI to analyze the results
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -139,16 +148,11 @@ Assessment Scores (0-10 scale) organized by category:
 - Funding Amount & Use Defined: ${scores.funding_defined} (${scoreLabels[scores.funding_defined as keyof typeof scoreLabels]})
 
 Average Score: ${averageScore.toFixed(1)}/10.0
-Current Status: ${isReady ? 'Ready' : 'Not Ready'}
+Current Verdict: ${verdict}
 
-Provide a comprehensive, actionable analysis organized by these 5 categories. Focus on:
-- Traction & Validation is typically most important for investors
-- Strong Team reduces execution risk
-- Market Opportunity determines upside potential
-- Scalable Operations shows ability to grow
-- Preparation shows professionalism and readiness
+Based on the average score, provide a clear, actionable analysis. Focus on being direct and practical. The goal is to give founders a "Reality Check" - helping them understand where they truly stand and what they need to do next before approaching investors.
 
-Be encouraging but realistic. Provide specific, actionable feedback for a first-time entrepreneur.`;
+Keep the analysis focused and investor-focused.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -175,51 +179,29 @@ Be encouraging but realistic. Provide specific, actionable feedback for a first-
                 verdict: {
                   type: 'string',
                   enum: ['Ready', 'Not Ready', 'Almost Ready'],
-                  description: 'Overall fundraising readiness verdict'
+                  description: 'Overall fundraising readiness verdict (must match the average score: >=7.0 = Ready, >=5.5 = Almost Ready, <5.5 = Not Ready)'
                 },
-                confidence: {
-                  type: 'number',
-                  minimum: 0,
-                  maximum: 100,
-                  description: 'Confidence level in the verdict (0-100)'
+                summary: {
+                  type: 'string',
+                  description: 'A brief 2-3 sentence summary clearly stating whether the founder is ready to start looking for investors or not'
                 },
                 strengths: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'List of 2-4 key strengths identified from the scores'
+                  description: 'List of 3-4 key strengths identified from the scores'
                 },
                 critical_gaps: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'List of 2-4 critical gaps or weaknesses that need attention'
+                  description: 'List of 3-4 critical gaps or weaknesses that need attention before fundraising'
                 },
-                prioritized_actions: {
+                next_steps: {
                   type: 'array',
-                  items: { 
-                    type: 'object',
-                    properties: {
-                      action: { type: 'string' },
-                      priority: { type: 'string', enum: ['High', 'Medium', 'Low'] },
-                      estimated_time: { type: 'string' }
-                    },
-                    required: ['action', 'priority']
-                  },
-                  description: 'Top 3-5 prioritized action items with priority and time estimates'
-                },
-                timeline_to_readiness: {
-                  type: 'string',
-                  description: 'Estimated timeline to reach fundraising readiness (e.g., "2-3 months", "1-2 weeks", "6+ months")'
-                },
-                risk_assessment: {
-                  type: 'string',
-                  description: 'Brief risk assessment highlighting main concerns'
-                },
-                summary: {
-                  type: 'string',
-                  description: 'A brief 2-3 sentence summary of the assessment'
+                  items: { type: 'string' },
+                  description: 'List of 3-5 actionable next steps tailored to the score, outlining exactly what the founder should focus on improving'
                 }
               },
-              required: ['verdict', 'confidence', 'strengths', 'critical_gaps', 'prioritized_actions', 'summary']
+              required: ['verdict', 'summary', 'strengths', 'critical_gaps', 'next_steps']
             }
           }
         }],
@@ -237,25 +219,34 @@ Be encouraging but realistic. Provide specific, actionable feedback for a first-
     const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
-      // Fallback: parse text response
-      const textResponse = aiData.choices[0]?.message?.content || '';
+      // Fallback: create simple response based on score thresholds
+      const fallbackSummary = verdict === 'Ready' 
+        ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
+        : verdict === 'Almost Ready'
+        ? `Based on your average score of ${averageScore.toFixed(1)}/10, you're close to being ready. Address the key gaps identified below before actively seeking investors.`
+        : `Based on your average score of ${averageScore.toFixed(1)}/10, you're not quite ready to start fundraising. Focus on improving the areas below before approaching investors.`;
+      
       return new Response(
         JSON.stringify({
-          verdict: isReady ? 'Ready' : 'Not Ready',
-          confidence: Math.round(averageScore * 20),
-          summary: textResponse.substring(0, 500),
-          strengths: [],
-          critical_gaps: [],
-          prioritized_actions: [],
-          timeline_to_readiness: 'Unknown',
-          risk_assessment: 'Unable to assess',
-          raw_response: textResponse
+          verdict: verdict,
+          summary: fallbackSummary,
+          strengths: ['Complete the assessment to see detailed strengths'],
+          critical_gaps: ['Complete the assessment to see detailed gaps'],
+          next_steps: ['Complete the assessment to see detailed next steps']
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const analysis = JSON.parse(toolCall.function.arguments);
+    let analysis;
+    try {
+      analysis = JSON.parse(toolCall.function.arguments);
+      // Ensure verdict matches the score threshold
+      analysis.verdict = verdict;
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError);
+      throw new Error('Failed to parse AI analysis response');
+    }
 
     // Save assessment to database (optional)
     try {
@@ -283,32 +274,28 @@ Be encouraging but realistic. Provide specific, actionable feedback for a first-
       console.error('Failed to save assessment:', dbError);
     }
 
+    // Ensure we have all required fields with defaults
+    const response = {
+      verdict: analysis.verdict || verdict,
+      summary: analysis.summary || 'Assessment completed. Review your scores to understand your fundraising readiness.',
+      strengths: analysis.strengths || [],
+      critical_gaps: analysis.critical_gaps || [],
+      next_steps: analysis.next_steps || [],
+      average_score: averageScore
+    };
+
     return new Response(
-      JSON.stringify({
-        ...analysis,
-        average_score: averageScore,
-        scores: {
-          team_complementary: scores.team_complementary,
-          team_experience: scores.team_experience,
-          traction_revenue: scores.traction_revenue,
-          milestone_achieved: scores.milestone_achieved,
-          mvp_working: scores.mvp_working,
-          product_live: scores.product_live,
-          market_size: scores.market_size,
-          demand_validated: scores.demand_validated,
-          pitch_deck: scores.pitch_deck,
-          funding_defined: scores.funding_defined
-        }
-      }),
+      JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in fundraising-readiness-analyzer:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'An unexpected error occurred',
-        details: error instanceof Error ? error.stack : undefined
+        error: errorMessage
       }),
       { 
         status: 500,

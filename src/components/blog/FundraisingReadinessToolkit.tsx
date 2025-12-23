@@ -26,30 +26,11 @@ interface Criterion {
 
 interface AIAnalysis {
   verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
-  confidence: number;
+  summary: string;
   strengths: string[];
   critical_gaps: string[];
-  prioritized_actions: Array<{
-    action: string;
-    priority: 'High' | 'Medium' | 'Low';
-    estimated_time?: string;
-  }>;
-  timeline_to_readiness?: string;
-  risk_assessment?: string;
-  summary: string;
+  next_steps: string[];
   average_score?: number;
-  scores?: {
-    team_complementary: number;
-    team_experience: number;
-    traction_revenue: number;
-    milestone_achieved: number;
-    mvp_working: number;
-    product_live: number;
-    market_size: number;
-    demand_validated: number;
-    pitch_deck: number;
-    funding_defined: number;
-  };
 }
 
 const criteria: Criterion[] = [
@@ -603,11 +584,8 @@ const FundraisingReadinessToolkit = () => {
     setIsAnalyzing(true);
     setAnalysisError(null);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:603',message:'analyzeReadiness start',data:{scores:scores,allScored:allScored,averageScore:averageScore,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     try {
+      // Validate all scores are valid numbers before sending
       const requestBody = {
         team_complementary_score: scores.team_complementary,
         team_experience_score: scores.team_experience,
@@ -621,59 +599,29 @@ const FundraisingReadinessToolkit = () => {
         funding_defined_score: scores.funding_defined
       };
 
-      // #region agent log
-      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:620',message:'request body prepared',data:{requestBody:requestBody},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+      // Validate scores are all numbers
+      const scoreValues = Object.values(requestBody);
+      if (scoreValues.some(score => typeof score !== 'number' || isNaN(score) || score < 0 || score > 10)) {
+        throw new Error('Invalid scores. Please ensure all questions are answered with valid scores.');
+      }
 
       const { data, error } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
         body: requestBody
       });
 
-      // #region agent log
-      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:627',message:'function invoke response',data:{hasError:!!error,hasData:!!data,errorType:error?.constructor?.name,errorKeys:error?Object.keys(error):[],dataKeys:data?Object.keys(data):[],errorStatus:error?.status,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-
       if (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:632',message:'error object details',data:{error:error,errorString:JSON.stringify(error),status:error?.status,message:error?.message,context:error?.context,errorContext:error?.context?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
-        
-        // Extract error message from various possible error formats
-        let errorMsg = 'Failed to analyze readiness';
-        if (error.message) {
-          errorMsg = error.message;
-        } else if (error.context?.message) {
-          errorMsg = error.context.message;
-        } else if (typeof error === 'string') {
-          errorMsg = error;
-        }
-        
         // Handle credit errors specifically
-        if (error.status === 402 || errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
+        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
           setCreditGateOpen(true);
           throw new Error('Insufficient credits');
         }
         
-        // Try to extract error from context if available
-        if (error.context?.body) {
-          try {
-            const errorBody = typeof error.context.body === 'string' ? JSON.parse(error.context.body) : error.context.body;
-            if (errorBody.error) {
-              errorMsg = errorBody.error;
-            }
-          } catch (e) {
-            // Ignore parse errors
-          }
-        }
-        
+        // Extract error message
+        const errorMsg = error.message || 'Failed to analyze readiness. Please try again.';
         throw new Error(errorMsg);
       }
 
       if (data?.error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:642',message:'data contains error',data:{dataError:data.error,dataRequired:data.required},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
-        
         if (data.error.includes('credits') || data.required) {
           setCreditGateOpen(true);
           throw new Error('Insufficient credits');
@@ -681,19 +629,14 @@ const FundraisingReadinessToolkit = () => {
         throw new Error(data.error);
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:652',message:'success - setting analysis',data:{hasVerdict:!!data?.verdict,hasStrengths:!!data?.strengths,hasGaps:!!data?.critical_gaps},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
+      if (!data || !data.verdict) {
+        throw new Error('Invalid response from analysis service. Please try again.');
+      }
 
       setAiAnalysis(data as AIAnalysis);
       toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
     } catch (error) {
       console.error('Analysis error:', error);
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:661',message:'catch block error',data:{errorType:error?.constructor?.name,errorMessage:error?.message,errorString:String(error),isErrorInstance:error instanceof Error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-      // #endregion
-      
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
       setAnalysisError(errorMessage);
       if (!errorMessage.includes('credits')) {
@@ -891,16 +834,16 @@ const FundraisingReadinessToolkit = () => {
           <Card className="mb-8">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Average Score</p>
-                  <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
-                </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Average Score</p>
+                    <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
+                  </div>
                 {/* Insighta Test Results Button */}
                 {isAuthenticated && (
-                  <Button
+                    <Button
                     onClick={analyzeReadiness}
                     disabled={isAnalyzing}
-                    size="lg"
+                      size="lg"
                     className="w-full sm:w-auto min-w-[200px]"
                   >
                     {isAnalyzing ? (
@@ -987,7 +930,7 @@ const FundraisingReadinessToolkit = () => {
                      "Not Quite Ready Yet"}
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Confidence: {aiAnalysis.confidence}% • Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
+                    Average Score: {aiAnalysis.average_score?.toFixed(1) || averageScore.toFixed(1)} / 10.0
                   </CardDescription>
                 </div>
               </div>
@@ -1040,49 +983,21 @@ const FundraisingReadinessToolkit = () => {
                 </div>
               )}
 
-              {/* Prioritized Actions */}
-              {aiAnalysis.prioritized_actions && aiAnalysis.prioritized_actions.length > 0 && (
+              {/* Next Steps */}
+              {aiAnalysis.next_steps && aiAnalysis.next_steps.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    Prioritized Action Items
+                    Next Steps
                   </h4>
-                  <ul className="space-y-3">
-                    {aiAnalysis.prioritized_actions.map((action, index) => (
+                  <ul className="space-y-2">
+                    {aiAnalysis.next_steps.map((step, index) => (
                       <li key={index} className="flex gap-3 text-sm">
-                        <Badge 
-                          variant={action.priority === 'High' ? 'destructive' : action.priority === 'Medium' ? 'default' : 'secondary'}
-                          className="h-fit"
-                        >
-                          {action.priority}
-                        </Badge>
-                        <div className="flex-1">
-                          <span className="text-foreground">{action.action}</span>
-                          {action.estimated_time && (
-                            <span className="text-xs text-muted-foreground ml-2">({action.estimated_time})</span>
-                          )}
-                        </div>
+                        <span className="text-primary mt-1">•</span>
+                        <span className="text-muted-foreground">{step}</span>
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
-
-              {/* Timeline & Risk Assessment */}
-              {(aiAnalysis.timeline_to_readiness || aiAnalysis.risk_assessment) && (
-                <div className="grid md:grid-cols-2 gap-4 pt-4 border-t">
-                  {aiAnalysis.timeline_to_readiness && (
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Timeline to Readiness</h4>
-                      <p className="text-sm text-muted-foreground">{aiAnalysis.timeline_to_readiness}</p>
-                    </div>
-                  )}
-                  {aiAnalysis.risk_assessment && (
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Risk Assessment</h4>
-                      <p className="text-sm text-muted-foreground">{aiAnalysis.risk_assessment}</p>
-                    </div>
-                  )}
                 </div>
               )}
             </CardContent>
