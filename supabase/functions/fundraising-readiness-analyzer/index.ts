@@ -325,7 +325,8 @@ Keep the analysis focused and investor-focused.`;
       );
     }
 
-    // Save assessment to database (optional - never fail on this)
+    // Save assessment to database (optional - completely skip if it fails)
+    // This is non-critical, so we don't let it affect the response
     try {
       const insertResult = await supabase
         .from('fundraising_readiness_assessments')
@@ -348,13 +349,12 @@ Keep the analysis focused and investor-focused.`;
         });
       
       if (insertResult.error) {
-        console.error('Database insert error (non-critical, continuing):', insertResult.error);
-      } else {
-        console.log('Assessment saved to database successfully');
+        console.warn('Database insert failed (non-critical):', insertResult.error.message);
+        // Continue anyway - database save is optional
       }
     } catch (dbError) {
-      // Non-critical - log but don't fail - this should never happen but just in case
-      console.error('Database insert exception (non-critical, continuing):', dbError);
+      // Ignore database errors completely - this is optional
+      console.warn('Database insert exception (ignored):', dbError);
     }
 
     // Ensure we have all required fields with defaults
