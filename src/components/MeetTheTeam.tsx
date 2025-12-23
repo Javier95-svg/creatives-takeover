@@ -29,7 +29,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Domagoj Markota",
     role: "Fractional CTO",
-    bio: "Domagoj is a founder and senior software engineer specializing in AI, machine learning, and scalable systems, with a strong track record of building deep-tech products, leading international engineering teams, and turning complex technology into market-ready solutions.",
+    bio: "Domagoj is a founder and senior software engineer focused on building and scaling deep-tech products, combining AI expertise with hands-on leadership to turn complex ideas into real-world solutions.",
     email: "domagoj.markota@gmail.com",
     photo: domagojPhoto,
   },
