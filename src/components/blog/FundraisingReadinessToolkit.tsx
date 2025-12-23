@@ -622,21 +622,29 @@ const FundraisingReadinessToolkit = () => {
         dataString: data ? JSON.stringify(data) : null
       });
 
-      // Check if data contains error even when error object exists (Supabase sometimes does this)
-      if (data?.error && !error) {
-        console.error('Error in response data (no error object):', data.error);
-        if (data.error.includes('credits') || data.required) {
+      // Check if data contains error (sometimes Supabase includes response body in data even when error exists)
+      if (data?.error) {
+        const errorFromData = data.error as string;
+        console.error('Error in response data:', errorFromData);
+        
+        if (errorFromData.includes('credits') || data.required) {
           setCreditGateOpen(true);
           setAnalysisError('Insufficient credits');
           toast.error('Insufficient credits');
           return;
         }
-        setAnalysisError(data.error);
-        toast.error(data.error);
+        
+        setAnalysisError(errorFromData);
+        toast.error(errorFromData);
         return;
       }
 
       if (error) {
+        console.error('Supabase function error:', error);
+        console.error('Error status:', error?.status);
+        console.error('Error message:', error?.message);
+        console.error('Response data (if any):', data);
+        
         // Handle credit errors specifically
         if (error.status === 402 || (error.message && error.message.includes('credits'))) {
           setCreditGateOpen(true);
@@ -644,12 +652,18 @@ const FundraisingReadinessToolkit = () => {
           return;
         }
         
-        // Extract error message - Supabase sometimes puts it in data even when error exists
+        // Extract error message
         let errorMsg = error.message || 'Failed to analyze readiness. Please try again.';
         
-        // If it's the generic "non-2xx" message, provide a better error
+        // If it's the generic "non-2xx" message, try to get actual error from response
         if (errorMsg.includes('non-2xx')) {
-          errorMsg = 'Analysis service returned an error. Please try again or contact support if the issue persists.';
+          // Check if we have data with error field
+          if (data && typeof data === 'object' && 'error' in data) {
+            errorMsg = (data as any).error || errorMsg;
+          } else {
+            // Provide a more helpful generic message
+            errorMsg = 'The analysis service encountered an error. Please try again in a moment.';
+          }
         }
         
         setAnalysisError(errorMsg);

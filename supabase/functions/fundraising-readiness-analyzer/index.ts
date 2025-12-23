@@ -152,7 +152,14 @@ serve(async (req) => {
     // Use Lovable AI to analyze the results
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+      console.error('LOVABLE_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'AI service not configured. Please contact support.' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const scoreLabels = {
@@ -200,13 +207,15 @@ Based on the average score, provide a clear, actionable analysis. Focus on being
 
 Keep the analysis focused and investor-focused.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    let aiResponse;
+    try {
+      aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [{
           role: 'system',
@@ -253,7 +262,17 @@ Keep the analysis focused and investor-focused.`;
         }],
         tool_choice: { type: 'function', function: { name: 'analyze_readiness' } }
       }),
-    });
+      });
+    } catch (fetchError) {
+      console.error('Failed to call AI API (network/timeout error):', fetchError);
+      return new Response(
+        JSON.stringify({ error: 'Unable to connect to AI analysis service. Please try again in a moment.' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
@@ -373,19 +392,26 @@ Keep the analysis focused and investor-focused.`;
     );
 
   } catch (error) {
-    console.error('Unhandled error in fundraising-readiness-analyzer:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-    const errorStack = error instanceof Error ? error.stack : String(error);
+    console.error('=== UNHANDLED ERROR IN FUNDRAISING READINESS ANALYZER ===');
+    console.error('Error:', error);
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
-    console.error('Error details:', {
-      message: errorMessage,
-      stack: errorStack,
-      errorType: error?.constructor?.name
-    });
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === 'string' 
+        ? error 
+        : 'An unexpected error occurred during analysis. Please try again.';
+    
+    // Return a user-friendly error message
+    const userFriendlyMessage = errorMessage.includes('API') || errorMessage.includes('fetch')
+      ? 'AI analysis service is temporarily unavailable. Please try again in a moment.'
+      : errorMessage || 'An unexpected error occurred. Please try again.';
     
     return new Response(
       JSON.stringify({ 
-        error: errorMessage
+        error: userFriendlyMessage
       }),
       { 
         status: 500,
