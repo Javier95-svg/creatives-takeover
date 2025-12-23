@@ -682,12 +682,12 @@ const FundraisingReadinessToolkit = () => {
         {/* Main Card */}
         <Card className="mb-8">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-primary animate-pulse">How ready are you?</CardTitle>
+            <CardTitle className="text-3xl font-bold text-primary animate-pulse">How ready are you?</CardTitle>
+            {isAuthenticated && (
             <CardDescription className="mt-2">
-              {isAuthenticated 
-                ? "Answer each question honestly by moving the slider from 0 (Not Started) to 10 (Complete)"
-                : "Preview the assessment below. Sign in to adjust scores and get AI-powered insights!"}
+                Answer each question honestly by moving the slider from 0 (Not Started) to 10 (Complete)
             </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Progress Indicator */}
@@ -804,34 +804,37 @@ const FundraisingReadinessToolkit = () => {
 
             {/* Navigation Buttons */}
             <div className="flex justify-between items-center pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={goToPrevious}
-                disabled={isFirstQuestion || !isAuthenticated}
-                className="min-w-[100px]"
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Previous
-              </Button>
+              {!isFirstQuestion && (
+                <Button
+                  variant="outline"
+                  onClick={goToPrevious}
+                  disabled={!isAuthenticated}
+                  className="min-w-[100px]"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+              )}
+              {isFirstQuestion && <div />}
 
               {isLastQuestion && canProceed && isAuthenticated ? (
-                <Button
-                  onClick={analyzeReadiness}
-                  disabled={isAnalyzing || !allScored}
+                  <Button
+                    onClick={analyzeReadiness}
+                    disabled={isAnalyzing || !allScored}
                   className="min-w-[150px]"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="h-4 w-4 mr-2" />
-                      Get AI Analysis
-                    </>
-                  )}
-                </Button>
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="h-4 w-4 mr-2" />
+                        Get AI Analysis
+                      </>
+                    )}
+                  </Button>
               ) : (
                 <Button
                   onClick={goToNext}
