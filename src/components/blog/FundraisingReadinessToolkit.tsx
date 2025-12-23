@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn, ArrowRight, Briefcase, TrendingUp, Zap, Globe, FileText, BarChart } from "lucide-react";
+import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Loader2, LogIn, ArrowRight, Briefcase, TrendingUp, Zap, Globe, FileText, BarChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -526,6 +526,7 @@ const FundraisingReadinessToolkit = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const averageScore = useMemo(() => {
     const scoreValues = Object.values(scores);
@@ -557,6 +558,28 @@ const FundraisingReadinessToolkit = () => {
       [criterionId]: !prev[criterionId]
     }));
   };
+
+  const goToNext = () => {
+    const currentQuestion = criteria[currentQuestionIndex];
+    const currentScore = scores[currentQuestion.id] || 0;
+    if (currentQuestionIndex < criteria.length - 1 && currentScore > 0) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const goToPrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const currentQuestion = criteria[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / criteria.length) * 100;
+  const progressText = `${currentQuestionIndex + 1} of ${criteria.length}`;
+  const isFirstQuestion = currentQuestionIndex === 0;
+  const isLastQuestion = currentQuestionIndex === criteria.length - 1;
+  const currentScore = scores[currentQuestion.id] || 0;
+  const canProceed = currentScore > 0;
 
   const analyzeReadiness = async () => {
     if (!isAuthenticated || !user) {
@@ -662,26 +685,31 @@ const FundraisingReadinessToolkit = () => {
             <CardTitle className="text-2xl text-primary animate-pulse">How ready are you?</CardTitle>
             <CardDescription className="mt-2">
               {isAuthenticated 
-                ? "Move each slider from 0 (Not Started) to 10 (Complete). Be honest with yourself!"
+                ? "Answer each question honestly by moving the slider from 0 (Not Started) to 10 (Complete)"
                 : "Preview the assessment below. Sign in to adjust scores and get AI-powered insights!"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8">
-            <TooltipProvider>
-            {criteria.map((criterion) => {
-              const currentScore = scores[criterion.id] || 0;
-              const isHelpExpanded = expandedHelp[criterion.id];
+          <CardContent className="space-y-6">
+            {/* Progress Indicator */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium text-muted-foreground">Question {progressText}</span>
+                <span className="text-muted-foreground">{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
 
-              return (
-                <div key={criterion.id} className="space-y-4">
+            {/* Current Question */}
+            <TooltipProvider>
+              <div className="space-y-4 pt-4">
                   {/* Criterion Header */}
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-primary/10 text-primary mt-1">
-                      {criterion.icon}
+                    {currentQuestion.icon}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold">{criterion.title}</h3>
+                      <h3 className="text-lg font-semibold">{currentQuestion.title}</h3>
                         {currentScore > 0 && (
                           <Badge variant="secondary" className="text-xs">
                             {scoreLabels[currentScore]}
@@ -689,11 +717,11 @@ const FundraisingReadinessToolkit = () => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {criterion.description}
+                      {currentQuestion.description}
                       </p>
                       
                       {/* Help Text */}
-                      <Collapsible open={isHelpExpanded} onOpenChange={() => toggleHelp(criterion.id)}>
+                    <Collapsible open={expandedHelp[currentQuestion.id]} onOpenChange={() => toggleHelp(currentQuestion.id)}>
                         <CollapsibleTrigger asChild>
                           <Button
                             variant="ghost"
@@ -701,8 +729,8 @@ const FundraisingReadinessToolkit = () => {
                             className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground"
                           >
                             <HelpCircle className="h-3 w-3 mr-1" />
-                            {isHelpExpanded ? "Hide help" : "What does this mean?"}
-                            {isHelpExpanded ? (
+                          {expandedHelp[currentQuestion.id] ? "Hide help" : "What does this mean?"}
+                          {expandedHelp[currentQuestion.id] ? (
                               <ChevronUp className="h-3 w-3 ml-1" />
                             ) : (
                               <ChevronDown className="h-3 w-3 ml-1" />
@@ -710,7 +738,7 @@ const FundraisingReadinessToolkit = () => {
                           </Button>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="text-sm text-muted-foreground mt-2 pl-4 border-l-2 border-primary/20 space-y-2 whitespace-pre-line">
-                          {criterion.helpText}
+                        {currentQuestion.helpText}
                         </CollapsibleContent>
                       </Collapsible>
                     </div>
@@ -732,7 +760,7 @@ const FundraisingReadinessToolkit = () => {
                               value={[currentScore]}
                               onValueChange={(value) => {
                                 if (isAuthenticated) {
-                                  handleScoreChange(criterion.id, value);
+                              handleScoreChange(currentQuestion.id, value);
                                 }
                               }}
                               min={0}
@@ -772,57 +800,80 @@ const FundraisingReadinessToolkit = () => {
                     )}
                   </div>
                 </div>
-              );
-            })}
             </TooltipProvider>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={goToPrevious}
+                disabled={isFirstQuestion || !isAuthenticated}
+                className="min-w-[100px]"
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+
+              {isLastQuestion && canProceed && isAuthenticated ? (
+                <Button
+                  onClick={analyzeReadiness}
+                  disabled={isAnalyzing || !allScored}
+                  className="min-w-[150px]"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Get AI Analysis
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={goToNext}
+                  disabled={!canProceed || !isAuthenticated}
+                  className="min-w-[100px]"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        {/* Analyze Button */}
-        {(allScored || !isAuthenticated) && (
+        {/* Average Score Display (when all questions answered) */}
+        {allScored && (
           <Card className="mb-8">
             <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                {allScored && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Average Score</p>
-                    <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
-                  </div>
-                )}
-                {!isAuthenticated ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Sign in to get AI-powered analysis of your fundraising readiness
-                    </p>
-                    <Button
-                      size="lg"
-                      onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
-                      className="w-full md:w-auto min-w-[200px]"
-                    >
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In to Get Analysis
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    size="lg"
-                    onClick={analyzeReadiness}
-                    disabled={isAnalyzing || !allScored}
-                    className="w-full md:w-auto min-w-[200px]"
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Rocket className="h-4 w-4 mr-2" />
-                        Get AI Analysis
-                      </>
-                    )}
-                  </Button>
-                )}
+              <div className="text-center space-y-2">
+                <p className="text-sm text-muted-foreground">Average Score</p>
+                <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sign In Prompt (if not authenticated) */}
+        {!isAuthenticated && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Sign in to complete the assessment and get AI-powered analysis of your fundraising readiness
+                </p>
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/login', { state: { returnTo: '/insighta' } })}
+                  className="w-full md:w-auto min-w-[200px]"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In to Continue
+                </Button>
               </div>
             </CardContent>
           </Card>
