@@ -609,13 +609,78 @@ const FundraisingReadinessToolkit = () => {
         body: requestBody
       });
 
-      console.log('Function invoke response:', { hasError: !!error, hasData: !!data, error, data });
+      console.log('Function invoke response:', { 
+        hasError: !!error, 
+        hasData: !!data, 
+        errorType: error?.constructor?.name,
+        errorKeys: error ? Object.keys(error) : [],
+        errorString: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null,
+        errorStatus: error?.status,
+        errorMessage: error?.message,
+        errorContext: error?.context,
+        dataKeys: data ? Object.keys(data) : [],
+        dataString: data ? JSON.stringify(data) : null
+      });
+
+      // Check if data contains error even when error object exists (Supabase sometimes does this)
+      if (data?.error && !error) {
+        console.error('Error in response data (no error object):', data.error);
+        if (data.error.includes('credits') || data.required) {
+          setCreditGateOpen(true);
+          setAnalysisError('Insufficient credits');
+          toast.error('Insufficient credits');
+          return;
+        }
+        setAnalysisError(data.error);
+        toast.error(data.error);
+        return;
+      }
 
       if (error) {
-        console.error('Supabase function error:', error);
+        console.error('Full error object:', error);
+        console.error('Error status:', error?.status);
+        console.error('Error message:', error?.message);
+        console.error('Error context:', error?.context);
+        console.error('Error body:', error?.context?.body);
         
-        // Try to extract error from error object
-        let errorMsg = error.message || 'Failed to analyze readiness';
+        // Try multiple ways to extract error message
+        let errorMsg = 'Failed to analyze readiness. Please try again.';
+        
+        // Method 1: Direct error message
+        if (error.message) {
+          errorMsg = error.message;
+        }
+        
+        // Method 2: Check error context body
+        if (error.context?.body) {
+          try {
+            const body = typeof error.context.body === 'string' ? JSON.parse(error.context.body) : error.context.body;
+            if (body.error) {
+              errorMsg = body.error;
+            } else if (body.message) {
+              errorMsg = body.message;
+            }
+          } catch (e) {
+            console.error('Failed to parse error context body:', e);
+          }
+        }
+        
+        // Method 3: Check error context message
+        if (error.context?.message && errorMsg === 'Failed to analyze readiness. Please try again.') {
+          errorMsg = error.context.message;
+        }
+        
+        // Method 4: Check if error has a response body we can read
+        if (error.context?.response) {
+          try {
+            const response = typeof error.context.response === 'string' ? JSON.parse(error.context.response) : error.context.response;
+            if (response.error) {
+              errorMsg = response.error;
+            }
+          } catch (e) {
+            console.error('Failed to parse error response:', e);
+          }
+        }
         
         // Handle credit errors specifically
         if (error.status === 402 || errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
@@ -623,21 +688,28 @@ const FundraisingReadinessToolkit = () => {
           throw new Error('Insufficient credits');
         }
         
-        // If error has context, try to extract error message from there
-        if (error.context) {
-          try {
-            const errorContext = typeof error.context === 'string' ? JSON.parse(error.context) : error.context;
-            if (errorContext.error) {
-              errorMsg = errorContext.error;
-            } else if (errorContext.message) {
-              errorMsg = errorContext.message;
-            }
-          } catch (e) {
-            // Ignore parse errors
+        // Method 5: Try to stringify the entire error to see if message is hidden
+        try {
+          const errorStr = JSON.stringify(error, null, 2);
+          console.error('Full error JSON:', errorStr);
+          // Look for error message in the stringified version
+          const errorMatch = errorStr.match(/"error"\s*:\s*"([^"]+)"/);
+          if (errorMatch && errorMatch[1] && errorMsg === 'Failed to analyze readiness. Please try again.') {
+            errorMsg = errorMatch[1];
           }
+        } catch (e) {
+          console.error('Failed to stringify error:', e);
         }
         
-        throw new Error(errorMsg);
+        // If we still have generic message and have status code, include it
+        if (error.status && errorMsg === 'Failed to analyze readiness. Please try again.') {
+          errorMsg = `Analysis failed with status ${error.status}. ${error.message || 'Please check the console for details.'}`;
+        }
+        
+        console.error('Final extracted error message:', errorMsg);
+        setAnalysisError(errorMsg);
+        toast.error(errorMsg);
+        return; // Don't throw, just set error state and return
       }
 
       if (data?.error) {

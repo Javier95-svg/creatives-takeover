@@ -325,9 +325,9 @@ Keep the analysis focused and investor-focused.`;
       );
     }
 
-    // Save assessment to database (optional)
+    // Save assessment to database (optional - never fail on this)
     try {
-      await supabase
+      const insertResult = await supabase
         .from('fundraising_readiness_assessments')
         .insert({
           user_id: user.id,
@@ -346,9 +346,15 @@ Keep the analysis focused and investor-focused.`;
           analysis_data: analysis,
           created_at: new Date().toISOString()
         });
+      
+      if (insertResult.error) {
+        console.error('Database insert error (non-critical, continuing):', insertResult.error);
+      } else {
+        console.log('Assessment saved to database successfully');
+      }
     } catch (dbError) {
-      // Non-critical - log but don't fail
-      console.error('Failed to save assessment:', dbError);
+      // Non-critical - log but don't fail - this should never happen but just in case
+      console.error('Database insert exception (non-critical, continuing):', dbError);
     }
 
     // Ensure we have all required fields with defaults
