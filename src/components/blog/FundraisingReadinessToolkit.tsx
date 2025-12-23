@@ -651,20 +651,11 @@ const FundraisingReadinessToolkit = () => {
         body: requestBody
       });
       // #region agent log
-      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:631',message:'After function invoke',data:{hasError:!!invokeError,hasData:!!data,errorStatus:invokeError?.status,errorMessage:invokeError?.message,dataKeys:data&&typeof data==='object'?Object.keys(data):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FundraisingReadinessToolkit.tsx:631',message:'After function invoke',data:{hasError:!!invokeError,hasData:!!data,errorStatus:invokeError?.status,errorMessage:invokeError?.message,dataKeys:data&&typeof data==='object'?Object.keys(data):[],hasVerdict:data&&typeof data==='object'&&'verdict' in data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
-      console.log('Function invoke response:', { 
-        hasError: !!invokeError, 
-        hasData: !!data, 
-        errorType: invokeError?.constructor?.name,
-        errorStatus: invokeError?.status,
-        errorMessage: invokeError?.message,
-        dataType: typeof data,
-        dataKeys: data && typeof data === 'object' ? Object.keys(data) : [],
-        dataValue: data
-      });
 
-      // Check Supabase error object first (HTTP-level errors - happens when status is non-2xx)
+      // Simple, direct error handling (matching the working 4-question version)
+      // Step 1: Check for Supabase-level HTTP errors
       if (invokeError) {
         console.error('Supabase function error:', invokeError);
         
@@ -675,27 +666,10 @@ const FundraisingReadinessToolkit = () => {
           return;
         }
         
-        // When invokeError exists, data might contain the error response body
+        // Extract error message from invokeError or data
         let errorMsg = invokeError.message || 'Failed to analyze readiness. Please try again.';
-        
-        // Try to extract actual error from data if available
-        if (data) {
-          if (typeof data === 'string') {
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.error) {
-                errorMsg = parsed.error;
-              }
-            } catch (e) {
-              // If not JSON, use the string itself
-              errorMsg = data;
-            }
-          } else if (typeof data === 'object' && 'error' in data) {
-            const dataError = (data as any).error;
-            if (dataError) {
-              errorMsg = typeof dataError === 'string' ? dataError : String(dataError);
-            }
-          }
+        if (data && typeof data === 'object' && 'error' in data) {
+          errorMsg = typeof (data as any).error === 'string' ? (data as any).error : errorMsg;
         }
         
         setAnalysisError(errorMsg);
@@ -703,69 +677,53 @@ const FundraisingReadinessToolkit = () => {
         return;
       }
 
-      // If no invokeError, check if data contains an error (edge function returned 200 but with error in body)
-      // IMPORTANT: Only treat as error if it has 'error' field AND no 'verdict' field (successful responses have 'verdict')
-      if (data && typeof data === 'object' && 'error' in data && !('verdict' in data)) {
-        const errorFromData = (data as any).error;
-        console.error('Error in response data:', errorFromData);
+      // Step 2: Check if response has verdict (success) or error (failure)
+      // Backend returns { verdict, summary, strengths, critical_gaps, next_steps, average_score } on success
+      // Backend returns { error: string } on failure
+      if (!data) {
+        console.error('No response data received');
+        setAnalysisError('No response received from analysis service. Please try again.');
+        toast.error('No response received from analysis service. Please try again.');
+        return;
+      }
+
+      // If data has 'verdict', it's a successful response
+      if (data && typeof data === 'object' && 'verdict' in data) {
+        setAiAnalysis(data as AIAnalysis);
+        toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
+      
+        // Scroll to analysis results after successful analysis
+        setTimeout(() => {
+          const analysisCard = document.getElementById('analysis-results');
+          if (analysisCard) {
+            analysisCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+        return;
+      }
+
+      // If we get here, data exists but has no verdict - treat as error
+      // Check if it's an error response from backend
+      if (data && typeof data === 'object' && 'error' in data) {
+        const errorMsg = typeof (data as any).error === 'string' ? (data as any).error : 'Failed to analyze readiness. Please try again.';
         
-        if (errorFromData && (typeof errorFromData === 'string' && (errorFromData.includes('credits') || errorFromData.includes('Insufficient')))) {
+        // Handle credit errors
+        if (errorMsg.includes('credits') || errorMsg.includes('Insufficient')) {
           setCreditGateOpen(true);
           setAnalysisError('Insufficient credits');
           toast.error('Insufficient credits');
           return;
         }
         
-        if (errorFromData) {
-          const errorMsg = typeof errorFromData === 'string' ? errorFromData : String(errorFromData);
-          setAnalysisError(errorMsg);
-          toast.error(errorMsg);
-          return;
-        }
+        setAnalysisError(errorMsg);
+        toast.error(errorMsg);
+        return;
       }
 
-      // Handle case where data is a string (shouldn't happen for success, but handle it)
-      if (data && typeof data === 'string') {
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.error) {
-            setAnalysisError(parsed.error);
-            toast.error(parsed.error);
-            return;
-          }
-          // If parsed successfully and has verdict, use it
-          if (parsed.verdict) {
-            setAiAnalysis(parsed as AIAnalysis);
-            toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
-            return;
-          }
-        } catch (e) {
-          console.error('Failed to parse string response:', e);
-          throw new Error('Invalid response format from analysis service. Please try again.');
-        }
-      }
-
-      // Final validation - ensure we have valid response data
-      if (!data) {
-        console.error('No response data received');
-        throw new Error('No response received from analysis service. Please try again.');
-      }
-
-      if (!data.verdict) {
-        console.error('Invalid response data - missing verdict:', data);
-        throw new Error('Invalid response from analysis service. Please try again.');
-      }
-
-      setAiAnalysis(data as AIAnalysis);
-      toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
-      
-      // Scroll to analysis results after successful analysis
-      setTimeout(() => {
-        const analysisCard = document.getElementById('analysis-results');
-        if (analysisCard) {
-          analysisCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 300);
+      // Fallback: unknown response format
+      console.error('Invalid response format - no verdict or error:', data);
+      setAnalysisError('Invalid response from analysis service. Please try again.');
+      toast.error('Invalid response from analysis service. Please try again.');
     } catch (error) {
       console.error('=== ANALYSIS ERROR CAUGHT ===');
       console.error('Error:', error);
