@@ -52,82 +52,12 @@ export default defineConfig(({ mode }) => {
           entryFileNames: `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,
           assetFileNames: `assets/[name].[hash].[ext]`,
-          // Manual chunk splitting for better caching and parallel loading
-          manualChunks: (id) => {
-            // React vendor chunk
-            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
-              return 'react-vendor';
-            }
-            // Radix UI vendor chunk
-            if (id.includes('node_modules/@radix-ui')) {
-              return 'radix-vendor';
-            }
-            // Supabase and query client vendor chunk
-            if (id.includes('node_modules/@supabase') || id.includes('node_modules/@tanstack/react-query')) {
-              return 'supabase-vendor';
-            }
-            // Heavy libraries vendor chunk (fabric, mapbox, pdf generators, charts)
-            if (
-              id.includes('node_modules/fabric') ||
-              id.includes('node_modules/mapbox-gl') ||
-              id.includes('node_modules/jspdf') ||
-              id.includes('node_modules/html2canvas') ||
-              id.includes('node_modules/docx') ||
-              id.includes('node_modules/recharts')
-            ) {
-              return 'heavy-vendor';
-            }
-            // UI/utility vendor chunk (tailwind, lucide, date-fns, etc.)
-            if (
-              id.includes('node_modules/lucide-react') ||
-              id.includes('node_modules/date-fns') ||
-              id.includes('node_modules/tailwind') ||
-              id.includes('node_modules/clsx') ||
-              id.includes('node_modules/tailwind-merge') ||
-              id.includes('node_modules/class-variance-authority') ||
-              id.includes('node_modules/next-themes') ||
-              id.includes('node_modules/zustand') ||
-              id.includes('node_modules/canvas-confetti') ||
-              id.includes('node_modules/sonner') ||
-              id.includes('node_modules/vaul') ||
-              id.includes('node_modules/cmdk') ||
-              id.includes('node_modules/embla-carousel-react')
-            ) {
-              return 'ui-vendor';
-            }
-            // Form and validation vendor chunk
-            if (
-              id.includes('node_modules/react-hook-form') ||
-              id.includes('node_modules/@hookform/resolvers') ||
-              id.includes('node_modules/zod') ||
-              id.includes('node_modules/input-otp')
-            ) {
-              return 'form-vendor';
-            }
-            // Markdown and content vendor chunk
-            if (
-              id.includes('node_modules/react-markdown') ||
-              id.includes('node_modules/remark') ||
-              id.includes('node_modules/dompurify') ||
-              id.includes('node_modules/react-helmet-async')
-            ) {
-              return 'content-vendor';
-            }
-            // Other vendor dependencies
-            if (id.includes('node_modules')) {
-              return 'vendor';
-            }
-          },
         },
       },
-      // Lower chunk size warning limit to catch large chunks
-      chunkSizeWarningLimit: 500,
+      // Increase chunk size warning limit
+      chunkSizeWarningLimit: 1000,
       // Add sourcemap for debugging (can be disabled in production)
       sourcemap: false,
-      // Enable minification
-      minify: 'esbuild',
-      // Optimize chunk loading
-      cssCodeSplit: true,
     },
   };
 });
