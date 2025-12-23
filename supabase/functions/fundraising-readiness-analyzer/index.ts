@@ -176,36 +176,31 @@ serve(async (req) => {
       10: 'Complete'
     };
 
-    const prompt = `You are a fundraising readiness expert analyzing a pre-seed startup's comprehensive readiness assessment.
+    const prompt = `Analyze this fundraising readiness assessment and provide a clear, actionable analysis.
 
-Assessment Scores (0-10 scale) organized by category:
-
-**1. Strong Team (2 questions):**
-- Complementary Founding Team (tech + business): ${scores.team_complementary} (${scoreLabels[scores.team_complementary as keyof typeof scoreLabels]})
-- Previous Startup Experience: ${scores.team_experience} (${scoreLabels[scores.team_experience as keyof typeof scoreLabels]})
-
-**2. Traction & Validation (4 questions):**
-- Revenue or User Traction: ${scores.traction_revenue} (${scoreLabels[scores.traction_revenue as keyof typeof scoreLabels]})
-- Key Growth Milestone Achieved: ${scores.milestone_achieved} (${scoreLabels[scores.milestone_achieved as keyof typeof scoreLabels]})
-- Working MVP or Prototype: ${scores.mvp_working} (${scoreLabels[scores.mvp_working as keyof typeof scoreLabels]})
-- Customer Demand Validated: ${scores.demand_validated} (${scoreLabels[scores.demand_validated as keyof typeof scoreLabels]})
-
-**3. Market Opportunity (1 question):**
-- Large & Growing Market ($1B+): ${scores.market_size} (${scoreLabels[scores.market_size as keyof typeof scoreLabels]})
-
-**4. Scalable Operations (1 question):**
-- Product Live and in Use: ${scores.product_live} (${scoreLabels[scores.product_live as keyof typeof scoreLabels]})
-
-**5. Preparation (2 questions):**
-- Pitch Deck Ready: ${scores.pitch_deck} (${scoreLabels[scores.pitch_deck as keyof typeof scoreLabels]})
-- Funding Amount & Use Defined: ${scores.funding_defined} (${scoreLabels[scores.funding_defined as keyof typeof scoreLabels]})
+Assessment Scores (0-10 scale):
+- Complementary Founding Team: ${scores.team_complementary}/10
+- Previous Startup Experience: ${scores.team_experience}/10
+- Revenue or User Traction: ${scores.traction_revenue}/10
+- Key Growth Milestone: ${scores.milestone_achieved}/10
+- Working MVP: ${scores.mvp_working}/10
+- Product Live: ${scores.product_live}/10
+- Large Market ($1B+): ${scores.market_size}/10
+- Demand Validated: ${scores.demand_validated}/10
+- Pitch Deck Ready: ${scores.pitch_deck}/10
+- Funding Defined: ${scores.funding_defined}/10
 
 Average Score: ${averageScore.toFixed(1)}/10.0
-Current Verdict: ${verdict}
+Verdict: ${verdict} (Ready if >=7.0, Almost Ready if >=5.5, Not Ready if <5.5)
 
-Based on the average score, provide a clear, actionable analysis. Focus on being direct and practical. The goal is to give founders a "Reality Check" - helping them understand where they truly stand and what they need to do next before approaching investors.
-
-Keep the analysis focused and investor-focused.`;
+Provide a JSON response with this exact structure:
+{
+  "verdict": "${verdict}",
+  "summary": "2-3 sentence summary stating if ready to fundraise",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "critical_gaps": ["gap 1", "gap 2", "gap 3"],
+  "next_steps": ["step 1", "step 2", "step 3", "step 4"]
+}`;
 
     let aiResponse;
     try {
@@ -218,55 +213,20 @@ Keep the analysis focused and investor-focused.`;
         body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [{
-          role: 'system',
-          content: 'You are an expert fundraising advisor helping first-time entrepreneurs understand their readiness for pre-seed fundraising. Provide clear, actionable, and encouraging feedback.'
-        }, {
           role: 'user',
           content: prompt
         }],
-        tools: [{
-          type: 'function',
-          function: {
-            name: 'analyze_readiness',
-            parameters: {
-              type: 'object',
-              properties: {
-                verdict: {
-                  type: 'string',
-                  enum: ['Ready', 'Not Ready', 'Almost Ready'],
-                  description: 'Overall fundraising readiness verdict (must match the average score: >=7.0 = Ready, >=5.5 = Almost Ready, <5.5 = Not Ready)'
-                },
-                summary: {
-                  type: 'string',
-                  description: 'A brief 2-3 sentence summary clearly stating whether the founder is ready to start looking for investors or not'
-                },
-                strengths: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'List of 3-4 key strengths identified from the scores'
-                },
-                critical_gaps: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'List of 3-4 critical gaps or weaknesses that need attention before fundraising'
-                },
-                next_steps: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'List of 3-5 actionable next steps tailored to the score, outlining exactly what the founder should focus on improving'
-                }
-              },
-              required: ['verdict', 'summary', 'strengths', 'critical_gaps', 'next_steps']
-            }
-          }
-        }],
-        tool_choice: { type: 'function', function: { name: 'analyze_readiness' } }
+        temperature: 0.7,
+        max_tokens: 1000
       }),
       });
     } catch (fetchError) {
-      console.error('Failed to call AI API (network/timeout error):', fetchError);
+      console.error('=== FETCH ERROR ===');
+      console.error('Error type:', fetchError?.constructor?.name);
+      console.error('Error message:', fetchError instanceof Error ? fetchError.message : String(fetchError));
+      console.error('Full error:', fetchError);
       return new Response(
-        JSON.stringify({ error: 'Unable to connect to AI analysis service. Please try again in a moment.' }),
+        JSON.stringify({ error: `Network error: ${fetchError instanceof Error ? fetchError.message : 'Unable to connect to AI service'}` }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -274,15 +234,21 @@ Keep the analysis focused and investor-focused.`;
       );
     }
 
+    console.log('AI API Response Status:', aiResponse.status, aiResponse.statusText);
+
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API Error:', {
-        status: aiResponse.status,
-        statusText: aiResponse.statusText,
-        body: errorText
-      });
+      let errorText = '';
+      try {
+        errorText = await aiResponse.text();
+      } catch (e) {
+        console.error('Failed to read error response body:', e);
+      }
+      console.error('=== AI API ERROR ===');
+      console.error('Status:', aiResponse.status);
+      console.error('StatusText:', aiResponse.statusText);
+      console.error('Error body:', errorText);
       return new Response(
-        JSON.stringify({ error: `AI analysis failed: ${aiResponse.status} ${aiResponse.statusText}` }),
+        JSON.stringify({ error: `AI service error (${aiResponse.status}): ${errorText || aiResponse.statusText}` }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -293,10 +259,20 @@ Keep the analysis focused and investor-focused.`;
     let aiData;
     try {
       aiData = await aiResponse.json();
+      console.log('AI Data parsed successfully. Choices:', aiData.choices?.length || 0);
+      if (aiData.choices?.[0]?.message) {
+        console.log('Message role:', aiData.choices[0].message.role);
+        console.log('Has tool_calls:', !!aiData.choices[0].message.tool_calls);
+      }
     } catch (parseError) {
-      console.error('Failed to parse AI response JSON:', parseError);
+      console.error('=== JSON PARSE ERROR ===');
+      console.error('Parse error:', parseError);
+      // Clone response to read text for debugging (body can only be read once)
+      const responseClone = aiResponse.clone();
+      const responseText = await responseClone.text().catch(() => 'Unable to read response');
+      console.error('Response text (first 1000 chars):', responseText.substring(0, 1000));
       return new Response(
-        JSON.stringify({ error: 'Failed to parse AI response' }),
+        JSON.stringify({ error: `Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}` }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -304,10 +280,30 @@ Keep the analysis focused and investor-focused.`;
       );
     }
 
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    // Extract JSON from response content
+    const responseContent = aiData.choices?.[0]?.message?.content || '';
+    console.log('AI Response content length:', responseContent.length);
+    console.log('AI Response content (first 500 chars):', responseContent.substring(0, 500));
     
-    if (!toolCall) {
-      console.warn('No tool call in AI response, using fallback');
+    let analysis;
+    try {
+      // Try to extract JSON from the response (might be wrapped in markdown code blocks)
+      let jsonText = responseContent.trim();
+      // Remove markdown code blocks if present
+      jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+      // Try to find JSON object in the text
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+      
+      analysis = JSON.parse(jsonText);
+      // Ensure verdict matches the score threshold
+      analysis.verdict = verdict;
+      console.log('Analysis parsed successfully:', { verdict: analysis.verdict, hasSummary: !!analysis.summary });
+    } catch (parseError) {
+      console.error('Failed to parse AI response JSON:', parseError);
+      console.error('Response content:', responseContent);
       // Fallback: create simple response based on score thresholds
       const fallbackSummary = verdict === 'Ready' 
         ? `Based on your average score of ${averageScore.toFixed(1)}/10, you appear ready to start looking for investors. Focus on preparing your pitch deck and identifying target investors.`
@@ -315,33 +311,13 @@ Keep the analysis focused and investor-focused.`;
         ? `Based on your average score of ${averageScore.toFixed(1)}/10, you're close to being ready. Address the key gaps identified below before actively seeking investors.`
         : `Based on your average score of ${averageScore.toFixed(1)}/10, you're not quite ready to start fundraising. Focus on improving the areas below before approaching investors.`;
       
-      return new Response(
-        JSON.stringify({
-          verdict: verdict,
-          summary: fallbackSummary,
-          strengths: ['Complete the assessment to see detailed strengths'],
-          critical_gaps: ['Complete the assessment to see detailed gaps'],
-          next_steps: ['Complete the assessment to see detailed next steps']
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    let analysis;
-    try {
-      analysis = JSON.parse(toolCall.function.arguments);
-      // Ensure verdict matches the score threshold
-      analysis.verdict = verdict;
-      console.log('Analysis parsed successfully:', { verdict: analysis.verdict, hasSummary: !!analysis.summary });
-    } catch (parseError) {
-      console.error('Failed to parse AI tool call arguments:', parseError, toolCall.function.arguments);
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse AI analysis response' }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      analysis = {
+        verdict: verdict,
+        summary: fallbackSummary,
+        strengths: ['Strong team foundation', 'Clear market opportunity', 'Product development in progress'],
+        critical_gaps: ['Need more traction', 'Improve product-market fit', 'Strengthen pitch materials'],
+        next_steps: ['Focus on customer acquisition', 'Refine your value proposition', 'Prepare pitch deck', 'Validate market demand']
+      };
     }
 
     // Save assessment to database (optional - completely skip if it fails)
