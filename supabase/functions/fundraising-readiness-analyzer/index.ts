@@ -219,15 +219,15 @@ serve(async (req) => {
       verdict = 'Not Ready';
     }
 
-    // Use Lovable AI to analyze the results
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    // Use OpenAI to analyze the results (replacing Lovable API for better reliability)
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:192',message:'Checking LOVABLE_API_KEY',data:{hasLovableKey:!!LOVABLE_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:192',message:'Checking OPENAI_API_KEY',data:{hasOpenAIKey:!!OPENAI_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY not configured');
       // #region agent log
-      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:194',message:'Missing LOVABLE_API_KEY - returning 500',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:194',message:'Missing OPENAI_API_KEY - returning 500',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       return new Response(
         JSON.stringify({ error: 'AI service not configured. Please contact support.' }),
@@ -280,24 +280,25 @@ Provide a JSON response with this exact structure:
 
     let aiResponse;
     // #region agent log
-    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:245',message:'Before AI API call',data:{hasKey:!!LOVABLE_API_KEY,promptLength:prompt.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:245',message:'Before AI API call',data:{hasKey:!!OPENAI_API_KEY,promptLength:prompt.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
     // #endregion
     try {
-      aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [{
-          role: 'user',
-          content: prompt
-        }],
-        temperature: 0.7,
-        max_tokens: 1000
-      }),
+          model: 'gpt-4o-mini',
+          messages: [{
+            role: 'user',
+            content: prompt
+          }],
+          temperature: 0.7,
+          max_tokens: 1000,
+          response_format: { type: 'json_object' }
+        }),
       });
       // #region agent log
       await fetch('http://127.0.0.1:7250/ingest/dea6ca95-e9cd-4e2d-ba7b-8b1d3ec26670',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fundraising-readiness-analyzer/index.ts:261',message:'AI API response received',data:{status:aiResponse.status,statusText:aiResponse.statusText,ok:aiResponse.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
