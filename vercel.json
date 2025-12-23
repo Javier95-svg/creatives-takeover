@@ -50,6 +50,11 @@
   ],
   "redirects": [
     {
+      "source": "/blog/:splat*",
+      "destination": "/posts/:splat",
+      "permanent": true
+    },
+    {
       "source": "/(.*)",
       "has": [
         {
