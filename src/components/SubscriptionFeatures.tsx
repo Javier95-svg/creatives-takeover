@@ -65,7 +65,7 @@ const SubscriptionFeatures = () => {
     {
       icon: <Sparkles className="w-10 h-10 text-primary" />,
       title: "Prompt Library",
-      description: "Access 30+ battle-tested prompts for AI, E-commerce, SaaS, and creative businesses with one-click copy.",
+      description: "Access 60 business cases across multiple industries including AI & Automation, E-commerce, SaaS & Tech, Creator Economy, Local Business, Consulting, Green & Climate Tech, and Health & Wellness with one-click copy.",
       benefits: ["8 industry categories", "One-click copy prompts", "BizMap AI integration", "Customizable templates"],
       highlight: "",
       details: "Leverage hundreds of proven business prompts and templates. From pitch decks to financial models, get professional-grade resources tailored to your industry and stage. Copy prompts directly into BizMap AI conversations for seamless workflow."
