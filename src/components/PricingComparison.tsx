@@ -10,7 +10,7 @@ const PricingComparison = () => {
 
   const features = [
     {
-      category: "Credits & Access",
+      category: "Credits & Dashboard",
       items: [
         { feature: "Monthly Credits", free: "10 Credits", creator: "50 Credits", professional: "150 Credits" },
         { feature: "Dashboard Access", free: false, creator: true, professional: true }
@@ -25,15 +25,20 @@ const PricingComparison = () => {
       ]
     },
     {
-      category: "Content & Tools",
+      category: "Prompt Library",
       items: [
-        { feature: "Prompt Library", free: "Free Models Only", creator: "Full Access", professional: "Full Access" },
+        { feature: "Prompt Library", free: "Free Models Only", creator: "Full Access", professional: "Full Access" }
+      ]
+    },
+    {
+      category: "Insighta",
+      items: [
         { feature: "Insighta Test Assessment", free: true, creator: true, professional: true },
         { feature: "Investor Matchmaker", free: false, creator: false, professional: true }
       ]
     },
     {
-      category: "Community & Opportunities",
+      category: "Community and Stories",
       items: [
         { feature: "Funding Opportunities", free: true, creator: true, professional: true },
         { feature: "Discovery Calls with Mentors", free: false, creator: true, professional: true },
