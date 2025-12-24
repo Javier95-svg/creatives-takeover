@@ -113,6 +113,9 @@ export function useSubscription() {
 
   // Check current subscription status
   const checkSubscription = async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useSubscription.ts:115',message:'checkSubscription entry',data:{hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     setLoadingSubscription(true);
 
     // If no user, reset to defaults and skip calling Supabase functions
@@ -127,6 +130,9 @@ export function useSubscription() {
     }
 
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useSubscription.ts:130',message:'checkSubscription before Supabase call',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       const sessionResp = await supabase.auth.getSession();
       const accessToken = sessionResp?.data?.session?.access_token;
 
@@ -148,13 +154,22 @@ export function useSubscription() {
       }
 
       if (data) {
+        // #region agent log
+        fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useSubscription.ts:151',message:'checkSubscription data received',data:{hasData:!!data,subscribed:data.subscribed,subscriptionTier:data.subscription_tier},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         setSubscriptionData({
           subscribed: Boolean(data.subscribed),
           subscription_tier: String(data.subscription_tier ?? 'free').toLowerCase(),
           subscription_end: data.subscription_end ?? null
         });
+        // #region agent log
+        fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useSubscription.ts:157',message:'checkSubscription data set',data:{subscribed:Boolean(data.subscribed),tier:String(data.subscription_tier??'free').toLowerCase()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
       }
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useSubscription.ts:162',message:'checkSubscription error',data:{errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack?.substring(0,300):''},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       console.error('Error checking subscription:', error);
       console.debug('Failed to check subscription status:', error);
     } finally {
