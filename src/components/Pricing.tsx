@@ -39,7 +39,7 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "10 credits per month",
-        "BizMap - Business Planning Mode (1 Timeline Completion)",
+        "BizMap - Business Planning Mode",
         "Prompt Library (Free Models Only)",
         "Insighta Test Assessment",
         "Funding Opportunities",
