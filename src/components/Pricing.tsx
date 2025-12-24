@@ -39,48 +39,29 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "10 credits per month",
-        "10 BizMap AI conversations (1 credit each)",
-        "1 Tech Stack generation (3 credits)",
-        "1 Insighta Test assessment (8 credits)",
-        "Product-Market Fit Lab preview",
-        "Investor Matchmaker browse-only",
-        "Community read-only access",
-        "Prompt library (view free prompts only)",
-        "1 active sprint",
-        "Funding opportunities (view only)",
-        "Job board (view only)",
-        "Community forum support"
+        "Validate your idea (1 full Insighta Test)",
+        "Plan your tech stack (1 generation)",
+        "Get AI business guidance (10 conversations)",
+        "Browse investor matches",
+        "Community access"
       ],
       creator: [
         "50 credits per month",
-        "Unlimited BizMap AI conversations (1 credit each)",
-        "Unlimited Tech Stack generations (3 credits each)",
-        "Full Product-Market Fit Lab access (8 credits each)",
-        "Unlimited Insighta Test assessments (8 credits each)",
-        "Full Investor Matchmaker access (10 credits per match)",
-        "Full community access (post, comment, vote)",
-        "Prompt library with export (2 credits per export)",
-        "Unlimited sprints",
-        "Market intelligence (5 queries/month, 10 credits each)",
-        "Basic collaboration (up to 3 team members)",
-        "Basic reports (3/month, 5 credits each)",
-        "Priority email support (48hr response)"
+        "Everything in Free, plus:",
+        "Match with investors (5 matches/month)",
+        "Full product-market fit analysis",
+        "Market intelligence (5 deep research queries)",
+        "Work with your team (up to 3 members)",
+        "Export premium prompts and materials"
       ],
       professional: [
         "150 credits per month",
-        "Unlimited BizMap AI conversations (1 credit each)",
-        "Unlimited Tech Stack generations (3 credits each)",
-        "Full Product-Market Fit Lab access (8 credits each)",
-        "Unlimited Insighta Test assessments (8 credits each)",
-        "Full Investor Matchmaker access (10 credits per match)",
-        "Pitch Deck Generation (12 credits per deck)",
-        "AI-enhanced community features",
-        "Unlimited market intelligence queries",
-        "Unlimited custom reports + PDF export",
-        "Advanced collaboration (unlimited team members)",
-        "Advanced analytics (10 credits per analysis)",
-        "API access",
-        "24hr priority support"
+        "Everything in Creator, plus:",
+        "Generate pitch decks",
+        "Unlimited investor matches",
+        "Unlimited market intelligence",
+        "Unlimited team members",
+        "Advanced analytics"
       ]
     };
     return featureMap[tierName] || [];
