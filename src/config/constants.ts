@@ -5,40 +5,39 @@
 
 // Credit costs for various features - SINGLE SOURCE OF TRUTH
 // All credit costs must be defined here and referenced from this file
-// Updated to value-based pricing: credits = perceived value to founder
 export const CREDIT_COSTS = {
   // BizMap AI Features
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
-  PREMIUM_FEATURE: 2, // Prompt Library export (reduced from 3)
+  PREMIUM_FEATURE: 3,
   
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
   
   // Research & Analysis
-  MARKET_RESEARCH: 6, // Reduced from 10 (more accessible)
-  MARKET_VALIDATION: 6, // Reduced from 10 (more accessible)
-  FINANCIAL_ANALYSIS: 7, // Reduced from 8
-  FUNDRAISING_READINESS_ANALYSIS: 9, // Increased from 8 (higher perceived value)
+  MARKET_RESEARCH: 10,
+  MARKET_VALIDATION: 10,
+  FINANCIAL_ANALYSIS: 8,
+  FUNDRAISING_READINESS_ANALYSIS: 8,
   BUSINESS_INSIGHTS: 5,
   PMF_ANALYSIS: 8,
   
   // Investor Matching & Outreach
-  INVESTOR_MATCHING: 10, // Increased from 5 (2x value perception for fundraising)
-  PITCH_DECK_GENERATION: 12, // Increased from 8 (critical fundraising tool)
+  INVESTOR_MATCHING: 5,
+  PITCH_DECK_GENERATION: 8,
   COLD_EMAIL_GENERATION: 3,
   ONEPAGER_GENERATION: 3,
   
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
-  ROADMAP_GENERATION: 4, // Reduced from 5 (medium value planning tool)
+  ROADMAP_GENERATION: 5,
   
   // Tech Stack Generator
   TECH_STACK_GENERATION: 3,
   
   // Other Premium Features
   PDF_EXPORT: 3,
-  ADVANCED_ANALYTICS: 10, // Increased from 5 (higher value for data-driven decisions)
+  ADVANCED_ANALYTICS: 5,
 } as const;
 
 // Type for credit cost feature names
@@ -174,27 +173,26 @@ export const TIER_MONTHLY_CREDITS = {
 } as const;
 
 // Feature usage limits per tier (soft limits for Creator, unlimited for Professional)
-// Updated per freemium business model redesign
 export const TIER_USAGE_LIMITS = {
   free: {
-    bizmap_conversations: 10, // 10 credits = 10 conversations
-    tech_stack_generations: 1, // 3 credits = 1 generation
-    pmf_analyses: 0, // Preview only (0 credits)
-    insighta_tests: 1, // 8 credits = 1 test
-    investor_matches: 0, // Browse only (0 credits, can't match)
-    market_intelligence_queries: 0, // Not available on free tier
-    basic_reports: 0, // Not available on free tier
-    team_members: 0, // Not available on free tier
+    bizmap_conversations: 10,
+    tech_stack_generations: 1,
+    pmf_analyses: 0, // Preview only
+    insighta_tests: 1,
+    investor_matches: 0, // View only
+    market_intelligence_queries: 0,
+    basic_reports: 0,
+    team_members: 0,
   },
   creator: {
-    bizmap_conversations: -1, // Unlimited (credit-gated, 1 credit each)
-    tech_stack_generations: -1, // Unlimited (credit-gated, 3 credits each)
-    pmf_analyses: -1, // Unlimited (credit-gated, 8 credits each)
-    insighta_tests: -1, // Unlimited (credit-gated, 8 credits each)
-    investor_matches: -1, // Unlimited (credit-gated, 10 credits each)
-    market_intelligence_queries: 5, // 5 queries/month (10 credits each) - soft limit
-    basic_reports: 3, // 3 reports/month (5 credits each) - soft limit
-    team_members: 3, // Up to 3 team members
+    bizmap_conversations: -1, // Unlimited (credit-gated)
+    tech_stack_generations: -1, // Unlimited (credit-gated)
+    pmf_analyses: -1, // Unlimited (credit-gated)
+    insighta_tests: -1, // Unlimited (credit-gated)
+    investor_matches: -1, // Unlimited (credit-gated)
+    market_intelligence_queries: 10,
+    basic_reports: 5,
+    team_members: 3,
   },
   professional: {
     bizmap_conversations: -1, // Unlimited (credit-gated)

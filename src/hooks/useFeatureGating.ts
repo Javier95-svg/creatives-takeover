@@ -1,7 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { useCredits } from './useCredits';
-import { CREDIT_COSTS } from '@/config/constants';
 
 export interface FeatureAccess {
   hasAccess: boolean;
@@ -298,11 +297,11 @@ export function useFeatureGating() {
             requiredTier: 'creator'
           };
         }
-        // Creator+ has full matching (10 credits)
-        if (!hasCredits(CREDIT_COSTS.INVESTOR_MATCHING)) {
+        // Creator+ has full matching (5 credits)
+        if (!hasCredits(5)) {
           return {
             hasAccess: false,
-            message: `Insufficient credits. You need ${CREDIT_COSTS.INVESTOR_MATCHING} credits for investor matching.`,
+            message: 'Insufficient credits. You need 5 credits for investor matching.',
           };
         }
         return { hasAccess: true };
@@ -330,29 +329,47 @@ export function useFeatureGating() {
     const featureMap: Record<string, string[]> = {
       free: [
         '10 credits per month',
-        'Validate your idea (1 full Insighta Test)',
-        'Plan your tech stack (1 generation)',
-        'Get AI business guidance (10 conversations)',
-        'Browse investor matches',
-        'Community access'
+        '10 BizMap AI conversations (1 credit each)',
+        '1 Tech Stack generation (3 credits)',
+        '1 Insighta Test assessment (8 credits)',
+        'Product-Market Fit Lab preview',
+        'Investor Matchmaker browse-only',
+        'Community read-only access',
+        'Prompt library (view free prompts only)',
+        '1 active sprint',
+        'Funding opportunities (view only)',
+        'Job board (view only)',
+        'Community forum support'
       ],
       creator: [
         '50 credits per month',
-        'Everything in Free, plus:',
-        'Match with investors (5 matches/month)',
-        'Full product-market fit analysis',
-        'Market intelligence (5 deep research queries)',
-        'Work with your team (up to 3 members)',
-        'Export premium prompts and materials'
+        'Unlimited BizMap AI conversations (1 credit each)',
+        'Unlimited Tech Stack generations (3 credits each)',
+        'Full Product-Market Fit Lab access (8 credits each)',
+        'Unlimited Insighta Test assessments (8 credits each)',
+        'Full Investor Matchmaker access (5 credits per match)',
+        'Full community access (post, comment, vote)',
+        'Prompt library with export (3 credits per export)',
+        'Unlimited sprints',
+        'Market intelligence (10 queries/month, 10 credits each)',
+        'Basic collaboration (up to 3 team members)',
+        'Basic reports (5/month, 5 credits each)',
+        'Priority email support (48hr response)'
       ],
       professional: [
         '150 credits per month',
-        'Everything in Creator, plus:',
-        'Generate pitch decks',
-        'Unlimited investor matches',
-        'Unlimited market intelligence',
-        'Unlimited team members',
-        'Advanced analytics'
+        'Unlimited BizMap AI conversations (1 credit each)',
+        'Unlimited Tech Stack generations (3 credits each)',
+        'Full Product-Market Fit Lab access (8 credits each)',
+        'Unlimited Insighta Test assessments (8 credits each)',
+        'Full Investor Matchmaker access (5 credits per match)',
+        'AI-enhanced community features',
+        'Unlimited market intelligence queries',
+        'Unlimited custom reports + PDF export',
+        'Advanced collaboration (unlimited team members)',
+        'Success score analytics',
+        'API access',
+        '24hr priority support'
       ]
     };
     return featureMap[tierName] || [];
