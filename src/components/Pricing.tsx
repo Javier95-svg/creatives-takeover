@@ -39,17 +39,11 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "10 credits per month",
-        "10 BizMap AI conversations (1 credit each)",
-        "1 Tech Stack generation (3 credits)",
-        "1 Insighta Test assessment (8 credits)",
-        "Product-Market Fit Lab preview",
-        "Investor Matchmaker browse-only",
-        "Community read-only access",
-        "Prompt library (view free prompts only)",
-        "1 active sprint",
-        "Funding opportunities (view only)",
-        "Job board (view only)",
-        "Community forum support"
+        "BizMap - Business Planning Mode (1 Timeline Completion)",
+        "Prompt Library (Free Models Only)",
+        "Insighta Test Assessment",
+        "Funding Opportunities",
+        "Full access to Stories (Content)"
       ],
       creator: [
         "50 credits per month",
