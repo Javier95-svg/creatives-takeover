@@ -28,7 +28,7 @@ This flexibility means you can start small and scale up as you grow, or adjust b
       question: "What happens when I run out of AI conversation credits?",
       answer: `Running out of credits doesn't mean hitting a wall. It actually means you're actively building your business, and we celebrate that progress!
 
-When you reach your monthly limit, you have two great options. You can upgrade to a higher tier for more monthly credits and additional premium features, or purchase affordable credit packs to top up instantly without changing your plan. The best part is that all your other features remain fully functional. Your community access, resource library, dashboard, and collaboration tools keep working exactly as they should.
+When you reach your monthly limit, you can upgrade to a higher tier for more monthly credits and additional premium features. The best part is that all your other features remain fully functional. Your community access, resource library, dashboard, and collaboration tools keep working exactly as they should.
 
 Many successful entrepreneurs start with one tier and upgrade as their momentum builds. Think of it as a sign of growth, not a limitation. Plus, credits reset monthly, so you're never penalized long-term.`,
       relatedQuestions: [0, 5]

@@ -1843,9 +1843,8 @@ Subject: "Quick question about [their pain point]"
             : `Asset Generation (${pendingAction?.assetType || 'unknown'})`
         }
         onPurchase={() => {
-          // TODO: Implement Stripe purchase flow
-          console.log('Purchase flow would open here');
-          toast.info('Credit purchase coming soon!');
+          // Direct users to upgrade their plan instead of purchasing credits
+          window.location.href = '/pricing';
         }}
       />
 

@@ -19,7 +19,7 @@ export const useInvestorMatching = () => {
       if (invokeError) {
         // Handle credit errors specifically
         if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
-          const errorMsg = 'Insufficient credits. Please purchase credits to use this feature.';
+          const errorMsg = 'Insufficient credits. Please upgrade your plan to get more credits.';
           setError(errorMsg);
           throw new Error(errorMsg);
         }

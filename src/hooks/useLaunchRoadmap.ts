@@ -76,7 +76,7 @@ export const useLaunchRoadmap = () => {
     if (!hasCredits(requiredCredits)) {
       toast({
         title: "Insufficient Credits",
-        description: `Roadmap generation requires ${requiredCredits} credits. Please purchase more credits.`,
+        description: `Roadmap generation requires ${requiredCredits} credits. Please upgrade your plan to get more credits.`,
         variant: "destructive",
       });
       return null;
@@ -103,7 +103,7 @@ export const useLaunchRoadmap = () => {
         if (functionError.status === 402 || (functionError.message && functionError.message.includes('credits'))) {
           toast({
             title: "Insufficient Credits",
-            description: `Roadmap generation requires ${requiredCredits} credits. Please purchase more credits.`,
+            description: `Roadmap generation requires ${requiredCredits} credits. Please upgrade your plan to get more credits.`,
             variant: "destructive",
           });
           return null;

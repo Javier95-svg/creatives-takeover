@@ -110,7 +110,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               {showPurchaseButton && (
                 <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
                   <Plus className="h-3 w-3" />
-                  Buy More Credits
+                  Upgrade Plan
                 </Button>
               )}
             </div>
@@ -192,7 +192,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
           {showPurchaseButton && (
             <Button className="w-full gap-2" variant="default" onClick={() => navigate('/pricing')}>
               <Plus className="h-4 w-4" />
-              Purchase More Credits
+              Upgrade Plan
             </Button>
           )}
         </div>
