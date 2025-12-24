@@ -8,35 +8,35 @@ export const CREDIT_COSTS = {
   // BizMap AI Features
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
-  PREMIUM_FEATURE: 3,
+  PREMIUM_FEATURE: 2, // Prompt Library export (reduced from 3)
   
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
   
   // Research & Analysis
-  MARKET_RESEARCH: 10,
-  MARKET_VALIDATION: 10,
-  FINANCIAL_ANALYSIS: 8,
-  FUNDRAISING_READINESS_ANALYSIS: 8,
+  MARKET_RESEARCH: 6, // Reduced from 10 (more accessible)
+  MARKET_VALIDATION: 6, // Reduced from 10 (more accessible)
+  FINANCIAL_ANALYSIS: 7, // Reduced from 8
+  FUNDRAISING_READINESS_ANALYSIS: 9, // Increased from 8 (higher perceived value)
   BUSINESS_INSIGHTS: 5,
   PMF_ANALYSIS: 8,
   
   // Investor Matching & Outreach
-  INVESTOR_MATCHING: 5,
-  PITCH_DECK_GENERATION: 8,
+  INVESTOR_MATCHING: 10, // Increased from 5 (2x value perception for fundraising)
+  PITCH_DECK_GENERATION: 12, // Increased from 8 (critical fundraising tool)
   COLD_EMAIL_GENERATION: 3,
   ONEPAGER_GENERATION: 3,
   
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
-  ROADMAP_GENERATION: 5,
+  ROADMAP_GENERATION: 4, // Reduced from 5 (medium value planning tool)
   
   // Tech Stack Generator
   TECH_STACK_GENERATION: 3,
   
   // Other Premium Features
   PDF_EXPORT: 3,
-  ADVANCED_ANALYTICS: 5,
+  ADVANCED_ANALYTICS: 10, // Increased from 5 (higher value for data-driven decisions)
 } as const;
 
 // Type for credit cost feature names

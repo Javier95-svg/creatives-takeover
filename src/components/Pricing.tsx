@@ -57,13 +57,13 @@ const Pricing = () => {
         "Unlimited Tech Stack generations (3 credits each)",
         "Full Product-Market Fit Lab access (8 credits each)",
         "Unlimited Insighta Test assessments (8 credits each)",
-        "Full Investor Matchmaker access (5 credits per match)",
+        "Full Investor Matchmaker access (10 credits per match)",
         "Full community access (post, comment, vote)",
-        "Prompt library with export (3 credits per export)",
+        "Prompt library with export (2 credits per export)",
         "Unlimited sprints",
-        "Market intelligence (10 queries/month, 10 credits each)",
+        "Market intelligence (5 queries/month, 10 credits each)",
         "Basic collaboration (up to 3 team members)",
-        "Basic reports (5/month, 5 credits each)",
+        "Basic reports (3/month, 5 credits each)",
         "Priority email support (48hr response)"
       ],
       professional: [
@@ -72,12 +72,13 @@ const Pricing = () => {
         "Unlimited Tech Stack generations (3 credits each)",
         "Full Product-Market Fit Lab access (8 credits each)",
         "Unlimited Insighta Test assessments (8 credits each)",
-        "Full Investor Matchmaker access (5 credits per match)",
+        "Full Investor Matchmaker access (10 credits per match)",
+        "Pitch Deck Generation (12 credits per deck)",
         "AI-enhanced community features",
         "Unlimited market intelligence queries",
         "Unlimited custom reports + PDF export",
         "Advanced collaboration (unlimited team members)",
-        "Success score analytics",
+        "Advanced analytics (10 credits per analysis)",
         "API access",
         "24hr priority support"
       ]
