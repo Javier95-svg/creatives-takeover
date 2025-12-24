@@ -45,7 +45,7 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
     );
   }
 
-  const tierInfo = getTierInfo(subscriptionData.subscription_tier);
+  const tierInfo = getTierInfo(subscriptionData?.subscription_tier || 'free');
   const daysUntilEnd = getDaysUntilEnd();
 
   const getTierColor = (tier: string) => {
@@ -65,11 +65,11 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
   if (variant === "inline") {
     return (
       <div className="flex items-center gap-2">
-        <Badge variant={getTierColor(subscriptionData.subscription_tier)} className="gap-1">
-          {getTierIcon(subscriptionData.subscription_tier)}
-          {subscriptionData.subscription_tier.charAt(0).toUpperCase() + subscriptionData.subscription_tier.slice(1)}
+        <Badge variant={getTierColor(subscriptionData?.subscription_tier || 'free')} className="gap-1">
+          {getTierIcon(subscriptionData?.subscription_tier || 'free')}
+          {(subscriptionData?.subscription_tier || 'free').charAt(0).toUpperCase() + (subscriptionData?.subscription_tier || 'free').slice(1)}
         </Badge>
-        {subscriptionData.subscribed && (
+        {subscriptionData?.subscribed && (
           <Button size="sm" variant="ghost" onClick={openCustomerPortal}>
             <Settings className="h-3 w-3" />
           </Button>
@@ -91,9 +91,9 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Current Plan:</span>
-              <Badge variant={getTierColor(subscriptionData.subscription_tier)} className="gap-1">
-                {getTierIcon(subscriptionData.subscription_tier)}
-                {subscriptionData.subscription_tier.charAt(0).toUpperCase() + subscriptionData.subscription_tier.slice(1)}
+              <Badge variant={getTierColor(subscriptionData?.subscription_tier || 'free')} className="gap-1">
+                {getTierIcon(subscriptionData?.subscription_tier || 'free')}
+                {(subscriptionData?.subscription_tier || 'free').charAt(0).toUpperCase() + (subscriptionData?.subscription_tier || 'free').slice(1)}
               </Badge>
             </div>
 
@@ -112,7 +112,7 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
               </div>
             )}
 
-            {subscriptionData.subscribed && subscriptionData.subscription_end && (
+            {subscriptionData?.subscribed && subscriptionData?.subscription_end && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -137,7 +137,7 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
                 Refresh
               </Button>
               
-              {subscriptionData.subscribed ? (
+              {subscriptionData?.subscribed ? (
                 <Button 
                   size="sm" 
                   onClick={openCustomerPortal}
@@ -194,14 +194,14 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-sm">
           <span>Subscription</span>
-          <Badge variant={getTierColor(subscriptionData.subscription_tier)} className="gap-1">
-            {getTierIcon(subscriptionData.subscription_tier)}
-            {subscriptionData.subscription_tier.charAt(0).toUpperCase() + subscriptionData.subscription_tier.slice(1)}
+          <Badge variant={getTierColor(subscriptionData?.subscription_tier || 'free')} className="gap-1">
+            {getTierIcon(subscriptionData?.subscription_tier || 'free')}
+            {(subscriptionData?.subscription_tier || 'free').charAt(0).toUpperCase() + (subscriptionData?.subscription_tier || 'free').slice(1)}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        {subscriptionData.subscribed ? (
+        {subscriptionData?.subscribed ? (
           <div className="space-y-2">
             {tierInfo && (
               <p className="text-xs text-muted-foreground">

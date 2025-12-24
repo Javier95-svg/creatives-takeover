@@ -24,7 +24,12 @@ export function useFeatureGating() {
       return { hasAccess: true };
     }
 
-    const tier = subscriptionData.subscription_tier;
+    // Safety check for subscriptionData
+    if (!subscriptionData) {
+      return { hasAccess: false, message: 'Loading subscription data...' };
+    }
+
+    const tier = subscriptionData.subscription_tier || 'free';
 
     switch (feature) {
       // BizMap AI conversation limits
@@ -317,7 +322,7 @@ export function useFeatureGating() {
   };
 
   const getConversationLimit = (): number => {
-    const tier = subscriptionData.subscription_tier;
+    const tier = subscriptionData?.subscription_tier || 'free';
     const limits = {
       free: 10,
       creator: 50,
@@ -362,8 +367,8 @@ export function useFeatureGating() {
     checkFeatureAccess,
     getConversationLimit,
     getTierFeatures,
-    currentTier: subscriptionData.subscription_tier,
-    isSubscribed: subscriptionData.subscribed,
+    currentTier: subscriptionData?.subscription_tier || 'free',
+    isSubscribed: subscriptionData?.subscribed || false,
     hasCredits: (amount: number) => hasCredits(amount)
   };
 }

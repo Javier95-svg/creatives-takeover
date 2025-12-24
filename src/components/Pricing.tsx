@@ -268,7 +268,7 @@ const Pricing = () => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
             const targetAudience = getTargetAudience(tier.tier_name);
-            const isCurrentPlan = subscriptionData.subscription_tier === tier.tier_name;
+            const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'creator';
 
             return (
