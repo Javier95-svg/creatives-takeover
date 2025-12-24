@@ -47,18 +47,13 @@ const Pricing = () => {
       ],
       creator: [
         "50 credits per month",
-        "Unlimited BizMap AI conversations (1 credit each)",
-        "Unlimited Tech Stack generations (3 credits each)",
-        "Full Product-Market Fit Lab access (8 credits each)",
-        "Unlimited Insighta Test assessments (8 credits each)",
-        "Full Investor Matchmaker access (5 credits per match)",
-        "Full community access (post, comment, vote)",
-        "Prompt library with export (3 credits per export)",
-        "Unlimited sprints",
-        "Market intelligence (10 queries/month, 10 credits each)",
-        "Basic collaboration (up to 3 team members)",
-        "Basic reports (5/month, 5 credits each)",
-        "Priority email support (48hr response)"
+        "Dashboard Access",
+        "BizMap AI Upgrade: Business Planning & Product Market Fit Lab modes.",
+        "Full Access to Prompt Library",
+        "Insighta Test Assessment",
+        "Funding Opportunities",
+        "Discovery Calls with Mentors (Community)",
+        "Full access to Stories (Content)"
       ],
       professional: [
         "150 credits per month",
