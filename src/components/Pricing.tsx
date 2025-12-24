@@ -88,9 +88,9 @@ const Pricing = () => {
   // Get target audience description
   const getTargetAudience = (tierName: string) => {
     const audiences: Record<string, string> = {
-      free: "Test the waters with 10 credits/month. Perfect for validating your idea and getting started.",
-      creator: "Build your business with 50 credits/month. Everything you need to plan, validate, and grow.",
-      professional: "Scale your business with 150 credits/month. Advanced features, unlimited intelligence, and team collaboration."
+      free: "For early-stage founders validating a single idea and experiencing a full 0–1 sprint.",
+      creator: "For solofounders or small teams actively building and iterating one main product.",
+      professional: "For full-time founders running multiple products, services, or accelerator-style cohorts that need high-volume AI planning and investor workflows."
     };
     return audiences[tierName] || "";
   };
