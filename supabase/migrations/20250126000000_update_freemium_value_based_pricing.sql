@@ -2,8 +2,9 @@
 -- Updates subscription tiers with new credit costs and feature usage limits
 -- Implements value-based credit system where credits = perceived value to founder
 
--- Update Free tier features (no changes to limits, just update feature descriptions)
+-- Update Free tier: Set monthly credits to 10 and update feature descriptions
 UPDATE subscription_tiers SET 
+  monthly_credits = 10,
   features = '["10 credits per month", "10 BizMap AI conversations (1 credit each)", "1 Tech Stack generation (3 credits)", "1 Insighta Test assessment (8 credits)", "Product-Market Fit Lab preview", "Investor Matchmaker browse-only", "Community read-only access", "Prompt library (view free prompts only)", "1 active sprint", "Funding opportunities (view only)", "Job board (view only)", "Community forum support"]'::jsonb
 WHERE tier_name = 'free';
 
