@@ -87,7 +87,7 @@ const SubscriptionFeatures = () => {
             The Perfect Ecosystem
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            A complete ecosystem built to support founders at every stage of their journey. It combines AI-powered business planning and validation with mentorship, fundraising tools, and practical resources, giving you everything needed to turn an idea into a strong, investable startup
+            A complete ecosystem built to support founders at every stage of their journey. It combines AI-powered business planning and validation with mentorship, fundraising tools, and practical resources, giving you everything needed to turn an idea into a solid, investable startup.
           </p>
         </div>
 
