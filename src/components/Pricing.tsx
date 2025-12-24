@@ -90,7 +90,7 @@ const Pricing = () => {
     const audiences: Record<string, string> = {
       free: "For early-stage founders validating a single idea and experiencing a full 0–1 sprint.",
       creator: "For solofounders or small teams actively building and iterating one main product.",
-      professional: "For full-time founders running multiple products, services, or accelerator-style cohorts that need high-volume AI planning and investor workflows."
+      professional: "For full-time founders running multiple products or services that need high-volume AI planning and investor workflows."
     };
     return audiences[tierName] || "";
   };
