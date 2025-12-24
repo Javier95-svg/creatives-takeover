@@ -34,13 +34,13 @@ const PricingComparison = () => {
       category: "Insighta",
       items: [
         { feature: "Insighta Test Assessment", free: true, creator: true, professional: true },
-        { feature: "Investor Matchmaker", free: false, creator: false, professional: true }
+        { feature: "Investor Matchmaker", free: false, creator: false, professional: true },
+        { feature: "Funding Opportunities", free: true, creator: true, professional: true }
       ]
     },
     {
       category: "Community and Stories",
       items: [
-        { feature: "Funding Opportunities", free: true, creator: true, professional: true },
         { feature: "Discovery Calls with Mentors", free: false, creator: true, professional: true },
         { feature: "Stories Content", free: "Full access", creator: "Full access", professional: "Full access" }
       ]
