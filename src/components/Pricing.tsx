@@ -57,18 +57,14 @@ const Pricing = () => {
       ],
       professional: [
         "150 credits per month",
-        "Unlimited BizMap AI conversations (1 credit each)",
-        "Unlimited Tech Stack generations (3 credits each)",
-        "Full Product-Market Fit Lab access (8 credits each)",
-        "Unlimited Insighta Test assessments (8 credits each)",
-        "Full Investor Matchmaker access (5 credits per match)",
-        "AI-enhanced community features",
-        "Unlimited market intelligence queries",
-        "Unlimited custom reports + PDF export",
-        "Advanced collaboration (unlimited team members)",
-        "Success score analytics",
-        "API access",
-        "24hr priority support"
+        "Dashboard Access",
+        "Full Access to BizMap AI (Business Planning, Product Market Fit Lab & Tech Stack)",
+        "Full Access to Prompt Library",
+        "Insighta Test Assessment",
+        "Investor Matchmaker (Insighta)",
+        "Funding Opportunities",
+        "Discovery Calls with Mentors (Community)",
+        "Full access to Stories (Content)"
       ]
     };
     return featureMap[tierName] || [];
