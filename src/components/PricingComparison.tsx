@@ -19,7 +19,9 @@ const PricingComparison = () => {
     {
       category: "BizMap AI",
       items: [
-        { feature: "BizMap AI", free: "Business Planning Mode", creator: "Business Planning & Product Market Fit Lab modes", professional: "Full Access (Business Planning, Product Market Fit Lab & Tech Stack)" }
+        { feature: "Business Planning", free: true, creator: true, professional: true },
+        { feature: "Product–Market Fit Lab", free: false, creator: true, professional: true },
+        { feature: "Tech Stack", free: false, creator: false, professional: true }
       ]
     },
     {
