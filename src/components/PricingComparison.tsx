@@ -10,76 +10,32 @@ const PricingComparison = () => {
 
   const features = [
     {
-      category: "BizMap AI Conversations",
+      category: "Credits & Access",
       items: [
-        { feature: "Monthly Credits", free: "10 Credits", creator: "50 Credits", professional: "150 Credits" }
+        { feature: "Monthly Credits", free: "10 Credits", creator: "50 Credits", professional: "150 Credits" },
+        { feature: "Dashboard Access", free: false, creator: true, professional: true }
       ]
     },
     {
-      category: "Community Features",
+      category: "BizMap AI",
       items: [
-        { feature: "Community Access", free: "Read-only", creator: "Full access", professional: "Full access" },
-        { feature: "Create Posts", free: false, creator: true, professional: true },
-        { feature: "Comment & Engage", free: false, creator: true, professional: true },
-        { feature: "Vote on Posts", free: false, creator: true, professional: true },
-        { feature: "AI-Enhanced Insights", free: false, creator: false, professional: true }
+        { feature: "BizMap AI", free: "Business Planning Mode", creator: "Business Planning & Product Market Fit Lab modes", professional: "Full Access (Business Planning, Product Market Fit Lab & Tech Stack)" }
       ]
     },
     {
-      category: "Sprint Planning",
+      category: "Content & Tools",
       items: [
-        { feature: "Active Sprints", free: "1 sprint", creator: "Unlimited", professional: "Unlimited" },
-        { feature: "Kanban Boards", free: "Basic", creator: "Full access", professional: "Full access" },
-        { feature: "Daily Check-ins", free: false, creator: true, professional: true }
+        { feature: "Prompt Library", free: "Free Models Only", creator: "Full Access", professional: "Full Access" },
+        { feature: "Insighta Test Assessment", free: true, creator: true, professional: true },
+        { feature: "Investor Matchmaker (Insighta)", free: false, creator: false, professional: true }
       ]
     },
     {
-      category: "Funding & Opportunities",
+      category: "Community & Opportunities",
       items: [
-        { feature: "Funding Opportunities", free: "View only", creator: "View & bookmark", professional: "View & bookmark" },
-        { feature: "Job Board Access", free: "View only", creator: "View & apply", professional: "View & apply" }
-      ]
-    },
-    {
-      category: "Networking & Accountability",
-      items: [
-        { feature: "Accountability Partnerships", free: false, creator: true, professional: true },
-        { feature: "Reputation System", free: "Basic", creator: "Full access", professional: "Full access" }
-      ]
-    },
-    {
-      category: "Business Tools",
-      items: [
-        { feature: "Market Intelligence", free: false, creator: "10 queries/month", professional: "Unlimited" },
-        { feature: "Report Generation", free: false, creator: "5/month", professional: "Unlimited" },
-        { feature: "PDF Export", free: false, creator: false, professional: true },
-        { feature: "Success Score Analytics", free: false, creator: false, professional: true },
-        { feature: "Financial Dashboard", free: false, creator: true, professional: true },
-        { feature: "Budget Management", free: false, creator: "Basic", professional: "Advanced" },
-        { feature: "Custom Prompt Chains", free: false, creator: true, professional: true }
-      ]
-    },
-    {
-      category: "Outreach & Marketing",
-      items: [
-        { feature: "Outreach Campaigns", free: false, creator: false, professional: true }
-      ]
-    },
-    {
-      category: "Collaboration",
-      items: [
-        { feature: "Basic Collaboration", free: false, creator: "3 max", professional: "Unlimited" },
-        { feature: "Advanced Tools", free: false, creator: false, professional: true },
-        { feature: "Whiteboarding", free: false, creator: false, professional: true },
-        { feature: "Video Calls", free: false, creator: false, professional: true }
-      ]
-    },
-    {
-      category: "Support & Access",
-      items: [
-        { feature: "Support Type", free: "Community forum", creator: "Priority email (48hr)", professional: "24hr priority" },
-        { feature: "API Access", free: false, creator: false, professional: true },
-        { feature: "Prompt Library Export", free: false, creator: true, professional: true }
+        { feature: "Funding Opportunities", free: true, creator: true, professional: true },
+        { feature: "Discovery Calls with Mentors (Community)", free: false, creator: true, professional: true },
+        { feature: "Stories (Content)", free: "Full access", creator: "Full access", professional: "Full access" }
       ]
     }
   ];
