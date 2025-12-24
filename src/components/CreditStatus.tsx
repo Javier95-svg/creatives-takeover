@@ -1,10 +1,12 @@
-import { Coins, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { Coins, AlertTriangle, CheckCircle, Info, TrendingUp } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CREDIT_COSTS } from "@/config/constants";
+import { CREDIT_COSTS, TIER_MONTHLY_CREDITS } from "@/config/constants";
 
 interface CreditStatusProps {
   requiredCredits?: number;
@@ -14,8 +16,16 @@ interface CreditStatusProps {
 
 export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true }: CreditStatusProps) {
   const { balance, monthlyQuota, hasCredits } = useCredits();
+  const { subscriptionData } = useSubscription();
+  const { currentTier } = useFeatureGating();
   
   const totalAvailable = balance + monthlyQuota;
+  const monthlyCredits = TIER_MONTHLY_CREDITS[currentTier as keyof typeof TIER_MONTHLY_CREDITS] || 10;
+  const creditUsagePercent = monthlyCredits > 0 
+    ? Math.round(((monthlyCredits - totalAvailable) / monthlyCredits) * 100)
+    : 0;
+  const isLowCredits = creditUsagePercent >= 80 && totalAvailable > 0;
+  const isVeryLowCredits = creditUsagePercent >= 90 && totalAvailable > 0;
 
   const getStatusInfo = () => {
     if (requiredCredits && !hasCredits(requiredCredits)) {
@@ -23,7 +33,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
         type: 'insufficient',
         icon: AlertTriangle,
         variant: 'destructive' as const,
-        message: `You need ${requiredCredits} credits to use ${feature || 'this feature'}, but you only have ${totalAvailable} credits available (${monthlyQuota} monthly quota + ${balance} purchased).`
+        message: `You need ${requiredCredits} credits to use ${feature || 'this feature'}, but you only have ${totalAvailable} credits available.`
       };
     }
 
@@ -32,16 +42,25 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
         type: 'empty',
         icon: AlertTriangle,
         variant: 'destructive' as const,
-        message: 'You have no credits remaining. Purchase more credits to continue using BizMap AI features.'
+        message: 'You have no credits remaining. Upgrade to get more credits and continue using features.'
       };
     }
 
-    if (totalAvailable <= 2) {
+    if (isVeryLowCredits) {
+      return {
+        type: 'very_low',
+        icon: AlertTriangle,
+        variant: 'destructive' as const,
+        message: `You've used ${creditUsagePercent}% of your monthly credits (${totalAvailable} remaining). Upgrade now to avoid interruption.`
+      };
+    }
+
+    if (isLowCredits) {
       return {
         type: 'low',
         icon: Info,
         variant: 'default' as const,
-        message: `You have ${totalAvailable} credits remaining (${monthlyQuota} monthly quota + ${balance} purchased). Upgrade to get more credits and avoid interruption.`
+        message: `You've used ${creditUsagePercent}% of your monthly credits (${totalAvailable} remaining). Consider upgrading for more credits.`
       };
     }
 
@@ -49,7 +68,7 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       type: 'sufficient',
       icon: CheckCircle,
       variant: 'default' as const,
-      message: `You have ${totalAvailable} credits available (${monthlyQuota} monthly quota + ${balance} purchased).`
+      message: `You have ${totalAvailable} credits available.`
     };
   };
 
@@ -85,8 +104,20 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
     if (featureLower.includes('pdf') || featureLower.includes('export')) {
       return ` PDF export costs ${CREDIT_COSTS.PDF_EXPORT} credits.`;
     }
-    if (featureLower.includes('chat') || featureLower.includes('message')) {
-      return ` AI chat messages cost ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit each.`;
+    if (featureLower.includes('chat') || featureLower.includes('message') || featureLower.includes('bizmap')) {
+      return ` BizMap AI messages cost ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit each.`;
+    }
+    if (featureLower.includes('tech stack')) {
+      return ` Tech Stack generation costs ${CREDIT_COSTS.TECH_STACK_GENERATION} credits.`;
+    }
+    if (featureLower.includes('pmf') || featureLower.includes('product-market fit')) {
+      return ` Product-Market Fit analysis costs ${CREDIT_COSTS.PMF_ANALYSIS} credits.`;
+    }
+    if (featureLower.includes('insighta') || featureLower.includes('test')) {
+      return ` Insighta Test costs ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits.`;
+    }
+    if (featureLower.includes('investor') || featureLower.includes('matching')) {
+      return ` Investor matching costs ${CREDIT_COSTS.INVESTOR_MATCHING} credits.`;
     }
     if (featureLower.includes('market research')) {
       return ` Market research costs ${CREDIT_COSTS.MARKET_RESEARCH} credits.`;
@@ -140,20 +171,28 @@ export function CreditStatus({ requiredCredits, feature, showPurchaseLink = true
       </div>
 
       {/* Status Alert */}
-      {(status.type === 'insufficient' || status.type === 'empty' || status.type === 'low') && (
+      {(status.type === 'insufficient' || status.type === 'empty' || status.type === 'low' || status.type === 'very_low') && (
         <Alert variant={status.variant}>
           <Icon className="h-4 w-4" />
           <AlertDescription className="text-sm">
             {status.message}
             {getCreditCostMessage()}
             
-            {showPurchaseLink && (status.type === 'insufficient' || status.type === 'empty') && (
-              <div className="mt-2">
-                <Button size="sm" variant="outline" asChild>
-                  <Link to="/credits">
-                    Purchase Credits
+            {showPurchaseLink && (status.type === 'insufficient' || status.type === 'empty' || status.type === 'very_low' || (status.type === 'low' && currentTier === 'free')) && (
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" variant={status.type === 'very_low' || status.type === 'empty' ? "default" : "outline"} asChild>
+                  <Link to="/pricing">
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    {currentTier === 'free' ? 'Upgrade Plan' : 'View Plans'}
                   </Link>
                 </Button>
+                {currentTier !== 'free' && (
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/credits">
+                      Learn More
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
           </AlertDescription>

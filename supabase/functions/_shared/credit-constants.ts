@@ -31,6 +31,9 @@ export const CREDIT_COSTS = {
   SPRINT_TASK_GENERATION: 2,
   ROADMAP_GENERATION: 5,
   
+  // Tech Stack Generator
+  TECH_STACK_GENERATION: 3,
+  
   // Other Premium Features
   PDF_EXPORT: 3,
   ADVANCED_ANALYTICS: 5,

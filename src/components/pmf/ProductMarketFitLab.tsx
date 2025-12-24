@@ -9,6 +9,7 @@ import { Loader2, Target, Users, CheckCircle2, FileText, FlaskConical, TrendingU
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
+import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { CreditGate } from '@/components/CreditGate';
 import { CREDIT_COSTS } from '@/config/constants';
 import { supabase } from '@/integrations/supabase/client';
@@ -151,6 +152,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const { hasCredits } = useCredits();
+  const { checkFeatureAccess } = useFeatureGating();
   const [creditGateOpen, setCreditGateOpen] = useState(false);
   
   const [structuredFormData, setStructuredFormData] = useState<any>(null);
@@ -205,6 +207,18 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
         description: "Please sign in to use PMF Analysis",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Check feature access (free tier gets preview only)
+    const featureAccess = checkFeatureAccess('pmf_analysis');
+    if (!featureAccess.hasAccess) {
+      toast({
+        title: "Upgrade Required",
+        description: featureAccess.message || "Upgrade to Creator tier to run full Product-Market Fit analysis.",
+        variant: "destructive",
+      });
+      setCreditGateOpen(true);
       return;
     }
 

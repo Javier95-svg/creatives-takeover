@@ -13,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCredits } from "@/hooks/useCredits";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useSubscription } from "@/hooks/useSubscription";
 import { CreditGate } from "@/components/CreditGate";
 import { CREDIT_COSTS } from "@/config/constants";
 
@@ -183,6 +185,8 @@ const FundraisingReadinessToolkit = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { hasCredits, balance } = useCredits();
+  const { checkFeatureAccess } = useFeatureGating();
+  const { subscriptionData } = useSubscription();
   const [scores, setScores] = useState<{ [key: string]: number }>({
     mvp: 0,
     feedback: 0,
@@ -257,11 +261,41 @@ const FundraisingReadinessToolkit = () => {
       return;
     }
 
-    // Check credits before proceeding
+    // Check feature access and credits
     const requiredCredits = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
+    const featureAccess = checkFeatureAccess('insighta_test');
+    if (!featureAccess.hasAccess) {
+      toast.error(featureAccess.message || "Upgrade to Creator tier for unlimited Insighta Test assessments.");
+      setCreditGateOpen(true);
+      return;
+    }
+
     if (!hasCredits(requiredCredits)) {
       setCreditGateOpen(true);
       return;
+    }
+
+    // Check usage limits for free tier (1/month)
+    const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
+    if (currentTier === 'free' && user) {
+      try {
+        const { data: usageData, error: usageError } = await supabase
+          .rpc('get_feature_usage', {
+            p_user_id: user.id,
+            p_feature_name: 'insighta_tests'
+          });
+
+        if (!usageError && usageData) {
+          const usage = usageData as { current_usage: number; limit: number; remaining: number };
+          if (usage.remaining <= 0 && usage.limit > 0) {
+            toast.error("You've used your 1 free Insighta Test this month. Upgrade to Creator for unlimited assessments.");
+            setCreditGateOpen(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking usage:', error);
+      }
     }
 
     setIsAnalyzing(true);
@@ -295,6 +329,16 @@ const FundraisingReadinessToolkit = () => {
       }
 
       setAiAnalysis(data as AIAnalysis);
+      
+      // Increment usage for free tier
+      if (currentTier === 'free' && user) {
+        await supabase.rpc('check_and_increment_usage', {
+          p_user_id: user.id,
+          p_feature_name: 'insighta_tests',
+          p_increment_by: 1
+        });
+      }
+      
       toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
     } catch (error) {
       console.error('Analysis error:', error);

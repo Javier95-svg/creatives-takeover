@@ -7,6 +7,12 @@ import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart,
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useFeatureGating } from '@/hooks/useFeatureGating';
+import { useCredits } from '@/hooks/useCredits';
+import { CreditGate } from '@/components/CreditGate';
+import { CREDIT_COSTS } from '@/config/constants';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -34,12 +40,15 @@ const TechStack: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { subscriptionData } = useSubscription();
+  const { checkFeatureAccess } = useFeatureGating();
+  const { hasCredits } = useCredits();
+  const { toast } = useToast();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
+  const [creditGateOpen, setCreditGateOpen] = useState(false);
   
-  // Check if user has paid plan access (Creator or Professional)
-  const hasPaidAccess = user && ['creator', 'professional'].includes(subscriptionData.subscription_tier?.toLowerCase() || 'free');
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
+  const hasPaidAccess = user && ['creator', 'professional'].includes(currentTier);
 
   const handleProductSelect = (categoryId: string, productId: string) => {
     setSelectedProducts(prev => {
@@ -102,16 +111,9 @@ const TechStack: React.FC = () => {
 
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
 
-  const handleSeeBudget = () => {
+  const handleSeeBudget = async () => {
     if (!user) {
       navigate('/login');
-      return;
-    }
-    
-    // Check if user has paid plan (Creator or Professional)
-    if (!hasPaidAccess) {
-      // Navigate to pricing page for free tier users
-      navigate('/pricing');
       return;
     }
     
@@ -119,8 +121,85 @@ const TechStack: React.FC = () => {
     if (selectedCount !== techStackData.length) {
       return;
     }
-    
-    setShowBudget(true);
+
+    // Check feature access and credits
+    const featureAccess = checkFeatureAccess('tech_stack_generation');
+    if (!featureAccess.hasAccess) {
+      toast({
+        title: "Upgrade Required",
+        description: featureAccess.message || "Upgrade to Creator tier for unlimited Tech Stack generations.",
+        variant: "destructive",
+      });
+      setCreditGateOpen(true);
+      return;
+    }
+
+    if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
+      setCreditGateOpen(true);
+      return;
+    }
+
+    // Check usage limits for free tier (1/month)
+    if (currentTier === 'free') {
+      try {
+        const { data: usageData, error: usageError } = await supabase
+          .rpc('get_feature_usage', {
+            p_user_id: user.id,
+            p_feature_name: 'tech_stack_generations'
+          });
+
+        if (!usageError && usageData) {
+          const usage = usageData as { current_usage: number; limit: number; remaining: number };
+          if (usage.remaining <= 0 && usage.limit > 0) {
+            toast({
+              title: "Usage Limit Reached",
+              description: "You've used your 1 free Tech Stack generation this month. Upgrade to Creator for unlimited generations.",
+              variant: "destructive",
+            });
+            setCreditGateOpen(true);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking usage:', error);
+      }
+    }
+
+    // Deduct credits and increment usage
+    try {
+      const { data: creditData, error: creditError } = await supabase.functions.invoke('credit-service', {
+        body: {
+          action: 'deduct',
+          amount: CREDIT_COSTS.TECH_STACK_GENERATION,
+          feature: 'Tech Stack Generation'
+        }
+      });
+
+      if (creditError || !creditData?.success) {
+        toast({
+          title: "Error",
+          description: "Failed to process. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Increment usage
+      await supabase.rpc('check_and_increment_usage', {
+        p_user_id: user.id,
+        p_feature_name: 'tech_stack_generations',
+        p_increment_by: 1
+      });
+
+      setShowBudget(true);
+    } catch (error) {
+      console.error('Error processing generation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
@@ -156,22 +235,17 @@ const TechStack: React.FC = () => {
                 onClick={handleSeeBudget}
                 size="lg"
                 className="w-full sm:w-auto min-w-[140px]"
-                disabled={!user || !hasPaidAccess || !allCategoriesSelected}
+                disabled={!user || !allCategoriesSelected}
               >
                 {!user ? (
                   <>
                     <Lock className="w-4 h-4 mr-2" />
                     Sign In to View Budget
                   </>
-                ) : !hasPaidAccess ? (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Upgrade to View Budget
-                  </>
                 ) : (
                   <>
                     <Calculator className="w-4 h-4 mr-2" />
-                    See Budget
+                    {currentTier === 'free' ? 'Generate (1/month)' : 'Generate Budget'}
                   </>
                 )}
               </Button>
@@ -180,7 +254,7 @@ const TechStack: React.FC = () => {
         </Card>
       </div>
 
-      {showBudget && user && hasPaidAccess && allCategoriesSelected && (
+      {showBudget && user && allCategoriesSelected && (
         <BudgetDisplay
           budget={budget}
           selectedProducts={selectedProducts}
@@ -188,6 +262,13 @@ const TechStack: React.FC = () => {
           onClose={() => setShowBudget(false)}
         />
       )}
+
+      <CreditGate
+        isOpen={creditGateOpen}
+        onClose={() => setCreditGateOpen(false)}
+        requiredCredits={CREDIT_COSTS.TECH_STACK_GENERATION}
+        feature="Tech Stack Generation"
+      />
     </div>
   );
 };

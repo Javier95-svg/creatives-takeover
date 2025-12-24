@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Hourglass, ArrowRight, Sparkles } from 'lucide-react';
+import { Users, Search, Hourglass, ArrowRight, Sparkles, Lock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useFeatureGating } from '@/hooks/useFeatureGating';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const InvestorMatchingToolkit = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { checkFeatureAccess } = useFeatureGating();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -98,13 +105,50 @@ const InvestorMatchingToolkit = () => {
             </div>
 
             <div className="text-center pt-4">
-              <Button size="lg" className="w-full sm:w-auto" disabled>
-                <Hourglass className="mr-2 h-5 w-5" />
-                Feature Coming Soon
-              </Button>
-              <p className="text-sm text-muted-foreground mt-3">
-                The full matching tool is currently being built. Check back soon!
-              </p>
+              {(() => {
+                const matchingAccess = checkFeatureAccess('investor_matching');
+                const browseAccess = checkFeatureAccess('investor_browse');
+                
+                if (!user) {
+                  return (
+                    <>
+                      <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/auth')}>
+                        <Lock className="mr-2 h-5 w-5" />
+                        Sign In to Browse Investors
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-3">
+                        Sign in to browse investors. Upgrade to Creator for full matching.
+                      </p>
+                    </>
+                  );
+                }
+                
+                if (!matchingAccess.hasAccess) {
+                  return (
+                    <>
+                      <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate('/pricing')}>
+                        <Lock className="mr-2 h-5 w-5" />
+                        Upgrade to Match Investors
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-3">
+                        Free tier allows browsing only. Upgrade to Creator for AI-powered matching and outreach generation.
+                      </p>
+                    </>
+                  );
+                }
+                
+                return (
+                  <>
+                    <Button size="lg" className="w-full sm:w-auto" disabled>
+                      <Hourglass className="mr-2 h-5 w-5" />
+                      Feature Coming Soon
+                    </Button>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      The full matching tool is currently being built. Check back soon!
+                    </p>
+                  </>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>

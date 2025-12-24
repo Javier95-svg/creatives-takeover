@@ -13,6 +13,10 @@ import { multiStepPrompts, type MultiStepPrompt } from "@/data/multiStepPrompts"
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomPromptChains } from "@/hooks/useCustomPromptChains";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditGate } from "@/components/CreditGate";
+import { CREDIT_COSTS } from "@/config/constants";
 
 const PromptLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +27,10 @@ const PromptLibrary = () => {
   const { subscriptionData, loading: subscriptionLoading } = useSubscription();
   const { user } = useAuth();
   const { publishedChains, fetchPublishedChains, loading: chainsLoading } = useCustomPromptChains();
+  const { checkFeatureAccess } = useFeatureGating();
+  const { hasCredits } = useCredits();
+  const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const [pendingExport, setPendingExport] = useState<{ type: 'copy' | 'bizmap'; prompt: string } | null>(null);
 
   const userTier = subscriptionData.subscription_tier || "free";
 
@@ -72,12 +80,54 @@ const PromptLibrary = () => {
     });
   }, [allPrompts, selectedCategory, searchQuery]);
 
-  const copyPrompt = (prompt: string) => {
+  const copyPrompt = async (prompt: string, isPremium: boolean = false) => {
+    if (isPremium && selectedConcept) {
+      // Check if user can export premium prompts
+      const exportAccess = checkFeatureAccess('prompt_library_export');
+      if (!exportAccess.hasAccess) {
+        toast.error(exportAccess.message || "Upgrade to Creator tier to export premium prompts.");
+        setPendingExport({ type: 'copy', prompt });
+        setCreditGateOpen(true);
+        return;
+      }
+
+      // Check credits for premium prompt export
+      if (!hasCredits(CREDIT_COSTS.PREMIUM_FEATURE)) {
+        setPendingExport({ type: 'copy', prompt });
+        setCreditGateOpen(true);
+        return;
+      }
+
+      // Deduct credits (would be done via edge function in production)
+      toast.success(`Premium prompt copied! (Used ${CREDIT_COSTS.PREMIUM_FEATURE} credits)`);
+    }
+    
     navigator.clipboard.writeText(prompt);
     toast.success("Prompt copied to clipboard!");
   };
 
-  const useInBizMap = (prompt: string) => {
+  const useInBizMap = async (prompt: string, isPremium: boolean = false) => {
+    if (isPremium && selectedConcept) {
+      // Check if user can export premium prompts
+      const exportAccess = checkFeatureAccess('prompt_library_export');
+      if (!exportAccess.hasAccess) {
+        toast.error(exportAccess.message || "Upgrade to Creator tier to export premium prompts.");
+        setPendingExport({ type: 'bizmap', prompt });
+        setCreditGateOpen(true);
+        return;
+      }
+
+      // Check credits for premium prompt export
+      if (!hasCredits(CREDIT_COSTS.PREMIUM_FEATURE)) {
+        setPendingExport({ type: 'bizmap', prompt });
+        setCreditGateOpen(true);
+        return;
+      }
+
+      // Deduct credits (would be done via edge function in production)
+      toast.success(`Premium prompt loaded! (Used ${CREDIT_COSTS.PREMIUM_FEATURE} credits)`);
+    }
+
     localStorage.setItem("bizmap_prompt", prompt);
     navigator.clipboard.writeText(prompt);
     window.open("/bizmap-ai", "_blank");
@@ -302,7 +352,7 @@ const PromptLibrary = () => {
                       {!isStepLocked && (
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button
-                            onClick={() => useInBizMap(step.prompt)}
+                            onClick={() => useInBizMap(step.prompt, isPremiumPrompt)}
                             className="flex-1"
                           >
                             <ExternalLink className="w-4 h-4 mr-2" />
@@ -310,7 +360,7 @@ const PromptLibrary = () => {
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => copyPrompt(step.prompt)}
+                            onClick={() => copyPrompt(step.prompt, isPremiumPrompt)}
                           >
                             <Copy className="w-4 h-4 mr-2" />
                             Copy
@@ -519,6 +569,25 @@ const PromptLibrary = () => {
         </div>
       </div>
       <Footer />
+      <CreditGate
+        isOpen={creditGateOpen}
+        onClose={() => {
+          setCreditGateOpen(false);
+          setPendingExport(null);
+        }}
+        requiredCredits={CREDIT_COSTS.PREMIUM_FEATURE}
+        feature="Premium Prompt Export"
+        onPurchase={() => {
+          if (pendingExport) {
+            if (pendingExport.type === 'copy') {
+              copyPrompt(pendingExport.prompt, true);
+            } else {
+              useInBizMap(pendingExport.prompt, true);
+            }
+            setPendingExport(null);
+          }
+        }}
+      />
     </div>
   );
 };

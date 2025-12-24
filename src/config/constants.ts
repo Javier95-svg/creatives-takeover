@@ -32,6 +32,9 @@ export const CREDIT_COSTS = {
   SPRINT_TASK_GENERATION: 2,
   ROADMAP_GENERATION: 5,
   
+  // Tech Stack Generator
+  TECH_STACK_GENERATION: 3,
+  
   // Other Premium Features
   PDF_EXPORT: 3,
   ADVANCED_ANALYTICS: 5,
@@ -160,4 +163,45 @@ export const SUBSCRIPTION_TIERS = {
   FREE: 'free',
   CREATOR: 'creator',
   PROFESSIONAL: 'professional',
+} as const;
+
+// Monthly credit allocation per tier
+export const TIER_MONTHLY_CREDITS = {
+  free: 10,
+  creator: 50,
+  professional: 150,
+} as const;
+
+// Feature usage limits per tier (soft limits for Creator, unlimited for Professional)
+export const TIER_USAGE_LIMITS = {
+  free: {
+    bizmap_conversations: 10,
+    tech_stack_generations: 1,
+    pmf_analyses: 0, // Preview only
+    insighta_tests: 1,
+    investor_matches: 0, // View only
+    market_intelligence_queries: 0,
+    basic_reports: 0,
+    team_members: 0,
+  },
+  creator: {
+    bizmap_conversations: -1, // Unlimited (credit-gated)
+    tech_stack_generations: -1, // Unlimited (credit-gated)
+    pmf_analyses: -1, // Unlimited (credit-gated)
+    insighta_tests: -1, // Unlimited (credit-gated)
+    investor_matches: -1, // Unlimited (credit-gated)
+    market_intelligence_queries: 10,
+    basic_reports: 5,
+    team_members: 3,
+  },
+  professional: {
+    bizmap_conversations: -1, // Unlimited (credit-gated)
+    tech_stack_generations: -1, // Unlimited (credit-gated)
+    pmf_analyses: -1, // Unlimited (credit-gated)
+    insighta_tests: -1, // Unlimited (credit-gated)
+    investor_matches: -1, // Unlimited (credit-gated)
+    market_intelligence_queries: -1, // Unlimited
+    basic_reports: -1, // Unlimited
+    team_members: -1, // Unlimited
+  },
 } as const;

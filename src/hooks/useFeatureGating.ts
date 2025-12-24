@@ -220,6 +220,96 @@ export function useFeatureGating() {
           requiredTier: 'professional'
         };
 
+      // Tech Stack Generator
+      case 'tech_stack_generation':
+        if (tier === 'free') {
+          // Free tier: 1 generation/month (3 credits)
+          // Check will be done at component level for usage limits
+          if (!hasCredits(3)) {
+            return {
+              hasAccess: false,
+              message: 'Insufficient credits. You need 3 credits for Tech Stack generation. Upgrade to Creator for unlimited generations.',
+              requiredTier: 'creator'
+            };
+          }
+          return { hasAccess: true };
+        }
+        // Creator+ has unlimited (credit-gated)
+        if (!hasCredits(3)) {
+          return {
+            hasAccess: false,
+            message: 'Insufficient credits. You need 3 credits for Tech Stack generation.',
+          };
+        }
+        return { hasAccess: true };
+
+      // Product-Market Fit Lab
+      case 'pmf_analysis':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Creator tier to run full Product-Market Fit analysis. Free tier includes preview only.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full access (8 credits)
+        if (!hasCredits(8)) {
+          return {
+            hasAccess: false,
+            message: 'Insufficient credits. You need 8 credits for PMF analysis.',
+          };
+        }
+        return { hasAccess: true };
+
+      case 'pmf_preview':
+        // Preview mode available to all tiers
+        return { hasAccess: true };
+
+      // Insighta Test (Fundraising Readiness Assessment)
+      case 'insighta_test':
+        if (tier === 'free') {
+          // Free tier: 1 assessment/month (8 credits)
+          // Check will be done at component level for usage limits
+          if (!hasCredits(8)) {
+            return {
+              hasAccess: false,
+              message: 'Insufficient credits. You need 8 credits for Insighta Test. Upgrade to Creator for unlimited assessments.',
+              requiredTier: 'creator'
+            };
+          }
+          return { hasAccess: true };
+        }
+        // Creator+ has unlimited (credit-gated)
+        if (!hasCredits(8)) {
+          return {
+            hasAccess: false,
+            message: 'Insufficient credits. You need 8 credits for Insighta Test.',
+          };
+        }
+        return { hasAccess: true };
+
+      // Investor Matchmaker
+      case 'investor_matching':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Upgrade to Creator tier to get investor matches. Free tier allows browsing only.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full matching (5 credits)
+        if (!hasCredits(5)) {
+          return {
+            hasAccess: false,
+            message: 'Insufficient credits. You need 5 credits for investor matching.',
+          };
+        }
+        return { hasAccess: true };
+
+      case 'investor_browse':
+        // Browse/view-only available to all tiers
+        return { hasAccess: true };
+
       default:
         return { hasAccess: true };
     }
@@ -238,30 +328,45 @@ export function useFeatureGating() {
   const getTierFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
-        '10 BizMap AI conversations per month',
+        '10 credits per month',
+        '10 BizMap AI conversations (1 credit each)',
+        '1 Tech Stack generation (3 credits)',
+        '1 Insighta Test assessment (8 credits)',
+        'Product-Market Fit Lab preview',
+        'Investor Matchmaker browse-only',
         'Community read-only access',
-        'Prompt library (view only)',
+        'Prompt library (view free prompts only)',
         '1 active sprint',
         'Funding opportunities (view only)',
         'Job board (view only)',
         'Community forum support'
       ],
       creator: [
-        '50 BizMap AI conversations per month',
-        'Full community access',
-        'Prompt library with export',
+        '50 credits per month',
+        'Unlimited BizMap AI conversations (1 credit each)',
+        'Unlimited Tech Stack generations (3 credits each)',
+        'Full Product-Market Fit Lab access (8 credits each)',
+        'Unlimited Insighta Test assessments (8 credits each)',
+        'Full Investor Matchmaker access (5 credits per match)',
+        'Full community access (post, comment, vote)',
+        'Prompt library with export (3 credits per export)',
         'Unlimited sprints',
-        'Market intelligence (10 queries/month)',
-        'Basic collaboration (3 max)',
-        'Basic reports (5/month)',
-        'Priority email support'
+        'Market intelligence (10 queries/month, 10 credits each)',
+        'Basic collaboration (up to 3 team members)',
+        'Basic reports (5/month, 5 credits each)',
+        'Priority email support (48hr response)'
       ],
       professional: [
-        '150 BizMap AI conversations per month',
-        'AI-enhanced community',
-        'Unlimited market intelligence',
+        '150 credits per month',
+        'Unlimited BizMap AI conversations (1 credit each)',
+        'Unlimited Tech Stack generations (3 credits each)',
+        'Full Product-Market Fit Lab access (8 credits each)',
+        'Unlimited Insighta Test assessments (8 credits each)',
+        'Full Investor Matchmaker access (5 credits per match)',
+        'AI-enhanced community features',
+        'Unlimited market intelligence queries',
         'Unlimited custom reports + PDF export',
-        'Advanced collaboration (unlimited)',
+        'Advanced collaboration (unlimited team members)',
         'Success score analytics',
         'API access',
         '24hr priority support'

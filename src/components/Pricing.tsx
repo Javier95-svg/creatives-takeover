@@ -38,33 +38,48 @@ const Pricing = () => {
   const getFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
-        "10 BizMap AI conversations per month",
+        "10 credits per month",
+        "10 BizMap AI conversations (1 credit each)",
+        "1 Tech Stack generation (3 credits)",
+        "1 Insighta Test assessment (8 credits)",
+        "Product-Market Fit Lab preview",
+        "Investor Matchmaker browse-only",
         "Community read-only access",
-        "Prompt library (view only)",
+        "Prompt library (view free prompts only)",
         "1 active sprint",
         "Funding opportunities (view only)",
         "Job board (view only)",
         "Community forum support"
       ],
       creator: [
-        "50 BizMap AI conversations per month",
+        "50 credits per month",
+        "Unlimited BizMap AI conversations (1 credit each)",
+        "Unlimited Tech Stack generations (3 credits each)",
+        "Full Product-Market Fit Lab access (8 credits each)",
+        "Unlimited Insighta Test assessments (8 credits each)",
+        "Full Investor Matchmaker access (5 credits per match)",
         "Full community access (post, comment, vote)",
-        "Unlimited sprint planning & Kanban boards",
-        "Market intelligence (10 queries/month)",
-        "Financial dashboard access",
-        "Basic collaboration tools (max 3 collaborators)",
+        "Prompt library with export (3 credits per export)",
+        "Unlimited sprints",
+        "Market intelligence (10 queries/month, 10 credits each)",
+        "Basic collaboration (up to 3 team members)",
+        "Basic reports (5/month, 5 credits each)",
         "Priority email support (48hr response)"
       ],
       professional: [
-        "150 BizMap AI conversations per month",
+        "150 credits per month",
+        "Unlimited BizMap AI conversations (1 credit each)",
+        "Unlimited Tech Stack generations (3 credits each)",
+        "Full Product-Market Fit Lab access (8 credits each)",
+        "Unlimited Insighta Test assessments (8 credits each)",
+        "Full Investor Matchmaker access (5 credits per match)",
         "AI-enhanced community features",
-        "Unlimited market intelligence",
+        "Unlimited market intelligence queries",
         "Unlimited custom reports + PDF export",
-        "Advanced collaboration tools",
-        "Advanced financial analytics",
-        "Unlimited team members",
-        "24hr priority support",
-        "API access"
+        "Advanced collaboration (unlimited team members)",
+        "Success score analytics",
+        "API access",
+        "24hr priority support"
       ]
     };
     return featureMap[tierName] || [];
@@ -73,9 +88,9 @@ const Pricing = () => {
   // Get target audience description
   const getTargetAudience = (tierName: string) => {
     const audiences: Record<string, string> = {
-      free: "Perfect for exploring the platform and validating your business idea",
-      creator: "Ideal for active solopreneurs ready to build and execute their business plan",
-      professional: "Built for serious entrepreneurs and small teams scaling their operations"
+      free: "Test the waters with 10 credits/month. Perfect for validating your idea and getting started.",
+      creator: "Build your business with 50 credits/month. Everything you need to plan, validate, and grow.",
+      professional: "Scale your business with 150 credits/month. Advanced features, unlimited intelligence, and team collaboration."
     };
     return audiences[tierName] || "";
   };
