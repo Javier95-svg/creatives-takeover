@@ -50,7 +50,7 @@ const SubscriptionFeatures = () => {
       icon: <BookOpen className="w-10 h-10 text-primary" />,
       title: "Stories",
       description: "Discover articles tailored for founders and their specific needs. Read expert insights, real-world stories, and actionable advice from successful entrepreneurs and creative professionals.",
-      benefits: ["Expert insights & articles", "Real-world success stories", "Actionable business advice", "LinkedIn post integration"],
+      benefits: ["Expert insights & articles", "Real-world success stories", "Actionable business advice", "LinkedIn posts"],
       highlight: "",
       details: "Discover actionable insights, real-world stories, and expert advice from successful entrepreneurs and creative professionals. Learn from their experiences, mistakes, and triumphs as they build and grow their businesses. All stories are tagged and searchable by topic."
     },
