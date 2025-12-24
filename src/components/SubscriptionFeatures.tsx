@@ -8,7 +8,7 @@ import {
   TrendingUp, 
   Check,
   Sparkles,
-  FlaskConical,
+  LayoutDashboard,
   BookOpen,
   ChevronDown
 } from "lucide-react";
@@ -33,18 +33,18 @@ const SubscriptionFeatures = () => {
     {
       icon: <Users className="w-10 h-10 text-primary" />,
       title: "Community",
-      description: "Join 10,000+ entrepreneurs sharing progress, getting feedback, and growing together in a supportive network.",
-      benefits: ["Share wins & get support", "Daily challenges & rewards", "Reputation badges & leveling", "Connect with founders"],
+      description: "Connect with vetted startup mentors and coaches through discovery calls. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth.",
+      benefits: ["Discovery calls with mentors", "Vetted mentor network", "Actionable feedback & guidance", "Pitch review & support"],
       highlight: "Most Popular",
-      details: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding. Post updates, engage with others, and build your reputation."
+      details: "Access our curated mentorship marketplace featuring experienced startup mentors and coaches. Book discovery calls to get personalized guidance on your business roadmap, pitch deck, and growth strategy. Connect with mentors who have successfully built and scaled businesses, and get the support you need to accelerate from idea to funding."
     },
     {
       icon: <TrendingUp className="w-10 h-10 text-primary" />,
       title: "Insighta",
-      description: "Your curated news hub for funding opportunities, accelerator programs, and the latest AI & startup trends.",
-      benefits: ["Funding opportunities", "Latest AI & startup news", "Trending articles", "Bookmark & save"],
+      description: "Your complete fundraising toolkit with investor matchmaking, readiness assessments, and curated funding opportunities to accelerate your path to investment.",
+      benefits: ["Investor Matchmaker", "Insighta Test Assessment", "Funding opportunities", "Investment readiness tools"],
       highlight: "New",
-      details: "Access a complete fundraising toolkit designed for entrepreneurs. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy. Stay updated with the latest trends in AI and entrepreneurship."
+      details: "Access a complete fundraising toolkit designed for entrepreneurs. Use the Investor Matchmaker to connect with potential investors, take the Insighta Test Assessment to evaluate your investment readiness, and discover curated funding opportunities and accelerator programs. Get the tools you need to craft a winning fundraising strategy."
     },
     {
       icon: <BookOpen className="w-10 h-10 text-primary" />,
@@ -55,12 +55,12 @@ const SubscriptionFeatures = () => {
       details: "Discover actionable insights, real-world stories, and expert advice from successful entrepreneurs and creative professionals. Learn from their experiences, mistakes, and triumphs as they build and grow their businesses. All stories are tagged and searchable by topic."
     },
     {
-      icon: <FlaskConical className="w-10 h-10 text-primary" />,
-      title: "Product Market Fit Lab",
-      description: "Validate your product in the market and discover if there's real demand with AI-powered analysis and validation experiments.",
-      benefits: ["Customer segment analysis", "Problem-solution fit scoring", "PMF score calculation", "Validation experiments"],
+      icon: <LayoutDashboard className="w-10 h-10 text-primary" />,
+      title: "Dashboard",
+      description: "Your command center for tracking business progress, managing tasks, and monitoring your business growth. Stay organized and maintain momentum with daily check-ins and priority management.",
+      benefits: ["Daily check-ins & goal tracking", "Task & priority management", "Business progress metrics", "Momentum streaks & gamification"],
       highlight: "",
-      details: "Validate your product in the market and discover if there's real demand. Get AI-powered customer segment analysis, problem-solution fit scoring, PMF score calculation, and actionable validation experiments. Includes survey questions and interview scripts to test your assumptions."
+      details: "Your personalized command center that helps you stay organized and motivated. Track your daily goals, manage priorities, monitor business progress, and maintain momentum with streak tracking. Get a clear view of your business health, upcoming tasks, and recent wins all in one place."
     },
     {
       icon: <Sparkles className="w-10 h-10 text-primary" />,
@@ -84,7 +84,7 @@ const SubscriptionFeatures = () => {
             </Badge>
           </div>
           <h2 className="text-4xl lg:text-5xl font-bold mb-6 pb-2 gradient-text">
-            Everything You Need to Build Your Business
+            The Perfect Ecosystem
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Get the tools, community, and insights you need to turn your idea into a real business. Start planning today and launch in 30 days.
