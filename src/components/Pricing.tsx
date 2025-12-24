@@ -261,7 +261,7 @@ const Pricing = () => {
             Choose Your Plan
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Unlock your creative potential with flexible plans designed for every level of ambition
+            Start taking action and move your ideas forward with plans that scale as you do.
           </p>
         </div>
 
