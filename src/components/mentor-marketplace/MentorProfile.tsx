@@ -32,7 +32,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
   
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), and Dikshit Kukreja (India)
+  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), and Dikshit Kukreja (Germany)
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -65,9 +65,9 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     if (mentor.name.toLowerCase().includes('ramona') && mentor.name.toLowerCase().includes('chihaia')) {
       return 'Netherlands';
     }
-    // Special case: Dikshit Kukreja is from India
+    // Special case: Dikshit Kukreja is from Germany
     if (mentor.name.toLowerCase().includes('dikshit') && mentor.name.toLowerCase().includes('kukreja')) {
-      return 'India';
+      return 'Germany';
     }
     return null;
   };
