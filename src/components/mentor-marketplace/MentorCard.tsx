@@ -35,7 +35,7 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const rating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;
   
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), and Dikshit Kukreja (Germany)
+  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), and Dikshit Kukreja (India)
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -68,9 +68,9 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     if (mentor.name.toLowerCase().includes('ramona') && mentor.name.toLowerCase().includes('chihaia')) {
       return 'Netherlands';
     }
-    // Special case: Dikshit Kukreja is from Germany
+    // Special case: Dikshit Kukreja is from India
     if (mentor.name.toLowerCase().includes('dikshit') && mentor.name.toLowerCase().includes('kukreja')) {
-      return 'Germany';
+      return 'India';
     }
     return null;
   };
