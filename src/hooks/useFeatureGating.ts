@@ -295,14 +295,14 @@ export function useFeatureGating() {
 
       // Investor Matchmaker
       case 'investor_matching':
-        if (tier === 'free') {
+        if (tier === 'free' || tier === 'creator') {
           return {
             hasAccess: false,
-            message: 'Upgrade to Creator tier to get investor matches. Free tier allows browsing only.',
-            requiredTier: 'creator'
+            message: 'Upgrade to Professional tier to access Investor Matchmaker.',
+            requiredTier: 'professional'
           };
         }
-        // Creator+ has full matching (5 credits)
+        // Professional tier has full matching (5 credits)
         if (!hasCredits(5)) {
           return {
             hasAccess: false,
@@ -314,6 +314,28 @@ export function useFeatureGating() {
       case 'investor_browse':
         // Browse/view-only available to all tiers
         return { hasAccess: true };
+
+      // Dashboard Access
+      case 'dashboard_access':
+        if (['creator', 'professional'].includes(tier)) {
+          return { hasAccess: true };
+        }
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Creator tier or higher to access the Dashboard.',
+          requiredTier: 'creator'
+        };
+
+      // Discovery Calls with Mentors
+      case 'discovery_calls_mentors':
+        if (['creator', 'professional'].includes(tier)) {
+          return { hasAccess: true };
+        }
+        return {
+          hasAccess: false,
+          message: 'Upgrade to Creator tier or higher to book discovery calls with mentors.',
+          requiredTier: 'creator'
+        };
 
       default:
         return { hasAccess: true };
@@ -334,47 +356,32 @@ export function useFeatureGating() {
     const featureMap: Record<string, string[]> = {
       free: [
         '10 credits per month',
-        '10 BizMap AI conversations (1 credit each)',
-        '1 Tech Stack generation (3 credits)',
-        '1 Insighta Test assessment (8 credits)',
-        'Product-Market Fit Lab preview',
-        'Investor Matchmaker browse-only',
-        'Community read-only access',
-        'Prompt library (view free prompts only)',
-        '1 active sprint',
-        'Funding opportunities (view only)',
-        'Job board (view only)',
-        'Community forum support'
+        'BizMap - Business Planning Mode',
+        'Prompt Library (Free Models Only)',
+        'Insighta Test Assessment',
+        'Funding Opportunities',
+        'Full access to Stories (Content)'
       ],
       creator: [
         '50 credits per month',
-        'Unlimited BizMap AI conversations (1 credit each)',
-        'Unlimited Tech Stack generations (3 credits each)',
-        'Full Product-Market Fit Lab access (8 credits each)',
-        'Unlimited Insighta Test assessments (8 credits each)',
-        'Full Investor Matchmaker access (5 credits per match)',
-        'Full community access (post, comment, vote)',
-        'Prompt library with export (3 credits per export)',
-        'Unlimited sprints',
-        'Market intelligence (10 queries/month, 10 credits each)',
-        'Basic collaboration (up to 3 team members)',
-        'Basic reports (5/month, 5 credits each)',
-        'Priority email support (48hr response)'
+        'Dashboard Access',
+        'BizMap AI Upgrade: Business Planning & Product Market Fit Lab modes.',
+        'Full Access to Prompt Library',
+        'Insighta Test Assessment',
+        'Funding Opportunities',
+        'Discovery Calls with Mentors (Community)',
+        'Full access to Stories (Content)'
       ],
       professional: [
         '150 credits per month',
-        'Unlimited BizMap AI conversations (1 credit each)',
-        'Unlimited Tech Stack generations (3 credits each)',
-        'Full Product-Market Fit Lab access (8 credits each)',
-        'Unlimited Insighta Test assessments (8 credits each)',
-        'Full Investor Matchmaker access (5 credits per match)',
-        'AI-enhanced community features',
-        'Unlimited market intelligence queries',
-        'Unlimited custom reports + PDF export',
-        'Advanced collaboration (unlimited team members)',
-        'Success score analytics',
-        'API access',
-        '24hr priority support'
+        'Dashboard Access',
+        'Full Access to BizMap AI (Business Planning, Product Market Fit Lab & Tech Stack)',
+        'Full Access to Prompt Library',
+        'Insighta Test Assessment',
+        'Investor Matchmaker (Insighta)',
+        'Funding Opportunities',
+        'Discovery Calls with Mentors (Community)',
+        'Full access to Stories (Content)'
       ]
     };
     return featureMap[tierName] || [];

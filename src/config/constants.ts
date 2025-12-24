@@ -189,7 +189,7 @@ export const TIER_USAGE_LIMITS = {
     tech_stack_generations: -1, // Unlimited (credit-gated)
     pmf_analyses: -1, // Unlimited (credit-gated)
     insighta_tests: -1, // Unlimited (credit-gated)
-    investor_matches: -1, // Unlimited (credit-gated)
+    investor_matches: 0, // Not available on Creator tier (Professional only)
     market_intelligence_queries: 10,
     basic_reports: 5,
     team_members: 3,

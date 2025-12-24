@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { ArrowLeft, Loader2, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
@@ -21,6 +23,7 @@ const MentorProfilePage = () => {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, loading } = useMentors();
+  const { checkFeatureAccess } = useFeatureGating();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
 
   useEffect(() => {
@@ -64,7 +67,17 @@ const MentorProfilePage = () => {
       return;
     }
     
-    // User is authenticated, open Calendly directly
+    // Check feature access for discovery calls
+    const access = checkFeatureAccess('discovery_calls_mentors');
+    if (!access.hasAccess) {
+      toast.error(access.message || 'Upgrade to Creator tier or higher to book discovery calls with mentors.');
+      if (access.requiredTier) {
+        navigate('/pricing');
+      }
+      return;
+    }
+    
+    // User is authenticated and has access, open Calendly directly
     window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
