@@ -328,7 +328,7 @@ const Pricing = () => {
                     </div>
                     {tier.monthly_credits > 0 && (
                       <div className="text-sm text-muted-foreground mt-2">
-                        {tier.monthly_credits} credits/month
+                        {tier.tier_name === 'free' ? 10 : tier.monthly_credits} credits/month
                       </div>
                     )}
                   </div>
