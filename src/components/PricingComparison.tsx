@@ -29,15 +29,15 @@ const PricingComparison = () => {
       items: [
         { feature: "Prompt Library", free: "Free Models Only", creator: "Full Access", professional: "Full Access" },
         { feature: "Insighta Test Assessment", free: true, creator: true, professional: true },
-        { feature: "Investor Matchmaker (Insighta)", free: false, creator: false, professional: true }
+        { feature: "Investor Matchmaker", free: false, creator: false, professional: true }
       ]
     },
     {
       category: "Community & Opportunities",
       items: [
         { feature: "Funding Opportunities", free: true, creator: true, professional: true },
-        { feature: "Discovery Calls with Mentors (Community)", free: false, creator: true, professional: true },
-        { feature: "Stories (Content)", free: "Full access", creator: "Full access", professional: "Full access" }
+        { feature: "Discovery Calls with Mentors", free: false, creator: true, professional: true },
+        { feature: "Stories Content", free: "Full access", creator: "Full access", professional: "Full access" }
       ]
     }
   ];
