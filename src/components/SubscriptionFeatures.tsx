@@ -25,10 +25,10 @@ const SubscriptionFeatures = () => {
     {
       icon: <Bot className="w-10 h-10 text-primary" />,
       title: "BizMap AI",
-      description: "Your AI co-founder that guides you through a 7-step business planning wizard to transform ideas into actionable roadmaps.",
-      benefits: ["7-step interactive wizard", "AI-powered validation", "Success probability scoring", "Downloadable business roadmap"],
+      description: "Your AI co-founder with three powerful modes: Business Planning chatbot for strategic roadmaps, Product Market Fit Lab for validation, and Tech Stack Builder for technical architecture.",
+      benefits: ["Business Planning (chatbot)", "Product Market Fit Lab", "Tech Stack Builder", "AI-powered guidance & analysis"],
       highlight: "Core Feature",
-      details: "Start with our BizMap AI Creative Operating System to analyze your business idea, validate market fit, and create a comprehensive 30-day launch strategy. Get real-time AI guidance, competitor analysis, and strategic recommendations tailored to your creative business."
+      details: "Access three powerful modes in one AI platform. Use Business Planning mode as your interactive chatbot to create strategic roadmaps and get real-time guidance. Validate your product-market fit with the Product Market Fit Lab, analyzing customer segments and demand. Build your technical architecture with the Tech Stack Builder, getting recommendations for the perfect technology stack for your business."
     },
     {
       icon: <Users className="w-10 h-10 text-primary" />,
