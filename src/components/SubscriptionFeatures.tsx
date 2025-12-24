@@ -87,7 +87,7 @@ const SubscriptionFeatures = () => {
             The Perfect Ecosystem
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Get the tools, community, and insights you need to turn your idea into a real business. Start planning today and launch in 30 days.
+            A complete ecosystem designed to support founders at every stage. From AI-powered business planning and validation to mentorship, fundraising tools, and actionable content—everything you need to transform your idea into a successful, investable business.
           </p>
         </div>
 
