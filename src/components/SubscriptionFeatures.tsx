@@ -87,7 +87,7 @@ const SubscriptionFeatures = () => {
             The Perfect Ecosystem
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            An all-in-one platform that helps founders turn ideas into investable startups using AI-powered planning, validation, and fundraising tools.
+            Everything Creatives Takeover offers you.
           </p>
         </div>
 
