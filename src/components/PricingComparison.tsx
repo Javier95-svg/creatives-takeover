@@ -84,7 +84,7 @@ const PricingComparison = () => {
             </Badge>
           </div>
           <h2 className="text-4xl lg:text-5xl font-bold mb-8 pb-2 gradient-text">
-            Compare Our Packages
+            Compare Our Plans
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             See exactly what's included in each pricing plan. 
