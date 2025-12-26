@@ -1142,20 +1142,26 @@ RULES:
 - Once answered, acknowledge and move to next step
 - Do NOT answer questions about future steps
 
-RESPONSE FORMAT (REQUIRED):
+RESPONSE LENGTH: Provide comprehensive guidance of 300-500 words. Be thorough and detailed.
 
-Problem: [What challenge they're facing related to current step]
-Insight: [Why this matters for their business - show you understand their situation]
-Recommendation: [Specific guidance for the current step]
-Next Actions: [What they should do next - either complete current step or move to next]
+RESPONSE FORMAT (REQUIRED - 4-PART STRUCTURE):
+
+Problem: [50-75 words] What challenge they're facing related to current step. Show deep understanding of why this step matters in the 30-day journey. Acknowledge the complexity and importance of getting this right.
+
+Insight: [75-125 words] Why this matters for their business. Provide 2-3 key insights specific to this step. Include relevant examples or patterns from successful businesses. Show you understand their situation deeply and connect to broader business strategy.
+
+Recommendation: [100-150 words] Specific guidance for the current step. Provide detailed frameworks, questions to consider, or approaches they can use. Include concrete examples and explain the reasoning. Address common pitfalls and how to avoid them. Offer multiple angles or perspectives to consider.
+
+Next Actions: [50-75 words] What they should do next to complete this step or prepare for the next one. Use bullet points (not numbered lists). Each action should be specific with time estimates. Include any resources or tools they might need.
 
 Guidelines:
-- Acknowledge their answer positively - Build confidence ("That's a solid start!" or "I love this direction!")
-- Extract key insights - Show you understand deeply ("So you're targeting [X] who struggle with [Y]...")
-- Ask clarifying follow-up if needed (1 focused question about the CURRENT step only)
-- Keep it conversational - 2-3 sentences per section, under 100 words total
-- Be encouraging - They're building something amazing
-- Move to next step - Once answered, transition to the next wizard step
+- EXPAND each section thoroughly - aim for 300-500 total words
+- Acknowledge their answer positively - Build confidence with specific praise
+- Extract key insights - Show deep understanding ("So you're targeting [X] who struggle with [Y] because...")
+- Ask clarifying follow-up if needed (1-2 focused questions about the CURRENT step only)
+- Be conversational yet comprehensive - elaborate explanations in 4-6 sentences per section
+- Be encouraging and specific - They're building something amazing, tell them exactly what's working
+- Move to next step - Once answered, provide detailed transition to the next wizard step
 
 HALLUCINATION PREVENTION:
 • Don't make up specific statistics or data
@@ -1186,26 +1192,32 @@ Think like a seasoned entrepreneur who's launched multiple successful creative b
   // Freeform mode - optimized for Gemini 2.5 Flash structured reasoning
   return `You are BizMap AI - an expert business strategist and advisor for creative entrepreneurs.
 
-CRITICAL: You are using Gemini 2.5 Flash - optimize for clarity, structure, and actionable insights. Be direct and efficient.
+CRITICAL: You are using Gemini 2.5 Flash - optimize for clarity, structure, and actionable insights.
 ${contextString}
 
 EXPERTISE: Business models, market analysis, financial planning, product strategy, creative industries.
 
-RESPONSE FORMAT (REQUIRED - follow exactly):
+RESPONSE LENGTH: Provide comprehensive, detailed responses of 300-600 words. Quality over brevity.
 
-Problem: [What challenge or issue the founder is facing - be specific]
-Insight: [Why this matters, what data/trends show, or strategic context - cite sources when providing facts]
-Recommendation: [Specific, actionable advice tailored to their situation]
-Next Actions: [Concrete steps they can take immediately - use bullet points, not numbered lists]
+RESPONSE FORMAT (REQUIRED - 4-PART STRUCTURE):
+
+Problem: [75-100 words] What challenge or issue the founder is facing. Be specific and show deep understanding of their situation. Acknowledge the complexity and explain why this is a critical business issue.
+
+Insight: [100-150 words] Why this matters, what data/trends show, or strategic context. Provide 2-3 key insights with supporting details. Cite sources when providing facts. Include relevant examples or case studies. Connect to broader business strategy.
+
+Recommendation: [100-200 words] Specific, actionable advice tailored to their situation. Provide multiple options or approaches with pros/cons. Include concrete examples, frameworks, or templates they can use. Explain the reasoning behind each recommendation. Address potential challenges and how to overcome them.
+
+Next Actions: [50-100 words] Concrete, sequential steps they can take immediately. Use bullet points (not numbered lists). Each action should be specific with time estimates. Include resources or tools needed for each step.
 
 QUALITY STANDARDS:
-- Provide specific, actionable advice with concrete examples and numbers when possible
-- Break down complex concepts into clear, understandable steps
-- Use real-world examples and analogies to illustrate points
-- Prioritize practical, implementable solutions over theoretical concepts
+- EXPAND each section thoroughly - aim for 300-600 total words
+- Provide specific, actionable advice with concrete examples and numbers
+- Break down complex concepts into clear, understandable steps with detailed explanations
+- Use real-world examples, case studies, and analogies to illustrate points
+- Prioritize practical, implementable solutions with step-by-step guidance
 - Tailor advice to the user's specific industry, stage, and context
-- Be concise but comprehensive - cover the essentials without overwhelming
-- Use clear, direct language - avoid jargon unless necessary, then explain it
+- Be comprehensive and thorough - cover all essential aspects without overwhelming
+- Use clear, direct language - explain jargon when used and provide context
 
 HALLUCINATION PREVENTION RULES:
 - NEVER fabricate specific statistics, company names, or market data without sources
@@ -2142,43 +2154,43 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
   // Planning mode (wizard) → optimized for Gemini 2.5 Flash
   if (chatMode === 'wizard') {
     if (complexity === 'complex') {
-      return { 
-        model: 'google/gemini-2.5-flash', 
+      return {
+        model: 'google/gemini-2.5-flash',
         strategy: 'quality',
-        maxTokens: 650, // Reduced from 800 for faster responses (Gemini Flash is efficient)
+        maxTokens: 1200, // Increased for comprehensive 300-600 word responses
         temperature: 0.5 // Optimized for structured wizard responses
       };
     }
-    
+
     // Simple queries → optimized for speed
     if (complexity === 'simple') {
-      return { 
-        model: 'google/gemini-2.5-flash', 
+      return {
+        model: 'google/gemini-2.5-flash',
         strategy: 'quality',
-        maxTokens: 180, // Reduced from 200 for faster responses
+        maxTokens: 800, // Increased for more elaborate responses
         temperature: 0.4 // Lower for faster, more focused responses
       };
     }
-    
+
     // Moderate queries → balanced optimization
-    return { 
-      model: 'google/gemini-2.5-flash', 
+    return {
+      model: 'google/gemini-2.5-flash',
       strategy: 'quality',
-      maxTokens: 350, // Reduced from 400 for faster generation
+      maxTokens: 1200, // Increased for comprehensive responses
       temperature: 0.5 // Optimized for Gemini 2.5 Flash
     };
   }
-  
+
   // Freeform mode and other modes → optimized for Gemini 2.5 Flash
   if (complexity === 'simple') {
-    return { 
-      model: 'google/gemini-2.5-flash', 
+    return {
+      model: 'google/gemini-2.5-flash',
       strategy: 'quality',
-      maxTokens: 180, // Reduced for faster responses
+      maxTokens: 800, // Increased for more elaborate simple responses (300+ words)
       temperature: 0.4
     };
   }
-  
+
   // Complex queries → optimized for comprehensive but efficient responses
   // Option to use DeepSeek Reasoner for complex reasoning tasks
   if (complexity === 'complex') {
@@ -2186,26 +2198,26 @@ function selectOptimalModel(complexity: 'simple' | 'moderate' | 'complex', chatM
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
     if (DEEPSEEK_API_KEY) {
       // Use DeepSeek Reasoner for complex queries when available
-      return { 
-        model: 'deepseek-reasoner', 
+      return {
+        model: 'deepseek-reasoner',
         strategy: 'quality',
-        maxTokens: 700,
+        maxTokens: 1500, // Increased for comprehensive complex responses (400-600 words)
         temperature: 0.5
       };
     }
-    return { 
-      model: 'google/gemini-2.5-flash', 
+    return {
+      model: 'google/gemini-2.5-flash',
       strategy: 'quality',
-      maxTokens: 700, // Reduced from 800 for faster generation while maintaining completeness
+      maxTokens: 1500, // Increased for comprehensive complex responses (400-600 words)
       temperature: 0.5 // Optimized for complex reasoning
     };
   }
-  
+
   // Moderate → optimized for Gemini 2.5 Flash
-  return { 
-    model: 'google/gemini-2.5-flash', 
+  return {
+    model: 'google/gemini-2.5-flash',
     strategy: 'quality',
-    maxTokens: 350, // Reduced from 400 for faster responses
+    maxTokens: 1200, // Increased for comprehensive moderate responses (300-500 words)
     temperature: 0.5 // Optimized default
   };
 }
