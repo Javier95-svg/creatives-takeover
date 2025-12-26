@@ -2691,8 +2691,45 @@ All colors MUST be HSL.
 .animate-dashboard-cta:hover {
   animation-duration: 1.5s;
   transform: scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 0 40px hsl(var(--blue-primary) / 0.8),
     0 0 80px hsl(var(--blue-primary) / 0.6),
     0 8px 40px hsl(var(--primary) / 0.7);
+}
+
+/* ===================================================================
+   MOBILE UI ENHANCEMENTS - Touch-Optimized Components
+   =================================================================== */
+
+@layer components {
+  /* Mobile-optimized touch targets */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    @apply touch-manipulation;
+  }
+
+  .touch-target-large {
+    min-width: 56px;
+    min-height: 56px;
+    @apply touch-manipulation;
+  }
+
+  /* Mobile-optimized message bubbles */
+  .message-mobile {
+    @apply max-w-[90%] sm:max-w-[85%] md:max-w-[80%];
+    @apply p-4 sm:p-5 md:p-6;
+    @apply text-[15px] sm:text-base;
+    @apply leading-7 sm:leading-relaxed;
+  }
+
+  /* Mobile-optimized spacing */
+  .chat-mobile-spacing {
+    @apply space-y-8 sm:space-y-6;
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  .no-zoom-input {
+    font-size: 16px !important; /* Prevents iOS zoom */
+  }
 }

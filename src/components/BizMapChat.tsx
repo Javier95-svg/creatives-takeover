@@ -408,7 +408,7 @@ export const BizMapChat = ({
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 relative"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 sm:space-y-6 relative"
         role="log"
         aria-label="Conversation messages"
         aria-live="polite"
@@ -422,7 +422,7 @@ export const BizMapChat = ({
         {Array.isArray(messages) && messages.map((msg, index) => (
           <div key={msg.id} className="space-y-2">
             <div
-              className={`flex gap-4 sm:gap-5 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
+              className={`flex gap-3 sm:gap-5 ${msg.isBot ? 'justify-start' : 'justify-end'} animate-fade-in`}
               style={{ animationDelay: `${index * 50}ms` }}
               role="article"
               aria-label={msg.isBot ? "AI assistant message" : "Your message"}
@@ -442,7 +442,7 @@ export const BizMapChat = ({
                     : 'message-user bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                 }`}
               >
-                <p className="text-sm sm:text-base md:text-[15px] leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
+                <p className="text-[15px] sm:text-base leading-7 sm:leading-relaxed whitespace-pre-wrap" role="text">{msg.content}</p>
               </div>
               {!msg.isBot && (
                 <Avatar 
@@ -631,15 +631,15 @@ export const BizMapChat = ({
             iconOnly
             aria-label="Attach file to message"
           />
-          <Button 
+          <Button
             onClick={handleSend}
             disabled={
-              (!message.trim() && attachedFiles.length === 0) || 
-              isTyping || 
+              (!message.trim() && attachedFiles.length === 0) ||
+              isTyping ||
               isStreaming
             }
             size="icon"
-            className="h-[52px] w-[52px] rounded-2xl glass-chat-button shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed touch-manipulation"
+            className="h-14 w-14 sm:h-[52px] sm:w-[52px] rounded-2xl glass-chat-button shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed touch-manipulation"
             aria-label="Send message"
             aria-describedby={isTyping || isStreaming ? "sending-status" : undefined}
           >

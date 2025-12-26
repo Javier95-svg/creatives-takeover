@@ -1148,10 +1148,11 @@ What aspect of your business would you like to explore?`;
     };
   };
 
-  const simulateTyping = (duration: number = 1200 + Math.random() * 800) => {
+  const simulateTyping = (duration: number = 200) => {
+    // Reduced from 1200-2000ms to 200ms for instant response feel
     setIsTyping(true);
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
-    
+
     typingTimeout.current = setTimeout(() => {
       setIsTyping(false);
     }, duration);
