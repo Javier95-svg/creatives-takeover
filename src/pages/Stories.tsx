@@ -17,12 +17,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { slugifyTag } from "@/utils/hashtagUtils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
+const ARTICLES_PER_PAGE = 18;
 
 const Stories = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const selectedTag = searchParams.get("tag");
   const activeTab = searchParams.get("tab") || "published";
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
   const { fetchStories, fetchDrafts, loading, isAdmin } = useStories();
   const { user } = useAuth();
   const [stories, setStories] = useState<StoryArticle[]>([]);
@@ -95,12 +107,83 @@ const Stories = () => {
   }, [selectedTag, activeTab, fetchStories, fetchDrafts, isAdmin]);
 
   const clearTagFilter = () => {
-    setSearchParams({ tab: activeTab });
+    setSearchParams({ tab: activeTab, page: "1" });
   };
 
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+    setSearchParams({ tab: value, page: "1" });
   };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    setSearchParams(params);
+    // Scroll to top of content section
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Calculate pagination for published stories
+  const filteredStories = stories.filter((story) => story.linkedin_post_url);
+  const totalPages = Math.ceil(filteredStories.length / ARTICLES_PER_PAGE);
+  const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
+  const endIndex = startIndex + ARTICLES_PER_PAGE;
+  const paginatedStories = filteredStories.slice(startIndex, endIndex);
+
+  // Calculate pagination for drafts
+  const totalDraftPages = Math.ceil(drafts.length / ARTICLES_PER_PAGE);
+  const draftStartIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
+  const draftEndIndex = draftStartIndex + ARTICLES_PER_PAGE;
+  const paginatedDrafts = drafts.slice(draftStartIndex, draftEndIndex);
+
+  // Generate page numbers to display with ellipsis
+  const getPageNumbers = (totalPages: number, currentPage: number) => {
+    const pages: (number | string)[] = [];
+    
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        // Near the start
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Near the end
+        pages.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // In the middle
+        pages.push("ellipsis");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  // Reset to page 1 if current page is out of bounds
+  useEffect(() => {
+    const maxPages = activeTab === "drafts" ? totalDraftPages : totalPages;
+    if (currentPage > maxPages && maxPages > 0) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  }, [currentPage, totalPages, totalDraftPages, activeTab, searchParams, setSearchParams]);
 
   return (
     <>
@@ -234,8 +317,9 @@ const Stories = () => {
                   </Link>
                 </div>
               ) : (
+                <>
                 <div className="space-y-4">
-                  {drafts.map((draft) => {
+                  {paginatedDrafts.map((draft) => {
                     const updatedDate = new Date(draft.updated_at);
                     const timeAgo = formatDistanceToNow(updatedDate, { addSuffix: true });
                     
@@ -289,6 +373,61 @@ const Stories = () => {
                     );
                   })}
                 </div>
+                {totalDraftPages > 1 && (
+                  <div className="mt-8">
+                    <Pagination>
+                      <PaginationContent>
+                        {currentPage > 1 && (
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage - 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                        {getPageNumbers(totalDraftPages, currentPage).map((page, index) => {
+                          if (page === "ellipsis") {
+                            return (
+                              <PaginationItem key={`ellipsis-${index}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(page as number);
+                                }}
+                                isActive={page === currentPage}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        {currentPage < totalDraftPages && (
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage + 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+                </>
               )
             ) : (
               /* Published Stories View */
@@ -315,10 +454,9 @@ const Stories = () => {
                   )}
                 </div>
               ) : (
+                <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {stories
-                    .filter((story) => story.linkedin_post_url) // Only show stories with LinkedIn URLs
-                    .map((story) => (
+                  {paginatedStories.map((story) => (
                       <div key={story.id} className="relative group">
                         <StoryCard article={story} />
                         {/* Admin Edit Button - Overlay */}
@@ -341,6 +479,61 @@ const Stories = () => {
                       </div>
                     ))}
                 </div>
+                {totalPages > 1 && (
+                  <div className="mt-8">
+                    <Pagination>
+                      <PaginationContent>
+                        {currentPage > 1 && (
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage - 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                        {getPageNumbers(totalPages, currentPage).map((page, index) => {
+                          if (page === "ellipsis") {
+                            return (
+                              <PaginationItem key={`ellipsis-${index}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(page as number);
+                                }}
+                                isActive={page === currentPage}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        {currentPage < totalPages && (
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage + 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+                </>
               )
             )}
             </div>
