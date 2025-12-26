@@ -4,11 +4,11 @@
  */
 
 import { useEffect } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFounderProfile } from '@/hooks/useFounderProfile';
 
 export function useAutoProfile() {
-  const user = useUser();
+  const { user } = useAuth();
   const { profile, hasProfile, createProfile, isLoading } = useFounderProfile();
 
   useEffect(() => {

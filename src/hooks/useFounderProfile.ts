@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { BusinessContextService } from '@/services/businessContextService';
 import type {
@@ -17,7 +17,7 @@ import type {
  * Main hook for founder profile management
  */
 export const useFounderProfile = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const userId = user?.id;
   const queryClient = useQueryClient();
   const { toast } = useToast();

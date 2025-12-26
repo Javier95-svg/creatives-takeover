@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { BusinessContextService } from '@/services/businessContextService';
 import type {
   AggregatedUserContext,
@@ -16,7 +16,7 @@ import type {
  * This is the primary hook for accessing enhanced context in the chatbot
  */
 export const useAggregatedContext = () => {
-  const user = useUser();
+  const { user } = useAuth();
   const userId = user?.id;
 
   const {
