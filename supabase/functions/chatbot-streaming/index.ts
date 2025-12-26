@@ -994,7 +994,7 @@ function createTemplateStream(templateContent: string, quickActions: Array<{text
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 5)); // Original delay
+          // Removed artificial 5ms delay for faster streaming
         }
         
         // Complete
@@ -1050,7 +1050,7 @@ function createCachedStream(cachedContent: string, message: string, conversation
           controller.enqueue(new TextEncoder().encode(
             `data: ${JSON.stringify({ type: 'delta', content: prefix + chunk })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 10)); // Original delay
+          // Removed artificial 10ms delay for faster streaming
         }
         
         // Complete
@@ -1835,11 +1835,13 @@ function createRAGStream(ragData: any, message: string, conversation: any, busin
       try {
         // Stream answer word by word (original timing for smooth experience)
         const words = answer.split(' ');
-        for (let i = 0; i < words.length; i++) {
+        const chunkSize = 5; // Stream 5 words at a time instead of word-by-word
+        for (let i = 0; i < words.length; i += chunkSize) {
+          const chunk = words.slice(i, i + chunkSize).join(' ');
           controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + chunk })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 20)); // Balanced delay for smooth streaming
+          // Removed artificial 20ms delay for faster streaming
         }
         
         // Add sources with type indicators
@@ -1915,15 +1917,17 @@ function createWebSearchStream(webSearchData: any, message: string, conversation
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Stream answer word by word
+        // Stream answer in chunks for faster delivery
         const words = answer.split(' ');
-        for (let i = 0; i < words.length; i++) {
+        const chunkSize = 5; // Stream 5 words at a time
+        for (let i = 0; i < words.length; i += chunkSize) {
+          const chunk = words.slice(i, i + chunkSize).join(' ');
           controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + chunk })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 20));
+          // Removed artificial 20ms delay for faster streaming
         }
-        
+
         // Add sources
         if (sources.length > 0) {
           controller.enqueue(new TextEncoder().encode(
@@ -1994,15 +1998,17 @@ function createMergedSearchStream(mergedData: any, message: string, conversation
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Stream answer word by word
+        // Stream answer in chunks for faster delivery
         const words = answer.split(' ');
-        for (let i = 0; i < words.length; i++) {
+        const chunkSize = 5; // Stream 5 words at a time
+        for (let i = 0; i < words.length; i += chunkSize) {
+          const chunk = words.slice(i, i + chunkSize).join(' ');
           controller.enqueue(new TextEncoder().encode(
-            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + words[i] })}\n\n`
+            `data: ${JSON.stringify({ type: 'delta', content: (i === 0 ? '' : ' ') + chunk })}\n\n`
           ));
-          await new Promise(r => setTimeout(r, 20));
+          // Removed artificial 20ms delay for faster streaming
         }
-        
+
         // Add sources with type indicators
         if (sources.length > 0) {
           controller.enqueue(new TextEncoder().encode(
