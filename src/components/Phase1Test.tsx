@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFounderProfile, useProfileCompleteness } from '@/hooks/useFounderProfile';
 import { useProgressMilestones, useProgressBlockers, useProgressMetrics } from '@/hooks/useProgressTracker';
 import { useAggregatedContext, useContextForAI, useProactiveSuggestions } from '@/hooks/useEnhancedContext';
@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 export function Phase1Test() {
-  const user = useUser();
+  const { user } = useAuth();
   const [testResults, setTestResults] = useState<string[]>([]);
 
   // Test Hooks
