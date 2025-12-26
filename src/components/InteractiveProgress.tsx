@@ -1,4 +1,4 @@
-import { Compass, Target, Sparkles, Rocket, TrendingUp, CheckCircle } from "lucide-react";
+import { Compass, Target, Sparkles, Rocket, TrendingUp, CheckCircle, Lightbulb } from "lucide-react";
 
 interface InteractiveProgressProps {
   currentStep: number;
@@ -29,7 +29,7 @@ const stepConfig = [
     days: "Days 5-7"
   },
   {
-    icon: Rocket,
+    icon: Lightbulb,
     name: "SOLUTION",
     description: "Shape an offer that directly solves the core problem.",
     days: "Days 8-14"
