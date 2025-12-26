@@ -777,7 +777,7 @@ ${answers.pricing || 'Sustainable pricing strategy aligned with market expectati
 "Hi [Name], I'm working on [solution] for [target market]. Could you help me understand: What's your biggest challenge with [problem area]? How do you currently handle this? What would make the biggest difference?"
 
 ### Social Media Post Template:
-"🚀 Excited to share [business name] - helping [target market] [key benefit]. Early users are seeing [specific result]. Who else struggles with [problem]? #startup #entrepreneurship"
+"🚀 Excited to share [business name] - helping [target market] [key benefit]. Early users are seeing [specific result]. Who else struggles with [problem]? #startup #Entrepreneurship"
 
 ### Email Outreach Template:
 Subject: "Quick question about [their pain point]"
