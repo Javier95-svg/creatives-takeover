@@ -18,6 +18,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { SourceCitation } from "./chatbot/SourceCitation";
 import { SearchResults } from "./chatbot/SearchResults";
+import { ContextAwareBanner } from './chatbot/ContextAwareBanner';
+import { QuickActions } from './chatbot/QuickActions';
+import { useAutoProfile } from '@/hooks/useAutoProfile';
 
 interface BizMapChatProps {
   wizardSteps: Array<{
@@ -137,9 +140,9 @@ const extractKeyContent = (messages: ChatMessage[], businessContext: Record<stri
   };
 };
 
-export const BizMapChat = ({ 
-  wizardSteps, 
-  onStepComplete, 
+export const BizMapChat = ({
+  wizardSteps,
+  onStepComplete,
   onWizardComplete,
   currentStep,
   answers,
@@ -147,6 +150,9 @@ export const BizMapChat = ({
   onModeInfoReady,
   sessionManagement
 }: BizMapChatProps) => {
+  // Auto-create profile for new users
+  useAutoProfile();
+
   const [message, setMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [celebrationMode, setCelebrationMode] = useState(false);
@@ -397,8 +403,11 @@ export const BizMapChat = ({
         <div className="bizmap-chat-shimmer" />
       </div>
       <div className="relative z-10 flex h-full flex-col">
+      {/* Context-aware welcome banner */}
+      {user && <ContextAwareBanner />}
+
       {/* Messages Area */}
-      <div 
+      <div
         className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 relative"
         role="log"
         aria-label="Conversation messages"
@@ -503,6 +512,15 @@ export const BizMapChat = ({
               side="top"
             />
           </div>
+        )}
+
+        {/* Quick action suggestions */}
+        {user && !isTyping && !isStreaming && (
+          <QuickActions
+            onActionClick={(prompt) => {
+              setMessage(prompt);
+            }}
+          />
         )}
         
         {/* Document Upload Section - Only in freeform mode */}
