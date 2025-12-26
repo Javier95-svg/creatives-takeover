@@ -45,6 +45,7 @@ import Account from "./pages/Account";
 import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
 import RAGTest from "./pages/RAGTest";
+import TestPhase1 from "./pages/TestPhase1";
 import MentorMarketplaceHub from "./pages/community/MentorMarketplaceHub";
 import MentorProfilePage from "./pages/community/MentorProfilePage";
 import MentorBookingPage from "./pages/community/MentorBookingPage";
@@ -130,6 +131,7 @@ function App() {
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/creatives-takeover" element={<CreativesTakeover />} />
                   <Route path="/rag-test" element={<RAGTest />} />
+                  <Route path="/test-phase1" element={<TestPhase1 />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
