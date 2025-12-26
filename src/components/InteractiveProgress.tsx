@@ -1,4 +1,4 @@
-import { Compass, Target, Sparkles, Rocket, TrendingUp, CheckCircle, Lightbulb } from "lucide-react";
+import { Brain, Users, AlertCircle, Lightbulb, Share2, DollarSign, Rocket } from "lucide-react";
 
 interface InteractiveProgressProps {
   currentStep: number;
@@ -11,19 +11,19 @@ interface InteractiveProgressProps {
 // Step configuration matching the screenshot design
 const stepConfig = [
   {
-    icon: Compass,
+    icon: Brain,
     name: "CONCEPT",
     description: "Clarify what you're building and why it matters.",
     days: "Days 1-2"
   },
   {
-    icon: Target,
+    icon: Users,
     name: "MARKET",
     description: "Define the people most likely to become your first customers.",
     days: "Days 3-4"
   },
   {
-    icon: Sparkles,
+    icon: AlertCircle,
     name: "PROBLEM",
     description: "Turn vague frustrations into sharp, testable problems.",
     days: "Days 5-7"
@@ -35,13 +35,13 @@ const stepConfig = [
     days: "Days 8-14"
   },
   {
-    icon: TrendingUp,
+    icon: Share2,
     name: "CHANNELS",
     description: "Decide how you'll reach real humans in the next 30 days.",
     days: "Days 15-21"
   },
   {
-    icon: CheckCircle,
+    icon: DollarSign,
     name: "PRICING",
     description: "Choose a pricing model that fits your goals and audience.",
     days: "Days 22-25"
