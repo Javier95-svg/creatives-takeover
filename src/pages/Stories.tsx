@@ -79,14 +79,26 @@ const Stories = () => {
             
             setStories(data);
             
-            // Extract unique tags from all stories
-            const tagsSet = new Set<string>();
+            // Extract tags and count frequency to determine most important tags
+            const tagCounts = new Map<string, number>();
             data.forEach((story) => {
               story.hashtags?.forEach((tag) => {
-                tagsSet.add(tag);
+                tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
               });
             });
-            setAllTags(Array.from(tagsSet).sort());
+            // Sort by frequency (descending), then alphabetically, and take top 8
+            const sortedTags = Array.from(tagCounts.entries())
+              .sort((a, b) => {
+                // First sort by frequency (descending)
+                if (b[1] !== a[1]) {
+                  return b[1] - a[1];
+                }
+                // If frequency is equal, sort alphabetically
+                return a[0].localeCompare(b[0]);
+              })
+              .map(([tag]) => tag)
+              .slice(0, 8);
+            setAllTags(sortedTags);
           }
         }
       } catch (error) {
@@ -226,6 +238,41 @@ const Stories = () => {
             <StoriesHero />
           </section>
 
+          {/* Explore Topics Section - Right after hero */}
+          {allTags.length > 0 && !selectedTag && activeTab === "published" && (
+            <section className="relative z-10 -mt-8 mb-8">
+              <div className="container mx-auto px-6 max-w-7xl">
+                <div className="p-6 border rounded-lg bg-muted/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Explore Topics</h3>
+                    <span className="text-sm text-muted-foreground">
+                      {filteredStories.length} {filteredStories.length === 1 ? 'article' : 'articles'} published
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Browse stories by topic to find insights relevant to your interests
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.slice(0, 8).map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
+                        onClick={() => {
+                          const tagSlug = slugifyTag(tag);
+                          navigate(`/stories/tags/${tagSlug}`);
+                        }}
+                      >
+                        <Hash className="w-3 h-3 mr-1" />
+                        {tag.replace('#', '')}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Content Section */}
           <section className="relative z-10">
             <div className="container mx-auto px-6 max-w-7xl relative z-10">
@@ -269,32 +316,6 @@ const Stories = () => {
                   >
                     <X className="w-4 h-4" />
                   </Button>
-                </div>
-              )}
-
-              {/* Popular Tags - Only show for published */}
-              {allTags.length > 0 && !selectedTag && activeTab === "published" && (
-                <div className="mt-6 p-6 border rounded-lg bg-muted/30">
-                  <h3 className="text-lg font-semibold mb-4">Explore Topics</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Browse stories by topic to find insights relevant to your interests
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.slice(0, 15).map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-sm px-3 py-1"
-                        onClick={() => {
-                          const tagSlug = slugifyTag(tag);
-                          navigate(`/stories/tags/${tagSlug}`);
-                        }}
-                      >
-                        <Hash className="w-3 h-3 mr-1" />
-                        {tag.replace('#', '')}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
