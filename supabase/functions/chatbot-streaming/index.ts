@@ -1168,7 +1168,18 @@ FORMATTING RULES (CRITICAL - MUST FOLLOW):
 - NEVER use bold formatting (**text**) - use plain text only
 - NEVER use italic formatting (*text*)
 - Section labels (Problem, Insight, Recommendation, Next Actions) should be plain text followed by a colon
-- Structure content with bullet points and line breaks for natural readability
+- Break content into SHORT paragraphs (2-3 sentences max per paragraph)
+- Add blank lines between paragraphs for visual spacing and easy scanning
+- Use relevant emojis SPARINGLY (1-2 per section) to support clarity:
+  • 💡 for insights and key realizations
+  • 🎯 for goals and targets
+  • 📊 for data and metrics
+  • ✅ for actions and next steps
+  • ⚠️ for warnings or important considerations
+  • 🚀 for growth and progress
+- Place emojis at the START of important sentences, never mid-sentence
+- Use bullet points for lists to break up dense information
+- Structure content with clear visual hierarchy through spacing
 
 HALLUCINATION PREVENTION:
 • Don't make up specific statistics or data
@@ -1295,8 +1306,21 @@ FORMATTING RULES (CRITICAL - MUST FOLLOW):
 - NEVER use markdown headings (###, ##, #) - replace with plain text labels followed by content
 - NEVER use bold formatting (**text**) - use plain text only
 - NEVER use italic formatting (*text*)
-- Structure content with bullet points and line breaks for readability
 - Section labels (Problem, Insight, Recommendation, Next Actions) should be plain text followed by a colon
+- Break content into SHORT paragraphs (2-4 sentences max per paragraph)
+- Add blank lines between paragraphs for visual breathing room and scannability
+- Use relevant emojis SPARINGLY (1-2 per major section) to enhance clarity:
+  • 💡 for insights and strategic realizations
+  • 🎯 for goals, targets, and focus areas
+  • 📊 for data, metrics, and market analysis
+  • ✅ for actions, next steps, and implementation
+  • ⚠️ for risks, warnings, and important considerations
+  • 🚀 for growth opportunities and scaling strategies
+  • 💰 for financial insights and monetization
+  • 🔍 for research and validation needs
+- Place emojis at the START of key sentences to draw attention, never mid-sentence
+- Use bullet points for multi-item lists to improve readability
+- Structure responses with clear visual hierarchy through intentional spacing
 - All text should flow naturally without special markdown formatting
 
 CRITICAL RULES:
