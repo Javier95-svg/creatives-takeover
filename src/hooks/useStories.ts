@@ -44,8 +44,14 @@ export const useStories = () => {
 
   // Fetch all published stories (prioritize LinkedIn posts)
   const fetchStories = useCallback(async (hashtag?: string): Promise<StoryArticle[]> => {
+    // #region agent log
+    fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:46',message:'fetchStories entry',data:{hashtag},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
       setLoading(true);
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:49',message:'Before Supabase query',data:{hashtag},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       
       let query = supabase
         .from('stories_articles')
@@ -55,10 +61,16 @@ export const useStories = () => {
         .order('published_at', { ascending: false });
 
       const { data, error } = await query;
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:58',message:'After Supabase query',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,dataLength:data?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
 
       if (error) throw error;
       
       let stories = (data || []) as StoryArticle[];
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:62',message:'Stories parsed',data:{storiesCount:stories.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
 
       // Case-insensitive tag filtering (client-side for better compatibility)
       if (hashtag) {
@@ -70,9 +82,15 @@ export const useStories = () => {
           );
         });
       }
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:74',message:'fetchStories success exit',data:{storiesCount:stories.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
 
       return stories;
     } catch (error: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:76',message:'fetchStories error caught',data:{errorName:error?.name,errorMessage:error?.message,errorCode:error?.code,errorDetails:error?.details,errorHint:error?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
       console.error('Error fetching stories:', error);
       toast.error('Failed to load stories');
       return [];

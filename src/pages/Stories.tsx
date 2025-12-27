@@ -53,8 +53,14 @@ const Stories = () => {
   }, [selectedTag, activeTab, navigate]);
 
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:55',message:'useEffect entry',data:{selectedTag,activeTab,isMounted:isMountedRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // Abort previous request if any
     if (abortControllerRef.current) {
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:58',message:'Aborting previous request',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       abortControllerRef.current.abort();
     }
 
@@ -62,10 +68,21 @@ const Stories = () => {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
     isMountedRef.current = true;
+    // #region agent log
+    fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:64',message:'New AbortController created',data:{signalAborted:signal.aborted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     const loadStories = async () => {
       try {
-        if (signal.aborted || !isMountedRef.current) return;
+        // #region agent log
+        fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:68',message:'loadStories entry',data:{signalAborted:signal.aborted,isMounted:isMountedRef.current,activeTab,selectedTag},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        if (signal.aborted || !isMountedRef.current) {
+          // #region agent log
+          fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:69',message:'Early return due to abort or unmount',data:{signalAborted:signal.aborted,isMounted:isMountedRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
+          return;
+        }
 
         if (activeTab === "drafts" && isAdmin) {
           const data = await fetchDrafts();
@@ -74,8 +91,19 @@ const Stories = () => {
         } else {
           // Only load stories if no tag is selected (otherwise redirect will handle it)
           if (!selectedTag) {
+            // #region agent log
+            fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:77',message:'Calling fetchStories',data:{signalAborted:signal.aborted,isMounted:isMountedRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             const data = await fetchStories();
-            if (signal.aborted || !isMountedRef.current) return;
+            // #region agent log
+            fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:78',message:'fetchStories returned',data:{dataLength:data?.length,signalAborted:signal.aborted,isMounted:isMountedRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
+            if (signal.aborted || !isMountedRef.current) {
+              // #region agent log
+              fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:79',message:'Aborted after fetchStories',data:{signalAborted:signal.aborted,isMounted:isMountedRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+              // #endregion
+              return;
+            }
             
             setStories(data);
             
@@ -99,9 +127,15 @@ const Stories = () => {
               .map(([tag]) => tag)
               .slice(0, 8);
             setAllTags(sortedTags);
+            // #region agent log
+            fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:101',message:'Stories state updated',data:{storiesCount:data.length,tagsCount:sortedTags.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            // #endregion
           }
         }
       } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:104',message:'Error in loadStories catch',data:{errorName:error?.name,errorMessage:error?.message,signalAborted:signal.aborted,isMounted:isMountedRef.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         if (!signal.aborted && isMountedRef.current) {
           console.error('Error loading stories:', error);
         }
@@ -111,6 +145,9 @@ const Stories = () => {
     loadStories();
 
     return () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7255/ingest/6dcf1972-417f-409e-820f-6156428557ff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Stories.tsx:113',message:'useEffect cleanup',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       isMountedRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
