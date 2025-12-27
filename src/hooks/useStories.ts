@@ -44,14 +44,8 @@ export const useStories = () => {
 
   // Fetch all published stories (prioritize LinkedIn posts)
   const fetchStories = useCallback(async (hashtag?: string): Promise<StoryArticle[]> => {
-    // #region agent log
-    fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:46',message:'fetchStories entry',data:{hashtag,loadingState:loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     try {
       setLoading(true);
-      // #region agent log
-      fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:51',message:'Before Supabase query',data:{hashtag},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       
       let query = supabase
         .from('stories_articles')
@@ -60,58 +54,32 @@ export const useStories = () => {
         .not('linkedin_post_url', 'is', null) // Only fetch stories with LinkedIn URLs
         .order('published_at', { ascending: false });
 
-      const queryStartTime = Date.now();
       const { data, error } = await query;
-      const queryDuration = Date.now() - queryStartTime;
-      // #region agent log
-      fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:63',message:'After Supabase query',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,errorDetails:error?.details,errorHint:error?.hint,dataLength:data?.length,dataIsArray:Array.isArray(data),queryDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
 
-      if (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:68',message:'Supabase query error thrown',data:{errorCode:error.code,errorMessage:error.message,errorDetails:error.details,errorHint:error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        throw error;
-      }
+      if (error) throw error;
       
       let stories = (data || []) as StoryArticle[];
-      // #region agent log
-      fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:72',message:'Stories parsed',data:{storiesCount:stories.length,storiesIsArray:Array.isArray(stories)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       // Case-insensitive tag filtering (client-side for better compatibility)
       if (hashtag) {
         const normalizedTag = normalizeHashtag(hashtag).toLowerCase();
-        const beforeFilterCount = stories.length;
         stories = stories.filter((story) => {
           if (!story.hashtags || story.hashtags.length === 0) return false;
           return story.hashtags.some((tag) => 
             normalizeHashtag(tag).toLowerCase() === normalizedTag
           );
         });
-        // #region agent log
-        fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:82',message:'Tag filtering applied',data:{hashtag,beforeFilterCount,afterFilterCount:stories.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
       }
-      // #region agent log
-      fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:85',message:'fetchStories success exit',data:{storiesCount:stories.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
 
       return stories;
     } catch (error: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:90',message:'fetchStories error caught',data:{errorName:error?.name,errorMessage:error?.message,errorCode:error?.code,errorDetails:error?.details,errorHint:error?.hint,errorStack:error?.stack?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      // #endregion
       console.error('Error fetching stories:', error);
       toast.error('Failed to load stories');
       return [];
     } finally {
       setLoading(false);
-      // #region agent log
-      fetch('http://127.0.0.1:7256/ingest/dff1e4fd-d1e8-4642-a283-af6c327394f5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStories.ts:97',message:'fetchStories finally block',data:{loadingState:loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
     }
-  }, [loading]);
+  }, []);
 
   // Fetch single story by slug
   const fetchStoryBySlug = useCallback(async (slug: string): Promise<StoryArticle | null> => {
