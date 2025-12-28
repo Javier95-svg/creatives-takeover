@@ -18,54 +18,24 @@ const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-wi
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
 const MentorProfilePage = () => {
-  const pageMountTime = performance.now();
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:21',message:'component mount',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(()=>{});
-  // #endregion
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const authStartTime = performance.now();
   const { user, isAuthenticated } = useAuth();
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:25',message:'useAuth hook complete',data:{duration:performance.now()-authStartTime,hasUser:!!user,isAuthenticated},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
-  // #endregion
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
-  const mentorsHookStartTime = performance.now();
   const { fetchMentorById, loading } = useMentors();
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:28',message:'useMentors hook complete',data:{duration:performance.now()-mentorsHookStartTime,loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
-  // #endregion
-  const featureGatingStartTime = performance.now();
   const { checkFeatureAccess } = useFeatureGating();
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:30',message:'useFeatureGating hook complete',data:{duration:performance.now()-featureGatingStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
-  // #endregion
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:35',message:'useEffect triggered',data:{id,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
     if (id) {
       loadMentor(id);
     }
   }, [id]);
 
   const loadMentor = async (mentorId: string) => {
-    const loadStartTime = performance.now();
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadMentor start',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     const found = await fetchMentorById(mentorId);
-    const loadDuration = performance.now() - loadStartTime;
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadMentor complete',data:{mentorId,found:!!found,duration:loadDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     if (found) {
       setMentor(found as MentorProfileType);
-      // #region agent log
-      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:48',message:'mentor state set',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-      // #endregion
     }
   };
 
@@ -100,9 +70,6 @@ const MentorProfilePage = () => {
     // Check feature access for discovery calls
     try {
       const access = checkFeatureAccess('discovery_calls_mentors');
-      // #region agent log
-      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:69',message:'Discovery call access check',data:{hasAccess:access.hasAccess,message:access.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       if (!access.hasAccess) {
         toast.error(access.message || 'Upgrade to Creator tier or higher to book discovery calls with mentors.');
         if (access.requiredTier) {
@@ -111,9 +78,6 @@ const MentorProfilePage = () => {
         return;
       }
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:79',message:'Discovery call access check error',data:{errorMessage:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       console.error('Error checking discovery call access:', error);
       toast.error('An error occurred. Please try again.');
       return;
@@ -149,10 +113,6 @@ const MentorProfilePage = () => {
     );
   }
 
-  const renderStartTime = performance.now();
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:125',message:'render start',data:{hasMentor:!!mentor,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-  // #endregion
   return (
     <>
       <Helmet>
@@ -189,9 +149,6 @@ const MentorProfilePage = () => {
           <Footer />
         </div>
       </div>
-      {/* #region agent log */}
-      {(() => { fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:157',message:'render complete',data:{duration:performance.now()-renderStartTime,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{}); return null; })()}
-      {/* #endregion */}
     </>
   );
 };

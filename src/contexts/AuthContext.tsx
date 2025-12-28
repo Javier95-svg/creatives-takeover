@@ -35,18 +35,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:37',message:'auth state change',data:{event,hasSession:!!session,userId:session?.user?.id,email:session?.user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
         // Create or update profile when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
-          // #region agent log
-          fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:43',message:'user signed in',data:{userId:session.user.id,email:session.user.email,isAdmin:session.user.email?.toLowerCase()==='admin@creatives-takeover.com'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-          // #endregion
           // Check for pending Calendly redirect
           const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
           const pendingCalendlyUrl = localStorage.getItem(CALENDLY_REDIRECT_KEY);

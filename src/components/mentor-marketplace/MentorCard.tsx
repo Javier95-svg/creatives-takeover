@@ -129,9 +129,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     // Check feature access for discovery calls
     try {
       const access = checkFeatureAccess('discovery_calls_mentors');
-      // #region agent log
-      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorCard.tsx:127',message:'Discovery call access check',data:{hasAccess:access.hasAccess,message:access.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       if (!access.hasAccess) {
         toast.error(access.message || 'Upgrade to Creator tier or higher to book discovery calls with mentors.');
         if (access.requiredTier) {
@@ -140,9 +137,6 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
         return;
       }
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorCard.tsx:137',message:'Discovery call access check error',data:{errorMessage:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
       console.error('Error checking discovery call access:', error);
       toast.error('An error occurred. Please try again.');
       return;

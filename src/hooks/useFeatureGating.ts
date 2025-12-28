@@ -14,9 +14,6 @@ export function useFeatureGating() {
   const { balance, hasCredits } = useCredits();
 
   const checkFeatureAccess = (feature: string): FeatureAccess => {
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFeatureGating.ts:16',message:'checkFeatureAccess entry',data:{feature,hasUser:!!user,hasSubscriptionData:!!subscriptionData,subscriptionTier:subscriptionData?.subscription_tier},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     if (!user) {
       return { hasAccess: false, message: 'Please sign in to access this feature' };
     }
@@ -28,16 +25,10 @@ export function useFeatureGating() {
 
     // Safety check for subscriptionData
     if (!subscriptionData) {
-      // #region agent log
-      fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFeatureGating.ts:28',message:'subscriptionData is null/undefined',data:{feature},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       return { hasAccess: false, message: 'Loading subscription data...' };
     }
 
     const tier = subscriptionData.subscription_tier || 'free';
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFeatureGating.ts:32',message:'checkFeatureAccess tier determined',data:{feature,tier,subscriptionTier:subscriptionData.subscription_tier},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
 
     switch (feature) {
       // BizMap AI conversation limits
@@ -396,10 +387,6 @@ export function useFeatureGating() {
     return featureMap[tierName] || [];
   };
 
-  // #region agent log
-  const currentTierValue = subscriptionData?.subscription_tier || 'free';
-  fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useFeatureGating.ts:383',message:'useFeatureGating return',data:{hasSubscriptionData:!!subscriptionData,currentTier:currentTierValue,isSubscribed:subscriptionData?.subscribed},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   return {
     checkFeatureAccess,
     getConversationLimit,

@@ -26,17 +26,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:28',message:'ErrorBoundary caught error',data:{errorMessage:error.message,errorStack:error.stack?.substring(0,500),componentStack:errorInfo.componentStack?.substring(0,500)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     logError('React Error Boundary caught error', error, {
       componentStack: errorInfo.componentStack,
       errorStack: error.stack,
     });
 
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:35',message:'ErrorBoundary error details',data:{errorName:error.name,errorMessage:error.message,hasComponentStack:!!errorInfo.componentStack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     // Log to console in development for easier debugging
     if (import.meta.env.DEV) {

@@ -13,15 +13,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.tsx:15',message:'Dashboard useEffect entry',data:{hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     if (user) {
       try {
         const access = checkFeatureAccess('dashboard_access');
-        // #region agent log
-        fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.tsx:20',message:'Dashboard access check result',data:{hasAccess:access.hasAccess,message:access.message,requiredTier:access.requiredTier},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         if (!access.hasAccess) {
           toast.error(access.message || 'Upgrade to Creator tier or higher to access the Dashboard.');
           if (access.requiredTier) {
@@ -29,9 +23,6 @@ const Dashboard = () => {
           }
         }
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.tsx:28',message:'Dashboard access check error',data:{errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack?.substring(0,300):''},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         console.error('Error checking dashboard access:', error);
       }
     }
@@ -53,13 +44,7 @@ const Dashboard = () => {
   let access;
   try {
     access = checkFeatureAccess('dashboard_access');
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.tsx:40',message:'Dashboard render access check',data:{hasAccess:access.hasAccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.tsx:45',message:'Dashboard render access check error',data:{errorMessage:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     console.error('Error checking dashboard access in render:', error);
     return (
       <>
