@@ -176,23 +176,26 @@ export function Phase1Test() {
     addResult('All tests completed!');
   };
 
-  if (!user) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-lg">Please sign in to test Phase 1 features</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-8 max-w-5xl">
       {/* Sticky Header */}
       <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-4 border-b">
         <h1 className="text-3xl font-bold gradient-text">Phase 1 Feature Testing</h1>
-        <Button onClick={runAllTests} size="lg" className="shadow-lg">
-          Run All Tests
+        <Button onClick={runAllTests} size="lg" className="shadow-lg" disabled={!user}>
+          {user ? 'Run All Tests' : 'Sign In to Test'}
         </Button>
       </div>
+
+      {!user && (
+        <div className="p-6 border border-yellow-500/50 bg-yellow-500/10 rounded-lg">
+          <p className="text-center text-lg font-medium">
+            👋 Sign in to run interactive tests and save your progress
+          </p>
+          <p className="text-center text-sm text-muted-foreground mt-2">
+            You can view the test sections below without signing in
+          </p>
+        </div>
+      )}
 
       {/* Vertical Scrollable List of Test Sections */}
       <div className="space-y-8">
