@@ -113,7 +113,7 @@ No worries if the timing isn't right!
 
 Thanks,
 {{founder_name}}`,
-    useCase: 'When asking your network to introduce you to a VC. Make it easy for them by being specific about why it's a good fit.',
+    useCase: 'When asking your network to introduce you to a VC. Make it easy for them by being specific about why it\'s a good fit.',
     variables: ['{{connection_name}}', '{{stage}}', '{{company_name}}', '{{product_description}}', '{{vc_name}}', '{{firm_name}}', '{{investment_focus}}', '{{reason_1}}', '{{reason_2}}', '{{traction_highlight}}', '{{founder_name}}'],
     previewSnippet: 'Ask your network for introductions to VCs with clear context on fit.',
     tags: ['VC', 'Warm Intro', 'Network'],
