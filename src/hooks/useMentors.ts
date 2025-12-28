@@ -206,11 +206,24 @@ export const useMentors = () => {
 
       if (mentor) {
         console.log('[fetchMentorBySlug] Found mentor:', mentor.name);
-      } else {
-        console.log('[fetchMentorBySlug] No match found for slug:', slug);
+        return convertToMentor(mentor);
       }
 
-      return mentor ? convertToMentor(mentor) : null;
+      // Fallback: try to find by partial name match if exact slug didn't work
+      console.log('[fetchMentorBySlug] No exact match, trying partial match');
+      const partialMatch = data.find((m) => {
+        const nameParts = slug.split('-');
+        const mentorNameLower = m.name.toLowerCase();
+        return nameParts.every(part => mentorNameLower.includes(part));
+      });
+
+      if (partialMatch) {
+        console.log('[fetchMentorBySlug] Found partial match:', partialMatch.name);
+        return convertToMentor(partialMatch);
+      }
+
+      console.log('[fetchMentorBySlug] No match found for slug:', slug);
+      return null;
     } catch (error: any) {
       console.error('Error fetching mentor by slug:', {
         slug,
