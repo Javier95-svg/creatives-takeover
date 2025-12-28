@@ -22,7 +22,7 @@ const MentorProfilePage = () => {
   // #region agent log
   fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:21',message:'component mount',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(()=>{});
   // #endregion
-  const { id } = useParams<{ id: string }>();
+  const { id, slug } = useParams<{ id?: string; slug?: string }>();
   const navigate = useNavigate();
   const authStartTime = performance.now();
   const { user, isAuthenticated } = useAuth();
@@ -31,7 +31,7 @@ const MentorProfilePage = () => {
   // #endregion
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const mentorsHookStartTime = performance.now();
-  const { fetchMentorById, loading } = useMentors();
+  const { fetchMentorById, fetchMentorBySlug, loading } = useMentors();
   // #region agent log
   fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:28',message:'useMentors hook complete',data:{duration:performance.now()-mentorsHookStartTime,loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
   // #endregion
@@ -44,28 +44,37 @@ const MentorProfilePage = () => {
 
   useEffect(() => {
     // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:35',message:'useEffect triggered',data:{id,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:35',message:'useEffect triggered',data:{id,slug,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
     // #endregion
-    if (id) {
-      loadMentor(id);
+    if (slug) {
+      loadMentorBySlug(slug);
+    } else if (id) {
+      loadMentorById(id);
     }
-  }, [id]);
+  }, [id, slug]);
 
-  const loadMentor = async (mentorId: string) => {
+  const loadMentorById = async (mentorId: string) => {
     const loadStartTime = performance.now();
     // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadMentor start',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadMentorById start',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
     // #endregion
     const found = await fetchMentorById(mentorId);
     const loadDuration = performance.now() - loadStartTime;
     // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadMentor complete',data:{mentorId,found:!!found,duration:loadDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadMentorById complete',data:{mentorId,found:!!found,duration:loadDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
     // #endregion
     if (found) {
       setMentor(found as MentorProfileType);
       // #region agent log
       fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:48',message:'mentor state set',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
       // #endregion
+    }
+  };
+
+  const loadMentorBySlug = async (mentorSlug: string) => {
+    const found = await fetchMentorBySlug(mentorSlug);
+    if (found) {
+      setMentor(found as MentorProfileType);
     }
   };
 

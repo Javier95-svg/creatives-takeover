@@ -166,6 +166,53 @@ export const useMentors = () => {
     }
   }, []);
 
+  // Fetch mentor by slug (name-based URL)
+  const fetchMentorBySlug = useCallback(async (slug: string): Promise<Mentor | null> => {
+    try {
+      setLoading(true);
+
+      // Fetch all active mentors and find by slug
+      const { data, error } = await supabase
+        .from('mentors')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) return null;
+
+      // Generate slug from each mentor name and match
+      const mentor = data.find((m) => {
+        const mentorSlug = m.name
+          .toLowerCase()
+          .trim()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        return mentorSlug === slug;
+      });
+
+      return mentor ? convertToMentor(mentor) : null;
+    } catch (error: any) {
+      console.error('Error fetching mentor by slug:', {
+        slug,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
+      const errorMessage = formatErrorMessage(error, 'Failed to load mentor');
+      toast.error(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Create mentor (admin only)
   const createMentor = useCallback(async (input: CreateMentorInput): Promise<Mentor | null> => {
     if (!isAdmin) {
@@ -386,6 +433,7 @@ export const useMentors = () => {
   return {
     fetchMentors,
     fetchMentorById,
+    fetchMentorBySlug,
     createMentor,
     updateMentor,
     deleteMentor,

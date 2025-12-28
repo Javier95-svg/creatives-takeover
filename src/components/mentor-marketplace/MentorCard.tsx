@@ -11,6 +11,7 @@ import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_ST
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useState } from "react";
 import { toast } from "sonner";
+import { generateMentorSlug } from "@/utils/mentorSlug";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
@@ -27,7 +28,9 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const { startConversation, getUserIdByEmail } = useMessaging();
   const { checkFeatureAccess } = useFeatureGating();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
-  
+  const mentorSlug = generateMentorSlug(mentor.name);
+  const profileUrl = `/community/${mentorSlug}`;
+
   // Truncate bio if too long
   const bioMaxLength = 200;
   const truncatedBio = mentor.bio.length > bioMaxLength 
@@ -231,8 +234,8 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
           <div className="flex-1 min-w-0 space-y-2">
             {/* Name and Verification */}
             <div className="flex items-center gap-2 flex-wrap">
-              <Link 
-                to={`/community/mentors/${mentor.id}`}
+              <Link
+                to={profileUrl}
                 className="text-lg lg:text-xl font-bold text-foreground hover:text-primary transition-colors"
               >
                 {mentor.name}
@@ -307,8 +310,8 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
             <p className="text-sm lg:text-base text-muted-foreground leading-relaxed line-clamp-2">
               {truncatedBio}
             </p>
-            <Link 
-              to={`/community/mentors/${mentor.id}`}
+            <Link
+              to={profileUrl}
               className="text-sm font-medium text-primary hover:underline inline-block"
             >
               Learn more

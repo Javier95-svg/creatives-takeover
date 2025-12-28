@@ -104,6 +104,7 @@ function App() {
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
+                  <Route path="/community/:slug" element={<MentorProfilePage />} />
                   <Route path="/community/book/:id" element={<MentorBookingPage />} />
                   <Route path="/community/my-bookings" element={<MyBookings />} />
                   <Route path="/community/admin/new" element={<AdminMentorEditor />} />
