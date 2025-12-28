@@ -66,6 +66,7 @@ const Blog = () => {
 
         {/* Fundraising Resources Tabbed Section */}
         <section className="container mx-auto px-4 py-12">
+          {/* DEBUG: Build timestamp - 2025-12-28 10:45 AM */}
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold gradient-text mb-4">
               Fundraising Resources
