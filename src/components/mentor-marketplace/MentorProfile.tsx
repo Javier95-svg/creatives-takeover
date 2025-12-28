@@ -358,9 +358,9 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
           </CardContent>
         </div>
       )}
+      {/* #region agent log */}
+      {(() => { fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfile.tsx:361',message:'MentorProfile render complete',data:{duration:performance.now()-renderStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{}); return null; })()}
+      {/* #endregion */}
     </Card>
-    {/* #region agent log */}
-    {(() => { fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfile.tsx:361',message:'MentorProfile render complete',data:{duration:performance.now()-renderStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{}); return null; })()}
-    {/* #endregion */}
   );
 };
