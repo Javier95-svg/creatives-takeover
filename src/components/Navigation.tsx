@@ -104,7 +104,7 @@ const Navigation = () => {
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan", icon: Bot },
     { name: "Prompt Library", href: "/prompt-library", tooltip: "Ready-made prompts to grow your business", icon: BookOpen },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
-    { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: Users },
+    { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: UsersIcon },
     { name: "Stories", href: "/stories", tooltip: "Read insights and articles about building your business", icon: FileText },
     { name: "About Us", href: "/about", tooltip: "Learn about our mission and team", icon: Info },
     { name: "Pricing", href: "/pricing", tooltip: "View plans and pricing options", icon: DollarSign }
