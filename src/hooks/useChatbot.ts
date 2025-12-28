@@ -1875,18 +1875,90 @@ What specific aspect of your business would you like to focus on first?`;
             }
           );
           
+          // Check if response contains substantive business information before advancing timeline
+          const isSubstantiveInput = (() => {
+            // For Step 1 specifically: require WHAT they're building, WHO it's for, or WHY it matters
+            if (wizardStep === 0) {
+              const text = content.toLowerCase().trim();
+
+              // Detect general/informational questions (should NOT advance timeline)
+              const generalQuestionPatterns = [
+                /^(how|what|when|where|why|who|can|should|could|would|is|are|do|does)\s/i,
+                /\?$/,
+                /how (do|can|should) i/i,
+                /what (is|are|does)/i,
+                /can you (help|explain|tell)/i,
+                /i (want to know|need help|have a question)/i
+              ];
+
+              if (generalQuestionPatterns.some(pattern => pattern.test(text))) {
+                console.log('⏸️ General question detected - timeline will not advance');
+                return false;
+              }
+
+              // Detect substantive business descriptions (SHOULD advance timeline)
+              const substantivePatterns = [
+                // What they're building
+                /(i'?m|we'?re|want to|going to|plan to|building|creating|developing|making|launching)\s+(a|an)\s+\w+/i,
+                /(platform|app|service|product|business|tool|website|marketplace|solution)\s+(for|that|to help)/i,
+
+                // Who it's for
+                /(for|targeting|helping|serving)\s+(small business|entrepreneurs|creators|freelancers|students|parents|professionals|\w+\s+owners)/i,
+                /(my\s+)?(target|ideal)\s+(market|customer|audience|user)/i,
+
+                // Why it matters / problem solving
+                /(solve|address|help with|fix|improve)\s+(the\s+)?\w+\s+(problem|issue|challenge|pain)/i,
+                /struggle with|difficulty with|hard to|problem is/i,
+
+                // Business specifics (strong signals)
+                /business (idea|concept|model)/i,
+                /market for/i,
+                /customers? (are|will be|need|want)/i
+              ];
+
+              const hasSubstantiveContent = substantivePatterns.some(pattern => pattern.test(text));
+
+              // Require minimum length for substantive input (avoid single words)
+              const hasMinimumLength = text.split(/\s+/).length >= 5;
+
+              const isSubstantive = hasSubstantiveContent && hasMinimumLength;
+              console.log(isSubstantive ? '✅ Substantive business input detected - timeline will advance' : '⏸️ Input too brief or lacks business details - timeline will not advance');
+              return isSubstantive;
+            }
+
+            // For steps 2-7: also check for substantive content (not just questions)
+            const text = content.toLowerCase().trim();
+            const generalQuestionPatterns = [
+              /^(how|what|when|where|why|who|can|should|could|would|is|are|do|does)\s/i,
+              /\?$/
+            ];
+
+            if (generalQuestionPatterns.some(pattern => pattern.test(text))) {
+              console.log('⏸️ General question detected - timeline will not advance');
+              return false;
+            }
+
+            // If not a question and has reasonable length, consider it substantive
+            return content.trim().split(/\s+/).length >= 3;
+          })();
+
           // Notify parent of step completion
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1871',message:'wizard step completion',data:{wizardStep,nextStep:wizardStep+1,totalSteps:config.wizardMode.steps.length,willComplete:wizardStep+1>=config.wizardMode.steps.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1871',message:'wizard step completion',data:{wizardStep,nextStep:wizardStep+1,totalSteps:config.wizardMode.steps.length,willComplete:wizardStep+1>=config.wizardMode.steps.length,isSubstantiveInput},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
           // #endregion
           config.wizardMode.onStepComplete?.(wizardStep, content.trim());
-          
-          // Move to next step
-          setWizardStep(wizardStep + 1);
-          
-          // Check if wizard complete
-          if (wizardStep + 1 >= config.wizardMode.steps.length) {
-            config.wizardMode.onWizardComplete?.(newAnswers);
+
+          // Only advance timeline if user provided substantive business information
+          if (isSubstantiveInput) {
+            console.log('🚀 Advancing timeline to next step');
+            setWizardStep(wizardStep + 1);
+
+            // Check if wizard complete
+            if (wizardStep + 1 >= config.wizardMode.steps.length) {
+              config.wizardMode.onWizardComplete?.(newAnswers);
+            }
+          } else {
+            console.log('⏸️ Timeline remains at current step - user asked a clarifying question');
           }
           
         } catch (error) {
