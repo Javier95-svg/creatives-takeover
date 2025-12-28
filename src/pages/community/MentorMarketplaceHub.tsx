@@ -47,38 +47,20 @@ const MentorMarketplaceHub = () => {
   }, []);
 
   const loadMentors = async () => {
-    // #region agent log
-    const startTime = performance.now();
-    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:49',message:'loadMentors start',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-    // #endregion
     const fetchedMentors = await fetchMentors();
-    // #region agent log
-    const duration = performance.now() - startTime;
-    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:52',message:'loadMentors complete',data:{duration,mentorCount:fetchedMentors.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-    // #endregion
     setMentors(fetchedMentors);
   };
 
 
   const filteredMentors = useMemo(() => {
-    // #region agent log
-    const startTime = performance.now();
-    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:55',message:'filteredMentors useMemo start',data:{mentorCount:mentors.length,searchQuery,filterCount:filters.expertise.length + filters.coachingFormat.length,sortBy},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     let result = mentors.filter((mentor) => {
       // Search filter
       if (searchQuery) {
-        // #region agent log
-        const searchStart = performance.now();
-        // #endregion
         const query = searchQuery.toLowerCase();
         const matchesSearch =
           mentor.name.toLowerCase().includes(query) ||
           mentor.bio.toLowerCase().includes(query) ||
           mentor.expertise?.some((e) => e.toLowerCase().includes(query));
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:64',message:'search filter operation',data:{duration:performance.now()-searchStart,queryLength:query.length,bioLength:mentor.bio.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
         if (!matchesSearch) return false;
       }
 
@@ -92,27 +74,16 @@ const MentorMarketplaceHub = () => {
 
       // Coaching Format filter
       if (filters.coachingFormat.length > 0) {
-        // #region agent log
-        const formatStart = performance.now();
-        // #endregion
         const mentorNameLower = mentor.name.toLowerCase();
         const isMarcBright = mentorNameLower.includes('marc') && mentorNameLower.includes('bright');
         const mentorFormat = isMarcBright ? 'Hourly Rate Basis' : '8 Week Coaching Program';
         const hasFormat = filters.coachingFormat.includes(mentorFormat);
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:81',message:'coaching format check',data:{duration:performance.now()-formatStart,nameLength:mentor.name.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
         if (!hasFormat) return false;
       }
 
       return true;
     });
 
-    // #region agent log
-    const filterEnd = performance.now();
-    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:87',message:'filtering complete',data:{duration:filterEnd-startTime,resultCount:result.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    const sortStart = performance.now();
-    // #endregion
 
     // Apply sorting
     switch (sortBy) {
@@ -126,17 +97,11 @@ const MentorMarketplaceHub = () => {
         result = result.sort((a, b) => b.hourly_rate - a.hourly_rate);
         break;
       case "newest":
-        // #region agent log
-        const dateParseStart = performance.now();
-        // #endregion
         result = result.sort(
           (a, b) =>
             new Date(b.created_at).getTime() -
             new Date(a.created_at).getTime()
         );
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:102',message:'date parsing in sort',data:{duration:performance.now()-dateParseStart,itemCount:result.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
         break;
       case "recommended":
       default:
@@ -150,26 +115,16 @@ const MentorMarketplaceHub = () => {
         break;
     }
 
-    // #region agent log
-    const totalDuration = performance.now() - startTime;
-    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:117',message:'filteredMentors useMemo complete',data:{totalDuration,sortDuration:performance.now()-sortStart,resultCount:result.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
 
     return result;
   }, [searchQuery, filters, mentors, sortBy]);
 
   const allExpertise = useMemo(() => {
-    // #region agent log
-    const startTime = performance.now();
-    // #endregion
     const expertiseSet = new Set<string>();
     mentors.forEach((m) => {
       m.expertise?.forEach((e) => expertiseSet.add(e));
     });
     const result = Array.from(expertiseSet).sort();
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/96891b93-e954-44b6-b2a1-b98de6f4ca77',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorMarketplaceHub.tsx:126',message:'allExpertise useMemo',data:{duration:performance.now()-startTime,mentorCount:mentors.length,expertiseCount:result.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
     return result;
   }, [mentors]);
 
