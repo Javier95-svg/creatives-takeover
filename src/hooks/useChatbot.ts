@@ -1938,12 +1938,6 @@ What specific aspect of your business would you like to focus on first?`;
             return content.trim().split(/\s+/).length >= 3;
           })();
 
-          // Notify parent of step completion
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1871',message:'wizard step completion',data:{wizardStep,nextStep:wizardStep+1,totalSteps:config.wizardMode.steps.length,willComplete:wizardStep+1>=config.wizardMode.steps.length,isSubstantiveInput},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-          // #endregion
-          config.wizardMode.onStepComplete?.(wizardStep, content.trim());
-
           // Only advance timeline if user provided substantive business information
           if (isSubstantiveInput) {
             console.log('🚀 Advancing timeline to next step');
@@ -1951,6 +1945,12 @@ What specific aspect of your business would you like to focus on first?`;
             // Save the answer now that we've confirmed it's substantive
             const newAnswers = { ...wizardAnswers, [currentStepData.key]: content.trim() };
             setWizardAnswers(newAnswers);
+
+            // Notify parent of step completion (ONLY for substantive input)
+            // #region agent log
+            fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1871',message:'wizard step completion',data:{wizardStep,nextStep:wizardStep+1,totalSteps:config.wizardMode.steps.length,willComplete:wizardStep+1>=config.wizardMode.steps.length,isSubstantiveInput},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            // #endregion
+            config.wizardMode.onStepComplete?.(wizardStep, content.trim());
 
             // Advance to next step
             setWizardStep(wizardStep + 1);
@@ -1961,7 +1961,7 @@ What specific aspect of your business would you like to focus on first?`;
             }
           } else {
             console.log('⏸️ Timeline remains at current step - user asked a clarifying question');
-            // Don't save the answer or advance the step for general questions
+            // Don't save the answer, advance the step, or notify parent for general questions
           }
           
         } catch (error) {
