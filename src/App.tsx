@@ -104,11 +104,11 @@ function App() {
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
-                  <Route path="/community/:slug" element={<MentorProfilePage />} />
                   <Route path="/community/book/:id" element={<MentorBookingPage />} />
                   <Route path="/community/my-bookings" element={<MyBookings />} />
                   <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                   <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
+                  <Route path="/community/:slug" element={<MentorProfilePage />} />
                   <Route path="/stories" element={<Stories />} />
                   <Route path="/stories/rss.xml" element={<StoriesRSS />} />
                   <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />

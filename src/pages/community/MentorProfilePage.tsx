@@ -72,9 +72,13 @@ const MentorProfilePage = () => {
   };
 
   const loadMentorBySlug = async (mentorSlug: string) => {
+    console.log('Loading mentor by slug:', mentorSlug);
     const found = await fetchMentorBySlug(mentorSlug);
+    console.log('Mentor found:', found);
     if (found) {
       setMentor(found as MentorProfileType);
+    } else {
+      console.error('Mentor not found for slug:', mentorSlug);
     }
   };
 
@@ -148,10 +152,13 @@ const MentorProfilePage = () => {
     return (
       <>
         <Navigation />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <p>Mentor not found</p>
+        <div className="container mx-auto px-4 py-20 text-center space-y-4">
+          <h2 className="text-2xl font-bold text-foreground">Mentor Not Found</h2>
+          <p className="text-muted-foreground">
+            The mentor profile you're looking for doesn't exist or may have been removed.
+          </p>
           <Button asChild className="mt-4">
-            <Link to="/community">Browse Mentors</Link>
+            <Link to="/community">Browse All Mentors</Link>
           </Button>
         </div>
       </>

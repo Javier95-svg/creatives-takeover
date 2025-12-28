@@ -171,6 +171,8 @@ export const useMentors = () => {
     try {
       setLoading(true);
 
+      console.log('[fetchMentorBySlug] Looking for slug:', slug);
+
       // Fetch all active mentors and find by slug
       const { data, error } = await supabase
         .from('mentors')
@@ -179,7 +181,12 @@ export const useMentors = () => {
 
       if (error) throw error;
 
-      if (!data || data.length === 0) return null;
+      if (!data || data.length === 0) {
+        console.log('[fetchMentorBySlug] No active mentors found');
+        return null;
+      }
+
+      console.log('[fetchMentorBySlug] Total active mentors:', data.length);
 
       // Generate slug from each mentor name and match
       const mentor = data.find((m) => {
@@ -192,8 +199,16 @@ export const useMentors = () => {
           .replace(/[^a-z0-9-]/g, '')
           .replace(/-+/g, '-')
           .replace(/^-|-$/g, '');
+
+        console.log('[fetchMentorBySlug] Checking:', m.name, '→', mentorSlug, 'vs', slug, '=', mentorSlug === slug);
         return mentorSlug === slug;
       });
+
+      if (mentor) {
+        console.log('[fetchMentorBySlug] Found mentor:', mentor.name);
+      } else {
+        console.log('[fetchMentorBySlug] No match found for slug:', slug);
+      }
 
       return mentor ? convertToMentor(mentor) : null;
     } catch (error: any) {
