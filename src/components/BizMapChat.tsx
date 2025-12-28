@@ -317,16 +317,25 @@ export const BizMapChat = ({
   const SEND_DEBOUNCE_MS = 1000; // 1 second debounce
 
   const handleSend = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:315',message:'handleSend entry',data:{messageLength:message.length,hasFiles:attachedFiles.length,isTyping,isStreaming},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     const now = Date.now();
     const messageContent = message.trim();
     
     // 🚀 OPTIMIZATION: Debounce rapid sends and prevent duplicates
     if (now - lastSendTime.current < SEND_DEBOUNCE_MS && lastSentMessage.current === messageContent) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:322',message:'handleSend blocked duplicate',data:{messageContent},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('⚡ Ignoring duplicate send request');
       return;
     }
     
     if ((messageContent || attachedFiles.length > 0) && !isTyping && !isStreaming) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:326',message:'handleSend calling sendMessage',data:{messageContent,hasFiles:attachedFiles.length,sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('💬 Sending message:', { message, filesCount: attachedFiles.length });
       lastSentMessage.current = messageContent;
       lastSendTime.current = now;
@@ -342,6 +351,9 @@ export const BizMapChat = ({
       setMessage("");
       setAttachedFiles([]);
     } else {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BizMapChat.tsx:341',message:'handleSend blocked by state',data:{hasMessage:!!messageContent,hasFiles:attachedFiles.length>0,isTyping,isStreaming},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('⚠️ Cannot send message:', { 
         hasMessage: !!messageContent, 
         hasFiles: attachedFiles.length > 0,

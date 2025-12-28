@@ -112,19 +112,44 @@ export const useMentors = () => {
 
   // Fetch single mentor by ID
   const fetchMentorById = useCallback(async (id: string): Promise<Mentor | null> => {
+    const queryStartTime = performance.now();
+    // #region agent log
+    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:129',message:'fetchMentorById start',data:{id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
     try {
       setLoading(true);
+      const dbQueryStartTime = performance.now();
+      // #region agent log
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:133',message:'database query start',data:{id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       const { data, error } = await supabase
         .from('mentors')
         .select('*')
         .eq('id', id)
         .maybeSingle();
+      const dbQueryDuration = performance.now() - dbQueryStartTime;
+      // #region agent log
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:139',message:'database query complete',data:{id,duration:dbQueryDuration,hasData:!!data,hasError:!!error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
 
       if (error) throw error;
       
+      const convertStartTime = performance.now();
       const result = data ? convertToMentor(data) : null;
+      const convertDuration = performance.now() - convertStartTime;
+      // #region agent log
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:145',message:'data conversion complete',data:{id,duration:convertDuration,hasResult:!!result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
+      const totalDuration = performance.now() - queryStartTime;
+      // #region agent log
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:148',message:'fetchMentorById complete',data:{id,totalDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       return result;
     } catch (error: any) {
+      const errorDuration = performance.now() - queryStartTime;
+      // #region agent log
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMentors.ts:152',message:'fetchMentorById error',data:{id,duration:errorDuration,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       console.error('Error fetching mentor:', {
         id,
         message: error?.message,

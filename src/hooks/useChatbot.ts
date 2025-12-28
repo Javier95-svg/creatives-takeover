@@ -371,6 +371,11 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
     'bizmap-structured': `session_structured_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   });
   const sessionId = sessionIdsByMode[chatMode];
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:373',message:'sessionId initialized',data:{chatbotSessionId:sessionId,chatMode,currentSessionId:config.sessionManagement?.currentSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  }, [sessionId, chatMode, config.sessionManagement?.currentSessionId]);
+  // #endregion
   const [enableStreaming] = useState(true); // Enable streaming by default
   const [wizardStep, setWizardStep] = useState(config.wizardMode?.currentStep || 0);
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>(config.wizardMode?.answers || {});
@@ -988,11 +993,17 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
   useEffect(() => {
     const currentSessionId = config.sessionManagement?.currentSessionId;
     
+    // #region agent log
+    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:989',message:'session effect triggered',data:{currentSessionId,previousSessionId:previousSessionIdRef.current,chatbotSessionId:sessionId,messagesCount:messages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     console.log('🔍 useChatbot useEffect: currentSessionId =', currentSessionId, 'previous =', previousSessionIdRef.current);
     
     // Only load if sessionId changed and is not null
     if (currentSessionId && currentSessionId !== previousSessionIdRef.current) {
       previousSessionIdRef.current = currentSessionId;
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:994',message:'session changed clearing messages',data:{currentSessionId,previousSessionId:previousSessionIdRef.current,messagesCountBefore:messages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       console.log('🔄 Session changed, loading messages:', currentSessionId);
       // Clear messages first to show loading state
       setMessages([]);
@@ -1002,6 +1013,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       }));
       // Load messages
       loadMessagesFromSession(currentSessionId).catch((error) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1004',message:'loadMessagesFromSession failed',data:{currentSessionId,error:error instanceof Error?error.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         console.error('Failed to load messages:', error);
         dispatch({ 
           type: 'SET_ERROR', 
@@ -1012,6 +1026,9 @@ export const useChatbot = (config: EnhancedChatbotConfig & {
       // Session was cleared, but only reset if we have messages to preserve
       // If messages exist, they might be from an anonymous session - preserve them
       // Only clear if explicitly switching to null (user selected "New Chat")
+      // #region agent log
+      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1024',message:'session cleared but preserving messages',data:{previousSessionId:previousSessionIdRef.current,messagesCount:messages.length,willPreserve:messages.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       console.log('🔄 Session cleared, but preserving existing messages');
       previousSessionIdRef.current = null;
       // Don't clear messages - they might be from anonymous session that should persist
@@ -1663,6 +1680,9 @@ What specific aspect of your business would you like to focus on first?`;
 
   // Enhanced message sending function with NLU, personalization, and chatAnalytics
   const sendMessage = useCallback(async (content: string, messageAttachments: File[] = []) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1698',message:'sendMessage entry',data:{contentLength:content.length,isProcessing:conversationState.isProcessing,enableStreaming,wizardModeEnabled:config.wizardMode?.enabled,sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     console.log('🎬 sendMessage called:', { 
       content: content.substring(0, 50), 
       isProcessing: conversationState.isProcessing,
@@ -1671,6 +1691,9 @@ What specific aspect of your business would you like to focus on first?`;
     });
     
     if (!content.trim() || conversationState.isProcessing) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1706',message:'sendMessage blocked',data:{hasContent:!!content.trim(),isProcessing:conversationState.isProcessing},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('❌ Blocked: content empty or already processing');
       return;
     }
@@ -1679,6 +1702,9 @@ What specific aspect of your business would you like to focus on first?`;
     const { data: { user } } = await supabase.auth.getUser();
     const sessionMgmt = config.sessionManagement;
     
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1713',message:'session check before send',data:{hasUser:!!user,hasSessionMgmt:!!sessionMgmt,currentSessionId:sessionMgmt?.currentSessionId,sessionCreationAttempted:sessionCreationAttempted.current},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     if (user && sessionMgmt && !sessionMgmt.currentSessionId && !sessionCreationAttempted.current) {
       // Check if this is the first user message (not counting welcome/bot messages)
@@ -1694,6 +1720,9 @@ What specific aspect of your business would you like to focus on first?`;
         
         try {
           const newSessionId = await sessionMgmt.createNewSession(title);
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1728',message:'session creation result',data:{newSessionId,success:!!newSessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           if (newSessionId) {
             sessionMgmt.setCurrentSessionId(newSessionId);
             console.log('✅ Chat session created:', newSessionId);
@@ -1777,6 +1806,9 @@ What specific aspect of your business would you like to focus on first?`;
           setIsTyping(false);
           setIsStreaming(true);
 
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1816',message:'calling streamChat wizard mode',data:{sessionId,historyLength:conversationHistory.length,wizardStep,chatMode,hasSessionId:!!sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           console.log('📞 Calling streamChat function with:', {
             sessionId,
             historyLength: conversationHistory.length,
@@ -1801,9 +1833,15 @@ What specific aspect of your business would you like to focus on first?`;
             chatMode,
             messageAttachments,
             (chunk) => {
+              // #region agent log
+              fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1839',message:'streamChat chunk received',data:{chunkLength:chunk.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
               setStreamingMessage(prev => prev + chunk);
             },
             (fullMessage, quickActions, sources) => {
+              // #region agent log
+              fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1840',message:'streamChat complete',data:{fullMessageLength:fullMessage.length,hasQuickActions:!!quickActions,hasSources:!!sources},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+              // #endregion
               // Replace streaming message with final message and add quick actions
               setMessages(prev => {
                 const updated = prev.map(msg => 
@@ -1909,6 +1947,9 @@ What specific aspect of your business would you like to focus on first?`;
             setWizardAnswers(newAnswers);
 
             // Notify parent of step completion (ONLY for substantive input)
+            // #region agent log
+            fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1871',message:'wizard step completion',data:{wizardStep,nextStep:wizardStep+1,totalSteps:config.wizardMode.steps.length,willComplete:wizardStep+1>=config.wizardMode.steps.length,isSubstantiveInput},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            // #endregion
             config.wizardMode.onStepComplete?.(wizardStep, content.trim());
 
             // Advance to next step
