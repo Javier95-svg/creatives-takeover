@@ -15,23 +15,27 @@ import { FundingFilters } from "@/types/funding";
 import { useSearchParams } from "react-router-dom";
 
 // Insighta: VC Search, Email Templates, Accelerator Hunt - v1.0
-const Blog = () => {
+interface BlogProps {
+  defaultTab?: 'vc-search' | 'email-templates' | 'accelerator-hunt';
+}
+
+const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
   const { trackPageVisit } = useReadingAnalytics();
   const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [fundingFilters, setFundingFilters] = useState<FundingFilters>({});
 
-  // Get tab from URL query parameter, default to "vc-search"
-  const tabFromUrl = searchParams.get('tab') || 'vc-search';
+  // Get tab from URL query parameter or use defaultTab prop
+  const tabFromUrl = searchParams.get('tab') || defaultTab;
   const [activeTab, setActiveTab] = useState<string>(tabFromUrl);
 
-  // Update active tab when URL changes
+  // Update active tab when URL changes or defaultTab changes
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab && ['vc-search', 'email-templates', 'accelerator-hunt'].includes(tab)) {
+    const tab = searchParams.get('tab') || defaultTab;
+    if (['vc-search', 'email-templates', 'accelerator-hunt'].includes(tab)) {
       setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, [searchParams, defaultTab]);
 
   // Track page visit when component mounts
   useEffect(() => {

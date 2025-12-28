@@ -57,10 +57,10 @@ const Navigation = () => {
 
   // Insighta submenu items
   const insightaSubmenu = [
-    { name: "VC Search", href: "/insighta?tab=vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
-    { name: "Email Templates", href: "/insighta?tab=email-templates", icon: Mail, description: "Fundraising email templates" },
-    { name: "Accelerator Hunt", href: "/insighta?tab=accelerator-hunt", icon: Rocket, description: "Find accelerator programs" },
-    { name: "Insighta Test", href: "/test-phase1", icon: FlaskConical, description: "Test new features" },
+    { name: "VC Search", href: "/insighta/vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
+    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Fundraising email templates" },
+    { name: "Accelerator Hunt", href: "/insighta/accelerator-hunt", icon: Rocket, description: "Find accelerator programs" },
+    { name: "Insighta Test", href: "/insighta/test", icon: FlaskConical, description: "Test new features" },
   ];
 
   // Fetch user avatar

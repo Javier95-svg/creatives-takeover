@@ -32,6 +32,9 @@ import ResetPassword from "./pages/ResetPassword";
 import PromptLibrary from "./pages/PromptLibrary";
 import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
+import VCSearchPage from "./pages/VCSearchPage";
+import EmailTemplatesPage from "./pages/EmailTemplatesPage";
+import AcceleratorHuntPage from "./pages/AcceleratorHuntPage";
 import Stories from "./pages/Stories";
 import StoryArticle from "./pages/StoryArticle";
 import StoryTagPage from "./pages/StoryTagPage";
@@ -126,6 +129,10 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/insighta" element={<Blog />} />
+                  <Route path="/insighta/vc-search" element={<VCSearchPage />} />
+                  <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
+                  <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
+                  <Route path="/insighta/test" element={<TestPhase1 />} />
                   <Route path="/insighta/vc/:id" element={<VCProfilePage />} />
                   <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
                   <Route path="/demo" element={<Demo />} />
