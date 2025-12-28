@@ -10,7 +10,6 @@ import { useProgressMilestones, useProgressBlockers, useProgressMetrics } from '
 import { useAggregatedContext, useContextForAI, useProactiveSuggestions } from '@/hooks/useEnhancedContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 export function Phase1Test() {
@@ -185,229 +184,211 @@ export function Phase1Test() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Phase 1 Feature Testing</h1>
-        <Button onClick={runAllTests} size="lg">
+    <div className="container mx-auto p-6 space-y-8 max-w-5xl">
+      {/* Sticky Header */}
+      <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-4 border-b">
+        <h1 className="text-3xl font-bold gradient-text">Phase 1 Feature Testing</h1>
+        <Button onClick={runAllTests} size="lg" className="shadow-lg">
           Run All Tests
         </Button>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
-          <TabsTrigger value="context">Context</TabsTrigger>
-          <TabsTrigger value="tests">Tests</TabsTrigger>
-          <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
-        </TabsList>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Founder Profile</CardTitle>
-              <CardDescription>
-                {hasProfile ? `Profile ${completeness}% complete` : 'No profile created yet'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {hasProfile && profile ? (
-                <div className="space-y-2">
-                  <p><strong>Risk Tolerance:</strong> {profile.risk_tolerance}</p>
-                  <p><strong>Decision Style:</strong> {profile.decision_making_style}</p>
-                  <p><strong>Experience:</strong> {profile.entrepreneurial_experience}</p>
-                  <p><strong>Skill Gaps:</strong> {profile.skill_gaps.join(', ') || 'None'}</p>
-                  <p><strong>Goals:</strong> {profile.primary_goals.join(', ') || 'None'}</p>
-                  {missingFields.length > 0 && (
-                    <p className="text-yellow-600">
-                      <strong>Missing:</strong> {missingFields.join(', ')}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-gray-500">Profile not created yet</p>
-              )}
-              <div className="flex gap-2">
-                <Button onClick={testCreateProfile} disabled={hasProfile}>
-                  Create Profile
-                </Button>
-                <Button onClick={testUpdateProfile} disabled={!hasProfile}>
-                  Update Profile
-                </Button>
+      {/* Vertical Scrollable List of Test Sections */}
+      <div className="space-y-8">
+        {/* Section 1: Founder Profile */}
+        <Card className="border-l-4 border-l-primary">
+          <CardHeader>
+            <CardTitle className="text-2xl">1. Founder Profile</CardTitle>
+            <CardDescription>
+              {hasProfile ? `Profile ${completeness}% complete` : 'No profile created yet'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {hasProfile && profile ? (
+              <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                <p><strong>Risk Tolerance:</strong> {profile.risk_tolerance}</p>
+                <p><strong>Decision Style:</strong> {profile.decision_making_style}</p>
+                <p><strong>Experience:</strong> {profile.entrepreneurial_experience}</p>
+                <p><strong>Skill Gaps:</strong> {profile.skill_gaps.join(', ') || 'None'}</p>
+                <p><strong>Goals:</strong> {profile.primary_goals.join(', ') || 'None'}</p>
+                {missingFields.length > 0 && (
+                  <p className="text-yellow-600">
+                    <strong>Missing:</strong> {missingFields.join(', ')}
+                  </p>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            ) : (
+              <p className="text-muted-foreground">Profile not created yet</p>
+            )}
+            <div className="flex gap-2">
+              <Button onClick={testCreateProfile} disabled={hasProfile}>
+                Create Profile
+              </Button>
+              <Button onClick={testUpdateProfile} disabled={!hasProfile} variant="outline">
+                Update Profile
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Progress Tab */}
-        <TabsContent value="progress" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Milestones ({milestones.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {/* Section 2: Progress Tracking */}
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <CardTitle className="text-2xl">2. Progress Tracking</CardTitle>
+            <CardDescription>Milestones, blockers, and metrics</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Milestones */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Milestones ({milestones.length})</h3>
               {milestones.length > 0 ? (
                 <div className="space-y-2">
                   {milestones.slice(0, 5).map(m => (
-                    <div key={m.id} className="p-2 border rounded">
+                    <div key={m.id} className="p-3 border rounded-lg bg-muted/30">
                       <p className="font-medium">{m.milestone_name}</p>
-                      <p className="text-sm text-gray-600">Status: {m.status}</p>
+                      <p className="text-sm text-muted-foreground">Status: {m.status}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">No milestones yet</p>
+                <p className="text-muted-foreground">No milestones yet</p>
               )}
               <div className="flex gap-2">
-                <Button onClick={testCreateMilestone}>Create Milestone</Button>
-                <Button onClick={testCompleteMilestone} disabled={milestones.length === 0}>
+                <Button onClick={testCreateMilestone} size="sm">Create Milestone</Button>
+                <Button onClick={testCompleteMilestone} disabled={milestones.length === 0} variant="outline" size="sm">
                   Complete First
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Blockers ({blockers.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Blockers */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Blockers ({blockers.length})</h3>
               {blockers.length > 0 ? (
                 <div className="space-y-2">
                   {blockers.map(b => (
-                    <div key={b.id} className="p-2 border rounded">
+                    <div key={b.id} className="p-3 border rounded-lg bg-red-50 dark:bg-red-950/20">
                       <p className="font-medium">{b.blocker_title}</p>
-                      <p className="text-sm text-gray-600">Severity: {b.severity}</p>
+                      <p className="text-sm text-muted-foreground">Severity: {b.severity}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">No blockers</p>
+                <p className="text-muted-foreground">No blockers</p>
               )}
               <div className="flex gap-2">
-                <Button onClick={testCreateBlocker}>Create Blocker</Button>
-                <Button onClick={testResolveBlocker} disabled={blockers.length === 0}>
+                <Button onClick={testCreateBlocker} size="sm">Create Blocker</Button>
+                <Button onClick={testResolveBlocker} disabled={blockers.length === 0} variant="outline" size="sm">
                   Resolve First
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {metrics && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Progress Metrics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Current Day</p>
+            {/* Metrics */}
+            {metrics && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Progress Metrics</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground mb-1">Current Day</p>
                     <p className="text-2xl font-bold">{metrics.currentDay}/30</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Velocity</p>
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground mb-1">Velocity</p>
                     <p className="text-2xl font-bold">{metrics.velocity.toFixed(2)}/week</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Quality Score</p>
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground mb-1">Quality Score</p>
                     <p className="text-2xl font-bold">{metrics.qualityScore}/100</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Status</p>
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
                     <p className={`text-lg font-bold ${metrics.onTrack ? 'text-green-600' : 'text-red-600'}`}>
                       {metrics.onTrack ? '✓ On Track' : '⚠ Behind'}
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Context Tab */}
-        <TabsContent value="context" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Aggregated Context</CardTitle>
-              <CardDescription>Combined data from all sources</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Button onClick={testContextAggregation}>
-                  Test Context Aggregation
-                </Button>
-                <Button onClick={testFormattedContext} className="ml-2">
-                  Test Formatted Context
-                </Button>
-                {context && (
-                  <div className="mt-4 p-4 bg-gray-100 rounded text-sm">
-                    <p><strong>Profile:</strong> {context.founderProfile ? '✓ Loaded' : '✗ Missing'}</p>
-                    <p><strong>Milestones:</strong> {context.currentMilestones.length} active</p>
-                    <p><strong>Blockers:</strong> {context.activeBlockers.length} active</p>
-                    <p><strong>On Track:</strong> {context.insights.isOnTrack ? '✓' : '✗'}</p>
-                  </div>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Tests Tab */}
-        <TabsContent value="tests" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Test Results</CardTitle>
-              <CardDescription>Recent test outputs</CardDescription>
-            </CardHeader>
-            <CardContent>
+        {/* Section 3: Context Aggregation */}
+        <Card className="border-l-4 border-l-purple-500">
+          <CardHeader>
+            <CardTitle className="text-2xl">3. Context Aggregation</CardTitle>
+            <CardDescription>Combined data from all sources for AI</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Button onClick={testContextAggregation}>
+                Test Context Aggregation
+              </Button>
+              <Button onClick={testFormattedContext} variant="outline">
+                Test Formatted Context
+              </Button>
+            </div>
+            {context && (
+              <div className="p-4 bg-muted/50 rounded-lg text-sm space-y-2">
+                <p><strong>Profile:</strong> {context.founderProfile ? '✓ Loaded' : '✗ Missing'}</p>
+                <p><strong>Milestones:</strong> {context.currentMilestones.length} active</p>
+                <p><strong>Blockers:</strong> {context.activeBlockers.length} active</p>
+                <p><strong>On Track:</strong> {context.insights.isOnTrack ? '✓ Yes' : '✗ No'}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Section 4: Test Results & Suggestions */}
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader>
+            <CardTitle className="text-2xl">4. Test Results & Suggestions</CardTitle>
+            <CardDescription>Recent test outputs and AI recommendations</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Test Results */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Test Results</h3>
               {testResults.length > 0 ? (
-                <div className="space-y-1 max-h-96 overflow-y-auto">
+                <div className="space-y-1 max-h-96 overflow-y-auto p-4 bg-muted/30 rounded-lg">
                   {testResults.map((result, idx) => (
                     <p key={idx} className="text-sm font-mono">{result}</p>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">No tests run yet. Click "Run All Tests" above.</p>
+                <p className="text-muted-foreground">No tests run yet. Click "Run All Tests" above.</p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
 
-        {/* Suggestions Tab */}
-        <TabsContent value="suggestions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Proactive Suggestions</CardTitle>
-              <CardDescription>AI-generated recommendations</CardDescription>
-            </CardHeader>
-            <CardContent>
+            {/* Proactive Suggestions */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Proactive Suggestions</h3>
               {suggestions.length > 0 ? (
                 <div className="space-y-3">
                   {suggestions.map((suggestion, idx) => (
-                    <div key={idx} className="p-3 border rounded">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div key={idx} className="p-4 border rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          suggestion.priority === 'high' ? 'bg-red-100 text-red-800' :
-                          suggestion.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-blue-100 text-blue-800'
+                          suggestion.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                          suggestion.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                         }`}>
                           {suggestion.priority}
                         </span>
-                        <span className="text-sm text-gray-600">{suggestion.type}</span>
+                        <span className="text-sm text-muted-foreground">{suggestion.type}</span>
                       </div>
                       <p className="font-medium">{suggestion.title}</p>
-                      <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{suggestion.description}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">No suggestions yet. Complete your profile and add milestones!</p>
+                <p className="text-muted-foreground">No suggestions yet. Complete your profile and add milestones!</p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
