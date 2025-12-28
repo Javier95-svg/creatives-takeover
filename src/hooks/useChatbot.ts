@@ -1773,18 +1773,14 @@ What specific aspect of your business would you like to focus on first?`;
       console.log('🧙 Wizard mode active, processing step:', wizardStep);
       const currentStepData = config.wizardMode.steps[wizardStep];
       if (currentStepData) {
-        // Save the answer
-        const newAnswers = { ...wizardAnswers, [currentStepData.key]: content.trim() };
-        setWizardAnswers(newAnswers);
-        
         // Show typing indicator for AI response
         simulateTyping();
-        
+
         try {
           // Get user ID
           const { data: { user } } = await supabase.auth.getUser();
           const userId = user?.id || null;
-          
+
           // Prepare conversation history (optimized - only last 5 messages)
           const conversationHistory = messages
             .filter(msg => msg.id !== 'streaming')
@@ -1793,7 +1789,7 @@ What specific aspect of your business would you like to focus on first?`;
               role: msg.isBot ? 'assistant' as const : 'user' as const,
               content: msg.content
             }));
-          
+
           // Add placeholder streaming message
           const streamingMsg: ChatMessage = {
             id: 'streaming',
@@ -1809,7 +1805,7 @@ What specific aspect of your business would you like to focus on first?`;
         }));
           setIsTyping(false);
           setIsStreaming(true);
-          
+
           // #region agent log
           fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useChatbot.ts:1816',message:'calling streamChat wizard mode',data:{sessionId,historyLength:conversationHistory.length,wizardStep,chatMode,hasSessionId:!!sessionId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
           // #endregion
@@ -1819,8 +1815,8 @@ What specific aspect of your business would you like to focus on first?`;
             wizardStep,
             chatMode
           });
-          
-          // Stream AI response with full wizard context
+
+          // Stream AI response with full wizard context (using current answers, not saving yet)
           await streamChat(
             content,
             sessionId,
@@ -1831,7 +1827,7 @@ What specific aspect of your business would you like to focus on first?`;
               enabled: true,
               steps: config.wizardMode.steps,
               currentStep: wizardStep,
-              answers: newAnswers
+              answers: wizardAnswers
             },
             wizardStep,
             chatMode,
@@ -1951,6 +1947,12 @@ What specific aspect of your business would you like to focus on first?`;
           // Only advance timeline if user provided substantive business information
           if (isSubstantiveInput) {
             console.log('🚀 Advancing timeline to next step');
+
+            // Save the answer now that we've confirmed it's substantive
+            const newAnswers = { ...wizardAnswers, [currentStepData.key]: content.trim() };
+            setWizardAnswers(newAnswers);
+
+            // Advance to next step
             setWizardStep(wizardStep + 1);
 
             // Check if wizard complete
@@ -1959,6 +1961,7 @@ What specific aspect of your business would you like to focus on first?`;
             }
           } else {
             console.log('⏸️ Timeline remains at current step - user asked a clarifying question');
+            // Don't save the answer or advance the step for general questions
           }
           
         } catch (error) {
