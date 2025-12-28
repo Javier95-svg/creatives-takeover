@@ -48,6 +48,8 @@ import RAGTest from "./pages/RAGTest";
 import TestPhase1 from "./pages/TestPhase1";
 import MentorMarketplaceHub from "./pages/community/MentorMarketplaceHub";
 import MentorProfilePage from "./pages/community/MentorProfilePage";
+import VCProfilePage from "./components/vc/VCProfilePage";
+import AcceleratorProfilePage from "./components/accelerator/AcceleratorProfilePage";
 import MentorBookingPage from "./pages/community/MentorBookingPage";
 import MyBookings from "./pages/community/MyBookings";
 import AdminMentorEditor from "./pages/community/AdminMentorEditor";
@@ -124,6 +126,8 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/insighta" element={<Blog />} />
+                  <Route path="/insighta/vc/:id" element={<VCProfilePage />} />
+                  <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
                   <Route path="/demo" element={<Demo />} />
                   <Route path="/messages/:username" element={<Messages />} />
                   <Route path="/messages" element={<Messages />} />

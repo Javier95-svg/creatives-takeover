@@ -20,7 +20,10 @@ export interface Investor {
   firm_website?: string;
   linkedin_url?: string;
   email?: string;
-  
+
+  // Investor Type
+  investor_type: 'vc' | 'angel' | 'fund' | 'corporate_vc';
+
   // Investment Focus
   investment_thesis?: string;
   industries: string[];

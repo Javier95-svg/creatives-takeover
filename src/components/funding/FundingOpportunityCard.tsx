@@ -4,14 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
 import { FundingOpportunity } from "@/types/funding";
 import { useDeviceType } from "@/hooks/use-device-type";
+import { Link, useNavigate } from "react-router-dom";
 
 interface FundingOpportunityCardProps {
   opportunity: FundingOpportunity;
+  profileLink?: string; // Optional internal profile link (e.g., /insighta/accelerator/:id)
 }
 
-const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) => {
+const FundingOpportunityCard = ({ opportunity, profileLink }: FundingOpportunityCardProps) => {
   const deviceType = useDeviceType();
   const isMobile = deviceType === 'mobile';
+  const navigate = useNavigate();
   
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -28,21 +31,29 @@ const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) =>
     }
   };
 
+  const handleCardClick = () => {
+    if (profileLink) {
+      navigate(profileLink);
+    } else {
+      window.open(opportunity.url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
-    <Card 
+    <Card
       className={`
-        hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 
+        hover:shadow-lg transition-all duration-300 cursor-pointer group border-0
         bg-gradient-to-br from-background to-muted/20 h-full flex flex-col
         ${isMobile ? 'active:scale-[0.98]' : ''}
       `}
-      onClick={() => window.open(opportunity.url, '_blank', 'noopener,noreferrer')}
+      onClick={handleCardClick}
       role="article"
       aria-label={`Funding opportunity: ${opportunity.title}`}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          window.open(opportunity.url, '_blank', 'noopener,noreferrer');
+          handleCardClick();
         }
       }}
     >
@@ -94,17 +105,21 @@ const FundingOpportunityCard = ({ opportunity }: FundingOpportunityCardProps) =>
           </div>
         )}
         
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           className={`w-full text-xs mt-auto touch-manipulation ${isMobile ? 'h-10 min-h-[44px]' : 'h-8'}`}
           onClick={(e) => {
             e.stopPropagation();
-            window.open(opportunity.url, '_blank', 'noopener,noreferrer');
+            if (profileLink) {
+              navigate(profileLink);
+            } else {
+              window.open(opportunity.url, '_blank', 'noopener,noreferrer');
+            }
           }}
           aria-label={`Learn more about ${opportunity.title} funding opportunity`}
         >
           <ExternalLink className="h-3 w-3 mr-1" aria-hidden="true" />
-          Learn More
+          {profileLink ? 'View Details' : 'Learn More'}
         </Button>
       </CardContent>
     </Card>
