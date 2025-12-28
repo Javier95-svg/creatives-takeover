@@ -35,6 +35,7 @@ import Blog from "./pages/Blog";
 import VCSearchPage from "./pages/VCSearchPage";
 import EmailTemplatesPage from "./pages/EmailTemplatesPage";
 import AcceleratorHuntPage from "./pages/AcceleratorHuntPage";
+import InsightaTestPage from "./pages/InsightaTestPage";
 import Stories from "./pages/Stories";
 import StoryArticle from "./pages/StoryArticle";
 import StoryTagPage from "./pages/StoryTagPage";
@@ -132,7 +133,7 @@ function App() {
                   <Route path="/insighta/vc-search" element={<VCSearchPage />} />
                   <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
                   <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
-                  <Route path="/insighta/test" element={<TestPhase1 />} />
+                  <Route path="/insighta/test" element={<InsightaTestPage />} />
                   <Route path="/insighta/vc/:id" element={<VCProfilePage />} />
                   <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
                   <Route path="/demo" element={<Demo />} />
