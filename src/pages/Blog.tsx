@@ -14,6 +14,7 @@ import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { FundingFilters } from "@/types/funding";
 
+// Insighta: VC Search, Email Templates, Accelerator Hunt - v1.0
 const Blog = () => {
   const { trackPageVisit } = useReadingAnalytics();
   const [selectedCategory, setSelectedCategory] = useState("all");
