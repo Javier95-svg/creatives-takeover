@@ -11,6 +11,7 @@ import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_ST
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useState } from "react";
 import { toast } from "sonner";
+import { generateMentorSlug } from "@/utils/mentorSlug";
 
 // Calendly link for Samuel Starkman
 const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-with-sam?month=2025-12';
@@ -27,8 +28,8 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const { startConversation, getUserIdByEmail } = useMessaging();
   const { checkFeatureAccess } = useFeatureGating();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
-  // Use ID-based URL for now to ensure reliability
-  const profileUrl = `/community/mentors/${mentor.id}`;
+  const mentorSlug = generateMentorSlug(mentor.name);
+  const profileUrl = `/community/${mentorSlug}`;
 
   // Truncate bio if too long
   const bioMaxLength = 200;
