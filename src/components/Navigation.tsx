@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users, FileText, Info, DollarSign } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,11 +49,19 @@ const Navigation = () => {
     "BizMap AI": Bot,
     "Prompt Library": BookOpen,
     "Insighta": TrendingUp,
-    "Community": Users,
+    "Community": UsersIcon,
     "Stories": FileText,
     "About Us": Info,
     "Pricing": DollarSign,
   };
+
+  // Insighta submenu items
+  const insightaSubmenu = [
+    { name: "VC Search", href: "/insighta?tab=vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
+    { name: "Email Templates", href: "/insighta?tab=email-templates", icon: Mail, description: "Fundraising email templates" },
+    { name: "Accelerator Hunt", href: "/insighta?tab=accelerator-hunt", icon: Rocket, description: "Find accelerator programs" },
+    { name: "Insighta Test", href: "/test-phase1", icon: FlaskConical, description: "Test new features" },
+  ];
 
   // Fetch user avatar
   useEffect(() => {
@@ -155,7 +163,7 @@ const Navigation = () => {
                 {navItems.map((item) => {
                   const Icon = item.icon || iconMap[item.name];
                   const active = isActive(item.href);
-                  
+
                   // Color-code navigation items semantically
                   let colorClass = '';
                   if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
@@ -167,7 +175,55 @@ const Navigation = () => {
                   } else {
                     colorClass = 'hover:text-primary';
                   }
-                  
+
+                  // Special handling for Insighta with dropdown
+                  if (item.name === 'Insighta') {
+                    return (
+                      <DropdownMenu key={item.name}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger className={cn(
+                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
+                              "nav-item-hover-effect",
+                              active
+                                ? "text-foreground bg-primary/5 nav-active-indicator active"
+                                : `text-muted-foreground ${colorClass}`
+                            )}>
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              <span className="tracking-wide">{item.name}</span>
+                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="start" className="w-56">
+                          <DropdownMenuLabel>Funding Resources</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {insightaSubmenu.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <DropdownMenuItem key={subItem.name} asChild>
+                                <Link
+                                  to={subItem.href}
+                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                  className="cursor-pointer"
+                                >
+                                  <SubIcon className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{subItem.name}</span>
+                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  }
+
                   return (
                     <Tooltip key={item.name}>
                       <TooltipTrigger asChild>
@@ -177,8 +233,8 @@ const Navigation = () => {
                           className={cn(
                             "relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm",
                             "nav-item-hover-effect",
-                            active 
-                              ? "text-foreground bg-primary/5 nav-active-indicator active" 
+                            active
+                              ? "text-foreground bg-primary/5 nav-active-indicator active"
                               : `text-muted-foreground ${colorClass}`,
                             item.name === 'BizMap AI' && 'relative'
                           )}

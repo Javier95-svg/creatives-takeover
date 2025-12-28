@@ -12,13 +12,26 @@ import { Users, Mail, Rocket } from "lucide-react";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
 import { FundingFilters } from "@/types/funding";
+import { useSearchParams } from "react-router-dom";
 
 // Insighta: VC Search, Email Templates, Accelerator Hunt - v1.0
 const Blog = () => {
   const { trackPageVisit } = useReadingAnalytics();
+  const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [fundingFilters, setFundingFilters] = useState<FundingFilters>({});
-  const [activeTab, setActiveTab] = useState<string>("vc-search");
+
+  // Get tab from URL query parameter, default to "vc-search"
+  const tabFromUrl = searchParams.get('tab') || 'vc-search';
+  const [activeTab, setActiveTab] = useState<string>(tabFromUrl);
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['vc-search', 'email-templates', 'accelerator-hunt'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   // Track page visit when component mounts
   useEffect(() => {
