@@ -41,6 +41,7 @@ const MentorProfilePage = () => {
   fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:30',message:'useFeatureGating hook complete',data:{duration:performance.now()-featureGatingStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
   // #endregion
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // #region agent log
@@ -54,31 +55,41 @@ const MentorProfilePage = () => {
   }, [id, slug]);
 
   const loadMentorById = async (mentorId: string) => {
-    const loadStartTime = performance.now();
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadMentorById start',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-    const found = await fetchMentorById(mentorId);
-    const loadDuration = performance.now() - loadStartTime;
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadMentorById complete',data:{mentorId,found:!!found,duration:loadDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-    if (found) {
-      setMentor(found as MentorProfileType);
+    try {
+      setIsLoading(true);
+      const loadStartTime = performance.now();
       // #region agent log
-      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:48',message:'mentor state set',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadMentorById start',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
       // #endregion
+      const found = await fetchMentorById(mentorId);
+      const loadDuration = performance.now() - loadStartTime;
+      // #region agent log
+      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadMentorById complete',data:{mentorId,found:!!found,duration:loadDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
+      if (found) {
+        setMentor(found as MentorProfileType);
+        // #region agent log
+        fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:48',message:'mentor state set',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+        // #endregion
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const loadMentorBySlug = async (mentorSlug: string) => {
-    console.log('Loading mentor by slug:', mentorSlug);
-    const found = await fetchMentorBySlug(mentorSlug);
-    console.log('Mentor found:', found);
-    if (found) {
-      setMentor(found as MentorProfileType);
-    } else {
-      console.error('Mentor not found for slug:', mentorSlug);
+    try {
+      setIsLoading(true);
+      console.log('Loading mentor by slug:', mentorSlug);
+      const found = await fetchMentorBySlug(mentorSlug);
+      console.log('Mentor found:', found);
+      if (found) {
+        setMentor(found as MentorProfileType);
+      } else {
+        console.error('Mentor not found for slug:', mentorSlug);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -136,7 +147,7 @@ const MentorProfilePage = () => {
     window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <>
         <Navigation />
@@ -148,7 +159,7 @@ const MentorProfilePage = () => {
     );
   }
 
-  if (!mentor) {
+  if (!mentor && !isLoading && !loading) {
     return (
       <>
         <Navigation />
