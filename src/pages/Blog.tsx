@@ -3,7 +3,6 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
-import FundraisingReadinessToolkit from "@/components/blog/FundraisingReadinessToolkit";
 import VCSearchTab from "@/components/insighta/VCSearchTab";
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
@@ -75,10 +74,8 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
         structuredData={structuredData}
       />
       <Navigation />
-      
-      <main>
-        <FundraisingReadinessToolkit />
 
+      <main>
         {/* Fundraising Resources Tabbed Section */}
         <section className="container mx-auto px-4 py-12">
           {/* DEBUG: Build timestamp - 2025-12-28 10:45 AM */}
