@@ -4,7 +4,6 @@ import Footer from "@/components/Footer";
 import BlogStickyNav from "@/components/blog/BlogStickyNav";
 import FundingOpportunitiesSection from "@/components/blog/FundingOpportunitiesSection";
 import FundraisingReadinessToolkit from "@/components/blog/FundraisingReadinessToolkit";
-import InvestorMatchingToolkit from "@/components/investor/InvestorMatchingToolkit";
 import VCSearchTab from "@/components/insighta/VCSearchTab";
 import EmailTemplatesTab from "@/components/insighta/EmailTemplatesTab";
 import AcceleratorHuntTab from "@/components/insighta/AcceleratorHuntTab";
@@ -62,7 +61,6 @@ const Blog = () => {
       
       <main>
         <FundraisingReadinessToolkit />
-        <InvestorMatchingToolkit />
 
         {/* Fundraising Resources Tabbed Section */}
         <section className="container mx-auto px-4 py-12">
