@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn, ArrowRight } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Rocket, Target, Users, DollarSign, CheckCircle2, AlertCircle, HelpCircle, ChevronDown, ChevronUp, Loader2, LogIn, ArrowRight, ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,11 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +22,24 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useSubscription } from "@/hooks/useSubscription";
 import { CreditGate } from "@/components/CreditGate";
 import { CREDIT_COSTS } from "@/config/constants";
+import {
+  AssessmentContext,
+  AssessmentScores,
+  AIAnalysis as EnhancedAIAnalysis,
+  FounderStage,
+  FounderExperience,
+  QuestionId,
+  getVisibleQuestions,
+  getRequiredQuestions,
+  isQuestionOptional
+} from "@/types/fundraisingAssessment";
+import { ASSESSMENT_QUESTIONS, INDUSTRY_OPTIONS, BUSINESS_MODEL_OPTIONS, SCORE_LABELS } from "@/data/assessmentQuestions";
+
+// Legacy interface kept for backwards compatibility
+interface AIAnalysis extends EnhancedAIAnalysis {}
+
+// Assessment flow steps
+type AssessmentStep = 'context-stage' | 'context-business' | 'assessment' | 'results';
 
 interface Criterion {
   id: string;
@@ -24,28 +47,6 @@ interface Criterion {
   description: string;
   helpText: string;
   icon: React.ReactNode;
-}
-
-interface AIAnalysis {
-  verdict: 'Ready' | 'Not Ready' | 'Almost Ready';
-  confidence: number;
-  strengths: string[];
-  critical_gaps: string[];
-  prioritized_actions: Array<{
-    action: string;
-    priority: 'High' | 'Medium' | 'Low';
-    estimated_time?: string;
-  }>;
-  timeline_to_readiness?: string;
-  risk_assessment?: string;
-  summary: string;
-  average_score?: number;
-  scores?: {
-    mvp: number;
-    feedback: number;
-    team: number;
-    runway: number;
-  };
 }
 
 const criteria: Criterion[] = [
@@ -187,28 +188,79 @@ const FundraisingReadinessToolkitAll = () => {
   const { hasCredits } = useCredits();
   const { checkFeatureAccess } = useFeatureGating();
   const { subscriptionData } = useSubscription();
-  const [scores, setScores] = useState<{ [key: string]: number }>({
+
+  // Multi-step flow state
+  const [currentStep, setCurrentStep] = useState<AssessmentStep>('context-stage');
+
+  // Context collection state
+  const [context, setContext] = useState<Partial<AssessmentContext>>({
+    founder_stage: 'validation', // Default
+    founder_experience: 'first-time' // Default
+  });
+
+  // Expanded scores state (10 questions)
+  const [scores, setScores] = useState<Partial<AssessmentScores>>({
     mvp: 0,
     feedback: 0,
     team: 0,
     runway: 0
   });
+
   const [expandedHelp, setExpandedHelp] = useState<{ [key: string]: boolean }>({});
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [creditGateOpen, setCreditGateOpen] = useState(false);
 
+  // Get visible questions based on current stage
+  const visibleQuestions = useMemo(() => {
+    const stage = (context.founder_stage || 'validation') as FounderStage;
+    return getVisibleQuestions(ASSESSMENT_QUESTIONS, stage);
+  }, [context.founder_stage]);
+
   const averageScore = useMemo(() => {
-    const scoreValues = Object.values(scores);
+    // Calculate average only from non-null, non-undefined scores
+    const scoreValues = Object.values(scores).filter(
+      score => score !== null && score !== undefined && score > 0
+    ) as number[];
     if (scoreValues.length === 0) return 0;
     const sum = scoreValues.reduce((acc, val) => acc + val, 0);
     return sum / scoreValues.length;
   }, [scores]);
 
-  const allScored = useMemo(() => {
-    return Object.values(scores).every(score => score > 0);
-  }, [scores]);
+  const allRequiredScored = useMemo(() => {
+    const stage = (context.founder_stage || 'validation') as FounderStage;
+    const requiredQuestions = getRequiredQuestions(ASSESSMENT_QUESTIONS, stage);
+    return requiredQuestions.every(q => {
+      const score = scores[q.id as keyof AssessmentScores];
+      return score !== null && score !== undefined && score > 0;
+    });
+  }, [scores, context.founder_stage]);
+
+  // Context step handlers
+  const handleStageContextSubmit = () => {
+    if (!context.founder_stage || !context.founder_experience) {
+      toast.error("Please select both your journey stage and founder experience");
+      return;
+    }
+    setCurrentStep('context-business');
+  };
+
+  const handleBusinessContextSubmit = () => {
+    if (!context.industry || !context.business_model) {
+      toast.error("Please select your industry and business model");
+      return;
+    }
+    setCurrentStep('assessment');
+  };
+
+  const handleBackToContext = () => {
+    if (currentStep === 'context-business') {
+      setCurrentStep('context-stage');
+    } else if (currentStep === 'assessment') {
+      setCurrentStep('context-business');
+    }
+  };
 
   const handleScoreChange = (criterionId: string, value: number[]) => {
     const newScore = value[0];
@@ -237,8 +289,8 @@ const FundraisingReadinessToolkitAll = () => {
       return;
     }
 
-    if (!allScored) {
-      toast.error("Please set all scores before analyzing");
+    if (!allRequiredScored) {
+      toast.error("Please complete all required questions before analyzing");
       return;
     }
 
@@ -285,10 +337,26 @@ const FundraisingReadinessToolkitAll = () => {
     try {
       const { data, error } = await supabase.functions.invoke('fundraising-readiness-analyzer', {
         body: {
+          // Original 4 scores (required)
           mvp_score: scores.mvp,
           feedback_score: scores.feedback,
           team_score: scores.team,
-          runway_score: scores.runway
+          runway_score: scores.runway,
+          // New 6 scores (optional - only send if defined)
+          ...(scores.founder_market_fit !== undefined && scores.founder_market_fit !== null && { founder_market_fit_score: scores.founder_market_fit }),
+          ...(scores.traction !== undefined && scores.traction !== null && { traction_score: scores.traction }),
+          ...(scores.competitive_positioning !== undefined && scores.competitive_positioning !== null && { competitive_positioning_score: scores.competitive_positioning }),
+          ...(scores.gtm_strategy !== undefined && scores.gtm_strategy !== null && { gtm_strategy_score: scores.gtm_strategy }),
+          ...(scores.unit_economics !== undefined && scores.unit_economics !== null && { unit_economics_score: scores.unit_economics }),
+          ...(scores.legal_readiness !== undefined && scores.legal_readiness !== null && { legal_readiness_score: scores.legal_readiness }),
+          // Context fields
+          founder_stage: context.founder_stage,
+          founder_experience: context.founder_experience,
+          industry: context.industry,
+          business_model: context.business_model,
+          primary_location: context.primary_location,
+          funding_amount_needed: context.funding_amount_needed,
+          pitch_summary: context.pitch_summary
         }
       });
 
@@ -309,6 +377,7 @@ const FundraisingReadinessToolkitAll = () => {
       }
 
       setAiAnalysis(data as AIAnalysis);
+      setCurrentStep('results'); // Transition to results step
 
       // Increment usage for free tier
       if (currentTier === 'free' && user) {
