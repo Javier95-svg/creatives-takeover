@@ -129,35 +129,16 @@ const Footer = () => {
             
             {/* ShipSquad Badge */}
             <div className="mt-4 pt-4 border-t border-border">
-              <a 
-                href="https://shipsquad.space/saas/2a1346bb-0b4a-435c-8495-f2dfdac4d022" 
-                target="_blank" 
+              <a
+                href="https://shipsquad.space/saas/2a1346bb-0b4a-435c-8495-f2dfdac4d022"
+                target="_blank"
                 rel="noopener"
                 aria-label="Featured on ShipSquad"
               >
-                <img 
-                  src="https://shipsquad.space/api/badge?id=2a1346bb-0b4a-435c-8495-f2dfdac4d022&style=dark" 
-                  alt="Featured on ShipSquad" 
+                <img
+                  src="https://shipsquad.space/api/badge?id=2a1346bb-0b4a-435c-8495-f2dfdac4d022&style=dark"
+                  alt="Featured on ShipSquad"
                   className="hover:opacity-80 transition-opacity"
-                />
-              </a>
-            </div>
-
-            {/* Product Hunt Badge */}
-            <div className="mt-4">
-              <a 
-                href="https://www.producthunt.com/products/creatives-takeover?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-creatives-takeover" 
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Featured on Product Hunt"
-              >
-                <img 
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1025583&theme=light&t=1760234587519" 
-                  alt="Creatives Takeover - AI Platform for Creators & Entrepreneurs | Product Hunt" 
-                  className="hover:opacity-80 transition-opacity dark:invert dark:opacity-90" 
-                  style={{ width: '250px', height: '54px' }} 
-                  width="250" 
-                  height="54" 
                 />
               </a>
             </div>
