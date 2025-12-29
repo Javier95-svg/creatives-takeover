@@ -168,20 +168,6 @@ Remember: Runway isn't just about money - it's about having time to make good de
   }
 ];
 
-const scoreLabels: { [key: number]: string } = {
-  0: "Not Started",
-  1: "Just Beginning",
-  2: "Early Stage",
-  3: "Making Progress",
-  4: "Getting There",
-  5: "Halfway There",
-  6: "Strong Progress",
-  7: "Almost Ready",
-  8: "Very Close",
-  9: "Nearly Complete",
-  10: "Complete"
-};
-
 const FundraisingReadinessToolkitAll = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -448,7 +434,7 @@ const FundraisingReadinessToolkitAll = () => {
                           <h3 className="text-xl font-semibold">{index + 1}. {question.title}</h3>
                           {questionScore > 0 && (
                             <Badge variant="secondary" className="text-xs">
-                              {scoreLabels[questionScore]}
+                              {SCORE_LABELS[questionScore]}
                             </Badge>
                           )}
                         </div>
@@ -488,7 +474,7 @@ const FundraisingReadinessToolkitAll = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">Score: {questionScore} / 10</span>
-                        <span className="text-xs text-muted-foreground">{scoreLabels[questionScore]}</span>
+                        <span className="text-xs text-muted-foreground">{SCORE_LABELS[questionScore]}</span>
                       </div>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -547,11 +533,11 @@ const FundraisingReadinessToolkitAll = () => {
         </div>
 
         {/* Analyze Button */}
-        {(allScored || !isAuthenticated) && (
+        {(allRequiredScored || !isAuthenticated) && (
           <Card className="mb-8">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
-                {allScored && (
+                {allRequiredScored && (
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Average Score</p>
                     <p className="text-3xl font-bold">{averageScore.toFixed(1)} / 10.0</p>
@@ -575,7 +561,7 @@ const FundraisingReadinessToolkitAll = () => {
                   <Button
                     size="lg"
                     onClick={analyzeReadiness}
-                    disabled={isAnalyzing || !allScored}
+                    disabled={isAnalyzing || !allRequiredScored}
                     className="w-full md:w-auto min-w-[200px]"
                   >
                     {isAnalyzing ? (
