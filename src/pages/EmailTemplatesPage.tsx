@@ -49,8 +49,23 @@ export default function EmailTemplatesPage() {
       <Navigation />
 
       <main>
-        <section className="container mx-auto px-4 py-20">
-          <EmailTemplatesTab />
+        <section className="py-20 px-4 relative overflow-hidden" data-section="email-templates">
+          {/* Background styling */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+            <div
+              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
+              style={{
+                background:
+                  'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.35), transparent 55%)',
+                animationDuration: '28s'
+              }}
+            />
+          </div>
+
+          <div className="container mx-auto max-w-5xl relative z-10">
+            <EmailTemplatesTab />
+          </div>
         </section>
       </main>
 
