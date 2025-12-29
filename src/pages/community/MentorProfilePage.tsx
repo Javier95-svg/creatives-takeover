@@ -88,23 +88,23 @@ const MentorProfilePage = () => {
 
   const handleBookClick = () => {
     if (!mentor) return;
-    
+
     // Check if this is Samuel Starkman's profile
     const mentorNameLower = mentor.name.toLowerCase();
     const isSamuelStarkman = (mentorNameLower.includes('samuel') && mentorNameLower.includes('starkman')) ||
                              mentorNameLower.includes('samuel starkman');
-    
+
     // Use hardcoded URL for Samuel Starkman, otherwise use mentor's calendly_url
-    const calendlyUrl = isSamuelStarkman 
-      ? SAMUEL_STARKMAN_CALENDLY_URL 
+    const calendlyUrl = isSamuelStarkman
+      ? SAMUEL_STARKMAN_CALENDLY_URL
       : mentor.calendly_url;
-    
+
     if (!calendlyUrl) {
       // Fallback: show message if no Calendly link is set
       alert('Discovery call scheduling is not yet available for this mentor. Please check back soon!');
       return;
     }
-    
+
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
       // Store Calendly URL in localStorage for redirect after auth
@@ -113,7 +113,7 @@ const MentorProfilePage = () => {
       navigate('/auth?redirect=/community');
       return;
     }
-    
+
     // Check feature access for discovery calls
     try {
       const access = checkFeatureAccess('discovery_calls_mentors');
@@ -135,7 +135,7 @@ const MentorProfilePage = () => {
       toast.error('An error occurred. Please try again.');
       return;
     }
-    
+
     // User is authenticated and has access, open Calendly directly
     window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
@@ -217,4 +217,3 @@ const MentorProfilePage = () => {
 };
 
 export default MentorProfilePage;
-
