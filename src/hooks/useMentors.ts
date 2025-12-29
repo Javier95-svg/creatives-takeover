@@ -72,9 +72,40 @@ const convertToMentor = (data: any): Mentor => {
   };
 };
 
+/**
+ * Custom hook for managing mentor data operations.
+ *
+ * @warning The `loading` state is shared across ALL operations (fetchMentors,
+ * fetchMentorById, createMentor, etc.). This can cause race conditions when
+ * multiple operations run concurrently. Components should maintain their own
+ * loading state for critical UI rendering decisions.
+ *
+ * @example
+ * // CORRECT: Component-level loading state
+ * const { fetchMentorById } = useMentors();
+ * const [loading, setLoading] = useState(true);
+ * const [mentor, setMentor] = useState(null);
+ *
+ * useEffect(() => {
+ *   const loadData = async () => {
+ *     try {
+ *       setLoading(true);
+ *       const data = await fetchMentorById(id);
+ *       setMentor(data);
+ *     } finally {
+ *       setLoading(false);
+ *     }
+ *   };
+ *   loadData();
+ * }, [id]);
+ *
+ * // INCORRECT: Relying on hook's shared loading state
+ * const { fetchMentorById, loading } = useMentors();
+ * if (loading) return <Spinner />; // Race condition risk!
+ */
 export const useMentors = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Shared state across all operations!
 
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 

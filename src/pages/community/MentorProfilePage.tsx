@@ -31,9 +31,9 @@ const MentorProfilePage = () => {
   // #endregion
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const mentorsHookStartTime = performance.now();
-  const { fetchMentorById, fetchMentorBySlug, loading } = useMentors();
+  const { fetchMentorById, fetchMentorBySlug } = useMentors(); // Removed shared 'loading' state
   // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:28',message:'useMentors hook complete',data:{duration:performance.now()-mentorsHookStartTime,loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:28',message:'useMentors hook complete',data:{duration:performance.now()-mentorsHookStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
   // #endregion
   const featureGatingStartTime = performance.now();
   const { checkFeatureAccess } = useFeatureGating();
@@ -41,46 +41,50 @@ const MentorProfilePage = () => {
   fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:30',message:'useFeatureGating hook complete',data:{duration:performance.now()-featureGatingStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H6'})}).catch(()=>{});
   // #endregion
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
+  const [loadingMentor, setLoadingMentor] = useState(true); // Component-level loading state
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:35',message:'useEffect triggered',data:{id,slug,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-    if (slug) {
-      loadMentorBySlug(slug);
-    } else if (id) {
-      loadMentorById(id);
-    }
-  }, [id, slug]);
+    if (!id && !slug) return;
 
-  const loadMentorById = async (mentorId: string) => {
-    const loadStartTime = performance.now();
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadMentorById start',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-    const found = await fetchMentorById(mentorId);
-    const loadDuration = performance.now() - loadStartTime;
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadMentorById complete',data:{mentorId,found:!!found,duration:loadDuration},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-    if (found) {
-      setMentor(found as MentorProfileType);
-      // #region agent log
-      fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:48',message:'mentor state set',data:{mentorId,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-      // #endregion
-    }
-  };
+    let cancelled = false; // Abort controller for cleanup
 
-  const loadMentorBySlug = async (mentorSlug: string) => {
-    console.log('Loading mentor by slug:', mentorSlug);
-    const found = await fetchMentorBySlug(mentorSlug);
-    console.log('Mentor found:', found);
-    if (found) {
-      setMentor(found as MentorProfileType);
-    } else {
-      console.error('Mentor not found for slug:', mentorSlug);
-    }
-  };
+    const loadData = async () => {
+      try {
+        setLoadingMentor(true);
+        // #region agent log
+        fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'loadData start',data:{id,slug,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
+
+        const found = slug
+          ? await fetchMentorBySlug(slug)
+          : await fetchMentorById(id!);
+
+        // #region agent log
+        fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:45',message:'loadData complete',data:{id,slug,found:!!found,cancelled},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+        // #endregion
+
+        if (!cancelled && found) {
+          setMentor(found as MentorProfileType);
+          // #region agent log
+          fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:48',message:'mentor state set',data:{id,slug,timeSinceMount:performance.now()-pageMountTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+          // #endregion
+        }
+      } catch (error) {
+        // Error already handled by hook's toast
+        console.error('Failed to load mentor profile:', error);
+      } finally {
+        if (!cancelled) {
+          setLoadingMentor(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true; // Cleanup: prevent state updates after unmount
+    };
+  }, [id, slug, fetchMentorById, fetchMentorBySlug]); // Complete dependencies
 
   const handleBookClick = () => {
     if (!mentor) return;
@@ -136,7 +140,7 @@ const MentorProfilePage = () => {
     window.open(calendlyUrl, '_blank', 'noopener,noreferrer');
   };
 
-  if (loading) {
+  if (loadingMentor) {
     return (
       <>
         <Navigation />

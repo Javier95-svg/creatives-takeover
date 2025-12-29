@@ -361,14 +361,6 @@ const FundraisingReadinessToolkitAll = () => {
           </p>
         </div>
 
-        {/* Main Card - "How ready are you?" */}
-        <Card className="mb-8">
-          <CardHeader className="text-center">
-            <CardTitle className="text-4xl text-primary animate-pulse">How ready are you?</CardTitle>
-            <CardDescription className="mt-2">Answer all 4 questions below to get your readiness score</CardDescription>
-          </CardHeader>
-        </Card>
-
         {/* All Questions in Vertical List */}
         <div className="space-y-6 mb-8">
           <TooltipProvider>
