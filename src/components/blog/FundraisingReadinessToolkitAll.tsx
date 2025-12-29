@@ -201,13 +201,14 @@ const FundraisingReadinessToolkitAll = () => {
           feedback_score: scores.feedback,
           team_score: scores.team,
           runway_score: scores.runway,
-          // New 6 scores (optional - only send if defined)
+          // New 7 scores (optional - only send if defined)
           ...(scores.founder_market_fit !== undefined && scores.founder_market_fit !== null && { founder_market_fit_score: scores.founder_market_fit }),
           ...(scores.traction !== undefined && scores.traction !== null && { traction_score: scores.traction }),
           ...(scores.competitive_positioning !== undefined && scores.competitive_positioning !== null && { competitive_positioning_score: scores.competitive_positioning }),
           ...(scores.gtm_strategy !== undefined && scores.gtm_strategy !== null && { gtm_strategy_score: scores.gtm_strategy }),
           ...(scores.unit_economics !== undefined && scores.unit_economics !== null && { unit_economics_score: scores.unit_economics }),
           ...(scores.legal_readiness !== undefined && scores.legal_readiness !== null && { legal_readiness_score: scores.legal_readiness }),
+          ...(scores.investor_network !== undefined && scores.investor_network !== null && { investor_network_score: scores.investor_network }),
           // Context fields
           founder_stage: context.founder_stage,
           founder_experience: context.founder_experience,

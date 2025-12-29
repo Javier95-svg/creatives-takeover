@@ -3,7 +3,7 @@
  * Questions ordered by logical narrative flow: why → what → proof → scale → readiness
  */
 
-import { Lightbulb, Rocket, TrendingUp, Target, Swords, Users as UsersIcon, DollarSign, Calculator, Scale } from "lucide-react";
+import { Lightbulb, Rocket, TrendingUp, Target, Swords, Users as UsersIcon, DollarSign, Calculator, Scale, Network } from "lucide-react";
 import { AssessmentQuestion } from "@/types/fundraisingAssessment";
 
 export const ASSESSMENT_QUESTIONS: AssessmentQuestion[] = [
@@ -461,6 +461,110 @@ Remember: Legal isn't exciting, but it's essential. Investors have seen deals di
     visibility: {
       ideation: 'hidden',
       validation: 'optional',
+      building: 'required',
+      launching: 'required',
+      scaling: 'required'
+    }
+  },
+
+  // QUESTION 11: Investor Network & Warm Intros (NEW)
+  {
+    id: "investor_network",
+    title: "Investor Network & Warm Intros",
+    description: "Do you have access to investors through warm introductions?",
+    helpText: `Fundraising is relationship-driven. Cold emails rarely work - you need warm introductions from people investors trust. Having a strong network dramatically increases your chances of raising capital.
+
+Why this matters:
+Investors get hundreds of cold pitches weekly and ignore 95%+ of them. A warm intro from someone they respect gets you in the door. Your network is often as important as your business metrics.
+
+What counts as a strong investor network:
+
+1. Direct Connections (Best):
+   • You've worked with VCs before (previous company, advisor relationships)
+   • You know partners at funds personally
+   • Investors have reached out to YOU based on reputation
+
+2. Second-Degree Connections (Good):
+   • Your advisors/mentors can introduce you to investors
+   • Other founders in your network will vouch for you
+   • Accelerator/incubator alumni connections
+   • Industry leaders who know relevant investors
+
+3. Third-Degree Connections (Decent):
+   • LinkedIn connections who can make intros
+   • Angel networks you've joined
+   • Pitch events and demo days
+   • Active participation in startup communities
+
+4. No Network (Challenging):
+   • Only have cold email/LinkedIn outreach
+   • No startup ecosystem connections
+   • No advisors or mentors with investor access
+
+Scoring guide:
+- 0-2: No investor connections, will rely purely on cold outreach
+- 3-4: Some startup community involvement, few second-degree connections
+- 5-6: Active in ecosystem, several people who could potentially intro you
+- 7-8: Strong network, multiple warm intro paths to relevant investors
+- 9-10: Well-connected, investors know you or can easily be introduced
+
+How to build your network NOW:
+
+Early Stage (0-4 score):
+• Join startup communities (Startup Grind, local meetups)
+• Find 2-3 advisors who believe in your vision
+• Attend demo days and pitch events (even just to watch)
+• Help other founders - give before you ask
+• Join relevant accelerators or incubators
+
+Growing Network (5-7 score):
+• Get warm intros to angel investors for practice pitches
+• Ask advisors: "Who should I know in my space?"
+• Speak at events or write about your domain expertise
+• Connect with other founders who've raised recently
+• Join angel networks or syndicate platforms
+
+Strong Network (8-10 score):
+• Maintain relationships - update your network quarterly
+• Make intros between people in your network (give value)
+• Host dinners or events for your community
+• Share your fundraising journey transparously
+• Help other founders with intros when you can
+
+Red Flags:
+❌ Waiting until you need funding to start building relationships
+❌ Only reaching out when you want something
+❌ Neglecting your network between raises
+❌ Not being helpful to others in your ecosystem
+
+Green Flags:
+✅ Building relationships months before you need them
+✅ Regularly giving value without asking for anything
+✅ Being known in your niche or industry
+✅ Other founders vouching for you unprompted
+
+Practical Steps:
+1. List 20 people who could intro you to investors
+2. For each gap, identify WHO could make that connection
+3. Reach out to help, not to ask (yet)
+4. Attend 2-3 startup events per month
+5. Join a founder community (On Deck, South Park Commons, local groups)
+
+The Fundraising Reality:
+• ~80% of successful fundraises come from warm intros
+• Building relationships takes 3-6 months minimum
+• Your "network strength" often predicts fundraising success
+• Investors fund people they trust or who come recommended
+
+Bottom Line:
+If your score is below 5, start building your network NOW - don't wait until you need to raise. Fundraising is a relationship game, and relationships take time to build.
+
+Remember: The best time to build your investor network was 6 months ago. The second best time is today. Start with one coffee, one intro request, one helpful connection at a time.`,
+    icon: <Network className="h-5 w-5" />,
+    order: 11,
+    visibility: {
+      ideation: 'optional',
+      validation: 'required',
       building: 'required',
       launching: 'required',
       scaling: 'required'

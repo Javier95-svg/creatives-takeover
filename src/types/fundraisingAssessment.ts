@@ -15,7 +15,8 @@ export type QuestionId =
   | 'unit_economics'
   | 'team'
   | 'runway'
-  | 'legal_readiness';
+  | 'legal_readiness'
+  | 'investor_network';
 
 export type QuestionVisibility = 'required' | 'optional' | 'hidden';
 
@@ -49,7 +50,7 @@ export interface AssessmentQuestion {
 }
 
 /**
- * All assessment scores (10 total)
+ * All assessment scores (11 total)
  */
 export interface AssessmentScores {
   // Original 4 scores
@@ -57,13 +58,14 @@ export interface AssessmentScores {
   feedback: number;
   team: number;
   runway: number;
-  // New 6 scores (nullable for backwards compatibility)
+  // New 7 scores (nullable for backwards compatibility)
   founder_market_fit?: number | null;
   traction?: number | null;
   competitive_positioning?: number | null;
   gtm_strategy?: number | null;
   unit_economics?: number | null;
   legal_readiness?: number | null;
+  investor_network?: number | null;
 }
 
 /**
@@ -155,13 +157,14 @@ export interface AssessmentSubmission {
   feedback_score: number;
   team_score: number;
   runway_score: number;
-  // New 6 scores (optional)
+  // New 7 scores (optional)
   founder_market_fit_score?: number | null;
   traction_score?: number | null;
   competitive_positioning_score?: number | null;
   gtm_strategy_score?: number | null;
   unit_economics_score?: number | null;
   legal_readiness_score?: number | null;
+  investor_network_score?: number | null;
   // Context fields
   founder_stage?: FounderStage;
   founder_experience?: FounderExperience;
