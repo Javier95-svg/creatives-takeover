@@ -570,15 +570,67 @@ const FundraisingReadinessToolkitAll = () => {
                         >
                           {action.priority}
                         </Badge>
-                        <div className="flex-1">
-                          <span className="text-foreground">{action.action}</span>
-                          {action.estimated_time && (
-                            <span className="text-xs text-muted-foreground ml-2">({action.estimated_time})</span>
+                        <div className="flex-1 space-y-1">
+                          <div>
+                            <span className="text-foreground font-medium">{action.action}</span>
+                            {action.estimated_time && (
+                              <span className="text-xs text-muted-foreground ml-2">({action.estimated_time})</span>
+                            )}
+                          </div>
+                          {action.leverage_strength && (
+                            <div className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-1">
+                              <span>💡</span>
+                              <span>{action.leverage_strength}</span>
+                            </div>
                           )}
                         </div>
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Strength Leverage Opportunities - NEW! */}
+              {aiAnalysis.strength_leverage_opportunities && aiAnalysis.strength_leverage_opportunities.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <span className="text-xl">💡</span>
+                    Leverage Your Strengths
+                  </h4>
+                  <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <ul className="space-y-2">
+                      {aiAnalysis.strength_leverage_opportunities.map((opportunity, index) => (
+                        <li key={index} className="flex gap-3 text-sm">
+                          <span className="text-blue-600 dark:text-blue-400 mt-1">→</span>
+                          <span className="text-foreground">{opportunity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Comparable Company Example - NEW! */}
+              {aiAnalysis.comparable_company && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <span className="text-xl">🏢</span>
+                    Success Story: Company Like You
+                  </h4>
+                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <span className="font-semibold text-green-700 dark:text-green-300">{aiAnalysis.comparable_company.company}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium">Why similar:</span> {aiAnalysis.comparable_company.similar_because}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium">What they did:</span> {aiAnalysis.comparable_company.what_they_did}
+                    </p>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                      {aiAnalysis.comparable_company.outcome}
+                    </p>
+                  </div>
                 </div>
               )}
 

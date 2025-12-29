@@ -20,13 +20,14 @@ serve(async (req) => {
       feedback_score,
       team_score,
       runway_score,
-      // New 6 scores
+      // New 7 scores
       founder_market_fit_score,
       traction_score,
       competitive_positioning_score,
       gtm_strategy_score,
       unit_economics_score,
       legal_readiness_score,
+      investor_network_score,
       // Context fields
       founder_stage,
       founder_experience,
@@ -63,7 +64,8 @@ serve(async (req) => {
       !validateOptionalScore(competitive_positioning_score) ||
       !validateOptionalScore(gtm_strategy_score) ||
       !validateOptionalScore(unit_economics_score) ||
-      !validateOptionalScore(legal_readiness_score)
+      !validateOptionalScore(legal_readiness_score) ||
+      !validateOptionalScore(investor_network_score)
     ) {
       return new Response(
         JSON.stringify({ error: 'Invalid optional scores. All scores must be between 0 and 10.' }),
@@ -111,7 +113,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Calculate average score (including optional new questions)
+    // Calculate average score (including optional new questions + investor_network)
     const allScores = [
       mvp_score,
       feedback_score,
@@ -122,7 +124,8 @@ serve(async (req) => {
       competitive_positioning_score,
       gtm_strategy_score,
       unit_economics_score,
-      legal_readiness_score
+      legal_readiness_score,
+      investor_network_score
     ].filter(score => score !== null && score !== undefined);
 
     const averageScore = allScores.reduce((sum, score) => sum + score, 0) / allScores.length;
@@ -230,7 +233,8 @@ serve(async (req) => {
       formatScore(unit_economics_score, 'Unit Economics'),
       formatScore(team_score, 'Team in Place'),
       formatScore(runway_score, 'Runway Secured'),
-      formatScore(legal_readiness_score, 'Legal & IP Readiness')
+      formatScore(legal_readiness_score, 'Legal & IP Readiness'),
+      formatScore(investor_network_score, 'Investor Network & Warm Intros')
     ].filter(s => s !== null).join('\n');
 
     const contextInfo = `
@@ -243,6 +247,38 @@ ${funding_amount_needed ? `- Funding Seeking: $${funding_amount_needed.toLocaleS
 ${pitch_summary ? `- Brief: ${pitch_summary}` : ''}
 `.trim();
 
+    // Industry-specific benchmarks (condensed for prompt)
+    const industryBenchmarks: Record<string, any> = {
+      'SaaS': {
+        validation: { traction: '$500-5K MRR, 10-100 users', runway: '9-12 months', success_rate: '15-20%' },
+        building: { traction: '$10K-50K MRR, 100-1000 users', runway: '12-18 months', success_rate: '25-30%' }
+      },
+      'Fintech': {
+        validation: { traction: '$5K-20K transaction volume', runway: '12-18 months', success_rate: '10-15%' },
+        building: { traction: '$500K-3M GMV/month', runway: '15-24 months', success_rate: '20-25%' }
+      },
+      'Healthcare': {
+        validation: { traction: '1-3 pilot hospitals, 100-1K patients', runway: '15-24 months', success_rate: '10-15%' },
+        building: { traction: '5-15 health systems, clinical evidence', runway: '18-30 months', success_rate: '15-25%' }
+      },
+      'E-commerce': {
+        validation: { traction: '$10K-50K revenue/month', runway: '9-15 months', success_rate: '20-25%' },
+        building: { traction: '$100K-500K revenue/month', runway: '12-18 months', success_rate: '25-30%' }
+      },
+      'Marketplace': {
+        validation: { traction: '$10K-100K GMV/month', runway: '12-18 months', success_rate: '15-20%' },
+        building: { traction: '$200K-1M GMV/month, 3-5 markets', runway: '15-24 months', success_rate: '20-30%' }
+      },
+      'AI/ML': {
+        validation: { traction: '50-500 users, API calls, paying pilots', runway: '12-18 months', success_rate: '25-35%' },
+        building: { traction: '$500K-3M ARR, enterprise contracts', runway: '15-24 months', success_rate: '30-40%' }
+      }
+    };
+
+    const benchmarkContext = industry && industryBenchmarks[industry]?.[stage]
+      ? `\n\nIndustry Benchmarks (${industry} - ${stage}):\n- Typical Traction: ${industryBenchmarks[industry][stage].traction}\n- Typical Runway: ${industryBenchmarks[industry][stage].runway}\n- Success Rate: ${industryBenchmarks[industry][stage].success_rate} raise at this stage`
+      : '';
+
     const prompt = `You are a fundraising readiness expert analyzing a ${stage} stage startup's readiness assessment.
 
 ${contextInfo}
@@ -252,16 +288,17 @@ ${scoresList}
 
 Average Score: ${averageScore.toFixed(1)}/10.0
 Stage Threshold: ${threshold.min_average}/10.0 average required
-Meets Investor Threshold: ${meetsInvestorThreshold ? 'YES' : 'NO'}
+Meets Investor Threshold: ${meetsInvestorThreshold ? 'YES' : 'NO'}${benchmarkContext}
 
 CRITICAL INSTRUCTIONS:
 1. Judge this founder against ${stage.toUpperCase()} stage standards, NOT scaling-stage perfection
 2. Be calibrated to their experience level (${experienceLabel})
-3. Focus on the next 1-2 most important actions for their stage
-4. Be encouraging but realistic
-${industry ? `5. Provide industry-specific advice for ${industry}` : ''}
+3. **WEAKNESS-STRENGTH PAIRING**: Identify how their high scores (strengths) can be leveraged to address low scores (gaps). E.g., "You have strong founder-market fit (8/10) but weak traction (3/10) - use your domain expertise to create thought leadership content that attracts early users."
+4. **COMPARABLE EXAMPLES**: If relevant, reference successful companies in ${industry || 'their industry'} that had similar profiles and what they did to succeed
+5. Be encouraging but realistic with specific, actionable next steps
+${industry ? `6. Provide ${industry}-specific benchmarks and advice` : ''}
 
-Provide a comprehensive, stage-appropriate analysis.`;
+Provide a comprehensive, stage-appropriate analysis with concrete examples and strength-leverage strategies.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -322,11 +359,27 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
                       action: { type: 'string' },
                       priority: { type: 'string', enum: ['High', 'Medium', 'Low'] },
                       estimated_time: { type: 'string' },
-                      rationale: { type: 'string', description: 'Why this matters for this stage' }
+                      rationale: { type: 'string', description: 'Why this matters for this stage' },
+                      leverage_strength: { type: 'string', description: 'Optional: which existing strength can help achieve this' }
                     },
                     required: ['action', 'priority', 'rationale']
                   },
-                  description: 'Top 3-5 prioritized action items with priority, time estimates, and stage-specific rationale'
+                  description: 'Top 3-5 prioritized action items with priority, time estimates, stage-specific rationale, and leverage opportunities'
+                },
+                strength_leverage_opportunities: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of 2-3 specific ways to leverage strengths (high scores) to address weaknesses (low scores)'
+                },
+                comparable_company: {
+                  type: 'object',
+                  properties: {
+                    company: { type: 'string', description: 'Name of similar successful company' },
+                    similar_because: { type: 'string', description: 'Why they are comparable (stage, industry, profile)' },
+                    what_they_did: { type: 'string', description: 'Specific actions they took to succeed' },
+                    outcome: { type: 'string', description: 'What they achieved (funding, valuation, etc.)' }
+                  },
+                  description: 'Example of a comparable company that succeeded from a similar position'
                 },
                 stage_benchmark_comparison: {
                   type: 'object',
@@ -415,13 +468,14 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
           feedback_score,
           team_score,
           runway_score,
-          // New 6 scores
+          // New 7 scores
           founder_market_fit_score: founder_market_fit_score ?? null,
           traction_score: traction_score ?? null,
           competitive_positioning_score: competitive_positioning_score ?? null,
           gtm_strategy_score: gtm_strategy_score ?? null,
           unit_economics_score: unit_economics_score ?? null,
           legal_readiness_score: legal_readiness_score ?? null,
+          investor_network_score: investor_network_score ?? null,
           // Context fields
           founder_stage: founder_stage ?? null,
           founder_experience: founder_experience ?? null,
@@ -454,13 +508,14 @@ CRITICAL: Judge against ${stage} standards, NOT scaling-stage perfection.`
           feedback: feedback_score,
           team: team_score,
           runway: runway_score,
-          // New 6 scores (include if provided)
+          // New 7 scores (include if provided)
           ...(founder_market_fit_score !== null && founder_market_fit_score !== undefined && { founder_market_fit: founder_market_fit_score }),
           ...(traction_score !== null && traction_score !== undefined && { traction: traction_score }),
           ...(competitive_positioning_score !== null && competitive_positioning_score !== undefined && { competitive_positioning: competitive_positioning_score }),
           ...(gtm_strategy_score !== null && gtm_strategy_score !== undefined && { gtm_strategy: gtm_strategy_score }),
           ...(unit_economics_score !== null && unit_economics_score !== undefined && { unit_economics: unit_economics_score }),
-          ...(legal_readiness_score !== null && legal_readiness_score !== undefined && { legal_readiness: legal_readiness_score })
+          ...(legal_readiness_score !== null && legal_readiness_score !== undefined && { legal_readiness: legal_readiness_score }),
+          ...(investor_network_score !== null && investor_network_score !== undefined && { investor_network: investor_network_score })
         },
         context: {
           founder_stage: stage,

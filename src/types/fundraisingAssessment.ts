@@ -108,6 +108,28 @@ export const READINESS_THRESHOLDS: Record<FounderStage, ReadinessThreshold> = {
 };
 
 /**
+ * Comparable company example
+ */
+export interface ComparableCompany {
+  company: string;
+  similar_because: string;
+  what_they_did: string;
+  outcome: string;
+  stage_when_raised: FounderStage;
+}
+
+/**
+ * Industry benchmark context
+ */
+export interface IndustryBenchmarkContext {
+  typical_traction: string;
+  typical_runway_months: string;
+  typical_funding_raised: string;
+  your_position: 'Above benchmark' | 'At benchmark' | 'Below benchmark';
+  gap_analysis: string;
+}
+
+/**
  * Enhanced AI analysis response with stage-specific insights
  */
 export interface AIAnalysis {
@@ -121,6 +143,10 @@ export interface AIAnalysis {
   next_milestone?: string;
   risk_assessment?: string;
   summary: string;
+  // NEW: Enhanced fields
+  industry_benchmark?: IndustryBenchmarkContext;
+  comparable_company?: ComparableCompany;
+  strength_leverage_opportunities?: string[]; // How to use strengths to address weaknesses
   // Additional fields returned from edge function
   average_score?: number;
   meets_investor_threshold?: boolean;
@@ -137,6 +163,7 @@ export interface PrioritizedAction {
   priority: 'High' | 'Medium' | 'Low';
   estimated_time?: string;
   rationale?: string; // Why this matters for this stage
+  leverage_strength?: string; // Optional: which existing strength can help achieve this
 }
 
 /**
