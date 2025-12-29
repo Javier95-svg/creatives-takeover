@@ -38,12 +38,11 @@ const EmailTemplatesTab = () => {
           <div className="inline-flex items-center gap-2 mb-6">
             <Mail className="h-6 w-6 text-primary" />
             <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Email Templates Library
+              Email Templates
             </h2>
           </div>
           <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Copy-paste ready email templates for every stage of fundraising.
-            Personalize the variables (like {'{{vc_name}}'} and {'{{company_name}}'}) and send.
+            Professional email templates for every stage of your fundraising journey. From cold outreach to warm introductions, get the exact words that open doors with investors.
           </p>
         </div>
 
