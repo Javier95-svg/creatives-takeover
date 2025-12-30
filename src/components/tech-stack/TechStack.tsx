@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { techStackData, TechStackCategory, TechStackData, TechStackProduct } from '@/data/techStack';
-import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, Lock, Sparkles, TrendingUp, AlertTriangle, Lightbulb, Target } from 'lucide-react';
+import { CheckCircle2, Calculator, DollarSign, Monitor, Server, Cloud, BarChart, CreditCard, Mail, Users, Lock, Sparkles, TrendingUp, AlertTriangle, Lightbulb, Target, Link2, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -34,6 +34,14 @@ interface BudgetBreakdown {
   product: string;
   price: string;
   isVariable: boolean;
+}
+
+interface IntegrationSuggestion {
+  title: string;
+  description: string;
+  tools: string[];
+  difficulty: 'easy' | 'medium' | 'advanced';
+  benefits: string[];
 }
 
 const TechStack: React.FC = () => {
@@ -555,6 +563,189 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
     return recommendations;
   }
 
+  // Generate integration suggestions
+  function generateIntegrationSuggestions(selectedProductDetails: Array<{ category: string; product: TechStackProduct | undefined }>) {
+    const integrations: IntegrationSuggestion[] = [];
+
+    const frontend = selectedProductDetails.find(item => item.category === 'Frontend')?.product;
+    const backend = selectedProductDetails.find(item => item.category === 'Backend')?.product;
+    const hosting = selectedProductDetails.find(item => item.category === 'Hosting / Infrastructure')?.product;
+    const analytics = selectedProductDetails.find(item => item.category === 'Analytics')?.product;
+    const payments = selectedProductDetails.find(item => item.category === 'Payments')?.product;
+    const email = selectedProductDetails.find(item => item.category === 'Email')?.product;
+    const leadGen = selectedProductDetails.find(item => item.category === 'Lead Generation')?.product;
+
+    // Next.js + Vercel integration
+    if (frontend?.name === 'Next.js' && hosting?.name === 'Vercel') {
+      integrations.push({
+        title: 'Seamless Next.js + Vercel Deployment',
+        description: 'Deploy your Next.js app with zero configuration. Connect your Git repository and Vercel will automatically build and deploy on every push.',
+        tools: ['Next.js', 'Vercel'],
+        difficulty: 'easy',
+        benefits: [
+          'Automatic builds on git push',
+          'Preview deployments for every branch',
+          'Optimized edge network delivery',
+          'Built-in analytics and monitoring'
+        ]
+      });
+    }
+
+    // Frontend + Supabase integration
+    if ((frontend?.name === 'React' || frontend?.name === 'Next.js') && backend?.name === 'Supabase') {
+      integrations.push({
+        title: `${frontend.name} + Supabase Full-Stack Integration`,
+        description: 'Use Supabase JavaScript client for authentication, database queries, and real-time subscriptions directly from your React components.',
+        tools: [frontend.name, 'Supabase'],
+        difficulty: 'easy',
+        benefits: [
+          'Type-safe database queries with auto-generated types',
+          'Real-time data sync across users',
+          'Built-in authentication hooks',
+          'Row-level security for data protection'
+        ]
+      });
+    }
+
+    // Stripe integration
+    if (payments?.name === 'Stripe') {
+      const frontendName = frontend?.name || 'your frontend';
+      integrations.push({
+        title: `Stripe Checkout Integration`,
+        description: `Integrate Stripe's hosted checkout page or embedded components into ${frontendName}. Use Stripe webhooks to handle payment events in your backend.`,
+        tools: ['Stripe', frontendName],
+        difficulty: 'medium',
+        benefits: [
+          'PCI compliance handled by Stripe',
+          'Support for 135+ currencies',
+          'Subscription billing automation',
+          'Fraud prevention built-in'
+        ]
+      });
+    }
+
+    // Analytics integration
+    if (analytics?.name === 'Google Analytics') {
+      integrations.push({
+        title: 'Google Analytics 4 Event Tracking',
+        description: 'Set up GA4 using gtag.js or Google Tag Manager. Track custom events like signups, purchases, and feature usage to understand user behavior.',
+        tools: ['Google Analytics', frontend?.name || 'Frontend'],
+        difficulty: 'easy',
+        benefits: [
+          'Free and comprehensive tracking',
+          'Integration with Google Ads',
+          'Demographic and interest data',
+          'Custom event tracking'
+        ]
+      });
+    } else if (analytics?.name === 'Mixpanel' || analytics?.name === 'Amplitude') {
+      integrations.push({
+        title: `${analytics.name} Product Analytics Setup`,
+        description: 'Implement event tracking throughout your app. Track user journeys, feature adoption, and conversion funnels with detailed segmentation.',
+        tools: [analytics.name, frontend?.name || 'Frontend'],
+        difficulty: 'medium',
+        benefits: [
+          'User-level event tracking',
+          'Funnel and retention analysis',
+          'A/B testing capabilities',
+          'Cohort-based insights'
+        ]
+      });
+    }
+
+    // Email service integration
+    if (email?.name === 'SendGrid' || email?.name === 'Resend' || email?.name === 'Postmark') {
+      integrations.push({
+        title: `${email.name} Transactional Email Setup`,
+        description: `Use ${email.name}'s API to send password resets, welcome emails, and notifications. Create email templates and track delivery rates.`,
+        tools: [email.name, backend?.name || 'Backend'],
+        difficulty: 'easy',
+        benefits: [
+          'High deliverability rates',
+          'Email template management',
+          'Bounce and spam tracking',
+          'Webhooks for email events'
+        ]
+      });
+    }
+
+    // Firebase + Hosting optimization
+    if (backend?.name === 'Firebase' && hosting?.name === 'Vercel') {
+      integrations.push({
+        title: 'Firebase + Vercel Hybrid Architecture',
+        description: 'Host your frontend on Vercel while using Firebase for backend services. Use Vercel Edge Functions for performance-critical logic.',
+        tools: ['Firebase', 'Vercel', frontend?.name || 'Frontend'],
+        difficulty: 'medium',
+        benefits: [
+          'Best-in-class frontend performance',
+          'Real-time database capabilities',
+          'Scalable backend infrastructure',
+          'Optimized global delivery'
+        ]
+      });
+    }
+
+    // Lead generation + CRM workflow
+    if (leadGen?.name === 'Apollo.io' || leadGen?.name === 'Hunter') {
+      integrations.push({
+        title: `${leadGen.name} Lead Enrichment Workflow`,
+        description: 'Set up automated workflows to enrich leads from your app with contact data. Sync enriched leads to your CRM or send to email sequences.',
+        tools: [leadGen.name, email?.name || 'Email Service'],
+        difficulty: 'advanced',
+        benefits: [
+          'Automated lead enrichment',
+          'Contact verification',
+          'Email sequence automation',
+          'Sales pipeline integration'
+        ]
+      });
+    }
+
+    // Node.js + PostgreSQL (Supabase) patterns
+    if (backend?.name === 'Node.js' && hosting?.name === 'Railway') {
+      integrations.push({
+        title: 'Node.js + PostgreSQL on Railway',
+        description: 'Deploy your Node.js backend and PostgreSQL database on Railway. Use environment variables for database connection and automatic SSL.',
+        tools: ['Node.js', 'Railway'],
+        difficulty: 'medium',
+        benefits: [
+          'Database and backend in one platform',
+          'Automatic SSL certificates',
+          'Simple CI/CD pipeline',
+          'Cost-effective for startups'
+        ]
+      });
+    }
+
+    // Full-stack modern setup
+    if (frontend?.name === 'Next.js' && backend?.name === 'Supabase' && payments?.name === 'Stripe') {
+      integrations.push({
+        title: 'Complete SaaS Stack Integration',
+        description: 'Build a full-featured SaaS with Next.js frontend, Supabase backend, and Stripe billing. Use Next.js API routes to handle Stripe webhooks securely.',
+        tools: ['Next.js', 'Supabase', 'Stripe'],
+        difficulty: 'advanced',
+        benefits: [
+          'End-to-end type safety',
+          'Subscription billing automation',
+          'Real-time data updates',
+          'Production-ready architecture'
+        ]
+      });
+    }
+
+    return integrations;
+  }
+
+  const integrationSuggestions = useMemo(() => {
+    const selectedProductDetails = techStackData.map(category => {
+      const productId = selectedProducts[category.id];
+      const product = category.products.find(p => p.id === productId);
+      return { category: category.name, product, productId };
+    }).filter(item => item.product);
+
+    return generateIntegrationSuggestions(selectedProductDetails);
+  }, [selectedProducts, techStackData]);
+
   return (
     <div className="space-y-6">
       {/* Budget Summary Card */}
@@ -591,16 +782,39 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
             ))}
           </div>
 
-          <div className="border-t pt-4 space-y-2">
-            <div className="flex items-center justify-between text-lg font-bold">
-              <span>Total Fixed Cost:</span>
-              <span>${total.toFixed(2)}/month</span>
+          <div className="border-t pt-4 space-y-4">
+            {/* Monthly Cost */}
+            <div className="flex items-center justify-between">
+              <span className="text-base font-medium text-muted-foreground">Monthly Fixed Cost:</span>
+              <span className="text-2xl font-bold text-foreground">${total.toFixed(2)}</span>
             </div>
+
+            {/* Annual Cost */}
+            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <div>
+                <span className="text-base font-semibold text-foreground">Annual Fixed Cost:</span>
+                <p className="text-xs text-muted-foreground mt-1">12-month commitment savings potential</p>
+              </div>
+              <span className="text-2xl font-bold text-primary">${(total * 12).toFixed(2)}</span>
+            </div>
+
+            {/* Budget Range Info */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Budget Range:</strong> {
+                  total < 200 ? 'Budget-Conscious (Great for bootstrapped startups and MVPs)' :
+                  total < 500 ? 'Mid-Range (Suitable for growth-stage startups)' :
+                  'Premium (Enterprise-grade tools for scaling teams)'
+                }
+              </p>
+            </div>
+
             {hasVariable && (
               <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-900">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Note:</strong> Some selected products have usage-based or variable pricing. 
-                  The total above only includes fixed monthly costs. Additional charges may apply based on usage.
+                  <strong>Variable Costs Alert:</strong> Some selected products use usage-based pricing.
+                  The totals above only include fixed monthly costs. Plan for 20-30% additional budget for
+                  variable charges as you scale.
                 </p>
               </div>
             )}
@@ -705,6 +919,90 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
                 </div>
               );
             })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Integration Suggestions Card */}
+      {integrationSuggestions.length > 0 && (
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Link2 className="w-6 h-6" />
+              Integration Guide
+            </CardTitle>
+            <CardDescription>
+              Step-by-step guidance on connecting your selected tools
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {integrationSuggestions.map((integration, idx) => {
+              const difficultyColors = {
+                easy: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-900',
+                medium: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-900',
+                advanced: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-900'
+              };
+
+              return (
+                <div
+                  key={idx}
+                  className="p-5 rounded-lg border-2 bg-background/80 backdrop-blur-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Zap className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-base mb-1">{integration.title}</h4>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {integration.tools.map((tool, toolIdx) => (
+                            <span
+                              key={toolIdx}
+                              className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium"
+                            >
+                              {tool}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium border flex-shrink-0 ${difficultyColors[integration.difficulty]}`}>
+                      {integration.difficulty.charAt(0).toUpperCase() + integration.difficulty.slice(1)}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    {integration.description}
+                  </p>
+
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-semibold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      Key Benefits:
+                    </h5>
+                    <ul className="space-y-1.5 ml-5">
+                      {integration.benefits.map((benefit, benefitIdx) => (
+                        <li key={benefitIdx} className="text-sm text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-1.5 text-xs">•</span>
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Call to Action */}
+            <div className="mt-6 p-4 bg-primary/10 border-2 border-primary/20 rounded-lg">
+              <p className="text-sm text-foreground/90 flex items-start gap-2">
+                <Lightbulb className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <span>
+                  <strong>Pro Tip:</strong> Start with "Easy" integrations first to get quick wins.
+                  Build confidence before tackling "Advanced" integrations. All these tools have
+                  excellent documentation and active communities to help you succeed.
+                </span>
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
