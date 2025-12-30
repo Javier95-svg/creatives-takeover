@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User, Settings, Gift, UserPlus, MessageCircle, Home, Bot, BookOpen, TrendingUp, Users as UsersIcon, FileText, Info, DollarSign, ChevronDown, Mail, Rocket, FlaskConical, Lightbulb, Target, Boxes } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,6 +54,13 @@ const Navigation = () => {
     "About Us": Info,
     "Pricing": DollarSign,
   };
+
+  // BizMap AI submenu items
+  const bizMapSubmenu = [
+    { name: "Business Planning", href: "/bizmap-ai", icon: Lightbulb, description: "30-day business plan wizard" },
+    { name: "Product Market Fit Lab", href: "/bizmap-ai/pmf-lab", icon: Target, description: "Analyze your product-market fit" },
+    { name: "Tech Stack", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Build your ideal tech stack" },
+  ];
 
   // Insighta submenu items
   const insightaSubmenu = [
@@ -174,6 +181,54 @@ const Navigation = () => {
                     colorClass = 'hover:text-growth';
                   } else {
                     colorClass = 'hover:text-primary';
+                  }
+
+                  // Special handling for BizMap AI with dropdown
+                  if (item.name === 'BizMap AI') {
+                    return (
+                      <DropdownMenu key={item.name}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger className={cn(
+                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
+                              "nav-item-hover-effect",
+                              active
+                                ? "text-foreground bg-primary/5 nav-active-indicator active"
+                                : `text-muted-foreground ${colorClass}`
+                            )}>
+                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                              <span className="tracking-wide">{item.name}</span>
+                              <ChevronDown className="h-3 w-3 ml-0.5" />
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="start" className="w-64">
+                          <DropdownMenuLabel>AI-Powered Business Tools</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {bizMapSubmenu.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <DropdownMenuItem key={subItem.name} asChild>
+                                <Link
+                                  to={subItem.href}
+                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                  className="cursor-pointer"
+                                >
+                                  <SubIcon className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{subItem.name}</span>
+                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
                   }
 
                   // Special handling for Insighta with dropdown
