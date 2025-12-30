@@ -108,6 +108,13 @@ const Stories = () => {
       } catch (error) {
         if (!signal.aborted && isMountedRef.current) {
           console.error('Error loading stories:', error);
+          // Set empty arrays to prevent undefined errors
+          if (activeTab === "drafts") {
+            setDrafts([]);
+          } else {
+            setStories([]);
+            setAllTags([]);
+          }
         }
       }
     };
@@ -139,7 +146,8 @@ const Stories = () => {
   };
 
   // Calculate pagination for published stories
-  const filteredStories = stories.filter((story) => story.linkedin_post_url);
+  // Note: stories already filtered for linkedin_post_url in fetchStories
+  const filteredStories = stories;
   const totalPages = Math.ceil(filteredStories.length / ARTICLES_PER_PAGE);
   const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
   const endIndex = startIndex + ARTICLES_PER_PAGE;
@@ -458,7 +466,10 @@ const Stories = () => {
               /* Published Stories View */
               loading ? (
                 <div className="text-center py-16">
-                  <p className="text-muted-foreground">Loading LinkedIn posts...</p>
+                  <div className="inline-flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-muted-foreground">Loading stories...</p>
+                  </div>
                 </div>
               ) : stories.length === 0 ? (
                 <div className="text-center py-16">
