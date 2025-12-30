@@ -59,7 +59,7 @@ const platformSnippets: PlatformSnippet[] = [
     color: "pmf" // orange - contrasts with green
   },
   {
-    name: "Product Market Fit Lab",
+    name: "PMF Lab",
     description: "Validate your product-market fit with customer analysis and validation experiments",
     icon: FlaskConical,
     route: "/bizmap-ai",

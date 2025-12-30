@@ -58,7 +58,7 @@ const Navigation = () => {
   // BizMap AI submenu items
   const bizMapSubmenu = [
     { name: "Business Planning", href: "/bizmap-ai", icon: Lightbulb, description: "30-day business plan wizard" },
-    { name: "Product Market Fit Lab", href: "/bizmap-ai/pmf-lab", icon: Target, description: "Analyze your product-market fit" },
+    { name: "PMF Lab", href: "/bizmap-ai/pmf-lab", icon: Target, description: "Analyze your product-market fit" },
     { name: "Tech Stack", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Build your ideal tech stack" },
   ];
 

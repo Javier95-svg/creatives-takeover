@@ -168,7 +168,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
     try {
       if (!toast) {
         console.error('[PMF Lab] Toast context not available');
-        throw new Error('Toast context is required for Product Market Fit Lab');
+        throw new Error('Toast context is required for PMF Lab');
       }
       if (!hasCredits) {
         console.error('[PMF Lab] Credits hook not available');
@@ -325,7 +325,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
-            Product Market Fit Lab
+            PMF Lab
           </CardTitle>
           <CardDescription>
             Validate your product in the market and discover if there's real demand

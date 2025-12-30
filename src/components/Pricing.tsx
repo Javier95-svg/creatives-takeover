@@ -48,7 +48,7 @@ const Pricing = () => {
       creator: [
         "50 credits per month",
         "Dashboard Access",
-        "BizMap AI Upgrade: Business Planning & Product Market Fit Lab modes.",
+        "BizMap AI Upgrade: Business Planning & PMF Lab modes.",
         "Full Access to Prompt Library",
         "Insighta Test Assessment",
         "Funding Opportunities",
@@ -58,7 +58,7 @@ const Pricing = () => {
       professional: [
         "150 credits per month",
         "Dashboard Access",
-        "Full Access to BizMap AI (Business Planning, Product Market Fit Lab & Tech Stack)",
+        "Full Access to BizMap AI (Business Planning, PMF Lab & Tech Stack)",
         "Full Access to Prompt Library",
         "Insighta Test Assessment",
         "Investor Matchmaker (Insighta)",

@@ -14,7 +14,7 @@ export default function PMFLabPage() {
 
   // Track page visit when component mounts
   useEffect(() => {
-    trackPageVisit('Product Market Fit Lab');
+    trackPageVisit('PMF Lab');
   }, [trackPageVisit]);
 
   // Structured data for PMF Lab page
@@ -22,7 +22,7 @@ export default function PMFLabPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Product Market Fit Lab - Validate Your Business Idea",
+      "name": "PMF Lab - Validate Your Business Idea",
       "description": "Analyze your product-market fit with AI-powered insights. Validate your business concept, understand your target market, and get actionable recommendations.",
       "url": "https://creatives-takeover.com/bizmap-ai/pmf-lab",
       "publisher": {
@@ -37,14 +37,14 @@ export default function PMFLabPage() {
     createBreadcrumbSchema([
       { name: 'Home', url: '/' },
       { name: 'BizMap AI', url: '/bizmap-ai' },
-      { name: 'Product Market Fit Lab', url: '/bizmap-ai/pmf-lab' }
+      { name: 'PMF Lab', url: '/bizmap-ai/pmf-lab' }
     ])
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Product Market Fit Lab - Creatives Takeover"
+        title="PMF Lab - Creatives Takeover"
         description="Analyze your product-market fit with AI-powered insights. Validate your business concept, understand your target market, and get actionable recommendations for success."
         keywords="product market fit, PMF analysis, business validation, market analysis, startup validation, product validation"
         url="/bizmap-ai/pmf-lab"
@@ -71,7 +71,7 @@ export default function PMFLabPage() {
             {/* Page Header */}
             <div className="text-center mb-12 sm:mb-16">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
-                Product Market Fit Lab
+                PMF Lab
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
                 Test your product in the market and uncover whether there's<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> genuine demand waiting for you.</span>
@@ -82,7 +82,7 @@ export default function PMFLabPage() {
               fallback={
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-muted-foreground">Loading Product Market Fit Lab...</p>
+                  <p className="text-muted-foreground">Loading PMF Lab...</p>
                 </div>
               }
             >
