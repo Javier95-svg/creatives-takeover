@@ -112,8 +112,10 @@ const MentorProfilePage = () => {
       <>
         <Navigation />
         <div className="container mx-auto px-4 py-20 text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading mentor profile...</p>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Loading mentor profile...</p>
+          </div>
         </div>
       </>
     );
@@ -128,6 +130,11 @@ const MentorProfilePage = () => {
           <p className="text-muted-foreground">
             The mentor profile you're looking for doesn't exist or may have been removed.
           </p>
+          {(id || slug) && (
+            <p className="text-sm text-muted-foreground">
+              Looking for: {slug || id}
+            </p>
+          )}
           <Button asChild className="mt-4">
             <Link to="/community">Browse All Mentors</Link>
           </Button>

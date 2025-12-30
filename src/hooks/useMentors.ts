@@ -177,9 +177,7 @@ export const useMentors = () => {
     try {
       setLoading(true);
 
-      console.log('[fetchMentorBySlug] Looking for slug:', slug);
-
-      // Fetch all active mentors and find by slug
+      // Fetch all active mentors
       const { data, error } = await supabase
         .from('mentors')
         .select('*')
@@ -188,13 +186,10 @@ export const useMentors = () => {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        console.log('[fetchMentorBySlug] No active mentors found');
         return null;
       }
 
-      console.log('[fetchMentorBySlug] Total active mentors:', data.length);
-
-      // Generate slug from each mentor name and match
+      // Generate slug from each mentor name and match - using exact same algorithm as MentorCard
       const mentor = data.find((m) => {
         const mentorSlug = m.name
           .toLowerCase()
@@ -206,29 +201,24 @@ export const useMentors = () => {
           .replace(/-+/g, '-')
           .replace(/^-|-$/g, '');
 
-        console.log('[fetchMentorBySlug] Checking:', m.name, '→', mentorSlug, 'vs', slug, '=', mentorSlug === slug);
         return mentorSlug === slug;
       });
 
       if (mentor) {
-        console.log('[fetchMentorBySlug] Found mentor:', mentor.name);
         return convertToMentor(mentor);
       }
 
-      // Fallback: try to find by partial name match if exact slug didn't work
-      console.log('[fetchMentorBySlug] No exact match, trying partial match');
+      // Fallback: try partial name match for robustness
+      const nameParts = slug.split('-');
       const partialMatch = data.find((m) => {
-        const nameParts = slug.split('-');
         const mentorNameLower = m.name.toLowerCase();
         return nameParts.every(part => mentorNameLower.includes(part));
       });
 
       if (partialMatch) {
-        console.log('[fetchMentorBySlug] Found partial match:', partialMatch.name);
         return convertToMentor(partialMatch);
       }
 
-      console.log('[fetchMentorBySlug] No match found for slug:', slug);
       return null;
     } catch (error: any) {
       console.error('Error fetching mentor by slug:', {
