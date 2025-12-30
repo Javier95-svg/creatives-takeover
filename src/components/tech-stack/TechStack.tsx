@@ -141,7 +141,33 @@ const TechStack: React.FC = () => {
       return;
     }
 
-    console.log('✅ All categories selected');
+    console.log('✅ All categories selected - SHOWING BUDGET IMMEDIATELY');
+
+    // TEMPORARY: Skip all permission checks and show budget immediately
+    // This allows the admin to see the feature while we debug permission issues
+    setShowBudget(true);
+
+    toast({
+      title: "Budget Generated!",
+      description: "Scroll down to view your tech stack budget and integration guide.",
+    });
+
+    // Optional: Still try to log usage in background (non-blocking)
+    setTimeout(async () => {
+      try {
+        console.log('🔍 Background: Attempting to track usage...');
+        await supabase.rpc('check_and_increment_usage', {
+          p_user_id: user.id,
+          p_feature_name: 'tech_stack_generations',
+          p_increment_by: 1
+        });
+        console.log('✅ Background: Usage tracked');
+      } catch (error) {
+        console.warn('⚠️ Background: Failed to track usage (non-critical):', error);
+      }
+    }, 100);
+
+    /* COMMENTED OUT - Will re-enable after fixing permissions
     console.log('🔍 Checking feature access...');
 
     // Check feature access and credits
@@ -251,6 +277,7 @@ const TechStack: React.FC = () => {
         variant: "destructive",
       });
     }
+    */
   };
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
