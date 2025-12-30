@@ -120,19 +120,36 @@ const TechStack: React.FC = () => {
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
 
   const handleSeeBudget = async () => {
+    console.log('🔍 Debug - Button clicked');
+    console.log('🔍 Debug - User:', user);
+    console.log('🔍 Debug - Selected count:', selectedCount, '/', techStackData.length);
+
     if (!user) {
+      console.log('❌ No user - redirecting to login');
       navigate('/login');
       return;
     }
-    
+
     // Require all categories to be selected
     if (selectedCount !== techStackData.length) {
+      console.log('❌ Not all categories selected');
+      toast({
+        title: "Selection Required",
+        description: `Please select one product from all ${techStackData.length} categories to generate your budget.`,
+        variant: "destructive",
+      });
       return;
     }
 
+    console.log('✅ All categories selected');
+    console.log('🔍 Checking feature access...');
+
     // Check feature access and credits
     const featureAccess = checkFeatureAccess('tech_stack_generation');
+    console.log('🔍 Feature access:', featureAccess);
+
     if (!featureAccess.hasAccess) {
+      console.log('❌ No feature access');
       toast({
         title: "Upgrade Required",
         description: featureAccess.message || "Upgrade to Creator tier for unlimited Tech Stack generations.",
@@ -142,13 +159,20 @@ const TechStack: React.FC = () => {
       return;
     }
 
+    console.log('✅ Feature access granted');
+    console.log('🔍 Checking credits...');
+
     if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
+      console.log('❌ Insufficient credits');
       setCreditGateOpen(true);
       return;
     }
 
+    console.log('✅ Has credits');
+
     // Check usage limits for free tier (1/month)
     if (currentTier === 'free') {
+      console.log('🔍 Free tier - checking usage limits...');
       try {
         const { data: usageData, error: usageError } = await supabase
           .rpc('get_feature_usage', {
@@ -156,9 +180,12 @@ const TechStack: React.FC = () => {
             p_feature_name: 'tech_stack_generations'
           });
 
+        console.log('🔍 Usage data:', usageData, 'Error:', usageError);
+
         if (!usageError && usageData) {
           const usage = usageData as { current_usage: number; limit: number; remaining: number };
           if (usage.remaining <= 0 && usage.limit > 0) {
+            console.log('❌ Usage limit reached');
             toast({
               title: "Usage Limit Reached",
               description: "You've used your 1 free Tech Stack generation this month. Upgrade to Creator for unlimited generations.",
@@ -169,9 +196,11 @@ const TechStack: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error checking usage:', error);
+        console.error('⚠️ Error checking usage:', error);
       }
     }
+
+    console.log('🔍 Attempting to deduct credits...');
 
     // Deduct credits and increment usage
     try {
@@ -183,7 +212,10 @@ const TechStack: React.FC = () => {
         }
       });
 
+      console.log('🔍 Credit deduction response:', creditData, 'Error:', creditError);
+
       if (creditError || !creditData?.success) {
+        console.log('❌ Credit deduction failed');
         toast({
           title: "Error",
           description: "Failed to process. Please try again.",
@@ -192,6 +224,9 @@ const TechStack: React.FC = () => {
         return;
       }
 
+      console.log('✅ Credits deducted');
+      console.log('🔍 Incrementing usage...');
+
       // Increment usage
       await supabase.rpc('check_and_increment_usage', {
         p_user_id: user.id,
@@ -199,9 +234,17 @@ const TechStack: React.FC = () => {
         p_increment_by: 1
       });
 
+      console.log('✅ Usage incremented');
+      console.log('✅ SHOWING BUDGET!');
+
       setShowBudget(true);
+
+      toast({
+        title: "Budget Generated!",
+        description: "Scroll down to view your tech stack budget and integration guide.",
+      });
     } catch (error) {
-      console.error('Error processing generation:', error);
+      console.error('❌ Error processing generation:', error);
       toast({
         title: "Error",
         description: "Failed to process. Please try again.",
