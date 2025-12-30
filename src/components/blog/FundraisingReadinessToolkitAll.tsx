@@ -262,35 +262,8 @@ const FundraisingReadinessToolkitAll = () => {
   };
 
   return (
-    <section className="py-20 px-4 relative overflow-hidden" data-section="fundraising-readiness-all">
-      {/* Background styling */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-        <div
-          className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
-          style={{
-            background:
-              'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.35), transparent 55%)',
-            animationDuration: '28s'
-          }}
-        />
-      </div>
-
-      <div className="container mx-auto max-w-5xl relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <Rocket className="h-6 w-6 text-primary" />
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Insighta Test
-            </h2>
-          </div>
-          <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Take our comprehensive self-assessment to evaluate your startup's fundraising readiness, identify gaps, and understand exactly what you need to improve before approaching investors.
-          </p>
-        </div>
-
-        {/* All Questions in Vertical List */}
+    <div>
+      {/* All Questions in Vertical List */}
         <div className="space-y-6 mb-8">
           <TooltipProvider>
             {visibleQuestions.map((question, index) => {
@@ -655,23 +628,22 @@ const FundraisingReadinessToolkitAll = () => {
           </Card>
         )}
 
-        {/* Find My Investors Button - appears after analysis */}
-        {aiAnalysis && (
-          <div className="mt-6 text-center">
-            <Button
-              size="lg"
-              className="w-full sm:w-auto"
-              onClick={() => {
-                navigate('/insighta/vc-search');
-              }}
-            >
-              <Users className="mr-2 h-5 w-5" />
-              Find My Investors
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+      {/* Find My Investors Button - appears after analysis */}
+      {aiAnalysis && (
+        <div className="mt-6 text-center">
+          <Button
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={() => {
+              navigate('/insighta/vc-search');
+            }}
+          >
+            <Users className="mr-2 h-5 w-5" />
+            Find My Investors
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       <CreditGate
         isOpen={creditGateOpen}
@@ -679,7 +651,7 @@ const FundraisingReadinessToolkitAll = () => {
         requiredCredits={CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS}
         feature="Fundraising Readiness Analysis"
       />
-    </section>
+    </div>
   );
 };
 
