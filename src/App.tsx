@@ -57,6 +57,8 @@ import AcceleratorProfilePage from "./components/accelerator/AcceleratorProfileP
 import MentorBookingPage from "./pages/community/MentorBookingPage";
 import MyBookings from "./pages/community/MyBookings";
 import AdminMentorEditor from "./pages/community/AdminMentorEditor";
+import PMFLabPage from "./pages/PMFLabPage";
+import TechStackPage from "./pages/TechStackPage";
 import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient({
@@ -121,7 +123,9 @@ function App() {
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                  
+                  <Route path="/bizmap-ai/pmf-lab" element={<PMFLabPage />} />
+                  <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
+
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />

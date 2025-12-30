@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,9 +22,6 @@ import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useFeedbackCredits } from "@/hooks/useFeedbackCredits";
 import SuccessScore from "@/components/SuccessScore";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FlaskConical, Code } from "lucide-react";
-
 import { BizMapChat } from "@/components/BizMapChat";
 import { useChatBotStore } from "@/store/chatBotStore";
 import { ReportDisplay } from "@/components/ReportDisplay";
@@ -36,10 +33,6 @@ import { useFounderOSIntegration } from "@/hooks/useFounderOSIntegration";
 import { BizMapTour } from "@/components/onboarding/BizMapTour";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BizmapWallpaper from "@/components/wallpapers/BizmapWallpaper";
-
-// Lazy load heavy components for better performance
-const ProductMarketFitLab = lazy(() => import("@/components/pmf/ProductMarketFitLab"));
-const TechStack = lazy(() => import("@/components/tech-stack/TechStack"));
 
 const BizMapAI = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -74,7 +67,6 @@ const BizMapAI = () => {
   const { user, isAuthenticated } = useAuth();
   const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
   const { generateReport } = useChatBotStore();
-  const [activeTab, setActiveTab] = useState("bizmap");
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   
   // Founder OS Integration
@@ -1267,94 +1259,8 @@ Subject: "Quick question about [their pain point]"
               </p>
             </div>
 
-            {/* Enhanced Tab Navigation */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="flex justify-center mb-6 sm:mb-8 mt-8 sm:mt-10">
-                <TabsList className="relative glass-card border-2 border-primary/30 shadow-2xl shadow-primary/10 backdrop-blur-xl bg-background/80 p-1.5 sm:p-2.5 animate-fade-in w-full sm:w-auto max-w-4xl sm:max-w-none rounded-2xl overflow-visible" style={{ animationDelay: '0.5s' }}>
-                  {/* Subtle glow effect for active tab indicator */}
-                  <div 
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 opacity-0 transition-opacity duration-500 pointer-events-none"
-                    style={{
-                      opacity: activeTab === 'bizmap' ? 1 : activeTab === 'pmf' ? 1 : activeTab === 'tech-stack' ? 1 : 0
-                    }}
-                  />
-                  
-                  <TabsTrigger 
-                    value="bizmap" 
-                    className="relative flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-3.5 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/25 data-[state=active]:via-primary/20 data-[state=active]:to-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 data-[state=active]:scale-105 transition-all duration-300 hover:bg-primary/8 hover:scale-[1.02] rounded-xl font-semibold text-xs sm:text-sm leading-normal overflow-visible border border-transparent data-[state=active]:border-primary/30 data-[state=active]:backdrop-blur-sm"
-                    aria-label="Business Planning tab - AI-powered business planning wizard"
-                  >
-                    <div className="relative">
-                      <Lightbulb 
-                        className={`w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0 transition-all duration-300 ${
-                          activeTab === 'bizmap' 
-                            ? 'scale-110 text-primary drop-shadow-lg' 
-                            : ''
-                        }`} 
-                        aria-hidden="true" 
-                      />
-                      {activeTab === 'bizmap' && (
-                        <div className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full animate-pulse" />
-                      )}
-                    </div>
-                    <span className="hidden sm:inline font-medium">Business Planning</span>
-                    <span className="sm:hidden leading-tight pb-0.5 font-medium">Planning</span>
-                    {activeTab === 'bizmap' && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full animate-pulse" />
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="pmf" 
-                    className="relative flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-3.5 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/25 data-[state=active]:via-primary/20 data-[state=active]:to-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 data-[state=active]:scale-105 transition-all duration-300 hover:bg-primary/8 hover:scale-[1.02] rounded-xl font-semibold text-xs sm:text-sm leading-normal overflow-visible border border-transparent data-[state=active]:border-primary/30 data-[state=active]:backdrop-blur-sm"
-                    aria-label="Product Market Fit Lab tab - Validate product-market fit"
-                  >
-                    <div className="relative">
-                      <FlaskConical 
-                        className={`w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0 transition-all duration-300 ${
-                          activeTab === 'pmf' 
-                            ? 'scale-110 text-primary drop-shadow-lg' 
-                            : ''
-                        }`} 
-                        aria-hidden="true" 
-                      />
-                      {activeTab === 'pmf' && (
-                        <div className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full animate-pulse" />
-                      )}
-                    </div>
-                    <span className="hidden sm:inline font-medium">Product Market Fit Lab</span>
-                    <span className="sm:hidden font-medium">PMF Lab</span>
-                    {activeTab === 'pmf' && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full animate-pulse" />
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="tech-stack" 
-                    className="relative flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-3.5 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/25 data-[state=active]:via-primary/20 data-[state=active]:to-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 data-[state=active]:scale-105 transition-all duration-300 hover:bg-primary/8 hover:scale-[1.02] rounded-xl font-semibold text-xs sm:text-sm leading-normal overflow-visible border border-transparent data-[state=active]:border-primary/30 data-[state=active]:backdrop-blur-sm"
-                    aria-label="Tech Stack tab - Compare and select tools for your startup"
-                  >
-                    <div className="relative">
-                      <Code 
-                        className={`w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0 transition-all duration-300 ${
-                          activeTab === 'tech-stack' 
-                            ? 'scale-110 text-primary drop-shadow-lg' 
-                            : ''
-                        }`} 
-                        aria-hidden="true" 
-                      />
-                      {activeTab === 'tech-stack' && (
-                        <div className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full animate-pulse" />
-                      )}
-                    </div>
-                    <span className="hidden sm:inline font-medium">Tech Stack</span>
-                    <span className="sm:hidden leading-tight pb-0.5 font-medium">Stack</span>
-                    {activeTab === 'tech-stack' && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full animate-pulse" />
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="bizmap">
+            {/* Business Planning Chat Interface */}
+            <div className="w-full">
                 {/* Unified Chat Interface Container */}
                 <div className="chat-unified-frame mb-6 sm:mb-8 h-[700px] rounded-xl lg:rounded-2xl overflow-hidden shadow-2xl">
                   <div className="flex flex-row h-full">
@@ -1750,77 +1656,7 @@ Subject: "Quick question about [their pain point]"
                     </div>
                   </div>
                 )}
-              </TabsContent>
-
-              <TabsContent value="pmf">
-                <div className="flex items-center gap-4 mb-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab("bizmap")}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to BizMap
-                  </Button>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold">Product Market Fit Lab</h2>
-                    <p className="text-muted-foreground">Validate your product in the market and discover if there's real demand</p>
-                  </div>
-                </div>
-                
-                <Suspense
-                  fallback={
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-4">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                        <p className="text-muted-foreground">Loading Product Market Fit Lab...</p>
-                      </div>
-                    </div>
-                  }
-                >
-                  <ProductMarketFitLab
-                    businessPlanData={launchReport ? {
-                      answers: userAnswers,
-                      launchReport: launchReport,
-                      successScore: successScore
-                    } : undefined}
-                    onDataExport={handlePMFDataExport}
-                  />
-                </Suspense>
-              </TabsContent>
-
-              <TabsContent value="tech-stack">
-                <div className="flex items-center gap-4 mb-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab("bizmap")}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to BizMap
-                  </Button>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold">Tech Stack</h2>
-                    <p className="text-muted-foreground">Select one product in each category to build your stack and instantly view your estimated budget and strategy.</p>
-                  </div>
-                </div>
-                
-                <Suspense
-                  fallback={
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-4">
-                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                        <p className="text-muted-foreground">Loading Tech Stack...</p>
-                      </div>
-                    </div>
-                  }
-                >
-                  <TechStack />
-                </Suspense>
-              </TabsContent>
-            </Tabs>
+            </div>
           </div>
         </div>
       </div>
