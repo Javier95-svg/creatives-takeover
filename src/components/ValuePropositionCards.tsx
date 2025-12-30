@@ -42,7 +42,7 @@ const ValuePropositionCards = () => {
       subtitle: "Insighta",
       description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
       cta: "Explore Insighta",
-      link: "/insighta",
+      link: "/insighta/test",
       color: "accent", // Yellow for fundraising
       metric: "Find your VC"
     }
