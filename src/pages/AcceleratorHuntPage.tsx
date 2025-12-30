@@ -64,6 +64,16 @@ export default function AcceleratorHuntPage() {
           </div>
 
           <div className="container mx-auto max-w-5xl relative z-10">
+            {/* Page Header */}
+            <div className="text-center mb-12 sm:mb-16">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2">
+                Accelerator Hunt
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+                Discover accelerator programs offering funding,<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit', marginLeft: '0.25rem' }}> mentorship, and resources.</span>
+              </p>
+            </div>
+
             <AcceleratorHuntTab />
           </div>
         </section>
