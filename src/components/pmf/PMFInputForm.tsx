@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { X, Plus, AlertCircle, CheckCircle2, Loader2, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { DataSourceBadge } from './DataSourceBadge';
+import { AdvancedFieldsSection } from './AdvancedFieldsSection';
+import { mapWizardToPMF, hasWizardData, getMappingSummary, type WizardAnswers } from '@/services/wizardToPMFMapper';
 
 interface PMFInputFormData {
   problemStatement: string;
@@ -67,6 +72,8 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
   onSubmit,
   isSubmitting = false
 }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [formData, setFormData] = useState<PMFInputFormData>({
     problemStatement: initialData?.problemStatement || businessPlanData?.answers?.problem || '',
     solutionDescription: initialData?.solutionDescription || businessPlanData?.answers?.solution || '',
@@ -79,6 +86,45 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
   });
 
   const [newAssumption, setNewAssumption] = useState('');
+  const [autoPopulatedFields, setAutoPopulatedFields] = useState<Set<string>>(new Set());
+  const [dataSources, setDataSources] = useState<Record<string, string>>({});
+  const [confidence, setConfidence] = useState<Record<string, number>>({});
+
+  // Auto-populate from wizard data
+  useEffect(() => {
+    const loadWizardData = async () => {
+      // Skip if we have initial data or business plan data already
+      if (initialData || businessPlanData?.answers) return;
+
+      // Convert businessPlanData to WizardAnswers format
+      if (businessPlanData?.answers) {
+        const wizardAnswers: WizardAnswers = {
+          overview: businessPlanData.answers.problem,
+          solution: businessPlanData.answers.solution,
+          market: businessPlanData.answers.market,
+          pricing: businessPlanData.answers.pricing,
+        };
+
+        if (hasWizardData(wizardAnswers)) {
+          const mapping = mapWizardToPMF(wizardAnswers);
+
+          // Update form data with mapped values
+          setFormData(prev => ({ ...prev, ...mapping.data }));
+          setAutoPopulatedFields(new Set(Object.keys(mapping.data)));
+          setDataSources(mapping.mappings);
+          setConfidence(mapping.confidence);
+
+          // Show success toast
+          toast({
+            title: "Fields Auto-Filled",
+            description: getMappingSummary(mapping),
+          });
+        }
+      }
+    };
+
+    loadWizardData();
+  }, [initialData, businessPlanData, toast]);
 
   const addAssumption = () => {
     if (newAssumption.trim()) {
@@ -145,6 +191,13 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
             className="resize-none"
             required
           />
+          {autoPopulatedFields.has('problemStatement') && (
+            <DataSourceBadge
+              source={dataSources.problemStatement}
+              confidence={confidence.problemStatement}
+              compact
+            />
+          )}
           <p className="text-xs text-muted-foreground">
             Be specific about the problem and who experiences it.
           </p>
@@ -163,6 +216,13 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
             className="resize-none"
             required
           />
+          {autoPopulatedFields.has('solutionDescription') && (
+            <DataSourceBadge
+              source={dataSources.solutionDescription}
+              confidence={confidence.solutionDescription}
+              compact
+            />
+          )}
           <p className="text-xs text-muted-foreground">
             Explain how your solution addresses the problem you identified.
           </p>
@@ -180,6 +240,13 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
               placeholder="e.g., Small business owners, Students, etc."
               required
             />
+            {autoPopulatedFields.has('targetMarket') && (
+              <DataSourceBadge
+                source={dataSources.targetMarket}
+                confidence={confidence.targetMarket}
+                compact
+              />
+            )}
             <p className="text-xs text-muted-foreground">
               Who is your primary customer?
             </p>
@@ -204,121 +271,153 @@ const PMFInputForm: React.FC<PMFInputFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            {autoPopulatedFields.has('industry') && (
+              <DataSourceBadge
+                source={dataSources.industry}
+                confidence={confidence.industry}
+                compact
+              />
+            )}
             <p className="text-xs text-muted-foreground">
               Helps provide industry-specific insights
             </p>
           </div>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="businessModel">
-            Business Model
-          </Label>
-          <Select
-            value={formData.businessModel}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, businessModel: value }))}
-          >
-            <SelectTrigger id="businessModel">
-              <SelectValue placeholder="Select business model" />
-            </SelectTrigger>
-            <SelectContent>
-              {BUSINESS_MODELS.map((model) => (
-                <SelectItem key={model} value={model}>
-                  {model}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            How do you plan to make money?
-          </p>
-        </div>
       </div>
 
-      {/* Key Assumptions */}
-      <div className="space-y-2">
-        <Label>Key Assumptions</Label>
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Input
-              value={newAssumption}
-              onChange={(e) => setNewAssumption(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addAssumption();
-                }
-              }}
-              placeholder="Enter an assumption and press Enter"
-            />
-            <Button
-              type="button"
-              onClick={addAssumption}
-              variant="outline"
-              size="icon"
+      {/* Advanced Optional Fields */}
+      <AdvancedFieldsSection
+        defaultOpen={false}
+        completedCount={[
+          formData.businessModel,
+          formData.keyAssumptions.length > 0,
+          formData.competitiveLandscape,
+          formData.tractionValidation
+        ].filter(Boolean).length}
+        totalCount={4}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="businessModel">
+              Business Model
+            </Label>
+            <Select
+              value={formData.businessModel}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, businessModel: value }))}
             >
-              <Plus className="w-4 h-4" />
-            </Button>
+              <SelectTrigger id="businessModel">
+                <SelectValue placeholder="Select business model" />
+              </SelectTrigger>
+              <SelectContent>
+                {BUSINESS_MODELS.map((model) => (
+                  <SelectItem key={model} value={model}>
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {autoPopulatedFields.has('businessModel') && (
+              <DataSourceBadge
+                source={dataSources.businessModel}
+                confidence={confidence.businessModel}
+                compact
+              />
+            )}
+            <p className="text-xs text-muted-foreground">
+              How do you plan to make money?
+            </p>
           </div>
-          {formData.keyAssumptions.length > 0 && (
-            <div className="space-y-1">
-              {formData.keyAssumptions.map((assumption, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm"
+
+          {/* Key Assumptions */}
+          <div className="space-y-2">
+            <Label>Key Assumptions</Label>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={newAssumption}
+                  onChange={(e) => setNewAssumption(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addAssumption();
+                    }
+                  }}
+                  placeholder="Enter an assumption and press Enter"
+                />
+                <Button
+                  type="button"
+                  onClick={addAssumption}
+                  variant="outline"
+                  size="icon"
                 >
-                  <span className="flex-1">{assumption}</span>
-                  <Button
-                    type="button"
-                    onClick={() => removeAssumption(index)}
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              {formData.keyAssumptions.length > 0 && (
+                <div className="space-y-1">
+                  {formData.keyAssumptions.map((assumption, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm"
+                    >
+                      <span className="flex-1">{assumption}</span>
+                      <Button
+                        type="button"
+                        onClick={() => removeAssumption(index)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          List key assumptions you're making about the market, customers, or solution.
-        </p>
-      </div>
+            <p className="text-xs text-muted-foreground">
+              List key assumptions you're making about the market, customers, or solution.
+            </p>
+          </div>
 
-      {/* Optional Fields */}
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="competitiveLandscape">Competitive Landscape (Optional)</Label>
-          <Textarea
-            id="competitiveLandscape"
-            value={formData.competitiveLandscape}
-            onChange={(e) => setFormData(prev => ({ ...prev, competitiveLandscape: e.target.value }))}
-            placeholder="Who are your main competitors? What are their strengths and weaknesses?"
-            rows={3}
-            className="resize-none"
-          />
-          <p className="text-xs text-muted-foreground">
-            Help us understand the competitive environment.
-          </p>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="competitiveLandscape">Competitive Landscape</Label>
+            <Textarea
+              id="competitiveLandscape"
+              value={formData.competitiveLandscape}
+              onChange={(e) => setFormData(prev => ({ ...prev, competitiveLandscape: e.target.value }))}
+              placeholder="Who are your main competitors? What are their strengths and weaknesses?"
+              rows={3}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Help us understand the competitive environment.
+            </p>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="tractionValidation">Traction/Validation (Optional)</Label>
-          <Textarea
-            id="tractionValidation"
-            value={formData.tractionValidation}
-            onChange={(e) => setFormData(prev => ({ ...prev, tractionValidation: e.target.value }))}
-            placeholder="Any early traction, validation, or customer feedback? (e.g., beta users, pre-orders, pilot programs)"
-            rows={3}
-            className="resize-none"
-          />
-          <p className="text-xs text-muted-foreground">
-            Share any validation signals you've already received.
-          </p>
+          <div className="space-y-2">
+            <Label htmlFor="tractionValidation">Traction/Validation</Label>
+            <Textarea
+              id="tractionValidation"
+              value={formData.tractionValidation}
+              onChange={(e) => setFormData(prev => ({ ...prev, tractionValidation: e.target.value }))}
+              placeholder="Any early traction, validation, or customer feedback? (e.g., beta users, pre-orders, pilot programs)"
+              rows={3}
+              className="resize-none"
+            />
+            {autoPopulatedFields.has('tractionValidation') && (
+              <DataSourceBadge
+                source={dataSources.tractionValidation}
+                confidence={confidence.tractionValidation}
+                compact
+              />
+            )}
+            <p className="text-xs text-muted-foreground">
+              Share any validation signals you've already received.
+            </p>
+          </div>
         </div>
-      </div>
+      </AdvancedFieldsSection>
 
       {/* Validation Status */}
       {!isFormValid && (
