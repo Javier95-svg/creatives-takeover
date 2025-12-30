@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Rocket } from "lucide-react";
 import AcceleratorFilters from "@/components/accelerator/AcceleratorFilters";
 import { useAcceleratorSearch } from "@/hooks/useAcceleratorSearch";
 import { AcceleratorFilters as AcceleratorFiltersType } from "@/types/insighta";
@@ -11,20 +10,6 @@ const AcceleratorHuntTab = () => {
 
   return (
     <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <Rocket className="h-6 w-6 text-primary" />
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Accelerator Hunt
-            </h2>
-          </div>
-          <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Discover accelerator programs offering funding, mentorship, and resources.
-            Filter by location, industry focus, and funding amount to find the best fit.
-          </p>
-        </div>
-
       {/* Filters */}
       <AcceleratorFilters
         filters={filters}

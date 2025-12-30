@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEmailTemplates } from "@/hooks/useEmailTemplates";
@@ -33,19 +33,6 @@ const EmailTemplatesTab = () => {
 
   return (
     <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <Mail className="h-6 w-6 text-primary" />
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              Email Templates
-            </h2>
-          </div>
-          <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Professional email templates for every stage of your fundraising journey. From cold outreach to warm introductions, get the exact words that open doors with investors.
-          </p>
-        </div>
-
       {/* Search */}
       <div className="relative max-w-md mx-auto">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

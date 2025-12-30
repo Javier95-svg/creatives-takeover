@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Users } from "lucide-react";
 import VCFilters from "@/components/vc/VCFilters";
 import VCGrid from "@/components/vc/VCGrid";
 import { useVCSearch } from "@/hooks/useVCSearch";
@@ -11,21 +10,6 @@ const VCSearchTab = () => {
 
   return (
     <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <Users className="h-6 w-6 text-primary" />
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent leading-tight pb-2">
-              VC Search
-            </h2>
-          </div>
-          <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto">
-            Search and filter through venture capitalists by investment stage,
-            industry, check size, and geography. Click any VC to view their full profile
-            and contact information.
-          </p>
-        </div>
-
       {/* Filters */}
       <VCFilters
         filters={filters}
