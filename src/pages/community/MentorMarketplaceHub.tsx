@@ -47,8 +47,13 @@ const MentorMarketplaceHub = () => {
   }, []);
 
   const loadMentors = async () => {
-    const fetchedMentors = await fetchMentors();
-    setMentors(fetchedMentors);
+    try {
+      const fetchedMentors = await fetchMentors();
+      setMentors(fetchedMentors);
+    } catch (error) {
+      console.error('Error loading mentors:', error);
+      setMentors([]);
+    }
   };
 
 
@@ -236,8 +241,9 @@ const MentorMarketplaceHub = () => {
 
             {/* Mentor Cards Grid */}
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground">Loading mentors...</p>
               </div>
             ) : filteredMentors.length > 0 ? (
               <div className="grid grid-cols-1 gap-6">
