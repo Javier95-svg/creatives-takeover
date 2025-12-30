@@ -1248,7 +1248,7 @@ Subject: "Quick question about [their pain point]"
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2 overflow-visible">
                 BizMap AI
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '2.2', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '1.6', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
                 <>Your AI powered business planner in chatbot form,<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit' }}> ready to turn your vision into action.</span></>
               </p>
             </div>
