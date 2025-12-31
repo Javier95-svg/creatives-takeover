@@ -70,17 +70,15 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
     return baseItems;
   };
 
-  const platformToolsItems = [
+  const toolsItems = [
+    { path: '/chat', label: 'AI Advisor', icon: MessageSquare },
     { path: '/business-health', label: 'Business Health', icon: TrendingUp },
     { path: '/market-validation', label: 'Market Validation', icon: Target },
     { path: '/community', label: 'Community', icon: Users },
-    { path: '/resources', label: 'Resources', icon: BookOpen },
-    { path: '/chat', label: 'AI Chat', icon: MessageSquare },
   ];
 
   const settingsItems = [
-    { path: '/settings?tab=dashboard', label: 'Dashboard Settings', icon: Settings },
-    { path: '/settings', label: 'Preferences', icon: Settings },
+    { path: '/settings?tab=dashboard', label: 'Customize Dashboard', icon: Settings },
   ];
 
   return (
@@ -97,9 +95,9 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Dashboard Views - Scroll-to Navigation */}
+        {/* Today's Focus - Quick Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Dashboard Views</SidebarGroupLabel>
+          <SidebarGroupLabel>Your Focus</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {getDashboardViewItems().map((item) => (
@@ -118,12 +116,12 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Platform Tools - React Router Links */}
+        {/* Tools & Support */}
         <SidebarGroup>
-          <SidebarGroupLabel>Platform Tools</SidebarGroupLabel>
+          <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {platformToolsItems.map((item) => (
+              {toolsItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild tooltip={item.label}>
                     <Link to={item.path}>
@@ -137,9 +135,9 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Settings */}
+        {/* Customize */}
         <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupLabel>Personalize</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {settingsItems.map((item) => (
