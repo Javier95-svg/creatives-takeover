@@ -15,6 +15,28 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
 import { DashboardSidebar } from './DashboardSidebar';
 import { useActiveSection } from '@/hooks/useActiveSection';
+import { ReactNode } from 'react';
+
+// Internal wrapper component that uses the navigation context
+interface DashboardContentWrapperProps {
+  dashboardMode: DashboardMode;
+  children: ReactNode;
+}
+
+const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWrapperProps) => {
+  // Setup section IDs for active section tracking
+  const sectionIds =
+    dashboardMode === 'focus'
+      ? ['dashboard-focus']
+      : dashboardMode === 'dashboard'
+      ? ['dashboard-focus', 'weekly-mission', 'active-projects', 'your-tasks']
+      : ['dashboard-focus', 'weekly-mission', 'ai-insights', 'active-projects', 'calendar-view', 'your-tasks'];
+
+  // Initialize active section tracking (now inside the provider)
+  useActiveSection(sectionIds);
+
+  return <>{children}</>;
+};
 
 export const PersonalizedDashboardV2 = () => {
   const { user } = useAuth();
@@ -163,17 +185,6 @@ export const PersonalizedDashboardV2 = () => {
 
   const metrics = calculateMetrics();
 
-  // Setup section IDs for active section tracking
-  const sectionIds =
-    dashboardMode === 'focus'
-      ? ['dashboard-focus']
-      : dashboardMode === 'dashboard'
-      ? ['dashboard-focus', 'weekly-mission', 'active-projects', 'your-tasks']
-      : ['dashboard-focus', 'weekly-mission', 'ai-insights', 'active-projects', 'calendar-view', 'your-tasks'];
-
-  // Initialize active section tracking
-  useActiveSection(sectionIds);
-
   if (loading || isInitializing) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -204,9 +215,10 @@ export const PersonalizedDashboardV2 = () => {
     <ErrorBoundary>
       <SidebarProvider>
         <DashboardNavigationProvider>
-          <DashboardSidebar dashboardMode={dashboardMode} />
-          <SidebarInset>
-            <div className="min-h-screen relative overflow-hidden bg-background">
+          <DashboardContentWrapper dashboardMode={dashboardMode}>
+            <DashboardSidebar dashboardMode={dashboardMode} />
+            <SidebarInset>
+              <div className="min-h-screen relative overflow-hidden bg-background">
               {/* Fixed Header with Exit Button and Mode Toggle */}
               <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
                 <div className="container mx-auto px-6 py-3 max-w-7xl">
@@ -293,8 +305,9 @@ export const PersonalizedDashboardV2 = () => {
                   lastFetchTimeRef.current = 0;
                 }}
               />
-            </div>
-          </SidebarInset>
+              </div>
+            </SidebarInset>
+          </DashboardContentWrapper>
         </DashboardNavigationProvider>
       </SidebarProvider>
     </ErrorBoundary>
