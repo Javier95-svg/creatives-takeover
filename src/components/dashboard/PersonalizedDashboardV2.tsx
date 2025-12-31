@@ -11,6 +11,10 @@ import { ModeToggle, DashboardMode } from './modes/ModeToggle';
 import { FocusModeView } from './modes/FocusModeView';
 import { DashboardModeView } from './modes/DashboardModeView';
 import { ControlCenterView } from './modes/ControlCenterView';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { DashboardNavigationProvider } from '@/contexts/DashboardNavigationContext';
+import { DashboardSidebar } from './DashboardSidebar';
+import { useActiveSection } from '@/hooks/useActiveSection';
 
 export const PersonalizedDashboardV2 = () => {
   const { user } = useAuth();
@@ -159,6 +163,17 @@ export const PersonalizedDashboardV2 = () => {
 
   const metrics = calculateMetrics();
 
+  // Setup section IDs for active section tracking
+  const sectionIds =
+    dashboardMode === 'focus'
+      ? ['dashboard-focus']
+      : dashboardMode === 'dashboard'
+      ? ['dashboard-focus', 'weekly-mission', 'active-projects', 'your-tasks']
+      : ['dashboard-focus', 'weekly-mission', 'ai-insights', 'active-projects', 'calendar-view', 'your-tasks'];
+
+  // Initialize active section tracking
+  useActiveSection(sectionIds);
+
   if (loading || isInitializing) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -187,17 +202,31 @@ export const PersonalizedDashboardV2 = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative overflow-hidden bg-background">
-        {/* Exit Button - Fixed in top-right corner */}
-        <button
-          onClick={() => navigate('/')}
-          className="fixed right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:shadow-xl hover:bg-accent flex items-center gap-2 text-sm font-medium"
-          aria-label="Exit dashboard and return to platform"
-          type="button"
-        >
-          <span>Platform</span>
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </button>
+      <SidebarProvider>
+        <DashboardNavigationProvider>
+          <DashboardSidebar dashboardMode={dashboardMode} />
+          <SidebarInset>
+            <div className="min-h-screen relative overflow-hidden bg-background">
+              {/* Fixed Header with Exit Button and Mode Toggle */}
+              <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
+                <div className="container mx-auto px-6 py-3 max-w-7xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <SidebarTrigger />
+                      <ModeToggle currentMode={dashboardMode} onModeChange={handleModeChange} />
+                    </div>
+                    <button
+                      onClick={() => navigate('/')}
+                      className="rounded-sm opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:shadow-xl hover:bg-accent flex items-center gap-2 text-sm font-medium"
+                      aria-label="Exit dashboard and return to platform"
+                      type="button"
+                    >
+                      <span>Platform</span>
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </div>
 
         {/* Modern Wallpaper Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -229,45 +258,45 @@ export const PersonalizedDashboardV2 = () => {
           />
         </div>
 
-        {/* Dashboard Content */}
-        <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                {dashboardMode === 'focus'
-                  ? 'Here\'s your focus for today'
-                  : dashboardMode === 'dashboard'
-                  ? 'Your dashboard overview'
-                  : 'Full control center'}
-              </p>
+              {/* Dashboard Content */}
+              <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
+                {/* Header */}
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    {dashboardMode === 'focus'
+                      ? 'Here\'s your focus for today'
+                      : dashboardMode === 'dashboard'
+                      ? 'Your dashboard overview'
+                      : 'Full control center'}
+                  </p>
+                </div>
+
+                {/* Dynamic View Based on Mode */}
+                {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
+                {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
+                {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
+              </div>
+
+              {/* Daily Goal Modal */}
+              <DailyGoalModal
+                open={showDailyGoal}
+                onOpenChange={setShowDailyGoal}
+                currentStreak={currentStreak}
+                mode={modalMode}
+                todaysCheckInId={todaysCheckInId}
+                onCheckInComplete={async () => {
+                  setHasCheckedInToday(true);
+                  hasInitializedRef.current = false;
+                  lastFetchTimeRef.current = 0;
+                }}
+              />
             </div>
-            <ModeToggle currentMode={dashboardMode} onModeChange={handleModeChange} />
-          </div>
-
-          {/* Dynamic View Based on Mode */}
-          {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
-          {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
-          {dashboardMode === 'control_center' && <ControlCenterView {...metrics} />}
-        </div>
-
-        {/* Daily Goal Modal */}
-        <DailyGoalModal
-          open={showDailyGoal}
-          onOpenChange={setShowDailyGoal}
-          currentStreak={currentStreak}
-          mode={modalMode}
-          todaysCheckInId={todaysCheckInId}
-          onCheckInComplete={async () => {
-            setHasCheckedInToday(true);
-            hasInitializedRef.current = false;
-            lastFetchTimeRef.current = 0;
-          }}
-        />
-      </div>
+          </SidebarInset>
+        </DashboardNavigationProvider>
+      </SidebarProvider>
     </ErrorBoundary>
   );
 };

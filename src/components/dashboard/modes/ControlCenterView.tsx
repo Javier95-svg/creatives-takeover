@@ -30,10 +30,10 @@ export function ControlCenterView({
     <div className="space-y-8">
       {/* Hero Section: Smart Focus + Mission */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div>
+        <div id="dashboard-focus">
           <SmartFocusCard />
         </div>
-        <div>
+        <div id="weekly-mission">
           <WeeklyMissionPanel />
         </div>
       </div>
@@ -93,7 +93,7 @@ export function ControlCenterView({
       </div>
 
       {/* AI Insights - Added Value */}
-      <div>
+      <div id="ai-insights">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">AI Insights</h3>
           <p className="text-xs text-muted-foreground">Smart recommendations</p>
@@ -102,7 +102,7 @@ export function ControlCenterView({
       </div>
 
       {/* Active Projects */}
-      <div>
+      <div id="active-projects">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Active Projects</h3>
           <p className="text-xs text-muted-foreground">What you're building</p>
@@ -112,14 +112,14 @@ export function ControlCenterView({
 
       {/* Task Management - Calendar + List */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div>
+        <div id="calendar-view">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Calendar View</h3>
             <p className="text-xs text-muted-foreground">Schedule overview</p>
           </div>
           <TaskCalendar />
         </div>
-        <div>
+        <div id="your-tasks">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">All Tasks</h3>
             <p className="text-xs text-muted-foreground">Complete list</p>

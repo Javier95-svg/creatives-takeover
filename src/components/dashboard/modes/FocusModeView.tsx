@@ -18,7 +18,9 @@ export function FocusModeView({
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Hero Section: Smart Focus Card Only */}
-      <SmartFocusCard />
+      <div id="dashboard-focus">
+        <SmartFocusCard />
+      </div>
 
       {/* Minimal Key Metrics - 3 Cards Only */}
       <div className="grid gap-4 md:grid-cols-3">

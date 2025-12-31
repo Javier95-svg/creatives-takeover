@@ -26,10 +26,10 @@ export function DashboardModeView({
     <div className="space-y-6">
       {/* Hero Section: Smart Focus + Weekly Mission Side by Side */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div>
+        <div id="dashboard-focus">
           <SmartFocusCard />
         </div>
-        <div>
+        <div id="weekly-mission">
           <WeeklyMissionPanel />
         </div>
       </div>
@@ -93,7 +93,7 @@ export function DashboardModeView({
       </div>
 
       {/* Active Projects */}
-      <div>
+      <div id="active-projects">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Active Projects</h3>
           <p className="text-xs text-muted-foreground">What you're working on</p>
@@ -102,7 +102,7 @@ export function DashboardModeView({
       </div>
 
       {/* Task Overview */}
-      <div>
+      <div id="your-tasks">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Your Tasks</h3>
           <p className="text-xs text-muted-foreground">Manage your daily work</p>
