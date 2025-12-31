@@ -32,7 +32,9 @@ export const DailyGoalModal = ({
   const [goal, setGoal] = useState('');
   const [goalAchieved, setGoalAchieved] = useState<boolean | null>(null);
   const [whatWentWell, setWhatWentWell] = useState('');
-  const [reflectionNote, setReflectionNote] = useState('');
+  const [whatBlockedYou, setWhatBlockedYou] = useState('');
+  const [energyLevelEnd, setEnergyLevelEnd] = useState<number>(3);
+  const [tomorrowFocus, setTomorrowFocus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -73,7 +75,9 @@ export const DailyGoalModal = ({
           .update({
             goal_achieved: goalAchieved,
             what_went_well: whatWentWell.trim() || null,
-            reflection_note: reflectionNote.trim() || null,
+            what_blocked_you: whatBlockedYou.trim() || null,
+            energy_level_end: energyLevelEnd,
+            tomorrow_focus: tomorrowFocus.trim() || null,
           })
           .eq('id', todaysCheckInId);
 
@@ -89,7 +93,9 @@ export const DailyGoalModal = ({
       setGoal('');
       setGoalAchieved(null);
       setWhatWentWell('');
-      setReflectionNote('');
+      setWhatBlockedYou('');
+      setEnergyLevelEnd(3);
+      setTomorrowFocus('');
       onCheckInComplete?.();
     } catch (error: any) {
       console.error('Error saving check-in:', error);
@@ -170,22 +176,54 @@ export const DailyGoalModal = ({
                     placeholder="Small wins count! What are you proud of today?"
                     value={whatWentWell}
                     onChange={(e) => setWhatWentWell(e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[70px]"
                   />
                 </div>
 
-                {goalAchieved === false && (
-                  <div className="space-y-2">
-                    <Label htmlFor="reflection">What got in the way? (Optional)</Label>
-                    <Textarea
-                      id="reflection"
-                      placeholder="Understanding obstacles helps you plan better tomorrow"
-                      value={reflectionNote}
-                      onChange={(e) => setReflectionNote(e.target.value)}
-                      className="min-h-[80px]"
-                    />
+                <div className="space-y-2">
+                  <Label htmlFor="blocked">What blocked you? (Optional)</Label>
+                  <Textarea
+                    id="blocked"
+                    placeholder="Technical issues, distractions, unclear requirements..."
+                    value={whatBlockedYou}
+                    onChange={(e) => setWhatBlockedYou(e.target.value)}
+                    className="min-h-[70px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Energy level at end of day</Label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setEnergyLevelEnd(level)}
+                        className={`flex-1 py-2 px-3 rounded-lg border-2 transition-colors ${
+                          energyLevelEnd === level
+                            ? 'border-primary bg-primary/10 text-primary font-medium'
+                            : 'border-muted hover:border-muted-foreground/30'
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
                   </div>
-                )}
+                  <p className="text-xs text-muted-foreground">
+                    1 = Exhausted • 5 = Energized
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tomorrow">Tomorrow's focus (Optional)</Label>
+                  <Textarea
+                    id="tomorrow"
+                    placeholder="What's the one thing you want to accomplish tomorrow?"
+                    value={tomorrowFocus}
+                    onChange={(e) => setTomorrowFocus(e.target.value)}
+                    className="min-h-[70px]"
+                  />
+                </div>
               </div>
             </>
           )}

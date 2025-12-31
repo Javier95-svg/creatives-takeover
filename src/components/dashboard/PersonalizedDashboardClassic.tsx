@@ -15,7 +15,7 @@ import { GmailIntegration } from './GmailIntegration';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SmartRecommendations } from '@/components/smart/SmartRecommendations';
 
-export const PersonalizedDashboard = () => {
+export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isInitializing } = useDashboardInitialization();

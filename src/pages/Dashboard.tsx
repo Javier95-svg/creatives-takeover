@@ -1,16 +1,38 @@
-import { PersonalizedDashboard } from '@/components/dashboard/PersonalizedDashboard';
+import { PersonalizedDashboardClassic } from '@/components/dashboard/PersonalizedDashboardClassic';
+import { PersonalizedDashboardV2 } from '@/components/dashboard/PersonalizedDashboardV2';
 import DashboardPreview from '@/components/DashboardPreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { checkFeatureAccess } = useFeatureGating();
   const navigate = useNavigate();
+  const [useClassicDashboard, setUseClassicDashboard] = useState(false);
+
+  // Load user's dashboard preference
+  useEffect(() => {
+    if (!user) return;
+
+    const loadDashboardPreference = async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('use_classic_dashboard')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setUseClassicDashboard(profile.use_classic_dashboard || false);
+      }
+    };
+
+    loadDashboardPreference();
+  }, [user]);
 
   useEffect(() => {
     // #region agent log
@@ -83,7 +105,8 @@ const Dashboard = () => {
     );
   }
 
-  return <PersonalizedDashboard />;
+  // Render the appropriate dashboard version based on user preference
+  return useClassicDashboard ? <PersonalizedDashboardClassic /> : <PersonalizedDashboardV2 />;
 };
 
 export default Dashboard;
