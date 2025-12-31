@@ -4,8 +4,14 @@ import { ActiveProjects } from '../ActiveProjects';
 import { TaskOverview } from '../TaskOverview';
 import { TaskCalendar } from '../TaskCalendar';
 import { SmartRecommendations } from '@/components/smart/SmartRecommendations';
+import { MonthlyRevenueTarget } from '../MonthlyRevenueTarget';
+import { CoreMetrics } from '../CoreMetrics';
+import { QuickWins } from '../QuickWins';
+import { BusinessHealthScore } from '../BusinessHealthScore';
+import { GmailIntegration } from '../GmailIntegration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ControlCenterViewProps {
   streak: number;
@@ -26,6 +32,8 @@ export function ControlCenterView({
   tasksCompletedThisWeek,
   totalTasksThisWeek,
 }: ControlCenterViewProps) {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-8">
       {/* Hero Section: Smart Focus + Mission */}
@@ -92,13 +100,28 @@ export function ControlCenterView({
         </Card>
       </div>
 
-      {/* AI Insights - Added Value */}
-      <div id="ai-insights">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">AI Insights</h3>
-          <p className="text-xs text-muted-foreground">Smart recommendations</p>
+      {/* Revenue & Core Metrics */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="monthly-revenue">
+          <MonthlyRevenueTarget />
         </div>
-        <SmartRecommendations />
+        <div id="core-metrics">
+          <CoreMetrics />
+        </div>
+      </div>
+
+      {/* AI Insights & Business Health */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="ai-insights">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">AI Insights</h3>
+            <p className="text-xs text-muted-foreground">Smart recommendations</p>
+          </div>
+          <SmartRecommendations />
+        </div>
+        <div id="business-health">
+          {user && <BusinessHealthScore userId={user.id} />}
+        </div>
       </div>
 
       {/* Active Projects */}
@@ -110,7 +133,7 @@ export function ControlCenterView({
         <ActiveProjects />
       </div>
 
-      {/* Task Management - Calendar + List */}
+      {/* Task Management - Calendar + Quick Wins */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="calendar-view">
           <div className="flex items-center justify-between mb-4">
@@ -119,12 +142,22 @@ export function ControlCenterView({
           </div>
           <TaskCalendar />
         </div>
+        <div id="quick-wins">
+          <QuickWins />
+        </div>
+      </div>
+
+      {/* Tasks & Integrations */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <div id="your-tasks">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">All Tasks</h3>
             <p className="text-xs text-muted-foreground">Complete list</p>
           </div>
           <TaskOverview />
+        </div>
+        <div id="gmail-integration">
+          <GmailIntegration />
         </div>
       </div>
     </div>

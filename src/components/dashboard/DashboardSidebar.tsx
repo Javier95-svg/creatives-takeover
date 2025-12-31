@@ -55,7 +55,10 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
     if (dashboardMode === 'dashboard' || dashboardMode === 'control-center') {
       baseItems.push(
         { id: 'weekly-mission', label: 'Weekly Mission', icon: Calendar },
+        { id: 'monthly-revenue', label: 'Monthly Revenue', icon: TrendingUp },
+        { id: 'core-metrics', label: 'Core Metrics', icon: Target },
         { id: 'active-projects', label: 'Active Projects', icon: Briefcase },
+        { id: 'quick-wins', label: 'Quick Wins', icon: Sparkles },
         { id: 'your-tasks', label: 'Your Tasks', icon: CheckSquare }
       );
     }
@@ -63,6 +66,7 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
     if (dashboardMode === 'control-center') {
       baseItems.push(
         { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
+        { id: 'business-health', label: 'Business Health', icon: TrendingUp },
         { id: 'calendar-view', label: 'Calendar View', icon: CalendarDays }
       );
     }

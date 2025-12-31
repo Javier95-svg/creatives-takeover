@@ -2,6 +2,9 @@ import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
 import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
 import { ActiveProjects } from '../ActiveProjects';
 import { TaskOverview } from '../TaskOverview';
+import { MonthlyRevenueTarget } from '../MonthlyRevenueTarget';
+import { CoreMetrics } from '../CoreMetrics';
+import { QuickWins } from '../QuickWins';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
 
@@ -92,6 +95,16 @@ export function DashboardModeView({
         </Card>
       </div>
 
+      {/* Revenue & Metrics Section */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="monthly-revenue">
+          <MonthlyRevenueTarget />
+        </div>
+        <div id="core-metrics">
+          <CoreMetrics />
+        </div>
+      </div>
+
       {/* Active Projects */}
       <div id="active-projects">
         <div className="flex items-center justify-between mb-4">
@@ -101,13 +114,18 @@ export function DashboardModeView({
         <ActiveProjects />
       </div>
 
-      {/* Task Overview */}
-      <div id="your-tasks">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Your Tasks</h3>
-          <p className="text-xs text-muted-foreground">Manage your daily work</p>
+      {/* Quick Wins & Tasks */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="quick-wins">
+          <QuickWins />
         </div>
-        <TaskOverview />
+        <div id="your-tasks">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Your Tasks</h3>
+            <p className="text-xs text-muted-foreground">Manage your daily work</p>
+          </div>
+          <TaskOverview />
+        </div>
       </div>
     </div>
   );

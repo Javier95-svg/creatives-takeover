@@ -29,8 +29,8 @@ const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWr
     dashboardMode === 'focus'
       ? ['dashboard-focus']
       : dashboardMode === 'dashboard'
-      ? ['dashboard-focus', 'weekly-mission', 'active-projects', 'your-tasks']
-      : ['dashboard-focus', 'weekly-mission', 'ai-insights', 'active-projects', 'calendar-view', 'your-tasks'];
+      ? ['dashboard-focus', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'active-projects', 'quick-wins', 'your-tasks']
+      : ['dashboard-focus', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'ai-insights', 'business-health', 'active-projects', 'calendar-view', 'quick-wins', 'your-tasks', 'gmail-integration'];
 
   // Initialize active section tracking (now inside the provider)
   useActiveSection(sectionIds);
