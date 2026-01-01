@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Sparkles, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { trackOnboardingComplete, trackOnboardingDismissed } from '@/lib/onboardingAnalytics';
 
 interface OnboardingChecklistProps {
   userId: string;
@@ -91,6 +92,9 @@ export const OnboardingChecklist = ({
             .update({ onboarding_completed: true })
             .eq('id', userId);
 
+          // Track completion analytics
+          await trackOnboardingComplete(userId);
+
           // Show celebration
           confetti({
             particleCount: 100,
@@ -115,6 +119,9 @@ export const OnboardingChecklist = ({
 
   const handleDismiss = async () => {
     try {
+      // Track dismissal analytics
+      await trackOnboardingDismissed(userId, completedCount, totalCount);
+
       // Mark onboarding as completed even if not all items are done
       await supabase
         .from('profiles')
