@@ -122,7 +122,7 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
     sidebarPreferences.showTechStack && { path: '/bizmap-ai?mode=tech-stack', label: 'Tech Stack', icon: Zap },
     sidebarPreferences.showAcceleratorHunt && { path: '/insighta?mode=accelerator', label: 'Accelerator Hunt', icon: Rocket },
     sidebarPreferences.showInsighta && { path: '/insighta', label: 'Investor Match', icon: DollarSign },
-    sidebarPreferences.showCommunity && { path: '/community', label: 'Community', icon: Users },
+    sidebarPreferences.showCommunity && { path: '/community', label: 'Find a Mentor', icon: Users },
     sidebarPreferences.showRead && { path: '/stories', label: 'Read', icon: BookOpen },
   ].filter(Boolean) as { path: string; label: string; icon: any }[];
 
