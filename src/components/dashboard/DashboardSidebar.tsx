@@ -67,7 +67,12 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
       baseItems.push(
         { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
         { id: 'business-health', label: 'Business Health', icon: TrendingUp },
-        { id: 'calendar-view', label: 'Calendar View', icon: CalendarDays }
+        { id: 'calendar-view', label: 'Calendar', icon: CalendarDays },
+        { id: 'daily-priorities', label: 'Daily Priorities', icon: Target },
+        { id: 'progress-timeline', label: 'Progress', icon: TrendingUp },
+        { id: 'key-milestones', label: 'Milestones', icon: Target },
+        { id: 'revenue-hub', label: 'Budget', icon: TrendingUp },
+        { id: 'market-validation', label: 'Market Intel', icon: Target }
       );
     }
 
@@ -75,10 +80,9 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
   };
 
   const toolsItems = [
-    { path: '/chat', label: 'AI Advisor', icon: MessageSquare },
-    { path: '/business-health', label: 'Business Health', icon: TrendingUp },
-    { path: '/market-validation', label: 'Market Validation', icon: Target },
+    { path: '/bizmap-ai', label: 'BizMap AI', icon: MessageSquare },
     { path: '/community', label: 'Community', icon: Users },
+    { path: '/stories', label: 'Resources', icon: BookOpen },
   ];
 
   const settingsItems = [

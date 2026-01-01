@@ -53,7 +53,7 @@ export const PersonalizedDashboardV2 = () => {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [todaysCheckInId, setTodaysCheckInId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('focus');
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('dashboard');
 
   // Track last fetch time to prevent unnecessary refreshes
   const lastFetchTimeRef = useRef<number>(0);
