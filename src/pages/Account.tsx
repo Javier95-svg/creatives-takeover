@@ -16,6 +16,8 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import { FriendRequestsModal } from "@/components/social/FriendRequestsModal";
 import { useSocial } from "@/hooks/useSocial";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
+import { AccountWallpaper } from "@/components/AccountWallpaper";
+import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
 
 const Account = () => {
   const { user } = useAuth();
@@ -300,11 +302,11 @@ const Account = () => {
   if (!user) {
     return (
       <div className="relative min-h-screen overflow-hidden">
-        <AnimatedBackground />
+        <AccountWallpaper />
         <div className="relative z-10">
           <Navigation />
           <div className="container mx-auto px-6 pt-24">
-            <Card className="max-w-md mx-auto">
+            <Card className="max-w-md mx-auto backdrop-blur-sm bg-card/80 border-border/50">
               <CardHeader>
                 <CardTitle>Access Denied</CardTitle>
                 <CardDescription>
@@ -320,21 +322,42 @@ const Account = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <AnimatedBackground />
+      <AccountWallpaper />
       <div className="relative z-10">
         <Navigation />
-        <div className="container mx-auto px-6 pt-24">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold gradient-text">My Account</h1>
-            <p className="text-muted-foreground mt-2">
+        <div className="container mx-auto px-6 pt-24 pb-12">
+          {/* Centered Hero Section */}
+          <div className="text-center py-12 space-y-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
+              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                My Account
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
               Manage your account information and preferences.
             </p>
           </div>
 
-          <form onSubmit={handleUpdateProfile} className="space-y-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* Profile Completion Tracker */}
+            <ProfileCompletionTracker
+              fullName={fullName}
+              bio={bio}
+              avatarUrl={avatarUrl}
+              socialLinks={{
+                twitter: twitterUrl,
+                linkedin: linkedinUrl,
+                instagram: instagramUrl,
+                facebook: facebookUrl,
+                youtube: youtubeUrl,
+                github: githubUrl,
+                website: websiteUrl,
+              }}
+            />
+
+            <form onSubmit={handleUpdateProfile} className="space-y-8">
             {/* Profile Picture Section */}
-            <Card>
+            <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Camera className="w-5 h-5" />
@@ -388,7 +411,7 @@ const Account = () => {
             </Card>
 
             {/* Personal Information */}
-            <Card>
+            <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
@@ -430,7 +453,7 @@ const Account = () => {
             </Card>
 
             {/* Social Media Links */}
-            <Card>
+            <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="w-5 h-5" />
@@ -544,7 +567,7 @@ const Account = () => {
             </Card>
 
             {/* Save Button */}
-            <Card>
+            <Card className="backdrop-blur-sm bg-card/80 border-border/50">
               <CardContent className="pt-6">
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? (
@@ -564,7 +587,7 @@ const Account = () => {
           </form>
 
           {/* Social Stats & Friend Requests */}
-          <Card>
+          <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
@@ -613,7 +636,7 @@ const Account = () => {
           </Card>
 
           {/* Account Information */}
-          <Card>
+          <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="w-5 h-5" />
