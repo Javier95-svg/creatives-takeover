@@ -248,6 +248,7 @@ const Account = () => {
     e.preventDefault();
     if (!user) return;
 
+    console.log('Starting profile update...', { userId: user.id, bio });
     setLoading(true);
     try {
       // Update user metadata
@@ -258,10 +259,13 @@ const Account = () => {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Auth update error:', authError);
+        throw authError;
+      }
 
       // Update profiles table
-      const { error: profileError } = await supabase
+      const { data: updateData, error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: fullName,
@@ -275,9 +279,15 @@ const Account = () => {
           github_url: githubUrl,
           website_url: websiteUrl,
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
-      if (profileError) throw profileError;
+      console.log('Profile update result:', { updateData, profileError });
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
 
       // Update initial values after successful save
       setInitialValues({
@@ -294,7 +304,9 @@ const Account = () => {
       });
 
       toast.success("Profile updated successfully!");
+      console.log('Profile updated successfully!');
     } catch (error: any) {
+      console.error('Update profile error:', error);
       toast.error("Failed to update profile: " + error.message);
     } finally {
       setLoading(false);
@@ -335,7 +347,7 @@ const Account = () => {
           <div className="text-center py-12 space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-                My Account
+                Account
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
