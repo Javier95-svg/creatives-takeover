@@ -574,12 +574,12 @@ const Hero = () => {
             {/* Enhanced CTA Section */}
             <div className="mb-8 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               {isAuthenticated ? (
-                /* Authenticated User CTAs: Open Dashboard + Explore Features */
+                /* Authenticated User CTA: Open Dashboard Only */
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
                 {/* Primary CTA - Open Dashboard with Animation */}
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300 animate-dashboard-cta" 
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300 animate-dashboard-cta"
                   asChild
                 >
                   <Link to="/dashboard" onClick={handleDashboardCTAClick}>
@@ -590,20 +590,6 @@ const Hero = () => {
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </Link>
-                </Button>
-
-                {/* Secondary CTA - Explore Features */}
-                <Button 
-                  variant="outline"
-                  size="lg" 
-                  className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSecondaryCTAClick(e as any);
-                  }}
-                >
-                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                  Explore Features
                 </Button>
               </div>
             ) : (
