@@ -46,6 +46,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
 import Account from "./pages/Account";
+import SetupQuiz from "./pages/SetupQuiz";
 import Messages from "./pages/Messages";
 import CreativesTakeover from "./pages/CreativesTakeover";
 import RAGTest from "./pages/RAGTest";
@@ -134,6 +135,7 @@ function App() {
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/account" element={<Account />} />
+                  <Route path="/setup-quiz" element={<SetupQuiz />} />
                   <Route path="/insighta" element={<Blog />} />
                   <Route path="/insighta/vc-search" element={<VCSearchPage />} />
                   <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />

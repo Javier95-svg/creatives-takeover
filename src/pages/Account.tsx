@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -305,6 +305,13 @@ const Account = () => {
 
       toast.success("Profile updated successfully!");
       console.log('Profile updated successfully!');
+
+      // Redirect to setup quiz if this is from onboarding
+      if (showOnboarding) {
+        setTimeout(() => {
+          window.location.href = '/setup-quiz';
+        }, 1000);
+      }
     } catch (error: any) {
       console.error('Update profile error:', error);
       toast.error("Failed to update profile: " + error.message);
@@ -347,7 +354,7 @@ const Account = () => {
           <div className="text-center py-12 space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-                Account
+                My Profile
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
@@ -611,7 +618,12 @@ const Account = () => {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Updating Profile...
+                      {showOnboarding ? 'Saving...' : 'Updating Profile...'}
+                    </>
+                  ) : showOnboarding ? (
+                    <>
+                      Continue
+                      <ArrowRight className="w-4 h-4 ml-2" />
                     </>
                   ) : (
                     <>
