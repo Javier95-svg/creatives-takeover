@@ -93,7 +93,6 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
         { id: 'weekly-mission', label: 'Weekly Mission', icon: Calendar },
         { id: 'monthly-revenue', label: 'Monthly Revenue', icon: TrendingUp },
         { id: 'core-metrics', label: 'Core Metrics', icon: Target },
-        { id: 'active-projects', label: 'Active Projects', icon: Briefcase },
         { id: 'quick-wins', label: 'Quick Wins', icon: Sparkles },
         { id: 'your-tasks', label: 'Your Tasks', icon: CheckSquare }
       );

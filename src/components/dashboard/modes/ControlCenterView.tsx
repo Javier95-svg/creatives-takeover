@@ -1,6 +1,5 @@
 import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
 import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
-import { ActiveProjects } from '../ActiveProjects';
 import { TaskOverview } from '../TaskOverview';
 import { TaskCalendar } from '../TaskCalendar';
 import { SmartRecommendations } from '@/components/smart/SmartRecommendations';
@@ -132,15 +131,6 @@ export function ControlCenterView({
         <div id="business-health">
           {user && <BusinessHealthScore userId={user.id} />}
         </div>
-      </div>
-
-      {/* Active Projects */}
-      <div id="active-projects">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Active Projects</h3>
-          <p className="text-xs text-muted-foreground">What you're building</p>
-        </div>
-        <ActiveProjects />
       </div>
 
       {/* Task Management - Calendar + Quick Wins */}
