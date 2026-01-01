@@ -199,6 +199,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   logError('Failed to send admin notification or welcome email', notificationError);
                 }
               }
+
+              // Handle first-time user onboarding redirection
+              try {
+                const { data: profileData } = await supabase
+                  .from('profiles')
+                  .select('onboarding_completed, first_login_at')
+                  .eq('id', session.user.id)
+                  .single();
+
+                // Update first_login_at if this is truly the first login
+                if (profileData && !profileData.first_login_at) {
+                  await supabase
+                    .from('profiles')
+                    .update({ first_login_at: new Date().toISOString() })
+                    .eq('id', session.user.id);
+                }
+
+                // Redirect to account page if onboarding not completed
+                if (profileData && !profileData.onboarding_completed) {
+                  // Check if we've already redirected in this session to prevent loops
+                  const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${session.user.id}`);
+
+                  if (!hasRedirected) {
+                    // Mark that we've redirected to prevent loops
+                    sessionStorage.setItem(`onboarding_redirect_${session.user.id}`, 'true');
+
+                    // Small delay to ensure auth state is fully settled
+                    setTimeout(() => {
+                      // Only redirect if not already on account page
+                      if (!window.location.pathname.includes('/account')) {
+                        window.location.href = '/account';
+                        logInfo('Redirected first-time user to account page', { userId: session.user.id });
+                      }
+                    }, 1500);
+                  }
+                }
+              } catch (onboardingError) {
+                logError('Failed to check onboarding status', onboardingError, { userId: session.user.id });
+              }
             } else {
               logError('Profile does not exist after sign in - user may experience issues', null, { userId: session.user.id });
             }

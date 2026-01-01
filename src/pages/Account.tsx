@@ -18,11 +18,13 @@ import { useSocial } from "@/hooks/useSocial";
 import { ProfilePictureCropModal } from "@/components/ProfilePictureCropModal";
 import { AccountWallpaper } from "@/components/AccountWallpaper";
 import { ProfileCompletionTracker } from "@/components/ProfileCompletionTracker";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 
 const Account = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [friendRequestsOpen, setFriendRequestsOpen] = useState(false);
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState("");
@@ -93,7 +95,7 @@ const Account = () => {
             githubUrl: data.github_url || "",
             websiteUrl: data.website_url || "",
           };
-          
+
           setFullName(profileData.fullName);
           setAvatarUrl(profileData.avatarUrl);
           setBio(profileData.bio);
@@ -105,11 +107,14 @@ const Account = () => {
           setGithubUrl(profileData.githubUrl);
           setWebsiteUrl(profileData.websiteUrl);
           setInitialValues(profileData);
-          
+
           // Set social counts
           setFollowersCount(data.followers_count || 0);
           setFollowingCount(data.following_count || 0);
           setFriendsCount(data.friends_count || 0);
+
+          // Check if user should see onboarding checklist
+          setShowOnboarding(data.onboarding_completed === false);
         }
         
         // Fetch posts count
@@ -339,21 +344,42 @@ const Account = () => {
           </div>
 
           <div className="max-w-4xl mx-auto space-y-8">
-            {/* Profile Completion Tracker */}
-            <ProfileCompletionTracker
-              fullName={fullName}
-              bio={bio}
-              avatarUrl={avatarUrl}
-              socialLinks={{
-                twitter: twitterUrl,
-                linkedin: linkedinUrl,
-                instagram: instagramUrl,
-                facebook: facebookUrl,
-                youtube: youtubeUrl,
-                github: githubUrl,
-                website: websiteUrl,
-              }}
-            />
+            {/* Onboarding Checklist (for first-time users) */}
+            {showOnboarding && user && (
+              <OnboardingChecklist
+                userId={user.id}
+                fullName={fullName}
+                bio={bio}
+                avatarUrl={avatarUrl}
+                socialLinks={{
+                  twitter: twitterUrl,
+                  linkedin: linkedinUrl,
+                  instagram: instagramUrl,
+                  facebook: facebookUrl,
+                  youtube: youtubeUrl,
+                  github: githubUrl,
+                  website: websiteUrl,
+                }}
+              />
+            )}
+
+            {/* Profile Completion Tracker (for all users) */}
+            {!showOnboarding && (
+              <ProfileCompletionTracker
+                fullName={fullName}
+                bio={bio}
+                avatarUrl={avatarUrl}
+                socialLinks={{
+                  twitter: twitterUrl,
+                  linkedin: linkedinUrl,
+                  instagram: instagramUrl,
+                  facebook: facebookUrl,
+                  youtube: youtubeUrl,
+                  github: githubUrl,
+                  website: websiteUrl,
+                }}
+              />
+            )}
 
             <form onSubmit={handleUpdateProfile} className="space-y-8">
             {/* Profile Picture Section */}
