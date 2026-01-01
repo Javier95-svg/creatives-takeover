@@ -14,6 +14,19 @@ import { MonthlyRevenueTarget } from './MonthlyRevenueTarget';
 import { GmailIntegration } from './GmailIntegration';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SmartRecommendations } from '@/components/smart/SmartRecommendations';
+import { BusinessHealthScore } from './BusinessHealthScore';
+import { BusinessHealthSummary } from './BusinessHealthSummary';
+import { RevenueHub } from './RevenueHub';
+import { ProgressTimeline } from './ProgressTimeline';
+import { KeyMilestones } from './KeyMilestones';
+import { FounderHealthCheck } from './FounderHealthCheck';
+import { MarketValidationHub } from './MarketValidationHub';
+import { MomentumMeter } from './MomentumMeter';
+import { CoreMetrics } from './CoreMetrics';
+import { DailyPriorities } from './DailyPriorities';
+import { QuickWins } from './QuickWins';
+import { RecentWins } from './RecentWins';
+import { FounderResources } from './FounderResources';
 
 export const PersonalizedDashboardClassic = () => {
   const { user } = useAuth();
@@ -265,19 +278,64 @@ export const PersonalizedDashboardClassic = () => {
           <SmartRecommendations maxRecommendations={2} />
         </div>
 
+        {/* Core Metrics and Business Health - Two columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0" style={{ animationDelay: '0.08s', animationFillMode: 'forwards' }}>
+          <CoreMetrics />
+          <BusinessHealthScore />
+        </div>
+
+        {/* Daily Priorities and Quick Wins - Two columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+          <DailyPriorities />
+          <QuickWins />
+        </div>
+
         {/* Active Projects */}
-        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.12s', animationFillMode: 'forwards' }}>
           <ActiveProjects />
         </div>
 
-        {/* Monthly Revenue Target - Full Width */}
+        {/* Progress Timeline and Momentum Meter - Two columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0" style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
+          <ProgressTimeline />
+          <MomentumMeter />
+        </div>
+
+        {/* Key Milestones */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.18s', animationFillMode: 'forwards' }}>
+          <KeyMilestones />
+        </div>
+
+        {/* Revenue Hub - Full Width */}
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+          <RevenueHub />
+        </div>
+
+        {/* Monthly Revenue Target - Full Width */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.22s', animationFillMode: 'forwards' }}>
           <MonthlyRevenueTarget />
+        </div>
+
+        {/* Business Health Summary and Founder Health Check - Two columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
+          <BusinessHealthSummary />
+          <FounderHealthCheck />
+        </div>
+
+        {/* Market Validation Hub - Full Width */}
+        <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.28s', animationFillMode: 'forwards' }}>
+          <MarketValidationHub />
         </div>
 
         {/* Task Overview - Below Active Projects, Matching Width */}
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
           <TaskOverview />
+        </div>
+
+        {/* Recent Wins and Founder Resources - Two columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0" style={{ animationDelay: '0.32s', animationFillMode: 'forwards' }}>
+          <RecentWins />
+          <FounderResources />
         </div>
           </div>
 
