@@ -9,6 +9,16 @@ import { CoreMetrics } from '../CoreMetrics';
 import { QuickWins } from '../QuickWins';
 import { BusinessHealthScore } from '../BusinessHealthScore';
 import { GmailIntegration } from '../GmailIntegration';
+import { RevenueHub } from '../RevenueHub';
+import { ProgressTimeline } from '../ProgressTimeline';
+import { KeyMilestones } from '../KeyMilestones';
+import { FounderHealthCheck } from '../FounderHealthCheck';
+import { MarketValidationHub } from '../MarketValidationHub';
+import { BusinessHealthSummary } from '../BusinessHealthSummary';
+import { MomentumMeter } from '../MomentumMeter';
+import { DailyPriorities } from '../DailyPriorities';
+import { RecentWins } from '../RecentWins';
+import { FounderResources } from '../FounderResources';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -158,6 +168,64 @@ export function ControlCenterView({
         </div>
         <div id="gmail-integration">
           <GmailIntegration />
+        </div>
+      </div>
+
+      {/* Daily Priorities & Progress Timeline */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="daily-priorities">
+          <DailyPriorities />
+        </div>
+        <div id="progress-timeline">
+          <ProgressTimeline />
+        </div>
+      </div>
+
+      {/* Milestones & Momentum */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="key-milestones">
+          <KeyMilestones />
+        </div>
+        <div id="momentum-meter">
+          <MomentumMeter />
+        </div>
+      </div>
+
+      {/* Revenue Hub - Full Width */}
+      <div id="revenue-hub">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Revenue Hub</h3>
+          <p className="text-xs text-muted-foreground">Budget & financial tracking</p>
+        </div>
+        <RevenueHub />
+      </div>
+
+      {/* Business Health Summary & Founder Health */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="business-health-summary">
+          <BusinessHealthSummary />
+        </div>
+        <div id="founder-health">
+          <FounderHealthCheck />
+        </div>
+      </div>
+
+      {/* Market Validation Hub - Full Width */}
+      <div id="market-validation">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Market Validation</h3>
+          <p className="text-xs text-muted-foreground">Market intelligence & insights</p>
+        </div>
+        <MarketValidationHub />
+      </div>
+
+      {/* Recent Wins & Resources */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="recent-wins">
+          <RecentWins />
+        </div>
+        <div id="founder-resources">
+          <FounderResources />
         </div>
       </div>
     </div>
