@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import {
   Target,
   Calendar,
@@ -12,6 +13,10 @@ import {
   MessageSquare,
   Settings,
   Command,
+  Zap,
+  Rocket,
+  DollarSign,
+  FlaskConical,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -29,6 +34,9 @@ import {
 import { useScrollToSection } from '@/hooks/useScrollToSection';
 import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
 import { DashboardMode } from './modes/ModeToggle';
+import { DashboardCustomization } from './DashboardCustomization';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DashboardSidebarProps {
   dashboardMode: DashboardMode;
@@ -38,6 +46,34 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
   const scrollToSection = useScrollToSection();
   const { activeSection } = useDashboardNavigation();
   const { setOpenMobile, isMobile } = useSidebar();
+  const { user } = useAuth();
+  const [sidebarPreferences, setSidebarPreferences] = useState({
+    showBizMapAI: true,
+    showPMFLab: false,
+    showTechStack: false,
+    showAcceleratorHunt: false,
+    showInsighta: false,
+    showCommunity: true,
+    showRead: true,
+  });
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('sidebar_preferences')
+        .eq('id', user.id)
+        .single();
+
+      if (data?.sidebar_preferences) {
+        setSidebarPreferences({ ...sidebarPreferences, ...data.sidebar_preferences });
+      }
+    };
+
+    loadPreferences();
+  }, [user]);
 
   const handleSectionClick = (sectionId: string) => {
     scrollToSection(sectionId);
@@ -79,15 +115,16 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
     return baseItems;
   };
 
+  // Build tools items based on user preferences
   const toolsItems = [
-    { path: '/bizmap-ai', label: 'BizMap AI', icon: MessageSquare },
-    { path: '/community', label: 'Community', icon: Users },
-    { path: '/stories', label: 'Resources', icon: BookOpen },
-  ];
-
-  const settingsItems = [
-    { path: '/settings?tab=dashboard', label: 'Customize Dashboard', icon: Settings },
-  ];
+    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai', label: 'BizMap AI', icon: MessageSquare },
+    sidebarPreferences.showPMFLab && { path: '/bizmap-ai?mode=pmf-lab', label: 'PMF Lab', icon: FlaskConical },
+    sidebarPreferences.showTechStack && { path: '/bizmap-ai?mode=tech-stack', label: 'Tech Stack', icon: Zap },
+    sidebarPreferences.showAcceleratorHunt && { path: '/insighta?mode=accelerator', label: 'Accelerator Hunt', icon: Rocket },
+    sidebarPreferences.showInsighta && { path: '/insighta', label: 'Investor Match', icon: DollarSign },
+    sidebarPreferences.showCommunity && { path: '/community', label: 'Community', icon: Users },
+    sidebarPreferences.showRead && { path: '/stories', label: 'Read', icon: BookOpen },
+  ].filter(Boolean) as { path: string; label: string; icon: any }[];
 
   return (
     <Sidebar collapsible="icon" className="glass-sidebar" variant="floating" side="left">
@@ -148,16 +185,9 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
           <SidebarGroupLabel>Personalize</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <DashboardCustomization />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
