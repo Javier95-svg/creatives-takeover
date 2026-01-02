@@ -47,7 +47,6 @@ const Navigation = () => {
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     "Home": Home,
     "BizMap AI": Bot,
-    "Prompt Library": BookOpen,
     "Insighta": TrendingUp,
     "Community": UsersIcon,
     "Stories": FileText,
@@ -116,7 +115,6 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", href: "/", tooltip: "Return to homepage", icon: Home },
     { name: "BizMap AI", href: "/bizmap-ai", tooltip: "AI Co-Founder that creates your business plan", icon: Bot },
-    { name: "Prompt Library", href: "/prompt-library", tooltip: "Ready-made prompts to grow your business", icon: BookOpen },
     { name: "Insighta", href: "/insighta", tooltip: "Funding opportunities and investment resources", icon: TrendingUp },
     { name: "Community", href: "/community", tooltip: "Connect with fellow creative entrepreneurs", icon: UsersIcon },
     { name: "Stories", href: "/stories", tooltip: "Read insights and articles about building your business", icon: FileText },
