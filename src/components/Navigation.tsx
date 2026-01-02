@@ -60,6 +60,7 @@ const Navigation = () => {
     { name: "Business Planning", href: "/bizmap-ai", icon: Lightbulb, description: "30-day business plan wizard" },
     { name: "PMF Lab", href: "/bizmap-ai/pmf-lab", icon: Target, description: "Analyze your product-market fit" },
     { name: "Tech Stack", href: "/bizmap-ai/tech-stack", icon: Boxes, description: "Build your ideal tech stack" },
+    { name: "Prompt Library", href: "/prompt-library", icon: BookOpen, description: "AI prompts for entrepreneurs" },
   ];
 
   // Insighta submenu items
