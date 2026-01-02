@@ -259,7 +259,7 @@ const Navigation = () => {
                           </TooltipContent>
                         </Tooltip>
                         <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Funding Resources</DropdownMenuLabel>
+                          <DropdownMenuLabel>Fundraising Tools</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           {insightaSubmenu.map((subItem) => {
                             const SubIcon = subItem.icon;
