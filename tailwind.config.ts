@@ -129,7 +129,21 @@ export default {
 				'section-desktop': '80px',
 				'section-mobile': '60px',
 			},
-			backgroundImage: {
+			boxShadow: {
+				// Modern, subtle shadows - Professional SaaS quality
+				'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+				'DEFAULT': '0 2px 4px -1px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.04)',
+				'md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06)',
+				'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
+				'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04)',
+				'2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+				'inner': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.06)',
+				'none': 'none',
+				// Colored shadows for emphasis
+				'primary': '0 4px 14px 0 hsl(var(--primary) / 0.25)',
+				'primary-lg': '0 8px 24px 0 hsl(var(--primary) / 0.3)',
+			},
+backgroundImage: {
 				'gradient-rgb': 'var(--gradient-rgb)',
 				'gradient-rgb-vertical': 'var(--gradient-rgb-vertical)',
 				'gradient-rgb-horizontal': 'var(--gradient-rgb-horizontal)',
