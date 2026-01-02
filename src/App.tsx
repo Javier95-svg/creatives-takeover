@@ -54,6 +54,7 @@ import TestPhase1 from "./pages/TestPhase1";
 import MentorMarketplaceHub from "./pages/community/MentorMarketplaceHub";
 import MentorProfilePage from "./pages/community/MentorProfilePage";
 import FindCoFounder from "./pages/community/FindCoFounder";
+import CreateCoFounderPost from "./pages/community/CreateCoFounderPost";
 import VCProfilePage from "./components/vc/VCProfilePage";
 import AcceleratorProfilePage from "./components/accelerator/AcceleratorProfilePage";
 import MentorBookingPage from "./pages/community/MentorBookingPage";
@@ -110,6 +111,7 @@ function App() {
                   <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
                   <Route path="/community/book/:id" element={<MentorBookingPage />} />
                   <Route path="/community/co-founders" element={<FindCoFounder />} />
+                  <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
                   <Route path="/community/my-bookings" element={<MyBookings />} />
                   <Route path="/community/admin/new" element={<AdminMentorEditor />} />
                   <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />

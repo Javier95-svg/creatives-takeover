@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star } from "lucide-react";
+import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus } from "lucide-react";
 
 const FindCoFounder = () => {
   return (
@@ -45,6 +46,12 @@ const FindCoFounder = () => {
                   <Button variant="outline" className="md:w-auto">
                     <Filter className="w-4 h-4 mr-2" />
                     Filters
+                  </Button>
+                  <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 md:w-auto">
+                    <Link to="/community/co-founders/create">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Post
+                    </Link>
                   </Button>
                 </div>
               </CardContent>

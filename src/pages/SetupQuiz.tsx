@@ -142,12 +142,22 @@ const SetupQuiz = () => {
 
       if (error) throw error;
 
-      toast.success('Setup complete! Redirecting to your dashboard...');
+      // Check if user is looking for a co-founder
+      if (answers.lookingForCofounder === 'yes') {
+        toast.success('Setup complete! Let\'s create your co-founder post...');
 
-      // Redirect to dashboard after 1 second
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+        // Redirect to create co-founder post page
+        setTimeout(() => {
+          navigate('/community/co-founders/create');
+        }, 1000);
+      } else {
+        toast.success('Setup complete! Redirecting to your dashboard...');
+
+        // Redirect to dashboard after 1 second
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+      }
     } catch (error: any) {
       console.error('Error saving quiz answers:', error);
       toast.error('Failed to save your answers: ' + error.message);
