@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -51,6 +51,25 @@ const Account = () => {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+
+  // Quiz responses state
+  const [quizData, setQuizData] = useState<{
+    isFirstStartup: string | null;
+    currentStage: string | null;
+    biggestChallenge: string | null;
+    launchTimeline: string | null;
+    lookingForCofounder: string | null;
+    completed: boolean;
+    completedAt: string | null;
+  }>({
+    isFirstStartup: null,
+    currentStage: null,
+    biggestChallenge: null,
+    launchTimeline: null,
+    lookingForCofounder: null,
+    completed: false,
+    completedAt: null,
+  });
 
   // Track initial values for unsaved changes detection
   const [initialValues, setInitialValues] = useState({
@@ -115,14 +134,25 @@ const Account = () => {
 
           // Check if user should see onboarding checklist
           setShowOnboarding(data.onboarding_completed === false);
+
+          // Set quiz data
+          setQuizData({
+            isFirstStartup: data.quiz_is_first_startup,
+            currentStage: data.quiz_current_stage,
+            biggestChallenge: data.quiz_biggest_challenge,
+            launchTimeline: data.quiz_launch_timeline,
+            lookingForCofounder: data.quiz_looking_for_cofounder,
+            completed: data.quiz_completed || false,
+            completedAt: data.quiz_completed_at,
+          });
         }
-        
+
         // Fetch posts count
         const { count, error: postsError } = await supabase
           .from('community_posts')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id);
-          
+
         if (!postsError && count !== null) {
           setPostsCount(count);
         }
@@ -729,11 +759,96 @@ const Account = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Onboarding Quiz Responses */}
+          {quizData.completed && (
+            <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5" />
+                  Onboarding Quiz Responses
+                </CardTitle>
+                <CardDescription>
+                  Your answers from the setup quiz
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {quizData.completedAt && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    Completed on {new Date(quizData.completedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                )}
+
+                <div className="grid gap-4">
+                  {quizData.isFirstStartup && (
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <Label className="text-sm font-medium text-muted-foreground">Is this your first startup?</Label>
+                      <p className="text-sm mt-1 font-medium">
+                        {quizData.isFirstStartup === 'yes' ? 'Yes, this is my first one' : 'No, I\'ve built before'}
+                      </p>
+                    </div>
+                  )}
+
+                  {quizData.currentStage && (
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <Label className="text-sm font-medium text-muted-foreground">Current Stage</Label>
+                      <p className="text-sm mt-1 font-medium">
+                        {quizData.currentStage === 'idea' && 'Just an idea'}
+                        {quizData.currentStage === 'building-mvp' && 'Building an MVP'}
+                        {quizData.currentStage === 'mvp-ready' && 'MVP is ready'}
+                        {quizData.currentStage === 'early-users' && 'Already have early users'}
+                        {quizData.currentStage === 'funded' && 'Funded / Revenue generating'}
+                      </p>
+                    </div>
+                  )}
+
+                  {quizData.biggestChallenge && (
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <Label className="text-sm font-medium text-muted-foreground">Biggest Challenge</Label>
+                      <p className="text-sm mt-1 font-medium">
+                        {quizData.biggestChallenge === 'idea-to-product' && 'Turning an idea into a real product'}
+                        {quizData.biggestChallenge === 'users-validation' && 'Finding users or validation'}
+                        {quizData.biggestChallenge === 'focus-accountability' && 'Staying focused and accountable'}
+                        {quizData.biggestChallenge === 'find-team' && 'Find the right people (team)'}
+                        {quizData.biggestChallenge === 'not-sure' && 'Not sure yet'}
+                      </p>
+                    </div>
+                  )}
+
+                  {quizData.launchTimeline && (
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <Label className="text-sm font-medium text-muted-foreground">Launch Timeline</Label>
+                      <p className="text-sm mt-1 font-medium">
+                        {quizData.launchTimeline === '30-days' && 'Within 30 days'}
+                        {quizData.launchTimeline === '60-days' && 'Within 60 days'}
+                        {quizData.launchTimeline === '90-plus-days' && 'Within 90+ days'}
+                        {quizData.launchTimeline === 'not-sure' && 'Not sure yet'}
+                      </p>
+                    </div>
+                  )}
+
+                  {quizData.lookingForCofounder && (
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <Label className="text-sm font-medium text-muted-foreground">Looking for a Co-Founder?</Label>
+                      <p className="text-sm mt-1 font-medium">
+                        {quizData.lookingForCofounder === 'yes' ? 'Yes' : 'No'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         </div>
-        <FriendRequestsModal 
-          open={friendRequestsOpen} 
-          onOpenChange={setFriendRequestsOpen} 
+        <FriendRequestsModal
+          open={friendRequestsOpen}
+          onOpenChange={setFriendRequestsOpen}
         />
         <ProfilePictureCropModal
           open={cropModalOpen}
