@@ -73,7 +73,7 @@ const Navigation = () => {
   // Community submenu items
   const communitySubmenu = [
     { name: "Find a Mentor", href: "/community", icon: GraduationCap, description: "Connect with experienced mentors" },
-    { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Find your ideal co-founder" },
+    { name: "Find a Co-Founder", href: "/community/co-founders", icon: Handshake, description: "Meet your business soulmate" },
   ];
 
   // Fetch user avatar
