@@ -393,6 +393,9 @@ const Account = () => {
 
     setQuizSaving(true);
     try {
+      // Check if looking for co-founder changed from no to yes
+      const cofounderChanged = quizData.lookingForCofounder !== 'yes' && tempQuizData.lookingForCofounder === 'yes';
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -417,7 +420,16 @@ const Account = () => {
       });
 
       setQuizEditMode(false);
-      toast.success("Quiz responses updated successfully!");
+
+      // If user changed to looking for co-founder, redirect to create post
+      if (cofounderChanged) {
+        toast.success("Quiz updated! Let's create your co-founder post...");
+        setTimeout(() => {
+          window.location.href = '/community/co-founders/create';
+        }, 1500);
+      } else {
+        toast.success("Quiz responses updated successfully!");
+      }
     } catch (error: any) {
       console.error('Error updating quiz responses:', error);
       toast.error("Failed to update quiz responses: " + error.message);
