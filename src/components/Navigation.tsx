@@ -65,7 +65,7 @@ const Navigation = () => {
   // Insighta submenu items
   const insightaSubmenu = [
     { name: "VC Search", href: "/insighta/vc-search", icon: UsersIcon, description: "Browse venture capital firms" },
-    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Fundraising email templates" },
+    { name: "Email Templates", href: "/insighta/email-templates", icon: Mail, description: "Reach out smartly" },
     { name: "Accelerator Hunt", href: "/insighta/accelerator-hunt", icon: Rocket, description: "Find accelerator programs" },
     { name: "Insighta Test", href: "/insighta/test", icon: FlaskConical, description: "Measure your fundraising readiness" },
   ];
