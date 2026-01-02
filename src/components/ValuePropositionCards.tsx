@@ -82,7 +82,7 @@ const ValuePropositionCards = () => {
             const colorClasses = {
               planning: {
                 border: 'border-planning/30 hover:border-planning/60',
-                bg: 'bg-gradient-planning-refined/10 group-hover:bg-gradient-planning-refined/20',
+                bg: 'bg-planning/10 group-hover:bg-planning/20',
                 text: 'text-planning',
                 textHover: 'text-planning group-hover:text-planning/90',
                 metric: 'text-planning/80',
@@ -92,7 +92,7 @@ const ValuePropositionCards = () => {
               },
               action: {
                 border: 'border-action/30 hover:border-action/60',
-                bg: 'bg-gradient-action-refined/10 group-hover:bg-gradient-action-refined/20',
+                bg: 'bg-action/10 group-hover:bg-action/20',
                 text: 'text-action',
                 textHover: 'text-action group-hover:text-action/90',
                 metric: 'text-action/80',
@@ -102,7 +102,7 @@ const ValuePropositionCards = () => {
               },
               growth: {
                 border: 'border-growth/30 hover:border-growth/60',
-                bg: 'bg-gradient-growth-refined/10 group-hover:bg-gradient-growth-refined/20',
+                bg: 'bg-growth/10 group-hover:bg-growth/20',
                 text: 'text-growth',
                 textHover: 'text-growth group-hover:text-growth/90',
                 metric: 'text-growth/80',

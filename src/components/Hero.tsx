@@ -579,7 +579,7 @@ const Hero = () => {
                 {/* Primary CTA - Open Dashboard with Animation */}
                 <Button
                   size="lg"
-                  className="button-refined bg-gradient-planning-refined hover:opacity-95 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-primary hover:shadow-primary-lg transition-all duration-200 animate-dashboard-cta"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300 animate-dashboard-cta"
                   asChild
                 >
                   <Link to="/dashboard" onClick={handleDashboardCTAClick}>
@@ -599,7 +599,7 @@ const Hero = () => {
                 <div className="mb-4 sm:mb-6">
                   <Button 
                     size="lg" 
-                    className="button-refined bg-gradient-planning-refined hover:opacity-95 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-primary hover:shadow-primary-lg transition-all duration-200 mb-2" 
+                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2" 
                     asChild
                   >
                     <Link to="/bizmap-ai" onClick={handlePrimaryCTAClick}>
@@ -619,7 +619,7 @@ const Hero = () => {
                   <Button 
                     variant="outline"
                     size="lg" 
-                    className="button-refined border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-200" 
+                    className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
                     onClick={(e) => {
                       e.preventDefault();
                       handleSecondaryCTAClick(e as any);
@@ -633,7 +633,7 @@ const Hero = () => {
                   <Button 
                     variant="ghost"
                     size="lg" 
-                    className="link-refined text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-200 underline-offset-4" 
+                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline" 
                     asChild
                   >
                     <Link to="/signup" className="flex items-center" onClick={handleTertiaryCTAClick}>
