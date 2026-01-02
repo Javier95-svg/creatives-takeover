@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2 } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2, Edit2, X } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -28,6 +29,8 @@ const Account = () => {
   const [friendRequestsOpen, setFriendRequestsOpen] = useState(false);
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState("");
+  const [quizEditMode, setQuizEditMode] = useState(false);
+  const [quizSaving, setQuizSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { pendingFriendRequests } = useSocial();
@@ -69,6 +72,15 @@ const Account = () => {
     lookingForCofounder: null,
     completed: false,
     completedAt: null,
+  });
+
+  // Temporary quiz edit state
+  const [tempQuizData, setTempQuizData] = useState({
+    isFirstStartup: "",
+    currentStage: "",
+    biggestChallenge: "",
+    launchTimeline: "",
+    lookingForCofounder: "",
   });
 
   // Track initial values for unsaved changes detection
@@ -352,6 +364,67 @@ const Account = () => {
 
   const bioCharCount = bio.length;
   const bioMaxLength = 500;
+
+  const handleEditQuiz = () => {
+    // Copy current quiz data to temp state for editing
+    setTempQuizData({
+      isFirstStartup: quizData.isFirstStartup || "",
+      currentStage: quizData.currentStage || "",
+      biggestChallenge: quizData.biggestChallenge || "",
+      launchTimeline: quizData.launchTimeline || "",
+      lookingForCofounder: quizData.lookingForCofounder || "",
+    });
+    setQuizEditMode(true);
+  };
+
+  const handleCancelQuizEdit = () => {
+    setQuizEditMode(false);
+    setTempQuizData({
+      isFirstStartup: "",
+      currentStage: "",
+      biggestChallenge: "",
+      launchTimeline: "",
+      lookingForCofounder: "",
+    });
+  };
+
+  const handleSaveQuiz = async () => {
+    if (!user) return;
+
+    setQuizSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          quiz_is_first_startup: tempQuizData.isFirstStartup,
+          quiz_current_stage: tempQuizData.currentStage,
+          quiz_biggest_challenge: tempQuizData.biggestChallenge,
+          quiz_launch_timeline: tempQuizData.launchTimeline,
+          quiz_looking_for_cofounder: tempQuizData.lookingForCofounder,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update the main quiz data state
+      setQuizData({
+        ...quizData,
+        isFirstStartup: tempQuizData.isFirstStartup,
+        currentStage: tempQuizData.currentStage,
+        biggestChallenge: tempQuizData.biggestChallenge,
+        launchTimeline: tempQuizData.launchTimeline,
+        lookingForCofounder: tempQuizData.lookingForCofounder,
+      });
+
+      setQuizEditMode(false);
+      toast.success("Quiz responses updated successfully!");
+    } catch (error: any) {
+      console.error('Error updating quiz responses:', error);
+      toast.error("Failed to update quiz responses: " + error.message);
+    } finally {
+      setQuizSaving(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -764,16 +837,30 @@ const Account = () => {
           {quizData.completed && (
             <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5" />
-                  Onboarding Quiz Responses
-                </CardTitle>
-                <CardDescription>
-                  Your answers from the setup quiz
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ClipboardList className="w-5 h-5" />
+                      Onboarding Quiz Responses
+                    </CardTitle>
+                    <CardDescription>
+                      Your answers from the setup quiz
+                    </CardDescription>
+                  </div>
+                  {!quizEditMode && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEditQuiz}
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {quizData.completedAt && (
+                {quizData.completedAt && !quizEditMode && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
                     Completed on {new Date(quizData.completedAt).toLocaleDateString('en-US', {
@@ -784,63 +871,205 @@ const Account = () => {
                   </div>
                 )}
 
-                <div className="grid gap-4">
-                  {quizData.isFirstStartup && (
-                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <Label className="text-sm font-medium text-muted-foreground">Is this your first startup?</Label>
-                      <p className="text-sm mt-1 font-medium">
-                        {quizData.isFirstStartup === 'yes' ? 'Yes, this is my first one' : 'No, I\'ve built before'}
-                      </p>
-                    </div>
-                  )}
+                {!quizEditMode ? (
+                  // View mode
+                  <div className="grid gap-4">
+                    {quizData.isFirstStartup && (
+                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                        <Label className="text-sm font-medium text-muted-foreground">Is this your first startup?</Label>
+                        <p className="text-sm mt-1 font-medium">
+                          {quizData.isFirstStartup === 'yes' ? 'Yes, this is my first one' : 'No, I\'ve built before'}
+                        </p>
+                      </div>
+                    )}
 
-                  {quizData.currentStage && (
-                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <Label className="text-sm font-medium text-muted-foreground">Current Stage</Label>
-                      <p className="text-sm mt-1 font-medium">
-                        {quizData.currentStage === 'idea' && 'Just an idea'}
-                        {quizData.currentStage === 'building-mvp' && 'Building an MVP'}
-                        {quizData.currentStage === 'mvp-ready' && 'MVP is ready'}
-                        {quizData.currentStage === 'early-users' && 'Already have early users'}
-                        {quizData.currentStage === 'funded' && 'Funded / Revenue generating'}
-                      </p>
-                    </div>
-                  )}
+                    {quizData.currentStage && (
+                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                        <Label className="text-sm font-medium text-muted-foreground">Current Stage</Label>
+                        <p className="text-sm mt-1 font-medium">
+                          {quizData.currentStage === 'idea' && 'Just an idea'}
+                          {quizData.currentStage === 'building-mvp' && 'Building an MVP'}
+                          {quizData.currentStage === 'mvp-ready' && 'MVP is ready'}
+                          {quizData.currentStage === 'early-users' && 'Already have early users'}
+                          {quizData.currentStage === 'funded' && 'Funded / Revenue generating'}
+                        </p>
+                      </div>
+                    )}
 
-                  {quizData.biggestChallenge && (
-                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <Label className="text-sm font-medium text-muted-foreground">Biggest Challenge</Label>
-                      <p className="text-sm mt-1 font-medium">
-                        {quizData.biggestChallenge === 'idea-to-product' && 'Turning an idea into a real product'}
-                        {quizData.biggestChallenge === 'users-validation' && 'Finding users or validation'}
-                        {quizData.biggestChallenge === 'focus-accountability' && 'Staying focused and accountable'}
-                        {quizData.biggestChallenge === 'find-team' && 'Find the right people (team)'}
-                        {quizData.biggestChallenge === 'not-sure' && 'Not sure yet'}
-                      </p>
-                    </div>
-                  )}
+                    {quizData.biggestChallenge && (
+                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                        <Label className="text-sm font-medium text-muted-foreground">Biggest Challenge</Label>
+                        <p className="text-sm mt-1 font-medium">
+                          {quizData.biggestChallenge === 'idea-to-product' && 'Turning an idea into a real product'}
+                          {quizData.biggestChallenge === 'users-validation' && 'Finding users or validation'}
+                          {quizData.biggestChallenge === 'focus-accountability' && 'Staying focused and accountable'}
+                          {quizData.biggestChallenge === 'find-team' && 'Find the right people (team)'}
+                          {quizData.biggestChallenge === 'not-sure' && 'Not sure yet'}
+                        </p>
+                      </div>
+                    )}
 
-                  {quizData.launchTimeline && (
-                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <Label className="text-sm font-medium text-muted-foreground">Launch Timeline</Label>
-                      <p className="text-sm mt-1 font-medium">
-                        {quizData.launchTimeline === '30-days' && 'Within 30 days'}
-                        {quizData.launchTimeline === '60-days' && 'Within 60 days'}
-                        {quizData.launchTimeline === '90-plus-days' && 'Within 90+ days'}
-                        {quizData.launchTimeline === 'not-sure' && 'Not sure yet'}
-                      </p>
-                    </div>
-                  )}
+                    {quizData.launchTimeline && (
+                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                        <Label className="text-sm font-medium text-muted-foreground">Launch Timeline</Label>
+                        <p className="text-sm mt-1 font-medium">
+                          {quizData.launchTimeline === '30-days' && 'Within 30 days'}
+                          {quizData.launchTimeline === '60-days' && 'Within 60 days'}
+                          {quizData.launchTimeline === '90-plus-days' && 'Within 90+ days'}
+                          {quizData.launchTimeline === 'not-sure' && 'Not sure yet'}
+                        </p>
+                      </div>
+                    )}
 
-                  {quizData.lookingForCofounder && (
-                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <Label className="text-sm font-medium text-muted-foreground">Looking for a Co-Founder?</Label>
-                      <p className="text-sm mt-1 font-medium">
-                        {quizData.lookingForCofounder === 'yes' ? 'Yes' : 'No'}
-                      </p>
+                    {quizData.lookingForCofounder && (
+                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                        <Label className="text-sm font-medium text-muted-foreground">Looking for a Co-Founder?</Label>
+                        <p className="text-sm mt-1 font-medium">
+                          {quizData.lookingForCofounder === 'yes' ? 'Yes' : 'No'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Edit mode
+                  <div className="space-y-6">
+                    {/* First Startup Question */}
+                    <div className="space-y-3">
+                      <Label>Is this your first startup?</Label>
+                      <RadioGroup value={tempQuizData.isFirstStartup} onValueChange={(value) => setTempQuizData({...tempQuizData, isFirstStartup: value})}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="first-yes" />
+                          <Label htmlFor="first-yes" className="cursor-pointer">Yes, this is my first one</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="first-no" />
+                          <Label htmlFor="first-no" className="cursor-pointer">No, I've built before</Label>
+                        </div>
+                      </RadioGroup>
                     </div>
-                  )}
-                </div>
+
+                    {/* Current Stage */}
+                    <div className="space-y-3">
+                      <Label>Current Stage</Label>
+                      <RadioGroup value={tempQuizData.currentStage} onValueChange={(value) => setTempQuizData({...tempQuizData, currentStage: value})}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="idea" id="stage-idea" />
+                          <Label htmlFor="stage-idea" className="cursor-pointer">Just an idea</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="building-mvp" id="stage-building" />
+                          <Label htmlFor="stage-building" className="cursor-pointer">Building an MVP</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mvp-ready" id="stage-ready" />
+                          <Label htmlFor="stage-ready" className="cursor-pointer">MVP is ready</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="early-users" id="stage-users" />
+                          <Label htmlFor="stage-users" className="cursor-pointer">Already have early users</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="funded" id="stage-funded" />
+                          <Label htmlFor="stage-funded" className="cursor-pointer">Funded / Revenue generating</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Biggest Challenge */}
+                    <div className="space-y-3">
+                      <Label>Biggest Challenge</Label>
+                      <RadioGroup value={tempQuizData.biggestChallenge} onValueChange={(value) => setTempQuizData({...tempQuizData, biggestChallenge: value})}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="idea-to-product" id="challenge-idea" />
+                          <Label htmlFor="challenge-idea" className="cursor-pointer">Turning an idea into a real product</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="users-validation" id="challenge-users" />
+                          <Label htmlFor="challenge-users" className="cursor-pointer">Finding users or validation</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="focus-accountability" id="challenge-focus" />
+                          <Label htmlFor="challenge-focus" className="cursor-pointer">Staying focused and accountable</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="find-team" id="challenge-team" />
+                          <Label htmlFor="challenge-team" className="cursor-pointer">Find the right people (team)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="not-sure" id="challenge-unsure" />
+                          <Label htmlFor="challenge-unsure" className="cursor-pointer">Not sure yet</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Launch Timeline */}
+                    <div className="space-y-3">
+                      <Label>Launch Timeline</Label>
+                      <RadioGroup value={tempQuizData.launchTimeline} onValueChange={(value) => setTempQuizData({...tempQuizData, launchTimeline: value})}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="30-days" id="timeline-30" />
+                          <Label htmlFor="timeline-30" className="cursor-pointer">Within 30 days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="60-days" id="timeline-60" />
+                          <Label htmlFor="timeline-60" className="cursor-pointer">Within 60 days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="90-plus-days" id="timeline-90" />
+                          <Label htmlFor="timeline-90" className="cursor-pointer">Within 90+ days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="not-sure" id="timeline-unsure" />
+                          <Label htmlFor="timeline-unsure" className="cursor-pointer">Not sure yet</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Looking for Co-Founder */}
+                    <div className="space-y-3">
+                      <Label>Looking for a Co-Founder?</Label>
+                      <RadioGroup value={tempQuizData.lookingForCofounder} onValueChange={(value) => setTempQuizData({...tempQuizData, lookingForCofounder: value})}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="cofounder-yes" />
+                          <Label htmlFor="cofounder-yes" className="cursor-pointer">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="cofounder-no" />
+                          <Label htmlFor="cofounder-no" className="cursor-pointer">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3 pt-4 border-t">
+                      <Button
+                        onClick={handleSaveQuiz}
+                        disabled={quizSaving}
+                        className="flex-1"
+                      >
+                        {quizSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelQuizEdit}
+                        disabled={quizSaving}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
