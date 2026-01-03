@@ -30,10 +30,20 @@ serve(async (req) => {
       .eq("user_id", user_id)
       .or("is_dismissed.eq.true,expires_at.lt." + new Date().toISOString());
 
-    // Fetch user context
+    // Fetch user context including quiz answers
     const { data: profile } = await supabase
       .from("profiles")
-      .select("creative_niche, business_stage, onboarding_completed")
+      .select(`
+        creative_niche,
+        business_stage,
+        onboarding_completed,
+        quiz_completed,
+        quiz_is_first_startup,
+        quiz_current_stage,
+        quiz_biggest_challenge,
+        quiz_launch_timeline,
+        quiz_looking_for_cofounder
+      `)
       .eq("id", user_id)
       .single();
 
@@ -160,9 +170,185 @@ function generateRecommendations(context: any): any[] {
   }) || [];
   const hasRecentActivity = context.activity && context.activity.length > 0;
   const lastActivity = hasRecentActivity ? new Date(context.activity[0].created_at) : null;
-  const daysSinceActivity = lastActivity 
+  const daysSinceActivity = lastActivity
     ? Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24))
     : 999;
+
+  // Get quiz answers for personalized recommendations
+  const quizCompleted = context.profile?.quiz_completed;
+  const isFirstStartup = context.profile?.quiz_is_first_startup;
+  const currentStage = context.profile?.quiz_current_stage;
+  const biggestChallenge = context.profile?.quiz_biggest_challenge;
+  const launchTimeline = context.profile?.quiz_launch_timeline;
+  const lookingForCofounder = context.profile?.quiz_looking_for_cofounder;
+
+  // Priority 0: Quiz-based personalized recommendations (highest priority)
+  if (quizCompleted) {
+    // Recommendations based on biggest challenge
+    if (biggestChallenge === 'finding_customers') {
+      recs.push({
+        recommendation_type: "action",
+        title: "🎯 Master Customer Acquisition",
+        description: "You identified finding customers as your biggest challenge. Start with market research and customer interviews to understand your ideal buyer.",
+        priority: 11,
+        reason: "Solving your biggest challenge unlocks growth",
+        action_url: "/blog",
+        metadata: { category: "customer_acquisition", quiz_driven: true }
+      });
+    } else if (biggestChallenge === 'building_product') {
+      recs.push({
+        recommendation_type: "action",
+        title: "🛠️ Build Your MVP Faster",
+        description: "Focus on building the minimum viable version of your product. Start with core features that solve the main problem.",
+        priority: 11,
+        reason: "Ship fast, iterate faster",
+        action_url: "/laboratory",
+        metadata: { category: "product_development", quiz_driven: true }
+      });
+    } else if (biggestChallenge === 'raising_money') {
+      recs.push({
+        recommendation_type: "action",
+        title: "💰 Prepare Your Fundraising Strategy",
+        description: "Build a solid pitch deck and financial model. Focus on traction and market validation before approaching investors.",
+        priority: 11,
+        reason: "Investors bet on traction, not just ideas",
+        action_url: "/blog",
+        metadata: { category: "fundraising", quiz_driven: true }
+      });
+    } else if (biggestChallenge === 'time_management') {
+      recs.push({
+        recommendation_type: "action",
+        title: "⏰ Optimize Your Time with Sprints",
+        description: "Create a 30-day sprint to focus on your most critical tasks. Break down big goals into daily actions.",
+        priority: 11,
+        reason: "Structure beats motivation every time",
+        action_url: "/laboratory",
+        metadata: { category: "productivity", quiz_driven: true }
+      });
+    } else if (biggestChallenge === 'staying_motivated') {
+      recs.push({
+        recommendation_type: "action",
+        title: "🔥 Build Momentum with Daily Check-ins",
+        description: "Join daily accountability check-ins to stay motivated. Share your wins and get support from the community.",
+        priority: 11,
+        reason: "Consistency compounds into success",
+        action_url: "/laboratory",
+        metadata: { category: "motivation", quiz_driven: true }
+      });
+    }
+
+    // Recommendations based on launch timeline
+    if (launchTimeline === 'asap') {
+      recs.push({
+        recommendation_type: "action",
+        title: "⚡ Fast-Track Your Launch",
+        description: "You want to launch ASAP. Focus ruthlessly on your MVP - cut everything that's not essential to solve the core problem.",
+        priority: 10,
+        reason: "Speed to market = faster learning",
+        action_url: "/laboratory",
+        metadata: { category: "rapid_launch", quiz_driven: true }
+      });
+    } else if (launchTimeline === '3_6_months') {
+      recs.push({
+        recommendation_type: "action",
+        title: "📅 Plan Your 90-Day Roadmap",
+        description: "With a 3-6 month timeline, create a structured roadmap. Break it into monthly milestones and weekly sprints.",
+        priority: 10,
+        reason: "Clear milestones prevent analysis paralysis",
+        action_url: "/laboratory",
+        metadata: { category: "roadmap_planning", quiz_driven: true }
+      });
+    } else if (launchTimeline === '6_12_months') {
+      recs.push({
+        recommendation_type: "action",
+        title: "🎯 Build Strong Foundations",
+        description: "You have 6-12 months to launch. Use this time to validate your market, refine your product, and build early traction.",
+        priority: 10,
+        reason: "Solid foundations = sustainable growth",
+        action_url: "/dream2plan",
+        metadata: { category: "foundation_building", quiz_driven: true }
+      });
+    }
+
+    // First-time founder specific recommendations
+    if (isFirstStartup === 'yes') {
+      recs.push({
+        recommendation_type: "resource",
+        title: "🎓 First-Time Founder Essentials",
+        description: "Learn the key lessons that took successful founders years to discover. Avoid common beginner mistakes and accelerate your journey.",
+        priority: 9,
+        reason: "Learn from others' mistakes, not just your own",
+        action_url: "/blog",
+        metadata: { category: "education", quiz_driven: true, audience: "first_time" }
+      });
+    } else if (isFirstStartup === 'no') {
+      recs.push({
+        recommendation_type: "resource",
+        title: "🚀 Scale Faster as a Serial Founder",
+        description: "Apply your experience to move faster. Focus on what's different this time - new market, new challenges, new opportunities.",
+        priority: 9,
+        reason: "Experience + focus = competitive advantage",
+        action_url: "/blog",
+        metadata: { category: "advanced_strategy", quiz_driven: true, audience: "experienced" }
+      });
+    }
+
+    // Co-founder search recommendation
+    if (lookingForCofounder === 'yes' && !context.profile?.cofounder_post_created) {
+      recs.push({
+        recommendation_type: "action",
+        title: "🤝 Find Your Co-Founder",
+        description: "You're looking for a co-founder! Create your post now to connect with talented entrepreneurs who complement your skills.",
+        priority: 10,
+        reason: "The right co-founder doubles your chances of success",
+        action_url: "/community/co-founders/create",
+        metadata: { category: "cofounder_matching", quiz_driven: true }
+      });
+    }
+
+    // Stage-specific recommendations
+    if (currentStage === 'idea') {
+      recs.push({
+        recommendation_type: "action",
+        title: "💡 Validate Your Idea",
+        description: "You're at the idea stage. Talk to 10 potential customers this week to validate there's real demand for your solution.",
+        priority: 9,
+        reason: "Customer validation prevents building the wrong thing",
+        action_url: "/dream2plan",
+        metadata: { category: "validation", quiz_driven: true }
+      });
+    } else if (currentStage === 'building_mvp') {
+      recs.push({
+        recommendation_type: "action",
+        title: "🛠️ Ship Your MVP This Month",
+        description: "You're building your MVP. Set a firm launch date and cut scope ruthlessly to ship something real to customers.",
+        priority: 9,
+        reason: "Real feedback beats perfect planning",
+        action_url: "/laboratory",
+        metadata: { category: "mvp_shipping", quiz_driven: true }
+      });
+    } else if (currentStage === 'launched_testing') {
+      recs.push({
+        recommendation_type: "action",
+        title: "📊 Analyze Your Early Data",
+        description: "You've launched and are testing! Double down on what's working and quickly pivot away from what's not.",
+        priority: 9,
+        reason: "Data-driven iteration = product-market fit",
+        action_url: "/dream2plan",
+        metadata: { category: "iteration", quiz_driven: true }
+      });
+    } else if (currentStage === 'growing') {
+      recs.push({
+        recommendation_type: "action",
+        title: "📈 Scale What's Working",
+        description: "You're in growth mode! Focus on your strongest acquisition channels and optimize your conversion funnel.",
+        priority: 9,
+        reason: "Optimization beats experimentation at scale",
+        action_url: "/blog",
+        metadata: { category: "growth_optimization", quiz_driven: true }
+      });
+    }
+  }
 
   // Priority 1: Critical next steps based on user stage
   if (!hasSessions) {
