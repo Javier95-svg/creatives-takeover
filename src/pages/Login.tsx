@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, Check } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -21,10 +21,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
-    email: "",
-    password: ""
-  });
-  const [fieldStatus, setFieldStatus] = useState({
     email: "",
     password: ""
   });
@@ -59,26 +55,13 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-
+    
     // Clear errors when user starts typing
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({
         ...prev,
         [name]: ""
       }));
-    }
-
-    // Show success state for valid fields
-    if (name === 'email' && value && emailRegex.test(value)) {
-      setFieldStatus(prev => ({ ...prev, email: 'success' }));
-    } else if (name === 'email') {
-      setFieldStatus(prev => ({ ...prev, email: '' }));
-    }
-
-    if (name === 'password' && value.length >= 6) {
-      setFieldStatus(prev => ({ ...prev, password: 'success' }));
-    } else if (name === 'password') {
-      setFieldStatus(prev => ({ ...prev, password: '' }));
     }
   };
 
@@ -146,15 +129,13 @@ const Login = () => {
   // Google OAuth login
   const handleGoogleLogin = async () => {
     try {
-      if (import.meta.env.DEV) {
-        console.log("Starting Google OAuth...");
-      }
-
+      console.log("Starting Google OAuth...");
+      
       // Save dashboard as return URL for after OAuth completes
       localStorage.setItem('oauth_return_url', '/dashboard');
-
+      
       toast("Redirecting to Google...");
-
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -165,28 +146,20 @@ const Login = () => {
           },
         }
       });
-
-      if (import.meta.env.DEV) {
-        console.log("OAuth response:", { data, error });
-      }
-
+      
+      console.log("OAuth response:", { data, error });
+      
       if (error) {
-        if (import.meta.env.DEV) {
-          console.error("OAuth error:", error);
-        }
+        console.error("OAuth error:", error);
         toast.error(`Google sign-in error: ${error.message}`);
         return;
       }
-
+      
       // If we get here without error, the redirect should have happened
-      if (import.meta.env.DEV) {
-        console.log("OAuth initiated successfully");
-      }
-
+      console.log("OAuth initiated successfully");
+      
     } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error("Caught error:", err);
-      }
+      console.error("Caught error:", err);
       toast.error(`Google sign-in failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
@@ -248,9 +221,8 @@ const Login = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
-                    className={`pl-10 ${fieldStatus.email === 'success' ? 'pr-10' : ''} h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' :
-                      fieldStatus.email === 'success' ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20' : ''
+                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                      errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
                     autoComplete="email"
@@ -261,9 +233,6 @@ const Login = () => {
                     data-lpignore="false"
                     data-1p-ignore="false"
                   />
-                  {fieldStatus.email === 'success' && (
-                    <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                  )}
                 </div>
                 {errors.email && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
@@ -284,9 +253,8 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your password"
-                    className={`pl-10 ${fieldStatus.password === 'success' ? 'pr-20' : 'pr-12'} h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' :
-                      fieldStatus.password === 'success' ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20' : ''
+                    className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                      errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                     }`}
                     disabled={isLoading}
                     autoComplete="current-password"
@@ -295,9 +263,6 @@ const Login = () => {
                     data-1p-ignore="false"
                     data-password-field="true"
                   />
-                  {fieldStatus.password === 'success' && (
-                    <Check className="absolute right-10 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
-                  )}
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
