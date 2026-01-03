@@ -1,15 +1,26 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus, Calendar, CheckCircle } from "lucide-react";
+import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CofounderPost {
   id: string;
@@ -33,8 +44,11 @@ interface CofounderPost {
 
 const FindCoFounder = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<CofounderPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -94,6 +108,37 @@ const FindCoFounder = () => {
       'funded': 'Funded / Revenue'
     };
     return stages[stage] || stage;
+  };
+
+  const handleEditPost = (postId: string) => {
+    // Navigate to edit page (we'll create this route)
+    navigate(`/community/co-founders/edit/${postId}`);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('cofounder_posts')
+        .delete()
+        .eq('id', postToDelete);
+
+      if (error) throw error;
+
+      toast.success('Post deleted successfully');
+      setPosts(posts.filter(p => p.id !== postToDelete));
+      setDeleteDialogOpen(false);
+      setPostToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post: ' + error.message);
+    }
+  };
+
+  const openDeleteDialog = (postId: string) => {
+    setPostToDelete(postId);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -252,15 +297,43 @@ const FindCoFounder = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-3 pt-2">
-                      <Button variant="default" className="flex-1">
-                        <Handshake className="w-4 h-4 mr-2" />
-                        Connect
-                      </Button>
-                      <Button variant="outline">
-                        View Profile
-                      </Button>
-                    </div>
+                    {/* Action Buttons */}
+                    {post.user_id === user?.id ? (
+                      // Owner controls
+                      <div className="flex gap-3 pt-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleEditPost(post.id)}
+                        >
+                          <Edit2 className="w-4 h-4 mr-2" />
+                          Edit Post
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => openDeleteDialog(post.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
+                    ) : (
+                      // Visitor actions
+                      <div className="flex gap-2 pt-2">
+                        <Button variant="default" size="sm" className="flex-1">
+                          <Handshake className="w-4 h-4 mr-2" />
+                          Connect
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Message
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <User className="w-4 h-4 mr-2" />
+                          View Profile
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))
@@ -329,6 +402,30 @@ const FindCoFounder = () => {
       </section>
 
       <Footer />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Co-Founder Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone.
+              Your post will be permanently removed and no longer visible to other users.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPostToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePost}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Post
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
