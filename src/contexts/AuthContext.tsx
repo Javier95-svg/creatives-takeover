@@ -124,16 +124,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             // Only proceed if profile exists
             if (profileExists) {
-              // Ensure admin account has professional tier
+              // Ensure admin account has professional tier and reset onboarding for testing
               const isAdmin = session.user.email?.toLowerCase() === 'admin@creatives-takeover.com';
               if (isAdmin) {
                 try {
-                  // Update profile to ensure professional tier
+                  // Update profile to ensure professional tier AND reset onboarding for testing
                   await supabase
                     .from('profiles')
-                    .update({ subscription_tier: 'professional' })
+                    .update({
+                      subscription_tier: 'professional',
+                      onboarding_completed: false,
+                      quiz_completed: false,
+                      quiz_is_first_startup: null,
+                      quiz_current_stage: null,
+                      quiz_biggest_challenge: null,
+                      quiz_launch_timeline: null,
+                      quiz_looking_for_cofounder: null,
+                      quiz_completed_at: null
+                    })
                     .eq('id', session.user.id);
-                  
+
                   // Update user_credits to ensure professional tier
                   await supabase
                     .from('user_credits')
@@ -141,7 +151,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                       user_id: session.user.id,
                       subscription_tier: 'professional'
                     }, { onConflict: 'user_id' });
-                  
+
                   // Update subscribers table
                   await supabase
                     .from('subscribers')
@@ -151,10 +161,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                       subscribed: true,
                       subscription_tier: 'professional'
                     }, { onConflict: 'email' });
-                  
-                  logInfo('Admin account updated to professional tier', { userId: session.user.id });
+
+                  logInfo('Admin account updated to professional tier and onboarding reset for testing', { userId: session.user.id });
                 } catch (adminError) {
-                  logError('Failed to update admin tier', adminError, { userId: session.user.id });
+                  logError('Failed to update admin tier/onboarding', adminError, { userId: session.user.id });
                 }
               }
               
@@ -218,6 +228,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 // Redirect to account page if onboarding not completed
                 if (profileData && !profileData.onboarding_completed) {
+                  // For admin user, always clear the redirect flag to enable repeated testing
+                  const isAdminUser = session.user.email?.toLowerCase() === 'admin@creatives-takeover.com';
+                  if (isAdminUser) {
+                    sessionStorage.removeItem(`onboarding_redirect_${session.user.id}`);
+                  }
+
                   // Check if we've already redirected in this session to prevent loops
                   const hasRedirected = sessionStorage.getItem(`onboarding_redirect_${session.user.id}`);
 
