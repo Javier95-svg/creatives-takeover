@@ -212,6 +212,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
               // Handle first-time user onboarding redirection
               try {
+                // For admin, we need to re-fetch profile after the reset to get updated onboarding status
+                const isAdminUser = session.user.email?.toLowerCase() === 'admin@creatives-takeover.com';
+
+                // Small delay for admin to ensure the profile update above has completed
+                if (isAdminUser) {
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
                 const { data: profileData } = await supabase
                   .from('profiles')
                   .select('onboarding_completed, first_login_at')
@@ -229,7 +237,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 // Redirect to account page if onboarding not completed
                 if (profileData && !profileData.onboarding_completed) {
                   // For admin user, always clear the redirect flag to enable repeated testing
-                  const isAdminUser = session.user.email?.toLowerCase() === 'admin@creatives-takeover.com';
                   if (isAdminUser) {
                     sessionStorage.removeItem(`onboarding_redirect_${session.user.id}`);
                   }
