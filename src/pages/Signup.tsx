@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -22,6 +22,10 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
+    email: "",
+    password: ""
+  });
+  const [fieldStatus, setFieldStatus] = useState({
     email: "",
     password: ""
   });
@@ -63,13 +67,26 @@ const Signup = () => {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear errors when user starts typing
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({
         ...prev,
         [name]: ""
       }));
+    }
+
+    // Show success state for valid fields
+    if (name === 'email' && value && emailRegex.test(value)) {
+      setFieldStatus(prev => ({ ...prev, email: 'success' }));
+    } else if (name === 'email') {
+      setFieldStatus(prev => ({ ...prev, email: '' }));
+    }
+
+    if (name === 'password' && value.length >= 6) {
+      setFieldStatus(prev => ({ ...prev, password: 'success' }));
+    } else if (name === 'password') {
+      setFieldStatus(prev => ({ ...prev, password: '' }));
     }
   };
 
@@ -138,7 +155,9 @@ const Signup = () => {
           errorMessage = "Password does not meet requirements. Please use a stronger password.";
         }
         
-        console.error('Signup error:', error);
+        if (import.meta.env.DEV) {
+          console.error('Signup error:', error);
+        }
         toast.error(errorMessage);
       } else {
         // Check if user needs to confirm email
@@ -156,7 +175,7 @@ const Signup = () => {
         trackSignupCompleted(triggerType);
         
         // Track conversion source
-        if (conversionSource.source !== 'direct') {
+        if (conversionSource.source !== 'direct' && import.meta.env.DEV) {
           console.log('User signed up from:', conversionSource.source);
         }
 
@@ -181,9 +200,11 @@ const Signup = () => {
       }
     } catch (error) {
       // Handle unexpected errors
-      console.error('Unexpected signup error:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
+      if (import.meta.env.DEV) {
+        console.error('Unexpected signup error:', error);
+      }
+      const errorMessage = error instanceof Error
+        ? error.message
         : "An unexpected error occurred. Please try again.";
       
       // Check if it's a database/profile error
@@ -205,20 +226,22 @@ const Signup = () => {
   // Google OAuth signup
   const handleGoogleSignup = async () => {
     try {
-      console.log("Starting Google OAuth signup...");
-      
+      if (import.meta.env.DEV) {
+        console.log("Starting Google OAuth signup...");
+      }
+
       // Save dashboard as return URL (override conversion source returnUrl)
       localStorage.setItem('oauth_return_url', '/dashboard');
       localStorage.setItem('oauth_source', conversionSource.source);
-      
+
       // Also save BizMap progress if it exists
       const savedProgress = localStorage.getItem('bizmap_progress');
       if (savedProgress) {
         localStorage.setItem('oauth_bizmap_progress', savedProgress);
       }
-      
+
       toast("Redirecting to Google...");
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -229,23 +252,31 @@ const Signup = () => {
           },
         }
       });
-      
-      console.log("OAuth response:", { data, error });
-      
+
+      if (import.meta.env.DEV) {
+        console.log("OAuth response:", { data, error });
+      }
+
       if (error) {
-        console.error("OAuth error:", error);
+        if (import.meta.env.DEV) {
+          console.error("OAuth error:", error);
+        }
         toast.error(`Google sign-up error: ${error.message}`);
         return;
       }
-      
+
       // If we get here without error, the redirect should have happened
-      console.log("OAuth initiated successfully");
+      if (import.meta.env.DEV) {
+        console.log("OAuth initiated successfully");
+      }
       try {
         await trackActivity('user:signup_oauth', { provider: 'google' });
       } catch {}
-      
+
     } catch (err) {
-      console.error("Caught error:", err);
+      if (import.meta.env.DEV) {
+        console.error("Caught error:", err);
+      }
       toast.error(`Google sign-up failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
@@ -310,8 +341,9 @@ const Signup = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
-                    className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                    className={`pl-10 ${fieldStatus.email === 'success' ? 'pr-10' : ''} h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                      errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' :
+                      fieldStatus.email === 'success' ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20' : ''
                     }`}
                     disabled={isLoading}
                     autoComplete="email"
@@ -319,6 +351,9 @@ const Signup = () => {
                     autoCorrect="off"
                     inputMode="email"
                   />
+                  {fieldStatus.email === 'success' && (
+                    <Check className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                  )}
                 </div>
                 {errors.email && (
                   <p className="text-sm text-red-500 animate-fade-in">{errors.email}</p>
@@ -339,12 +374,16 @@ const Signup = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Create a password"
-                    className={`pl-10 pr-12 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                      errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                    className={`pl-10 ${fieldStatus.password === 'success' ? 'pr-20' : 'pr-12'} h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                      errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' :
+                      fieldStatus.password === 'success' ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20' : ''
                     }`}
                     disabled={isLoading}
                     autoComplete="new-password"
                   />
+                  {fieldStatus.password === 'success' && (
+                    <Check className="absolute right-10 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-500" />
+                  )}
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}

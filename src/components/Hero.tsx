@@ -7,6 +7,10 @@ import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AnimatedBackground } from "@/components/hero/AnimatedBackground";
+import { RGBParticles } from "@/components/hero/RGBParticles";
+import { MagneticButton } from "@/components/ui/MagneticButton";
+import { PulseCTA } from "@/components/ui/PulseCTA";
 
 interface HeroImage {
   position: number;
@@ -443,77 +447,15 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="overview"
-      className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30 bg-gradient-rgb-subtle"
+      className="scroll-mt-24 relative min-h-screen flex items-center justify-center overflow-hidden pt-24 px-4 sm:px-6 bg-gradient-to-br from-background via-background to-muted/30"
     >
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Subtle grid pattern - adjusts for theme */}
-        <div className="absolute inset-0 dark:opacity-[0.05] opacity-[0.03]" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
-          `,
-          backgroundSize: "80px 80px, 80px 80px",
-        }} />
-        {/* RGB gradient accent lines - more visible in dark mode */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none dark:opacity-20 opacity-15">
-          <div
-            className="absolute left-1/2 w-full h-px"
-            style={{ 
-              top: "32%",
-              background: "linear-gradient(to right, transparent, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)), transparent)"
-            }}
-          />
-          <div
-            className="absolute left-1/2 w-full h-px"
-            style={{ 
-              top: "68%",
-              background: "linear-gradient(to right, transparent, hsl(var(--green-primary)), hsl(var(--red-primary)), hsl(var(--blue-primary)), transparent)"
-            }}
-          />
-        </div>
-        {creativeParticles.map((particle, index) => (
-          <div
-            key={`creative-spark-${index}`}
-            className="absolute rounded-full shadow-lg"
-            style={{
-              top: particle.top,
-              left: particle.left,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              background: `radial-gradient(circle, ${particle.color}, transparent)`,
-              boxShadow: `0 0 30px ${particle.color}`,
-            }}
-          />
-        ))}
-        <svg className="absolute inset-0 w-full h-full dark:opacity-30 opacity-15 pointer-events-none">
-          <defs>
-            <linearGradient id="tech-network" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-              <stop offset="45%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {/* Static tech network path – animation removed */}
-          <path
-            d="M 1760 220 L 1840 360 L 1720 460 L 1860 580 L 1680 660"
-            fill="none"
-            stroke="url(#tech-network)"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
-        {/* Tech nodes made more subtle - reduced opacity - theme-aware */}
-        {techNodes.map((node, index) => (
-          <div
-            key={`tech-node-${index}`}
-            className="absolute w-2 h-2 rounded-full dark:bg-[#22d3ee] bg-primary/60 dark:opacity-40 opacity-30"
-            style={{
-              ...node,
-              boxShadow: "0 0 12px hsl(var(--primary) / 0.4)",
-            }}
-          />
-        ))}
-      </div>
+      {/* New Animated Background System */}
+      <AnimatedBackground />
+
+      {/* Interactive RGB Particles */}
+      <RGBParticles />
+
+      {/* Gradient overlay for content readability */}
       <div className="absolute inset-0 bg-gradient-to-b dark:from-background/50 dark:via-background/35 dark:to-background/75 from-background/90 via-background/95 to-background/90" />
 
       <div className="container mx-auto relative z-20">
@@ -576,11 +518,13 @@ const Hero = () => {
               {isAuthenticated ? (
                 /* Authenticated User CTA: Open Dashboard Only */
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
-                {/* Primary CTA - Open Dashboard with Animation */}
-                <Button
+                {/* Primary CTA - Open Dashboard with Pulse Animation */}
+                <PulseCTA
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300 animate-dashboard-cta"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300"
                   asChild
+                  pulseColor="hsl(217 91% 60%)"
+                  magneticStrength={0.35}
                 >
                   <Link to="/dashboard" onClick={handleDashboardCTAClick}>
                     <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
@@ -590,17 +534,18 @@ const Hero = () => {
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </Link>
-                </Button>
+                </PulseCTA>
               </div>
             ) : (
               /* Unauthenticated User CTAs: Design Your Plan + Explore Features + Join */
               <>
-                {/* Primary CTA - Value-Focused */}
+                {/* Primary CTA - Value-Focused with Pulse Effect */}
                 <div className="mb-4 sm:mb-6">
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2" 
+                  <PulseCTA
+                    size="lg"
+                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2"
                     asChild
+                    magneticStrength={0.4}
                   >
                     <Link to="/bizmap-ai" onClick={handlePrimaryCTAClick}>
                       <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
@@ -610,37 +555,39 @@ const Hero = () => {
                       </div>
                       <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                     </Link>
-                  </Button>
+                  </PulseCTA>
                 </div>
 
-                  {/* Secondary & Tertiary CTAs */}
+                  {/* Secondary & Tertiary CTAs with Magnetic Effect */}
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
                   {/* Secondary CTA - Exploration */}
-                  <Button 
+                  <MagneticButton
                     variant="outline"
-                    size="lg" 
-                    className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                    size="lg"
+                    className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300"
                     onClick={(e) => {
                       e.preventDefault();
                       handleSecondaryCTAClick(e as any);
                     }}
+                    magneticStrength={0.25}
                   >
                     <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                     Explore Features
-                  </Button>
+                  </MagneticButton>
 
                   {/* Tertiary CTA - Sign-up */}
-                  <Button 
+                  <MagneticButton
                     variant="ghost"
-                    size="lg" 
-                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline" 
+                    size="lg"
+                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline"
                     asChild
+                    magneticStrength={0.2}
                   >
                     <Link to="/signup" className="flex items-center" onClick={handleTertiaryCTAClick}>
                       Join 1,000+ Founders
                       <ArrowRight className="ml-1.5 w-4 h-4" />
                     </Link>
-                  </Button>
+                  </MagneticButton>
                   </div>
                 </>
               )}

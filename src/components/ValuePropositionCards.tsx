@@ -2,8 +2,12 @@ import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { TiltCard } from "@/components/ui/TiltCard";
+import { useScrollSequence } from "@/hooks/useScrollSequence";
 
 const ValuePropositionCards = () => {
+  const { ref: gridRef, visibleItems } = useScrollSequence(4, 120); // 4 cards, 120ms stagger
+
   // Core value propositions - condensed to 4 essential offerings
   const allCards = [
     {
@@ -76,9 +80,10 @@ const ValuePropositionCards = () => {
         </div>
 
         {/* Core Value Props - Responsive Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {allCards.map((card, index) => {
             const Icon = card.icon;
+            const isVisible = visibleItems.has(index);
             const colorClasses = {
               planning: {
                 border: 'border-planning/30 hover:border-planning/60',
@@ -122,16 +127,30 @@ const ValuePropositionCards = () => {
               }
             };
             const colors = colorClasses[card.color as keyof typeof colorClasses];
-            
+
+            // Get glow color based on card type
+            const glowColors = {
+              planning: 'rgba(59, 130, 246, 0.4)',
+              action: 'rgba(239, 68, 68, 0.4)',
+              growth: 'rgba(16, 185, 129, 0.4)',
+              accent: 'rgba(251, 191, 36, 0.4)'
+            };
+
             return (
-              <Card 
-                key={index} 
-                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer h-full`}
-                style={{ 
-                  animationDelay: `${index * 0.1}s`,
-                  animationFillMode: 'both'
+              <div
+                key={index}
+                className="transform transition-all duration-700 ease-out"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.9)',
+                  transitionDelay: isVisible ? `${index * 40}ms` : '0ms'
                 }}
               >
+                <TiltCard
+                  tiltStrength={8}
+                  glowColor={glowColors[card.color as keyof typeof glowColors]}
+                  className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} hover:-translate-y-2 cursor-pointer h-full`}
+                >
                 {/* RGB gradient background overlay */}
                 <div className={`absolute inset-0 ${colors.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
                 
@@ -195,7 +214,8 @@ const ValuePropositionCards = () => {
                     </div>
                   </CardContent>
                 </Link>
-              </Card>
+                </TiltCard>
+              </div>
             );
           })}
         </div>

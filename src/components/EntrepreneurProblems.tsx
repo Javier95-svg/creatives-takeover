@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
+import { TiltCard } from "@/components/ui/TiltCard";
+import { useScrollSequence } from "@/hooks/useScrollSequence";
+import {
   Search,
   Users,
   DollarSign,
@@ -16,6 +18,7 @@ import {
 
 const EntrepreneurProblems = () => {
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
+  const { ref: gridRef, visibleItems } = useScrollSequence(6, 150); // 6 cards, 150ms stagger
 
   const toggleExpand = (index: number) => {
     const newExpanded = new Set(expandedCards);
@@ -270,18 +273,28 @@ const EntrepreneurProblems = () => {
         </div>
 
         {/* Problems Grid - 3 Column Layout with Better Spacing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-visible">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-visible">
           {problems.map((item, index) => {
             const BeforeIcon = item.beforeIcon;
             const AfterIcon = item.afterIcon;
             const isExpanded = expandedCards.has(index);
-            
+            const isVisible = visibleItems.has(index);
+
             return (
-              <Card 
-                key={index} 
-                className="card-hover-effect border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group animate-card-entrance bg-card/50 backdrop-blur-sm"
-                style={{ animationDelay: `${index * 0.08}s` }}
+              <div
+                key={index}
+                className="transform transition-all duration-700 ease-out"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
+                  transitionDelay: isVisible ? `${index * 50}ms` : '0ms'
+                }}
               >
+                <TiltCard
+                  tiltStrength={6}
+                  glowColor="rgba(239, 68, 68, 0.3)"
+                  className="border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group bg-card/50 backdrop-blur-sm"
+                >
                 {/* Problem Section Background Gradient */}
                 <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/20 dark:from-red-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
@@ -388,7 +401,8 @@ const EntrepreneurProblems = () => {
                     )}
                   </button>
                 </CardContent>
-              </Card>
+                </TiltCard>
+              </div>
             );
           })}
         </div>
