@@ -22,13 +22,19 @@ export const NotificationBell = () => {
 
   const handleNotificationClick = async (notification: any) => {
     await markAsRead(notification.id);
-    
+
     // Navigate to messages if it's a message notification - go directly to /messages
     if (notification.notification_type === 'message') {
       navigate('/messages');
       return;
     }
-    
+
+    // Navigate to co-founders page if it's a post_published notification
+    if (notification.notification_type === 'post_published') {
+      navigate('/community/co-founders');
+      return;
+    }
+
     // Navigate to the post for community notifications
     if (notification.post_id) {
       navigate(`/community?post=${notification.post_id}`);
@@ -36,8 +42,8 @@ export const NotificationBell = () => {
   };
 
   const getNotificationText = (notification: any) => {
-    const { notification_type, actor } = notification;
-    
+    const { notification_type, actor, metadata } = notification;
+
     switch (notification_type) {
       case 'message':
         return `${actor.name} sent you a message`;
@@ -49,6 +55,8 @@ export const NotificationBell = () => {
         return `${actor.name} reposted your post`;
       case 'share':
         return `${actor.name} shared your post`;
+      case 'post_published':
+        return metadata?.message || 'Your co-founder post is now live!';
       default:
         return `${actor.name} interacted with your post`;
     }

@@ -1,13 +1,101 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus } from "lucide-react";
+import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus, Calendar, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
+
+interface CofounderPost {
+  id: string;
+  user_id: string;
+  project_name: string;
+  project_description: string;
+  industry: string | null;
+  stage: string;
+  looking_for: string[];
+  commitment: string | null;
+  location: string | null;
+  equity_range: string | null;
+  additional_info: string | null;
+  created_at: string;
+  status: string;
+  author?: {
+    full_name: string;
+    avatar_url: string;
+  };
+}
 
 const FindCoFounder = () => {
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<CofounderPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cofounder_posts')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch author information for each post
+      const postsWithAuthors = await Promise.all(
+        (data || []).map(async (post) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', post.user_id)
+            .single();
+
+          return {
+            ...post,
+            author: profileData || { full_name: 'Anonymous', avatar_url: '' }
+          };
+        })
+      );
+
+      setPosts(postsWithAuthors);
+    } catch (error) {
+      console.error('Error fetching co-founder posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCofounderTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      'technical': 'Technical (CTO)',
+      'business': 'Business (CEO/COO)',
+      'marketing': 'Marketing (CMO)',
+      'design': 'Design',
+      'finance': 'Finance (CFO)'
+    };
+    return types[type] || type;
+  };
+
+  const getStageLabel = (stage: string) => {
+    const stages: Record<string, string> = {
+      'idea': 'Just an idea',
+      'building-mvp': 'Building an MVP',
+      'mvp-ready': 'MVP is ready',
+      'early-users': 'Has early users',
+      'funded': 'Funded / Revenue'
+    };
+    return stages[stage] || stage;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -58,37 +146,126 @@ const FindCoFounder = () => {
             </Card>
           </div>
 
-          {/* Coming Soon Banner */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple/5 mb-12">
-            <CardContent className="pt-6 text-center py-12">
-              <div className="mb-6">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
-                  <Handshake className="w-10 h-10 text-primary" />
-                </div>
-              </div>
-              <h2 className="text-3xl font-bold mb-4">Coming Soon</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-                We're building an intelligent matching system to help you find the perfect co-founder based on skills, experience, and vision alignment.
-              </p>
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <Badge variant="secondary" className="px-4 py-2">
-                  <Code className="w-4 h-4 mr-2" />
-                  Technical Co-Founders
-                </Badge>
-                <Badge variant="secondary" className="px-4 py-2">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Business Co-Founders
-                </Badge>
-                <Badge variant="secondary" className="px-4 py-2">
-                  <Palette className="w-4 h-4 mr-2" />
-                  Creative Co-Founders
-                </Badge>
-              </div>
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                Join the Waitlist
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Co-Founder Posts */}
+          <div className="space-y-6 mb-12">
+            {loading ? (
+              <Card>
+                <CardContent className="pt-6 text-center py-12">
+                  <p className="text-muted-foreground">Loading posts...</p>
+                </CardContent>
+              </Card>
+            ) : posts.length === 0 ? (
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-purple/5">
+                <CardContent className="pt-6 text-center py-12">
+                  <div className="mb-6">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
+                      <Handshake className="w-10 h-10 text-primary" />
+                    </div>
+                  </div>
+                  <h2 className="text-3xl font-bold mb-4">No Posts Yet</h2>
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
+                    Be the first to post and find your perfect co-founder!
+                  </p>
+                  <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    <Link to="/community/co-founders/create">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Your Post
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              posts.map((post) => (
+                <Card key={post.id} className="hover:border-primary/50 transition-all">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={post.author?.avatar_url} />
+                          <AvatarFallback>
+                            {post.author?.full_name?.charAt(0) || 'A'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-xl mb-1">{post.project_name}</CardTitle>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{post.author?.full_name}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        {getStageLabel(post.stage)}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="text-base whitespace-pre-wrap">
+                      {post.project_description}
+                    </CardDescription>
+
+                    <div className="flex flex-wrap gap-2">
+                      {post.industry && (
+                        <Badge variant="secondary">
+                          <Briefcase className="w-3 h-3 mr-1" />
+                          {post.industry}
+                        </Badge>
+                      )}
+                      {post.location && (
+                        <Badge variant="secondary">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {post.location}
+                        </Badge>
+                      )}
+                      {post.commitment && (
+                        <Badge variant="secondary">
+                          <Users className="w-3 h-3 mr-1" />
+                          {post.commitment}
+                        </Badge>
+                      )}
+                      {post.equity_range && (
+                        <Badge variant="secondary">
+                          Equity: {post.equity_range}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">Looking for:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {post.looking_for.map((type) => (
+                          <Badge key={type} className="bg-primary/10 text-primary border-primary/20">
+                            {getCofounderTypeLabel(type)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {post.additional_info && (
+                      <div className="pt-2 border-t">
+                        <p className="text-sm text-muted-foreground">{post.additional_info}</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                      <Button variant="default" className="flex-1">
+                        <Handshake className="w-4 h-4 mr-2" />
+                        Connect
+                      </Button>
+                      <Button variant="outline">
+                        View Profile
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
 
           {/* What to Expect */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
