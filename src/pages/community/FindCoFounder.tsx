@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle, User } from "lucide-react";
+import { Handshake, Search, Filter, MapPin, Briefcase, Code, Palette, TrendingUp, Users, Star, Plus, Calendar, CheckCircle, Edit2, Trash2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -234,7 +234,12 @@ const FindCoFounder = () => {
                         <div>
                           <CardTitle className="text-xl mb-1">{post.project_name}</CardTitle>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{post.author?.full_name}</span>
+                            <Link
+                              to={`/profile/${post.user_id}`}
+                              className="hover:text-primary hover:underline transition-colors cursor-pointer"
+                            >
+                              {post.author?.full_name}
+                            </Link>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -319,18 +324,14 @@ const FindCoFounder = () => {
                       </div>
                     ) : (
                       // Visitor actions
-                      <div className="flex gap-2 pt-2">
-                        <Button variant="default" size="sm" className="flex-1">
+                      <div className="flex gap-3 pt-2">
+                        <Button variant="default" className="flex-1">
                           <Handshake className="w-4 h-4 mr-2" />
                           Connect
                         </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
+                        <Button variant="outline" className="flex-1">
                           <MessageCircle className="w-4 h-4 mr-2" />
                           Message
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <User className="w-4 h-4 mr-2" />
-                          View Profile
                         </Button>
                       </div>
                     )}
