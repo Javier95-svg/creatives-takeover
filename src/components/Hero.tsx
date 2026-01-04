@@ -597,15 +597,15 @@ const Hero = () => {
               <>
                 {/* Primary CTA - Value-Focused */}
                 <div className="mb-4 sm:mb-6">
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2" 
+                  <Button
+                    size="lg"
+                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2"
                     asChild
                   >
-                    <Link to="/bizmap-ai" onClick={handlePrimaryCTAClick}>
+                    <Link to="/signup" onClick={handlePrimaryCTAClick}>
                       <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
                         <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                        <span className="relative z-10">Design Your Plan in 3 Minutes</span>
+                        <span className="relative z-10">Join Now</span>
                         <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
