@@ -605,7 +605,7 @@ const Hero = () => {
                     <Link to="/signup" onClick={handlePrimaryCTAClick}>
                       <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
                         <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                        <span className="relative z-10">Join Now</span>
+                        <span className="relative z-10">Join Today</span>
                         <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
