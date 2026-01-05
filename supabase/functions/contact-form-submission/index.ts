@@ -256,17 +256,31 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("[CONTACT-FORM] Email configuration:", {
         from: `${fromName} <${fromEmailValue}>`,
         to: [adminEmail],
-        reply_to: email,
+        replyTo: email,
         subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`
       });
       
-      const adminEmailResponse = await resend.emails.send({
+      // Build email payload - match the working notify-job-application pattern exactly
+      // Note: Resend v2.0.0 TypeScript SDK uses camelCase (replyTo), not snake_case (reply_to)
+      const emailPayload: {
+        from: string;
+        to: string[];
+        subject: string;
+        html: string;
+        replyTo?: string;
+      } = {
         from: `${fromName} <${fromEmailValue}>`,
-        to: [adminEmail], // Use array format like other working functions
-        reply_to: email, // Use underscore format (reply_to) instead of camelCase
+        to: [adminEmail],
         subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`,
         html: adminEmailHtml,
-      });
+      };
+      
+      // Add replyTo only if email is valid
+      if (email && email.includes('@') && email.includes('.')) {
+        emailPayload.replyTo = email;
+      }
+      
+      const adminEmailResponse = await resend.emails.send(emailPayload);
       
       console.log("[CONTACT-FORM] Resend API response:", JSON.stringify(adminEmailResponse, null, 2));
       
@@ -274,8 +288,12 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Resend API error: ${JSON.stringify(adminEmailResponse.error)}`);
       }
       
+      if (!adminEmailResponse.data || !adminEmailResponse.data.id) {
+        throw new Error("Resend API returned success but no email ID");
+      }
+      
       adminEmailSent = true;
-      adminEmailId = adminEmailResponse.data?.id;
+      adminEmailId = adminEmailResponse.data.id;
       console.log("[CONTACT-FORM] Admin notification sent successfully. Email ID:", adminEmailId);
     } catch (emailError: any) {
       const errorDetails = {
@@ -305,7 +323,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("[CONTACT-FORM] Attempting to send user confirmation to:", email);
       const userEmailResponse = await resend.emails.send({
         from: `${fromName} <${fromEmailValue}>`,
-        to: [email], // Use array format like other working functions
+        to: [email],
         subject: `Thank you for contacting Creatives Takeover!`,
         html: userEmailHtml,
       });
@@ -316,8 +334,12 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error(`Resend API error: ${JSON.stringify(userEmailResponse.error)}`);
       }
       
+      if (!userEmailResponse.data || !userEmailResponse.data.id) {
+        throw new Error("Resend API returned success but no email ID");
+      }
+      
       userEmailSent = true;
-      userEmailId = userEmailResponse.data?.id;
+      userEmailId = userEmailResponse.data.id;
       console.log("[CONTACT-FORM] User confirmation sent successfully. Email ID:", userEmailId);
     } catch (emailError: any) {
       const errorDetails = {
