@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Send, Clock, Users, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -150,29 +150,8 @@ const ContactUs = () => {
         {/* Header */}
         <header className="text-center max-w-3xl mx-auto mb-16 animate-slide-up">
           <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2">
-            Let's Build Together
+            Contact Us
           </h2>
-          <p className="text-lg text-foreground/85 leading-relaxed mb-8">
-            Whether you're a founder seeking support, an investor exploring
-            partnerships, or a mentor wanting to give back—we'd love to hear
-            from you. Join a community where collaboration drives innovation.
-          </p>
-
-          {/* Trust Signals */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-foreground/70">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" />
-              <span>24-hour response time</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span>Founder-led support</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span>Community-driven</span>
-            </div>
-          </div>
         </header>
 
         {/* Contact Form */}
