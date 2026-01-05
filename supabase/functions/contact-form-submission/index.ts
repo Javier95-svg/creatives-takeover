@@ -1,7 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+// Initialize Supabase client with service role for database writes
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -179,44 +185,104 @@ const handler = async (req: Request): Promise<Response> => {
     // Get admin email (fallback to admin@creatives-takeover.com)
     const adminEmail = Deno.env.get("CONTACT_ADMIN_EMAIL") || "admin@creatives-takeover.com";
 
+    // Variables to track email delivery status
+    let adminEmailSent = false;
+    let userEmailSent = false;
+    let adminEmailId: string | undefined;
+    let userEmailId: string | undefined;
+    let errorMessage: string | undefined;
+
+    // Get request metadata
+    const userAgent = req.headers.get("user-agent") || null;
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null;
+
     console.log("[CONTACT-FORM] Sending emails to admin:", adminEmail);
 
-    // Send admin notification
-    const adminEmailResponse = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: adminEmail,
-      replyTo: email, // Allow direct reply to the user
-      subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`,
-      html: adminEmailHtml,
-    });
+    // Try to send admin notification
+    try {
+      const adminEmailResponse = await resend.emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: adminEmail,
+        replyTo: email, // Allow direct reply to the user
+        subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`,
+        html: adminEmailHtml,
+      });
+      adminEmailSent = true;
+      adminEmailId = adminEmailResponse.data?.id;
+      console.log("[CONTACT-FORM] Admin notification sent:", adminEmailId);
+    } catch (emailError: any) {
+      console.error("[CONTACT-FORM] Failed to send admin email:", emailError);
+      errorMessage = `Admin email failed: ${emailError.message}`;
+    }
 
-    console.log("[CONTACT-FORM] Admin notification sent:", adminEmailResponse.data?.id);
+    // Try to send user confirmation
+    try {
+      const userEmailResponse = await resend.emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: email,
+        subject: `Thank you for contacting Creatives Takeover!`,
+        html: userEmailHtml,
+      });
+      userEmailSent = true;
+      userEmailId = userEmailResponse.data?.id;
+      console.log("[CONTACT-FORM] User confirmation sent:", userEmailId);
+    } catch (emailError: any) {
+      console.error("[CONTACT-FORM] Failed to send user email:", emailError);
+      errorMessage = errorMessage
+        ? `${errorMessage}; User email failed: ${emailError.message}`
+        : `User email failed: ${emailError.message}`;
+    }
 
-    // Send user confirmation
-    const userEmailResponse = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: email,
-      subject: `Thank you for contacting Creatives Takeover!`,
-      html: userEmailHtml,
-    });
+    // ALWAYS save to database, regardless of email success/failure
+    console.log("[CONTACT-FORM] Saving submission to database...");
+    const { data: dbData, error: dbError } = await supabase
+      .from("contact_submissions")
+      .insert({
+        name,
+        email,
+        role,
+        reason,
+        message,
+        admin_email_sent: adminEmailSent,
+        user_email_sent: userEmailSent,
+        admin_email_id: adminEmailId || null,
+        user_email_id: userEmailId || null,
+        error_message: errorMessage || null,
+        user_agent: userAgent,
+        ip_address: ipAddress,
+      })
+      .select()
+      .single();
 
-    console.log("[CONTACT-FORM] User confirmation sent:", userEmailResponse.data?.id);
+    if (dbError) {
+      console.error("[CONTACT-FORM] Database error:", dbError);
+      // Even if DB fails, continue - at least we tried to send emails
+    } else {
+      console.log("[CONTACT-FORM] Submission saved to database:", dbData?.id);
+    }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Your message has been sent successfully!",
-        adminEmailId: adminEmailResponse.data?.id,
-        userEmailId: userEmailResponse.data?.id,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      }
-    );
+    // Return success if at least the admin email was sent OR the data was saved to DB
+    if (adminEmailSent || !dbError) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Your message has been sent successfully!",
+          submissionId: dbData?.id,
+          adminEmailId,
+          userEmailId,
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+          },
+        }
+      );
+    }
+
+    // If both email and DB failed, return error
+    throw new Error("Failed to send emails and save to database");
   } catch (error: any) {
     console.error("[CONTACT-FORM] Error processing submission:", error);
 
