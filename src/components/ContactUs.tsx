@@ -152,6 +152,9 @@ const ContactUs = () => {
           <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2">
             Contact Us
           </h2>
+          <p className="text-lg text-foreground/85 leading-relaxed">
+            We'd love to hear from you. We are open to any collaboration opportunities or suggestions. Please send us a message, and we will respond as soon as possible.
+          </p>
         </header>
 
         {/* Contact Form */}
