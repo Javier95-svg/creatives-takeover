@@ -164,8 +164,8 @@ const ContactUs = () => {
           <div className="flex items-center justify-center animate-fade-in">
             <div className="relative w-full h-full min-h-[400px] lg:min-h-[600px] rounded-2xl overflow-hidden glass border-border/60 hover:shadow-xl hover:shadow-primary/10 transition-shadow duration-500">
               <img
-                src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=1000&fit=crop&q=80"
-                alt="Team collaboration"
+                src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&h=1000&fit=crop&q=80"
+                alt="Contact us - Communication and connection"
                 className="w-full h-full object-cover"
               />
             </div>
