@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Send, Clock, Users, CheckCircle2 } from "lucide-react";
+import { Mail, Send, Clock, Users, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactUs = () => {
   const { toast } = useToast();
@@ -28,12 +29,56 @@ const ContactUs = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission (replace with actual API call)
-    setTimeout(() => {
-      toast({
-        title: "Message sent successfully!",
-        description: "We'll get back to you within 24 hours.",
+    try {
+      // Call the contact form submission edge function
+      const { data, error } = await supabase.functions.invoke('contact-form-submission', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          reason: formData.reason,
+          message: formData.message,
+        },
       });
+
+      if (error) {
+        console.error('Error submitting contact form:', error);
+
+        // Show fallback error message with admin email
+        toast({
+          variant: "destructive",
+          title: "Oops! Something went wrong",
+          description: (
+            <div className="flex flex-col gap-2">
+              <p>We couldn't send your message through the form.</p>
+              <p className="text-sm">
+                Please email us directly at{" "}
+                <a
+                  href="mailto:admin@creatives-takeover.com"
+                  className="underline font-medium"
+                >
+                  admin@creatives-takeover.com
+                </a>
+              </p>
+            </div>
+          ),
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Success! Show confirmation message
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-green-500" />
+            Message sent successfully!
+          </div>
+        ),
+        description: "We've received your message and will get back to you within 24 hours. Check your email for confirmation.",
+      });
+
+      // Reset form
       setFormData({
         name: "",
         email: "",
@@ -41,8 +86,30 @@ const ContactUs = () => {
         reason: "",
         message: "",
       });
+
       setIsSubmitting(false);
-    }, 1500);
+    } catch (error) {
+      console.error('Unexpected error:', error);
+
+      // Show fallback error message
+      toast({
+        variant: "destructive",
+        title: "Unable to send message",
+        description: (
+          <div className="flex flex-col gap-2">
+            <p>There was a technical issue. Please try again or email us at:</p>
+            <a
+              href="mailto:admin@creatives-takeover.com"
+              className="underline font-medium"
+            >
+              admin@creatives-takeover.com
+            </a>
+          </div>
+        ),
+      });
+
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (
