@@ -60,6 +60,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Initialize Resend client with validated API key
     const resend = new Resend(resendApiKey);
+    
+    // Verify Resend client is properly initialized
+    if (!resend) {
+      console.error("[CONTACT-FORM] Failed to initialize Resend client");
+      return new Response(
+        JSON.stringify({
+          error: "Failed to initialize email service",
+          success: false,
+          details: "Resend client initialization failed"
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
+    console.log("[CONTACT-FORM] Resend client initialized successfully");
 
     const formData: ContactFormData = await req.json();
     const { name, email, role, reason, message } = formData;
@@ -235,13 +253,27 @@ const handler = async (req: Request): Promise<Response> => {
     // Try to send admin notification
     try {
       console.log("[CONTACT-FORM] Attempting to send admin email to:", adminEmail);
+      console.log("[CONTACT-FORM] Email configuration:", {
+        from: `${fromName} <${fromEmailValue}>`,
+        to: [adminEmail],
+        reply_to: email,
+        subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`
+      });
+      
       const adminEmailResponse = await resend.emails.send({
         from: `${fromName} <${fromEmailValue}>`,
-        to: adminEmail,
-        replyTo: email, // Allow direct reply to the user
+        to: [adminEmail], // Use array format like other working functions
+        reply_to: email, // Use underscore format (reply_to) instead of camelCase
         subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`,
         html: adminEmailHtml,
       });
+      
+      console.log("[CONTACT-FORM] Resend API response:", JSON.stringify(adminEmailResponse, null, 2));
+      
+      if (adminEmailResponse.error) {
+        throw new Error(`Resend API error: ${JSON.stringify(adminEmailResponse.error)}`);
+      }
+      
       adminEmailSent = true;
       adminEmailId = adminEmailResponse.data?.id;
       console.log("[CONTACT-FORM] Admin notification sent successfully. Email ID:", adminEmailId);
@@ -254,12 +286,17 @@ const handler = async (req: Request): Promise<Response> => {
           status: emailError.response.status,
           statusText: emailError.response.statusText,
           data: emailError.response.data
-        } : undefined
+        } : undefined,
+        // Resend SDK specific error structure
+        error: emailError.error || undefined
       };
       console.error("[CONTACT-FORM] Failed to send admin email. Full error:", JSON.stringify(errorDetails, null, 2));
       errorMessage = `Admin email failed: ${emailError.message || "Unknown error"}`;
       if (emailError.response?.data) {
         errorMessage += ` - ${JSON.stringify(emailError.response.data)}`;
+      }
+      if (emailError.error) {
+        errorMessage += ` - Resend error: ${JSON.stringify(emailError.error)}`;
       }
     }
 
@@ -268,10 +305,17 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("[CONTACT-FORM] Attempting to send user confirmation to:", email);
       const userEmailResponse = await resend.emails.send({
         from: `${fromName} <${fromEmailValue}>`,
-        to: email,
+        to: [email], // Use array format like other working functions
         subject: `Thank you for contacting Creatives Takeover!`,
         html: userEmailHtml,
       });
+      
+      console.log("[CONTACT-FORM] Resend API response (user):", JSON.stringify(userEmailResponse, null, 2));
+      
+      if (userEmailResponse.error) {
+        throw new Error(`Resend API error: ${JSON.stringify(userEmailResponse.error)}`);
+      }
+      
       userEmailSent = true;
       userEmailId = userEmailResponse.data?.id;
       console.log("[CONTACT-FORM] User confirmation sent successfully. Email ID:", userEmailId);
@@ -283,7 +327,8 @@ const handler = async (req: Request): Promise<Response> => {
           status: emailError.response.status,
           statusText: emailError.response.statusText,
           data: emailError.response.data
-        } : undefined
+        } : undefined,
+        error: emailError.error || undefined
       };
       console.error("[CONTACT-FORM] Failed to send user email. Full error:", JSON.stringify(errorDetails, null, 2));
       const userErrorMsg = `User email failed: ${emailError.message || "Unknown error"}`;
@@ -291,6 +336,10 @@ const handler = async (req: Request): Promise<Response> => {
         errorMessage = errorMessage
           ? `${errorMessage}; ${userErrorMsg} - ${JSON.stringify(emailError.response.data)}`
           : `${userErrorMsg} - ${JSON.stringify(emailError.response.data)}`;
+      } else if (emailError.error) {
+        errorMessage = errorMessage
+          ? `${errorMessage}; ${userErrorMsg} - Resend error: ${JSON.stringify(emailError.error)}`
+          : `${userErrorMsg} - Resend error: ${JSON.stringify(emailError.error)}`;
       } else {
         errorMessage = errorMessage
           ? `${errorMessage}; ${userErrorMsg}`
