@@ -149,8 +149,9 @@ const ContactUs = () => {
       <div className="container mx-auto px-6 relative z-10">
         {/* Header */}
         <header className="text-center max-w-3xl mx-auto mb-16 animate-slide-up">
-          <h2 className="text-5xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2">
-            Contact Us
+          <h2 className="text-6xl font-bold mb-4 gradient-text animate-text-shimmer animate-fade-in leading-relaxed pb-2 flex items-center justify-center gap-3">
+            <span>Contact Us</span>
+            <Send className="w-10 h-10" />
           </h2>
           <p className="text-lg text-foreground/85 leading-relaxed">
             We'd love to hear from you. We are open to any collaboration opportunities or suggestions. Please send us a message, and we will respond as soon as possible.
@@ -313,11 +314,11 @@ const ContactUs = () => {
               Prefer email? Reach us directly at
             </p>
             <a
-              href="mailto:contact@creatives-takeover.com"
+              href="mailto:admin@creatives-takeover.com"
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
             >
               <Mail className="w-4 h-4" />
-              contact@creatives-takeover.com
+              admin@creatives-takeover.com
             </a>
           </div>
           </div>
