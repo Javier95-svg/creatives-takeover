@@ -629,15 +629,15 @@ const Hero = () => {
                     Explore Features
                   </Button>
 
-                  {/* Tertiary CTA - Sign-up */}
-                  <Button 
+                  {/* Tertiary CTA - Start Your Plan */}
+                  <Button
                     variant="ghost"
-                    size="lg" 
-                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline" 
+                    size="lg"
+                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline"
                     asChild
                   >
-                    <Link to="/signup" className="flex items-center" onClick={handleTertiaryCTAClick}>
-                      Join 1,000+ Founders
+                    <Link to="/bizmap-ai" className="flex items-center" onClick={handleTertiaryCTAClick}>
+                      Start Your Plan
                       <ArrowRight className="ml-1.5 w-4 h-4" />
                     </Link>
                   </Button>
