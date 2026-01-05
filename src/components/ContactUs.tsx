@@ -157,8 +157,26 @@ const ContactUs = () => {
           </p>
         </header>
 
-        {/* Contact Form */}
-        <div className="max-w-2xl mx-auto">
+        {/* Two Column Layout - Image & Form */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto">
+          {/* Left Column - Image */}
+          <div className="flex items-center justify-center animate-fade-in">
+            <div className="relative w-full h-full min-h-[400px] lg:min-h-[600px] rounded-2xl overflow-hidden glass border-border/60 hover:shadow-xl hover:shadow-primary/10 transition-shadow duration-500">
+              <img
+                src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=1000&fit=crop&q=80"
+                alt="Team collaboration"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-8">
+                <h3 className="text-2xl font-bold text-white mb-2">Let's Connect</h3>
+                <p className="text-white/90">Building the future of entrepreneurship together</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Contact Form */}
+          <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <form
             onSubmit={handleSubmit}
             className="glass border-border/60 p-8 md:p-10 animate-fade-in hover:shadow-xl hover:shadow-primary/10 transition-shadow duration-500"
@@ -306,6 +324,7 @@ const ContactUs = () => {
               <Mail className="w-4 h-4" />
               contact@creatives-takeover.com
             </a>
+          </div>
           </div>
         </div>
       </div>
