@@ -2,8 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
 // Initialize Supabase client with service role for database writes
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -30,6 +28,38 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     console.log("[CONTACT-FORM] Function started");
+
+    // Validate required environment variables
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const contactAdminEmail = Deno.env.get("CONTACT_ADMIN_EMAIL");
+    const fromEmail = Deno.env.get("FROM_EMAIL");
+    
+    // Diagnostic logging (without exposing sensitive values)
+    console.log("[CONTACT-FORM] Environment check:", {
+      hasResendApiKey: !!resendApiKey,
+      hasContactAdminEmail: !!contactAdminEmail,
+      hasFromEmail: !!fromEmail,
+      adminEmail: contactAdminEmail || "admin@creatives-takeover.com (fallback)",
+      fromEmailValue: fromEmail || "onboarding@resend.dev (fallback)"
+    });
+
+    if (!resendApiKey) {
+      console.error("[CONTACT-FORM] RESEND_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({
+          error: "Email service is not configured. Please contact support.",
+          success: false,
+          details: "RESEND_API_KEY environment variable is missing. Please configure it in Supabase Dashboard → Settings → Edge Functions → Environment Variables."
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Initialize Resend client with validated API key
+    const resend = new Resend(resendApiKey);
 
     const formData: ContactFormData = await req.json();
     const { name, email, role, reason, message } = formData;
@@ -178,12 +208,16 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Get sender information from environment
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
+    // Get sender information from environment (already validated above)
+    const fromEmailValue = fromEmail || "onboarding@resend.dev";
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
 
-    // Get admin email (fallback to admin@creatives-takeover.com)
-    const adminEmail = Deno.env.get("CONTACT_ADMIN_EMAIL") || "admin@creatives-takeover.com";
+    // Get admin email (use validated value or fallback)
+    const adminEmail = contactAdminEmail || "admin@creatives-takeover.com";
+    
+    if (!contactAdminEmail) {
+      console.warn("[CONTACT-FORM] CONTACT_ADMIN_EMAIL not set, using fallback:", adminEmail);
+    }
 
     // Variables to track email delivery status
     let adminEmailSent = false;
@@ -200,8 +234,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Try to send admin notification
     try {
+      console.log("[CONTACT-FORM] Attempting to send admin email to:", adminEmail);
       const adminEmailResponse = await resend.emails.send({
-        from: `${fromName} <${fromEmail}>`,
+        from: `${fromName} <${fromEmailValue}>`,
         to: adminEmail,
         replyTo: email, // Allow direct reply to the user
         subject: `📬 New Contact: ${reasonLabels[reason] || reason} from ${name}`,
@@ -209,28 +244,58 @@ const handler = async (req: Request): Promise<Response> => {
       });
       adminEmailSent = true;
       adminEmailId = adminEmailResponse.data?.id;
-      console.log("[CONTACT-FORM] Admin notification sent:", adminEmailId);
+      console.log("[CONTACT-FORM] Admin notification sent successfully. Email ID:", adminEmailId);
     } catch (emailError: any) {
-      console.error("[CONTACT-FORM] Failed to send admin email:", emailError);
-      errorMessage = `Admin email failed: ${emailError.message}`;
+      const errorDetails = {
+        message: emailError.message,
+        name: emailError.name,
+        stack: emailError.stack,
+        response: emailError.response ? {
+          status: emailError.response.status,
+          statusText: emailError.response.statusText,
+          data: emailError.response.data
+        } : undefined
+      };
+      console.error("[CONTACT-FORM] Failed to send admin email. Full error:", JSON.stringify(errorDetails, null, 2));
+      errorMessage = `Admin email failed: ${emailError.message || "Unknown error"}`;
+      if (emailError.response?.data) {
+        errorMessage += ` - ${JSON.stringify(emailError.response.data)}`;
+      }
     }
 
     // Try to send user confirmation
     try {
+      console.log("[CONTACT-FORM] Attempting to send user confirmation to:", email);
       const userEmailResponse = await resend.emails.send({
-        from: `${fromName} <${fromEmail}>`,
+        from: `${fromName} <${fromEmailValue}>`,
         to: email,
         subject: `Thank you for contacting Creatives Takeover!`,
         html: userEmailHtml,
       });
       userEmailSent = true;
       userEmailId = userEmailResponse.data?.id;
-      console.log("[CONTACT-FORM] User confirmation sent:", userEmailId);
+      console.log("[CONTACT-FORM] User confirmation sent successfully. Email ID:", userEmailId);
     } catch (emailError: any) {
-      console.error("[CONTACT-FORM] Failed to send user email:", emailError);
-      errorMessage = errorMessage
-        ? `${errorMessage}; User email failed: ${emailError.message}`
-        : `User email failed: ${emailError.message}`;
+      const errorDetails = {
+        message: emailError.message,
+        name: emailError.name,
+        response: emailError.response ? {
+          status: emailError.response.status,
+          statusText: emailError.response.statusText,
+          data: emailError.response.data
+        } : undefined
+      };
+      console.error("[CONTACT-FORM] Failed to send user email. Full error:", JSON.stringify(errorDetails, null, 2));
+      const userErrorMsg = `User email failed: ${emailError.message || "Unknown error"}`;
+      if (emailError.response?.data) {
+        errorMessage = errorMessage
+          ? `${errorMessage}; ${userErrorMsg} - ${JSON.stringify(emailError.response.data)}`
+          : `${userErrorMsg} - ${JSON.stringify(emailError.response.data)}`;
+      } else {
+        errorMessage = errorMessage
+          ? `${errorMessage}; ${userErrorMsg}`
+          : userErrorMsg;
+      }
     }
 
     // ALWAYS save to database, regardless of email success/failure
@@ -261,8 +326,9 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("[CONTACT-FORM] Submission saved to database:", dbData?.id);
     }
 
-    // Return success if at least the admin email was sent OR the data was saved to DB
-    if (adminEmailSent || !dbError) {
+    // Return success ONLY if admin email was actually sent
+    if (adminEmailSent) {
+      console.log("[CONTACT-FORM] Success: Admin email sent. Submission ID:", dbData?.id);
       return new Response(
         JSON.stringify({
           success: true,
@@ -281,17 +347,36 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // If both email and DB failed, return error
-    throw new Error("Failed to send emails and save to database");
-  } catch (error: any) {
-    console.error("[CONTACT-FORM] Error processing submission:", error);
-
-    // Fallback: Log error and still return success to avoid user-facing errors
-    // The admin will be notified via error logs
+    // If admin email failed, return error even if DB save succeeded
+    console.error("[CONTACT-FORM] Failure: Admin email was not sent. Error:", errorMessage);
     return new Response(
       JSON.stringify({
-        error: error.message,
+        error: "Failed to send email notification",
         success: false,
+        details: errorMessage || "Unknown error occurred while sending email",
+        submissionId: dbData?.id || null,
+        fallbackEmail: "admin@creatives-takeover.com",
+        message: "There was an issue sending your message. Please email us directly at admin@creatives-takeover.com"
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  } catch (error: any) {
+    const errorDetails = {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      cause: error.cause
+    };
+    console.error("[CONTACT-FORM] Unexpected error processing submission:", JSON.stringify(errorDetails, null, 2));
+
+    return new Response(
+      JSON.stringify({
+        error: error.message || "An unexpected error occurred",
+        success: false,
+        details: "Please check the function logs for more information",
         fallbackEmail: "admin@creatives-takeover.com",
         message: "There was an issue sending your message. Please email us directly at admin@creatives-takeover.com"
       }),
