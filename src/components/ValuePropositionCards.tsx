@@ -10,41 +10,41 @@ const ValuePropositionCards = () => {
       icon: Lightbulb,
       title: "PLAN",
       subtitle: "BizMap AI",
-      description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
+      description: "AI-powered business planning suite that transforms scattered ideas into investor-ready strategies. Generate complete business plans through guided AI conversations, validate product-market fit with PMF Lab, access 100+ battle-tested prompts, and get personalized tech stack recommendations—all in one platform.",
       cta: "Start Planning",
       link: "/bizmap-ai",
       color: "planning", // Blue for planning/trust
-      metric: "Design your plan"
+      metric: "3-min plans • 100+ prompts • Tech recommendations"
     },
     {
       icon: Users,
       title: "CONNECT",
       subtitle: "Community",
-      description: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding.",
+      description: "Vetted community of mentors, co-founders, and 1,000+ fellow founders. Get 1:1 guidance on product and fundraising, discover co-founders who complement your skills, attend live expert workshops, and build accountability partnerships with peers who understand the journey.",
       cta: "Join Community",
       link: "/community",
       color: "action", // Red for action/urgency
-      metric: "Access mentorship"
+      metric: "1,000+ founders • Vetted mentors • Live workshops"
     },
     {
       icon: LayoutDashboard,
       title: "EXECUTE",
       subtitle: "Dashboard",
-      description: "Your command center for tracking progress, managing tasks, and monitoring your business growth. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
+      description: "Your command center for startup execution. Track daily progress with goal-setting and reflection, manage 30-day sprints with AI-generated tasks, visualize growth with analytics and milestones, and get personalized AI recommendations tailored to your stage and biggest challenges.",
       cta: "View Dashboard",
       link: "/dashboard",
       color: "growth", // Green for growth/success
-      metric: "Track your progress"
+      metric: "Daily check-ins • 30-day sprints • AI guidance"
     },
     {
       icon: Rocket,
       title: "FUNDRAISE",
       subtitle: "Insighta",
-      description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
+      description: "Complete fundraising toolkit for pre-seed founders. Search 1,000+ VCs filtered by stage and industry, craft winning outreach with proven email templates, discover accelerators with acceptance rates and equity terms, and assess your investment readiness before pitching.",
       cta: "Explore Insighta",
       link: "/insighta/test",
       color: "accent", // Yellow for fundraising
-      metric: "Find your VC"
+      metric: "1,000+ VCs • Proven templates • Readiness test"
     }
   ];
 
@@ -71,7 +71,7 @@ const ValuePropositionCards = () => {
             <span className="gradient-unified">Here's What You Get</span>
           </h2>
           <p className="text-body sm:text-body-lg text-foreground/85 max-w-3xl mx-auto leading-relaxed">
-            Everything you need to go from idea to launch. Four core tools designed for creative entrepreneurs who want to build real, sustainable businesses.
+            Everything you need to go from idea to funded startup. Four comprehensive platforms—each with multiple powerful tools—designed specifically for pre-seed founders.
           </p>
         </div>
 
