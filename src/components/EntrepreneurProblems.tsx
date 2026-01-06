@@ -40,7 +40,7 @@ const EntrepreneurProblems = () => {
       phase: "Seeking Resources",
       challenge: "Fundraising feels impossible without the right connections",
       insight: "Fundraising feels impossible without the right connections. Founders often struggle to get in front of the right investors, relying on cold outreach that leads to limited results. Building a strong network and leveraging referrals can make all the difference in securing the right funding.",
-      pathway: "Insighta surfaces relevant accelerators, grants, and investors matched to your stage and industry—helping you connect with the right opportunities.",
+      pathway: "Explore VC Search",
       icon: Rocket,
       accentColor: "amber", // Fundraising
     },
@@ -180,10 +180,20 @@ const EntrepreneurProblems = () => {
                             </span>
                           </Link>
                         </div>
+                      ) : index === 4 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/insighta/vc-search" 
+                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                              {step.pathway} <Rocket className="h-4 w-4" />
+                            </span>
+                          </Link>
+                        </div>
                       ) : (
                         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                           <p className="text-sm text-foreground/90 leading-relaxed">
-                            <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
                             {step.pathway}
                           </p>
                         </div>
@@ -251,10 +261,20 @@ const EntrepreneurProblems = () => {
                               </span>
                             </Link>
                           </div>
+                        ) : index === 4 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/insighta/vc-search" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                {step.pathway} <Rocket className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
                         ) : (
                           <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
                             <p className="text-sm text-foreground/90 leading-relaxed">
-                              <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
                               {step.pathway}
                             </p>
                           </div>
@@ -327,10 +347,20 @@ const EntrepreneurProblems = () => {
                               </span>
                             </Link>
                           </div>
+                        ) : index === 4 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/insighta/vc-search" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                {step.pathway} <Rocket className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
                         ) : (
                           <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                             <p className="text-sm text-foreground/90 leading-relaxed">
-                              <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
                               {step.pathway}
                             </p>
                           </div>
