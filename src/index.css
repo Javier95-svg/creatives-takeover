@@ -173,6 +173,37 @@ All colors MUST be HSL.
     
     --gradient-subtle: linear-gradient(135deg, hsl(210 40% 98%), hsl(210 40% 96%));
 
+    /* ========================================
+       VERTICAL INFOGRAPHIC GRADIENT SYSTEM
+       ======================================== */
+
+    /* Primary vertical gradient flowing through all sections */
+    --gradient-infographic-vertical: linear-gradient(
+      180deg,
+      hsl(210 40% 98%) 0%,              /* Neutral (Hero) */
+      hsl(217 91% 60% / 0.08) 15%,      /* Blue tint (Hero→Problems) */
+      hsl(0 84% 60% / 0.06) 30%,        /* Red tint (Problems) */
+      hsl(217 91% 60% / 0.05) 45%,      /* Blue tint (Trends) */
+      hsl(142 76% 36% / 0.06) 60%,      /* Green tint (Value Props) */
+      hsl(210 40% 98%) 75%,             /* Neutral (Reviews) */
+      hsl(217 91% 60% / 0.04) 100%      /* Blue tint (FAQ) */
+    );
+
+    /* Section-specific subtle accent overlays */
+    --gradient-accent-blue: linear-gradient(180deg, transparent 0%, hsl(217 91% 60% / 0.02) 50%, transparent 100%);
+    --gradient-accent-red: linear-gradient(180deg, transparent 0%, hsl(0 84% 60% / 0.03) 50%, transparent 100%);
+    --gradient-accent-green: linear-gradient(180deg, transparent 0%, hsl(142 76% 36% / 0.03) 50%, transparent 100%);
+
+    /* Infographic Spacing System */
+    --spacing-section-vertical: 5rem;      /* 80px - vertical padding */
+    --spacing-section-vertical-lg: 8rem;   /* 128px - large screens */
+    --spacing-section-internal: 4rem;      /* 64px - internal padding */
+    --spacing-header-margin: 4rem;         /* 64px - below headers */
+
+    /* Infographic Pattern Overlay */
+    --pattern-infographic-dots: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    --pattern-size: 40px 40px;
+
     /* Glass Effects for Light Theme */
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-border-color: rgba(214.3, 31.8%, 91.4%, 0.5);
@@ -351,6 +382,30 @@ All colors MUST be HSL.
     --gradient-glass-blue: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(96, 165, 250, 0.08));
     --gradient-glass-red: linear-gradient(135deg, rgba(248, 113, 113, 0.15), rgba(248, 113, 113, 0.08));
     --gradient-glass-green: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(74, 222, 128, 0.08));
+
+    /* ========================================
+       VERTICAL INFOGRAPHIC GRADIENT SYSTEM (DARK MODE)
+       ======================================== */
+
+    /* Primary vertical gradient flowing through all sections - Dark mode */
+    --gradient-infographic-vertical: linear-gradient(
+      180deg,
+      hsl(222 15% 9%) 0%,
+      hsl(217 92% 65% / 0.12) 15%,
+      hsl(0 85% 65% / 0.10) 30%,
+      hsl(217 92% 65% / 0.08) 45%,
+      hsl(142 72% 45% / 0.10) 60%,
+      hsl(222 15% 9%) 75%,
+      hsl(217 92% 65% / 0.06) 100%
+    );
+
+    /* Section-specific subtle accent overlays - Dark mode */
+    --gradient-accent-blue: linear-gradient(180deg, transparent 0%, hsl(217 92% 65% / 0.03) 50%, transparent 100%);
+    --gradient-accent-red: linear-gradient(180deg, transparent 0%, hsl(0 85% 65% / 0.04) 50%, transparent 100%);
+    --gradient-accent-green: linear-gradient(180deg, transparent 0%, hsl(142 72% 45% / 0.04) 50%, transparent 100%);
+
+    /* Infographic Pattern Overlay - Dark mode */
+    --pattern-infographic-dots: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.04) 1px, transparent 1px);
   }
 }
 
@@ -2908,6 +2963,127 @@ All colors MUST be HSL.
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Enhanced Smooth Transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-smooth-slow {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-bounce {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Enhanced Hover Lift Effect */
+  .hover-lift {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Subtle Glow Effect on Hover */
+  .hover-glow {
+    transition: all 0.3s ease;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  }
+
+  /* Stagger Animation for Lists */
+  @keyframes staggerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .stagger-item {
+    animation: staggerFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+
+  .stagger-item:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-item:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-item:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-item:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-item:nth-child(6) { animation-delay: 0.6s; }
+
+  /* Shimmer Effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Pulse Glow Animation */
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+    }
+  }
+
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  /* Modern Scroll Reveal Animation */
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scroll-reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Smooth Gradient Text Animation */
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .gradient-animate {
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
   }
 
 

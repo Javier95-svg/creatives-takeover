@@ -56,6 +56,7 @@ const AdminMentorEditor = () => {
     picture: null,
     bio: "",
     hourly_rate: 10000, // $100 default for 8-week program (stored in cents)
+    hourly_rate_per_hour: 0, // $0 default for per-hour rate (stored in cents)
     expertise: [],
     universities: [],
     is_active: true,
@@ -88,6 +89,7 @@ const AdminMentorEditor = () => {
         picture: found.picture || null,
         bio: found.bio,
         hourly_rate: found.hourly_rate,
+        hourly_rate_per_hour: (found as any).hourly_rate_per_hour || 0,
         expertise: found.expertise || [],
         universities: found.universities || [],
         is_active: found.is_active !== false,
@@ -304,6 +306,7 @@ const AdminMentorEditor = () => {
         name: formData.name,
         bio: formData.bio,
         hourly_rate: formData.hourly_rate,
+        hourly_rate_per_hour: formData.hourly_rate_per_hour || 0,
         picture: formData.picture || null,
         expertise: formData.expertise || [],
         universities: formData.universities || [], // Explicitly include universities
@@ -557,6 +560,37 @@ const AdminMentorEditor = () => {
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Provide a comprehensive bio about the mentor's experience and expertise.
+                </p>
+              </div>
+
+              {/* Hourly Rate */}
+              <div>
+                <Label htmlFor="hourly_rate_per_hour" className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Hourly Rate (USD)
+                </Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-muted-foreground">$</span>
+                  <Input
+                    id="hourly_rate_per_hour"
+                    type="number"
+                    min="0"
+                    step="10"
+                    value={((formData.hourly_rate_per_hour || 0) / 100).toFixed(0)}
+                    onChange={(e) => {
+                      const dollars = parseFloat(e.target.value) || 0;
+                      setFormData((prev) => ({
+                        ...prev,
+                        hourly_rate_per_hour: Math.round(dollars * 100),
+                      }));
+                    }}
+                    placeholder="150"
+                    className="flex-1"
+                  />
+                  <span className="text-muted-foreground text-sm">per hour</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Enter the per-hour consulting rate in dollars (e.g., 150 for $150/hour). Enter 0 if not offering hourly consulting.
                 </p>
               </div>
 

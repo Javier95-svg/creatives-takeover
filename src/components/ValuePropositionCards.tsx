@@ -49,28 +49,17 @@ const ValuePropositionCards = () => {
   ];
 
   return (
-    <section id="what-you-get" className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden bg-gradient-rgb-subtle scroll-mt-24">
-      {/* RGB gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-rgb-soft opacity-30" />
-
-      {/* Subtle grid pattern - adjusts for theme */}
-      <div className="absolute inset-0 dark:opacity-[0.04] opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-      </div>
+    <section id="what-you-get" className="py-20 lg:py-32 relative overflow-hidden scroll-mt-24">
+      {/* Subtle green accent */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/[0.03] to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in px-4">
-          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 pb-2">
+        {/* Section Header - Enhanced */}
+        <div className="text-center mb-16 sm:mb-20 animate-fade-in px-4">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 pb-2 tracking-tight">
             <span className="gradient-unified">Here's What You Get</span>
           </h2>
-          <p className="text-body sm:text-body-lg text-foreground/85 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
             Everything you need to go from idea to launch. Four core tools designed for creative entrepreneurs who want to build real, sustainable businesses.
           </p>
         </div>
@@ -126,9 +115,9 @@ const ValuePropositionCards = () => {
             return (
               <Card
                 key={index}
-                className={`relative overflow-hidden group hover:shadow-xl ${colors.shadow} transition-all duration-500 border-2 ${colors.border} animate-fade-in hover:-translate-y-2 cursor-pointer h-full`}
+                className={`relative overflow-hidden group hover:shadow-2xl ${colors.shadow} transition-all duration-700 border ${colors.border} animate-fade-in hover:-translate-y-3 cursor-pointer h-full backdrop-blur-sm bg-card/50`}
                 style={{
-                  animationDelay: `${index * 0.1}s`,
+                  animationDelay: `${index * 0.12}s`,
                   animationFillMode: 'both'
                 }}
               >
@@ -143,9 +132,9 @@ const ValuePropositionCards = () => {
                 <Link to={card.link} className="block h-full">
                   <CardContent className="relative p-5 md:p-6 flex flex-col h-full items-center">
                     {/* Icon with enhanced animations */}
-                    <div className="mb-3">
-                      <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-lg`}>
-                        <Icon className={`w-5 h-5 ${colors.text} group-hover:scale-110 transition-transform duration-500`} />
+                    <div className="mb-4">
+                      <div className={`w-14 h-14 rounded-xl ${colors.bg} flex items-center justify-center group-hover:scale-125 group-hover:rotate-6 transition-all duration-700 group-hover:shadow-xl shadow-sm`}>
+                        <Icon className={`w-7 h-7 ${colors.text} group-hover:scale-110 transition-transform duration-700`} />
                       </div>
                     </div>
 

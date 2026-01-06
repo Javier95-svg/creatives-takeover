@@ -8,7 +8,8 @@ export interface CreateMentorInput {
   name: string;
   picture?: string | null;
   bio: string;
-  hourly_rate: number; // In cents
+  hourly_rate: number; // In cents (8-week program fee)
+  hourly_rate_per_hour?: number; // In cents (per-hour consulting rate)
   stripe_connected_account_id?: string | null;
   expertise?: string[];
   universities?: string[];
