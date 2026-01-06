@@ -47,7 +47,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Founder's Mental Tax",
       challenge: "Burnout and lost momentum threaten progress",
-      insight: "The founder journey is emotionally taxing—early excitement fades, and isolation amplifies every setback.",
+      insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion.",
       pathway: "Daily check-ins on the Dashboard and peer support in the Community help you maintain momentum, celebrate wins, and push through tough moments.",
       icon: LayoutDashboard,
       accentColor: "green", // Growth/Success
