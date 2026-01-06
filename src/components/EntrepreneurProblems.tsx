@@ -1,366 +1,217 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Search,
-  Users,
-  DollarSign,
-  Map,
-  AlertCircle,
-  Flame,
-  ArrowRight,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
+import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard } from "lucide-react";
 
 const EntrepreneurProblems = () => {
-  const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
-
-  const toggleExpand = (index: number) => {
-    const newExpanded = new Set(expandedCards);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
-    setExpandedCards(newExpanded);
-  };
-
-  const problems = [
+  // Timeline items representing the founder's journey with bottlenecks and pathways
+  const journeySteps = [
     {
-      beforeIcon: Search,
-      afterIcon: CheckCircle,
-      problem: "Building Without Validating",
-      beforeText: "Spending months building an MVP without validating demand, watching savings disappear with no clear direction.",
-      afterText: "Validate your idea with BizMap AI's 7-question framework before committing months to a build.",
-      detail: [
-        "Spending months building an MVP without validating if anyone needs it",
-        "Watching savings disappear with no clear direction or market feedback",
-        "Questioning every feature decision while avoiding hard customer conversations",
-        "Building in isolation, hoping the next feature will finally make people care",
-        "Facing validation paralysis that prevents you from making informed decisions"
-      ],
-      solution: [
-        "Test problem-solution fit with BizMap AI's structured 7-question framework",
-        "Get real customer discovery guidance before committing months to a build",
-        "Receive actionable feedback that tells you exactly what resonates",
-        "Connect with founders who've navigated validation challenges successfully",
-        "Know whether your idea has legs before investing everything into it"
-      ],
+      phase: "The Starting Point",
+      challenge: "Scattered ideas without a clear direction",
+      insight: "Most founders start with excitement but lack a structured roadmap to validate and execute their vision.",
+      pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
+      icon: Lightbulb,
+      accentColor: "blue", // Planning
     },
     {
-      beforeIcon: Users,
-      afterIcon: CheckCircle,
-      problem: "Team Building Nightmares",
-      beforeText: "Paralyzed by equity split uncertainty, unable to move forward with team building decisions.",
-      afterText: "Connect with founders in our Community who've navigated equity splits and co-founder agreements.",
-      detail: [
-        "Paralyzed by uncertainty about fair equity splits for co-founders",
-        "Second-guessing whether you're being too generous or too stingy",
-        "Fear of making wrong decisions that create resentment down the line",
-        "Lack of clear frameworks and real-world examples for team building",
-        "Unable to move forward with team building due to decision paralysis"
-      ],
-      solution: [
-        "Access proven equity split calculators used by hundreds of successful startups",
-        "Get real-world examples and battle-tested frameworks from experienced founders",
-        "Learn what works and what creates problems from founders who've been there",
-        "Discuss your specific situation in a safe space with honest feedback",
-        "Build your team with clarity and fairness, avoiding common pitfalls"
-      ],
+      phase: "Finding Direction",
+      challenge: "Weak execution habits and constant distractions",
+      insight: "Without clear priorities and accountability, even great ideas fade into endless to-do lists with no tangible progress.",
+      pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
+      icon: Target,
+      accentColor: "green", // Execution/Growth
     },
     {
-      beforeIcon: DollarSign,
-      afterIcon: CheckCircle,
-      problem: "Raising Capital Feels Impossible",
-      beforeText: "Stuck in the 'need money to get money' trap, wasting time pitching to the wrong investors.",
-      afterText: "Use Insighta to research investors, understand their thesis, and identify the right fit for your startup.",
-      detail: [
-        "Stuck in the 'need money to get money' trap with no clear path forward",
-        "Shooting in the dark, not knowing which investors invest in your space",
-        "Wasting time on pitches that were never going to work",
-        "Each rejection chips away at your belief that you can make this happen",
-        "Fundraising process feels like a black box with constant guessing"
-      ],
-      solution: [
-        "Understand each investor's thesis, track record, and active investment patterns",
-        "Get real-time data on which investors are actively investing in your space",
-        "Access successful pitch decks and fundraising strategies from pre-seed founders",
-        "Identify the perfect fit for your startup before writing your first email",
-        "Stop wasting time on wrong investors and start meaningful conversations"
-      ],
+      phase: "Building Alone",
+      challenge: "Network limitations and lack of guidance",
+      insight: "Going solo means missing crucial insights, struggling with decisions, and facing the emotional weight without support.",
+      pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
+      icon: Users,
+      accentColor: "red", // Action/Connection
     },
     {
-      beforeIcon: Map,
-      afterIcon: CheckCircle,
-      problem: "Go-to-Market Confusion",
-      beforeText: "No clear understanding of your ideal customer or which channels to focus on, wasting time and money.",
-      afterText: "Build a comprehensive go-to-market strategy with BizMap AI, defining your ICP and channel selection.",
-      detail: [
-        "No clear understanding of what 'go to market' means for your startup",
-        "Paralyzed by fundamental questions like B2B vs B2C or direct sales vs inbound",
-        "Throwing money at tactics without understanding which ones will work",
-        "Unable to commit fully to any channel because you're not confident it's right",
-        "Constantly second-guessing your approach, resulting in mediocre results"
-      ],
-      solution: [
-        "Define your ideal customer profile with precision using proven frameworks",
-        "Get step-by-step guidance on customer discovery and channel selection",
-        "Access go-to-market templates battle-tested by hundreds of founders",
-        "Learn from real examples of startups that navigated similar challenges",
-        "Focus your time and resources on channels that will drive real growth"
-      ],
+      phase: "Scaling Strategy",
+      challenge: "Go-to-market confusion and customer uncertainty",
+      insight: "Many founders waste time and resources on the wrong channels, unsure how to reach their ideal customers effectively.",
+      pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
+      icon: Map,
+      accentColor: "blue", // Planning
     },
     {
-      beforeIcon: AlertCircle,
-      afterIcon: CheckCircle,
-      problem: "Weak Execution Habits",
-      beforeText: "Getting distracted by Wednesday, juggling too many priorities with no clear execution system.",
-      afterText: "Your Dashboard keeps you focused with clear priorities, progress tracking, and weekly sprint planning.",
-      detail: [
-        "Getting distracted by Wednesday, pulled toward shiny new ideas",
-        "Juggling too many things but nothing feels like it's moving forward",
-        "Constantly context-switching and losing momentum on important projects",
-        "Never quite finishing anything completely despite being constantly busy",
-        "Spinning in circles, making progress on everything but completing nothing"
-      ],
-      solution: [
-        "Break down big goals into actionable weekly sprints with clear roadmaps",
-        "Track progress across all key initiatives to see where you're stuck",
-        "Build execution habits that help you ship consistently",
-        "Get accountability systems that keep you honest about accomplishments",
-        "Transform from constantly busy to consistently productive"
-      ],
+      phase: "Seeking Resources",
+      challenge: "Fundraising feels impossible without the right connections",
+      insight: "Finding the right investors is like finding a needle in a haystack—wasting time on pitches that were never going to work.",
+      pathway: "Insighta surfaces relevant accelerators, grants, and investors matched to your stage and industry—helping you connect with the right opportunities.",
+      icon: Rocket,
+      accentColor: "amber", // Fundraising
     },
     {
-      beforeIcon: Flame,
-      afterIcon: CheckCircle,
-      problem: "Early Burnout & Lost Momentum",
-      beforeText: "Initial excitement faded, replaced by exhaustion and uncertainty, questioning if you have what it takes.",
-      afterText: "Connect with founders in our Community who understand the emotional rollercoaster and help maintain momentum.",
-      detail: [
-        "Initial excitement faded, replaced by exhaustion from late nights and rejection",
-        "Questioning if you have what it takes as the emotional weight wears you down",
-        "Carrying all the stress alone with no one who truly understands",
-        "Every setback feels personal, draining your energy and enthusiasm",
-        "Wondering if this is sustainable and whether the emotional toll is worth it"
-      ],
-      solution: [
-        "Connect with founders who understand the emotional rollercoaster you're experiencing",
-        "Get strategies for managing energy and building sustainable founder habits",
-        "Access accountability partnerships and weekly check-ins for peer support",
-        "Learn how to maintain your fire without burning out from experienced founders",
-        "Transform the lonely startup journey into a shared experience with support"
-      ],
-    }
+      phase: "Sustaining Growth",
+      challenge: "Burnout and lost momentum threaten progress",
+      insight: "The founder journey is emotionally taxing—early excitement fades, and isolation amplifies every setback.",
+      pathway: "Daily check-ins on the Dashboard and peer support in the Community help you maintain momentum, celebrate wins, and push through tough moments.",
+      icon: LayoutDashboard,
+      accentColor: "green", // Growth/Success
+    },
   ];
 
+  const getAccentClasses = (color: string) => {
+    const classes = {
+      blue: {
+        icon: "bg-primary/10 border-primary/30 text-primary",
+        timeline: "bg-primary/20",
+        glow: "shadow-primary/20",
+      },
+      red: {
+        icon: "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400",
+        timeline: "bg-red-500/20",
+        glow: "shadow-red-500/20",
+      },
+      green: {
+        icon: "bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400",
+        timeline: "bg-green-500/20",
+        glow: "shadow-green-500/20",
+      },
+      amber: {
+        icon: "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400",
+        timeline: "bg-amber-500/20",
+        glow: "shadow-amber-500/20",
+      },
+    };
+    return classes[color as keyof typeof classes] || classes.blue;
+  };
+
   return (
-    <section className="py-20 lg:py-32 relative overflow-visible" aria-labelledby="roadblocks-heading">
-      <style>{`
-        @keyframes flicker {
-          0%, 100% {
-            opacity: 1;
-            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
-          }
-          25% {
-            opacity: 0.8;
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
-          }
-          50% {
-            opacity: 1;
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
-          }
-          75% {
-            opacity: 0.9;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.45);
-          }
-        }
-        .animate-flicker {
-          animation: flicker 2s ease-in-out infinite;
-        }
-        @keyframes slideUpFadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        .animate-card-entrance {
-          animation: slideUpFadeIn 0.5s ease-out forwards;
-          opacity: 0;
-        }
-        .card-hover-effect {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-hover-effect:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-        }
-        .icon-hover-effect {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-hover-effect:hover .icon-hover-effect {
-          transform: scale(1.1) rotate(5deg);
-        }
-        .arrow-hover-effect {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-hover-effect:hover .arrow-hover-effect {
-          transform: scale(1.15) rotate(12deg);
-        }
-      `}</style>
+    <section className="py-20 lg:py-32 relative overflow-visible" aria-labelledby="journey-heading">
       {/* Subtle red accent aligned with infographic gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-500/[0.03] to-transparent pointer-events-none" />
 
-      <div className="container mx-auto px-4 sm:px-6 relative z-10 overflow-visible">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16 sm:mb-20">
-          <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 mb-6 text-sm animate-flicker">
-            Big Challenges, Bold Solutions
-          </Badge>
-          <h2 id="roadblocks-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
-            <span className="gradient-unified">Common Roadblocks Founders Face</span>
+        <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
+          <h2 id="journey-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
+            <span className="gradient-unified">Every Founder's Journey is Unique</span>
           </h2>
-          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
-            Discover how the right tools, frameworks, and community support help you navigate these obstacles and build with confidence.
+          <p className="text-lg sm:text-xl text-foreground/75 leading-[1.7] font-light">
+            But the challenges are universal. Here's how we clear the path from idea to launch, removing bottlenecks at every stage.
           </p>
         </div>
 
-        {/* Problems Grid - 3 Column Layout with Better Spacing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 overflow-visible">
-          {problems.map((item, index) => {
-            const BeforeIcon = item.beforeIcon;
-            const AfterIcon = item.afterIcon;
-            const isExpanded = expandedCards.has(index);
-            
-            return (
-              <Card 
-                key={index} 
-                className="card-hover-effect border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group animate-card-entrance bg-card/60 backdrop-blur-sm hover:shadow-2xl transition-all duration-700"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {/* Problem Section Background Gradient */}
-                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/20 dark:from-red-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <CardHeader className="pb-4 p-5 relative z-10">
-                  {/* Problem Section */}
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="icon-hover-effect p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md transition-all duration-700">
-                        <BeforeIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
-                      </div>
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <CardTitle className="text-lg font-bold leading-tight text-red-600 dark:text-red-400">
-                          {item.problem}
-                        </CardTitle>
-                        <CardDescription className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                          {item.beforeText}
-                        </CardDescription>
+        {/* Vertical Timeline */}
+        <div className="max-w-5xl mx-auto relative">
+          {/* Timeline Line - Continuous vertical line */}
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/30 via-red-500/20 to-green-500/30 hidden sm:block" />
+
+          {/* Timeline Items */}
+          <div className="space-y-12 md:space-y-16">
+            {journeySteps.map((step, index) => {
+              const Icon = step.icon;
+              const accentClasses = getAccentClasses(step.accentColor);
+              const isEven = index % 2 === 0;
+
+              return (
+                <div
+                  key={index}
+                  className="relative animate-fade-in"
+                  style={{ animationDelay: `${index * 0.15}s` }}
+                >
+                  {/* Mobile Layout (Stacked) */}
+                  <div className="md:hidden flex gap-6">
+                    {/* Icon */}
+                    <div className="flex-shrink-0">
+                      <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-7 h-7" />
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
 
-                {/* Arrow Divider - More Compact */}
-                <div className="relative px-5 py-3">
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                    <div className="arrow-hover-effect w-8 h-8 rounded-full bg-gradient-to-br from-red-500/20 to-green-500/20 border border-primary/30 flex items-center justify-center shadow-md backdrop-blur-sm">
-                      <ArrowRight className="w-4 h-4 text-primary" />
-                    </div>
-                  </div>
-                  <div className="h-px bg-gradient-to-r from-red-200 via-primary/20 to-green-200 dark:from-red-900/40 dark:via-primary/15 dark:to-green-900/40" />
-                </div>
-
-                {/* Solution Section Background Gradient */}
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-tl from-green-50/20 dark:from-green-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                {/* Solution Section */}
-                <CardContent className="pt-4 pb-5 px-5 flex-1 flex flex-col relative z-10">
-                  <div className="space-y-4 flex-1">
-                    <div className="flex items-start gap-3">
-                      <div className="icon-hover-effect p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md transition-all duration-700">
-                        <AfterIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    {/* Content */}
+                    <div className="flex-1 pt-2">
+                      <div className="mb-2">
+                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+                          {step.phase}
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                          <h4 className="text-sm font-semibold text-green-600 dark:text-green-400">Solution</h4>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                          {item.afterText}
+                      <h3 className="text-xl font-bold mb-3 text-foreground">
+                        {step.challenge}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                        {step.insight}
+                      </p>
+                      <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                        <p className="text-sm text-foreground/90 leading-relaxed">
+                          <span className="font-semibold text-foreground">Your path forward: </span>
+                          {step.pathway}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Expandable Detail Section */}
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-border space-y-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                      <div className="p-3 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
-                        <h5 className="text-xs font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          The Problem:
-                        </h5>
-                        <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
-                          {item.detail.map((point, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              <span className="text-red-500 dark:text-red-400 mt-1 flex-shrink-0">•</span>
-                              <span>{point}</span>
-                            </li>
-                          ))}
-                        </ul>
+                  {/* Desktop Layout (Alternating) */}
+                  <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
+                    {/* Left Side Content (for even indexes) */}
+                    {isEven && (
+                      <div className="text-right pr-12">
+                        <div className="mb-3 flex justify-end">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+                            {step.phase}
+                          </span>
+                        </div>
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">
+                          {step.challenge}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                          {step.insight}
+                        </p>
+                        <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            <span className="font-semibold text-foreground">Your path forward: </span>
+                            {step.pathway}
+                          </p>
+                        </div>
                       </div>
-                      <div className="p-3 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30">
-                        <h5 className="text-xs font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          The Solution:
-                        </h5>
-                        <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
-                          {item.solution.map((point, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              <span className="text-green-500 dark:text-green-400 mt-1 flex-shrink-0">•</span>
-                              <span>{point}</span>
-                            </li>
-                          ))}
-                        </ul>
+                    )}
+
+                    {/* Center Icon */}
+                    <div className="flex justify-center relative z-10">
+                      <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-9 h-9" />
                       </div>
                     </div>
-                  )}
 
-                  {/* Expand/Collapse Button - More Compact */}
-                  <button
-                    onClick={() => toggleExpand(index)}
-                    className="mt-4 w-full py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 transition-all duration-300 rounded-lg flex items-center justify-center gap-2 text-xs font-semibold text-primary hover:text-primary/90 active:scale-[0.98]"
-                  >
-                    {isExpanded ? (
-                      <>
-                        <span>Show Less</span>
-                        <ChevronUp className="w-3.5 h-3.5 transition-transform duration-300" />
-                      </>
+                    {/* Right Side Content (for odd indexes) */}
+                    {!isEven ? (
+                      <div className="pl-12">
+                        <div className="mb-3">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+                            {step.phase}
+                          </span>
+                        </div>
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">
+                          {step.challenge}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                          {step.insight}
+                        </p>
+                        <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            <span className="font-semibold text-foreground">Your path forward: </span>
+                            {step.pathway}
+                          </p>
+                        </div>
+                      </div>
                     ) : (
-                      <>
-                        <span>Learn More</span>
-                        <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-y-0.5" />
-                      </>
+                      <div /> // Empty div to maintain grid structure
                     )}
-                  </button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="text-center mt-16 sm:mt-20">
+          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
+            We're not here to sell you tools—we're here to clear the bottlenecks that slow founders down. Your journey is unique, but you don't have to navigate it alone.
+          </p>
         </div>
       </div>
     </section>
