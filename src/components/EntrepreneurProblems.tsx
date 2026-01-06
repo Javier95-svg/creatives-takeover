@@ -39,7 +39,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Seeking Resources",
       challenge: "Fundraising feels impossible without the right connections",
-      insight: "Finding the right investors is like finding a needle in a haystack—wasting time on pitches that were never going to work.",
+      insight: "Fundraising feels impossible without the right connections. Founders often struggle to get in front of the right investors, relying on cold outreach that leads to limited results. Building a strong network and leveraging referrals can make all the difference in securing the right funding.",
       pathway: "Insighta surfaces relevant accelerators, grants, and investors matched to your stage and industry—helping you connect with the right opportunities.",
       icon: Rocket,
       accentColor: "amber", // Fundraising
