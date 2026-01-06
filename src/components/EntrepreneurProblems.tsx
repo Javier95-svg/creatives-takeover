@@ -173,7 +173,7 @@ const EntrepreneurProblems = () => {
                   <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
                     {/* Left Side Content (for even indexes) */}
                     {isEven && (
-                      <div className="text-right pr-12">
+                      <div className={`pr-12 ${index === 2 ? 'text-left' : 'text-right'}`}>
                         <div className="mb-3 flex justify-center">
                           <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
                             {step.phase}
