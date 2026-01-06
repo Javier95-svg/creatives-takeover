@@ -30,7 +30,7 @@ const EntrepreneurProblems = () => {
     },
     {
       phase: "Scaling Strategy",
-      challenge: "Go-to-market confusion and customer uncertainty",
+      challenge: "Task prioritization and resources management",
       insight: "Many founders waste time and resources on the wrong channels, unsure how to reach their ideal customers effectively.",
       pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
       icon: Map,
