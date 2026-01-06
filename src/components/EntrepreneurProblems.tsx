@@ -14,7 +14,7 @@ const EntrepreneurProblems = () => {
     },
     {
       phase: "Finding Direction",
-      challenge: "Weak execution habits and constant distractions",
+      challenge: "Aligning your product with a genuine market need",
       insight: "Without clear priorities and accountability, even great ideas fade into endless to-do lists with no tangible progress.",
       pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
       icon: Target,
