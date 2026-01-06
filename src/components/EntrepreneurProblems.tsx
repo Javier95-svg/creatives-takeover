@@ -207,12 +207,6 @@ const EntrepreneurProblems = () => {
           </div>
         </div>
 
-        {/* Bottom CTA */}
-        <div className="text-center mt-16 sm:mt-20">
-          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
-            We're not here to sell you tools—we're here to clear the bottlenecks that slow founders down. Your journey is unique, but you don't have to navigate it alone.
-          </p>
-        </div>
       </div>
     </section>
   );
