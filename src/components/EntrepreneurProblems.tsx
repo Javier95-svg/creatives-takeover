@@ -130,7 +130,7 @@ const EntrepreneurProblems = () => {
                           {step.phase}
                         </span>
                       </div>
-                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                         {step.challenge}
                       </h3>
                       <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 ? 'text-left' : ''}`}>
@@ -168,7 +168,7 @@ const EntrepreneurProblems = () => {
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
                         <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 ? 'text-left' : ''}`}>
@@ -211,7 +211,7 @@ const EntrepreneurProblems = () => {
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
                         <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
