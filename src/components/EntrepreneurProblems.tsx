@@ -6,7 +6,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "The Starting Point",
       challenge: "Scattered ideas without a clear direction",
-      insight: "Most founders start with excitement but lack a structured roadmap to validate and execute their vision.",
+      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward.",
       pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
       icon: Lightbulb,
       accentColor: "blue", // Planning
@@ -129,7 +129,7 @@ const EntrepreneurProblems = () => {
                           {step.phase}
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold mb-3 text-foreground">
+                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                         {step.challenge}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -137,7 +137,7 @@ const EntrepreneurProblems = () => {
                       </p>
                       <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                         <p className="text-sm text-foreground/90 leading-relaxed">
-                          <span className="font-semibold text-foreground">Your path forward: </span>
+                          <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
                           {step.pathway}
                         </p>
                       </div>
@@ -154,7 +154,7 @@ const EntrepreneurProblems = () => {
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className="text-2xl font-bold mb-4 text-foreground">
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
                         <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
@@ -162,7 +162,7 @@ const EntrepreneurProblems = () => {
                         </p>
                         <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
                           <p className="text-sm text-foreground/90 leading-relaxed">
-                            <span className="font-semibold text-foreground">Your path forward: </span>
+                            <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
                             {step.pathway}
                           </p>
                         </div>
@@ -184,7 +184,7 @@ const EntrepreneurProblems = () => {
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className="text-2xl font-bold mb-4 text-foreground">
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
                         <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
@@ -192,7 +192,7 @@ const EntrepreneurProblems = () => {
                         </p>
                         <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                           <p className="text-sm text-foreground/90 leading-relaxed">
-                            <span className="font-semibold text-foreground">Your path forward: </span>
+                            <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
                             {step.pathway}
                           </p>
                         </div>
