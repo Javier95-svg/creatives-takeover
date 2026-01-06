@@ -47,6 +47,15 @@ const Index = () => {
         className="fixed inset-0 -z-10"
         style={{ background: 'var(--gradient-infographic-vertical)' }}
       />
+
+      {/* Subtle dot pattern overlay */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: 'var(--pattern-infographic-dots)',
+          backgroundSize: 'var(--pattern-size)'
+        }}
+      />
       <SEO
         title="Creatives Takeover"
         description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."

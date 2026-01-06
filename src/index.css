@@ -200,6 +200,10 @@ All colors MUST be HSL.
     --spacing-section-internal: 4rem;      /* 64px - internal padding */
     --spacing-header-margin: 4rem;         /* 64px - below headers */
 
+    /* Infographic Pattern Overlay */
+    --pattern-infographic-dots: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    --pattern-size: 40px 40px;
+
     /* Glass Effects for Light Theme */
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-border-color: rgba(214.3, 31.8%, 91.4%, 0.5);
@@ -399,6 +403,9 @@ All colors MUST be HSL.
     --gradient-accent-blue: linear-gradient(180deg, transparent 0%, hsl(217 92% 65% / 0.03) 50%, transparent 100%);
     --gradient-accent-red: linear-gradient(180deg, transparent 0%, hsl(0 85% 65% / 0.04) 50%, transparent 100%);
     --gradient-accent-green: linear-gradient(180deg, transparent 0%, hsl(142 72% 45% / 0.04) 50%, transparent 100%);
+
+    /* Infographic Pattern Overlay - Dark mode */
+    --pattern-infographic-dots: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.04) 1px, transparent 1px);
   }
 }
 
