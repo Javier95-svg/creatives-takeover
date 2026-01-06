@@ -46,7 +46,7 @@ const EntrepreneurProblems = () => {
     },
     {
       phase: "Founder's Mental Tax",
-      challenge: "Burnout and lost momentum threaten progress",
+      challenge: "Risk of overwhelm and burnout",
       insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion.",
       pathway: "Find a Co-Founder",
       icon: LayoutDashboard,
