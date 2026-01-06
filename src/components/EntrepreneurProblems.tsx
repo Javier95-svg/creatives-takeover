@@ -31,7 +31,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Scaling Strategy",
       challenge: "Task prioritization and resources management",
-      insight: "Many founders waste time and resources on the wrong channels, unsure how to reach their ideal customers effectively.",
+      insight: "80% of results come from 20% of effort. Many founders get lost in low-impact tasks that take them nowhere, struggling to prioritize effectively. Proper task prioritization and resource management help focus energy on what truly drives progress, ensuring time and resources are used wisely.",
       pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
       icon: Map,
       accentColor: "blue", // Planning
