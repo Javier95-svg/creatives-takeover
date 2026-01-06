@@ -171,7 +171,7 @@ const AISpecializationTrends = () => {
             How the Market is Evolving
           </Badge>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 tracking-tight">
-            <span className="gradient-unified">The Explosion of Niche AI Startups</span>
+            <span className="gradient-unified">The Explosion of Niche Startups</span>
           </h2>
           <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto px-4 leading-[1.7] font-light">
             Specialization is emerging as the core strategy of modern entrepreneurship, and the data clearly confirms it.
