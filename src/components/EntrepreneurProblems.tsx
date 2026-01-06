@@ -92,7 +92,7 @@ const EntrepreneurProblems = () => {
             <span className="gradient-unified">Every Founder's Journey is Unique</span>
           </h2>
           <p className="text-lg sm:text-xl text-foreground/75 leading-[1.7] font-light">
-            But some challenges are universal. Here's how we clear founders' path, removing bottlenecks at every stage.
+            But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
           </p>
         </div>
 
