@@ -7,7 +7,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "The Starting Point",
       challenge: "Scattered ideas without a clear direction",
-      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward.",
+      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward. Without a clear roadmap, they risk losing momentum and missing key opportunities that are critical for growth.",
       pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
       icon: Lightbulb,
       accentColor: "blue", // Planning
