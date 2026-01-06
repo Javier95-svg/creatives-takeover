@@ -39,7 +39,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Seeking Resources",
       challenge: "Fundraising feels impossible without the right connections",
-      insight: "Fundraising feels impossible without the right connections. Founders often struggle to get in front of the right investors, relying on cold outreach that leads to limited results. Building a strong network and leveraging referrals can make all the difference in securing the right funding.",
+      insight: "Founders often struggle to get in front of the right investors, relying on cold outreach that leads to limited results. Building a strong network and leveraging referrals can make all the difference in securing the right funding. A well-connected founder not only gains access to capital but also valuable mentorship and strategic partnerships that can accelerate growth.",
       pathway: "Explore VC Search",
       icon: Rocket,
       accentColor: "amber", // Fundraising
