@@ -45,7 +45,7 @@ const EntrepreneurProblems = () => {
       accentColor: "amber", // Fundraising
     },
     {
-      phase: "Sustaining Growth",
+      phase: "Founder's Mental Tax",
       challenge: "Burnout and lost momentum threaten progress",
       insight: "The founder journey is emotionally taxing—early excitement fades, and isolation amplifies every setback.",
       pathway: "Daily check-ins on the Dashboard and peer support in the Community help you maintain momentum, celebrate wins, and push through tough moments.",
