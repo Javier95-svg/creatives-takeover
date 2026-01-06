@@ -41,7 +41,12 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative">
+      {/* Fixed unified gradient background */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{ background: 'var(--gradient-infographic-vertical)' }}
+      />
       <SEO
         title="Creatives Takeover"
         description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."

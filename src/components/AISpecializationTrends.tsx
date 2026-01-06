@@ -97,7 +97,7 @@ const AISpecializationTrends = () => {
 
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden bg-background">
+    <section className="py-20 lg:py-32 relative overflow-hidden">
       <style>{`
         @keyframes shimmer {
           0% {
@@ -160,33 +160,20 @@ const AISpecializationTrends = () => {
           animation: areaFill 2.5s ease-out forwards;
         }
       `}</style>
-      {/* Background elements */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-      </div>
-      
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
-        <div className="absolute bottom-1/4 left-1/4 w-40 h-40 bg-secondary/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
-      </div>
-      
+      {/* Subtle blue accent */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16">
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-4 sm:mb-6 text-xs sm:text-sm">
-            <TrendingUp className="w-3 h-3 mr-1" />
+        {/* Section Header - Enhanced */}
+        <div className="text-center mb-16 sm:mb-20">
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6 sm:mb-8 text-sm">
+            <TrendingUp className="w-4 h-4 mr-1.5" />
             How the Market is Evolving
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 tracking-tight">
             <span className="gradient-unified">The Explosion of Niche AI Startups</span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
+          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto px-4 leading-[1.7] font-light">
             Specialization is emerging as the core strategy of modern entrepreneurship, and the data clearly confirms it.
           </p>
         </div>

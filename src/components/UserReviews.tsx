@@ -99,25 +99,17 @@ const UserReviews = () => {
   const duplicatedReviews = [...reviews, ...reviews];
 
   return (
-    <section className="py-section-mobile lg:py-section-desktop bg-background relative overflow-hidden">
-      {/* Subtle grid pattern for light theme */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
-            linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-      </div>
+    <section className="py-20 lg:py-32 relative overflow-hidden">
+      {/* Clean neutral background */}
+      <div className="absolute inset-0 bg-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in px-6 sm:px-8 lg:px-12">
-          <h2 className="text-headline-lg sm:text-headline-xl font-bold mb-4 sm:mb-6 break-words">
+        {/* Section Header - Enhanced */}
+        <div className="text-center mb-16 sm:mb-20 animate-fade-in px-6 sm:px-8 lg:px-12">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 break-words tracking-tight">
             <span className="gradient-unified">Helping Founders Succeed</span>
           </h2>
-          <p className="text-body text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
             See how founders are turning their ideas into thriving projects.
           </p>
         </div>
@@ -144,7 +136,7 @@ const UserReviews = () => {
             {duplicatedReviews.map((review, index) => (
               <Card 
                 key={`${review.name}-${index}`} 
-                className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px]"
+                className="relative overflow-hidden group hover:shadow-2xl transition-all duration-700 border hover:border-primary/40 flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px] hover:-translate-y-2 backdrop-blur-sm bg-card/60"
               >
                 {/* Gradient background on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

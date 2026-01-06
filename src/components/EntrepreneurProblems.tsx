@@ -222,55 +222,25 @@ const EntrepreneurProblems = () => {
           transform: scale(1.15) rotate(12deg);
         }
       `}</style>
-      {/* Problem-Focused Wallpaper - theme-aware */}
-      <div className="absolute inset-0 bg-gradient-to-br dark:from-red-950/30 dark:via-gray-900/20 dark:to-orange-950/20 from-red-50/40 via-background to-orange-50/30" />
-      
-      {/* Circuit Board Pattern - theme-aware */}
-      <div className="absolute inset-0 dark:opacity-5 opacity-3">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(90deg, hsl(var(--red-primary) / 0.1) 1px, transparent 1px),
-            linear-gradient(hsl(var(--red-primary) / 0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }} />
-      </div>
-      
-      {/* Scattered Problem Icons Background */}
-      <div className="absolute inset-0 opacity-5">
-        {/* Scattered X marks representing problems */}
-        <div className="absolute top-20 left-20 text-[hsl(var(--red-primary))] text-4xl font-bold">✕</div>
-        <div className="absolute top-40 right-32 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
-        <div className="absolute bottom-32 left-40 text-[hsl(var(--red-primary))] text-5xl font-bold">✕</div>
-        <div className="absolute bottom-48 right-20 text-[hsl(var(--red-primary))] text-2xl font-bold">✕</div>
-        <div className="absolute top-1/2 left-1/3 text-[hsl(var(--red-primary))] text-6xl font-bold">✕</div>
-        <div className="absolute top-1/3 right-1/4 text-[hsl(var(--red-primary))] text-3xl font-bold">✕</div>
-      </div>
-      
-      {/* Warning Stripes - theme-aware */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent dark:via-red-500/20 via-red-400/15 to-transparent" />
-      <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent dark:via-orange-500/20 via-orange-400/15 to-transparent" />
-      
-      {/* Glitch Effect Elements - theme-aware */}
-      <div className="absolute top-1/4 left-1/5 w-32 h-1 dark:bg-[hsl(var(--red-primary))]/30 bg-[hsl(var(--red-primary))]/20 animate-pulse" />
-      <div className="absolute bottom-1/3 right-1/5 w-24 h-1 dark:bg-orange-500/30 bg-orange-400/20 animate-pulse" style={{ animationDelay: '1s' }} />
-      
+      {/* Subtle red accent aligned with infographic gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-500/[0.03] to-transparent pointer-events-none" />
+
       <div className="container mx-auto px-4 sm:px-6 relative z-10 overflow-visible">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 sm:mb-20">
           <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 mb-6 text-sm animate-flicker">
             Big Challenges, Bold Solutions
           </Badge>
-          <h2 id="roadblocks-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+          <h2 id="roadblocks-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
             <span className="gradient-unified">Common Roadblocks Founders Face</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
             Discover how the right tools, frameworks, and community support help you navigate these obstacles and build with confidence.
           </p>
         </div>
 
         {/* Problems Grid - 3 Column Layout with Better Spacing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-visible">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 overflow-visible">
           {problems.map((item, index) => {
             const BeforeIcon = item.beforeIcon;
             const AfterIcon = item.afterIcon;
@@ -279,8 +249,8 @@ const EntrepreneurProblems = () => {
             return (
               <Card 
                 key={index} 
-                className="card-hover-effect border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group animate-card-entrance bg-card/50 backdrop-blur-sm"
-                style={{ animationDelay: `${index * 0.08}s` }}
+                className="card-hover-effect border-l-4 border-red-500/50 hover:border-red-500/80 border-border flex flex-col h-full relative overflow-hidden group animate-card-entrance bg-card/60 backdrop-blur-sm hover:shadow-2xl transition-all duration-700"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Problem Section Background Gradient */}
                 <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-br from-red-50/20 dark:from-red-950/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -289,8 +259,8 @@ const EntrepreneurProblems = () => {
                   {/* Problem Section */}
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="icon-hover-effect p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex-shrink-0">
-                        <BeforeIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      <div className="icon-hover-effect p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md transition-all duration-700">
+                        <BeforeIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
                       </div>
                       <div className="flex-1 min-w-0 space-y-2">
                         <CardTitle className="text-lg font-bold leading-tight text-red-600 dark:text-red-400">
@@ -321,8 +291,8 @@ const EntrepreneurProblems = () => {
                 <CardContent className="pt-4 pb-5 px-5 flex-1 flex flex-col relative z-10">
                   <div className="space-y-4 flex-1">
                     <div className="flex items-start gap-3">
-                      <div className="icon-hover-effect p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex-shrink-0">
-                        <AfterIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      <div className="icon-hover-effect p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex-shrink-0 shadow-sm group-hover:shadow-md transition-all duration-700">
+                        <AfterIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
                       </div>
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center gap-2">
