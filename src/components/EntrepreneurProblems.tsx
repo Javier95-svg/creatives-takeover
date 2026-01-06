@@ -1,4 +1,5 @@
 import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const EntrepreneurProblems = () => {
   // Timeline items representing the founder's journey with bottlenecks and pathways
@@ -135,20 +136,25 @@ const EntrepreneurProblems = () => {
                       <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 ? 'text-left' : ''}`}>
                         {step.insight}
                       </p>
-                      <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                        <p className="text-sm text-foreground/90 leading-relaxed">
-                          {index === 0 ? (
-                            <span className="font-semibold text-foreground flex items-center gap-2">
+                      {index === 0 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/bizmap-ai" 
+                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                               Try BizMap AI <Bot className="h-4 w-4" />
                             </span>
-                          ) : (
-                            <>
-                              <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
-                              {step.pathway}
-                            </>
-                          )}
-                        </p>
-                      </div>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
+                            {step.pathway}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -168,20 +174,25 @@ const EntrepreneurProblems = () => {
                         <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
-                        <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
-                          <p className="text-sm text-foreground/90 leading-relaxed">
-                            {index === 0 ? (
-                              <span className="font-semibold text-foreground flex items-center gap-2">
+                        {index === 0 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/bizmap-ai" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 Try BizMap AI <Bot className="h-4 w-4" />
                               </span>
-                            ) : (
-                              <>
-                                <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
-                                {step.pathway}
-                              </>
-                            )}
-                          </p>
-                        </div>
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                              <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
+                              {step.pathway}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -206,20 +217,25 @@ const EntrepreneurProblems = () => {
                         <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                           {step.insight}
                         </p>
-                        <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                          <p className="text-sm text-foreground/90 leading-relaxed">
-                            {index === 0 ? (
-                              <span className="font-semibold text-foreground flex items-center gap-2">
+                        {index === 0 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/bizmap-ai" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 Try BizMap AI <Bot className="h-4 w-4" />
                               </span>
-                            ) : (
-                              <>
-                                <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
-                                {step.pathway}
-                              </>
-                            )}
-                          </p>
-                        </div>
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                              <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
+                              {step.pathway}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div /> // Empty div to maintain grid structure
