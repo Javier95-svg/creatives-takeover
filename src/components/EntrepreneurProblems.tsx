@@ -124,8 +124,8 @@ const EntrepreneurProblems = () => {
 
                     {/* Content */}
                     <div className="flex-1 pt-2">
-                      <div className="mb-2">
-                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+                      <div className="mb-2 flex justify-center">
+                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
                           {step.phase}
                         </span>
                       </div>
@@ -149,8 +149,8 @@ const EntrepreneurProblems = () => {
                     {/* Left Side Content (for even indexes) */}
                     {isEven && (
                       <div className="text-right pr-12">
-                        <div className="mb-3 flex justify-end">
-                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+                        <div className="mb-3 flex justify-center">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
                             {step.phase}
                           </span>
                         </div>
@@ -179,8 +179,8 @@ const EntrepreneurProblems = () => {
                     {/* Right Side Content (for odd indexes) */}
                     {!isEven ? (
                       <div className="pl-12">
-                        <div className="mb-3">
-                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
+                        <div className="mb-3 flex justify-center">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
                             {step.phase}
                           </span>
                         </div>
