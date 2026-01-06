@@ -15,7 +15,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Finding Direction",
       challenge: "Aligning your product with a genuine market need",
-      insight: "Without clear priorities and accountability, even great ideas fade into endless to-do lists with no tangible progress.",
+      insight: "Founders frequently build products based on assumptions, only to face the harsh reality of limited market demand, which leads to wasted resources and a high risk of building something nobody is willing to buy.",
       pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
       icon: Target,
       accentColor: "green", // Execution/Growth
