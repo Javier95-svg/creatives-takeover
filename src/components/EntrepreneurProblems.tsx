@@ -23,7 +23,7 @@ const EntrepreneurProblems = () => {
     {
       phase: "Building Alone",
       challenge: "Navigating Uncertainty and Decision-Making",
-      insight: "Early-stage founders often find themselves in situations with limited information and high uncertainty. A mentor can help provide perspective and guidance on key decisions, like product direction, market fit, or hiring, based on their own experience.",
+      insight: "Early-stage founders often find themselves in situations with limited information and high uncertainty. This makes decision-making difficult, as they must navigate unknowns while balancing short-term survival with long-term vision. A mentor can help provide perspective and guidance on key decisions, like product direction, market fit, or hiring, based on their own experience.",
       pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
       icon: Users,
       accentColor: "red", // Action/Connection
