@@ -22,7 +22,7 @@ const EntrepreneurProblems = () => {
     },
     {
       phase: "Building Alone",
-      challenge: "Network limitations and lack of guidance",
+      challenge: "Lack of guidance and long-term planning",
       insight: "Going solo means missing crucial insights, struggling with decisions, and facing the emotional weight without support.",
       pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
       icon: Users,
