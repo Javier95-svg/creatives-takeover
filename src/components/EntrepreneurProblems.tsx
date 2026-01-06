@@ -138,7 +138,7 @@ const EntrepreneurProblems = () => {
                       <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                         <p className="text-sm text-foreground/90 leading-relaxed">
                           <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
-                          {step.pathway}
+                          {index !== 0 && step.pathway}
                         </p>
                       </div>
                     </div>
@@ -163,7 +163,7 @@ const EntrepreneurProblems = () => {
                         <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
                           <p className="text-sm text-foreground/90 leading-relaxed">
                             <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
-                            {step.pathway}
+                            {index !== 0 && step.pathway}
                           </p>
                         </div>
                       </div>
@@ -193,7 +193,7 @@ const EntrepreneurProblems = () => {
                         <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                           <p className="text-sm text-foreground/90 leading-relaxed">
                             <span className="font-semibold text-foreground">Solutions: BizMap AI features and Dashboard </span>
-                            {step.pathway}
+                            {index !== 0 && step.pathway}
                           </p>
                         </div>
                       </div>
