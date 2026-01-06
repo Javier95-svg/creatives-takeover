@@ -169,6 +169,17 @@ const EntrepreneurProblems = () => {
                             </span>
                           </Link>
                         </div>
+                      ) : index === 3 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/dashboard" 
+                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                              <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
+                            </span>
+                          </Link>
+                        </div>
                       ) : (
                         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                           <p className="text-sm text-foreground/90 leading-relaxed">
@@ -226,6 +237,17 @@ const EntrepreneurProblems = () => {
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 Find a Mentor <Users className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 3 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/dashboard" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
                               </span>
                             </Link>
                           </div>
@@ -291,6 +313,17 @@ const EntrepreneurProblems = () => {
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 Find a Mentor <Users className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 3 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/dashboard" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
                               </span>
                             </Link>
                           </div>
