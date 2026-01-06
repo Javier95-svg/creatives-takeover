@@ -88,7 +88,7 @@ const EntrepreneurProblems = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
-          <h2 id="journey-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
+          <h2 id="journey-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
             <span className="gradient-unified">Every Founder's Journey is Unique</span>
           </h2>
           <p className="text-lg sm:text-xl text-foreground/75 leading-[1.7] font-light">
