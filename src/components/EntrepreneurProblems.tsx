@@ -1,4 +1,4 @@
-import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot } from "lucide-react";
+import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const EntrepreneurProblems = () => {
@@ -48,7 +48,7 @@ const EntrepreneurProblems = () => {
       phase: "Founder's Mental Tax",
       challenge: "Burnout and lost momentum threaten progress",
       insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion.",
-      pathway: "Daily check-ins on the Dashboard and peer support in the Community help you maintain momentum, celebrate wins, and push through tough moments.",
+      pathway: "Find a Co-Founder",
       icon: LayoutDashboard,
       accentColor: "green", // Growth/Success
     },
@@ -191,6 +191,17 @@ const EntrepreneurProblems = () => {
                             </span>
                           </Link>
                         </div>
+                      ) : index === 5 ? (
+                        <div className="flex justify-center">
+                          <Link 
+                            to="/community/co-founders" 
+                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                              {step.pathway} <Handshake className="h-4 w-4" />
+                            </span>
+                          </Link>
+                        </div>
                       ) : (
                         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                           <p className="text-sm text-foreground/90 leading-relaxed">
@@ -269,6 +280,17 @@ const EntrepreneurProblems = () => {
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 {step.pathway} <Rocket className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 5 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/community/co-founders" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
@@ -355,6 +377,17 @@ const EntrepreneurProblems = () => {
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 {step.pathway} <Rocket className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 5 ? (
+                          <div className="flex justify-center">
+                            <Link 
+                              to="/community/co-founders" 
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
