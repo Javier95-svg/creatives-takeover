@@ -118,8 +118,8 @@ const EntrepreneurProblems = () => {
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
-                    <div className={index === 0 ? "w-full" : "flex-shrink-0"}>
-                      {index === 0 ? (
+                    <div className={index === 0 || index === 1 ? "w-full" : "flex-shrink-0"}>
+                      {index === 0 || index === 1 ? (
                         <FounderJourneyVideo />
                       ) : (
                         <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
@@ -309,11 +309,16 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Icon or Video (for first row) */}
+                    {/* Center Icon or Video (for first and second row) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
                         /* GIF Frame for First Row */
                         <div className="w-full max-w-4xl ml-4">
+                          <FounderJourneyVideo />
+                        </div>
+                      ) : index === 1 ? (
+                        /* GIF Frame for Second Row */
+                        <div className="w-full max-w-4xl mr-4">
                           <FounderJourneyVideo />
                         </div>
                       ) : (
@@ -326,7 +331,7 @@ const EntrepreneurProblems = () => {
 
                       {/* Right Side Content (for odd indexes) */}
                       {!isEven ? (
-                      <div className="pl-12">
+                      <div className={index === 1 ? 'pl-20' : 'pl-12'}>
                         <div className="mb-3 flex justify-center">
                           <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
                             {step.phase}
