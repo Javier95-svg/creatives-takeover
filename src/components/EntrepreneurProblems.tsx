@@ -118,7 +118,7 @@ const EntrepreneurProblems = () => {
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
-                    <div className={index === 0 || index === 1 || index === 2 || index === 3 ? "w-full" : "flex-shrink-0"}>
+                    <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 ? "w-full" : "flex-shrink-0"}>
                       {index === 0 ? (
                         <FounderJourneyVideo position={0} />
                       ) : index === 1 ? (
@@ -127,6 +127,8 @@ const EntrepreneurProblems = () => {
                         <FounderJourneyVideo position={2} />
                       ) : index === 3 ? (
                         <FounderJourneyVideo position={3} />
+                      ) : index === 4 ? (
+                        <FounderJourneyVideo position={4} />
                       ) : (
                         <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
                           <Icon className="w-7 h-7" />
@@ -315,7 +317,7 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Icon or Video (for first, second, third, and fourth row) */}
+                    {/* Center Icon or Video (for first, second, third, fourth, and fifth row) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
                         /* GIF Frame for First Row */
@@ -336,6 +338,11 @@ const EntrepreneurProblems = () => {
                         /* GIF Frame for Fourth Row */
                         <div className="w-full max-w-4xl mr-4">
                           <FounderJourneyVideo position={3} />
+                        </div>
+                      ) : index === 4 ? (
+                        /* GIF Frame for Fifth Row */
+                        <div className="w-full max-w-4xl ml-4">
+                          <FounderJourneyVideo position={4} />
                         </div>
                       ) : (
                         /* Regular Icon for Other Rows */
