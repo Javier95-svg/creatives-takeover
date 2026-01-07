@@ -18,7 +18,8 @@ ON public.founder_journey_gifs
 FOR INSERT
 TO authenticated
 WITH CHECK (
-  public.is_admin_user() = true
+  public.is_admin_user()
+  AND uploaded_by = auth.uid()
 );
 
 -- Admin can update GIFs
