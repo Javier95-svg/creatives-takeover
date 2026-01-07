@@ -76,11 +76,24 @@ const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
       setUploading(true);
       toast.loading('Uploading GIF...', { id: 'upload-gif' });
 
-      // Check if bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(b => b.id === 'founder-journey-gifs');
-      
-      if (!bucketExists) {
+      // Check if bucket exists (with better error handling)
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      console.log('Available buckets:', buckets?.map(b => ({ id: b.id, name: b.name })));
+      if (bucketError) {
+        console.error('Error checking buckets:', bucketError);
+        // Don't fail here - try to upload anyway, the upload will fail with a clearer error
+      }
+
+      // Check both id and name (like AdminHeroImages does)
+      const bucketExists = buckets?.some(b => 
+        b.id === 'founder-journey-gifs' || b.name === 'founder-journey-gifs'
+      );
+      console.log('founder-journey-gifs bucket exists:', bucketExists);
+
+      // If bucket check fails, try to upload anyway - the upload error will be more informative
+      if (!bucketExists && buckets && buckets.length > 0) {
+        // Only throw if we got buckets back but ours isn't there
+        // If listBuckets failed, we'll let the upload attempt show the real error
         throw new Error('Storage bucket "founder-journey-gifs" does not exist. Please run the SQL migration.');
       }
 
