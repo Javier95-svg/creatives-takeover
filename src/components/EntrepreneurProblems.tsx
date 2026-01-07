@@ -307,82 +307,51 @@ const EntrepreneurProblems = () => {
                     {/* Center Icon or Animation (for first row) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
-                        /* Brainstorming Animation for First Row */
-                        <div className="w-80 h-48 rounded-xl border-2 border-border/50 overflow-hidden shadow-lg bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 relative">
+                        /* Flickering Lightbulb Animation for First Row */
+                        <div className="relative">
                           <svg
-                            viewBox="0 0 320 192"
-                            className="w-full h-full"
+                            viewBox="0 0 100 120"
+                            className="w-24 h-28 flickering-lightbulb"
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            {/* Background gradient */}
                             <defs>
-                              <linearGradient id="brainstormGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="hsl(var(--primary) / 0.1)" />
-                                <stop offset="50%" stopColor="hsl(var(--accent) / 0.05)" />
-                                <stop offset="100%" stopColor="hsl(var(--primary) / 0.1)" />
-                              </linearGradient>
-                              <filter id="glow">
-                                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                              <filter id="lightbulbGlow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                                 <feMerge>
                                   <feMergeNode in="coloredBlur"/>
                                   <feMergeNode in="SourceGraphic"/>
                                 </feMerge>
                               </filter>
+                              <radialGradient id="bulbGradient" cx="50%" cy="30%">
+                                <stop offset="0%" stopColor="hsl(var(--primary) / 0.9)" />
+                                <stop offset="50%" stopColor="hsl(var(--primary) / 0.7)" />
+                                <stop offset="100%" stopColor="hsl(var(--primary) / 0.5)" />
+                              </radialGradient>
                             </defs>
-
-                            {/* Abstract shapes converging/diverging */}
-                            <circle cx="160" cy="96" r="30" fill="hsl(var(--primary) / 0.2)" className="brainstorm-shape-1" />
-                            <circle cx="100" cy="60" r="20" fill="hsl(var(--accent) / 0.15)" className="brainstorm-shape-2" />
-                            <circle cx="220" cy="60" r="20" fill="hsl(var(--primary) / 0.15)" className="brainstorm-shape-3" />
-                            <circle cx="80" cy="140" r="18" fill="hsl(var(--accent) / 0.2)" className="brainstorm-shape-4" />
-                            <circle cx="240" cy="140" r="18" fill="hsl(var(--primary) / 0.2)" className="brainstorm-shape-5" />
-
-                            {/* Connecting nodes with animated lines */}
-                            <g className="brainstorm-connections">
-                              <line x1="160" y1="96" x2="100" y2="60" stroke="hsl(var(--primary) / 0.3)" strokeWidth="1.5" className="connection-line-1" />
-                              <line x1="160" y1="96" x2="220" y2="60" stroke="hsl(var(--primary) / 0.3)" strokeWidth="1.5" className="connection-line-2" />
-                              <line x1="160" y1="96" x2="80" y2="140" stroke="hsl(var(--accent) / 0.3)" strokeWidth="1.5" className="connection-line-3" />
-                              <line x1="160" y1="96" x2="240" y2="140" stroke="hsl(var(--accent) / 0.3)" strokeWidth="1.5" className="connection-line-4" />
-                              <line x1="100" y1="60" x2="220" y2="60" stroke="hsl(var(--primary) / 0.2)" strokeWidth="1" className="connection-line-5" />
-                              <line x1="80" y1="140" x2="240" y2="140" stroke="hsl(var(--accent) / 0.2)" strokeWidth="1" className="connection-line-6" />
-                            </g>
-
-                            {/* Thought bubbles floating */}
-                            <g className="brainstorm-bubbles">
-                              <ellipse cx="60" cy="40" rx="15" ry="12" fill="hsl(var(--primary) / 0.25)" className="thought-bubble-1" />
-                              <ellipse cx="260" cy="50" rx="12" ry="10" fill="hsl(var(--accent) / 0.25)" className="thought-bubble-2" />
-                              <ellipse cx="50" cy="160" rx="14" ry="11" fill="hsl(var(--primary) / 0.2)" className="thought-bubble-3" />
-                              <ellipse cx="270" cy="150" rx="13" ry="9" fill="hsl(var(--accent) / 0.2)" className="thought-bubble-4" />
-                              <ellipse cx="140" cy="30" rx="10" ry="8" fill="hsl(var(--primary) / 0.3)" className="thought-bubble-5" />
-                              <ellipse cx="180" cy="170" rx="11" ry="9" fill="hsl(var(--accent) / 0.3)" className="thought-bubble-6" />
-                            </g>
-
-                            {/* Lightbulbs appearing and transforming */}
-                            <g className="brainstorm-lightbulbs">
-                              {/* Lightbulb 1 */}
-                              <g className="lightbulb-1" transform="translate(120, 80)">
-                                <circle cx="0" cy="0" r="8" fill="hsl(var(--primary) / 0.4)" filter="url(#glow)" />
-                                <rect x="-2" y="6" width="4" height="3" fill="hsl(var(--primary) / 0.3)" />
-                              </g>
-                              {/* Lightbulb 2 */}
-                              <g className="lightbulb-2" transform="translate(200, 100)">
-                                <circle cx="0" cy="0" r="7" fill="hsl(var(--accent) / 0.4)" filter="url(#glow)" />
-                                <rect x="-2" y="5" width="4" height="3" fill="hsl(var(--accent) / 0.3)" />
-                              </g>
-                              {/* Lightbulb 3 */}
-                              <g className="lightbulb-3" transform="translate(90, 110)">
-                                <circle cx="0" cy="0" r="6" fill="hsl(var(--primary) / 0.35)" filter="url(#glow)" />
-                                <rect x="-1.5" y="5" width="3" height="2" fill="hsl(var(--primary) / 0.25)" />
-                              </g>
-                              {/* Lightbulb 4 */}
-                              <g className="lightbulb-4" transform="translate(230, 85)">
-                                <circle cx="0" cy="0" r="7" fill="hsl(var(--accent) / 0.35)" filter="url(#glow)" />
-                                <rect x="-2" y="5" width="4" height="3" fill="hsl(var(--accent) / 0.25)" />
-                              </g>
-                            </g>
-
-                            {/* Central node */}
-                            <circle cx="160" cy="96" r="6" fill="hsl(var(--primary))" className="central-node" />
+                            
+                            {/* Lightbulb bulb */}
+                            <path
+                              d="M 50 20 Q 30 20 20 35 Q 20 50 25 60 Q 25 70 30 75 L 30 85 Q 30 90 35 90 L 40 90 Q 40 95 45 100 L 45 110 Q 45 115 50 115 Q 55 115 55 110 L 55 100 Q 60 95 60 90 L 65 90 Q 70 90 70 85 L 70 75 Q 75 70 75 60 Q 80 50 80 35 Q 70 20 50 20 Z"
+                              fill="url(#bulbGradient)"
+                              className="lightbulb-bulb"
+                              filter="url(#lightbulbGlow)"
+                            />
+                            
+                            {/* Lightbulb base */}
+                            <rect x="40" y="85" width="20" height="8" rx="2" fill="hsl(var(--primary) / 0.6)" className="lightbulb-base" />
+                            <rect x="42" y="93" width="16" height="4" rx="1" fill="hsl(var(--primary) / 0.4)" className="lightbulb-base" />
+                            
+                            {/* Filament */}
+                            <path
+                              d="M 50 35 Q 45 40 45 50 M 50 35 Q 55 40 55 50"
+                              stroke="hsl(var(--primary) / 0.8)"
+                              strokeWidth="1.5"
+                              fill="none"
+                              className="lightbulb-filament"
+                            />
+                            
+                            {/* Glow effect */}
+                            <circle cx="50" cy="50" r="35" fill="hsl(var(--primary) / 0.2)" className="lightbulb-glow" />
                           </svg>
                         </div>
                       ) : (
