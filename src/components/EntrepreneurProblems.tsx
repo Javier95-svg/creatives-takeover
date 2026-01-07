@@ -118,11 +118,13 @@ const EntrepreneurProblems = () => {
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
-                    <div className={index === 0 || index === 1 ? "w-full" : "flex-shrink-0"}>
+                    <div className={index === 0 || index === 1 || index === 2 ? "w-full" : "flex-shrink-0"}>
                       {index === 0 ? (
                         <FounderJourneyVideo position={0} />
                       ) : index === 1 ? (
                         <FounderJourneyVideo position={1} />
+                      ) : index === 2 ? (
+                        <FounderJourneyVideo position={2} />
                       ) : (
                         <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
                           <Icon className="w-7 h-7" />
@@ -311,7 +313,7 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Icon or Video (for first and second row) */}
+                    {/* Center Icon or Video (for first, second, and third row) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
                         /* GIF Frame for First Row */
@@ -322,6 +324,11 @@ const EntrepreneurProblems = () => {
                         /* GIF Frame for Second Row */
                         <div className="w-full max-w-4xl mr-4">
                           <FounderJourneyVideo position={1} />
+                        </div>
+                      ) : index === 2 ? (
+                        /* GIF Frame for Third Row */
+                        <div className="w-full max-w-4xl ml-4">
+                          <FounderJourneyVideo position={2} />
                         </div>
                       ) : (
                         /* Regular Icon for Other Rows */
