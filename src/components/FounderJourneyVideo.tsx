@@ -122,12 +122,19 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
         .from('founder-journey-gifs')
         .getPublicUrl(fileName);
 
-      // Deactivate all existing GIFs for this position
-      await supabase
+      // Deactivate all existing GIFs for this position FIRST
+      // This must happen before inserting the new one to avoid unique constraint violation
+      const { error: deactivateError } = await supabase
         .from('founder_journey_gifs')
         .update({ is_active: false })
         .eq('is_active', true)
         .eq('position', position);
+
+      if (deactivateError) {
+        console.error('Error deactivating existing GIFs:', deactivateError);
+        toast.error(`Failed to deactivate existing GIF: ${deactivateError.message}`, { id: 'upload-gif' });
+        throw deactivateError;
+      }
 
       // Save to database
       const { error: insertError } = await supabase
