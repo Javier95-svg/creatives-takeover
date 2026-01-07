@@ -124,17 +124,26 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
       // Deactivate all existing GIFs for this position FIRST
       // This must happen before inserting the new one to avoid unique constraint violation
-      const { error: deactivateError } = await supabase
+      const { data: deactivateData, error: deactivateError } = await supabase
         .from('founder_journey_gifs')
         .update({ is_active: false })
         .eq('is_active', true)
-        .eq('position', position);
+        .eq('position', position)
+        .select();
 
       if (deactivateError) {
         console.error('Error deactivating existing GIFs:', deactivateError);
+        console.error('Deactivate error details:', { 
+          message: deactivateError.message, 
+          code: deactivateError.code,
+          details: deactivateError.details,
+          hint: deactivateError.hint
+        });
         toast.error(`Failed to deactivate existing GIF: ${deactivateError.message}`, { id: 'upload-gif' });
         throw deactivateError;
       }
+
+      console.log('Deactivated existing GIFs:', deactivateData);
 
       // Save to database
       const { error: insertError } = await supabase
@@ -155,6 +164,21 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
       setGifUrl(publicUrl);
       toast.success('GIF uploaded successfully!', { id: 'upload-gif' });
+      
+      // Reload the GIF to ensure it displays correctly
+      // This will trigger the useEffect to fetch the new GIF
+      const { data: reloadData, error: reloadError } = await supabase
+        .from('founder_journey_gifs')
+        .select('gif_url')
+        .eq('is_active', true)
+        .eq('position', position)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (!reloadError && reloadData?.gif_url) {
+        setGifUrl(reloadData.gif_url);
+      }
     } catch (error: any) {
       console.error('Error uploading GIF:', error);
       const errorMessage = error?.message || 'Unknown error occurred';

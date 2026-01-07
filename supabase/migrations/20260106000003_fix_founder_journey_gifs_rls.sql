@@ -29,6 +29,9 @@ FOR UPDATE
 TO authenticated
 USING (
   public.is_admin_user() = true
+)
+WITH CHECK (
+  public.is_admin_user() = true
 );
 
 -- Admin can delete GIFs
