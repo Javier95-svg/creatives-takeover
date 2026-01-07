@@ -304,11 +304,33 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Icon */}
+                    {/* Center Icon or Image Frame (for first row) */}
                     <div className="flex justify-center relative z-10">
-                      <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
-                        <Icon className="w-9 h-9" />
-                      </div>
+                      {index === 0 ? (
+                        /* Horizontal Image Frame for First Row */
+                        <div className="w-80 h-48 rounded-xl border-2 border-border/50 overflow-hidden shadow-lg bg-muted/30 relative">
+                          <img
+                            src="/src/assets/startup-validation.jpg"
+                            alt="Scattered ideas visualization"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to a gradient background if image fails
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.className = parent.className.replace('bg-muted/30', 'bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20');
+                              }
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
+                        </div>
+                      ) : (
+                        /* Regular Icon for Other Rows */
+                        <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
+                          <Icon className="w-9 h-9" />
+                        </div>
+                      )}
                     </div>
 
                       {/* Right Side Content (for odd indexes) */}
