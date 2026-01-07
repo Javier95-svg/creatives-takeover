@@ -6,9 +6,10 @@ import { toast } from 'sonner';
 
 interface FounderJourneyVideoProps {
   className?: string;
+  position?: number; // 0 for first row, 1 for second row, etc.
 }
 
-const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
+const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVideoProps) => {
   const { user } = useAuth();
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,7 @@ const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
     }
   }, [user]);
 
-  // Load active GIF
+  // Load active GIF for this position
   useEffect(() => {
     const loadGif = async () => {
       try {
@@ -34,6 +35,7 @@ const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
           .from('founder_journey_gifs')
           .select('gif_url')
           .eq('is_active', true)
+          .eq('position', position)
           .order('uploaded_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -55,7 +57,7 @@ const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
     };
 
     loadGif();
-  }, []);
+  }, [position]);
 
   const handleGifUpload = async (file: File) => {
     // Validate file type
@@ -120,11 +122,12 @@ const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
         .from('founder-journey-gifs')
         .getPublicUrl(fileName);
 
-      // Deactivate all existing GIFs
+      // Deactivate all existing GIFs for this position
       await supabase
         .from('founder_journey_gifs')
         .update({ is_active: false })
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('position', position);
 
       // Save to database
       const { error: insertError } = await supabase
@@ -133,6 +136,7 @@ const FounderJourneyVideo = ({ className = '' }: FounderJourneyVideoProps) => {
           gif_url: publicUrl,
           storage_path: fileName,
           uploaded_by: user?.id,
+          position: position,
           is_active: true
         });
 
