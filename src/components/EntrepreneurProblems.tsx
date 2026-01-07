@@ -1,7 +1,9 @@
 import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const EntrepreneurProblems = () => {
+  const [isFirstRowFlipped, setIsFirstRowFlipped] = useState(false);
   // Timeline items representing the founder's journey with bottlenecks and pathways
   const journeySteps = [
     {
@@ -53,6 +55,10 @@ const EntrepreneurProblems = () => {
       accentColor: "green", // Growth/Success
     },
   ];
+
+  const toggleFirstRowFlip = () => {
+    setIsFirstRowFlipped((prev) => !prev);
+  };
 
   const getAccentClasses = (color: string) => {
     const classes = {
@@ -213,106 +219,150 @@ const EntrepreneurProblems = () => {
                   </div>
 
                   {/* Desktop Layout (Alternating) */}
-                  <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
-                    {/* Left Side Content (for even indexes) */}
-                    {isEven && (
-                      <div className={`pr-12 ${index === 2 ? 'text-left' : 'text-right'}`}>
-                        <div className="mb-3 flex justify-center">
-                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
-                            {step.phase}
-                          </span>
-                        </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                  {index === 0 ? (
+                    /* First Row: Challenge text on left, Flip card on right */
+                    <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
+                      {/* Left Side: Challenge Text */}
+                      <div className="pr-12 text-right">
+                        <h3 className="text-2xl font-bold text-foreground whitespace-nowrap animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                           {step.challenge}
                         </h3>
-                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
-                          {step.insight}
-                        </p>
-                        {index === 0 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try BizMap AI <Bot className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 1 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai/pmf-lab" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <Target className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 2 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/community" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Find a Mentor <Users className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 3 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/dashboard" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 4 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/insighta/vc-search" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Rocket className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 5 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/community/co-founders" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : (
-                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                            <p className="text-sm text-foreground/90 leading-relaxed">
-                              {step.pathway}
-                            </p>
-                          </div>
-                        )}
                       </div>
-                    )}
-
-                    {/* Center Icon */}
-                    <div className="flex justify-center relative z-10">
-                      <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
-                        <Icon className="w-9 h-9" />
+                      
+                      {/* Right Side: Flip Card */}
+                      <div className="flex justify-end relative z-10">
+                        <div
+                          className={`flip-card w-56 h-56 cursor-pointer ${isFirstRowFlipped ? 'flipped' : ''}`}
+                          onClick={toggleFirstRowFlip}
+                          onMouseEnter={() => setIsFirstRowFlipped(true)}
+                          onMouseLeave={() => setIsFirstRowFlipped(false)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Flip card for ${step.phase}`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              toggleFirstRowFlip();
+                            }
+                          }}
+                        >
+                          <div className="flip-card-inner">
+                            {/* Front Face */}
+                            <div className={`flip-card-front w-full h-full rounded-xl border-2 flex flex-col items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300`}>
+                              <Icon className="w-12 h-12 mb-4" />
+                              <span className="text-sm font-semibold text-center px-3">{step.phase}</span>
+                            </div>
+                            {/* Back Face */}
+                            <div className={`flip-card-back w-full h-full rounded-xl border-2 bg-card/95 backdrop-blur-sm border-border/50 shadow-lg ${accentClasses.glow} flex flex-col items-center justify-center p-6`}>
+                              <h4 className="text-lg font-bold text-foreground mb-3 text-center">{step.challenge}</h4>
+                              <p className="text-sm text-muted-foreground leading-relaxed text-center">{step.insight}</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  ) : (
+                    /* Other Rows: Original layout */
+                    <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
+                      {/* Left Side Content (for even indexes) */}
+                      {isEven && (
+                        <div className={`pr-12 ${index === 2 ? 'text-left' : 'text-right'}`}>
+                          <div className="mb-3 flex justify-center">
+                            <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                              {step.phase}
+                            </span>
+                          </div>
+                          <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                            {step.challenge}
+                          </h3>
+                          <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
+                            {step.insight}
+                          </p>
+                          {index === 0 ? (
+                            <div className="flex justify-center">
+                              <Link 
+                                to="/bizmap-ai" 
+                                className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                              >
+                                <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                  Try BizMap AI <Bot className="h-4 w-4" />
+                                </span>
+                              </Link>
+                            </div>
+                          ) : index === 1 ? (
+                            <div className="flex justify-center">
+                              <Link 
+                                to="/bizmap-ai/pmf-lab" 
+                                className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                              >
+                                <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                  Try PMF Lab <Target className="h-4 w-4" />
+                                </span>
+                              </Link>
+                            </div>
+                          ) : index === 2 ? (
+                            <div className="flex justify-center">
+                              <Link 
+                                to="/community" 
+                                className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                              >
+                                <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                  Find a Mentor <Users className="h-4 w-4" />
+                                </span>
+                              </Link>
+                            </div>
+                          ) : index === 3 ? (
+                            <div className="flex justify-center">
+                              <Link 
+                                to="/dashboard" 
+                                className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                              >
+                                <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                  <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
+                                </span>
+                              </Link>
+                            </div>
+                          ) : index === 4 ? (
+                            <div className="flex justify-center">
+                              <Link 
+                                to="/insighta/vc-search" 
+                                className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                              >
+                                <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                  {step.pathway} <Rocket className="h-4 w-4" />
+                                </span>
+                              </Link>
+                            </div>
+                          ) : index === 5 ? (
+                            <div className="flex justify-center">
+                              <Link 
+                                to="/community/co-founders" 
+                                className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                              >
+                                <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                  {step.pathway} <Handshake className="h-4 w-4" />
+                                </span>
+                              </Link>
+                            </div>
+                          ) : (
+                            <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                              <p className="text-sm text-foreground/90 leading-relaxed">
+                                {step.pathway}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Right Side Content (for odd indexes) */}
-                    {!isEven ? (
+                      {/* Center Icon */}
+                      <div className="flex justify-center relative z-10">
+                        <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
+                          <Icon className="w-9 h-9" />
+                        </div>
+                      </div>
+
+                      {/* Right Side Content (for odd indexes) */}
+                      {!isEven ? (
                       <div className="pl-12">
                         <div className="mb-3 flex justify-center">
                           <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
@@ -402,7 +452,8 @@ const EntrepreneurProblems = () => {
                     ) : (
                       <div /> // Empty div to maintain grid structure
                     )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
