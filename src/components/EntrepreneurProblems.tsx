@@ -248,7 +248,7 @@ const EntrepreneurProblems = () => {
                   {/* Desktop Layout (Alternating) */}
                   <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
                     {/* Left Side Content (for odd indexes: 1, 3, 5) */}
-                    {!isRight && (
+                    {!isRight ? (
                       <div className="pr-12 text-right">
                         {index === 0 ? (
                           <div className="flex justify-center">
