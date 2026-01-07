@@ -1,5 +1,6 @@
 import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
+import FounderJourneyVideo from "./FounderJourneyVideo";
 
 const EntrepreneurProblems = () => {
   // Timeline items representing the founder's journey with bottlenecks and pathways
@@ -116,11 +117,15 @@ const EntrepreneurProblems = () => {
                 >
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
-                    {/* Icon */}
-                    <div className="flex-shrink-0">
-                      <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
-                        <Icon className="w-7 h-7" />
-                      </div>
+                    {/* Icon or Video */}
+                    <div className={index === 0 ? "w-full" : "flex-shrink-0"}>
+                      {index === 0 ? (
+                        <FounderJourneyVideo />
+                      ) : (
+                        <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
+                          <Icon className="w-7 h-7" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Content */}
@@ -304,55 +309,12 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Icon or Animation (for first row) */}
+                    {/* Center Icon or Video (for first row) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
-                        /* Flickering Lightbulb Animation for First Row */
-                        <div className="relative">
-                          <svg
-                            viewBox="0 0 100 120"
-                            className="w-24 h-28 flickering-lightbulb"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <defs>
-                              <filter id="lightbulbGlow">
-                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                <feMerge>
-                                  <feMergeNode in="coloredBlur"/>
-                                  <feMergeNode in="SourceGraphic"/>
-                                </feMerge>
-                              </filter>
-                              <radialGradient id="bulbGradient" cx="50%" cy="30%">
-                                <stop offset="0%" stopColor="hsl(var(--primary) / 0.9)" />
-                                <stop offset="50%" stopColor="hsl(var(--primary) / 0.7)" />
-                                <stop offset="100%" stopColor="hsl(var(--primary) / 0.5)" />
-                              </radialGradient>
-                            </defs>
-                            
-                            {/* Lightbulb bulb */}
-                            <path
-                              d="M 50 20 Q 30 20 20 35 Q 20 50 25 60 Q 25 70 30 75 L 30 85 Q 30 90 35 90 L 40 90 Q 40 95 45 100 L 45 110 Q 45 115 50 115 Q 55 115 55 110 L 55 100 Q 60 95 60 90 L 65 90 Q 70 90 70 85 L 70 75 Q 75 70 75 60 Q 80 50 80 35 Q 70 20 50 20 Z"
-                              fill="url(#bulbGradient)"
-                              className="lightbulb-bulb"
-                              filter="url(#lightbulbGlow)"
-                            />
-                            
-                            {/* Lightbulb base */}
-                            <rect x="40" y="85" width="20" height="8" rx="2" fill="hsl(var(--primary) / 0.6)" className="lightbulb-base" />
-                            <rect x="42" y="93" width="16" height="4" rx="1" fill="hsl(var(--primary) / 0.4)" className="lightbulb-base" />
-                            
-                            {/* Filament */}
-                            <path
-                              d="M 50 35 Q 45 40 45 50 M 50 35 Q 55 40 55 50"
-                              stroke="hsl(var(--primary) / 0.8)"
-                              strokeWidth="1.5"
-                              fill="none"
-                              className="lightbulb-filament"
-                            />
-                            
-                            {/* Glow effect */}
-                            <circle cx="50" cy="50" r="35" fill="hsl(var(--primary) / 0.2)" className="lightbulb-glow" />
-                          </svg>
+                        /* GIF Frame for First Row */
+                        <div className="w-full max-w-4xl">
+                          <FounderJourneyVideo />
                         </div>
                       ) : (
                         /* Regular Icon for Other Rows */
