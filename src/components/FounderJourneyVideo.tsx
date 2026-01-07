@@ -15,6 +15,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [gifAspectRatio, setGifAspectRatio] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if user is admin
@@ -47,6 +48,8 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
         if (data?.gif_url) {
           setGifUrl(data.gif_url);
+          // Reset aspect ratio when loading new GIF
+          setGifAspectRatio(null);
         }
       } catch (error: any) {
         console.error('Error loading GIF:', error);
@@ -200,6 +203,8 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
       
       if (!reloadError && reloadData?.gif_url) {
         setGifUrl(reloadData.gif_url);
+        // Reset aspect ratio when loading new GIF
+        setGifAspectRatio(null);
       }
     } catch (error: any) {
       console.error('Error uploading GIF:', error);
@@ -220,16 +225,27 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
     }
   };
 
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.naturalWidth && img.naturalHeight) {
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      setGifAspectRatio(aspectRatio);
+    }
+  };
+
+  // Use calculated aspect ratio or fallback to 256/135
+  const containerAspectRatio = gifAspectRatio || 256/135;
+
   if (loading) {
     return (
-      <div className={`flex items-center justify-center bg-muted/30 rounded-lg border border-border ${className}`} style={{ aspectRatio: '256/135' }}>
+      <div className={`flex items-center justify-center bg-muted/30 rounded-lg border border-border ${className}`} style={{ aspectRatio: containerAspectRatio }}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className={`relative group ${className}`} style={{ aspectRatio: '256/135' }}>
+    <div className={`relative group ${className}`} style={{ aspectRatio: containerAspectRatio }}>
       {/* GIF Frame */}
       <div className="w-full h-full rounded-lg border-4 border-border bg-muted/30 overflow-hidden relative shadow-xl">
         {gifUrl ? (
@@ -238,7 +254,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
               src={gifUrl}
               alt="Founder journey GIF"
               className="w-full h-full object-contain"
-              style={{ aspectRatio: '256/135' }}
+              onLoad={handleImageLoad}
             />
             {/* Admin overlay on hover */}
             {isAdmin && (
