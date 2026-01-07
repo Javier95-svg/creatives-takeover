@@ -304,26 +304,86 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Icon or Image Frame (for first row) */}
+                    {/* Center Icon or Animation (for first row) */}
                     <div className="flex justify-center relative z-10">
                       {index === 0 ? (
-                        /* Horizontal Image Frame for First Row */
-                        <div className="w-80 h-48 rounded-xl border-2 border-border/50 overflow-hidden shadow-lg bg-muted/30 relative">
-                          <img
-                            src="/src/assets/startup-validation.jpg"
-                            alt="Scattered ideas visualization"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback to a gradient background if image fails
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.className = parent.className.replace('bg-muted/30', 'bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20');
-                              }
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
+                        /* Brainstorming Animation for First Row */
+                        <div className="w-80 h-48 rounded-xl border-2 border-border/50 overflow-hidden shadow-lg bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 relative">
+                          <svg
+                            viewBox="0 0 320 192"
+                            className="w-full h-full"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            {/* Background gradient */}
+                            <defs>
+                              <linearGradient id="brainstormGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="hsl(var(--primary) / 0.1)" />
+                                <stop offset="50%" stopColor="hsl(var(--accent) / 0.05)" />
+                                <stop offset="100%" stopColor="hsl(var(--primary) / 0.1)" />
+                              </linearGradient>
+                              <filter id="glow">
+                                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                <feMerge>
+                                  <feMergeNode in="coloredBlur"/>
+                                  <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                              </filter>
+                            </defs>
+
+                            {/* Abstract shapes converging/diverging */}
+                            <circle cx="160" cy="96" r="30" fill="hsl(var(--primary) / 0.2)" className="brainstorm-shape-1" />
+                            <circle cx="100" cy="60" r="20" fill="hsl(var(--accent) / 0.15)" className="brainstorm-shape-2" />
+                            <circle cx="220" cy="60" r="20" fill="hsl(var(--primary) / 0.15)" className="brainstorm-shape-3" />
+                            <circle cx="80" cy="140" r="18" fill="hsl(var(--accent) / 0.2)" className="brainstorm-shape-4" />
+                            <circle cx="240" cy="140" r="18" fill="hsl(var(--primary) / 0.2)" className="brainstorm-shape-5" />
+
+                            {/* Connecting nodes with animated lines */}
+                            <g className="brainstorm-connections">
+                              <line x1="160" y1="96" x2="100" y2="60" stroke="hsl(var(--primary) / 0.3)" strokeWidth="1.5" className="connection-line-1" />
+                              <line x1="160" y1="96" x2="220" y2="60" stroke="hsl(var(--primary) / 0.3)" strokeWidth="1.5" className="connection-line-2" />
+                              <line x1="160" y1="96" x2="80" y2="140" stroke="hsl(var(--accent) / 0.3)" strokeWidth="1.5" className="connection-line-3" />
+                              <line x1="160" y1="96" x2="240" y2="140" stroke="hsl(var(--accent) / 0.3)" strokeWidth="1.5" className="connection-line-4" />
+                              <line x1="100" y1="60" x2="220" y2="60" stroke="hsl(var(--primary) / 0.2)" strokeWidth="1" className="connection-line-5" />
+                              <line x1="80" y1="140" x2="240" y2="140" stroke="hsl(var(--accent) / 0.2)" strokeWidth="1" className="connection-line-6" />
+                            </g>
+
+                            {/* Thought bubbles floating */}
+                            <g className="brainstorm-bubbles">
+                              <ellipse cx="60" cy="40" rx="15" ry="12" fill="hsl(var(--primary) / 0.25)" className="thought-bubble-1" />
+                              <ellipse cx="260" cy="50" rx="12" ry="10" fill="hsl(var(--accent) / 0.25)" className="thought-bubble-2" />
+                              <ellipse cx="50" cy="160" rx="14" ry="11" fill="hsl(var(--primary) / 0.2)" className="thought-bubble-3" />
+                              <ellipse cx="270" cy="150" rx="13" ry="9" fill="hsl(var(--accent) / 0.2)" className="thought-bubble-4" />
+                              <ellipse cx="140" cy="30" rx="10" ry="8" fill="hsl(var(--primary) / 0.3)" className="thought-bubble-5" />
+                              <ellipse cx="180" cy="170" rx="11" ry="9" fill="hsl(var(--accent) / 0.3)" className="thought-bubble-6" />
+                            </g>
+
+                            {/* Lightbulbs appearing and transforming */}
+                            <g className="brainstorm-lightbulbs">
+                              {/* Lightbulb 1 */}
+                              <g className="lightbulb-1" transform="translate(120, 80)">
+                                <circle cx="0" cy="0" r="8" fill="hsl(var(--primary) / 0.4)" filter="url(#glow)" />
+                                <rect x="-2" y="6" width="4" height="3" fill="hsl(var(--primary) / 0.3)" />
+                              </g>
+                              {/* Lightbulb 2 */}
+                              <g className="lightbulb-2" transform="translate(200, 100)">
+                                <circle cx="0" cy="0" r="7" fill="hsl(var(--accent) / 0.4)" filter="url(#glow)" />
+                                <rect x="-2" y="5" width="4" height="3" fill="hsl(var(--accent) / 0.3)" />
+                              </g>
+                              {/* Lightbulb 3 */}
+                              <g className="lightbulb-3" transform="translate(90, 110)">
+                                <circle cx="0" cy="0" r="6" fill="hsl(var(--primary) / 0.35)" filter="url(#glow)" />
+                                <rect x="-1.5" y="5" width="3" height="2" fill="hsl(var(--primary) / 0.25)" />
+                              </g>
+                              {/* Lightbulb 4 */}
+                              <g className="lightbulb-4" transform="translate(230, 85)">
+                                <circle cx="0" cy="0" r="7" fill="hsl(var(--accent) / 0.35)" filter="url(#glow)" />
+                                <rect x="-2" y="5" width="4" height="3" fill="hsl(var(--accent) / 0.25)" />
+                              </g>
+                            </g>
+
+                            {/* Central node */}
+                            <circle cx="160" cy="96" r="6" fill="hsl(var(--primary))" className="central-node" />
+                          </svg>
                         </div>
                       ) : (
                         /* Regular Icon for Other Rows */
