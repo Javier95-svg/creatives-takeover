@@ -1,9 +1,7 @@
 import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 
 const EntrepreneurProblems = () => {
-  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   // Timeline items representing the founder's journey with bottlenecks and pathways
   const journeySteps = [
     {
@@ -55,18 +53,6 @@ const EntrepreneurProblems = () => {
       accentColor: "green", // Growth/Success
     },
   ];
-
-  const toggleFlip = (index: number) => {
-    setFlippedCards((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
 
   const getAccentClasses = (color: string) => {
     const classes = {
@@ -130,44 +116,26 @@ const EntrepreneurProblems = () => {
                 >
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
-                    {/* Flip Card */}
+                    {/* Icon */}
                     <div className="flex-shrink-0">
-                      <div
-                        className={`flip-card w-48 h-48 cursor-pointer ${flippedCards.has(index) ? 'flipped' : ''}`}
-                        onClick={() => toggleFlip(index)}
-                        onMouseEnter={() => setFlippedCards((prev) => new Set(prev).add(index))}
-                        onMouseLeave={() => setFlippedCards((prev) => {
-                          const newSet = new Set(prev);
-                          newSet.delete(index);
-                          return newSet;
-                        })}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Flip card for ${step.phase}`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            toggleFlip(index);
-                          }
-                        }}
-                      >
-                        <div className="flip-card-inner">
-                          {/* Front Face */}
-                          <div className={`flip-card-front w-full h-full rounded-xl border-2 flex flex-col items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300`}>
-                            <Icon className="w-10 h-10 mb-3" />
-                            <span className="text-xs font-semibold text-center px-2">{step.phase}</span>
-                          </div>
-                          {/* Back Face */}
-                          <div className={`flip-card-back w-full h-full rounded-xl border-2 bg-card/95 backdrop-blur-sm border-border/50 shadow-lg ${accentClasses.glow} flex flex-col items-center justify-center p-4`}>
-                            <h4 className="text-sm font-bold text-foreground mb-2 text-center">{step.challenge}</h4>
-                            <p className="text-xs text-muted-foreground leading-relaxed text-center line-clamp-6">{step.insight}</p>
-                          </div>
-                        </div>
+                      <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-7 h-7" />
                       </div>
                     </div>
 
-                    {/* Content - Pathway Links */}
+                    {/* Content */}
                     <div className="flex-1 pt-2">
+                      <div className="mb-2 flex justify-center">
+                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                          {step.phase}
+                        </span>
+                      </div>
+                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        {step.challenge}
+                      </h3>
+                      <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
+                        {step.insight}
+                      </p>
                       {index === 0 ? (
                         <div className="flex justify-center">
                           <Link 
@@ -249,6 +217,17 @@ const EntrepreneurProblems = () => {
                     {/* Left Side Content (for even indexes) */}
                     {isEven && (
                       <div className={`pr-12 ${index === 2 ? 'text-left' : 'text-right'}`}>
+                        <div className="mb-3 flex justify-center">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                            {step.phase}
+                          </span>
+                        </div>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                          {step.challenge}
+                        </h3>
+                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
+                          {step.insight}
+                        </p>
                         {index === 0 ? (
                           <div className="flex justify-center">
                             <Link 
@@ -325,45 +304,27 @@ const EntrepreneurProblems = () => {
                       </div>
                     )}
 
-                    {/* Center Flip Card */}
+                    {/* Center Icon */}
                     <div className="flex justify-center relative z-10">
-                      <div
-                        className={`flip-card w-56 h-56 cursor-pointer ${flippedCards.has(index) ? 'flipped' : ''}`}
-                        onClick={() => toggleFlip(index)}
-                        onMouseEnter={() => setFlippedCards((prev) => new Set(prev).add(index))}
-                        onMouseLeave={() => setFlippedCards((prev) => {
-                          const newSet = new Set(prev);
-                          newSet.delete(index);
-                          return newSet;
-                        })}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Flip card for ${step.phase}`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            toggleFlip(index);
-                          }
-                        }}
-                      >
-                        <div className="flip-card-inner">
-                          {/* Front Face */}
-                          <div className={`flip-card-front w-full h-full rounded-xl border-2 flex flex-col items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300`}>
-                            <Icon className="w-12 h-12 mb-4" />
-                            <span className="text-sm font-semibold text-center px-3">{step.phase}</span>
-                          </div>
-                          {/* Back Face */}
-                          <div className={`flip-card-back w-full h-full rounded-xl border-2 bg-card/95 backdrop-blur-sm border-border/50 shadow-lg ${accentClasses.glow} flex flex-col items-center justify-center p-6`}>
-                            <h4 className="text-lg font-bold text-foreground mb-3 text-center">{step.challenge}</h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed text-center">{step.insight}</p>
-                          </div>
-                        </div>
+                      <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-9 h-9" />
                       </div>
                     </div>
 
                     {/* Right Side Content (for odd indexes) */}
                     {!isEven ? (
                       <div className="pl-12">
+                        <div className="mb-3 flex justify-center">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                            {step.phase}
+                          </span>
+                        </div>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                          {step.challenge}
+                        </h3>
+                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 4 ? 'text-left' : ''}`}>
+                          {step.insight}
+                        </p>
                         {index === 0 ? (
                           <div className="flex justify-center">
                             <Link 
