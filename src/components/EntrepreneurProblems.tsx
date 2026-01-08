@@ -57,7 +57,7 @@ const EntrepreneurProblems = () => {
       phase: "Founder's Mental Tax",
       challenge: "High chance of Burnout",
       insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion. Without addressing this, their ability to lead effectively and make thoughtful decisions is compromised, hindering the growth and success of their business.",
-      pathway: "",
+      pathway: "Find a Co-Founder",
       icon: Code,
       accentColor: "blue", // Planning/Technical
     },
@@ -230,11 +230,11 @@ const EntrepreneurProblems = () => {
                       ) : index === 6 ? (
                         <div className="flex justify-center">
                           <Link 
-                            to="/bizmap-ai/tech-stack" 
+                            to="/community/co-founders" 
                             className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                           >
                             <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Build your Teck Stack <Code className="h-4 w-4" />
+                              {step.pathway} <Handshake className="h-4 w-4" />
                             </span>
                           </Link>
                         </div>
@@ -333,11 +333,11 @@ const EntrepreneurProblems = () => {
                         ) : index === 6 ? (
                           <div className="flex justify-center">
                             <Link 
-                              to="/bizmap-ai/tech-stack" 
+                              to="/community/co-founders" 
                               className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Build your Teck Stack <Code className="h-4 w-4" />
+                                {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
@@ -479,11 +479,11 @@ const EntrepreneurProblems = () => {
                         ) : index === 6 ? (
                           <div className="flex justify-center">
                             <Link 
-                              to="/bizmap-ai/tech-stack" 
+                              to="/community/co-founders" 
                               className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Build your Teck Stack <Code className="h-4 w-4" />
+                                {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
