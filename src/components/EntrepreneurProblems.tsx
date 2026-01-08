@@ -155,10 +155,10 @@ const EntrepreneurProblems = () => {
                           {step.phase}
                         </span>
                       </div>
-                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                         {step.challenge}
                       </h3>
-                      <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
+                      <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                         {step.insight}
                       </p>
                       {index === 0 ? (
@@ -247,16 +247,16 @@ const EntrepreneurProblems = () => {
                   <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
                     {/* Left Side Content (for even indexes) */}
                     {isEven && (
-                      <div className={`${index === 0 ? 'pr-20' : 'pr-12'} ${index === 2 ? 'text-left' : 'text-right'}`}>
+                      <div className={`${index === 0 ? 'pr-20' : 'pr-12'} ${index === 2 || index === 6 ? 'text-left' : 'text-right'}`}>
                         <div className="mb-3 flex justify-center">
                           <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
-                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
+                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
                           {step.insight}
                         </p>
                         {index === 0 ? (
