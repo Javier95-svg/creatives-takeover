@@ -120,7 +120,7 @@ const EntrepreneurProblems = () => {
               return (
                 <div
                   key={index}
-                  className="relative animate-fade-in"
+                  className={`relative animate-fade-in ${index === 6 ? 'mt-8 md:mt-12' : ''}`}
                   style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   {/* Mobile Layout (Stacked) */}
