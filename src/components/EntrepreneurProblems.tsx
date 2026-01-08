@@ -46,10 +46,10 @@ const EntrepreneurProblems = () => {
       accentColor: "amber", // Fundraising
     },
     {
-      phase: "Founder's Mental Tax",
-      challenge: "High chance of burnout",
-      insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion. Without addressing this, their ability to lead effectively and make sound decisions is compromised, hindering the growth and success of their business.",
-      pathway: "Find a Co-Founder",
+      phase: "Architecture Deadlock",
+      challenge: "The Teck Stack Dilemma",
+      insight: "Founders struggle to choose the right tech stack because they're making long-term, high-impact decisions at the earliest and most uncertain stage of their company. They're expected to move fast and build something credible without yet knowing their real product requirements, scale, or team needs, while facing an overwhelming number of tools and loud, conflicting opinions.",
+      pathway: "Build your Teck Stack",
       icon: LayoutDashboard,
       accentColor: "green", // Growth/Success
     },
@@ -219,11 +219,11 @@ const EntrepreneurProblems = () => {
                       ) : index === 5 ? (
                         <div className="flex justify-center">
                           <Link 
-                            to="/community/co-founders" 
+                            to="/bizmap-ai/tech-stack" 
                             className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                           >
                             <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Handshake className="h-4 w-4" />
+                              {step.pathway} <Code className="h-4 w-4" />
                             </span>
                           </Link>
                         </div>
@@ -322,11 +322,11 @@ const EntrepreneurProblems = () => {
                         ) : index === 5 ? (
                           <div className="flex justify-center">
                             <Link 
-                              to="/community/co-founders" 
+                              to="/bizmap-ai/tech-stack" 
                               className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
+                                {step.pathway} <Code className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
@@ -468,11 +468,11 @@ const EntrepreneurProblems = () => {
                         ) : index === 5 ? (
                           <div className="flex justify-center">
                             <Link 
-                              to="/community/co-founders" 
+                              to="/bizmap-ai/tech-stack" 
                               className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
+                                {step.pathway} <Code className="h-4 w-4" />
                               </span>
                             </Link>
                           </div>
