@@ -512,56 +512,38 @@ const Hero = () => {
                 </Button>
               </div>
             ) : (
-              /* Unauthenticated User CTAs: Design Your Plan + Explore Features + Join */
-              <>
-                {/* Primary CTA - Value-Focused */}
-                <div className="mb-4 sm:mb-6">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300 mb-2"
-                    asChild
-                  >
-                    <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                      <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
-                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                        <span className="relative z-10">Join Today</span>
-                        <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-                    </Link>
-                  </Button>
-                </div>
+              /* Unauthenticated User CTAs: Join Today + Explore Features */
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
+                {/* Primary CTA - Join Today */}
+                <Button
+                  size="lg"
+                  className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300"
+                  asChild
+                >
+                  <Link to="/signup" onClick={handlePrimaryCTAClick}>
+                    <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
+                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                      <span className="relative z-10">Join Today</span>
+                      <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                  </Link>
+                </Button>
 
-                  {/* Secondary & Tertiary CTAs */}
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
-                  {/* Secondary CTA - Exploration */}
-                  <Button 
-                    variant="outline"
-                    size="lg" 
-                    className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSecondaryCTAClick(e as any);
-                    }}
-                  >
-                    <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                    Explore Features
-                  </Button>
-
-                  {/* Tertiary CTA - Start Your Plan */}
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    className="text-muted-foreground hover:text-foreground px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium w-full sm:w-auto transition-all duration-300 underline-offset-4 hover:underline"
-                    asChild
-                  >
-                    <Link to="/bizmap-ai" className="flex items-center" onClick={handleTertiaryCTAClick}>
-                      Start Your Plan
-                      <ArrowRight className="ml-1.5 w-4 h-4" />
-                    </Link>
-                  </Button>
-                  </div>
-                </>
+                {/* Secondary CTA - Explore Features */}
+                <Button 
+                  variant="outline"
+                  size="lg" 
+                  className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSecondaryCTAClick(e as any);
+                  }}
+                >
+                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                  Explore Features
+                </Button>
+              </div>
               )}
             </div>
           </div>
