@@ -54,7 +54,7 @@ const EntrepreneurProblems = () => {
       accentColor: "green", // Growth/Success
     },
     {
-      phase: "Tech Stack Selection",
+      phase: "Architecture Deadlock",
       challenge: "The Teck Stack Dilemma",
       insight: "Founders struggle to choose the right tech stack because they're making long-term, high-impact decisions at the earliest and most uncertain stage of their company. They're expected to move fast and build something credible without yet knowing their real product requirements, scale, or team needs, while facing an overwhelming number of tools and loud, conflicting opinions.",
       pathway: "",
