@@ -1,4 +1,4 @@
-import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake } from "lucide-react";
+import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code } from "lucide-react";
 import { Link } from "react-router-dom";
 import FounderJourneyVideo from "./FounderJourneyVideo";
 
@@ -52,6 +52,14 @@ const EntrepreneurProblems = () => {
       pathway: "Find a Co-Founder",
       icon: LayoutDashboard,
       accentColor: "green", // Growth/Success
+    },
+    {
+      phase: "Tech Stack Selection",
+      challenge: "The Teck Stack Dilemma",
+      insight: "Founders struggle to choose the right tech stack because they're making long-term, high-impact decisions at the earliest and most uncertain stage of their company. They're expected to move fast and build something credible without yet knowing their real product requirements, scale, or team needs, while facing an overwhelming number of tools and loud, conflicting opinions.",
+      pathway: "",
+      icon: Code,
+      accentColor: "blue", // Planning/Technical
     },
   ];
 
@@ -118,7 +126,7 @@ const EntrepreneurProblems = () => {
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
                     {/* Icon or Video */}
-                    <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 || index === 5 ? "w-full" : "flex-shrink-0"}>
+                    <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6 ? "w-full" : "flex-shrink-0"}>
                       {index === 0 ? (
                         <FounderJourneyVideo position={0} />
                       ) : index === 1 ? (
@@ -131,6 +139,8 @@ const EntrepreneurProblems = () => {
                         <FounderJourneyVideo position={4} />
                       ) : index === 5 ? (
                         <FounderJourneyVideo position={5} />
+                      ) : index === 6 ? (
+                        <FounderJourneyVideo position={6} />
                       ) : (
                         <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
                           <Icon className="w-7 h-7" />
@@ -216,6 +226,12 @@ const EntrepreneurProblems = () => {
                               {step.pathway} <Handshake className="h-4 w-4" />
                             </span>
                           </Link>
+                        </div>
+                      ) : index === 6 ? (
+                        <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            {step.pathway}
+                          </p>
                         </div>
                       ) : (
                         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
@@ -309,6 +325,12 @@ const EntrepreneurProblems = () => {
                               </span>
                             </Link>
                           </div>
+                        ) : index === 6 ? (
+                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                              {step.pathway}
+                            </p>
+                          </div>
                         ) : (
                           <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
                             <p className="text-sm text-foreground/90 leading-relaxed">
@@ -350,6 +372,11 @@ const EntrepreneurProblems = () => {
                         /* GIF Frame for Sixth Row */
                         <div className="w-full max-w-4xl mr-4">
                           <FounderJourneyVideo position={5} />
+                        </div>
+                      ) : index === 6 ? (
+                        /* GIF Frame for Seventh Row */
+                        <div className="w-full max-w-4xl ml-4">
+                          <FounderJourneyVideo position={6} />
                         </div>
                       ) : (
                         /* Regular Icon for Other Rows */
@@ -438,6 +465,12 @@ const EntrepreneurProblems = () => {
                                 {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
+                          </div>
+                        ) : index === 6 ? (
+                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                            <p className="text-sm text-foreground/90 leading-relaxed">
+                              {step.pathway}
+                            </p>
                           </div>
                         ) : (
                           <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
