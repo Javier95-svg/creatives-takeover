@@ -22,7 +22,7 @@ const EntrepreneurProblems = () => {
       accentColor: "green", // Execution/Growth
     },
     {
-      phase: "Building Alone",
+      phase: "Lack of Experience",
       challenge: "Navigating Uncertainty and Decision-Making",
       insight: "Early-stage founders often find themselves in situations with limited information and high uncertainty. This makes decision-making difficult, as they must navigate unknowns while balancing short-term survival with long-term vision. A mentor can help provide perspective and guidance on key decisions, like product direction, market fit, or hiring, based on their own experience.",
       pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
@@ -89,7 +89,7 @@ const EntrepreneurProblems = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
-          <h2 id="journey-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
+          <h2 id="journey-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight animate-fade-in-up" style={{ animationDuration: '0.8s', animationTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)', animationFillMode: 'both' }}>
             <span className="gradient-unified">Every Founder's Journey is Unique</span>
           </h2>
           <p className="text-lg sm:text-xl text-foreground/75 leading-[1.7] font-light">
@@ -145,7 +145,7 @@ const EntrepreneurProblems = () => {
                           {step.phase}
                         </span>
                       </div>
-                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                         {step.challenge}
                       </h3>
                       <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
@@ -237,7 +237,7 @@ const EntrepreneurProblems = () => {
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
                         <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 ? 'text-left' : ''}`}>
@@ -367,7 +367,7 @@ const EntrepreneurProblems = () => {
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
                           {step.challenge}
                         </h3>
                         <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 4 ? 'text-left' : ''}`}>
