@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -18,7 +18,8 @@ const SAMUEL_STARKMAN_CALENDLY_URL = 'https://calendly.com/samstarkman/1-on-1-wi
 const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 
 const MentorProfilePage = () => {
-  const { id, slug } = useParams<{ id?: string; slug?: string }>();
+  const { id, slug: paramSlug } = useParams<{ id?: string; slug?: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
@@ -27,22 +28,33 @@ const MentorProfilePage = () => {
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
 
+  // CRITICAL: Extract slug directly from URL pathname to avoid useParams timing issues
+  // This ensures we always get the current route slug, even if useParams hasn't updated yet
+  // Using useMemo ensures this recalculates when location.pathname changes
+  const slug = useMemo(() => {
+    if (paramSlug) return paramSlug;
+    const pathMatch = location.pathname.match(/^\/community\/([^\/]+)$/);
+    return pathMatch ? pathMatch[1] : null;
+  }, [paramSlug, location.pathname]);
+
   useEffect(() => {
     // #region agent log
-    fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:30',message:'useEffect triggered',data:{id,slug,hasId:!!id,hasSlug:!!slug,currentMentorId:mentor?.id,currentMentorName:mentor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D,E'})}).catch(()=>{});
+    const pathMatch = location.pathname.match(/^\/community\/([^\/]+)$/);
+    const slugFromPath = pathMatch ? pathMatch[1] : null;
+    fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:43',message:'useEffect triggered',data:{id,paramSlug,slugFromPath,slug,hasId:!!id,hasSlug:!!slug,pathname:location.pathname,currentMentorId:mentor?.id,currentMentorName:mentor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D,E'})}).catch(()=>{});
     // #endregion
     
-    // CRITICAL FIX: Reset state immediately when params change to prevent stale data
+    // CRITICAL FIX: Reset state immediately when route changes to prevent stale data
     setMentor(null);
     setLoadingMentor(true);
     
     // #region agent log
-    fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:36',message:'State reset - mentor cleared, loading set to true',data:{id,slug,previousMentorId:mentor?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:42',message:'State reset - mentor cleared, loading set to true',data:{id,slug,pathname:location.pathname,previousMentorId:mentor?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
     
     if (!id && !slug) {
       // #region agent log
-      fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:40',message:'Early return - no id or slug',data:{id,slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:47',message:'Early return - no id or slug',data:{id,slug,pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
       // #endregion
       setLoadingMentor(false);
       return;
@@ -99,11 +111,11 @@ const MentorProfilePage = () => {
 
     return () => {
       // #region agent log
-      fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:79',message:'Cleanup - setting cancelled',data:{id,slug},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7259/ingest/efda94d1-ad7a-43dd-93ae-d197dbf341f8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfilePage.tsx:88',message:'Cleanup - setting cancelled',data:{id,slug,pathname:location.pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
       cancelled = true; // Cleanup: prevent state updates after unmount
     };
-  }, [id, slug, fetchMentorById, fetchMentorBySlug]); // Complete dependencies
+  }, [id, slug, location.pathname, fetchMentorById, fetchMentorBySlug]); // Include location.pathname to detect route changes
 
   const handleBookClick = () => {
     if (!mentor) return;

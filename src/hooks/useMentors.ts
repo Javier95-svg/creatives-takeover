@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Mentor, AvailabilitySlot } from '@/types/mentor';
+import { generateMentorSlug } from '@/utils/mentorSlug';
 
 export interface CreateMentorInput {
   name: string;
@@ -190,18 +191,9 @@ export const useMentors = () => {
         return null;
       }
 
-      // Generate slug from each mentor name and match - using exact same algorithm as MentorCard
+      // Generate slug from each mentor name and match - using the SAME utility function as MentorCard
       const mentor = data.find((m) => {
-        const mentorSlug = m.name
-          .toLowerCase()
-          .trim()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '')
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '');
-
+        const mentorSlug = generateMentorSlug(m.name);
         return mentorSlug === slug;
       });
 
