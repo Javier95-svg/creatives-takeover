@@ -29,6 +29,25 @@ import {
 
 const ARTICLES_PER_PAGE = 18;
 
+// Function to format hashtags for display in Explore Topics
+const formatHashtagForDisplay = (tag: string): string => {
+  const tagWithoutHash = tag.replace('#', '').toLowerCase();
+  
+  // Transform specific hashtags
+  if (tagWithoutHash === 'startuplessons') {
+    return 'StartupLessons';
+  }
+  if (tagWithoutHash === 'gotomarket') {
+    return 'GoToMarket';
+  }
+  if (tagWithoutHash === 'resilience') {
+    return 'Resilience';
+  }
+  
+  // Default: return tag without hash, preserving original casing
+  return tag.replace('#', '');
+};
+
 const Stories = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -276,7 +295,7 @@ const Stories = () => {
                         }}
                       >
                         <Hash className="w-3 h-3 mr-1" />
-                        {tag.replace('#', '')}
+                        {formatHashtagForDisplay(tag)}
                       </Badge>
                     ))}
                   </div>
