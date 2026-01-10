@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { PitchDeckUploader } from "@/components/pitch-deck-analyzer/PitchDeckUploader";
 import { AnalysisResults } from "@/components/pitch-deck-analyzer/AnalysisResults";
+import { PitchDeckBuilder } from "@/components/pitch-deck-builder/PitchDeckBuilder";
 import { usePitchDeckAnalyzer } from "@/hooks/usePitchDeckAnalyzer";
 import { useReadingAnalytics } from "@/hooks/useReadingAnalytics";
 import { useEffect, useState } from "react";
@@ -201,6 +202,11 @@ export default function PitchDeckAnalyzerPage() {
               />
             )}
           </div>
+        </section>
+
+        {/* Pitch Deck Builder Section */}
+        <section className="py-20 px-4 bg-muted/30" data-section="pitch-deck-builder">
+          <PitchDeckBuilder />
         </section>
       </main>
 
