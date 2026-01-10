@@ -46,20 +46,20 @@ const EntrepreneurProblems = () => {
       accentColor: "amber", // Fundraising
     },
     {
+      phase: "Tech Stack Selection",
+      challenge: "The Teck Stack Dilemma",
+      insight: "Founders struggle to choose the right tech stack because they're making long-term, high-impact decisions at the earliest and most uncertain stage of their company. They're expected to move fast and build something credible without yet knowing their real product requirements, scale, or team needs, while facing an overwhelming number of tools and loud, conflicting opinions.",
+      pathway: "Build your Tech Stack",
+      icon: Code,
+      accentColor: "blue", // Planning/Technical
+    },
+    {
       phase: "Founder's Mental Tax",
       challenge: "High chance of burnout",
       insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion. Without addressing this, their ability to lead effectively and make sound decisions is compromised, hindering the growth and success of their business.",
       pathway: "Find a Co-Founder",
       icon: LayoutDashboard,
       accentColor: "green", // Growth/Success
-    },
-    {
-      phase: "Tech Stack Selection",
-      challenge: "The Teck Stack Dilemma",
-      insight: "Founders struggle to choose the right tech stack because they're making long-term, high-impact decisions at the earliest and most uncertain stage of their company. They're expected to move fast and build something credible without yet knowing their real product requirements, scale, or team needs, while facing an overwhelming number of tools and loud, conflicting opinions.",
-      pathway: "",
-      icon: Code,
-      accentColor: "blue", // Planning/Technical
     },
   ];
 
@@ -218,20 +218,25 @@ const EntrepreneurProblems = () => {
                         </div>
                       ) : index === 5 ? (
                         <div className="flex justify-center">
-                          <Link 
-                            to="/community/co-founders" 
+                          <Link
+                            to="/bizmap-ai/tech-stack"
+                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                          >
+                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                              {step.pathway} <Code className="h-4 w-4" />
+                            </span>
+                          </Link>
+                        </div>
+                      ) : index === 6 ? (
+                        <div className="flex justify-center">
+                          <Link
+                            to="/community/co-founders"
                             className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                           >
                             <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                               {step.pathway} <Handshake className="h-4 w-4" />
                             </span>
                           </Link>
-                        </div>
-                      ) : index === 6 ? (
-                        <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                          <p className="text-sm text-foreground/90 leading-relaxed">
-                            {step.pathway}
-                          </p>
                         </div>
                       ) : (
                         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
@@ -316,20 +321,25 @@ const EntrepreneurProblems = () => {
                           </div>
                         ) : index === 5 ? (
                           <div className="flex justify-center">
-                            <Link 
-                              to="/community/co-founders" 
+                            <Link
+                              to="/bizmap-ai/tech-stack"
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                {step.pathway} <Code className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 6 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/community/co-founders"
                               className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
-                          </div>
-                        ) : index === 6 ? (
-                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                            <p className="text-sm text-foreground/90 leading-relaxed">
-                              {step.pathway}
-                            </p>
                           </div>
                         ) : (
                           <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
@@ -457,20 +467,25 @@ const EntrepreneurProblems = () => {
                           </div>
                         ) : index === 5 ? (
                           <div className="flex justify-center">
-                            <Link 
-                              to="/community/co-founders" 
+                            <Link
+                              to="/bizmap-ai/tech-stack"
+                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                            >
+                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
+                                {step.pathway} <Code className="h-4 w-4" />
+                              </span>
+                            </Link>
+                          </div>
+                        ) : index === 6 ? (
+                          <div className="flex justify-center">
+                            <Link
+                              to="/community/co-founders"
                               className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
                             >
                               <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
                                 {step.pathway} <Handshake className="h-4 w-4" />
                               </span>
                             </Link>
-                          </div>
-                        ) : index === 6 ? (
-                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                            <p className="text-sm text-foreground/90 leading-relaxed">
-                              {step.pathway}
-                            </p>
                           </div>
                         ) : (
                           <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
