@@ -17,62 +17,17 @@ export const PITCH_DECK_TOOLS: BuilderTool[] = [
     description: 'Calculate TAM, SAM, and SOM with guided inputs and industry benchmarks',
     category: 'generator',
     icon: 'Calculator',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/tools/market-calculator'
-  },
-  {
-    id: 'competitive-matrix',
-    name: 'Competitive Matrix Generator',
-    description: 'Create professional competitive analysis grids comparing features and positioning',
-    category: 'generator',
-    icon: 'Grid3x3',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/tools/competitive-matrix'
-  },
-  {
-    id: 'slide-checklist',
-    name: 'Slide Content Checklist',
-    description: 'Ensure each slide has all critical elements before presenting to investors',
-    category: 'validator',
-    icon: 'CheckSquare',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/tools/slide-checklist'
-  },
-  {
-    id: 'one-liner-generator',
-    name: 'One-Liner Generator',
-    description: 'Craft the perfect elevator pitch and tagline using proven frameworks',
-    category: 'helper',
-    icon: 'MessageSquare',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/tools/one-liner'
-  },
-  {
-    id: 'design-guidelines',
-    name: 'Design Guidelines PDF',
-    description: 'Best practices for visual design, layout, typography, and color in pitch decks',
-    category: 'resource',
-    icon: 'FileText',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/resources/pitch-deck-design-guide'
-  },
-  {
-    id: 'pitch-deck-examples',
-    name: 'Successful Pitch Decks',
-    description: 'Gallery of real pitch decks from companies that raised funding (Airbnb, Uber, etc.)',
-    category: 'resource',
-    icon: 'ExternalLink',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/resources/pitch-deck-examples'
+    actionType: 'modal',
+    action: 'MarketSizeCalculatorModal'
   },
   {
     id: 'storytelling-playbook',
     name: 'Storytelling Playbook',
-    description: 'Complete guide to crafting compelling narratives that resonate with investors',
+    description: 'Interactive guide to crafting compelling narratives that resonate with investors',
     category: 'resource',
     icon: 'BookOpen',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/resources/storytelling-playbook'
+    actionType: 'modal',
+    action: 'StorytellingPlaybookModal'
   },
   {
     id: 'investor-qa-prep',
@@ -80,7 +35,25 @@ export const PITCH_DECK_TOOLS: BuilderTool[] = [
     description: 'Practice answering tough investor questions with example responses and tips',
     category: 'helper',
     icon: 'HelpCircle',
-    actionType: 'link',
-    action: 'https://www.creatives-takeover.com/tools/investor-qa'
+    actionType: 'modal',
+    action: 'InvestorQAPrepModal'
+  },
+  {
+    id: 'design-guidelines',
+    name: 'Design Guidelines',
+    description: 'Best practices for visual design, layout, typography, and color in pitch decks',
+    category: 'resource',
+    icon: 'FileText',
+    actionType: 'download',
+    action: '/resources/pitch-deck-design-guidelines.pptx'
+  },
+  {
+    id: 'one-liner-generator',
+    name: 'One-Liner Generator',
+    description: 'Craft the perfect elevator pitch and tagline using proven frameworks',
+    category: 'generator',
+    icon: 'MessageSquare',
+    actionType: 'modal',
+    action: 'OneLinerGeneratorModal'
   }
 ];
