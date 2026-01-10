@@ -374,9 +374,9 @@ export const StorytellingPlaybookModal: React.FC<StorytellingPlaybookModalProps>
               <h4 className="font-semibold mb-2 text-sm">Universal Storytelling Principles</h4>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Always start with the problem, not your solution</li>
-                <li>Use specific examples and names (Sarah the baker > "a customer")</li>
+                <li>Use specific examples and names (Sarah the baker &gt; &quot;a customer&quot;)</li>
                 <li>Show transformation - before/after is powerful</li>
-                <li>End with a vision of the future you're building</li>
+                <li>End with a vision of the future you&apos;re building</li>
                 <li>Practice your pitch 50 times - storytelling improves with repetition</li>
               </ul>
             </div>
