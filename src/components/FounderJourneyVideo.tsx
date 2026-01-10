@@ -20,9 +20,6 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
 
   // Check if user is admin
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7258/ingest/99ab3382-ad71-4976-bc21-281a5fd09888',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FounderJourneyVideo.tsx:21',message:'Admin check',data:{hasUser:!!user,userId:user?.id,userEmail:user?.email,emailMatch:user?.email?.toLowerCase() === 'admin@creatives-takeover.com'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (user?.email?.toLowerCase() === 'admin@creatives-takeover.com') {
       setIsAdmin(true);
     } else {
@@ -66,10 +63,6 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   }, [position]);
 
   const handleGifUpload = async (file: File) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7258/ingest/99ab3382-ad71-4976-bc21-281a5fd09888',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FounderJourneyVideo.tsx:62',message:'handleGifUpload called',data:{hasUser:!!user,userId:user?.id,userEmail:user?.email,isAdmin,position,fileSize:file.size,fileType:file.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     // Validate file type
     const allowedTypes = ['image/gif'];
     if (!allowedTypes.includes(file.type)) {
@@ -87,10 +80,6 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
     try {
       setUploading(true);
       toast.loading('Uploading GIF...', { id: 'upload-gif' });
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7258/ingest/99ab3382-ad71-4976-bc21-281a5fd09888',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FounderJourneyVideo.tsx:77',message:'Before upload - checking auth state',data:{userId:user?.id,userEmail:user?.email,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
 
       // Check if bucket exists (with better error handling)
       const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
@@ -158,10 +147,6 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
       }
 
       console.log('Deactivated existing GIFs:', deactivateData);
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7258/ingest/99ab3382-ad71-4976-bc21-281a5fd09888',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FounderJourneyVideo.tsx:148',message:'Before insert - payload details',data:{userId:user?.id,userEmail:user?.email,position,publicUrl,fileName,uploaded_by:user?.id,is_active:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       // Save to database
       const { error: insertError } = await supabase
@@ -173,16 +158,9 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
           position: position,
           is_active: true
         });
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7258/ingest/99ab3382-ad71-4976-bc21-281a5fd09888',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FounderJourneyVideo.tsx:160',message:'Insert result',data:{hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError?.details,errorHint:insertError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       if (insertError) {
         console.error('Database insert error:', insertError);
-        // #region agent log
-        fetch('http://127.0.0.1:7258/ingest/99ab3382-ad71-4976-bc21-281a5fd09888',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FounderJourneyVideo.tsx:163',message:'Insert error details',data:{errorMessage:insertError.message,errorCode:insertError.code,errorDetails:insertError.details,errorHint:insertError.hint,userId:user?.id,userEmail:user?.email,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         toast.error(`Failed to save GIF: ${insertError.message}`, { id: 'upload-gif' });
         throw insertError;
       }
