@@ -27,7 +27,14 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({ templateId, onClos
 
   const handleDownload = () => {
     if (template.downloadUrl) {
-      window.open(template.downloadUrl, '_blank');
+      // Create a temporary link element to trigger download
+      const link = document.createElement('a');
+      link.href = template.downloadUrl;
+      link.download = `${template.id}.pptx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Downloading PowerPoint template...');
     } else {
       toast.info('Download coming soon!');
     }

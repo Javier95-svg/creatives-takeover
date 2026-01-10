@@ -27,6 +27,7 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'structure',
     stage: 'early-stage',
     slideCount: 10,
+    downloadUrl: '/templates/problem-solution-basic.pptx',
     slides: [
       {
         slideNumber: 1,
@@ -200,6 +201,7 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'structure',
     stage: 'growth',
     slideCount: 12,
+    downloadUrl: '/templates/traction-heavy.pptx',
     slides: [
       {
         slideNumber: 1,
@@ -348,6 +350,7 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'storytelling',
     stage: 'early-stage',
     slideCount: 11,
+    downloadUrl: '/templates/vision-driven.pptx',
     slides: [
       {
         slideNumber: 1,
@@ -486,6 +489,7 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'design',
     stage: 'early-stage',
     slideCount: 13,
+    downloadUrl: '/templates/product-demo.pptx',
     slides: [
       {
         slideNumber: 1,
@@ -644,6 +648,7 @@ export const PITCH_DECK_TEMPLATES: PitchDeckTemplate[] = [
     category: 'industry-specific',
     stage: 'series-a',
     slideCount: 12,
+    downloadUrl: '/templates/saas-b2b.pptx',
     slides: [
       {
         slideNumber: 1,
