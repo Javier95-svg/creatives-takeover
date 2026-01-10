@@ -73,7 +73,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
   const isDisabled = isUploading || isAnalyzing;
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       {!selectedFile ? (
         // Upload Area
         <Card
@@ -86,7 +86,7 @@ export const PitchDeckUploader: React.FC<PitchDeckUploaderProps> = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <CardContent className="p-8 sm:p-12">
+          <CardContent className="p-10 sm:p-16">
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="rounded-full bg-primary/10 p-6">
                 <Upload className="h-8 w-8 text-primary" />
