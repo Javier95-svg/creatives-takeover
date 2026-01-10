@@ -13,7 +13,7 @@ export const BuilderHero: React.FC = () => {
         Pitch Deck Builder
       </h2>
       <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-        Ready-to-use templates, guided frameworks, and practical tools to create, refine, and optimize your pitch deck at every stage.
+        Professional templates, proven frameworks, and interactive tools to create investor-ready pitch decks.
       </p>
     </div>
   );
