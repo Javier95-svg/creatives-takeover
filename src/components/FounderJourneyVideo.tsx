@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, Loader2, Image } from 'lucide-react';
 import { toast } from 'sonner';
-import { createLazyLoadObserver, preconnectToDomain } from '@/utils/imageOptimization';
 
 interface FounderJourneyVideoProps {
   className?: string;
@@ -17,9 +16,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   const [uploading, setUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [gifAspectRatio, setGifAspectRatio] = useState<number | null>(null);
-  const [shouldLoad, setShouldLoad] = useState(false); // Lazy load control
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Check if user is admin
   useEffect(() => {
@@ -30,29 +27,8 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
     }
   }, [user]);
 
-  // Lazy load observer - only load GIF when visible or nearly visible
+  // Load active GIF for this position
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const observer = createLazyLoadObserver((entry) => {
-      if (entry.isIntersecting) {
-        setShouldLoad(true);
-      }
-    }, {
-      rootMargin: '200px' // Start loading 200px before entering viewport
-    });
-
-    observer.observe(containerRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  // Load active GIF for this position (only when shouldLoad is true)
-  useEffect(() => {
-    if (!shouldLoad) return;
-
     const loadGif = async () => {
       try {
         setLoading(true);
@@ -68,8 +44,6 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
         if (error) throw error;
 
         if (data?.gif_url) {
-          // Preconnect to storage domain for faster loading
-          preconnectToDomain(data.gif_url);
           setGifUrl(data.gif_url);
           // Reset aspect ratio when loading new GIF
           setGifAspectRatio(null);
@@ -86,7 +60,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
     };
 
     loadGif();
-  }, [position, shouldLoad]);
+  }, [position]);
 
   const handleGifUpload = async (file: File) => {
     // Validate file type
@@ -249,7 +223,7 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
   }
 
   return (
-    <div ref={containerRef} className={`relative group ${className}`} style={{ aspectRatio: containerAspectRatio }}>
+    <div className={`relative group ${className}`} style={{ aspectRatio: containerAspectRatio }}>
       {/* GIF Frame */}
       <div className="w-full h-full rounded-lg border-4 border-border bg-muted/30 overflow-hidden relative shadow-xl">
         {gifUrl ? (
@@ -258,8 +232,6 @@ const FounderJourneyVideo = ({ className = '', position = 0 }: FounderJourneyVid
               src={gifUrl}
               alt="Founder journey GIF"
               className="w-full h-full object-contain"
-              loading="lazy"
-              decoding="async"
               onLoad={handleImageLoad}
             />
             {/* Admin overlay on hover */}
