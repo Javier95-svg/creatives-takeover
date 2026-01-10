@@ -58,6 +58,7 @@ import CreateCoFounderPost from "./pages/community/CreateCoFounderPost";
 import EditCoFounderPost from "./pages/community/EditCoFounderPost";
 import VCProfilePage from "./components/vc/VCProfilePage";
 import AcceleratorProfilePage from "./components/accelerator/AcceleratorProfilePage";
+import PitchDeckAnalyzerPage from "./pages/PitchDeckAnalyzerPage";
 import MentorBookingPage from "./pages/community/MentorBookingPage";
 import MyBookings from "./pages/community/MyBookings";
 import AdminMentorEditor from "./pages/community/AdminMentorEditor";
@@ -146,6 +147,7 @@ function App() {
                   <Route path="/insighta/vc-search" element={<VCSearchPage />} />
                   <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
                   <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
+                  <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
                   <Route path="/insighta/test" element={<InsightaTestPage />} />
                   <Route path="/insighta/vc/:id" element={<VCProfilePage />} />
                   <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />

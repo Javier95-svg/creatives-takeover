@@ -1,38 +1,36 @@
-import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard, Bot, Handshake, Code } from "lucide-react";
-import { Link } from "react-router-dom";
-import FounderJourneyVideo from "./FounderJourneyVideo";
+import { Map, Users, Target, Rocket, Lightbulb, LayoutDashboard } from "lucide-react";
 
 const EntrepreneurProblems = () => {
   // Timeline items representing the founder's journey with bottlenecks and pathways
   const journeySteps = [
     {
       phase: "The Starting Point",
-      challenge: "Scattered ideas without a clear direction",
-      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward. Without a clear roadmap, they risk losing momentum and missing key opportunities that are critical for growth.",
+      challenge: "Scattered ideas, no clear direction",
+      insight: "Founders often face a flood of ideas but struggle to prioritize or organize them into a clear plan. This lack of focus leads to confusion, indecision, and slow progress, as they bounce between concepts without a unified strategy, making it difficult to move the business forward.",
       pathway: "BizMap AI guides you from scattered thoughts to a strategic plan—clarifying your market, competitors, and next steps in one conversation.",
       icon: Lightbulb,
       accentColor: "blue", // Planning
     },
     {
       phase: "Finding Direction",
-      challenge: "Aligning your product with a genuine market need",
-      insight: "Founders frequently build products based on assumptions, only to face the harsh reality of limited market demand, which leads to wasted resources and a high risk of building something nobody is willing to buy. To avoid this, it's crucial to validate ideas early through market research and customer feedback, ensuring the product aligns with real needs and demands.",
+      challenge: "Weak execution habits and constant distractions",
+      insight: "Without clear priorities and accountability, even great ideas fade into endless to-do lists with no tangible progress.",
       pathway: "The Dashboard breaks down your vision into weekly sprints, tracks progress, and keeps you accountable—transforming busyness into real momentum.",
       icon: Target,
       accentColor: "green", // Execution/Growth
     },
     {
-      phase: "Lack of Experience",
-      challenge: "Navigating Uncertainty and Decision-Making",
-      insight: "Early-stage founders often find themselves in situations with limited information and high uncertainty. This makes decision-making difficult, as they must navigate unknowns while balancing short-term survival with long-term vision. A mentor can help provide perspective and guidance on key decisions, like product direction, market fit, or hiring, based on their own experience.",
+      phase: "Building Alone",
+      challenge: "Lack of guidance and long-term planning",
+      insight: "Going solo means missing crucial insights, struggling with decisions, and facing the emotional weight without support.",
       pathway: "Our Community connects you with mentors and fellow founders who've navigated these exact challenges—offering guidance, feedback, and genuine support.",
       icon: Users,
       accentColor: "red", // Action/Connection
     },
     {
-      phase: "Working Smartly",
-      challenge: "Task prioritization and resources management",
-      insight: "80% of results come from 20% of effort. Many founders get lost in low-impact tasks that take them nowhere, struggling to prioritize effectively. Proper task prioritization and resource management help focus energy on what truly drives progress, ensuring time and resources are used wisely.",
+      phase: "Scaling Strategy",
+      challenge: "Go-to-market confusion and customer uncertainty",
+      insight: "Many founders waste time and resources on the wrong channels, unsure how to reach their ideal customers effectively.",
       pathway: "BizMap AI helps define your ICP, select the right channels, and craft a go-to-market strategy based on proven frameworks—no more guessing.",
       icon: Map,
       accentColor: "blue", // Planning
@@ -40,26 +38,18 @@ const EntrepreneurProblems = () => {
     {
       phase: "Seeking Resources",
       challenge: "Fundraising feels impossible without the right connections",
-      insight: "Founders often struggle to get in front of the right investors, relying on cold outreach that leads to limited results. Building a strong network and leveraging referrals can make all the difference in securing the right funding. A well-connected founder not only gains access to capital but also valuable mentorship and strategic partnerships that can accelerate growth.",
-      pathway: "Explore VC Search",
+      insight: "Finding the right investors is like finding a needle in a haystack—wasting time on pitches that were never going to work.",
+      pathway: "Insighta surfaces relevant accelerators, grants, and investors matched to your stage and industry—helping you connect with the right opportunities.",
       icon: Rocket,
       accentColor: "amber", // Fundraising
     },
     {
-      phase: "Architecture Deadlock",
-      challenge: "The Teck Stack Dilemma",
-      insight: "Founders struggle to choose the right tech stack because they're making long-term, high-impact decisions at the earliest and most uncertain stage of their company. They're expected to move fast and build something credible without yet knowing their real product requirements, scale, or team needs, while facing an overwhelming number of tools and conflicting opinions.",
-      pathway: "Build your Teck Stack",
+      phase: "Sustaining Growth",
+      challenge: "Burnout and lost momentum threaten progress",
+      insight: "The founder journey is emotionally taxing—early excitement fades, and isolation amplifies every setback.",
+      pathway: "Daily check-ins on the Dashboard and peer support in the Community help you maintain momentum, celebrate wins, and push through tough moments.",
       icon: LayoutDashboard,
       accentColor: "green", // Growth/Success
-    },
-    {
-      phase: "Founder's Mental Tax",
-      challenge: "High chance of Burnout",
-      insight: "Founders often find themselves juggling multiple roles, neglecting self-care, and facing a never-ending to-do list, which can lead to physical and mental exhaustion. Without addressing this, their ability to lead effectively and make thoughtful decisions is compromised, hindering the growth and success of their business.",
-      pathway: "Find a Co-Founder",
-      icon: Code,
-      accentColor: "blue", // Planning/Technical
     },
   ];
 
@@ -97,11 +87,11 @@ const EntrepreneurProblems = () => {
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20 max-w-4xl mx-auto">
-          <h2 id="journey-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight animate-fade-in-up" style={{ animationDuration: '0.8s', animationTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)', animationFillMode: 'both' }}>
+          <h2 id="journey-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
             <span className="gradient-unified">Every Founder's Journey is Unique</span>
           </h2>
           <p className="text-lg sm:text-xl text-foreground/75 leading-[1.7] font-light">
-            But some challenges are universal. Here, we highlight some of the most common obstacles founders face and how we assist to overcome them.
+            But some challenges are universal. Here's how we clear founders' path, removing bottlenecks at every stage.
           </p>
         </div>
 
@@ -120,131 +110,37 @@ const EntrepreneurProblems = () => {
               return (
                 <div
                   key={index}
-                  className={`relative animate-fade-in ${index === 6 ? 'mt-8 md:mt-12' : ''}`}
+                  className="relative animate-fade-in"
                   style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   {/* Mobile Layout (Stacked) */}
                   <div className="md:hidden flex gap-6">
-                    {/* Icon or Video */}
-                    <div className={index === 0 || index === 1 || index === 2 || index === 3 || index === 4 || index === 5 || index === 6 ? "w-full" : "flex-shrink-0"}>
-                      {index === 0 ? (
-                        <FounderJourneyVideo position={0} />
-                      ) : index === 1 ? (
-                        <FounderJourneyVideo position={1} />
-                      ) : index === 2 ? (
-                        <FounderJourneyVideo position={2} />
-                      ) : index === 3 ? (
-                        <FounderJourneyVideo position={3} />
-                      ) : index === 4 ? (
-                        <FounderJourneyVideo position={4} />
-                      ) : index === 5 ? (
-                        <FounderJourneyVideo position={5} />
-                      ) : index === 6 ? (
-                        <FounderJourneyVideo position={6} />
-                      ) : (
-                        <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
-                          <Icon className="w-7 h-7" />
-                        </div>
-                      )}
+                    {/* Icon */}
+                    <div className="flex-shrink-0">
+                      <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-7 h-7" />
+                      </div>
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 pt-2">
-                      <div className="mb-2 flex justify-center">
-                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                      <div className="mb-2">
+                        <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
                           {step.phase}
                         </span>
                       </div>
-                      <h3 className={`text-xl font-bold mb-3 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                      <h3 className="text-xl font-bold mb-3 text-foreground">
                         {step.challenge}
                       </h3>
-                      <p className={`text-sm text-muted-foreground mb-4 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                         {step.insight}
                       </p>
-                      {index === 0 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/bizmap-ai" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Try BizMap AI <Bot className="h-4 w-4" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 1 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/bizmap-ai/pmf-lab" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Try PMF Lab <Target className="h-4 w-4" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 2 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/community" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              Find a Mentor <Users className="h-4 w-4" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 3 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/dashboard" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 4 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/insighta/vc-search" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Rocket className="h-4 w-4" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 5 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/bizmap-ai/tech-stack" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Code className="h-4 w-4" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : index === 6 ? (
-                        <div className="flex justify-center">
-                          <Link 
-                            to="/community/co-founders" 
-                            className="inline-block p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                              {step.pathway} <Handshake className="h-4 w-4" />
-                            </span>
-                          </Link>
-                        </div>
-                      ) : (
-                        <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                          <p className="text-sm text-foreground/90 leading-relaxed">
-                            {step.pathway}
-                          </p>
-                        </div>
-                      )}
+                      <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                        <p className="text-sm text-foreground/90 leading-relaxed">
+                          <span className="font-semibold text-foreground">Your path forward: </span>
+                          {step.pathway}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -252,248 +148,54 @@ const EntrepreneurProblems = () => {
                   <div className="hidden md:grid md:grid-cols-2 gap-8 items-center">
                     {/* Left Side Content (for even indexes) */}
                     {isEven && (
-                      <div className={`${index === 0 ? 'pr-20' : 'pr-12'} ${index === 2 || index === 6 ? 'text-left' : 'text-right'}`}>
-                        <div className="mb-3 flex justify-center">
-                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                      <div className="text-right pr-12">
+                        <div className="mb-3 flex justify-end">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 || index === 6 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">
                           {step.challenge}
                         </h3>
-                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 0 || index === 4 || index === 6 ? 'text-left' : ''}`}>
+                        <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                           {step.insight}
                         </p>
-                        {index === 0 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try BizMap AI <Bot className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 1 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai/pmf-lab" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <Target className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 2 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/community" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Find a Mentor <Users className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 3 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/dashboard" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 4 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/insighta/vc-search" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Rocket className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 5 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai/tech-stack" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Code className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 6 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/community/co-founders" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : (
-                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                            <p className="text-sm text-foreground/90 leading-relaxed">
-                              {step.pathway}
-                            </p>
-                          </div>
-                        )}
+                        <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 text-left">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            <span className="font-semibold text-foreground">Your path forward: </span>
+                            {step.pathway}
+                          </p>
+                        </div>
                       </div>
                     )}
 
-                    {/* Center Icon or Video (for all rows with GIF frames) */}
+                    {/* Center Icon */}
                     <div className="flex justify-center relative z-10">
-                      {index === 0 ? (
-                        /* GIF Frame for First Row */
-                        <div className="w-full max-w-4xl ml-4">
-                          <FounderJourneyVideo position={0} />
-                        </div>
-                      ) : index === 1 ? (
-                        /* GIF Frame for Second Row */
-                        <div className="w-full max-w-4xl mr-4">
-                          <FounderJourneyVideo position={1} />
-                        </div>
-                      ) : index === 2 ? (
-                        /* GIF Frame for Third Row */
-                        <div className="w-full max-w-4xl ml-4">
-                          <FounderJourneyVideo position={2} />
-                        </div>
-                      ) : index === 3 ? (
-                        /* GIF Frame for Fourth Row */
-                        <div className="w-full max-w-4xl mr-4">
-                          <FounderJourneyVideo position={3} />
-                        </div>
-                      ) : index === 4 ? (
-                        /* GIF Frame for Fifth Row */
-                        <div className="w-full max-w-4xl ml-4">
-                          <FounderJourneyVideo position={4} />
-                        </div>
-                      ) : index === 5 ? (
-                        /* GIF Frame for Sixth Row */
-                        <div className="w-full max-w-4xl mr-4">
-                          <FounderJourneyVideo position={5} />
-                        </div>
-                      ) : index === 6 ? (
-                        /* GIF Frame for Seventh Row */
-                        <div className="w-full max-w-4xl ml-4">
-                          <FounderJourneyVideo position={6} />
-                        </div>
-                      ) : (
-                        /* Regular Icon for Other Rows */
-                        <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
-                          <Icon className="w-9 h-9" />
-                        </div>
-                      )}
+                      <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${accentClasses.icon} shadow-lg ${accentClasses.glow} bg-background transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-9 h-9" />
+                      </div>
                     </div>
 
-                      {/* Right Side Content (for odd indexes) */}
-                      {!isEven ? (
-                      <div className={index === 1 ? 'pl-20' : 'pl-12'}>
-                        <div className="mb-3 flex justify-center">
-                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-subtle-flicker">
+                    {/* Right Side Content (for odd indexes) */}
+                    {!isEven ? (
+                      <div className="pl-12">
+                        <div className="mb-3">
+                          <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground">
                             {step.phase}
                           </span>
                         </div>
-                        <h3 className={`text-2xl font-bold mb-4 text-foreground ${index === 0 ? 'whitespace-nowrap animate-fade-in-up' : ''} ${index === 2 || index === 4 ? 'text-left' : ''} ${index === 5 ? 'text-center' : ''}`} style={index === 0 ? { animationDelay: '0.2s' } : undefined}>
+                        <h3 className="text-2xl font-bold mb-4 text-foreground">
                           {step.challenge}
                         </h3>
-                        <p className={`text-sm text-muted-foreground mb-5 leading-relaxed ${index === 4 ? 'text-left' : ''}`}>
+                        <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                           {step.insight}
                         </p>
-                        {index === 0 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try BizMap AI <Bot className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 1 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai/pmf-lab" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Try PMF Lab <Target className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 2 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/community" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                Find a Mentor <Users className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 3 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/dashboard" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                <LayoutDashboard className="h-4 w-4" /> Explore Dashboard
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 4 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/insighta/vc-search" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Rocket className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 5 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/bizmap-ai/tech-stack" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Code className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : index === 6 ? (
-                          <div className="flex justify-center">
-                            <Link 
-                              to="/community/co-founders" 
-                              className="inline-block p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all duration-300 cursor-pointer"
-                            >
-                              <span className="font-semibold text-foreground flex items-center gap-2 text-sm">
-                                {step.pathway} <Handshake className="h-4 w-4" />
-                              </span>
-                            </Link>
-                          </div>
-                        ) : (
-                          <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
-                            <p className="text-sm text-foreground/90 leading-relaxed">
-                              {step.pathway}
-                            </p>
-                          </div>
-                        )}
+                        <div className="p-5 rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+                          <p className="text-sm text-foreground/90 leading-relaxed">
+                            <span className="font-semibold text-foreground">Your path forward: </span>
+                            {step.pathway}
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <div /> // Empty div to maintain grid structure
@@ -505,6 +207,12 @@ const EntrepreneurProblems = () => {
           </div>
         </div>
 
+        {/* Bottom CTA */}
+        <div className="text-center mt-16 sm:mt-20">
+          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
+            We're not here to sell you tools—we're here to clear the bottlenecks that slow founders down. Your journey is unique, but you don't have to navigate it alone.
+          </p>
+        </div>
       </div>
     </section>
   );

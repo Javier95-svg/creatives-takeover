@@ -34,3 +34,45 @@ export interface EmailTemplate {
   tags: string[];
   popularity: number; // 0-100
 }
+
+// Pitch Deck Types
+export type FundingRound = 'pre-seed' | 'seed' | 'series-a' | 'series-b' | 'series-c+';
+
+export interface PitchDeck {
+  id: string;
+  startup_name: string;
+  company_description: string;
+  founded_year?: number;
+  funding_round: FundingRound;
+  amount_raised_usd: number;
+  amount_display: string;
+  fundraising_date?: string;
+  industries: string[];
+  primary_industry?: string;
+  pdf_url: string;
+  thumbnail_url?: string;
+  is_featured: boolean;
+  is_active: boolean;
+  view_count: number;
+  popularity_score: number;
+  key_takeaways?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PitchDeckFilters {
+  sort_by_popular?: boolean;
+  amount_min?: number;
+  amount_max?: number;
+  funding_round?: FundingRound;
+  industry?: string;
+  search?: string;
+}
+
+export const AMOUNT_RANGES = {
+  '20m+': { min: 20_000_000_00, max: undefined, label: '$20M+' },
+  '10m-20m': { min: 10_000_000_00, max: 20_000_000_00, label: '$10M–$20M' },
+  '5m-10m': { min: 5_000_000_00, max: 10_000_000_00, label: '$5M–$10M' },
+  '1m-5m': { min: 1_000_000_00, max: 5_000_000_00, label: '$1M–$5M' },
+  '0-200k': { min: 0, max: 200_000_00, label: '$0–$200K' },
+} as const;
