@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BuilderHero } from './BuilderHero';
 import { TemplateGallery } from './TemplateGallery';
 import { FrameworkSection } from './FrameworkSection';
 import { ToolsSection } from './ToolsSection';
@@ -9,10 +8,8 @@ export const PitchDeckBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState('templates');
 
   return (
-    <div className="container mx-auto max-w-7xl">
-      <BuilderHero />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-12">
+    <div className="max-w-7xl mx-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="frameworks">Frameworks</TabsTrigger>

@@ -71,22 +71,22 @@ export default function PitchDeckAnalyzerPage() {
       />
       <Navigation />
 
-      <main>
-        <section className="py-20 px-4 relative overflow-hidden" data-section="pitch-deck-analyzer">
-          {/* Background styling */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-            <div
-              className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
-              style={{
-                background:
-                  'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.35), transparent 55%)',
-                animationDuration: '28s'
-              }}
-            />
-          </div>
+      <main className="relative overflow-hidden">
+        {/* Shared Background styling */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+          <div
+            className="absolute -top-40 -right-48 w-[55rem] h-[55rem] rounded-full opacity-70 blur-3xl animate-[spin_28s_linear_infinite]"
+            style={{
+              background:
+                'radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.3), transparent 60%), radial-gradient(circle at 70% 70%, rgba(192, 132, 252, 0.35), transparent 55%)',
+              animationDuration: '28s'
+            }}
+          />
+        </div>
 
-          <div className="container mx-auto max-w-5xl relative z-10">
+        <section className="py-20 px-4 relative z-10" data-section="pitch-deck-analyzer">
+          <div className="container mx-auto max-w-5xl">
             {!analysis ? (
               <>
                 {/* Hero Section */}
@@ -192,6 +192,11 @@ export default function PitchDeckAnalyzerPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Pitch Deck Builder - Integrated */}
+                <div className="mt-16">
+                  <PitchDeckBuilder />
+                </div>
               </>
             ) : (
               /* Results Section */
@@ -202,11 +207,6 @@ export default function PitchDeckAnalyzerPage() {
               />
             )}
           </div>
-        </section>
-
-        {/* Pitch Deck Builder Section */}
-        <section className="py-20 px-4 bg-muted/30" data-section="pitch-deck-builder">
-          <PitchDeckBuilder />
         </section>
       </main>
 
