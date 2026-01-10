@@ -589,7 +589,7 @@ const Hero = () => {
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="hidden md:flex md:items-center md:justify-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="hidden md:flex md:items-center md:justify-center">
             <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full max-w-lg lg:max-w-2xl">
               {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
@@ -599,8 +599,8 @@ const Hero = () => {
                 const imageSrc = optimisticPreview || image?.image_url || '';
                 const altText = image?.alt_text || `Hero image ${position}`;
                 const isUploadingPosition = uploading === position;
-                // Top row loads immediately, bottom row can lazy load
-                const shouldLoadEagerly = position <= 2 || !!optimisticPreview;
+                // Load all images eagerly for faster display
+                const shouldLoadEagerly = true;
                 
                 // #region agent log
                 if (imageSrc) {
