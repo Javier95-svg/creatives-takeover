@@ -70,6 +70,8 @@ const AdminVCManagement = () => {
         setUploadingHeader(true);
       }
 
+      console.log('Starting upload for:', { vcId, type, fileName: file.name, fileSize: file.size, fileType: file.type });
+
       // Validate file
       if (!file.type.startsWith('image/')) {
         toast.error("Please upload an image file");
@@ -86,15 +88,22 @@ const AdminVCManagement = () => {
       const fileName = `${vcId}-${type}-${Date.now()}.${fileExt}`;
       const filePath = `vc-logos/${fileName}`;
 
+      console.log('Uploading to storage:', { filePath, bucket: 'public-assets' });
+
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('public-assets')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      console.log('Upload result:', { uploadData, uploadError });
+
+      if (uploadError) {
+        console.error('Upload error details:', uploadError);
+        throw uploadError;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -120,7 +129,11 @@ const AdminVCManagement = () => {
         setSelectedVC({ ...selectedVC, [updateField]: publicUrl });
       }
     } catch (error: any) {
-      toast.error("Upload failed: " + error.message);
+      console.error('Upload error:', error);
+      const errorMessage = error.message || error.error?.message || 'Unknown error';
+      toast.error("Upload failed: " + errorMessage, {
+        description: error.statusCode ? `Status code: ${error.statusCode}` : undefined
+      });
     } finally {
       if (type === 'logo') {
         setUploadingLogo(false);
