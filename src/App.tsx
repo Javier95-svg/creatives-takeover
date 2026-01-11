@@ -64,6 +64,7 @@ import MyBookings from "./pages/community/MyBookings";
 import AdminMentorEditor from "./pages/community/AdminMentorEditor";
 import PMFLabPage from "./pages/PMFLabPage";
 import TechStackPage from "./pages/TechStackPage";
+import AdminVCManagement from "./pages/AdminVCManagement";
 import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient({
@@ -126,6 +127,7 @@ function App() {
                   <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
                   <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
                   <Route path="/admin/hero-images" element={<AdminHeroImages />} />
+                  <Route path="/admin/vc-management" element={<AdminVCManagement />} />
                   <Route path="/careers" element={<Careers />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
