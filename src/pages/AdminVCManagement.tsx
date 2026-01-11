@@ -62,7 +62,13 @@ const AdminVCManagement = () => {
     }
   };
 
-  const handleLogoUpload = async (file: File, vcId: string, type: 'logo' | 'header') => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'header') => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedVC) {
+      toast.error("No file selected or no VC selected");
+      return;
+    }
+
     try {
       if (type === 'logo') {
         setUploadingLogo(true);
@@ -70,75 +76,76 @@ const AdminVCManagement = () => {
         setUploadingHeader(true);
       }
 
-      console.log('Starting upload for:', { vcId, type, fileName: file.name, fileSize: file.size, fileType: file.type });
+      toast.loading(`Uploading ${type}...`, { id: `upload-${type}` });
 
-      // Validate file
-      if (!file.type.startsWith('image/')) {
-        toast.error("Please upload an image file");
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Invalid file type. Please upload JPG, PNG, WebP, GIF, or SVG", { id: `upload-${type}` });
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File size must be less than 5MB");
+      // Validate file size (5MB)
+      if (file.size > 5242880) {
+        toast.error("File size exceeds 5MB. Please upload a smaller image", { id: `upload-${type}` });
         return;
       }
 
-      // Create unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${vcId}-${type}-${Date.now()}.${fileExt}`;
-      const filePath = `vc-logos/${fileName}`;
+      // Create unique filename using mentor pattern: vcId/type-timestamp.ext
+      const fileExt = file.name.split('.').pop() || 'png';
+      const fileName = `${selectedVC.id}/${type}-${Date.now()}.${fileExt}`;
 
-      console.log('Uploading to storage:', { filePath, bucket: 'public-assets' });
-
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage (same pattern as mentor pictures)
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('public-assets')
-        .upload(filePath, file, {
+        .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true, // Allow overwrite
+          contentType: file.type
         });
 
-      console.log('Upload result:', { uploadData, uploadError });
-
       if (uploadError) {
-        console.error('Upload error details:', uploadError);
+        console.error('Upload error:', uploadError);
+        toast.error(`Upload failed: ${uploadError.message}`, { id: `upload-${type}` });
         throw uploadError;
       }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('public-assets')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
-      // Update investor record
+      // Save to database immediately
       const updateField = type === 'logo' ? 'logo_url' : 'header_image_url';
       const { error: updateError } = await supabase
         .from('investors')
         .update({ [updateField]: publicUrl })
-        .eq('id', vcId);
+        .eq('id', selectedVC.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Database error:', updateError);
+        toast.error(`Failed to save: ${updateError.message}`, { id: `upload-${type}` });
+        throw updateError;
+      }
 
-      toast.success(`${type === 'logo' ? 'Logo' : 'Header image'} uploaded successfully!`);
+      // Update local state
+      setSelectedVC({ ...selectedVC, [updateField]: publicUrl });
 
-      // Refresh VCs list
+      // Refresh VCs list to show updated logo badge
       fetchVCs();
 
-      // Update selected VC
-      if (selectedVC?.id === vcId) {
-        setSelectedVC({ ...selectedVC, [updateField]: publicUrl });
-      }
+      toast.success(`${type === 'logo' ? 'Logo' : 'Header image'} uploaded and saved successfully!`, { id: `upload-${type}` });
     } catch (error: any) {
       console.error('Upload error:', error);
-      const errorMessage = error.message || error.error?.message || 'Unknown error';
-      toast.error("Upload failed: " + errorMessage, {
-        description: error.statusCode ? `Status code: ${error.statusCode}` : undefined
-      });
     } finally {
       if (type === 'logo') {
         setUploadingLogo(false);
       } else {
         setUploadingHeader(false);
+      }
+      // Clear file input
+      if (event.target) {
+        event.target.value = '';
       }
     }
   };
@@ -256,10 +263,7 @@ const AdminVCManagement = () => {
                           <Input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleLogoUpload(file, selectedVC.id, 'logo');
-                            }}
+                            onChange={(e) => handleLogoUpload(e, 'logo')}
                             disabled={uploadingLogo}
                           />
                           <p className="text-xs text-muted-foreground">
@@ -288,10 +292,7 @@ const AdminVCManagement = () => {
                         <Input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleLogoUpload(file, selectedVC.id, 'header');
-                          }}
+                          onChange={(e) => handleLogoUpload(e, 'header')}
                           disabled={uploadingHeader}
                         />
                         <p className="text-xs text-muted-foreground">
