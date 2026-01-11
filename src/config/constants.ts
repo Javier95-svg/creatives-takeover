@@ -38,6 +38,11 @@ export const CREDIT_COSTS = {
   // Other Premium Features
   PDF_EXPORT: 3,
   ADVANCED_ANALYTICS: 5,
+
+  // New Features (Phase 3)
+  PITCH_DECK_ANALYZER: 8,
+  EMAIL_TEMPLATE_GENERATION: 3,
+  PROMPT_GENERATION: 2,
 } as const;
 
 // Type for credit cost feature names
@@ -172,6 +177,13 @@ export const TIER_MONTHLY_CREDITS = {
   professional: 150,
 } as const;
 
+// VC View Limits per tier (monthly)
+export const VC_VIEW_LIMITS = {
+  free: 5,
+  creator: 25,
+  professional: -1, // unlimited
+} as const;
+
 // Feature usage limits per tier (soft limits for Creator, unlimited for Professional)
 export const TIER_USAGE_LIMITS = {
   free: {
@@ -183,6 +195,7 @@ export const TIER_USAGE_LIMITS = {
     market_intelligence_queries: 0,
     basic_reports: 0,
     team_members: 0,
+    vc_profile_views: 5, // New limit
   },
   creator: {
     bizmap_conversations: -1, // Unlimited (credit-gated)
@@ -193,6 +206,7 @@ export const TIER_USAGE_LIMITS = {
     market_intelligence_queries: 10,
     basic_reports: 5,
     team_members: 3,
+    vc_profile_views: 25, // New limit
   },
   professional: {
     bizmap_conversations: -1, // Unlimited (credit-gated)
@@ -203,5 +217,34 @@ export const TIER_USAGE_LIMITS = {
     market_intelligence_queries: -1, // Unlimited
     basic_reports: -1, // Unlimited
     team_members: -1, // Unlimited
+    vc_profile_views: -1, // Unlimited
+  },
+} as const;
+
+// Subscription Tier Details (with new pricing)
+export const TIER_DETAILS = {
+  free: {
+    name: 'Free',
+    subtitle: 'Validate',
+    price: 0,
+    credits: 10,
+    vcViewLimit: 5,
+    description: 'Start your journey - validate your idea',
+  },
+  creator: {
+    name: 'Creator',
+    subtitle: 'Build',
+    price: 32.99,
+    credits: 50,
+    vcViewLimit: 25,
+    description: 'Build your startup with AI-powered tools',
+  },
+  professional: {
+    name: 'Professional',
+    subtitle: 'Scale',
+    price: 74.99,
+    credits: 150,
+    vcViewLimit: -1, // unlimited
+    description: 'Scale with unlimited access and premium features',
   },
 } as const;

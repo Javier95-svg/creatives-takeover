@@ -324,6 +324,47 @@ export function useFeatureGating() {
         // Browse/view-only available to all tiers
         return { hasAccess: true };
 
+      // Pitch Deck Analyzer (Creator+ only)
+      case 'pitch_deck_analyzer':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'Pitch Deck Analyzer is available on Creator and Professional plans. Upgrade to analyze your pitch deck and get actionable feedback.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full access (8 credits)
+        if (!hasCredits(8)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. Pitch Deck Analyzer costs 8 credits. Your balance: ${balance}`,
+          };
+        }
+        return { hasAccess: true };
+
+      // Email Template Generation (Creator+ only)
+      case 'email_template_generation':
+        if (tier === 'free') {
+          return {
+            hasAccess: false,
+            message: 'AI Email Template Generation is available on Creator and Professional plans. Upgrade to generate personalized investor emails.',
+            requiredTier: 'creator'
+          };
+        }
+        // Creator+ has full access (3 credits)
+        if (!hasCredits(3)) {
+          return {
+            hasAccess: false,
+            message: `Insufficient credits. Email generation costs 3 credits. Your balance: ${balance}`,
+          };
+        }
+        return { hasAccess: true };
+
+      // VC Search View (handled by useVCViewTracking hook, but included for consistency)
+      case 'vc_search_view':
+        // This will be handled by useVCViewTracking hook
+        return { hasAccess: true };
+
       // Dashboard Access
       case 'dashboard_access':
         if (['creator', 'professional'].includes(tier)) {

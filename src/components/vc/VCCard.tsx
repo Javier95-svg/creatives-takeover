@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, MapPin, DollarSign, Building2 } from "lucide-react";
 import { Investor } from "@/types/investor";
 import { Link } from "react-router-dom";
+import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 
 interface VCCardProps {
   vc: Investor;
 }
 
 const VCCard = ({ vc }: VCCardProps) => {
+  const { canViewMore, remaining, hasUnlimitedViews } = useVCViewTracking();
   const formatCheckSize = () => {
     if (!vc.typical_check_size_min || !vc.typical_check_size_max) return null;
     const min = (vc.typical_check_size_min / 1000).toFixed(0);
@@ -92,12 +94,27 @@ const VCCard = ({ vc }: VCCardProps) => {
         </div>
 
         {/* View Profile Button */}
-        <Button asChild size="sm" className="w-full mt-auto">
-          <Link to={`/insighta/vc/${vc.slug}`}>
-            View Profile
-            <ExternalLink className="h-3 w-3 ml-1" />
-          </Link>
-        </Button>
+        {canViewMore ? (
+          <Button asChild size="sm" className="w-full mt-auto">
+            <Link to={`/insighta/vc/${vc.slug}`}>
+              View Profile
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Link>
+          </Button>
+        ) : (
+          <div className="space-y-2 mt-auto">
+            {!hasUnlimitedViews && remaining === 0 && (
+              <p className="text-xs text-center text-muted-foreground">
+                Monthly limit reached
+              </p>
+            )}
+            <Button asChild size="sm" className="w-full" variant="secondary">
+              <Link to="/pricing">
+                Upgrade to View More
+              </Link>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

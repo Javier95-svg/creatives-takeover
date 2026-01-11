@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
+import { useVCViewTracking } from "@/hooks/useVCViewTracking";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   ExternalLink,
@@ -23,6 +25,7 @@ const VCProfilePage = () => {
   const navigate = useNavigate();
   const [vc, setVc] = useState<Investor | null>(null);
   const [loading, setLoading] = useState(true);
+  const { trackVCView, canViewMore } = useVCViewTracking();
 
   useEffect(() => {
     const fetchVC = async () => {
@@ -36,14 +39,33 @@ const VCProfilePage = () => {
 
       if (error) {
         console.error('Error fetching VC:', error);
-      } else {
-        setVc(data as Investor);
+        setLoading(false);
+        return;
       }
+
+      // Track the view
+      if (data) {
+        const result = await trackVCView(data.id);
+
+        if (!result.success) {
+          // Show upgrade prompt
+          toast.error(result.message, {
+            action: result.requiredTier ? {
+              label: 'Upgrade',
+              onClick: () => navigate('/pricing'),
+            } : undefined,
+            duration: 6000,
+          });
+          // Still show the VC profile, just with tracking failure noted
+        }
+      }
+
+      setVc(data as Investor);
       setLoading(false);
     };
 
     fetchVC();
-  }, [slug]);
+  }, [slug, trackVCView, navigate]);
 
   if (loading) {
     return (

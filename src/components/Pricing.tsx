@@ -39,32 +39,32 @@ const Pricing = () => {
     const featureMap: Record<string, string[]> = {
       free: [
         "10 credits per month",
-        "BizMap - Business Planning Mode",
-        "Prompt Library (Free Models Only)",
-        "Insighta Test Assessment",
-        "Funding Opportunities",
-        "Full access to Stories (Content)"
+        "BizMap AI (10 messages/month)",
+        "PMF Lab (read-only)",
+        "Prompt Library (view only)",
+        "VC Search (5 views/month)",
+        "Community access (limited)",
+        "Insighta Test (basic)"
       ],
       creator: [
-        "50 credits per month",
-        "Dashboard Access",
-        "BizMap AI Upgrade: Business Planning & PMF Lab modes.",
-        "Full Access to Prompt Library",
-        "Insighta Test Assessment",
-        "Funding Opportunities",
-        "Discovery Calls with Mentors (Community)",
-        "Full access to Stories (Content)"
+        "50 credits per month (5x more)",
+        "BizMap AI (50 messages/month)",
+        "PMF Lab (full access)",
+        "Pitch Deck Analyzer",
+        "AI Email Templates",
+        "VC Search (25 views/month)",
+        "Community (full access)",
+        "Priority support"
       ],
       professional: [
-        "150 credits per month",
-        "Dashboard Access",
-        "Full Access to BizMap AI (Business Planning, PMF Lab & Tech Stack)",
-        "Full Access to Prompt Library",
-        "Insighta Test Assessment",
-        "Investor Matchmaker (Insighta)",
-        "Funding Opportunities",
-        "Discovery Calls with Mentors (Community)",
-        "Full access to Stories (Content)"
+        "150 credits per month (15x more)",
+        "BizMap AI (150 messages/month)",
+        "Unlimited VC searches",
+        "Advanced Pitch Deck Analyzer",
+        "Custom email templates",
+        "Featured in Community",
+        "Priority support (24h response)",
+        "Early access to new features"
       ]
     };
     return featureMap[tierName] || [];
@@ -73,11 +73,21 @@ const Pricing = () => {
   // Get target audience description
   const getTargetAudience = (tierName: string) => {
     const audiences: Record<string, string> = {
-      free: "For early-stage founders validating a single idea and experiencing a full 0–1 sprint.",
-      creator: "For solofounders or small teams actively building and iterating one main product.",
-      professional: "For full-time founders running multiple products or services that need high-volume AI planning and investor workflows."
+      free: "Start your journey - validate your idea",
+      creator: "Build your startup with AI-powered tools",
+      professional: "Scale with unlimited access and premium features"
     };
     return audiences[tierName] || "";
+  };
+
+  // Get subtitle for each tier
+  const getSubtitle = (tierName: string) => {
+    const subtitles: Record<string, string> = {
+      free: "Validate",
+      creator: "Build",
+      professional: "Scale"
+    };
+    return subtitles[tierName] || "";
   };
 
   // Removed upgrade benefits text - keeping it simple and clear
@@ -85,8 +95,8 @@ const Pricing = () => {
   const getTitleAndCTA = (tierName: string) => {
     const details: Record<string, { title: string; cta: string }> = {
       free: { title: "Get Started", cta: "Start Free" },
-      creator: { title: "Build & Create", cta: "Free Trial Available" },
-      professional: { title: "Scale & Collaborate", cta: "Free Trial Available" }
+      creator: { title: "Build & Create", cta: "Start Building" },
+      professional: { title: "Scale & Collaborate", cta: "Scale Your Startup" }
     };
     return details[tierName] || { title: "Get Started", cta: "Subscribe" };
   };
@@ -271,6 +281,7 @@ const Pricing = () => {
             const { title, cta } = getTitleAndCTA(tier.tier_name);
             const features = getFeatures(tier.tier_name);
             const targetAudience = getTargetAudience(tier.tier_name);
+            const subtitle = getSubtitle(tier.tier_name);
             const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'creator';
 
@@ -280,8 +291,8 @@ const Pricing = () => {
                 className={`relative bg-card border rounded-lg p-6 sm:p-8 transition-shadow hover:shadow-lg flex flex-col ${
                   isCurrentPlan
                     ? 'border-green-500 shadow-md'
-                    : isPopular 
-                    ? 'border-primary shadow-sm' 
+                    : isPopular
+                    ? 'border-primary shadow-sm'
                     : 'border-border'
                 }`}
                 style={{ animationDelay: `${index * 0.2}s` }}
@@ -301,7 +312,10 @@ const Pricing = () => {
 
                 {/* Plan Header */}
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl sm:text-3xl font-bold mb-3 capitalize">{tier.tier_name}</h3>
+                  <h3 className="text-2xl sm:text-3xl font-bold mb-1 capitalize">{tier.tier_name}</h3>
+                  {subtitle && (
+                    <p className="text-sm font-medium text-muted-foreground mb-3">{subtitle}</p>
+                  )}
                   <div className="mb-4">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl sm:text-5xl font-bold">
