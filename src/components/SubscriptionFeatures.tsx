@@ -80,8 +80,7 @@ const SubscriptionFeatures = () => {
             How Our Credit System Works
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Every AI-powered feature costs credits. Choose your plan based on how you work.
-            No surprises - full transparency on what each feature costs.
+            Choose your plan based on what you need and how you work.
           </p>
         </div>
 
