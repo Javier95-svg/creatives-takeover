@@ -16,6 +16,13 @@ const SubscriptionFeatures = () => {
   const [selectedTier, setSelectedTier] = useState<'free' | 'creator' | 'professional'>('creator');
 
   const creditBreakdown = {
+    dashboard: [
+      { name: "Sprint Task Generation", cost: 2, description: "AI-generated sprint tasks and priorities" },
+      { name: "Roadmap Generation", cost: 5, description: "Strategic business roadmap" },
+      { name: "Market Research", cost: 10, description: "In-depth market analysis and insights" },
+      { name: "Financial Analysis", cost: 8, description: "Financial projections and modeling" },
+      { name: "Business Insights", cost: 5, description: "Custom business intelligence reports" },
+    ],
     bizmap: [
       { name: "AI Chat Message", cost: 1, description: "Every message in Business Planning mode" },
       { name: "Product-Market Fit Lab", cost: 8, description: "Complete PMF analysis with recommendations" },
@@ -29,13 +36,6 @@ const SubscriptionFeatures = () => {
       { name: "Insighta Test", cost: 8, description: "Fundraising readiness assessment" },
       { name: "Investor Matching", cost: 5, description: "Find VCs aligned with your startup" },
       { name: "One-Pager Generation", cost: 3, description: "Professional one-page pitch document" },
-    ],
-    dashboard: [
-      { name: "Sprint Task Generation", cost: 2, description: "AI-generated sprint tasks and priorities" },
-      { name: "Roadmap Generation", cost: 5, description: "Strategic business roadmap" },
-      { name: "Market Research", cost: 10, description: "In-depth market analysis and insights" },
-      { name: "Financial Analysis", cost: 8, description: "Financial projections and modeling" },
-      { name: "Business Insights", cost: 5, description: "Custom business intelligence reports" },
     ],
     community: [
       { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },
@@ -113,8 +113,33 @@ const SubscriptionFeatures = () => {
           </CardContent>
         </Card>
 
-        {/* Credit Breakdown Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Credit Breakdown Grid - 4 cards in a single row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {/* Dashboard Card */}
+          <Card className="border-border">
+            <CardHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <LayoutDashboard className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle className="text-xl">Dashboard</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {creditBreakdown.dashboard.map((feature, idx) => (
+                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{feature.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
+                    </div>
+                    <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* BizMap AI Card */}
           <Card className="border-border">
             <CardHeader>
@@ -173,46 +198,30 @@ const SubscriptionFeatures = () => {
             </CardContent>
           </Card>
 
-          {/* Dashboard + Community Card */}
+          {/* Community Card */}
           <Card className="border-border">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <LayoutDashboard className="h-6 w-6 text-primary" />
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-xl">Dashboard</CardTitle>
+                <CardTitle className="text-xl">Community</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 mb-6">
-                {creditBreakdown.dashboard.map((feature, idx) => (
-                  <div key={idx} className="flex justify-between items-start gap-3 pb-3 border-b border-border/50 last:border-0">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge className="bg-green-500 text-white">FREE</Badge>
+              </div>
+              <div className="space-y-3">
+                {creditBreakdown.community.map((feature, idx) => (
+                  <div key={idx} className="flex items-start gap-2 pb-3 border-b border-border/50 last:border-0">
+                    <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
                     <div className="flex-1">
                       <p className="font-medium text-sm">{feature.name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
-                    <Badge variant="secondary" className="shrink-0">{feature.cost} credits</Badge>
                   </div>
                 ))}
-              </div>
-
-              {/* Community Section */}
-              <div className="border-t-2 border-primary/20 pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Users className="h-5 w-5 text-primary" />
-                  <h4 className="font-semibold">Community</h4>
-                  <Badge className="ml-auto bg-green-500 text-white">FREE</Badge>
-                </div>
-                <div className="space-y-2">
-                  {creditBreakdown.community.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm">{feature.name}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             </CardContent>
           </Card>
