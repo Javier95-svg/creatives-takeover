@@ -13,7 +13,7 @@ const PricingComparison = () => {
       category: "Credits & Dashboard",
       items: [
         { feature: "Monthly Credits", free: "10 Credits", creator: "50 Credits", professional: "150 Credits" },
-        { feature: "Dashboard Access", free: false, creator: true, professional: true }
+        { feature: "Dashboard Access", free: "Preview only", creator: "Full access", professional: "Full access" }
       ]
     },
     {
@@ -21,23 +21,17 @@ const PricingComparison = () => {
       items: [
         { feature: "Business Planning (1 credit/msg)", free: "10 messages", creator: "50 messages", professional: "150 messages" },
         { feature: "Product–Market Fit Lab", free: "Read-only", creator: "Full access (8 credits)", professional: "Full + insights (8 credits)" },
-        { feature: "Tech Stack Generator", free: "View only", creator: "Full access (3 credits)", professional: "Advanced (3 credits)" }
-      ]
-    },
-    {
-      category: "Prompt Library",
-      items: [
+        { feature: "Tech Stack Generator", free: "View only", creator: "Full access (3 credits)", professional: "Advanced (3 credits)" },
         { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
       ]
     },
     {
       category: "Insighta",
       items: [
-        { feature: "VC Search Views", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
+        { feature: "VC Search", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
         { feature: "Email Templates", free: "View only", creator: "AI generation (3 credits)", professional: "AI + custom (3 credits)" },
         { feature: "Pitch Deck Analyzer", free: false, creator: "Full access (8 credits)", professional: "Advanced + benchmarks (8 credits)" },
-        { feature: "Insighta Test", free: "Basic (8 credits)", creator: "Full access (8 credits)", professional: "Full + personalized (8 credits)" },
-        { feature: "Investor Matchmaker", free: false, creator: false, professional: "Full access (5 credits)" }
+        { feature: "Insighta Test", free: "Basic (8 credits)", creator: "Full access (8 credits)", professional: "Full + personalized (8 credits)" }
       ]
     },
     {
