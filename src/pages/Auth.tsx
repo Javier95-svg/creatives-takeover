@@ -253,7 +253,7 @@ const Auth: React.FC = () => {
             <CardTitle className="text-2xl font-bold takeover-gradient creatives-font">Welcome</CardTitle>
           </div>
           <CardDescription>
-            Join our community to share your entrepreneurial journey
+            Start your entrepreneurial journey with us
           </CardDescription>
         </CardHeader>
         <CardContent>
