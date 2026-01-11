@@ -19,38 +19,48 @@ const PricingComparison = () => {
     {
       category: "BizMap AI",
       items: [
-        { feature: "Business Planning", free: true, creator: true, professional: true },
-        { feature: "Product–Market Fit Lab", free: false, creator: true, professional: true },
-        { feature: "Tech Stack", free: false, creator: false, professional: true }
+        { feature: "Business Planning (1 credit/msg)", free: "10 messages", creator: "50 messages", professional: "150 messages" },
+        { feature: "Product–Market Fit Lab", free: "Read-only", creator: "Full access (8 credits)", professional: "Full + insights (8 credits)" },
+        { feature: "Tech Stack Generator", free: "View only", creator: "Full access (3 credits)", professional: "Advanced (3 credits)" }
       ]
     },
     {
       category: "Prompt Library",
       items: [
-        { feature: "Prompt Library", free: "Free Models Only", creator: "Full Access", professional: "Full Access" }
+        { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
       ]
     },
     {
       category: "Insighta",
       items: [
-        { feature: "Insighta Test Assessment", free: true, creator: true, professional: true },
-        { feature: "Investor Matchmaker", free: false, creator: false, professional: true },
-        { feature: "Funding Opportunities", free: true, creator: true, professional: true }
+        { feature: "VC Search Views", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
+        { feature: "Email Templates", free: "View only", creator: "AI generation (3 credits)", professional: "AI + custom (3 credits)" },
+        { feature: "Pitch Deck Analyzer", free: false, creator: "Full access (8 credits)", professional: "Advanced + benchmarks (8 credits)" },
+        { feature: "Insighta Test", free: "Basic (8 credits)", creator: "Full access (8 credits)", professional: "Full + personalized (8 credits)" },
+        { feature: "Investor Matchmaker", free: false, creator: false, professional: "Full access (5 credits)" }
       ]
     },
     {
-      category: "Community and Stories",
+      category: "Community",
       items: [
-        { feature: "Discovery Calls with Mentors", free: false, creator: true, professional: true },
+        { feature: "Find a Mentor", free: "Browse only", creator: "Full access", professional: "Full + verified priority" },
+        { feature: "Find a Co-Founder", free: "Browse only", creator: "Full access", professional: "Full + featured listings" },
         { feature: "Stories Content", free: "Full access", creator: "Full access", professional: "Full access" }
+      ]
+    },
+    {
+      category: "Support & Access",
+      items: [
+        { feature: "Support", free: "Community", creator: "Priority support", professional: "Priority (24h response)" },
+        { feature: "Early Access to New Features", free: false, creator: false, professional: true }
       ]
     }
   ];
 
   const plans = [
-    { name: "Free", price: "$0", period: "/month", isPopular: false },
-    { name: "Creator", price: "$19.99", period: "/month", isPopular: true },
-    { name: "Professional", price: "$39.99", period: "/month", isPopular: false }
+    { name: "Rookie", price: "$0", period: "/month", isPopular: false },
+    { name: "Rising", price: "$32.99", period: "/month", isPopular: true },
+    { name: "Pro", price: "$74.99", period: "/month", isPopular: false }
   ];
   const renderFeatureValue = (value: any, animated: boolean = false) => {
     if (typeof value === 'boolean') {
@@ -130,7 +140,13 @@ const PricingComparison = () => {
                   <h4 className="font-semibold text-lg mb-4 text-primary">{category.category}</h4>
                   <div className="space-y-3">
                     {category.items.map(item => {
-                      const planKey = plans[currentMobileIndex].name.toLowerCase() as 'free' | 'creator' | 'professional';
+                      // Map display names to data keys
+                      const planNameMap: Record<string, 'free' | 'creator' | 'professional'> = {
+                        'Rookie': 'free',
+                        'Rising': 'creator',
+                        'Pro': 'professional'
+                      };
+                      const planKey = planNameMap[plans[currentMobileIndex].name];
                       return (
                         <div key={item.feature} className="flex justify-between items-center gap-4">
                           <span className="text-sm flex-1">{item.feature}</span>

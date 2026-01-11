@@ -34,6 +34,16 @@ const Pricing = () => {
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [hasPrefilledAddress, setHasPrefilledAddress] = useState(false);
 
+  // Map tier names for display
+  const getTierDisplayName = (tierName: string): string => {
+    const displayNames: Record<string, string> = {
+      free: "Rookie",
+      creator: "Rising",
+      professional: "Pro"
+    };
+    return displayNames[tierName] || tierName;
+  };
+
   // Define simplified feature list for each tier - keep it clear and concise
   const getFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
@@ -312,7 +322,7 @@ const Pricing = () => {
 
                 {/* Plan Header */}
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl sm:text-3xl font-bold mb-1 capitalize">{tier.tier_name}</h3>
+                  <h3 className="text-2xl sm:text-3xl font-bold mb-1 capitalize">{getTierDisplayName(tier.tier_name)}</h3>
                   {subtitle && (
                     <p className="text-sm font-medium text-muted-foreground mb-3">{subtitle}</p>
                   )}
