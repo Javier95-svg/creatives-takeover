@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, MapPin, DollarSign } from "lucide-react";
+import { ExternalLink, MapPin, DollarSign, Building2 } from "lucide-react";
 import { Investor } from "@/types/investor";
 import { Link } from "react-router-dom";
 
@@ -27,11 +27,18 @@ const VCCard = ({ vc }: VCCardProps) => {
             </h3>
             <p className="text-sm text-muted-foreground truncate">{vc.name}</p>
           </div>
-          {vc.is_featured && (
-            <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 shrink-0 text-xs">
-              ⭐ Featured
-            </Badge>
-          )}
+          {/* VC Logo or Fallback Icon */}
+          <div className="shrink-0 w-12 h-12 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+            {vc.logo_url ? (
+              <img
+                src={vc.logo_url}
+                alt={`${vc.firm_name} logo`}
+                className="w-full h-full object-contain p-1"
+              />
+            ) : (
+              <Building2 className="h-6 w-6 text-muted-foreground/50" />
+            )}
+          </div>
         </div>
 
         {/* Investment Stages */}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import {
   ArrowLeft,
   ExternalLink,
@@ -15,7 +16,11 @@ import {
   MapPin,
   DollarSign,
   Building2,
-  Send
+  Send,
+  Twitter,
+  Facebook,
+  Youtube,
+  Instagram
 } from "lucide-react";
 
 const VCProfilePage = () => {
@@ -82,32 +87,52 @@ const VCProfilePage = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/insighta')}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to VC Search
-        </Button>
+      <main className="relative overflow-hidden py-20 px-4">
+        <VCWallpaper />
 
-        {/* Main Profile Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-3xl mb-2">{vc.firm_name}</CardTitle>
-                <p className="text-xl text-muted-foreground">{vc.name}</p>
+        <div className="container mx-auto max-w-4xl relative z-10">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/insighta')}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to VC Search
+          </Button>
+
+          {/* Main Profile Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-start gap-6">
+                {/* VC Logo */}
+                <div className="shrink-0 w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
+                  {vc.logo_url ? (
+                    <img
+                      src={vc.logo_url}
+                      alt={`${vc.firm_name} logo`}
+                      className="w-full h-full object-contain p-2"
+                    />
+                  ) : (
+                    <Building2 className="h-10 w-10 text-muted-foreground/50" />
+                  )}
+                </div>
+
+                {/* Firm Info */}
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-3xl mb-2">{vc.firm_name}</CardTitle>
+                      <p className="text-xl text-muted-foreground mb-2">{vc.name}</p>
+                      {/* Investor Type Badge */}
+                      <Badge variant="outline" className="capitalize">
+                        {vc.investor_type.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
               </div>
-              {vc.is_featured && (
-                <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-                  ⭐ Featured
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
+            </CardHeader>
 
           <CardContent className="space-y-6">
             {/* Investment Thesis */}
@@ -183,13 +208,23 @@ const VCProfilePage = () => {
 
             {/* Contact Information */}
             <div className="border-t pt-6">
-              <h3 className="font-semibold mb-4">Contact Information</h3>
-              <div className="flex flex-col gap-3">
+              <h3 className="font-semibold mb-4">Contact & Social Media</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {vc.firm_website && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.firm_website} target="_blank" rel="noopener noreferrer">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Firm Website
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
                 {vc.email && (
                   <Button variant="outline" asChild className="justify-start">
                     <a href={`mailto:${vc.email}`}>
                       <Mail className="h-4 w-4 mr-2" />
-                      {vc.email}
+                      Email
+                      <ExternalLink className="h-3 w-3 ml-auto" />
                     </a>
                   </Button>
                 )}
@@ -197,16 +232,70 @@ const VCProfilePage = () => {
                   <Button variant="outline" asChild className="justify-start">
                     <a href={vc.linkedin_url} target="_blank" rel="noopener noreferrer">
                       <Linkedin className="h-4 w-4 mr-2" />
-                      LinkedIn Profile
+                      LinkedIn
                       <ExternalLink className="h-3 w-3 ml-auto" />
                     </a>
                   </Button>
                 )}
-                {vc.firm_website && (
+                {vc.twitter_url && (
                   <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.firm_website} target="_blank" rel="noopener noreferrer">
+                    <a href={vc.twitter_url} target="_blank" rel="noopener noreferrer">
+                      <Twitter className="h-4 w-4 mr-2" />
+                      X / Twitter
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
+                {vc.facebook_url && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.facebook_url} target="_blank" rel="noopener noreferrer">
+                      <Facebook className="h-4 w-4 mr-2" />
+                      Facebook
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
+                {vc.youtube_url && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.youtube_url} target="_blank" rel="noopener noreferrer">
+                      <Youtube className="h-4 w-4 mr-2" />
+                      YouTube
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
+                {vc.instagram_url && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.instagram_url} target="_blank" rel="noopener noreferrer">
+                      <Instagram className="h-4 w-4 mr-2" />
+                      Instagram
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
+                {vc.crunchbase_url && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
                       <Building2 className="h-4 w-4 mr-2" />
-                      Firm Website
+                      Crunchbase
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
+                {vc.angellist_url && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.angellist_url} target="_blank" rel="noopener noreferrer">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      AngelList
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
+                {vc.medium_url && (
+                  <Button variant="outline" asChild className="justify-start">
+                    <a href={vc.medium_url} target="_blank" rel="noopener noreferrer">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Medium
                       <ExternalLink className="h-3 w-3 ml-auto" />
                     </a>
                   </Button>
@@ -233,7 +322,8 @@ const VCProfilePage = () => {
               </Card>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </div>
       </main>
 
       <Footer />

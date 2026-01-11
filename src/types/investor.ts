@@ -21,6 +21,17 @@ export interface Investor {
   linkedin_url?: string;
   email?: string;
 
+  // Visual Branding & Social Media
+  logo_url?: string;
+  header_image_url?: string;
+  twitter_url?: string;
+  facebook_url?: string;
+  crunchbase_url?: string;
+  angellist_url?: string;
+  youtube_url?: string;
+  instagram_url?: string;
+  medium_url?: string;
+
   // Investor Type
   investor_type: 'vc' | 'angel' | 'fund' | 'corporate_vc';
 
