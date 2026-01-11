@@ -11,16 +11,11 @@ import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import {
   ArrowLeft,
   ExternalLink,
-  Mail,
   Linkedin,
   MapPin,
   DollarSign,
   Building2,
-  Send,
-  Twitter,
-  Facebook,
-  Youtube,
-  Instagram
+  Send
 } from "lucide-react";
 
 const VCProfilePage = () => {
@@ -219,15 +214,6 @@ const VCProfilePage = () => {
                     </a>
                   </Button>
                 )}
-                {vc.email && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={`mailto:${vc.email}`}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
                 {vc.linkedin_url && (
                   <Button variant="outline" asChild className="justify-start">
                     <a href={vc.linkedin_url} target="_blank" rel="noopener noreferrer">
@@ -237,65 +223,11 @@ const VCProfilePage = () => {
                     </a>
                   </Button>
                 )}
-                {vc.twitter_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.twitter_url} target="_blank" rel="noopener noreferrer">
-                      <Twitter className="h-4 w-4 mr-2" />
-                      X / Twitter
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.facebook_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.facebook_url} target="_blank" rel="noopener noreferrer">
-                      <Facebook className="h-4 w-4 mr-2" />
-                      Facebook
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.youtube_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.youtube_url} target="_blank" rel="noopener noreferrer">
-                      <Youtube className="h-4 w-4 mr-2" />
-                      YouTube
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.instagram_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.instagram_url} target="_blank" rel="noopener noreferrer">
-                      <Instagram className="h-4 w-4 mr-2" />
-                      Instagram
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
                 {vc.crunchbase_url && (
                   <Button variant="outline" asChild className="justify-start">
                     <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
                       <Building2 className="h-4 w-4 mr-2" />
                       Crunchbase
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.angellist_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.angellist_url} target="_blank" rel="noopener noreferrer">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      AngelList
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.medium_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.medium_url} target="_blank" rel="noopener noreferrer">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Medium
                       <ExternalLink className="h-3 w-3 ml-auto" />
                     </a>
                   </Button>
