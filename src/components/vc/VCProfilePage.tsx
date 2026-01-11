@@ -67,9 +67,9 @@ const VCProfilePage = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">VC Not Found</h2>
           <p className="text-muted-foreground mb-6">The VC profile you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/insighta')}>
+          <Button onClick={() => navigate('/insighta/vc-search')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Insighta
+            Back to VC Search
           </Button>
         </div>
       </div>
@@ -94,7 +94,7 @@ const VCProfilePage = () => {
           {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => navigate('/insighta')}
+            onClick={() => navigate('/insighta/vc-search')}
             className="mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
