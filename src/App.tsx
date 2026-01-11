@@ -149,7 +149,7 @@ function App() {
                   <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
                   <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
                   <Route path="/insighta/test" element={<InsightaTestPage />} />
-                  <Route path="/insighta/vc/:id" element={<VCProfilePage />} />
+                  <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
                   <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
                   <Route path="/demo" element={<Demo />} />
                   <Route path="/messages/:username" element={<Messages />} />

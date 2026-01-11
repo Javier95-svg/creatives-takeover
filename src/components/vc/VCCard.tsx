@@ -93,7 +93,7 @@ const VCCard = ({ vc }: VCCardProps) => {
 
         {/* View Profile Button */}
         <Button asChild size="sm" className="w-full mt-auto">
-          <Link to={`/insighta/vc/${vc.id}`}>
+          <Link to={`/insighta/vc/${vc.slug}`}>
             View Profile
             <ExternalLink className="h-3 w-3 ml-1" />
           </Link>

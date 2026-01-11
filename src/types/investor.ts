@@ -15,6 +15,7 @@ export interface PortfolioCompany {
 
 export interface Investor {
   id: string;
+  slug: string;
   name: string;
   firm_name: string;
   firm_website?: string;

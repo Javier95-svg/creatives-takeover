@@ -24,19 +24,19 @@ import {
 } from "lucide-react";
 
 const VCProfilePage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [vc, setVc] = useState<Investor | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchVC = async () => {
-      if (!id) return;
+      if (!slug) return;
 
       const { data, error } = await supabase
         .from('investors')
         .select('*')
-        .eq('id', id)
+        .eq('slug', slug)
         .single();
 
       if (error) {
@@ -48,7 +48,7 @@ const VCProfilePage = () => {
     };
 
     fetchVC();
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return (
