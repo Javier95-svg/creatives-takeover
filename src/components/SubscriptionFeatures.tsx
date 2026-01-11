@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
 import {
   Bot,
   Users,
   TrendingUp,
   Check,
   LayoutDashboard,
-  Lightbulb,
-  ChevronRight
+  Lightbulb
 } from "lucide-react";
 import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
@@ -219,19 +216,6 @@ const SubscriptionFeatures = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-12 text-center">
-          <p className="text-muted-foreground mb-6">
-            Credits reset monthly. Unused credits don't roll over. Choose the plan that fits your pace.
-          </p>
-          <Button size="lg" asChild>
-            <Link to="/pricing#pricing-plans">
-              View Pricing Plans
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
         </div>
       </div>
     </section>
