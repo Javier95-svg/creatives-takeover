@@ -1,0 +1,232 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+  apiVersion: "2023-10-16",
+});
+
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
+
+serve(async (req) => {
+  const signature = req.headers.get("stripe-signature");
+
+  if (!signature) {
+    return new Response("No signature", { status: 400 });
+  }
+
+  try {
+    const body = await req.text();
+    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+
+    console.log(`[Webhook] Received event: ${event.type}`);
+
+    // Create Supabase admin client
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") || "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+    );
+
+    // Log webhook event to database
+    await supabaseAdmin.from("stripe_webhook_events").insert({
+      event_id: event.id,
+      event_type: event.type,
+      customer_id: event.data.object.customer || null,
+      customer_email: event.data.object.customer_details?.email || event.data.object.customer_email || null,
+      subscription_id: event.data.object.subscription || null,
+      payload: event,
+      processed: false,
+    });
+
+    // Handle the event
+    switch (event.type) {
+      case "checkout.session.completed":
+        await handleCheckoutCompleted(event.data.object, supabaseAdmin);
+        break;
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+        await handleSubscriptionChange(event.data.object, supabaseAdmin);
+        break;
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(event.data.object, supabaseAdmin);
+        break;
+      case "invoice.paid":
+        await handleInvoicePaid(event.data.object, supabaseAdmin);
+        break;
+      default:
+        console.log(`[Webhook] Unhandled event type: ${event.type}`);
+    }
+
+    // Mark webhook event as processed
+    await supabaseAdmin
+      .from("stripe_webhook_events")
+      .update({ processed: true, processed_at: new Date().toISOString() })
+      .eq("event_id", event.id);
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (err: any) {
+    console.error("[Webhook] Error:", err.message);
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  }
+});
+
+async function handleCheckoutCompleted(session: any, supabaseAdmin: any) {
+  console.log("[Checkout] Processing checkout.session.completed");
+
+  const { customer, customer_details, metadata } = session;
+  const customerEmail = customer_details?.email;
+
+  if (!customerEmail) {
+    console.error("[Checkout] No customer email found");
+    return;
+  }
+
+  // Get tier and billing cycle from metadata (set in payment link)
+  const tier = metadata?.tier; // 'creator' or 'professional'
+  const billingCycle = metadata?.billing_cycle; // 'monthly' or 'yearly'
+
+  if (!tier || !billingCycle) {
+    console.error("[Checkout] Missing metadata - tier or billing_cycle not found");
+    console.log("[Checkout] Metadata:", metadata);
+    return;
+  }
+
+  console.log(`[Checkout] Updating subscription for ${customerEmail} to ${tier} (${billingCycle})`);
+
+  // Call the database function to update user subscription
+  const { data, error } = await supabaseAdmin.rpc("update_user_subscription", {
+    customer_email_param: customerEmail,
+    tier_param: tier,
+    billing_cycle_param: billingCycle,
+    stripe_customer_id_param: customer,
+  });
+
+  if (error) {
+    console.error("[Checkout] Error updating subscription:", error);
+    throw error;
+  }
+
+  if (data === false) {
+    console.error("[Checkout] User not found for email:", customerEmail);
+    return;
+  }
+
+  console.log(`[Checkout] Successfully updated subscription for ${customerEmail}`);
+}
+
+async function handleSubscriptionChange(subscription: any, supabaseAdmin: any) {
+  console.log("[Subscription] Processing subscription change");
+
+  const { customer, status, current_period_end, items } = subscription;
+
+  // Get customer email
+  const { data: customerData } = await stripe.customers.retrieve(customer);
+  const customerEmail = (customerData as any).email;
+
+  if (!customerEmail) {
+    console.error("[Subscription] No email found for customer:", customer);
+    return;
+  }
+
+  // Determine tier from price ID
+  const priceId = items.data[0]?.price?.id;
+  const tier = getTierFromPriceId(priceId);
+
+  // Determine billing cycle
+  const interval = items.data[0]?.price?.recurring?.interval; // 'month' or 'year'
+  const billingCycle = interval === "year" ? "yearly" : "monthly";
+
+  if (status === "active") {
+    console.log(`[Subscription] Updating subscription for ${customerEmail} to ${tier} (${billingCycle})`);
+
+    await supabaseAdmin.rpc("update_user_subscription", {
+      customer_email_param: customerEmail,
+      tier_param: tier,
+      billing_cycle_param: billingCycle,
+      stripe_customer_id_param: customer,
+    });
+  } else if (status === "canceled" || status === "incomplete_expired") {
+    console.log(`[Subscription] Downgrading ${customerEmail} to free tier`);
+
+    // Downgrade to free
+    await supabaseAdmin.rpc("update_user_subscription", {
+      customer_email_param: customerEmail,
+      tier_param: "free",
+      billing_cycle_param: "monthly",
+      stripe_customer_id_param: customer,
+    });
+  }
+}
+
+async function handleSubscriptionDeleted(subscription: any, supabaseAdmin: any) {
+  console.log("[Subscription] Processing subscription deletion");
+
+  const { customer } = subscription;
+
+  // Downgrade user to free tier
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      subscription_tier: "free",
+      subscribed: false,
+      subscription_end: null,
+      monthly_credits: 10,
+      credits: 10,
+      billing_cycle: null,
+    })
+    .eq("stripe_customer_id", customer);
+
+  if (error) {
+    console.error("[Subscription] Error downgrading user:", error);
+    throw error;
+  }
+
+  console.log(`[Subscription] Successfully downgraded customer ${customer} to free tier`);
+}
+
+async function handleInvoicePaid(invoice: any, supabaseAdmin: any) {
+  console.log("[Invoice] Processing invoice.paid");
+
+  const { customer, subscription } = invoice;
+
+  if (!subscription) {
+    console.log("[Invoice] No subscription associated with invoice");
+    return;
+  }
+
+  // Reset monthly credits when invoice is paid (recurring payment)
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("monthly_credits")
+    .eq("stripe_customer_id", customer)
+    .single();
+
+  if (profile) {
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        credits: profile.monthly_credits, // Reset to plan allowance
+      })
+      .eq("stripe_customer_id", customer);
+
+    console.log(`[Invoice] Reset credits for customer ${customer} to ${profile.monthly_credits}`);
+  }
+}
+
+function getTierFromPriceId(priceId: string): string {
+  // Map Stripe price IDs to tier names
+  // You'll need to add your actual Stripe price IDs here
+  const priceMap: Record<string, string> = {
+    // Add your Stripe price IDs here once you create them
+    // Example:
+    // 'price_xxxCreatorMonthly': 'creator',
+    // 'price_xxxCreatorYearly': 'creator',
+    // 'price_xxxProMonthly': 'professional',
+    // 'price_xxxProYearly': 'professional',
+  };
+
+  return priceMap[priceId] || "free";
+}
