@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, Crown, Check } from "lucide-react";
 import UpgradeCheckoutDialog, {
   CheckoutFormState,
@@ -33,6 +34,7 @@ const Pricing = () => {
   );
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [hasPrefilledAddress, setHasPrefilledAddress] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   // Map tier names for display
   const getTierDisplayName = (tierName: string): string => {
@@ -42,6 +44,28 @@ const Pricing = () => {
       professional: "Pro"
     };
     return displayNames[tierName] || tierName;
+  };
+
+  // Get pricing based on billing cycle
+  const getPrice = (tierName: string): { price: number; period: string } => {
+    if (tierName === 'free') {
+      return { price: 0, period: '' };
+    }
+
+    if (billingCycle === 'yearly') {
+      const yearlyPrices: Record<string, number> = {
+        creator: 300,
+        professional: 750
+      };
+      return { price: yearlyPrices[tierName] || 0, period: '/year' };
+    }
+
+    // Monthly prices (from database)
+    const monthlyPrices: Record<string, number> = {
+      creator: 32.99,
+      professional: 74.99
+    };
+    return { price: monthlyPrices[tierName] || 0, period: '/month' };
   };
 
   // Define simplified feature list for each tier - keep it clear and concise
@@ -280,9 +304,20 @@ const Pricing = () => {
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Start taking action and move your ideas forward with plans that scale as you do.
           </p>
+
+          {/* Billing Cycle Tabs */}
+          <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')} className="inline-block">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              <TabsTrigger value="yearly">
+                Yearly
+                <Badge variant="secondary" className="ml-2 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Save up to 24%</Badge>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Pricing Cards */}
@@ -294,6 +329,7 @@ const Pricing = () => {
             const subtitle = getSubtitle(tier.tier_name);
             const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
             const isPopular = tier.tier_name === 'creator';
+            const { price, period } = getPrice(tier.tier_name);
 
             return (
               <div
@@ -329,12 +365,17 @@ const Pricing = () => {
                   <div className="mb-4">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl sm:text-5xl font-bold">
-                        ${(tier.price_cents / 100).toFixed(2)}
+                        ${price === 0 ? '0' : price.toFixed(2)}
                       </span>
-                      {tier.price_cents > 0 && (
-                        <span className="text-muted-foreground text-lg">/month</span>
+                      {period && (
+                        <span className="text-muted-foreground text-lg">{period}</span>
                       )}
                     </div>
+                    {billingCycle === 'yearly' && tier.tier_name !== 'free' && (
+                      <div className="text-sm text-green-600 dark:text-green-400 mt-1">
+                        ${(price / 12).toFixed(2)}/month billed annually
+                      </div>
+                    )}
                     {tier.monthly_credits > 0 && (
                       <div className="text-sm text-muted-foreground mt-2">
                         {tier.tier_name === 'free' ? 10 : tier.monthly_credits} credits/month
