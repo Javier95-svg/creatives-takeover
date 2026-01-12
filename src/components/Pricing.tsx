@@ -13,6 +13,29 @@ import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
 const BILLING_STORAGE_KEY = "ct_billing_details";
 
+// Stripe Payment Links mapping by tier and billing cycle
+const PAYMENT_LINKS: Record<string, Record<string, string>> = {
+  creator: {
+    monthly: "https://pay.creatives-takeover.com/b/cNi00jbqh07ma6e5e30ZW07",
+    yearly: "https://pay.creatives-takeover.com/b/eVq28r1PHcU8a6efSH0ZW06",
+  },
+  professional: {
+    monthly: "https://pay.creatives-takeover.com/b/4gMaEXcul4nC0vEfSH0ZW05",
+    yearly: "https://pay.creatives-takeover.com/b/14A5kDfGx8DS5PY9uj0ZW04",
+  },
+};
+
+// Get payment link for a given tier and billing cycle
+const getPaymentLink = (
+  tierName: string,
+  billingCycle: "monthly" | "yearly"
+): string | null => {
+  const normalizedTier = tierName.trim().toLowerCase();
+  const links = PAYMENT_LINKS[normalizedTier];
+  if (!links) return null;
+  return links[billingCycle] || null;
+};
+
 const createEmptyFormState = (): CheckoutFormState => ({
   fullName: "",
   email: "",
@@ -25,7 +48,7 @@ const createEmptyFormState = (): CheckoutFormState => ({
 });
 
 const Pricing = () => {
-  const { tiers, loading, createCheckout, subscriptionData } = useSubscription();
+  const { tiers, loading, subscriptionData } = useSubscription();
   const { user } = useAuth();
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
@@ -237,36 +260,34 @@ const Pricing = () => {
       return;
     }
 
+    // Get payment link based on tier and billing cycle
+    const paymentLink = getPaymentLink(selectedTier.tier_name, billingCycle);
+    
+    if (!paymentLink) {
+      toast.error("Unable to find payment link for this plan. Please try again.");
+      return;
+    }
+
+    // Save billing details to localStorage for potential future use
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        BILLING_STORAGE_KEY,
+        JSON.stringify(checkoutForm)
+      );
+    }
+
     setCheckoutSubmitting(true);
     try {
-      const prefill = {
-        name: checkoutForm.fullName,
-        email: checkoutForm.email,
-        address: {
-          line1: checkoutForm.addressLine1,
-          line2: checkoutForm.addressLine2 || undefined,
-          city: checkoutForm.city,
-          state: checkoutForm.state,
-          postal_code: checkoutForm.postalCode,
-          country: checkoutForm.country,
-        },
-      };
-
-      const url = await createCheckout(selectedTier.tier_name, prefill);
-      if (url) {
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(
-            BILLING_STORAGE_KEY,
-            JSON.stringify(checkoutForm)
-          );
-        }
-        toast.success("Redirecting you to secure checkout…");
-        handleDialogOpenChange(false);
-      }
+      toast.success("Redirecting you to secure checkout…");
+      handleDialogOpenChange(false);
+      
+      // Small delay to allow toast and dialog close animation
+      setTimeout(() => {
+        window.location.href = paymentLink;
+      }, 300);
     } catch (error) {
-      console.error("Upgrade checkout failed", error);
-      toast.error("We couldn't start the checkout. Please try again.");
-    } finally {
+      console.error("Redirect to payment link failed", error);
+      toast.error("We couldn't redirect to checkout. Please try again.");
       setCheckoutSubmitting(false);
     }
   };
