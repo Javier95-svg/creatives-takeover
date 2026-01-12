@@ -48,7 +48,7 @@ const createEmptyFormState = (): CheckoutFormState => ({
 });
 
 const Pricing = () => {
-  const { tiers, loading, subscriptionData } = useSubscription();
+  const { tiers, loading, subscriptionData, refreshSubscription } = useSubscription();
   const { user } = useAuth();
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
@@ -262,7 +262,7 @@ const Pricing = () => {
 
     // Get payment link based on tier and billing cycle
     const paymentLink = getPaymentLink(selectedTier.tier_name, billingCycle);
-    
+
     if (!paymentLink) {
       toast.error("Unable to find payment link for this plan. Please try again.");
       return;
@@ -278,16 +278,50 @@ const Pricing = () => {
 
     setCheckoutSubmitting(true);
     try {
-      toast.success("Redirecting you to secure checkout…");
+      toast.success("Opening secure checkout in new tab…");
       handleDialogOpenChange(false);
-      
-      // Small delay to allow toast and dialog close animation
+
+      // Open Stripe checkout in a new tab
+      const checkoutWindow = window.open(paymentLink, '_blank');
+
+      if (!checkoutWindow) {
+        toast.error("Please allow popups to complete checkout");
+        setCheckoutSubmitting(false);
+        return;
+      }
+
+      // Start polling for subscription updates when user returns
+      const pollInterval = setInterval(async () => {
+        // Check if checkout window is closed (user returned)
+        if (checkoutWindow.closed) {
+          clearInterval(pollInterval);
+
+          // Refresh subscription status
+          toast.info("Checking subscription status...");
+
+          // Wait a moment for Stripe webhook to process
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // Refresh subscription data without full page reload
+          await refreshSubscription();
+
+          setCheckoutSubmitting(false);
+
+          // Show success message if subscription was updated
+          const tierName = getTierDisplayName(selectedTier.tier_name);
+          toast.success(`Welcome to ${tierName}! Your account has been upgraded.`);
+        }
+      }, 1000); // Poll every second
+
+      // Clear interval after 10 minutes (in case window stays open)
       setTimeout(() => {
-        window.location.href = paymentLink;
-      }, 300);
+        clearInterval(pollInterval);
+        setCheckoutSubmitting(false);
+      }, 600000);
+
     } catch (error) {
-      console.error("Redirect to payment link failed", error);
-      toast.error("We couldn't redirect to checkout. Please try again.");
+      console.error("Failed to open checkout", error);
+      toast.error("We couldn't open checkout. Please try again.");
       setCheckoutSubmitting(false);
     }
   };
