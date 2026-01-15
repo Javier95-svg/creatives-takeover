@@ -12,7 +12,7 @@ import EntrepreneurProblems from "@/components/EntrepreneurProblems";
 import AISpecializationTrends from "@/components/AISpecializationTrends";
 import ValuePropositionCards from "@/components/ValuePropositionCards";
 import UserReviews from "@/components/UserReviews";
-import HomeFAQ from "@/components/HomeFAQ";
+import FAQ from "@/components/FAQ";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -45,7 +45,7 @@ const Index = () => {
       <AISpecializationTrends />
       <ValuePropositionCards />
       <UserReviews />
-      <HomeFAQ />
+      <FAQ />
     </>
   );
 
