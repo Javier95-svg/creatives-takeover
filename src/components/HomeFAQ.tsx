@@ -53,39 +53,40 @@ const HomeFAQ = () => {
   ];
 
   return (
-    <section className="py-16 lg:py-24 bg-background">
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-            FAQ
+    <section className="relative py-20 lg:py-32 overflow-hidden">
+      {/* Subtle blue accent aligned with gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        {/* Section Header */}
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <span className="gradient-unified">FAQ</span>
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Straightforward answers about how Creatives Takeover supports your
-            idea-to-launch workflow.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+            Everything you need to know about Creatives Takeover, the all-in-one platform that uses AI, automation, and community support to help you plan, build, and grow your business from idea to execution.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="rounded-xl border border-border/60 bg-card">
-            <Accordion type="single" collapsible className="divide-y">
+        {/* FAQ Accordion */}
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="backdrop-blur-sm bg-card/50 rounded-2xl border border-border/50 p-4 sm:p-6 lg:p-8 shadow-2xl animate-scale-in">
+            <Accordion type="single" collapsible className="space-y-3 sm:space-y-4">
               {faqs.map((faq, index) => (
-                <AccordionItem
-                  key={index}
+                <AccordionItem 
+                  key={index} 
                   value={`item-${index}`}
-                  className="border-0 px-4 sm:px-6"
+                  className="border border-border/50 rounded-lg px-4 sm:px-6 bg-background/50 hover:bg-background/80 transition-all duration-300 hover:shadow-lg hover:border-primary/30"
                 >
-                  <AccordionTrigger className="text-left text-sm sm:text-base font-semibold hover:text-primary transition-colors py-4">
+                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold hover:text-primary transition-colors py-4">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pb-4">
-                    {faq.answer
-                      .split("\n\n")
-                      .filter((para) => para.trim())
-                      .map((paragraph, idx) => (
-                        <p key={idx} className="mb-3 last:mb-0">
-                          {paragraph.trim()}
-                        </p>
-                      ))}
+                  <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-2">
+                    {faq.answer.split('\n\n').filter(para => para.trim()).map((paragraph, idx) => (
+                      <p key={idx} className="mb-3 last:mb-0">
+                        {paragraph.trim()}
+                      </p>
+                    ))}
                   </AccordionContent>
                 </AccordionItem>
               ))}
@@ -93,19 +94,20 @@ const HomeFAQ = () => {
           </div>
         </div>
 
-        <div className="mt-12 text-center">
-          <div className="border border-border/60 bg-muted/40 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
-            <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-3">
+        {/* Trust-Building Footer */}
+        <div className="mt-12 sm:mt-16 text-center animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
+          <div className="backdrop-blur-sm bg-card/30 border border-border/50 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Still have questions?
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6">
-              Reach the team directly for guidance or partnership inquiries.
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
+              We're here to help you succeed. Reach out to us directly.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <a
                 href="mailto:admin@creatives-takeover.com"
-                onClick={() => trackClick("Email Us", "FAQ Contact")}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-colors"
+                onClick={() => trackClick('Email Us', 'FAQ Contact')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
               >
                 <Mail className="w-5 h-5" />
                 Email Us
@@ -114,8 +116,8 @@ const HomeFAQ = () => {
                 href="https://t.me/creativestakeover"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackClick("Join Our Telegram", "FAQ Contact")}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-colors"
+                onClick={() => trackClick('Join Our Telegram', 'FAQ Contact')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
               >
                 <ExternalLink className="w-5 h-5" />
                 Join Our Telegram

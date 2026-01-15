@@ -174,7 +174,7 @@ const AISpecializationTrends = () => {
             <span className="gradient-unified">The Explosion of Niche Startups</span>
           </h2>
           <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto px-4 leading-[1.7] font-light">
-            Specialization is now the winning strategy: niche AI grew 340% from 2023–2025, general AI just 45%, and specialized tools reached 65% market share by 2025.
+            Specialization is emerging as the core strategy of modern entrepreneurship, and the data clearly confirms it.
           </p>
         </div>
 
@@ -474,18 +474,13 @@ const AISpecializationTrends = () => {
             {textSectionVisible && (
               <>
                 <TypedParagraph 
-                  text="2026 is the best moment to launch because markets are fragmenting fast. Specialized AI captured 65% market share by 2025, and niche products are scaling far faster than general platforms."
+                  text="It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants."
                   startDelay={0}
                   className="text-lg text-muted-foreground leading-relaxed mb-4"
                 />
                 <TypedParagraph 
-                  text="In 2024 alone, 2,500+ niche products launched across categories like creative tools, healthcare, legal, and finance. That pace signals a massive unbundling of demand into focused niches that big, generalist products can’t serve."
+                  text="The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher."
                   startDelay={2000}
-                  className="text-lg text-muted-foreground leading-relaxed mb-4"
-                />
-                <TypedParagraph 
-                  text="AI is the execution multiplier: founders can now outsource, automate, and scale core operations with AI workflows, shrinking fixed costs and lowering the talent barrier. When niche growth is 340% versus 45% for general tools, the data says focus + AI is the fastest path to traction."
-                  startDelay={4000}
                   className="text-lg text-muted-foreground leading-relaxed"
                 />
               </>
