@@ -457,6 +457,13 @@ export type Database = {
             foreignKeyName: "business_metrics_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -641,6 +648,7 @@ export type Database = {
       }
       chatbot_conversations: {
         Row: {
+          answer_quality_scores: Json | null
           business_context: Json | null
           chat_mode: string | null
           context_loaded_at: string | null
@@ -653,6 +661,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          answer_quality_scores?: Json | null
           business_context?: Json | null
           chat_mode?: string | null
           context_loaded_at?: string | null
@@ -665,6 +674,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          answer_quality_scores?: Json | null
           business_context?: Json | null
           chat_mode?: string | null
           context_loaded_at?: string | null
@@ -813,6 +823,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cofounder_posts: {
+        Row: {
+          additional_info: string | null
+          commitment: string | null
+          created_at: string | null
+          equity_range: string | null
+          id: string
+          industry: string | null
+          location: string | null
+          looking_for: string[]
+          project_description: string
+          project_name: string
+          stage: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string | null
+          commitment?: string | null
+          created_at?: string | null
+          equity_range?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          looking_for: string[]
+          project_description: string
+          project_name: string
+          stage: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_info?: string | null
+          commitment?: string | null
+          created_at?: string | null
+          equity_range?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          looking_for?: string[]
+          project_description?: string
+          project_name?: string
+          stage?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       cohort_checkins: {
         Row: {
@@ -1636,6 +1697,57 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          admin_email_id: string | null
+          admin_email_sent: boolean | null
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          message: string
+          name: string
+          reason: string
+          role: string
+          user_agent: string | null
+          user_email_id: string | null
+          user_email_sent: boolean | null
+        }
+        Insert: {
+          admin_email_id?: string | null
+          admin_email_sent?: boolean | null
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          message: string
+          name: string
+          reason: string
+          role: string
+          user_agent?: string | null
+          user_email_id?: string | null
+          user_email_sent?: boolean | null
+        }
+        Update: {
+          admin_email_id?: string | null
+          admin_email_sent?: boolean | null
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          message?: string
+          name?: string
+          reason?: string
+          role?: string
+          user_agent?: string | null
+          user_email_id?: string | null
+          user_email_sent?: boolean | null
+        }
+        Relationships: []
+      }
       conversation_context_cache: {
         Row: {
           business_context: Json | null
@@ -1804,6 +1916,13 @@ export type Database = {
             foreignKeyName: "credit_transactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1855,6 +1974,7 @@ export type Database = {
           completed_tasks: string[] | null
           created_at: string
           energy_level: number | null
+          energy_level_end: number | null
           goal_achieved: boolean | null
           id: string
           mood_rating: number | null
@@ -1863,8 +1983,10 @@ export type Database = {
           reflection_note: string | null
           sprint_id: string
           streak_count: number | null
+          tomorrow_focus: string | null
           updated_at: string
           user_id: string
+          what_blocked_you: string | null
           what_went_well: string | null
         }
         Insert: {
@@ -1873,6 +1995,7 @@ export type Database = {
           completed_tasks?: string[] | null
           created_at?: string
           energy_level?: number | null
+          energy_level_end?: number | null
           goal_achieved?: boolean | null
           id?: string
           mood_rating?: number | null
@@ -1881,8 +2004,10 @@ export type Database = {
           reflection_note?: string | null
           sprint_id: string
           streak_count?: number | null
+          tomorrow_focus?: string | null
           updated_at?: string
           user_id: string
+          what_blocked_you?: string | null
           what_went_well?: string | null
         }
         Update: {
@@ -1891,6 +2016,7 @@ export type Database = {
           completed_tasks?: string[] | null
           created_at?: string
           energy_level?: number | null
+          energy_level_end?: number | null
           goal_achieved?: boolean | null
           id?: string
           mood_rating?: number | null
@@ -1899,8 +2025,10 @@ export type Database = {
           reflection_note?: string | null
           sprint_id?: string
           streak_count?: number | null
+          tomorrow_focus?: string | null
           updated_at?: string
           user_id?: string
+          what_blocked_you?: string | null
           what_went_well?: string | null
         }
         Relationships: []
@@ -1979,42 +2107,60 @@ export type Database = {
       }
       daily_tasks: {
         Row: {
+          ai_generated: boolean | null
+          blocks_task_ids: string[] | null
+          business_impact_score: number | null
           completed_at: string | null
+          contributes_to_weekly_mission: boolean | null
           created_at: string | null
           deadline_reached_popup_shown: boolean | null
           deadline_time: string | null
+          effort_estimate: number | null
           id: string
           is_completed: boolean | null
           last_reminder_sent: string | null
           priority: string | null
+          stage_alignment_score: number | null
           task_date: string
           task_text: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          ai_generated?: boolean | null
+          blocks_task_ids?: string[] | null
+          business_impact_score?: number | null
           completed_at?: string | null
+          contributes_to_weekly_mission?: boolean | null
           created_at?: string | null
           deadline_reached_popup_shown?: boolean | null
           deadline_time?: string | null
+          effort_estimate?: number | null
           id?: string
           is_completed?: boolean | null
           last_reminder_sent?: string | null
           priority?: string | null
+          stage_alignment_score?: number | null
           task_date: string
           task_text: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          ai_generated?: boolean | null
+          blocks_task_ids?: string[] | null
+          business_impact_score?: number | null
           completed_at?: string | null
+          contributes_to_weekly_mission?: boolean | null
           created_at?: string | null
           deadline_reached_popup_shown?: boolean | null
           deadline_time?: string | null
+          effort_estimate?: number | null
           id?: string
           is_completed?: boolean | null
           last_reminder_sent?: string | null
           priority?: string | null
+          stage_alignment_score?: number | null
           task_date?: string
           task_text?: string
           updated_at?: string | null
@@ -2529,6 +2675,108 @@ export type Database = {
           },
         ]
       }
+      founder_journey_gifs: {
+        Row: {
+          created_at: string | null
+          gif_url: string
+          id: string
+          is_active: boolean | null
+          position: number
+          storage_path: string
+          updated_at: string | null
+          uploaded_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          gif_url: string
+          id?: string
+          is_active?: boolean | null
+          position?: number
+          storage_path: string
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          gif_url?: string
+          id?: string
+          is_active?: boolean | null
+          position?: number
+          storage_path?: string
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      founder_profiles: {
+        Row: {
+          available_resources: Json | null
+          created_at: string
+          decision_making_style: string | null
+          domain_expertise: string[] | null
+          entrepreneurial_experience: string | null
+          id: string
+          key_constraints: Json | null
+          last_updated: string | null
+          learning_preferences: string[] | null
+          preferred_detail_level: string | null
+          preferred_pace: string | null
+          preferred_tone: string | null
+          previous_ventures: Json | null
+          primary_goals: string[] | null
+          profile_completeness: number | null
+          risk_tolerance: string | null
+          skill_gaps: string[] | null
+          success_definition: string | null
+          user_id: string
+        }
+        Insert: {
+          available_resources?: Json | null
+          created_at?: string
+          decision_making_style?: string | null
+          domain_expertise?: string[] | null
+          entrepreneurial_experience?: string | null
+          id?: string
+          key_constraints?: Json | null
+          last_updated?: string | null
+          learning_preferences?: string[] | null
+          preferred_detail_level?: string | null
+          preferred_pace?: string | null
+          preferred_tone?: string | null
+          previous_ventures?: Json | null
+          primary_goals?: string[] | null
+          profile_completeness?: number | null
+          risk_tolerance?: string | null
+          skill_gaps?: string[] | null
+          success_definition?: string | null
+          user_id: string
+        }
+        Update: {
+          available_resources?: Json | null
+          created_at?: string
+          decision_making_style?: string | null
+          domain_expertise?: string[] | null
+          entrepreneurial_experience?: string | null
+          id?: string
+          key_constraints?: Json | null
+          last_updated?: string | null
+          learning_preferences?: string[] | null
+          preferred_detail_level?: string | null
+          preferred_pace?: string | null
+          preferred_tone?: string | null
+          previous_ventures?: Json | null
+          primary_goals?: string[] | null
+          profile_completeness?: number | null
+          risk_tolerance?: string | null
+          skill_gaps?: string[] | null
+          success_definition?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -2556,6 +2804,195 @@ export type Database = {
           sender_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      funding_opportunities: {
+        Row: {
+          created_at: string
+          description: string
+          funding_amount: string | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          keywords: string[] | null
+          location: string[] | null
+          title: string
+          type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          funding_amount?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          keywords?: string[] | null
+          location?: string[] | null
+          title: string
+          type: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          funding_amount?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          keywords?: string[] | null
+          location?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      fundraising_readiness_assessments: {
+        Row: {
+          analysis_data: Json
+          average_score: number
+          business_model: string | null
+          competitive_positioning_score: number | null
+          created_at: string | null
+          demand_validated_score: number | null
+          feedback_score: number | null
+          founder_experience: string | null
+          founder_market_fit_score: number | null
+          founder_stage: string | null
+          funding_amount_needed: number | null
+          funding_defined_score: number | null
+          gtm_strategy_score: number | null
+          id: string
+          industry: string | null
+          investor_network_score: number | null
+          legal_readiness_score: number | null
+          market_size_score: number | null
+          meets_investor_threshold: boolean | null
+          milestone_achieved_score: number | null
+          mvp_score: number | null
+          mvp_working_score: number | null
+          pitch_deck_score: number | null
+          pitch_summary: string | null
+          primary_location: string | null
+          product_live_score: number | null
+          runway_score: number | null
+          team_complementary_score: number | null
+          team_experience_score: number | null
+          team_score: number | null
+          traction_revenue_score: number | null
+          traction_score: number | null
+          unit_economics_score: number | null
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          analysis_data: Json
+          average_score: number
+          business_model?: string | null
+          competitive_positioning_score?: number | null
+          created_at?: string | null
+          demand_validated_score?: number | null
+          feedback_score?: number | null
+          founder_experience?: string | null
+          founder_market_fit_score?: number | null
+          founder_stage?: string | null
+          funding_amount_needed?: number | null
+          funding_defined_score?: number | null
+          gtm_strategy_score?: number | null
+          id?: string
+          industry?: string | null
+          investor_network_score?: number | null
+          legal_readiness_score?: number | null
+          market_size_score?: number | null
+          meets_investor_threshold?: boolean | null
+          milestone_achieved_score?: number | null
+          mvp_score?: number | null
+          mvp_working_score?: number | null
+          pitch_deck_score?: number | null
+          pitch_summary?: string | null
+          primary_location?: string | null
+          product_live_score?: number | null
+          runway_score?: number | null
+          team_complementary_score?: number | null
+          team_experience_score?: number | null
+          team_score?: number | null
+          traction_revenue_score?: number | null
+          traction_score?: number | null
+          unit_economics_score?: number | null
+          user_id: string
+          verdict: string
+        }
+        Update: {
+          analysis_data?: Json
+          average_score?: number
+          business_model?: string | null
+          competitive_positioning_score?: number | null
+          created_at?: string | null
+          demand_validated_score?: number | null
+          feedback_score?: number | null
+          founder_experience?: string | null
+          founder_market_fit_score?: number | null
+          founder_stage?: string | null
+          funding_amount_needed?: number | null
+          funding_defined_score?: number | null
+          gtm_strategy_score?: number | null
+          id?: string
+          industry?: string | null
+          investor_network_score?: number | null
+          legal_readiness_score?: number | null
+          market_size_score?: number | null
+          meets_investor_threshold?: boolean | null
+          milestone_achieved_score?: number | null
+          mvp_score?: number | null
+          mvp_working_score?: number | null
+          pitch_deck_score?: number | null
+          pitch_summary?: string | null
+          primary_location?: string | null
+          product_live_score?: number | null
+          runway_score?: number | null
+          team_complementary_score?: number | null
+          team_experience_score?: number | null
+          team_score?: number | null
+          traction_revenue_score?: number | null
+          traction_score?: number | null
+          unit_economics_score?: number | null
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: []
+      }
+      hero_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          position: number
+          updated_at: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          position: number
+          updated_at?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          position?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2631,6 +3068,138 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      investors: {
+        Row: {
+          angellist_url: string | null
+          application_url: string | null
+          contact_preference: string | null
+          created_at: string | null
+          crunchbase_url: string | null
+          data_source: string | null
+          email: string | null
+          facebook_url: string | null
+          firm_name: string
+          firm_website: string | null
+          geographic_focus: string[]
+          header_image_url: string | null
+          id: string
+          industries: string[]
+          instagram_url: string | null
+          investment_stages: string[]
+          investment_thesis: string | null
+          investor_type: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          last_investment_date: string | null
+          last_updated: string | null
+          linkedin_url: string | null
+          locations: string[]
+          logo_url: string | null
+          match_score_boost: number | null
+          medium_url: string | null
+          name: string
+          portfolio_companies: Json | null
+          recent_investments_count: number | null
+          remote_friendly: boolean | null
+          requires_warm_intro: boolean | null
+          response_rate_percentage: number | null
+          slug: string
+          total_portfolio_count: number | null
+          twitter_url: string | null
+          typical_check_size_max: number | null
+          typical_check_size_min: number | null
+          typical_timeline_days: number | null
+          updated_at: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          angellist_url?: string | null
+          application_url?: string | null
+          contact_preference?: string | null
+          created_at?: string | null
+          crunchbase_url?: string | null
+          data_source?: string | null
+          email?: string | null
+          facebook_url?: string | null
+          firm_name: string
+          firm_website?: string | null
+          geographic_focus?: string[]
+          header_image_url?: string | null
+          id?: string
+          industries?: string[]
+          instagram_url?: string | null
+          investment_stages?: string[]
+          investment_thesis?: string | null
+          investor_type?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          last_investment_date?: string | null
+          last_updated?: string | null
+          linkedin_url?: string | null
+          locations?: string[]
+          logo_url?: string | null
+          match_score_boost?: number | null
+          medium_url?: string | null
+          name: string
+          portfolio_companies?: Json | null
+          recent_investments_count?: number | null
+          remote_friendly?: boolean | null
+          requires_warm_intro?: boolean | null
+          response_rate_percentage?: number | null
+          slug: string
+          total_portfolio_count?: number | null
+          twitter_url?: string | null
+          typical_check_size_max?: number | null
+          typical_check_size_min?: number | null
+          typical_timeline_days?: number | null
+          updated_at?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          angellist_url?: string | null
+          application_url?: string | null
+          contact_preference?: string | null
+          created_at?: string | null
+          crunchbase_url?: string | null
+          data_source?: string | null
+          email?: string | null
+          facebook_url?: string | null
+          firm_name?: string
+          firm_website?: string | null
+          geographic_focus?: string[]
+          header_image_url?: string | null
+          id?: string
+          industries?: string[]
+          instagram_url?: string | null
+          investment_stages?: string[]
+          investment_thesis?: string | null
+          investor_type?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          last_investment_date?: string | null
+          last_updated?: string | null
+          linkedin_url?: string | null
+          locations?: string[]
+          logo_url?: string | null
+          match_score_boost?: number | null
+          medium_url?: string | null
+          name?: string
+          portfolio_companies?: Json | null
+          recent_investments_count?: number | null
+          remote_friendly?: boolean | null
+          requires_warm_intro?: boolean | null
+          response_rate_percentage?: number | null
+          slug?: string
+          total_portfolio_count?: number | null
+          twitter_url?: string | null
+          typical_check_size_max?: number | null
+          typical_check_size_min?: number | null
+          typical_timeline_days?: number | null
+          updated_at?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
       }
       job_applications: {
         Row: {
@@ -3196,6 +3765,7 @@ export type Database = {
           created_at: string
           expertise: string[] | null
           hourly_rate: number
+          hourly_rate_per_hour: number | null
           id: string
           is_active: boolean | null
           is_featured: boolean | null
@@ -3219,6 +3789,7 @@ export type Database = {
           created_at?: string
           expertise?: string[] | null
           hourly_rate?: number
+          hourly_rate_per_hour?: number | null
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
@@ -3242,6 +3813,7 @@ export type Database = {
           created_at?: string
           expertise?: string[] | null
           hourly_rate?: number
+          hourly_rate_per_hour?: number | null
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
@@ -3666,6 +4238,7 @@ export type Database = {
           ai_personality: string | null
           avatar_url: string | null
           banner_url: string | null
+          billing_cycle: string | null
           bio: string | null
           bio_html: string | null
           business_stage: string | null
@@ -3673,6 +4246,7 @@ export type Database = {
           created_at: string
           creative_niche: string | null
           credit_balance: number
+          credits: number | null
           date_of_birth: string | null
           facebook_url: string | null
           followers_count: number
@@ -3688,13 +4262,27 @@ export type Database = {
           last_credit_reset_at: string
           linkedin_url: string | null
           memory_preference: string | null
+          monthly_credits: number | null
           onboarding_completed: boolean | null
+          preferred_dashboard_mode: string | null
           preferred_dashboard_view: string | null
           profile_completion_percentage: number | null
+          quiz_biggest_challenge: string | null
+          quiz_completed: boolean | null
+          quiz_completed_at: string | null
+          quiz_current_stage: string | null
+          quiz_is_first_startup: string | null
+          quiz_launch_timeline: string | null
+          quiz_looking_for_cofounder: string | null
+          sidebar_preferences: Json | null
+          stripe_customer_id: string | null
+          subscribed: boolean | null
+          subscription_end: string | null
           subscription_tier: string
           tiktok_url: string | null
           twitter_url: string | null
           updated_at: string
+          use_classic_dashboard: boolean | null
           user_preferences: Json | null
           username: string | null
           website_url: string | null
@@ -3704,6 +4292,7 @@ export type Database = {
           ai_personality?: string | null
           avatar_url?: string | null
           banner_url?: string | null
+          billing_cycle?: string | null
           bio?: string | null
           bio_html?: string | null
           business_stage?: string | null
@@ -3711,6 +4300,7 @@ export type Database = {
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
+          credits?: number | null
           date_of_birth?: string | null
           facebook_url?: string | null
           followers_count?: number
@@ -3726,13 +4316,27 @@ export type Database = {
           last_credit_reset_at?: string
           linkedin_url?: string | null
           memory_preference?: string | null
+          monthly_credits?: number | null
           onboarding_completed?: boolean | null
+          preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
           profile_completion_percentage?: number | null
+          quiz_biggest_challenge?: string | null
+          quiz_completed?: boolean | null
+          quiz_completed_at?: string | null
+          quiz_current_stage?: string | null
+          quiz_is_first_startup?: string | null
+          quiz_launch_timeline?: string | null
+          quiz_looking_for_cofounder?: string | null
+          sidebar_preferences?: Json | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean | null
+          subscription_end?: string | null
           subscription_tier?: string
           tiktok_url?: string | null
           twitter_url?: string | null
           updated_at?: string
+          use_classic_dashboard?: boolean | null
           user_preferences?: Json | null
           username?: string | null
           website_url?: string | null
@@ -3742,6 +4346,7 @@ export type Database = {
           ai_personality?: string | null
           avatar_url?: string | null
           banner_url?: string | null
+          billing_cycle?: string | null
           bio?: string | null
           bio_html?: string | null
           business_stage?: string | null
@@ -3749,6 +4354,7 @@ export type Database = {
           created_at?: string
           creative_niche?: string | null
           credit_balance?: number
+          credits?: number | null
           date_of_birth?: string | null
           facebook_url?: string | null
           followers_count?: number
@@ -3764,13 +4370,27 @@ export type Database = {
           last_credit_reset_at?: string
           linkedin_url?: string | null
           memory_preference?: string | null
+          monthly_credits?: number | null
           onboarding_completed?: boolean | null
+          preferred_dashboard_mode?: string | null
           preferred_dashboard_view?: string | null
           profile_completion_percentage?: number | null
+          quiz_biggest_challenge?: string | null
+          quiz_completed?: boolean | null
+          quiz_completed_at?: string | null
+          quiz_current_stage?: string | null
+          quiz_is_first_startup?: string | null
+          quiz_launch_timeline?: string | null
+          quiz_looking_for_cofounder?: string | null
+          sidebar_preferences?: Json | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean | null
+          subscription_end?: string | null
           subscription_tier?: string
           tiktok_url?: string | null
           twitter_url?: string | null
           updated_at?: string
+          use_classic_dashboard?: boolean | null
           user_preferences?: Json | null
           username?: string | null
           website_url?: string | null
@@ -4000,6 +4620,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reputation_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reputation_transactions_user_id_fkey"
             columns: ["user_id"]
@@ -4482,6 +5109,48 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          created_at: string | null
+          customer_email: string | null
+          customer_id: string | null
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          processed_at: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -4517,6 +5186,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscribers_user_id_fkey"
             columns: ["user_id"]
@@ -4715,6 +5391,13 @@ export type Database = {
             foreignKeyName: "user_activity_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activity_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -4816,10 +5499,56 @@ export type Database = {
             foreignKeyName: "user_challenge_completions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_challenge_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_community_activity: {
+        Row: {
+          active_cofounder_posts: number | null
+          cofounder_messages_sent_this_month: number | null
+          created_at: string | null
+          discovery_calls_booked_this_month: number | null
+          id: string
+          last_reset_at: string | null
+          mentor_messages_sent_this_month: number | null
+          subscription_tier: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active_cofounder_posts?: number | null
+          cofounder_messages_sent_this_month?: number | null
+          created_at?: string | null
+          discovery_calls_booked_this_month?: number | null
+          id?: string
+          last_reset_at?: string | null
+          mentor_messages_sent_this_month?: number | null
+          subscription_tier: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active_cofounder_posts?: number | null
+          cofounder_messages_sent_this_month?: number | null
+          created_at?: string | null
+          discovery_calls_booked_this_month?: number | null
+          id?: string
+          last_reset_at?: string | null
+          mentor_messages_sent_this_month?: number | null
+          subscription_tier?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_credits: {
         Row: {
@@ -4853,6 +5582,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_credits_user_id_fkey"
             columns: ["user_id"]
@@ -5155,6 +5891,13 @@ export type Database = {
             foreignKeyName: "user_reputation_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reputation_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -5316,6 +6059,146 @@ export type Database = {
           },
         ]
       }
+      vc_views: {
+        Row: {
+          id: string
+          subscription_tier: string
+          user_id: string | null
+          vc_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          subscription_tier: string
+          user_id?: string | null
+          vc_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          subscription_tier?: string
+          user_id?: string | null
+          vc_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vc_views_vc_id_fkey"
+            columns: ["vc_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_mission_tasks: {
+        Row: {
+          contribution_weight: number | null
+          created_at: string | null
+          id: string
+          is_critical: boolean | null
+          task_id: string
+          weekly_mission_id: string
+        }
+        Insert: {
+          contribution_weight?: number | null
+          created_at?: string | null
+          id?: string
+          is_critical?: boolean | null
+          task_id: string
+          weekly_mission_id: string
+        }
+        Update: {
+          contribution_weight?: number | null
+          created_at?: string | null
+          id?: string
+          is_critical?: boolean | null
+          task_id?: string
+          weekly_mission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_mission_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "daily_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_mission_tasks_weekly_mission_id_fkey"
+            columns: ["weekly_mission_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_missions: {
+        Row: {
+          completed_at: string | null
+          completion_percentage: number | null
+          created_at: string | null
+          current_value: number | null
+          id: string
+          mission_goal: string
+          mission_type: string | null
+          status: string | null
+          target_metric: string | null
+          target_value: number | null
+          updated_at: string | null
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string | null
+          current_value?: number | null
+          id?: string
+          mission_goal: string
+          mission_type?: string | null
+          status?: string | null
+          target_metric?: string | null
+          target_value?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          completed_at?: string | null
+          completion_percentage?: number | null
+          created_at?: string | null
+          current_value?: number | null
+          id?: string
+          mission_goal?: string
+          mission_type?: string | null
+          status?: string | null
+          target_metric?: string | null
+          target_value?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whiteboard_objects: {
         Row: {
           created_at: string
@@ -5359,6 +6242,20 @@ export type Database = {
       }
     }
     Views: {
+      active_subscriptions: {
+        Row: {
+          billing_cycle: string | null
+          created_at: string | null
+          credits: number | null
+          email: string | null
+          id: string | null
+          monthly_credits: number | null
+          stripe_customer_id: string | null
+          subscription_end: string | null
+          subscription_tier: string | null
+        }
+        Relationships: []
+      }
       admin_reputation_analytics: {
         Row: {
           action_type: string | null
@@ -5402,6 +6299,12 @@ export type Database = {
         Args: { answers: Json }
         Returns: Json
       }
+      calculate_founder_profile_completeness: {
+        Args: {
+          profile_row: Database["public"]["Tables"]["founder_profiles"]["Row"]
+        }
+        Returns: number
+      }
       calculate_profile_completion: {
         Args: { p_user_id: string }
         Returns: number
@@ -5417,6 +6320,10 @@ export type Database = {
           level_name: string
           next_threshold: number
         }[]
+      }
+      can_view_vc: {
+        Args: { p_tier: string; p_user_id: string }
+        Returns: boolean
       }
       check_and_award_badges: { Args: { p_user_id: string }; Returns: Json }
       cleanup_expired_ai_cache: { Args: never; Returns: undefined }
@@ -5442,6 +6349,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      expire_subscriptions: { Args: never; Returns: number }
       get_conversations_for_summarization: {
         Args: { days_old?: number }
         Returns: {
@@ -5485,6 +6393,10 @@ export type Database = {
           top_sources: string[]
         }[]
       }
+      get_monthly_vc_view_count: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       get_notification_actor_info: {
         Args: { actor_user_id: string }
         Returns: {
@@ -5513,6 +6425,7 @@ export type Database = {
           reward_points: number
         }[]
       }
+      get_user_email: { Args: { user_id: string }; Returns: string }
       get_user_id_by_email: { Args: { user_email: string }; Returns: string }
       grant_monthly_credits: { Args: never; Returns: undefined }
       has_completed_todays_challenge: {
@@ -5532,6 +6445,7 @@ export type Database = {
         Args: { profile_id: string; viewer_id: string }
         Returns: boolean
       }
+      is_subscription_active: { Args: { user_id: string }; Returns: boolean }
       match_knowledge_chunks: {
         Args: {
           match_count?: number
@@ -5547,6 +6461,8 @@ export type Database = {
       }
       refresh_admin_analytics: { Args: never; Returns: undefined }
       refresh_expired_trends: { Args: never; Returns: undefined }
+      reset_community_limits: { Args: never; Returns: undefined }
+      reset_monthly_credits: { Args: never; Returns: number }
       search_similar_memories: {
         Args: {
           memory_kind?: string
@@ -5565,6 +6481,15 @@ export type Database = {
       }
       trigger_memory_summarization: { Args: never; Returns: undefined }
       update_market_data_freshness: { Args: never; Returns: undefined }
+      update_user_subscription: {
+        Args: {
+          billing_cycle_param: string
+          customer_email_param: string
+          stripe_customer_id_param: string
+          tier_param: string
+        }
+        Returns: boolean
+      }
       update_user_subscription_tier: {
         Args: { is_subscribed?: boolean; new_tier: string; user_email: string }
         Returns: undefined
