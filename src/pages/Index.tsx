@@ -1,10 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
-import ValuePropositionCards from "@/components/ValuePropositionCards";
-import UserReviews from "@/components/UserReviews";
-import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import AISpecializationTrends from "@/components/AISpecializationTrends";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,6 +7,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
+import HomeHero from "@/components/home/HomeHero";
+import HomeSocialProof from "@/components/home/HomeSocialProof";
+import HomePillars from "@/components/home/HomePillars";
+import HomeHowItWorks from "@/components/home/HomeHowItWorks";
+import HomeMetrics from "@/components/home/HomeMetrics";
+import HomeTestimonials from "@/components/home/HomeTestimonials";
+import HomeCTA from "@/components/home/HomeCTA";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -40,22 +42,23 @@ const Index = () => {
     ])
   ];
 
-  return (
-    <div className="min-h-screen relative">
-      {/* Fixed unified gradient background */}
-      <div
-        className="fixed inset-0 -z-10"
-        style={{ background: 'var(--gradient-infographic-vertical)' }}
-      />
+  const content = (
+    <>
+      <HomeHero />
+      <HomeSocialProof />
+      <HomePillars />
+      <HomeHowItWorks />
+      <HomeMetrics />
+      <HomeTestimonials />
+      <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
+        <HomeFAQ />
+      </Suspense>
+      <HomeCTA />
+    </>
+  );
 
-      {/* Subtle dot pattern overlay */}
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          backgroundImage: 'var(--pattern-infographic-dots)',
-          backgroundSize: 'var(--pattern-size)'
-        }}
-      />
+  return (
+    <div className="min-h-screen bg-background text-foreground">
       <SEO
         title="Creatives Takeover"
         description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."
@@ -71,34 +74,10 @@ const Index = () => {
       <main>
         {isMobile ? (
           <PullToRefresh onRefresh={handleRefresh}>
-            <Hero />
-            <EntrepreneurProblems />
-            
-            <AISpecializationTrends />
-            
-            <ValuePropositionCards />
-            
-            <UserReviews />
-            
-            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-              <HomeFAQ />
-            </Suspense>
+            {content}
           </PullToRefresh>
         ) : (
-          <>
-            <Hero />
-            <EntrepreneurProblems />
-            
-            <AISpecializationTrends />
-            
-            <ValuePropositionCards />
-            
-            <UserReviews />
-            
-            <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-              <HomeFAQ />
-            </Suspense>
-          </>
+          content
         )}
       </main>
       <Footer />
