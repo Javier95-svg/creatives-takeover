@@ -8,12 +8,11 @@ import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSch
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 import Hero from "@/components/Hero";
-import ValuePropositionCards from "@/components/ValuePropositionCards";
 import EntrepreneurProblems from "@/components/EntrepreneurProblems";
-import HowItWorks from "@/components/HowItWorks";
-import Testimonials from "@/components/Testimonials";
+import AISpecializationTrends from "@/components/AISpecializationTrends";
+import ValuePropositionCards from "@/components/ValuePropositionCards";
+import UserReviews from "@/components/UserReviews";
 import FAQ from "@/components/FAQ";
-import FinalCTA from "@/components/FinalCTA";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -42,12 +41,11 @@ const Index = () => {
   const content = (
     <>
       <Hero />
-      <ValuePropositionCards />
       <EntrepreneurProblems />
-      <HowItWorks />
-      <Testimonials />
+      <AISpecializationTrends />
+      <ValuePropositionCards />
+      <UserReviews />
       <FAQ />
-      <FinalCTA />
     </>
   );
 
