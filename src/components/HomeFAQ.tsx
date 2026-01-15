@@ -1,11 +1,14 @@
+import { ExternalLink, Mail } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const HomeFAQ = () => {
+  const { trackClick } = usePageAnalytics();
   const faqs = [
     {
       question: "What is Creatives Takeover?",
@@ -90,6 +93,36 @@ const HomeFAQ = () => {
           </div>
         </div>
 
+        <div className="mt-12 text-center">
+          <div className="border border-border/60 bg-muted/40 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
+            <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-3">
+              Still have questions?
+            </h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6">
+              Reach the team directly for guidance or partnership inquiries.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <a
+                href="mailto:admin@creatives-takeover.com"
+                onClick={() => trackClick("Email Us", "FAQ Contact")}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-colors"
+              >
+                <Mail className="w-5 h-5" />
+                Email Us
+              </a>
+              <a
+                href="https://t.me/creativestakeover"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackClick("Join Our Telegram", "FAQ Contact")}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-colors"
+              >
+                <ExternalLink className="w-5 h-5" />
+                Join Our Telegram
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

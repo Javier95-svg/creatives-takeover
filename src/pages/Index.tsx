@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import StickyMobileCTA from "@/components/StickyMobileCTA";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
@@ -7,16 +7,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
-import HomeHero from "@/components/home/HomeHero";
-import HomeSocialProof from "@/components/home/HomeSocialProof";
-import HomePillars from "@/components/home/HomePillars";
-import HomeHowItWorks from "@/components/home/HomeHowItWorks";
-import HomeMetrics from "@/components/home/HomeMetrics";
-import HomeTestimonials from "@/components/home/HomeTestimonials";
-import HomeCTA from "@/components/home/HomeCTA";
-
-// Lazy load below-the-fold components for better performance
-const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
+import Hero from "@/components/Hero";
+import ValuePropositionCards from "@/components/ValuePropositionCards";
+import EntrepreneurProblems from "@/components/EntrepreneurProblems";
+import HowItWorks from "@/components/HowItWorks";
+import Testimonials from "@/components/Testimonials";
+import FAQ from "@/components/FAQ";
+import FinalCTA from "@/components/FinalCTA";
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -44,16 +41,13 @@ const Index = () => {
 
   const content = (
     <>
-      <HomeHero />
-      <HomeSocialProof />
-      <HomePillars />
-      <HomeHowItWorks />
-      <HomeMetrics />
-      <HomeTestimonials />
-      <Suspense fallback={<div className="h-96 animate-pulse bg-muted/20" />}>
-        <HomeFAQ />
-      </Suspense>
-      <HomeCTA />
+      <Hero />
+      <ValuePropositionCards />
+      <EntrepreneurProblems />
+      <HowItWorks />
+      <Testimonials />
+      <FAQ />
+      <FinalCTA />
     </>
   );
 
