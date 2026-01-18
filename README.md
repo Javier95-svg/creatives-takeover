@@ -75,5 +75,16 @@ Tech stack (high level)
 
 ---
 
-# Run dev server
-pnpm dev
+---
+
+## Support & questions
+
+Need help or not sure where to start?
+
+- Check the FAQs on the website for common questions about BizMap AI, Insighta, Community, and the Dashboard  
+- If you still have questions, reach out directly:
+
+**Email:** admin@creatives-takeover.com  
+**Telegram:** https://t.me/creativestakeover
+
+We’re here to help you plan, build, and grow your startup from idea to execution.
