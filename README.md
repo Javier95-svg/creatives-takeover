@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
+# Creatives Takeover – Zero to One Platform
 
-## Project info
+We blend **technology**, **strategy** and **community** to democratize startup formation, empowering founders with AI‑driven planning, community support, and fundraising tools.
 
-**URL**: https://lovable.dev/projects/94f14b90-e5f2-4aea-9dad-b7f9db6ab17d
+[🌐 Website](https://creatives-takeover.com) · [📢 Product Hunt](https://www.producthunt.com/products/creatives-takeover) · [💼 LinkedIn](https://www.linkedin.com/company/creatives-takeover)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## What is Creatives Takeover?
 
-**Use Lovable**
+Creatives Takeover is a Zero to One platform for early‑stage founders who want to go from scattered ideas to a structured, fundable startup.
+It combines AI planning, execution dashboards, curated funding tools, and a global founder community in one place.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/94f14b90-e5f2-4aea-9dad-b7f9db6ab17d) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+Core tools
 
-**Use your preferred IDE**
+PLAN – BizMap AI
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Transform scattered ideas into a strategic roadmap.  
+- AI‑powered business planning in minutes  
+- Market research and competitor insights  
+- Actionable 30‑day launch roadmap
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+👉 Try BizMap AI: https://creatives-takeover.com/bizmap-ai
 
-Follow these steps:
+CONNECT – Community
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Access a curated founder and mentor community.  
+- Meet founders, mentors and potential co‑founders  
+- Get feedback on your roadmap and pitch  
+- Accountability, support, and shared playbooks[page:2]
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+👉 Join Community: https://creatives-takeover.com/community[page:2]
 
-# Step 3: Install the necessary dependencies.
-npm i
+EXECUTE – Dashboard
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Your command center to track execution.  
+- Daily check‑ins and momentum streaks  
+- Task prioritization focused on high‑impact work  
+- Visual progress tracking across your projects[page:2]
 
-**Edit a file directly in GitHub**
+👉 Explore Dashboard: https://creatives-takeover.com/dashboard[page:2]
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+FUNDRAISE – Insighta
 
-**Use GitHub Codespaces**
+Fundraising toolkit for founders without a warm network.  
+- Curated accelerators and funding opportunities  
+- Investment readiness support and resources  
+- Tools to craft a compelling fundraising strategy
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+👉 Discover Funding: https://creatives-takeover.com/insighta
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+Who this is for
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- First‑time founders and indie builders  
+- Creative entrepreneurs and non‑technical founders  
+- Early‑stage teams going from idea → validation → funding[page:2]
 
-## How can I deploy this project?
+If you feel stuck between too many ideas, too little structure, and no investor network, this platform is built for you.
 
-Simply open [Lovable](https://lovable.dev/projects/94f14b90-e5f2-4aea-9dad-b7f9db6ab17d) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+Tech stack (high level)
 
-Yes, you can!
+> Adjust this to match the exact repo.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Web app: Next.js / React / TypeScript  
+- Backend: NestJS API (`creatives-takeover-api`)  
+- Auth & Database: Supabase  
+- Hosting: Vercel + [backend host]  
+- Analytics & tracking: [PostHog / GA, etc.]
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
+
+# Run dev server
+pnpm dev
