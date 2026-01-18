@@ -127,18 +127,20 @@ const Footer = () => {
               </li>
             </ul>
             
-            {/* ShipSquad Badge */}
+            {/* Product Hunt Badge */}
             <div className="mt-4 pt-4 border-t border-border">
               <a
-                href="https://shipsquad.space/saas/2a1346bb-0b4a-435c-8495-f2dfdac4d022"
+                href="https://www.producthunt.com/products/creatives-takeover?utm_source=badge-follow&utm_medium=badge&utm_source=badge-creatives-takeover"
                 target="_blank"
-                rel="noopener"
-                aria-label="Featured on ShipSquad"
+                rel="noopener noreferrer"
+                aria-label="Follow on Product Hunt"
               >
                 <img
-                  src="https://shipsquad.space/api/badge?id=2a1346bb-0b4a-435c-8495-f2dfdac4d022&style=dark"
-                  alt="Featured on ShipSquad"
+                  src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1115949&theme=light"
+                  alt="Creatives Takeover - The Zero to One Platform | Product Hunt"
                   className="hover:opacity-80 transition-opacity"
+                  width="250"
+                  height="54"
                 />
               </a>
             </div>
