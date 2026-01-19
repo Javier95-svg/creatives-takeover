@@ -12,6 +12,7 @@ import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
+import ctLogo from "@/assets/ct-logo.svg";
 
 const FloatingFeedbackWidget = lazy(() => import("@/components/FloatingFeedbackWidget"));
 const MobileBottomNav = lazy(() =>
@@ -103,7 +104,16 @@ const FeedbackWidgetWrapper = () => {
 
 const RouteFallback = () => (
   <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">
-    Loading...
+    <div className="inline-flex items-center gap-3">
+      <img
+        src={ctLogo}
+        alt="Creatives Takeover logo"
+        className="h-4 w-4 animate-[spin_6s_linear_infinite]"
+        loading="eager"
+        decoding="async"
+      />
+      <span>Loading...</span>
+    </div>
   </div>
 );
 
