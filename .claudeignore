@@ -1,0 +1,7 @@
+BIZMAP_*.md
+AUDIT_README.md
+bizmap-chatbot-package/docs
+migrations
+node_modules
+.git
+.env
