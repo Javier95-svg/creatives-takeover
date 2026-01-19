@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
 import './index.css'
-import posthog from 'posthog-js'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { logError, logInfo, logWarn } from './lib/logger'
 
@@ -52,29 +51,48 @@ window.addEventListener('error', (event) => {
 // Initialize PostHog if a public key is provided via Vite env vars.
 // Uses VITE_POSTHOG_API_KEY (public key) and optional VITE_POSTHOG_API_HOST.
 // Do NOT place secret server keys in client-side envs.
-if (import.meta.env.VITE_POSTHOG_API_KEY) {
-  try {
-    posthog.init(import.meta.env.VITE_POSTHOG_API_KEY as string, {
-      api_host: (import.meta.env.VITE_POSTHOG_API_HOST as string) || 'https://app.posthog.com',
-      autocapture: true,
-    })
-    // Debug helpers: confirm init and send a test event (only in development)
-    if (import.meta.env.DEV) {
-      logInfo('PostHog init OK â€” test event will be sent', { 
-        maskedKey: (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...' 
-      });
-    }
-    try {
-      posthog.capture('debug_posthog_init')
-    } catch (err) {
-      logWarn('PostHog capture debug event failed', { error: err })
-    }
-  } catch (e) {
-    // Fail silently in case posthog init causes issues during build or runtime.
-    // This prevents a crash if PostHog isn't available in some environments.
-    logWarn('PostHog init failed', { error: e })
+const initPosthog = () => {
+  if (!import.meta.env.VITE_POSTHOG_API_KEY) {
+    return;
   }
-}
+
+  const start = async () => {
+    try {
+      const { default: posthog } = await import('posthog-js');
+      posthog.init(import.meta.env.VITE_POSTHOG_API_KEY as string, {
+        api_host: (import.meta.env.VITE_POSTHOG_API_HOST as string) || 'https://app.posthog.com',
+        autocapture: true,
+      });
+      // Debug helpers: confirm init and send a test event (only in development)
+      if (import.meta.env.DEV) {
+        logInfo('PostHog init OK ƒ?" test event will be sent', { 
+          maskedKey: (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...' 
+        });
+      }
+      try {
+        posthog.capture('debug_posthog_init');
+      } catch (err) {
+        logWarn('PostHog capture debug event failed', { error: err });
+      }
+    } catch (e) {
+      // Fail silently in case posthog init causes issues during build or runtime.
+      // This prevents a crash if PostHog isn't available in some environments.
+      logWarn('PostHog init failed', { error: e });
+    }
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => {
+      void start();
+    });
+  } else {
+    window.setTimeout(() => {
+      void start();
+    }, 1500);
+  }
+};
+
+initPosthog();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,64 +9,75 @@ import { UserProvider } from "@/contexts/UserContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
-import FloatingFeedbackWidget from "@/components/FloatingFeedbackWidget";
-import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import PricingPage from "./pages/PricingPage";
-import CommunityPage from "./pages/CommunityPage";
-import NotFound from "./pages/NotFound";
-import Careers from "./pages/Careers";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Terms from "./pages/Terms";
-import Signup from "./pages/Signup";
-import Dream2Plan from "./pages/Dream2Plan";
-import Onboarding from "./pages/Onboarding";
-
-import Login from "./pages/Login";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import PromptLibrary from "./pages/PromptLibrary";
-import Dashboard from "./pages/Dashboard";
-import Blog from "./pages/Blog";
-import VCSearchPage from "./pages/VCSearchPage";
-import EmailTemplatesPage from "./pages/EmailTemplatesPage";
-import AcceleratorHuntPage from "./pages/AcceleratorHuntPage";
-import InsightaTestPage from "./pages/InsightaTestPage";
-import Stories from "./pages/Stories";
-import StoryArticle from "./pages/StoryArticle";
-import StoryTagPage from "./pages/StoryTagPage";
-import AdminStoryEditor from "./pages/AdminStoryEditor";
-import AdminHeroImages from "./pages/AdminHeroImages";
-import StoriesRSS from "./pages/StoriesRSS";
 import ScrollToTop from "./components/ScrollToTop";
-import Demo from "./pages/Demo";
-import Profile from "./pages/Profile";
-import Account from "./pages/Account";
-import SetupQuiz from "./pages/SetupQuiz";
-import Messages from "./pages/Messages";
-import CreativesTakeover from "./pages/CreativesTakeover";
-import RAGTest from "./pages/RAGTest";
-import TestPhase1 from "./pages/TestPhase1";
-import MentorMarketplaceHub from "./pages/community/MentorMarketplaceHub";
-import MentorProfilePage from "./pages/community/MentorProfilePage";
-import FindCoFounder from "./pages/community/FindCoFounder";
-import CreateCoFounderPost from "./pages/community/CreateCoFounderPost";
-import EditCoFounderPost from "./pages/community/EditCoFounderPost";
-import VCProfilePage from "./components/vc/VCProfilePage";
-import AcceleratorProfilePage from "./components/accelerator/AcceleratorProfilePage";
-import PitchDeckAnalyzerPage from "./pages/PitchDeckAnalyzerPage";
-import MentorBookingPage from "./pages/community/MentorBookingPage";
-import MyBookings from "./pages/community/MyBookings";
-import AdminMentorEditor from "./pages/community/AdminMentorEditor";
-import PMFLabPage from "./pages/PMFLabPage";
-import TechStackPage from "./pages/TechStackPage";
-import AdminVCManagement from "./pages/AdminVCManagement";
-import { Analytics } from '@vercel/analytics/react';
+
+const FloatingFeedbackWidget = lazy(() => import("@/components/FloatingFeedbackWidget"));
+const MobileBottomNav = lazy(() =>
+  import("@/components/mobile/MobileBottomNav").then((module) => ({
+    default: module.MobileBottomNav,
+  }))
+);
+const Analytics = lazy(() =>
+  import("@vercel/analytics/react").then((module) => ({
+    default: module.Analytics,
+  }))
+);
+
+const Index = lazy(() => import("./pages/Index"));
+const About = lazy(() => import("./pages/About"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Careers = lazy(() => import("./pages/Careers"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Dream2Plan = lazy(() => import("./pages/Dream2Plan"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+
+const Login = lazy(() => import("./pages/Login"));
+const Auth = lazy(() => import("./pages/Auth"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PromptLibrary = lazy(() => import("./pages/PromptLibrary"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Blog = lazy(() => import("./pages/Blog"));
+const VCSearchPage = lazy(() => import("./pages/VCSearchPage"));
+const EmailTemplatesPage = lazy(() => import("./pages/EmailTemplatesPage"));
+const AcceleratorHuntPage = lazy(() => import("./pages/AcceleratorHuntPage"));
+const InsightaTestPage = lazy(() => import("./pages/InsightaTestPage"));
+const Stories = lazy(() => import("./pages/Stories"));
+const StoryArticle = lazy(() => import("./pages/StoryArticle"));
+const StoryTagPage = lazy(() => import("./pages/StoryTagPage"));
+const AdminStoryEditor = lazy(() => import("./pages/AdminStoryEditor"));
+const AdminHeroImages = lazy(() => import("./pages/AdminHeroImages"));
+const StoriesRSS = lazy(() => import("./pages/StoriesRSS"));
+const AdminVCManagement = lazy(() => import("./pages/AdminVCManagement"));
+
+const Demo = lazy(() => import("./pages/Demo"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Account = lazy(() => import("./pages/Account"));
+const SetupQuiz = lazy(() => import("./pages/SetupQuiz"));
+const Messages = lazy(() => import("./pages/Messages"));
+const CreativesTakeover = lazy(() => import("./pages/CreativesTakeover"));
+const RAGTest = lazy(() => import("./pages/RAGTest"));
+const TestPhase1 = lazy(() => import("./pages/TestPhase1"));
+const MentorMarketplaceHub = lazy(() => import("./pages/community/MentorMarketplaceHub"));
+const MentorProfilePage = lazy(() => import("./pages/community/MentorProfilePage"));
+const FindCoFounder = lazy(() => import("./pages/community/FindCoFounder"));
+const CreateCoFounderPost = lazy(() => import("./pages/community/CreateCoFounderPost"));
+const EditCoFounderPost = lazy(() => import("./pages/community/EditCoFounderPost"));
+const VCProfilePage = lazy(() => import("./components/vc/VCProfilePage"));
+const AcceleratorProfilePage = lazy(() => import("./components/accelerator/AcceleratorProfilePage"));
+const PitchDeckAnalyzerPage = lazy(() => import("./pages/PitchDeckAnalyzerPage"));
+const MentorBookingPage = lazy(() => import("./pages/community/MentorBookingPage"));
+const MyBookings = lazy(() => import("./pages/community/MyBookings"));
+const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
+const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
+const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +101,12 @@ const FeedbackWidgetWrapper = () => {
   return showWidget ? <FloatingFeedbackWidget /> : null;
 };
 
+const RouteFallback = () => (
+  <div className="min-h-[40vh] flex items-center justify-center text-sm text-muted-foreground">
+    Loading...
+  </div>
+);
+
 function App() {
   const { hasUpdate, refreshApp } = useVersionCheck();
 
@@ -104,74 +122,78 @@ function App() {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <ScrollToTop />
-                <FeedbackWidgetWrapper />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/community" element={<CommunityPage />} />
-                  <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
-                  <Route path="/community/book/:id" element={<MentorBookingPage />} />
-                  <Route path="/community/co-founders" element={<FindCoFounder />} />
-                  <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
-                  <Route path="/community/co-founders/edit/:postId" element={<EditCoFounderPost />} />
-                  <Route path="/community/my-bookings" element={<MyBookings />} />
-                  <Route path="/community/admin/new" element={<AdminMentorEditor />} />
-                  <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
-                  <Route path="/community/:slug" element={<MentorProfilePage />} />
-                  <Route path="/stories" element={<Stories />} />
-                  <Route path="/stories/rss.xml" element={<StoriesRSS />} />
-                  <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
-                  <Route path="/stories/:slug" element={<StoryArticle />} />
-                  <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
-                  <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
-                  <Route path="/admin/hero-images" element={<AdminHeroImages />} />
-                  <Route path="/admin/vc-management" element={<AdminVCManagement />} />
-                  <Route path="/careers" element={<Careers />} />
-                  <Route path="/prompt-library" element={<PromptLibrary />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                  <Route path="/bizmap-ai/pmf-lab" element={<PMFLabPage />} />
-                  <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
+                <Suspense fallback={<RouteFallback />}>
+                  <ScrollToTop />
+                  <FeedbackWidgetWrapper />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/community" element={<CommunityPage />} />
+                    <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
+                    <Route path="/community/book/:id" element={<MentorBookingPage />} />
+                    <Route path="/community/co-founders" element={<FindCoFounder />} />
+                    <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
+                    <Route path="/community/co-founders/edit/:postId" element={<EditCoFounderPost />} />
+                    <Route path="/community/my-bookings" element={<MyBookings />} />
+                    <Route path="/community/admin/new" element={<AdminMentorEditor />} />
+                    <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
+                    <Route path="/community/:slug" element={<MentorProfilePage />} />
+                    <Route path="/stories" element={<Stories />} />
+                    <Route path="/stories/rss.xml" element={<StoriesRSS />} />
+                    <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
+                    <Route path="/stories/:slug" element={<StoryArticle />} />
+                    <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
+                    <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
+                    <Route path="/admin/hero-images" element={<AdminHeroImages />} />
+                    <Route path="/admin/vc-management" element={<AdminVCManagement />} />
+                    <Route path="/careers" element={<Careers />} />
+                    <Route path="/prompt-library" element={<PromptLibrary />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/bizmap-ai" element={<Dream2Plan />} />
+                    <Route path="/bizmap-ai/pmf-lab" element={<PMFLabPage />} />
+                    <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
 
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/account" element={<Account />} />
-                  <Route path="/setup-quiz" element={<SetupQuiz />} />
-                  <Route path="/insighta" element={<Blog />} />
-                  <Route path="/insighta/vc-search" element={<VCSearchPage />} />
-                  <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
-                  <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
-                  <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
-                  <Route path="/insighta/test" element={<InsightaTestPage />} />
-                  <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
-                  <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
-                  <Route path="/demo" element={<Demo />} />
-                  <Route path="/messages/:username" element={<Messages />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/profile/:username" element={<Profile />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/creatives-takeover" element={<CreativesTakeover />} />
-                  <Route path="/rag-test" element={<RAGTest />} />
-                  <Route path="/test-phase1" element={<TestPhase1 />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <MobileBottomNav />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/account" element={<Account />} />
+                    <Route path="/setup-quiz" element={<SetupQuiz />} />
+                    <Route path="/insighta" element={<Blog />} />
+                    <Route path="/insighta/vc-search" element={<VCSearchPage />} />
+                    <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
+                    <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
+                    <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
+                    <Route path="/insighta/test" element={<InsightaTestPage />} />
+                    <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
+                    <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
+                    <Route path="/demo" element={<Demo />} />
+                    <Route path="/messages/:username" element={<Messages />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/profile/:username" element={<Profile />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/creatives-takeover" element={<CreativesTakeover />} />
+                    <Route path="/rag-test" element={<RAGTest />} />
+                    <Route path="/test-phase1" element={<TestPhase1 />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <MobileBottomNav />
+                </Suspense>
               </BrowserRouter>
             </TooltipProvider>
           </ProgressProvider>
         </UserProvider>
       </AuthProvider>
       </QueryClientProvider>
-      <Analytics />
+      <Suspense fallback={null}>
+        <Analytics />
+      </Suspense>
     </ErrorBoundary>
   );
 };
