@@ -49,10 +49,13 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   const marker = useRef<mapboxgl.Marker | null>(null);
   const debounceTimer = useRef<number | undefined>(undefined);
 
-  const [mapboxToken] = useState<string>('pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw');
+  // Get Mapbox token from environment variable, fallback to empty string
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
   useEffect(() => {
-    mapboxgl.accessToken = mapboxToken;
+    if (mapboxToken) {
+      mapboxgl.accessToken = mapboxToken;
+    }
   }, [mapboxToken]);
 
   const searchLocations = useCallback(async (query: string) => {
