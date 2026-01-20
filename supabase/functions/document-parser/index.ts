@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.2.67/legacy/build/pdf.mjs";
 import { corsHeaders } from '../_shared/response.ts';
 
 interface DocumentParseRequest {
@@ -166,18 +167,28 @@ serve(async (req) => {
 
 // Parse PDF files
 async function parsePDF(data: Uint8Array): Promise<ParsedDocument> {
-  // For PDF parsing, we'll use a simple text extraction approach
-  // In production, you might want to use a library like pdf-parse
-  // For now, we'll return a placeholder that indicates PDF parsing is needed
-  
-  // Note: PDF parsing requires a library. For MVP, we'll extract basic text
-  // You can integrate pdf-parse or similar library here
-  const text = 'PDF parsing requires additional library. Text extraction placeholder.';
-  
+  const loadingTask = pdfjsLib.getDocument({ data, disableWorker: true });
+  const pdf = await loadingTask.promise;
+
+  let text = '';
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
+    const page = await pdf.getPage(pageNum);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item: any) => item.str || '')
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (pageText) {
+      text += `${pageText}\n`;
+    }
+  }
+
   return {
-    text,
+    text: text.trim(),
     metadata: {
-      word_count: text.split(/\s+/).length,
+      page_count: pdf.numPages,
+      word_count: text.trim() ? text.trim().split(/\s+/).length : 0,
       file_type: 'pdf',
       extracted_at: new Date().toISOString()
     }
