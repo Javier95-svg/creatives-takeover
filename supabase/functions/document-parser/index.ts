@@ -6,6 +6,7 @@ interface DocumentParseRequest {
   file_path: string;
   user_id: string;
   conversation_id?: string;
+  bucket?: string;
 }
 
 interface ParsedDocument {
@@ -28,7 +29,7 @@ serve(async (req) => {
   }
 
   try {
-    const { file_path, user_id, conversation_id }: DocumentParseRequest = await req.json();
+    const { file_path, user_id, conversation_id, bucket }: DocumentParseRequest = await req.json();
 
     if (!file_path || !user_id) {
       return new Response(
@@ -41,9 +42,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const bucketName = bucket || 'chatbot-attachments';
+
     // Download file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
-      .from('chatbot-attachments')
+      .from(bucketName)
       .download(file_path);
 
     if (downloadError || !fileData) {
@@ -56,7 +59,7 @@ serve(async (req) => {
 
     // Get file metadata
     const { data: fileInfo } = await supabase.storage
-      .from('chatbot-attachments')
+      .from(bucketName)
       .list(user_id, {
         search: file_path.split('/').pop()
       });

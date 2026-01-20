@@ -49,16 +49,17 @@ export const usePitchDeckAnalyzer = () => {
       const { data: parseData, error: parseError } = await supabase.functions.invoke('document-parser', {
         body: {
           file_path: uploadData.path,
-          user_id: user.id
+          user_id: user.id,
+          bucket: 'pitch-deck-uploads'
         }
       });
 
-      if (parseError) {
+      if (parseError || !parseData?.success) {
         console.error('Parse error:', parseError);
-        throw new Error(`Document parsing failed: ${parseError.message}`);
+        throw new Error(`Document parsing failed: ${parseError?.message || parseData?.error || 'Unknown error'}`);
       }
 
-      const extractedText = parseData?.text || parseData?.content || '';
+      const extractedText = parseData?.document?.text || '';
       if (!extractedText) {
         throw new Error('Could not extract text from PDF');
       }
