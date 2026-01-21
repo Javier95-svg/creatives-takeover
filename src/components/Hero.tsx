@@ -488,41 +488,6 @@ const Hero = () => {
               We blend technology, strategy and community to democratize startup formation, empowering founders with AI-driven planning, community support, and fundraising tools.
             </p>
             
-            {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
-            <div className="grid grid-cols-2 gap-3 mb-8 sm:mb-10">
-              <Link 
-                to="/bizmap-ai" 
-                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-              >
-                <Sparkles className="w-4 h-4 text-primary" />
-                Business Plan in 3 Minutes
-              </Link>
-              
-              <Link 
-                to="/insighta" 
-                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-              >
-                <DollarSign className="w-4 h-4 text-primary" />
-                Discover Funding Opportunities
-              </Link>
-
-              <Link 
-                to="/dashboard" 
-                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-              >
-                <LayoutDashboard className="w-4 h-4 text-primary" />
-                Measure your progress
-              </Link>
-
-              <Link 
-                to="/community" 
-                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
-              >
-                <Users className="w-4 h-4 text-primary" />
-                Meet Founders & Mentors
-              </Link>
-            </div>
-
             {/* Enhanced CTA Section */}
             <div className="mb-8 sm:mb-10">
               {isAuthenticated ? (
