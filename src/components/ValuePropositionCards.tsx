@@ -45,10 +45,10 @@ const ValuePropositionCards = () => {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="max-w-3xl">
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight">
-            Everything you need to go from idea to launch
+            Here's What You Get
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground">
-            Four core tools that keep planning, execution, and fundraising in one clean workflow.
+            Everything you need to go from idea to launch. Four core tools designed for creative entrepreneurs who want to build real, sustainable businesses.
           </p>
         </div>
 

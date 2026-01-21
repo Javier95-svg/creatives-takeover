@@ -478,13 +478,6 @@ const Hero = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left Section - All existing content */}
           <div className="text-center md:text-left flex flex-col justify-center">
-            <div className="flex justify-center md:justify-start mb-4">
-              <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
-                <Sparkles className="h-4 w-4 text-primary" />
-                AI co-founder for creative founders
-              </span>
-            </div>
-
             {/* Main Headline */}
             <h1 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight">
               The <span className="text-primary">Zero to One</span> Platform
@@ -502,7 +495,7 @@ const Hero = () => {
                 className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
               >
                 <Sparkles className="w-4 h-4 text-primary" />
-                BizMap AI
+                Business Plan in 3 Minutes
               </Link>
               
               <Link 
@@ -510,7 +503,7 @@ const Hero = () => {
                 className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
               >
                 <DollarSign className="w-4 h-4 text-primary" />
-                Insighta
+                Discover Funding Opportunities
               </Link>
 
               <Link 
@@ -518,7 +511,7 @@ const Hero = () => {
                 className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
               >
                 <LayoutDashboard className="w-4 h-4 text-primary" />
-                Dashboard
+                Measure your progress
               </Link>
 
               <Link 
@@ -526,7 +519,7 @@ const Hero = () => {
                 className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
               >
                 <Users className="w-4 h-4 text-primary" />
-                Community
+                Meet Founders & Mentors
               </Link>
             </div>
 
@@ -546,7 +539,7 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-start">
                 <Button size="lg" className="w-full sm:w-auto" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                    Start free
+                    Join Today
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
@@ -561,16 +554,11 @@ const Hero = () => {
                   }}
                 >
                   <Play className="w-4 h-4" />
-                  Explore features
+                  Explore Features
                 </Button>
               </div>
               )}
             </div>
-            {!isAuthenticated && (
-              <p className="text-xs text-muted-foreground">
-                No credit card required. Cancel anytime.
-              </p>
-            )}
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
@@ -740,10 +728,6 @@ const Hero = () => {
                   </div>
                 );
                 })}
-              </div>
-              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Trusted by founders worldwide</span>
-                <span>BizMap AI + Insighta + Dashboard</span>
               </div>
             </div>
           </div>

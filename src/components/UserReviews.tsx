@@ -99,11 +99,8 @@ const UserReviews = () => {
     <section className="py-20 lg:py-28 font-poppins">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
-          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            Founder outcomes
-          </Badge>
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 break-words tracking-tight">
-            Helping founders succeed
+            Helping Founders Succeed
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             See how founders are turning their ideas into thriving projects.

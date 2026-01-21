@@ -80,7 +80,7 @@ const AISpecializationTrends = () => {
             How the Market is Evolving
           </Badge>
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight">
-            The explosion of niche startups
+            The Explosion of Niche Startups
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
             Specialization is emerging as the core strategy of modern entrepreneurship, and the data clearly confirms it.
@@ -378,13 +378,13 @@ const AISpecializationTrends = () => {
         <div className="mt-12 max-w-4xl mx-auto">
           <div className="bg-muted/40 border border-border/70 rounded-lg p-8">
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center">
-              A lifetime opportunity
+              A Lifetime Opportunity
             </h3>
             <p className="text-base text-muted-foreground leading-relaxed mb-4">
               It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.
             </p>
             <p className="text-base text-muted-foreground leading-relaxed">
-              The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem has never been higher.
+              The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher.
             </p>
           </div>
         </div>
