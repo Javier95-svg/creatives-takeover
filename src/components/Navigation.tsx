@@ -133,19 +133,11 @@ const Navigation = () => {
   return (
     <TooltipProvider delayDuration={200}>
       <nav className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b-2 transition-all duration-300",
-        scrolled 
-          ? 'backdrop-blur-xl bg-background/98 shadow-lg animate-nav-backdrop' 
-          : 'backdrop-blur-sm bg-background/85 border-border'
-      )}
-      style={scrolled ? {
-        borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
-        borderImageSlice: 1,
-        boxShadow: '0 4px 20px -2px hsl(var(--primary) / 0.1)'
-      } : {
-        borderColor: 'hsl(var(--border))'
-      }}
-      >
+        "fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300",
+        scrolled
+          ? "bg-background/70 backdrop-blur-xl shadow-md border-border/60"
+          : "bg-background/60 backdrop-blur-md border-border/50"
+      )}>
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 md:h-18 border-0">
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
@@ -171,194 +163,192 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             {deviceType === 'desktop' && (
-              <div className="flex items-center justify-evenly flex-1 pl-8 lg:pl-12 pr-8 lg:pr-16 !border-0 gap-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon || iconMap[item.name];
-                  const active = isActive(item.href);
+              <div className="flex flex-1 items-center justify-center px-4">
+                <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-2 py-1 shadow-sm font-poppins text-sm">
+                  {navItems.map((item) => {
+                    const Icon = item.icon || iconMap[item.name];
+                    const active = isActive(item.href);
 
-                  // Color-code navigation items semantically
-                  let colorClass = '';
-                  if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
-                    colorClass = 'hover:text-planning';
-                  } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
-                    colorClass = 'hover:text-action';
-                  } else if (item.name === 'Insighta' || item.name === 'Pricing') {
-                    colorClass = 'hover:text-growth';
-                  } else {
-                    colorClass = 'hover:text-primary';
-                  }
+                    // Color-code navigation items semantically
+                    let colorClass = '';
+                    if (item.name === 'BizMap AI' || item.name === 'Prompt Library') {
+                      colorClass = 'hover:text-planning';
+                    } else if (item.name === 'Community' || item.name === 'Stories' || item.name === 'About Us') {
+                      colorClass = 'hover:text-action';
+                    } else if (item.name === 'Insighta' || item.name === 'Pricing') {
+                      colorClass = 'hover:text-growth';
+                    } else {
+                      colorClass = 'hover:text-primary';
+                    }
 
-                  // Special handling for BizMap AI with dropdown
-                  if (item.name === 'BizMap AI') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-64">
-                          <DropdownMenuLabel>AI-Powered Business Tools</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {bizMapSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  }
+                    // Special handling for BizMap AI with dropdown
+                    if (item.name === 'BizMap AI') {
+                      return (
+                        <DropdownMenu key={item.name}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DropdownMenuTrigger className={cn(
+                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors duration-200 whitespace-nowrap font-medium outline-none",
+                                active
+                                  ? "text-foreground bg-muted/60 nav-active-indicator active"
+                                  : `text-muted-foreground hover:bg-muted/50 ${colorClass}`
+                              )}>
+                                {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                                <span className="tracking-wide">{item.name}</span>
+                                <ChevronDown className="h-3 w-3 ml-0.5" />
+                              </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{item.tooltip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="start" className="w-64">
+                            <DropdownMenuLabel>AI-Powered Business Tools</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {bizMapSubmenu.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              return (
+                                <DropdownMenuItem key={subItem.name} asChild>
+                                  <Link
+                                    to={subItem.href}
+                                    onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                    className="cursor-pointer"
+                                  >
+                                    <SubIcon className="h-4 w-4 mr-2" />
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{subItem.name}</span>
+                                      <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                    </div>
+                                  </Link>
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    }
 
                   // Special handling for Insighta with dropdown
-                  if (item.name === 'Insighta') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Fundraising Tools</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {insightaSubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  }
+                    if (item.name === 'Insighta') {
+                      return (
+                        <DropdownMenu key={item.name}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DropdownMenuTrigger className={cn(
+                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors duration-200 whitespace-nowrap font-medium outline-none",
+                                active
+                                  ? "text-foreground bg-muted/60 nav-active-indicator active"
+                                  : `text-muted-foreground hover:bg-muted/50 ${colorClass}`
+                              )}>
+                                {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                                <span className="tracking-wide">{item.name}</span>
+                                <ChevronDown className="h-3 w-3 ml-0.5" />
+                              </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{item.tooltip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuLabel>Fundraising Tools</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {insightaSubmenu.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              return (
+                                <DropdownMenuItem key={subItem.name} asChild>
+                                  <Link
+                                    to={subItem.href}
+                                    onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                    className="cursor-pointer"
+                                  >
+                                    <SubIcon className="h-4 w-4 mr-2" />
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{subItem.name}</span>
+                                      <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                    </div>
+                                  </Link>
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    }
 
                   // Special handling for Community with dropdown
-                  if (item.name === 'Community') {
-                    return (
-                      <DropdownMenu key={item.name}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger className={cn(
-                              "relative flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm outline-none",
-                              "nav-item-hover-effect",
-                              active
-                                ? "text-foreground bg-primary/5 nav-active-indicator active"
-                                : `text-muted-foreground ${colorClass}`
-                            )}>
-                              {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                              <span className="tracking-wide">{item.name}</span>
-                              <ChevronDown className="h-3 w-3 ml-0.5" />
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Connect & Collaborate</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {communitySubmenu.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            return (
-                              <DropdownMenuItem key={subItem.name} asChild>
-                                <Link
-                                  to={subItem.href}
-                                  onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
-                                  className="cursor-pointer"
-                                >
-                                  <SubIcon className="h-4 w-4 mr-2" />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{subItem.name}</span>
-                                    <span className="text-xs text-muted-foreground">{subItem.description}</span>
-                                  </div>
-                                </Link>
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  }
+                    if (item.name === 'Community') {
+                      return (
+                        <DropdownMenu key={item.name}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <DropdownMenuTrigger className={cn(
+                                "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors duration-200 whitespace-nowrap font-medium outline-none",
+                                active
+                                  ? "text-foreground bg-muted/60 nav-active-indicator active"
+                                  : `text-muted-foreground hover:bg-muted/50 ${colorClass}`
+                              )}>
+                                {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                                <span className="tracking-wide">{item.name}</span>
+                                <ChevronDown className="h-3 w-3 ml-0.5" />
+                              </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{item.tooltip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuLabel>Connect & Collaborate</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {communitySubmenu.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              return (
+                                <DropdownMenuItem key={subItem.name} asChild>
+                                  <Link
+                                    to={subItem.href}
+                                    onClick={() => trackClick(`${item.name} - ${subItem.name}`, 'Navigation')}
+                                    className="cursor-pointer"
+                                  >
+                                    <SubIcon className="h-4 w-4 mr-2" />
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{subItem.name}</span>
+                                      <span className="text-xs text-muted-foreground">{subItem.description}</span>
+                                    </div>
+                                  </Link>
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    }
 
-                  return (
-                    <Tooltip key={item.name}>
-                      <TooltipTrigger asChild>
-                        <Link
-                          to={item.href}
-                          onClick={() => trackClick(item.name, 'Navigation')}
-                          className={cn(
-                            "relative flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-250 whitespace-nowrap font-medium text-sm",
-                            "nav-item-hover-effect",
-                            active
-                              ? "text-foreground bg-primary/5 nav-active-indicator active"
-                              : `text-muted-foreground ${colorClass}`,
-                            item.name === 'BizMap AI' && 'relative'
-                          )}
-                          onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
-                          onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
-                        >
-                          {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
-                          <span className="tracking-wide">{item.name}</span>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{item.tooltip}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
+                    return (
+                      <Tooltip key={item.name}>
+                        <TooltipTrigger asChild>
+                          <Link
+                            to={item.href}
+                            onClick={() => trackClick(item.name, 'Navigation')}
+                            className={cn(
+                              "relative flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors duration-200 whitespace-nowrap font-medium",
+                              active
+                                ? "text-foreground bg-muted/60 nav-active-indicator active"
+                                : `text-muted-foreground hover:bg-muted/50 ${colorClass}`,
+                              item.name === 'BizMap AI' && 'relative'
+                            )}
+                            onMouseEnter={item.name === 'BizMap AI' ? bizMapHover.handleMouseEnter : undefined}
+                            onMouseLeave={item.name === 'BizMap AI' ? bizMapHover.handleMouseLeave : undefined}
+                          >
+                            {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+                            <span className="tracking-wide">{item.name}</span>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.tooltip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
