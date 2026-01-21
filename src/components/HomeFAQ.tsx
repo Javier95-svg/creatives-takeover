@@ -53,32 +53,30 @@ const HomeFAQ = () => {
   ];
 
   return (
-    <section className="relative py-20 lg:py-32 overflow-hidden">
-      {/* Subtle blue accent aligned with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+    <section className="relative py-20 lg:py-28 font-poppins">
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-            <span className="gradient-unified">FAQ</span>
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl font-semibold mb-4 sm:mb-6">
+            Frequently asked questions
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Everything you need to know about Creatives Takeover, the all-in-one platform that uses AI, automation, and community support to help you plan, build, and grow your business from idea to execution.
           </p>
         </div>
 
         {/* FAQ Accordion */}
         <div className="max-w-4xl mx-auto px-4">
-          <div className="backdrop-blur-sm bg-card/50 rounded-2xl border border-border/50 p-4 sm:p-6 lg:p-8 shadow-2xl animate-scale-in">
-            <Accordion type="single" collapsible className="space-y-3 sm:space-y-4">
+          <div className="rounded-2xl border border-border/70 bg-card p-4 sm:p-6 lg:p-8 shadow-sm">
+            <Accordion type="single" collapsible className="space-y-0">
               {faqs.map((faq, index) => (
                 <AccordionItem 
                   key={index} 
                   value={`item-${index}`}
-                  className="border border-border/50 rounded-lg px-4 sm:px-6 bg-background/50 hover:bg-background/80 transition-all duration-300 hover:shadow-lg hover:border-primary/30"
+                  className="border-b border-border/70 px-4 sm:px-6 last:border-b-0"
                 >
-                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold hover:text-primary transition-colors py-4">
+                  <AccordionTrigger className="text-left text-sm sm:text-base md:text-lg font-semibold py-4">
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pt-2">
@@ -95,9 +93,9 @@ const HomeFAQ = () => {
         </div>
 
         {/* Trust-Building Footer */}
-        <div className="mt-12 sm:mt-16 text-center animate-fade-in px-4" style={{ animationDelay: '0.3s' }}>
-          <div className="backdrop-blur-sm bg-card/30 border border-border/50 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
-            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="mt-12 sm:mt-16 text-center px-4">
+          <div className="bg-muted/40 border border-border/70 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
+            <h3 className="font-space-grotesk text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">
               Still have questions?
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
@@ -107,7 +105,7 @@ const HomeFAQ = () => {
               <a
                 href="mailto:admin@creatives-takeover.com"
                 onClick={() => trackClick('Email Us', 'FAQ Contact')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
+                className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-3 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
               >
                 <Mail className="w-5 h-5" />
                 Email Us
@@ -117,7 +115,7 @@ const HomeFAQ = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackClick('Join Our Telegram', 'FAQ Contact')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/90 transition-all duration-300 hover:scale-105 shadow-lg"
+                className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-3 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
               >
                 <ExternalLink className="w-5 h-5" />
                 Join Our Telegram

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, Zap, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -470,128 +470,115 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="overview"
-      className="scroll-mt-24 relative min-h-screen flex items-center justify-center pt-24 px-4 sm:px-6"
+      className="scroll-mt-24 relative pt-24 pb-20 px-4 sm:px-6 font-poppins"
     >
-      {/* Subtle blue accent overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/40 to-transparent pointer-events-none" />
 
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left Section - All existing content */}
-          <div className="text-center flex flex-col justify-center">
-            {/* Main Headline - Enhanced with modern typography */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 takeover-title creatives-font leading-[1.05] tracking-tight">
-              <span className="gradient-unified animate-fade-in animate-flicker inline-block">
-                The Zero to One Platform
+          <div className="text-center md:text-left flex flex-col justify-center">
+            <div className="flex justify-center md:justify-start mb-4">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+                <Sparkles className="h-4 w-4 text-primary" />
+                AI co-founder for creative founders
               </span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight">
+              Build a launch-ready business{" "}
+              <span className="text-primary">in 30 days</span>
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="text-lg sm:text-xl text-foreground/80 mb-8 max-w-2xl mx-auto leading-[1.7] animate-fade-in font-light">
-              We blend technology, strategy and community to democratize startup formation, empowering founders with AI-driven planning, community support, and fundraising tools.
+            <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto md:mx-0 leading-relaxed">
+              BizMap AI, Insighta, and the Dashboard bring planning, execution, and funding into one focused workspace.
             </p>
             
             {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10">
-            {/* Community - Meet Founders & Mentors */}
-            <Link 
-              to="/community" 
-              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
-            >
-              <Users className="w-4 h-4 text-growth group-hover:text-growth/80 transition-colors" />
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Meet Founders & Mentors</span>
-            </Link>
-            
-            {/* Dashboard - Measure your progress */}
-            <Link 
-              to="/dashboard" 
-              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
-            >
-              <LayoutDashboard className="w-4 h-4 text-action group-hover:text-action/80 transition-colors" />
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Measure your progress</span>
-            </Link>
-            
-            {/* BizMap AI - Business Plan in 3 Minutes */}
-            <Link 
-              to="/bizmap-ai" 
-              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-planning group-hover:text-planning/80 transition-colors" />
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Business Plan in 3 Minutes</span>
-            </Link>
-            
-            {/* Insighta - Discover Funding Opportunities */}
-            <Link 
-              to="/insighta" 
-              className="flex items-center gap-2 text-xs sm:text-sm hover:scale-105 transition-transform duration-200 group cursor-pointer"
-            >
-              <DollarSign className="w-4 h-4 text-growth group-hover:text-growth/80 transition-colors" />
-              <span className="text-muted-foreground group-hover:text-foreground/80 transition-colors">Discover Funding Opportunities</span>
-            </Link>
-          </div>
+            <div className="grid grid-cols-2 gap-3 mb-8 sm:mb-10">
+              <Link 
+                to="/bizmap-ai" 
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                <Sparkles className="w-4 h-4 text-primary" />
+                BizMap AI
+              </Link>
+              
+              <Link 
+                to="/insighta" 
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                <DollarSign className="w-4 h-4 text-primary" />
+                Insighta
+              </Link>
+
+              <Link 
+                to="/dashboard" 
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                <LayoutDashboard className="w-4 h-4 text-primary" />
+                Dashboard
+              </Link>
+
+              <Link 
+                to="/community" 
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                <Users className="w-4 h-4 text-primary" />
+                Community
+              </Link>
+            </div>
 
             {/* Enhanced CTA Section */}
-            <div className="mb-8 sm:mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="mb-8 sm:mb-10">
               {isAuthenticated ? (
-                /* Authenticated User CTA: Open Dashboard Only */
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
-                {/* Primary CTA - Open Dashboard with Animation */}
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold relative overflow-hidden group w-full sm:w-auto shadow-xl transition-all duration-300 animate-dashboard-cta"
-                  asChild
-                >
-                  <Link to="/dashboard" onClick={handleDashboardCTAClick}>
-                    <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
-                      <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                      <span className="relative z-10">Open Dashboard</span>
-                      <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </Link>
-                </Button>
-              </div>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-start">
+                  <Button size="lg" className="w-full sm:w-auto" asChild>
+                    <Link to="/dashboard" onClick={handleDashboardCTAClick}>
+                      <LayoutDashboard className="w-5 h-5" />
+                      Open Dashboard
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </div>
             ) : (
-              /* Unauthenticated User CTAs: Join Today + Explore Features */
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
-                {/* Primary CTA - Join Today */}
-                <Button
-                  size="lg"
-                  className="bg-gradient-unified hover:opacity-90 text-primary-foreground px-8 sm:px-12 py-5 sm:py-6 text-lg sm:text-xl font-bold btn-magnetic btn-start-creating relative overflow-hidden group w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all duration-300"
-                  asChild
-                >
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-start">
+                <Button size="lg" className="w-full sm:w-auto" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
-                    <div className="flex flex-col items-center sm:flex-row sm:items-center gap-2">
-                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                      <span className="relative z-10">Join Today</span>
-                      <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-unified opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                    Start free
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                 </Button>
 
-                {/* Secondary CTA - Explore Features */}
                 <Button 
                   variant="outline"
                   size="lg" 
-                  className="border-2 hover:bg-primary/10 text-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto shadow-md hover:shadow-lg transition-all duration-300" 
+                  className="w-full sm:w-auto" 
                   onClick={(e) => {
                     e.preventDefault();
                     handleSecondaryCTAClick(e as any);
                   }}
                 >
-                  <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                  Explore Features
+                  <Play className="w-4 h-4" />
+                  Explore features
                 </Button>
               </div>
               )}
             </div>
+            {!isAuthenticated && (
+              <p className="text-xs text-muted-foreground">
+                No credit card required. Cancel anytime.
+              </p>
+            )}
           </div>
 
           {/* Right Section - 4-Pic Grid Layout */}
-          <div className="hidden md:flex md:items-center md:justify-center">
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full max-w-lg lg:max-w-2xl">
-              {[1, 2, 3, 4].map((position) => {
+          <div className="hidden md:block">
+            <div className="rounded-2xl border border-border/70 bg-card shadow-lg p-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+                {[1, 2, 3, 4].map((position) => {
                 // Use optimistic preview if available (instant rendering), otherwise use database image
                 const optimisticPreview = optimisticPreviews[position];
                 const image = heroImages.find(img => img.position === position);
@@ -612,9 +599,9 @@ const Hero = () => {
                   return (
                     <div
                       key={position}
-                      className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 aspect-square flex flex-col items-center justify-center gap-3 p-4"
+                      className="relative rounded-xl border border-dashed border-border/70 bg-muted/30 aspect-square flex flex-col items-center justify-center gap-3 p-4"
                     >
-                      <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+                      <ImageIcon className="h-10 w-10 text-muted-foreground/50" />
                       {isAdmin && (
                         <div className="w-full space-y-2">
                           <Input
@@ -667,15 +654,12 @@ const Hero = () => {
                 return (
                   <div
                     key={position}
-                    className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border bg-muted/30 group"
+                    className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30 group"
                   >
                     <img
                       src={imageSrc}
                       alt={altText}
                       className="w-full h-auto object-cover aspect-square"
-                      style={{
-                        filter: 'saturate(1.15) brightness(0.97) contrast(1.08)',
-                      }}
                       loading={shouldLoadEagerly ? "eager" : "lazy"}
                       fetchPriority={shouldLoadEagerly ? "high" : "auto"}
                       decoding="async"
@@ -707,7 +691,6 @@ const Hero = () => {
                         // #endregion
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
                     {isAdmin && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
                         <div className="space-y-2 w-full px-4">
@@ -757,7 +740,12 @@ const Hero = () => {
                     )}
                   </div>
                 );
-              })}
+                })}
+              </div>
+              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Trusted by founders worldwide</span>
+                <span>BizMap AI + Insighta + Dashboard</span>
+              </div>
             </div>
           </div>
         </div>

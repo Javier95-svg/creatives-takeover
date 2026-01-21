@@ -95,53 +95,28 @@ const UserReviews = () => {
     }
   ];
 
-  // Duplicate reviews for seamless infinite scroll
-  const duplicatedReviews = [...reviews, ...reviews];
-
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Clean neutral background */}
-      <div className="absolute inset-0 bg-transparent pointer-events-none" />
-
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header - Enhanced */}
-        <div className="text-center mb-16 sm:mb-20 animate-fade-in px-6 sm:px-8 lg:px-12">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 break-words tracking-tight">
-            <span className="gradient-unified">Helping Founders Succeed</span>
+    <section className="py-20 lg:py-28 font-poppins">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+            Founder outcomes
+          </Badge>
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 break-words tracking-tight">
+            Helping founders succeed
           </h2>
-          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto leading-[1.7] font-light">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             See how founders are turning their ideas into thriving projects.
           </p>
         </div>
 
-        {/* Reviews Auto-Scrolling */}
-        <div className="relative overflow-hidden -mx-4 sm:-mx-6 px-4 sm:px-6">
-          <style>{`
-            @keyframes scroll {
-              0% {
-                transform: translateX(0);
-              }
-              100% {
-                transform: translateX(calc(-50% - 1rem));
-              }
-            }
-            .auto-scroll {
-              animation: scroll 90s linear infinite;
-            }
-            .auto-scroll:hover {
-              animation-play-state: paused;
-            }
-          `}</style>
-          <div className="flex gap-6 md:gap-8 auto-scroll" style={{ width: 'max-content' }}>
-            {duplicatedReviews.map((review, index) => (
-              <Card 
-                key={`${review.name}-${index}`} 
-                className="relative overflow-hidden group hover:shadow-2xl transition-all duration-700 border hover:border-primary/40 flex-shrink-0 w-[320px] sm:w-[380px] md:w-[420px] hover:-translate-y-2 backdrop-blur-sm bg-card/60"
-              >
-                {/* Gradient background on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                <CardContent className="relative p-6 md:p-8">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {reviews.map((review) => (
+            <Card 
+              key={review.name} 
+              className="group border-border/70 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-6">
                   {/* Rating Stars and Verification */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-0.5">
@@ -202,7 +177,7 @@ const UserReviews = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
+                        <h4 className="font-space-grotesk font-semibold text-sm sm:text-base mb-1 group-hover:text-primary transition-colors">
                           {review.name}
                         </h4>
                         {review.role && (

@@ -5,8 +5,6 @@ import { TrendingUp, Target, Zap, BarChart3 } from "lucide-react";
 import { 
   LineChart, 
   Line, 
-  BarChart, 
-  Bar, 
   AreaChart, 
   Area, 
   XAxis, 
@@ -18,31 +16,12 @@ import {
 } from "recharts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
-
-// Typed Paragraph Component
-const TypedParagraph = ({ text, startDelay = 0, className = "" }: { text: string; startDelay?: number; className?: string }) => {
-  const { displayedText, isTyping } = useTypingAnimation({
-    text,
-    speed: 30,
-    startDelay
-  });
-
-  return (
-    <p className={className}>
-      {displayedText}
-      {isTyping && <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />}
-    </p>
-  );
-};
 
 const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
-  const [textSectionVisible, setTextSectionVisible] = useState(false);
   
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
-  const { ref: textSectionRef, isVisible: textSectionIsVisible } = useScrollAnimation(100);
   
   useEffect(() => {
     if (chartIsVisible && !chartVisible) {
@@ -50,13 +29,6 @@ const AISpecializationTrends = () => {
       return () => clearTimeout(timer);
     }
   }, [chartIsVisible, chartVisible]);
-
-  useEffect(() => {
-    if (textSectionIsVisible && !textSectionVisible) {
-      const timer = setTimeout(() => setTextSectionVisible(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [textSectionIsVisible, textSectionVisible]);
 
   // Animated counters
   const { count: nicheGrowthCount, ref: nicheGrowthRef } = useCountUp(340, 2000);
@@ -97,90 +69,27 @@ const AISpecializationTrends = () => {
 
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
-      <style>{`
-        @keyframes shimmer {
-          0% {
-            background-position: -200% center;
-          }
-          100% {
-            background-position: 200% center;
-          }
-        }
-        .shiny-text {
-          background: linear-gradient(
-            90deg,
-            hsl(var(--foreground)) 0%,
-            hsl(var(--primary)) 50%,
-            hsl(var(--foreground)) 100%
-          );
-          background-size: 200% auto;
-          background-clip: text;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: shimmer 3s linear infinite;
-        }
-        @keyframes chartFadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes lineDraw {
-          from {
-            stroke-dashoffset: 1000;
-          }
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-        @keyframes areaFill {
-          from {
-            opacity: 0;
-            transform: scaleY(0);
-            transform-origin: bottom;
-          }
-          to {
-            opacity: 1;
-            transform: scaleY(1);
-          }
-        }
-        .chart-container {
-          animation: chartFadeIn 0.8s ease-out forwards;
-        }
-        .chart-line {
-          stroke-dasharray: 1000;
-          animation: lineDraw 2s ease-out forwards;
-        }
-        .chart-area {
-          animation: areaFill 2.5s ease-out forwards;
-        }
-      `}</style>
-      {/* Subtle blue accent */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+    <section className="py-20 lg:py-28 relative overflow-hidden font-poppins">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header - Enhanced */}
         <div className="text-center mb-16 sm:mb-20">
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 mb-6 sm:mb-8 text-sm">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
             <TrendingUp className="w-4 h-4 mr-1.5" />
             How the Market is Evolving
           </Badge>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 sm:mb-8 tracking-tight">
-            <span className="gradient-unified">The Explosion of Niche Startups</span>
+          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight">
+            The explosion of niche startups
           </h2>
-          <p className="text-lg sm:text-xl text-foreground/75 max-w-3xl mx-auto px-4 leading-[1.7] font-light">
+          <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
             Specialization is emerging as the core strategy of modern entrepreneurship, and the data clearly confirms it.
           </p>
         </div>
 
         {/* Key Statistics */}
         <div ref={chartAnimationRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="border-border bg-gradient-to-br from-primary/10 to-primary/5">
+          <Card className="border-border/70 bg-card shadow-sm">
             <CardContent className="p-6 text-center">
               <div ref={nicheGrowthRef} className="text-3xl md:text-4xl font-bold text-primary mb-2">
                 {nicheGrowthCount.toFixed(0)}%
@@ -193,7 +102,7 @@ const AISpecializationTrends = () => {
             </CardContent>
           </Card>
           
-          <Card className="border-border bg-gradient-to-br from-muted/20 to-muted/10">
+          <Card className="border-border/70 bg-card shadow-sm">
             <CardContent className="p-6 text-center">
               <div ref={generalGrowthRef} className="text-3xl md:text-4xl font-bold text-muted-foreground mb-2">
                 {generalGrowthCount.toFixed(0)}%
@@ -206,7 +115,7 @@ const AISpecializationTrends = () => {
             </CardContent>
           </Card>
           
-          <Card className="border-border bg-gradient-to-br from-accent/10 to-accent/5">
+          <Card className="border-border/70 bg-card shadow-sm">
             <CardContent className="p-6 text-center">
               <div ref={nicheProductsRef} className="text-3xl md:text-4xl font-bold text-accent mb-2">
                 {nicheProductsCount.toFixed(0)}+
@@ -223,9 +132,9 @@ const AISpecializationTrends = () => {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Chart 1: Niche vs General Growth */}
-          <Card className="border-border hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30">
+          <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-primary" />
                 Niche vs General AI Growth
               </CardTitle>
@@ -358,9 +267,9 @@ const AISpecializationTrends = () => {
           </Card>
 
           {/* Chart 2: Market Share Shift */}
-          <Card className="border-border hover:shadow-xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/30">
+          <Card className="border-border/70 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="font-space-grotesk text-base sm:text-lg flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
                 Market Share Shift
               </CardTitle>
@@ -466,25 +375,17 @@ const AISpecializationTrends = () => {
         </div>
 
         {/* Narrative Conclusion */}
-        <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
-          <div className="bg-primary/5 border border-primary/20 rounded-lg p-8">
-            <h3 className="text-2xl font-bold mb-4 relative text-center">
-              <span className="shiny-text">A Lifetime Opportunity</span>
+        <div className="mt-12 max-w-4xl mx-auto">
+          <div className="bg-muted/40 border border-border/70 rounded-lg p-8">
+            <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center">
+              A lifetime opportunity
             </h3>
-            {textSectionVisible && (
-              <>
-                <TypedParagraph 
-                  text="It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants."
-                  startDelay={0}
-                  className="text-lg text-muted-foreground leading-relaxed mb-4"
-                />
-                <TypedParagraph 
-                  text="The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher."
-                  startDelay={2000}
-                  className="text-lg text-muted-foreground leading-relaxed"
-                />
-              </>
-            )}
+            <p className="text-base text-muted-foreground leading-relaxed mb-4">
+              It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.
+            </p>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem has never been higher.
+            </p>
           </div>
         </div>
       </div>
