@@ -487,13 +487,12 @@ const Hero = () => {
 
             {/* Main Headline */}
             <h1 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight">
-              Build a launch-ready business{" "}
-              <span className="text-primary">in 30 days</span>
+              The <span className="text-primary">Zero to One</span> Platform
             </h1>
 
             {/* Subheadline - Improved readability */}
             <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto md:mx-0 leading-relaxed">
-              BizMap AI, Insighta, and the Dashboard bring planning, execution, and funding into one focused workspace.
+              We blend technology, strategy and community to democratize startup formation, empowering founders with AI-driven planning, community support, and fundraising tools.
             </p>
             
             {/* Platform-Specific Trust Indicators - Linked to Main Tools */}
