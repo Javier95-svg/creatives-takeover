@@ -39,7 +39,7 @@ export function DashboardModeView({
       {/* Metrics Grid - 4 Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         {/* Today's Tasks */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -53,7 +53,7 @@ export function DashboardModeView({
         </Card>
 
         {/* This Week */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">This Week</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
@@ -67,7 +67,7 @@ export function DashboardModeView({
         </Card>
 
         {/* Mission Progress */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Mission</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -79,7 +79,7 @@ export function DashboardModeView({
         </Card>
 
         {/* Streak */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Streak</CardTitle>
             <Flame className="h-4 w-4 text-orange-500" />
@@ -111,7 +111,7 @@ export function DashboardModeView({
         </div>
         <div id="your-tasks">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Your Tasks</h3>
+            <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Your Tasks</h3>
             <p className="text-xs text-muted-foreground">Manage your daily work</p>
           </div>
           <TaskOverview />
@@ -120,3 +120,5 @@ export function DashboardModeView({
     </div>
   );
 }
+
+

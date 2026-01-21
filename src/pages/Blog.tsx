@@ -80,25 +80,25 @@ const Blog = ({ defaultTab = 'vc-search' }: BlogProps) => {
         <section className="container mx-auto px-4 py-12">
           {/* DEBUG: Build timestamp - 2025-12-28 10:45 AM */}
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold gradient-text mb-4">
+            <h2 className="font-space-grotesk text-4xl sm:text-5xl font-semibold tracking-tight gradient-text mb-4">
               Fundraising Resources
             </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="font-poppins text-muted-foreground text-lg max-w-2xl mx-auto">
               Everything you need to connect with investors and raise capital
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="vc-search" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-3 mb-8 rounded-full border border-border/70 bg-muted/40 p-1 shadow-sm">
+              <TabsTrigger value="vc-search" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
                 <Users className="h-4 w-4" />
                 <span>VC Search</span>
               </TabsTrigger>
-              <TabsTrigger value="email-templates" className="flex items-center gap-2">
+              <TabsTrigger value="email-templates" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
                 <Mail className="h-4 w-4" />
                 <span>Email Templates</span>
               </TabsTrigger>
-              <TabsTrigger value="accelerator-hunt" className="flex items-center gap-2">
+              <TabsTrigger value="accelerator-hunt" className="flex items-center gap-2 rounded-full data-[state=active]:shadow-md">
                 <Rocket className="h-4 w-4" />
                 <span>Accelerator Hunt</span>
               </TabsTrigger>

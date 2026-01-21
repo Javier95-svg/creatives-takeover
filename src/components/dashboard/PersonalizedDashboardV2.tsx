@@ -220,7 +220,7 @@ export const PersonalizedDashboardV2 = () => {
             <SidebarInset>
               <div className="min-h-screen relative overflow-hidden bg-background">
               {/* Fixed Header with Exit Button and Mode Toggle */}
-              <div className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
+              <div className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/60">
                 <div className="container mx-auto px-6 py-3 max-w-7xl">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -229,7 +229,7 @@ export const PersonalizedDashboardV2 = () => {
                     </div>
                     <button
                       onClick={() => navigate('/')}
-                      className="rounded-sm opacity-70 ring-offset-background transition-all duration-300 hover:opacity-100 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm border border-border/50 px-4 py-2 shadow-lg hover:shadow-xl hover:bg-accent flex items-center gap-2 text-sm font-medium"
+                      className="rounded-md border border-border/60 bg-background/80 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/30 hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex items-center gap-2"
                       aria-label="Exit dashboard and return to platform"
                       type="button"
                     >
@@ -240,33 +240,23 @@ export const PersonalizedDashboardV2 = () => {
                 </div>
               </div>
 
-        {/* Modern Wallpaper Background */}
+        {/* Refined Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background via-primary/4 to-background" />
+          <div className="absolute inset-0 bg-background" />
           <div
-            className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/12 rounded-full blur-3xl animate-pulse"
-            style={{ animationDuration: '8s' }}
-          />
-          <div
-            className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl animate-pulse"
-            style={{ animationDuration: '12s', animationDelay: '2s' }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/6 rounded-full blur-3xl animate-pulse"
-            style={{ animationDuration: '10s', animationDelay: '4s' }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]"
+            className="absolute inset-0"
             style={{
-              backgroundImage: `
-                linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px),
-                linear-gradient(0deg, hsl(var(--foreground)) 1px, transparent 1px)
-              `,
-              backgroundSize: '60px 60px, 60px 60px'
+              backgroundImage:
+                'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)'
             }}
           />
           <div
-            className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-background/30"
+            className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+            style={{
+              backgroundImage:
+                'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
+              backgroundSize: '64px 64px'
+            }}
           />
         </div>
 
@@ -274,10 +264,10 @@ export const PersonalizedDashboardV2 = () => {
               <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
                 {/* Header */}
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight">
+                  <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
                     {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
                   </h1>
-                  <p className="text-muted-foreground mt-1">
+                  <p className="font-poppins text-muted-foreground mt-1">
                     {dashboardMode === 'focus'
                       ? 'Here\'s your focus for today'
                       : dashboardMode === 'dashboard'
@@ -313,3 +303,4 @@ export const PersonalizedDashboardV2 = () => {
     </ErrorBoundary>
   );
 };
+

@@ -57,7 +57,7 @@ export function ControlCenterView({
 
       {/* Key Metrics - Same as Dashboard Mode */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -70,7 +70,7 @@ export function ControlCenterView({
           </CardContent>
         </Card>
 
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">This Week</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
@@ -83,7 +83,7 @@ export function ControlCenterView({
           </CardContent>
         </Card>
 
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Mission</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -94,7 +94,7 @@ export function ControlCenterView({
           </CardContent>
         </Card>
 
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Streak</CardTitle>
             <Flame className="h-4 w-4 text-orange-500" />
@@ -123,7 +123,7 @@ export function ControlCenterView({
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="ai-insights">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">AI Insights</h3>
+            <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">AI Insights</h3>
             <p className="text-xs text-muted-foreground">Smart recommendations</p>
           </div>
           <SmartRecommendations />
@@ -137,7 +137,7 @@ export function ControlCenterView({
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="calendar-view">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Calendar View</h3>
+            <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Calendar View</h3>
             <p className="text-xs text-muted-foreground">Schedule overview</p>
           </div>
           <TaskCalendar />
@@ -151,7 +151,7 @@ export function ControlCenterView({
       <div className="grid gap-6 lg:grid-cols-2">
         <div id="your-tasks">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">All Tasks</h3>
+            <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">All Tasks</h3>
             <p className="text-xs text-muted-foreground">Complete list</p>
           </div>
           <TaskOverview />
@@ -184,7 +184,7 @@ export function ControlCenterView({
       {/* Revenue Hub - Full Width */}
       <div id="revenue-hub">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Revenue Hub</h3>
+          <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Revenue Hub</h3>
           <p className="text-xs text-muted-foreground">Budget & financial tracking</p>
         </div>
         <RevenueHub />
@@ -203,7 +203,7 @@ export function ControlCenterView({
       {/* Market Validation Hub - Full Width */}
       <div id="market-validation">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Market Validation</h3>
+          <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Market Validation</h3>
           <p className="text-xs text-muted-foreground">Market intelligence & insights</p>
         </div>
         <MarketValidationHub />
@@ -221,3 +221,5 @@ export function ControlCenterView({
     </div>
   );
 }
+
+

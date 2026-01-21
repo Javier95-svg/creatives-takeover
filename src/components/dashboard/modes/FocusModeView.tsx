@@ -25,7 +25,7 @@ export function FocusModeView({
       {/* Minimal Key Metrics - 3 Cards Only */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Today's Progress */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -43,7 +43,7 @@ export function FocusModeView({
         </Card>
 
         {/* Weekly Mission Progress */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Weekly Mission</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -61,7 +61,7 @@ export function FocusModeView({
         </Card>
 
         {/* Consistency Streak */}
-        <Card className="border-muted">
+        <Card className="border-border/70 bg-card/80 backdrop-blur-sm shadow-sm hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Streak</CardTitle>
             <Flame className="h-4 w-4 text-orange-500" />
@@ -91,3 +91,4 @@ export function FocusModeView({
     </div>
   );
 }
+

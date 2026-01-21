@@ -1245,10 +1245,10 @@ Subject: "Quick question about [their pain point]"
         <div className="pt-16 sm:pt-20 pb-12 sm:pb-16 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-6 sm:mb-8 overflow-visible" style={{ overflow: 'visible' }}>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 takeover-gradient creatives-font animate-fade-in leading-tight pb-2 overflow-visible">
+              <h1 className="font-space-grotesk text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-3 sm:mb-4 takeover-gradient animate-fade-in leading-tight pb-2 overflow-visible">
                 BizMap AI
               </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '1.6', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
+              <p className="font-poppins text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in px-4 overflow-visible mb-0" style={{ animationDelay: '0.3s', lineHeight: '1.6', paddingBottom: '1.5rem', paddingTop: '0.5rem', overflow: 'visible', minHeight: 'auto' }}>
                 <>Your AI powered business planner in chatbot form,<span className="gradient-text font-semibold" style={{ lineHeight: 'inherit' }}> ready to turn your vision into action.</span></>
               </p>
             </div>
