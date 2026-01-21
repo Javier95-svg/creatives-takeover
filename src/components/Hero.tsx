@@ -477,21 +477,21 @@ const Hero = () => {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left Section - All existing content */}
-          <div className="text-center md:text-left flex flex-col justify-center">
+          <div className="text-center flex flex-col justify-center">
             {/* Main Headline */}
-            <h1 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight">
+            <h1 className="font-space-grotesk text-5xl sm:text-6xl lg:text-7xl font-semibold mb-6 leading-tight tracking-tight">
               The <span className="text-primary">Zero to One</span> Platform
             </h1>
 
             {/* Subheadline - Improved readability */}
-            <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto md:mx-0 leading-relaxed">
+            <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
               We blend technology, strategy and community to democratize startup formation, empowering founders with AI-driven planning, community support, and fundraising tools.
             </p>
             
             {/* Enhanced CTA Section */}
             <div className="mb-8 sm:mb-10">
               {isAuthenticated ? (
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-start">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
                   <Button size="lg" className="w-full sm:w-auto" asChild>
                     <Link to="/dashboard" onClick={handleDashboardCTAClick}>
                       <LayoutDashboard className="w-5 h-5" />
@@ -501,7 +501,7 @@ const Hero = () => {
                   </Button>
                 </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
                 <Button size="lg" className="w-full sm:w-auto" asChild>
                   <Link to="/signup" onClick={handlePrimaryCTAClick}>
                     Join Today
