@@ -204,7 +204,6 @@ const UserReviews = () => {
             ))}
           </div>
         </div>
-      </div>
     </section>
   );
 };
