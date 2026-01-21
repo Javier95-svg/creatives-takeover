@@ -253,6 +253,7 @@ const Account = () => {
 
     setUploadLoading(true);
     setCropModalOpen(false);
+    const previousAvatarUrl = avatarUrl;
 
     try {
       const fileName = `${user.id}/${Date.now()}.jpg`;
@@ -271,17 +272,42 @@ const Account = () => {
         .from('avatars')
         .getPublicUrl(fileName);
 
-      setAvatarUrl(data.publicUrl);
+      if (!data?.publicUrl) {
+        throw new Error("Unable to generate a public URL for the uploaded image.");
+      }
+
+      const nextAvatarUrl = data.publicUrl;
+      setAvatarUrl(nextAvatarUrl);
+
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: nextAvatarUrl,
+        },
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: nextAvatarUrl })
+        .eq('id', user.id);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      setInitialValues((prev) => ({ ...prev, avatarUrl: nextAvatarUrl }));
       toast.success("Profile picture updated successfully!");
-      
-      // Clean up temp URL
+    } catch (error: any) {
+      setAvatarUrl(previousAvatarUrl);
+      toast.error("Failed to upload profile picture: " + error.message);
+    } finally {
       if (tempImageUrl) {
         URL.revokeObjectURL(tempImageUrl);
         setTempImageUrl("");
       }
-    } catch (error: any) {
-      toast.error("Failed to upload profile picture: " + error.message);
-    } finally {
       setUploadLoading(false);
     }
   };
