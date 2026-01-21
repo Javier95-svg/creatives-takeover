@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SEO, { createOrganizationSchema, createWebSiteSchema, createBreadcrumbSchema } from "@/components/SEO";
 import Footer from "@/components/Footer";
 import { usePageAnalytics } from "@/hooks/usePageAnalytics";
+import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 
 // Lazy load below-the-fold components for better performance
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
@@ -42,23 +43,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Modern SaaS background */}
-      <div className="fixed inset-0 -z-10 bg-background" />
-      <div
-        className="fixed inset-0 -z-10"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 45%), radial-gradient(circle at 30% 80%, hsl(var(--accent) / 0.08), transparent 55%)'
-        }}
-      />
-      <div
-        className="fixed inset-0 -z-10 opacity-50"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px)',
-          backgroundSize: '48px 48px'
-        }}
-      />
+      <HomeWallpaper />
       <SEO
         title="Creatives Takeover"
         description="Turn your creative idea into a real business. Get AI-powered planning, community support, and funding resources designed for creative entrepreneurs. Start building today."

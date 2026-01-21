@@ -9,7 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
-import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
 const PricingFAQ = () => {
   const [expandAll, setExpandAll] = useState(false);
@@ -98,7 +97,6 @@ We've successfully partnered with startup incubators, business consultancies, co
 
   return (
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
-      <PricingWallpaper />
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-8 pb-2 gradient-text font-space-grotesk">

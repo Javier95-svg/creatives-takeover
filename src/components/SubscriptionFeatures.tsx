@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   Lightbulb
 } from "lucide-react";
-import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
 const SubscriptionFeatures = () => {
   const [selectedTier, setSelectedTier] = useState<'free' | 'creator' | 'professional'>('creator');
@@ -64,7 +63,6 @@ const SubscriptionFeatures = () => {
 
   return (
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="features">
-      <PricingWallpaper />
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
-import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
 const PricingComparison = () => {
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
@@ -78,7 +77,6 @@ const PricingComparison = () => {
   };
   return (
     <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden">
-      <PricingWallpaper />
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">

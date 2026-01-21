@@ -5,7 +5,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { StoryCard } from "@/components/stories/StoryCard";
 import StoriesHero from "@/components/stories/StoriesHero";
-import StoriesWallpaper from "@/components/wallpapers/StoriesWallpaper";
+import HomeWallpaper from "@/components/wallpapers/HomeWallpaper";
 import { useStories } from "@/hooks/useStories";
 import { StoryArticle } from "@/hooks/useStories";
 import { Badge } from "@/components/ui/badge";
@@ -258,12 +258,10 @@ const Stories = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
+        <HomeWallpaper />
         <Navigation />
 
         <main className="relative pb-16">
-          {/* Unified Wallpaper for entire Stories page */}
-          <StoriesWallpaper />
-          
           {/* Hero Section */}
           <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden z-10">
             <StoriesHero />

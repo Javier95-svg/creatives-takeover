@@ -9,7 +9,6 @@ import UpgradeCheckoutDialog, {
 import { useSubscription, SubscriptionTier } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import PricingWallpaper from "@/components/wallpapers/PricingWallpaper";
 
 const BILLING_STORAGE_KEY = "ct_billing_details";
 
@@ -353,7 +352,6 @@ const Pricing = () => {
       />
       {/* Pricing Section */}
       <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="pricing-plans">
-        <PricingWallpaper />
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
           <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
