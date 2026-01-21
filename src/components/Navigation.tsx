@@ -412,25 +412,22 @@ const Navigation = () => {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/account" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Account Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
                       <Link to="/dashboard" className="cursor-pointer">
                         <User className="mr-2 h-4 w-4" />
                         <span>Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setShowFriendRequests(true)}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      <span>Friend Requests</span>
-                      {pendingFriendRequests.length > 0 && (
-                        <Badge variant="destructive" className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs">
-                          {pendingFriendRequests.length}
-                        </Badge>
-                      )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/messages" className="cursor-pointer">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        <span>Messages</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/account" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
@@ -535,6 +532,18 @@ const Navigation = () => {
                       </div>
                       <CreditDisplay variant="inline" />
                     </div>
+                    <Button  
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]" 
+                      onClick={() => setIsOpen(false)}
+                      asChild
+                    >
+                      <Link to="/dashboard" className="flex items-center">
+                        <User className="w-5 h-5 mr-3" />
+                        Dashboard
+                      </Link>
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -547,23 +556,6 @@ const Navigation = () => {
                         Messages
                       </Link>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start relative min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]" 
-                      onClick={() => {
-                        setIsOpen(false);
-                        setShowFriendRequests(true);
-                      }}
-                    >
-                      <UserPlus className="w-5 h-5 mr-3" />
-                      Friend Requests
-                      {pendingFriendRequests.length > 0 && (
-                        <Badge variant="destructive" className="ml-auto h-6 w-6 flex items-center justify-center p-0 text-xs font-semibold animate-pulse">
-                          {pendingFriendRequests.length}
-                        </Badge>
-                      )}
-                    </Button>
                     <Button  
                       variant="ghost" 
                       size="sm" 
@@ -573,19 +565,7 @@ const Navigation = () => {
                     >
                       <Link to="/account" className="flex items-center">
                         <Settings className="w-5 h-5 mr-3" />
-                        Account Settings
-                      </Link>
-                    </Button>
-                    <Button  
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]" 
-                      onClick={() => setIsOpen(false)}
-                      asChild
-                    >
-                      <Link to="/dashboard" className="flex items-center">
-                        <User className="w-5 h-5 mr-3" />
-                        Dashboard
+                        Settings
                       </Link>
                     </Button>
                     <Button 

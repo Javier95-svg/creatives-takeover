@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2, Edit2, X } from "lucide-react";
+import { Loader2, Save, User, Mail, Calendar, Upload, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Globe, Camera, Users, UserCheck, MessageSquare, ArrowRight, ClipboardList, CheckCircle2, Edit2, X, Lock, Eye, EyeOff } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -39,6 +39,13 @@ const Account = () => {
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+
+  // Password update state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Social counts state
   const [followersCount, setFollowersCount] = useState(0);
@@ -385,6 +392,49 @@ const Account = () => {
       toast.error("Failed to update profile: " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!user) {
+      toast.error("Please sign in to update your password.");
+      return;
+    }
+
+    if (!newPassword.trim()) {
+      toast.error("Please enter a new password.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Password updated successfully.");
+    } catch (error: any) {
+      toast.error("Failed to update password: " + error.message);
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -776,6 +826,80 @@ const Account = () => {
               </CardContent>
             </Card>
           </form>
+
+          {/* Security */}
+          <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                Security
+              </CardTitle>
+              <CardDescription>
+                Update your password.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter a new password"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm-new-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your new password"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <p className="text-xs text-muted-foreground">Minimum 6 characters.</p>
+                  <Button type="submit" disabled={passwordLoading} className="w-full sm:w-auto">
+                    {passwordLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Password"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
 
           {/* Social Stats & Friend Requests */}
           <Card className="backdrop-blur-sm bg-card/80 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
