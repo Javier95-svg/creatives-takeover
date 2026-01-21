@@ -45,35 +45,55 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Check if this is the admin account - grant professional tier immediately
-    if (user.email.toLowerCase() === 'admin@creatives-takeover.com') {
-      logStep("Admin account detected - granting professional tier");
-      
+    const proOverrideEmails = new Set([
+      'admin@creatives-takeover.com',
+      'apembertona@gmail.com'
+    ]);
+
+    // Check if this is a pro-override account - grant professional tier immediately
+    if (proOverrideEmails.has(user.email.toLowerCase())) {
+      logStep("Pro override account detected - granting professional tier", { email: user.email });
+      const professionalTier = 'professional';
+      const professionalCredits = 150;
+
       // Update subscribers table
       await supabaseService.from("subscribers").upsert({
         email: user.email,
         user_id: user.id,
         stripe_customer_id: null,
         subscribed: true,
-        subscription_tier: 'professional',
+        subscription_tier: professionalTier,
         subscription_end: null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'email' });
 
-      // Update user_credits table
+      // Fetch current credits to avoid reducing balances
+      const { data: creditRow } = await supabaseService
+        .from("user_credits")
+        .select("balance, monthly_quota")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const nextBalance = Math.max(creditRow?.balance ?? 0, professionalCredits);
+      const nextQuota = Math.max(creditRow?.monthly_quota ?? 0, professionalCredits);
+
+      // Update user_credits table (tier + credits)
       await supabaseService.from("user_credits").upsert({
         user_id: user.id,
-        subscription_tier: 'professional',
+        subscription_tier: professionalTier,
+        balance: nextBalance,
+        monthly_quota: nextQuota,
+        last_credit_grant: new Date().toISOString()
       }, { onConflict: 'user_id' });
 
       // Update profiles table
       await supabaseService.from("profiles").update({
-        subscription_tier: 'professional'
+        subscription_tier: professionalTier
       }).eq('id', user.id);
 
       return new Response(JSON.stringify({
         subscribed: true,
-        subscription_tier: 'professional',
+        subscription_tier: professionalTier,
         subscription_end: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
