@@ -485,7 +485,7 @@ const Hero = () => {
 
             {/* Subheadline - Improved readability */}
             <p className="font-poppins text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
-              We blend technology, strategy and community to automate startup formation, empowering founders with business development guidance, expert support, and fundraising tools.
+              We blend technology, strategy and community to accelerate startup growth, empowering founders with business development guidance, expert support, and fundraising tools.
             </p>
             
             {/* Enhanced CTA Section */}
