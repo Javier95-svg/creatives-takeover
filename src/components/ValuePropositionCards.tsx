@@ -43,7 +43,7 @@ const ValuePropositionCards = () => {
   return (
     <section id="what-you-get" className="py-20 lg:py-28 scroll-mt-24 font-poppins">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight">
             Here's What You Get
           </h2>
