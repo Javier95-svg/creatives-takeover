@@ -44,6 +44,12 @@ const TypedParagraph = ({
 const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
   const [textSectionVisible, setTextSectionVisible] = useState(false);
+  const typingSpeed = 24;
+  const firstNarrative =
+    "It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.";
+  const secondNarrative =
+    "The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher.";
+  const secondStartDelay = firstNarrative.length * typingSpeed + 600;
   
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
@@ -103,6 +109,48 @@ const AISpecializationTrends = () => {
 
   return (
     <section className="py-20 lg:py-28 relative overflow-hidden font-poppins">
+      <style>{`
+        @keyframes chartFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes lineDraw {
+          from {
+            stroke-dashoffset: 1000;
+          }
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes areaFill {
+          from {
+            opacity: 0;
+            transform: scaleY(0.85);
+            transform-origin: bottom;
+          }
+          to {
+            opacity: 1;
+            transform: scaleY(1);
+          }
+        }
+        .chart-container {
+          animation: chartFadeIn 0.7s ease-out both;
+        }
+        .chart-line {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: lineDraw 2.2s ease-out forwards;
+        }
+        .chart-area {
+          animation: areaFill 2.4s ease-out forwards;
+        }
+      `}</style>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
@@ -228,6 +276,7 @@ const AISpecializationTrends = () => {
                         dataKey="niche" 
                         stroke="hsl(var(--primary))" 
                         strokeWidth={3}
+                        className="chart-line"
                         dot={{ 
                           fill: 'hsl(var(--primary))', 
                           r: 5,
@@ -372,6 +421,7 @@ const AISpecializationTrends = () => {
                         fill="url(#specializedGradient)" 
                         fillOpacity={0.7}
                         name="Specialized AI"
+                        className="chart-area"
                         animationBegin={0}
                         animationDuration={2800}
                         animationEasing="ease-out"
@@ -389,6 +439,7 @@ const AISpecializationTrends = () => {
                         fill="url(#generalGradient)" 
                         fillOpacity={0.4}
                         name="General AI"
+                        className="chart-area"
                         animationBegin={500}
                         animationDuration={2800}
                         animationEasing="ease-out"
@@ -416,13 +467,13 @@ const AISpecializationTrends = () => {
             {textSectionVisible && (
               <>
                 <TypedParagraph
-                  text="It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants."
+                  text={firstNarrative}
                   startDelay={0}
                   className="text-base text-muted-foreground leading-relaxed mb-4"
                 />
                 <TypedParagraph
-                  text="The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher."
-                  startDelay={2000}
+                  text={secondNarrative}
+                  startDelay={secondStartDelay}
                   className="text-base text-muted-foreground leading-relaxed"
                 />
               </>
