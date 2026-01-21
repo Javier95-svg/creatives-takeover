@@ -132,19 +132,13 @@ const Navigation = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <nav className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b-2 transition-all duration-300",
-        scrolled 
-          ? 'backdrop-blur-xl bg-background/98 shadow-lg animate-nav-backdrop' 
-          : 'backdrop-blur-sm bg-background/85 border-border'
-      )}
-      style={scrolled ? {
-        borderImage: 'linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary))) 1',
-        borderImageSlice: 1,
-        boxShadow: '0 4px 20px -2px hsl(var(--primary) / 0.1)'
-      } : {
-        borderColor: 'hsl(var(--border))'
-      }}
+      <nav
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300",
+          scrolled
+            ? "bg-background/95 backdrop-blur-lg shadow-sm border-border/70"
+            : "bg-background/85 backdrop-blur-md border-border/60"
+        )}
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 border-0">
           <div className="flex items-center h-16 md:h-18 border-0">
@@ -154,7 +148,7 @@ const Navigation = () => {
                 <img 
                   src={ctLogo} 
                   alt="Creatives Takeover Logo" 
-                  className="h-10 w-auto max-w-full object-contain animate-logo-breathing" 
+                  className="h-10 w-auto max-w-full object-contain nav-logo-hover"
                 />
               </Link>
             </div>

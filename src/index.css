@@ -2766,7 +2766,7 @@ All colors MUST be HSL.
 
 .nav-item-hover-effect:hover {
   transform: translateY(-1px);
-  text-shadow: 0 2px 4px hsl(var(--primary) / 0.2);
+  text-shadow: none;
 }
 
 .nav-active-indicator {
@@ -2780,8 +2780,9 @@ All colors MUST be HSL.
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, hsl(var(--blue-primary)), hsl(var(--red-primary)), hsl(var(--green-primary)));
-  border-radius: 2px;
+  background: hsl(var(--primary));
+  border-radius: 999px;
+  opacity: 0.7;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
