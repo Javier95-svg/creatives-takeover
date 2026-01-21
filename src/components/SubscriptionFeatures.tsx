@@ -69,29 +69,29 @@ const SubscriptionFeatures = () => {
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
           <div className="mb-6">
-            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+            <Badge variant="secondary" className="rounded-full bg-primary/10 text-primary border-primary/20 font-medium">
               Credits Explained
             </Badge>
           </div>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 pb-2 gradient-text">
+          <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 pb-2 gradient-text font-space-grotesk">
             How Our Credit System Works
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-poppins">
             Choose your plan based on what you need and how you work.
           </p>
         </div>
 
         {/* Tier Selector Tabs */}
         <Tabs value={selectedTier} onValueChange={(value) => setSelectedTier(value as 'free' | 'creator' | 'professional')} className="mb-12">
-          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
-            <TabsTrigger value="free">Rookie (10)</TabsTrigger>
-            <TabsTrigger value="creator">Rising (50)</TabsTrigger>
-            <TabsTrigger value="professional">Pro (150)</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
+            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="free">Rookie (10)</TabsTrigger>
+            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="creator">Rising (50)</TabsTrigger>
+            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="professional">Pro (150)</TabsTrigger>
           </TabsList>
         </Tabs>
 
         {/* Usage Example Card */}
-        <Card className="mb-12 max-w-4xl mx-auto border-primary/20 bg-primary/5">
+        <Card className="mb-12 max-w-4xl mx-auto rounded-2xl border-primary/30 bg-primary/5 shadow-md backdrop-blur">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-primary" />
@@ -116,13 +116,13 @@ const SubscriptionFeatures = () => {
         {/* Credit Breakdown Grid - 4 cards in a single row */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {/* Dashboard Card */}
-          <Card className="border-border">
+          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-full bg-primary/10">
                   <LayoutDashboard className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-xl">Dashboard</CardTitle>
+                <CardTitle className="text-xl font-space-grotesk">Dashboard</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -141,13 +141,13 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* BizMap AI Card */}
-          <Card className="border-border">
+          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-full bg-primary/10">
                   <Bot className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-xl">BizMap AI</CardTitle>
+                <CardTitle className="text-xl font-space-grotesk">BizMap AI</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -166,13 +166,13 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Insighta Card */}
-          <Card className="border-border">
+          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-full bg-primary/10">
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-xl">Insighta</CardTitle>
+                <CardTitle className="text-xl font-space-grotesk">Insighta</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -199,13 +199,13 @@ const SubscriptionFeatures = () => {
           </Card>
 
           {/* Community Card */}
-          <Card className="border-border">
+          <Card className="rounded-2xl border-border/60 bg-card/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-full bg-primary/10">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-xl">Community</CardTitle>
+                <CardTitle className="text-xl font-space-grotesk">Community</CardTitle>
               </div>
             </CardHeader>
             <CardContent>

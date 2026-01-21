@@ -101,15 +101,15 @@ We've successfully partnered with startup incubators, business consultancies, co
       <PricingWallpaper />
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-8 pb-2 gradient-text">
+          <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-8 pb-2 gradient-text font-space-grotesk">
             Pricing FAQ
           </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto font-poppins">
             Get clear and honest answers about our pricing, billing, features, and commitment to your success. There are no hidden fees or unexpected costs. We provide straightforward, transparent information to help you make the right decision.
           </p>
         </div>
 
-        <Card className="max-w-4xl mx-auto bg-background/60 backdrop-blur-sm border-border/50 p-8 animate-fade-in shadow-xl">
+        <Card className="max-w-4xl mx-auto rounded-2xl bg-card/80 backdrop-blur-sm border-border/60 p-8 animate-fade-in shadow-xl">
           <Accordion 
             type="single" 
             collapsible 
@@ -120,11 +120,11 @@ We've successfully partnered with startup incubators, business consultancies, co
                 const vote = helpfulVotes[index];
               
               return (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left text-foreground hover:text-primary">
+                <AccordionItem key={index} value={`item-${index}`} className="border-border/60">
+                  <AccordionTrigger className="text-left text-foreground hover:text-primary font-space-grotesk text-base sm:text-lg">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground space-y-4">
+                  <AccordionContent className="text-muted-foreground space-y-4 font-poppins">
                     <div className="space-y-3">
                       {faq.answer.split('\n\n').map((paragraph, pIndex) => (
                         <p key={pIndex}>{paragraph.trim()}</p>
@@ -139,7 +139,7 @@ We've successfully partnered with startup incubators, business consultancies, co
                           variant="ghost"
                           size="sm"
                           onClick={() => handleVote(index, 'up')}
-                          className={vote === 'up' ? 'text-green-600' : ''}
+                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === 'up' ? 'text-green-600' : ''}`}
                         >
                           <ThumbsUp className="w-4 h-4" />
                         </Button>
@@ -147,7 +147,7 @@ We've successfully partnered with startup incubators, business consultancies, co
                           variant="ghost"
                           size="sm"
                           onClick={() => handleVote(index, 'down')}
-                          className={vote === 'down' ? 'text-red-600' : ''}
+                          className={`h-9 w-9 rounded-full border border-border/60 ${vote === 'down' ? 'text-red-600' : ''}`}
                         >
                           <ThumbsDown className="w-4 h-4" />
                         </Button>
@@ -163,7 +163,7 @@ We've successfully partnered with startup incubators, business consultancies, co
                             <Badge 
                               key={relatedIndex}
                               variant="secondary" 
-                              className="cursor-pointer hover:bg-primary/20"
+                              className="cursor-pointer rounded-full bg-background/70 border border-border/60 hover:bg-primary/10"
                             >
                               {faqs[relatedIndex].question}
                             </Badge>

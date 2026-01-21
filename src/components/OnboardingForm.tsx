@@ -386,41 +386,41 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Welcome to Creatives Takeover! 👋</h2>
-              <p className="text-muted-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Welcome to Creatives Takeover! 👋</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
                 Let's get started by creating your account. We'll guide you through a quick onboarding to personalize your experience.
               </p>
             </div>
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-foreground">Full Name *</Label>
                 <Input
                   id="name"
                   type="text"
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={errors.name ? 'border-destructive' : ''}
+                  className={`bg-background/70 border-border/60 focus-visible:ring-primary/30 ${errors.name ? 'border-destructive' : ''}`}
                 />
                 {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
               </div>
 
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={errors.email ? 'border-destructive' : ''}
+                  className={`bg-background/70 border-border/60 focus-visible:ring-primary/30 ${errors.email ? 'border-destructive' : ''}`}
                 />
                 {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
               </div>
 
               <div>
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">Password *</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -428,7 +428,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                     placeholder="Minimum 6 characters"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={errors.password ? 'border-destructive' : ''}
+                    className={`bg-background/70 border-border/60 focus-visible:ring-primary/30 ${errors.password ? 'border-destructive' : ''}`}
                   />
                   <button
                     type="button"
@@ -442,7 +442,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password *</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -450,7 +450,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                     placeholder="Re-enter your password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className={errors.confirmPassword ? 'border-destructive' : ''}
+                    className={`bg-background/70 border-border/60 focus-visible:ring-primary/30 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                   />
                   <button
                     type="button"
@@ -470,36 +470,36 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Tell us about your current reality 🎯</h2>
-              <p className="text-muted-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Tell us about your current reality 🎯</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
                 Understanding where you are helps us personalize your experience.
               </p>
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What stage is your business at? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What stage is your business at? *</Label>
               <RadioGroup
                 value={formData.businessStage}
                 onValueChange={(value) => setFormData({ ...formData, businessStage: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="idea" id="stage-idea" />
                   <Label htmlFor="stage-idea" className="cursor-pointer flex-1">💡 Just an idea</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="validation" id="stage-validation" />
                   <Label htmlFor="stage-validation" className="cursor-pointer flex-1">🔍 Validating the idea</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="mvp" id="stage-mvp" />
                   <Label htmlFor="stage-mvp" className="cursor-pointer flex-1">🚀 Building MVP</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="launched" id="stage-launched" />
                   <Label htmlFor="stage-launched" className="cursor-pointer flex-1">✨ Launched</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="scaling" id="stage-scaling" />
                   <Label htmlFor="stage-scaling" className="cursor-pointer flex-1">📈 Scaling</Label>
                 </div>
@@ -508,21 +508,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What's your founder experience? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your founder experience? *</Label>
               <RadioGroup
                 value={formData.founderExperience}
                 onValueChange={(value) => setFormData({ ...formData, founderExperience: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="first-time" id="exp-first" />
                   <Label htmlFor="exp-first" className="cursor-pointer flex-1">🌱 First-time founder</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="1-2" id="exp-1-2" />
                   <Label htmlFor="exp-1-2" className="cursor-pointer flex-1">📚 1-2 previous ventures</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="3+" id="exp-3plus" />
                   <Label htmlFor="exp-3plus" className="cursor-pointer flex-1">🎯 3+ previous ventures</Label>
                 </div>
@@ -531,21 +531,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What's your time commitment? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your time commitment? *</Label>
               <RadioGroup
                 value={formData.timeCommitment}
                 onValueChange={(value) => setFormData({ ...formData, timeCommitment: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="full-time" id="time-full" />
                   <Label htmlFor="time-full" className="cursor-pointer flex-1">⏰ Full-time</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="part-time" id="time-part" />
                   <Label htmlFor="time-part" className="cursor-pointer flex-1">📅 Part-time</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="weekends" id="time-weekends" />
                   <Label htmlFor="time-weekends" className="cursor-pointer flex-1">🌙 Weekends/evenings</Label>
                 </div>
@@ -559,21 +559,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Let's dive into your challenges 💭</h2>
-              <p className="text-muted-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Let's dive into your challenges 💭</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
                 Understanding your pain points helps us provide better guidance.
               </p>
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What's your primary pain point? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your primary pain point? *</Label>
               <RadioGroup
                 value={formData.primaryPain}
                 onValueChange={(value) => setFormData({ ...formData, primaryPain: value })}
                 className="space-y-2"
               >
                 {PRIMARY_PAIN_OPTIONS.map((pain) => (
-                  <div key={pain.value} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                  <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                     <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
                     <Label htmlFor={`pain-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
                   </div>
@@ -583,10 +583,10 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What other challenges do you face? (Select all that apply)</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What other challenges do you face? (Select all that apply)</Label>
               <div className="space-y-2">
                 {SECONDARY_PAIN_OPTIONS.map((pain) => (
-                  <div key={pain.value} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                  <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                     <Checkbox
                       id={`secondary-${pain.value}`}
                       checked={formData.secondaryPains.includes(pain.value)}
@@ -599,25 +599,25 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">How do you typically make important decisions? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">How do you typically make important decisions? *</Label>
               <RadioGroup
                 value={formData.decisionMakingProcess}
                 onValueChange={(value) => setFormData({ ...formData, decisionMakingProcess: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="gut-feel" id="decision-gut" />
                   <Label htmlFor="decision-gut" className="cursor-pointer flex-1">🎲 Gut feeling</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="research" id="decision-research" />
                   <Label htmlFor="decision-research" className="cursor-pointer flex-1">📊 Research and data</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="community" id="decision-community" />
                   <Label htmlFor="decision-community" className="cursor-pointer flex-1">👥 Community input</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="mentor" id="decision-mentor" />
                   <Label htmlFor="decision-mentor" className="cursor-pointer flex-1">🎓 Mentor guidance</Label>
                 </div>
@@ -631,8 +631,8 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Meet Your Toolkit 🛠️</h2>
-              <p className="text-muted-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Meet Your Toolkit 🛠️</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
                 Select the features you're most interested in. You can always explore more later!
               </p>
             </div>
@@ -643,17 +643,17 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 return (
                   <Card
                     key={feature.id}
-                    className={`cursor-pointer transition-all ${
+                    className={`cursor-pointer rounded-2xl border border-border/60 bg-card/80 transition-all duration-300 ${
                       isSelected
-                        ? 'border-[#32b8c6] bg-[#f0f8fa] shadow-md'
-                        : 'hover:border-primary/50 hover:shadow-sm'
+                        ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/20 shadow-md'
+                        : 'hover:border-primary/40 hover:shadow-sm'
                     }`}
                     onClick={() => toggleFeature(feature.id)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg">{feature.title}</CardTitle>
+                          <CardTitle className="text-lg font-space-grotesk">{feature.title}</CardTitle>
                           <CardDescription className="mt-1">{feature.description}</CardDescription>
                         </div>
                         <Checkbox
@@ -678,28 +678,28 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Personalize your experience ✨</h2>
-              <p className="text-muted-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Personalize your experience ✨</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
                 Help us tailor the platform to your preferences.
               </p>
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What's your preferred communication style? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your preferred communication style? *</Label>
               <RadioGroup
                 value={formData.communicationStyle}
                 onValueChange={(value) => setFormData({ ...formData, communicationStyle: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="visual" id="comm-visual" />
                   <Label htmlFor="comm-visual" className="cursor-pointer flex-1">🎨 Visual (charts, graphs, infographics)</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="text-focused" id="comm-text" />
                   <Label htmlFor="comm-text" className="cursor-pointer flex-1">📝 Text-focused (detailed explanations)</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="mixed" id="comm-mixed" />
                   <Label htmlFor="comm-mixed" className="cursor-pointer flex-1">🔄 Mixed (both visual and text)</Label>
                 </div>
@@ -708,21 +708,21 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             </div>
 
             <div>
-              <Label className="text-base font-semibold mb-3 block">What's your commitment level? *</Label>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your commitment level? *</Label>
               <RadioGroup
                 value={formData.commitmentLevel}
                 onValueChange={(value) => setFormData({ ...formData, commitmentLevel: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="serious" id="commit-serious" />
                   <Label htmlFor="commit-serious" className="cursor-pointer flex-1">🔥 Serious—ready to take action</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="exploring" id="commit-exploring" />
                   <Label htmlFor="commit-exploring" className="cursor-pointer flex-1">🔍 Exploring—seeing what's possible</Label>
                 </div>
-                <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-accent/50">
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
                   <RadioGroupItem value="casual" id="commit-casual" />
                   <Label htmlFor="commit-casual" className="cursor-pointer flex-1">💭 Casual—just checking it out</Label>
                 </div>
@@ -736,14 +736,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Almost there! 🎉</h2>
-              <p className="text-muted-foreground mb-6">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Almost there! 🎉</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
                 Review our terms and get ready to launch your founder journey.
               </p>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-start space-x-2 p-4 rounded-lg border bg-muted/50">
+              <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
                 <Checkbox
                   id="terms"
                   checked={formData.acceptedTerms}
@@ -765,7 +765,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               {errors.acceptedTerms && <p className="text-sm text-destructive mt-1">{errors.acceptedTerms}</p>}
             </div>
 
-            <div className="p-4 rounded-lg bg-[#f0f8fa] border border-[#32b8c6]/20">
+            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
               <p className="text-sm text-muted-foreground">
                 <strong className="text-foreground">What's next?</strong> After you complete onboarding, you'll be taken to your personalized dashboard where you can start exploring the features you selected.
               </p>
@@ -779,24 +779,24 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-[600px] mx-auto p-4 sm:p-6">
-      <Card className="border-2">
-        <CardHeader className="space-y-4 pb-4">
+    <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6 font-poppins">
+      <Card className="rounded-2xl border border-border/60 bg-card/80 shadow-xl backdrop-blur">
+        <CardHeader className="space-y-4 pb-6 border-b border-border/60">
           <div>
-            <CardTitle className="text-2xl">Welcome to Creatives Takeover</CardTitle>
-            <CardDescription className="mt-2">
+            <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">Welcome to Creatives Takeover</CardTitle>
+            <CardDescription className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Step {currentStep + 1} of {totalSteps}
             </CardDescription>
           </div>
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
             <div
-              className="h-full bg-[#32b8c6] transition-all"
+              className="h-full bg-[#32b8c6] transition-all rounded-full shadow-sm"
               style={{ width: `${progress}%` }}
             />
           </div>
         </CardHeader>
         
-        <CardContent className="min-h-[400px]">
+        <CardContent className="min-h-[400px] pt-6">
           {renderStep()}
         </CardContent>
 
@@ -808,7 +808,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 variant="secondary"
                 onClick={handleBack}
                 disabled={isLoading || isSigningUp}
-                className="gap-2"
+                className="gap-2 rounded-full border border-border/60 bg-background/80"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
@@ -824,7 +824,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               type="button"
               onClick={handleNext}
               disabled={isLoading || isSigningUp}
-              className="gap-2"
+              className="gap-2 rounded-full px-6 font-semibold shadow-sm hover:shadow-md"
               style={{ backgroundColor: currentStep === 5 ? '#32b8c6' : undefined }}
             >
               {isLoading || isSigningUp ? (

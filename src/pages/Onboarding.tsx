@@ -49,7 +49,7 @@ const Onboarding = () => {
         <meta name="description" content="Complete your onboarding to get started with Creatives Takeover" />
       </Helmet>
       
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 bg-[radial-gradient(1200px_circle_at_top,_rgba(56,189,248,0.12),_transparent_65%)] py-10 px-4">
         <OnboardingForm onComplete={handleComplete} />
       </div>
     </>
