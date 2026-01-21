@@ -16,12 +16,38 @@ import {
 } from "recharts";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+
+const TypedParagraph = ({
+  text,
+  startDelay = 0,
+  className = ""
+}: {
+  text: string;
+  startDelay?: number;
+  className?: string;
+}) => {
+  const { displayedText, isTyping } = useTypingAnimation({
+    text,
+    speed: 28,
+    startDelay
+  });
+
+  return (
+    <p className={className}>
+      {displayedText}
+      {isTyping && <span className="inline-block w-0.5 h-4 bg-primary ml-1 animate-pulse" />}
+    </p>
+  );
+};
 
 const AISpecializationTrends = () => {
   const [chartVisible, setChartVisible] = useState(false);
+  const [textSectionVisible, setTextSectionVisible] = useState(false);
   
   // Scroll-triggered animations
   const { ref: chartAnimationRef, isVisible: chartIsVisible } = useScrollAnimation(200);
+  const { ref: textSectionRef, isVisible: textSectionIsVisible } = useScrollAnimation(120);
   
   useEffect(() => {
     if (chartIsVisible && !chartVisible) {
@@ -29,6 +55,13 @@ const AISpecializationTrends = () => {
       return () => clearTimeout(timer);
     }
   }, [chartIsVisible, chartVisible]);
+
+  useEffect(() => {
+    if (textSectionIsVisible && !textSectionVisible) {
+      const timer = setTimeout(() => setTextSectionVisible(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [textSectionIsVisible, textSectionVisible]);
 
   // Animated counters
   const { count: nicheGrowthCount, ref: nicheGrowthRef } = useCountUp(340, 2000);
@@ -375,17 +408,25 @@ const AISpecializationTrends = () => {
         </div>
 
         {/* Narrative Conclusion */}
-        <div className="mt-12 max-w-4xl mx-auto">
+        <div ref={textSectionRef} className="mt-12 max-w-4xl mx-auto">
           <div className="bg-muted/40 border border-border/70 rounded-lg p-8">
             <h3 className="font-space-grotesk text-2xl font-semibold mb-4 text-center">
               A Lifetime Opportunity
             </h3>
-            <p className="text-base text-muted-foreground leading-relaxed mb-4">
-              It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants.
-            </p>
-            <p className="text-base text-muted-foreground leading-relaxed">
-              The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher.
-            </p>
+            {textSectionVisible && (
+              <>
+                <TypedParagraph
+                  text="It has never been a better time to be a founder. Markets are unbundling, and software is breaking into focused, founder-sized opportunities instead of being dominated by a few general-purpose giants."
+                  startDelay={0}
+                  className="text-base text-muted-foreground leading-relaxed mb-4"
+                />
+                <TypedParagraph
+                  text="The data shows that niche, specialized products are the ones growing fastest, raising capital, and building loyal communities of users who feel truly understood. For creative entrepreneurs, that means the barrier to starting is lower than ever, and the upside for solving a specific problem for a specific group of people has never been higher."
+                  startDelay={2000}
+                  className="text-base text-muted-foreground leading-relaxed"
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
