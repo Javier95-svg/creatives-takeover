@@ -95,6 +95,8 @@ const UserReviews = () => {
     }
   ];
 
+  const duplicatedReviews = [...reviews, ...reviews];
+
   return (
     <section className="py-20 lg:py-28 font-poppins">
       <div className="container mx-auto px-4 sm:px-6">
@@ -106,14 +108,30 @@ const UserReviews = () => {
             See how founders are turning their ideas into thriving projects.
           </p>
         </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {reviews.map((review) => (
-            <Card 
-              key={review.name} 
-              className="group border-border/70 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <CardContent className="p-6">
+        <div className="relative overflow-hidden -mx-4 sm:-mx-6 px-4 sm:px-6">
+          <style>{`
+            @keyframes reviewScroll {
+              0% {
+                transform: translateX(0);
+              }
+              100% {
+                transform: translateX(calc(-50% - 1rem));
+              }
+            }
+            .reviews-scroll {
+              animation: reviewScroll 90s linear infinite;
+            }
+            .reviews-scroll:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+          <div className="flex gap-6 md:gap-8 reviews-scroll" style={{ width: 'max-content' }}>
+            {duplicatedReviews.map((review, index) => (
+              <Card 
+                key={`${review.name}-${index}`} 
+                className="group border-border/70 shadow-sm hover:shadow-md transition-shadow flex-shrink-0 w-[320px] sm:w-[360px] md:w-[400px]"
+              >
+                <CardContent className="p-6">
                   {/* Rating Stars and Verification */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-0.5">
@@ -201,6 +219,7 @@ const UserReviews = () => {
             ))}
           </div>
         </div>
+      </div>
     </section>
   );
 };
