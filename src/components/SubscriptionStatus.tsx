@@ -167,11 +167,23 @@ export function SubscriptionStatus({ variant = "card" }: SubscriptionStatusProps
               <ul className="space-y-1 text-sm">
                 {(() => {
                   // Handle features as array or string
-                  const featureList = Array.isArray(tierInfo.features) 
-                    ? tierInfo.features 
-                    : typeof tierInfo.features === 'string' 
-                      ? JSON.parse(tierInfo.features) 
-                      : [];
+                  const featureList = (() => {
+                    if (Array.isArray(tierInfo.features)) {
+                      return tierInfo.features;
+                    }
+                    if (typeof tierInfo.features === 'string') {
+                      try {
+                        const parsed = JSON.parse(tierInfo.features);
+                        return Array.isArray(parsed) ? parsed : [];
+                      } catch (error) {
+                        return tierInfo.features
+                          .split(',')
+                          .map((feature) => feature.trim())
+                          .filter(Boolean);
+                      }
+                    }
+                    return [];
+                  })();
                   
                   return featureList.map((feature: string, index: number) => (
                     <li key={index} className="flex items-center gap-2">

@@ -4,9 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import type { Map as MapboxMap, Marker as MapboxMarker } from "mapbox-gl";
 
 interface LocationData {
   address: string;
@@ -30,6 +28,8 @@ interface LocationSearchInputProps {
   placeholder?: string;
 }
 
+type MapboxGl = typeof import("mapbox-gl")["default"];
+
 const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   value,
   onChange,
@@ -45,17 +45,25 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
+  const map = useRef<MapboxMap | null>(null);
+  const marker = useRef<MapboxMarker | null>(null);
+  const mapboxRef = useRef<MapboxGl | null>(null);
   const debounceTimer = useRef<number | undefined>(undefined);
 
   // Get Mapbox token from environment variable, fallback to empty string
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-  useEffect(() => {
-    if (mapboxToken) {
+  const loadMapbox = useCallback(async () => {
+    if (!mapboxToken) return null;
+    if (!mapboxRef.current) {
+      const mapboxModule = await import("mapbox-gl");
+      await import("mapbox-gl/dist/mapbox-gl.css");
+      const mapboxgl = ("default" in mapboxModule ? mapboxModule.default : mapboxModule) as MapboxGl;
       mapboxgl.accessToken = mapboxToken;
+      mapboxRef.current = mapboxgl;
     }
+
+    return mapboxRef.current;
   }, [mapboxToken]);
 
   const searchLocations = useCallback(async (query: string) => {
@@ -139,7 +147,9 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     // Show map with selected location
     if (mapboxToken && suggestion.center) {
       setShowMap(true);
-      setTimeout(() => initializeMap(suggestion.center[1], suggestion.center[0]), 100);
+      setTimeout(() => {
+        void initializeMap(suggestion.center[1], suggestion.center[0]);
+      }, 100);
     }
   };
 
@@ -188,7 +198,9 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             // Show map with current location
             if (mapboxToken) {
               setShowMap(true);
-              setTimeout(() => initializeMap(latitude, longitude), 100);
+              setTimeout(() => {
+                void initializeMap(latitude, longitude);
+              }, 100);
             }
             
             toast.success('Current location detected!');
@@ -231,8 +243,10 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     );
   };
 
-  const initializeMap = (lat: number, lng: number) => {
+  const initializeMap = useCallback(async (lat: number, lng: number) => {
     if (!mapContainer.current || !mapboxToken) return;
+    const mapboxgl = await loadMapbox();
+    if (!mapboxgl || !mapContainer.current) return;
 
     // Clean up existing map
     if (map.current) {
@@ -263,7 +277,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
       console.error('Map initialization error:', error);
       toast.error('Failed to load map preview.');
     }
-  };
+  }, [loadMapbox, mapboxToken]);
 
   const clearLocation = () => {
     setSearchValue('');

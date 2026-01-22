@@ -380,7 +380,14 @@ const BizMapAI = () => {
       localStorage.removeItem('bizmap_prompt');
       toast.success("Prompt loaded from Prompt Library!");
     } else if (savedTemplate) {
-      const template = JSON.parse(savedTemplate);
+      let template: any = null;
+      try {
+        template = JSON.parse(savedTemplate);
+      } catch (error) {
+        console.error('Failed to parse saved template:', error);
+        localStorage.removeItem('bizmap_template');
+        return;
+      }
       setUserAnswers(template.answers);
       setCurrentStep(7); // Move to end since template is complete
       localStorage.removeItem('bizmap_template');

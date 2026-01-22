@@ -61,39 +61,38 @@ const CommunityFeed: React.FC = () => {
       }
 
       // Get unique user IDs from all posts
-      const uniqueUserIds = [...new Set(data.map(post => post.user_id).filter(Boolean))];
-      
-      // Batch fetch all author information using RPC calls in parallel
-      // Note: Each RPC call is still separate, but they run in parallel
-      // For true optimization, would need a batch RPC function that accepts array of IDs
-      const authorResults = await Promise.all(
-        uniqueUserIds.map(async (userId) => {
-          try {
-            const { data: authorData } = await supabase.rpc('get_post_author_info', {
-              author_user_id: userId
-            });
-            return {
-              userId,
-              authorName: authorData?.[0]?.author_name || 'Anonymous',
-              authorAvatar: authorData?.[0]?.author_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
-              authorUsername: authorData?.[0]?.author_username
-            };
-          } catch (err) {
-            return {
-              userId,
-              authorName: 'Anonymous',
-              authorAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
-              authorUsername: undefined
-            };
-          }
-        })
-      );
+      const uniqueUserIds = [...new Set(data.map(post => post.user_id))];
 
-      // Create map of userId to author info for fast lookup
-      const authorMap = new Map(authorResults.map(result => [result.userId, result]));
+      const authorMap = new Map<string, {
+        authorName: string;
+        authorAvatar: string;
+        authorUsername?: string;
+      }>();
+
+      if (uniqueUserIds.length > 0) {
+        const { data: profileRows, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, username')
+          .in('id', uniqueUserIds);
+
+        if (profileError) {
+          console.error('Error fetching post authors:', profileError);
+        } else {
+          profileRows?.forEach((profile) => {
+            const name = profile.full_name || profile.username || 'Anonymous';
+            authorMap.set(profile.id, {
+              authorName: name,
+              authorAvatar: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+              authorUsername: profile.username || undefined
+            });
+          });
+        }
+      }
 
       let formattedPosts: Post[] = data.map(post => {
         const authorInfo = authorMap.get(post.user_id);
+        const authorName = authorInfo?.authorName || 'Anonymous';
+        const authorAvatar = authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(authorName)}`;
         
         return {
           id: post.id,
@@ -103,8 +102,8 @@ const CommunityFeed: React.FC = () => {
           location: post.location,
           createdAt: post.created_at,
           author: {
-            name: authorInfo?.authorName || 'Anonymous',
-            avatar: authorInfo?.authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent('Anonymous')}`,
+            name: authorName,
+            avatar: authorAvatar,
             username: authorInfo?.authorUsername
           },
           user_id: post.user_id,
