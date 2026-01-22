@@ -47,7 +47,8 @@ serve(async (req) => {
 
     const proOverrideEmails = new Set([
       'admin@creatives-takeover.com',
-      'apembertona@gmail.com'
+      'apembertona@gmail.com',
+      'adam@tiplo.ai'
     ]);
 
     // Check if this is a pro-override account - grant professional tier immediately
