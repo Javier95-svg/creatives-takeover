@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
+import { UpgradePromptProvider } from "@/contexts/UpgradePromptContext";
 import MobileOptimization from "@/components/MobileOptimization";
 import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
@@ -118,8 +119,9 @@ function App() {
               <BrowserRouter>
                 <Suspense fallback={null}>
                   <ScrollToTop />
-                  <FeedbackWidgetWrapper />
-                  <Routes>
+                  <UpgradePromptProvider>
+                    <FeedbackWidgetWrapper />
+                    <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/pricing" element={<PricingPage />} />
@@ -176,8 +178,9 @@ function App() {
                     <Route path="/test-phase1" element={<TestPhase1 />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <MobileBottomNav />
+                    </Routes>
+                    <MobileBottomNav />
+                  </UpgradePromptProvider>
                 </Suspense>
               </BrowserRouter>
             </TooltipProvider>

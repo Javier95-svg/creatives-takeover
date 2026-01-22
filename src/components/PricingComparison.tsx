@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { CREDIT_COSTS } from "@/config/constants";
 
 const PricingComparison = () => {
   const [currentMobileIndex, setCurrentMobileIndex] = useState(0);
@@ -18,9 +19,9 @@ const PricingComparison = () => {
     {
       category: "BizMap AI",
       items: [
-        { feature: "Business Planning (1 credit/msg)", free: "10 messages", creator: "50 messages", professional: "150 messages" },
-        { feature: "Product–Market Fit Lab", free: "Read-only", creator: "Full access (8 credits)", professional: "Full + insights (8 credits)" },
-        { feature: "Tech Stack Generator", free: "View only", creator: "Full access (3 credits)", professional: "Advanced (3 credits)" },
+        { feature: `Business Planning (${CREDIT_COSTS.AI_CHAT_MESSAGE} credit/msg)`, free: "10 messages", creator: "50 messages", professional: "150 messages" },
+        { feature: "Product–Market Fit Lab", free: "Read-only", creator: `Full access (${CREDIT_COSTS.PMF_ANALYSIS} credits)`, professional: `Full + insights (${CREDIT_COSTS.PMF_ANALYSIS} credits)` },
+        { feature: "Tech Stack Generator", free: "View only", creator: `Full access (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)`, professional: `Advanced (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)` },
         { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
       ]
     },
@@ -28,9 +29,9 @@ const PricingComparison = () => {
       category: "Insighta",
       items: [
         { feature: "VC Search", free: "5 views/month", creator: "25 views/month", professional: "Unlimited" },
-        { feature: "Email Templates", free: "View only", creator: "AI generation (3 credits)", professional: "AI + custom (3 credits)" },
-        { feature: "Pitch Deck Analyzer", free: false, creator: "Full access (8 credits)", professional: "Advanced + benchmarks (8 credits)" },
-        { feature: "Insighta Test", free: "Basic (8 credits)", creator: "Full access (8 credits)", professional: "Full + personalized (8 credits)" }
+        { feature: "Email Templates", free: "View only", creator: `AI generation (${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits)`, professional: `AI + custom (${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits)` },
+        { feature: "Pitch Deck Analyzer", free: false, creator: `Full access (${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits)`, professional: `Advanced + benchmarks (${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits)` },
+        { feature: "Insighta Test", free: `Basic (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)`, creator: `Full access (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)`, professional: `Full + personalized (${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits)` }
       ]
     },
     {

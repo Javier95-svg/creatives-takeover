@@ -1,28 +1,22 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, MapPin, DollarSign, Building2 } from "lucide-react";
+import { ExternalLink, Lock, MapPin, DollarSign, Building2 } from "lucide-react";
 import { Investor } from "@/types/investor";
 import { Link } from "react-router-dom";
-import { useVCViewTracking } from "@/hooks/useVCViewTracking";
 
 interface VCCardProps {
   vc: Investor;
+  canViewProfile?: boolean;
 }
 
-const VCCard = ({ vc }: VCCardProps) => {
-  const { canViewMore, remaining, hasUnlimitedViews, currentTier, limit } = useVCViewTracking();
+const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
   const formatCheckSize = () => {
     if (!vc.typical_check_size_min || !vc.typical_check_size_max) return null;
     const min = (vc.typical_check_size_min / 1000).toFixed(0);
     const max = (vc.typical_check_size_max / 1000).toFixed(0);
     return `$${min}K - $${max}K`;
   };
-
-  const upgradeLabel = currentTier === 'free' ? 'Upgrade to Creator' : 'Upgrade to Pro';
-  const upgradeDetail = currentTier === 'free'
-    ? 'Unlock 25 VC views this month'
-    : 'Unlock unlimited VC views';
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 group border-0 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col">
@@ -99,7 +93,7 @@ const VCCard = ({ vc }: VCCardProps) => {
         </div>
 
         {/* View Profile Button */}
-        {canViewMore ? (
+        {canViewProfile ? (
           <Button asChild size="sm" className="w-full mt-auto">
             <Link to={`/insighta/vc/${vc.slug}`}>
               View Profile
@@ -107,19 +101,10 @@ const VCCard = ({ vc }: VCCardProps) => {
             </Link>
           </Button>
         ) : (
-          <div className="space-y-2 mt-auto">
-            {!hasUnlimitedViews && remaining === 0 && (
-              <div className="text-xs text-center text-muted-foreground space-y-1">
-                <p>You've used all {limit} VC views this month.</p>
-                <p>{upgradeDetail}</p>
-              </div>
-            )}
-            <Button asChild size="sm" className="w-full" variant="secondary">
-              <Link to="/pricing">
-                {upgradeLabel}
-              </Link>
-            </Button>
-          </div>
+          <Button size="sm" className="w-full mt-auto" variant="secondary" disabled>
+            <Lock className="h-3 w-3 mr-1" />
+            View limit reached
+          </Button>
         )}
       </CardContent>
     </Card>

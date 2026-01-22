@@ -43,7 +43,7 @@ export const SocialButtons = ({
     cancelFriendRequest
   } = useSocial(userId);
   
-  const { startConversation, getUsernameByUserId } = useMessaging();
+  const { startConversation, getUsernameByUserId } = useMessaging({ autoLoad: false });
   const { sendPartnershipRequest } = useAccountabilityPartners();
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
   const [partnershipType, setPartnershipType] = useState<'sprint_buddy' | 'daily_accountability' | 'goal_tracker'>('sprint_buddy');

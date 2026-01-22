@@ -10,31 +10,32 @@ import {
   LayoutDashboard,
   Lightbulb
 } from "lucide-react";
+import { CREDIT_COSTS } from "@/config/constants";
 
 const SubscriptionFeatures = () => {
   const [selectedTier, setSelectedTier] = useState<'free' | 'creator' | 'professional'>('creator');
 
   const creditBreakdown = {
     dashboard: [
-      { name: "Sprint Task Generation", cost: 2, description: "AI-generated sprint tasks and priorities" },
-      { name: "Roadmap Generation", cost: 5, description: "Strategic business roadmap" },
-      { name: "Market Research", cost: 10, description: "In-depth market analysis and insights" },
-      { name: "Financial Analysis", cost: 8, description: "Financial projections and modeling" },
-      { name: "Business Insights", cost: 5, description: "Custom business intelligence reports" },
+      { name: "Sprint Task Generation", cost: CREDIT_COSTS.SPRINT_TASK_GENERATION, description: "AI-generated sprint tasks and priorities" },
+      { name: "Roadmap Generation", cost: CREDIT_COSTS.ROADMAP_GENERATION, description: "Strategic business roadmap" },
+      { name: "Market Research", cost: CREDIT_COSTS.MARKET_RESEARCH, description: "In-depth market analysis and insights" },
+      { name: "Financial Analysis", cost: CREDIT_COSTS.FINANCIAL_ANALYSIS, description: "Financial projections and modeling" },
+      { name: "Business Insights", cost: CREDIT_COSTS.BUSINESS_INSIGHTS, description: "Custom business intelligence reports" },
     ],
     bizmap: [
-      { name: "AI Chat Message", cost: 1, description: "Every message in Business Planning mode" },
-      { name: "Product-Market Fit Lab", cost: 8, description: "Complete PMF analysis with recommendations" },
-      { name: "Tech Stack Generator", cost: 3, description: "Custom tech stack for your startup" },
-      { name: "Launch Report", cost: 5, description: "Comprehensive business launch roadmap" },
-      { name: "Prompt Generation", cost: 2, description: "AI-generated custom prompts" },
+      { name: "AI Chat Message", cost: CREDIT_COSTS.AI_CHAT_MESSAGE, description: "Every message in Business Planning mode" },
+      { name: "Product-Market Fit Lab", cost: CREDIT_COSTS.PMF_ANALYSIS, description: "Complete PMF analysis with recommendations" },
+      { name: "Tech Stack Generator", cost: CREDIT_COSTS.TECH_STACK_GENERATION, description: "Custom tech stack for your startup" },
+      { name: "Launch Report", cost: CREDIT_COSTS.LAUNCH_REPORT, description: "Comprehensive business launch roadmap" },
+      { name: "Prompt Generation", cost: CREDIT_COSTS.PROMPT_GENERATION, description: "AI-generated custom prompts" },
     ],
     insighta: [
-      { name: "Pitch Deck Analyzer", cost: 8, description: "AI analysis with actionable feedback" },
-      { name: "Email Template Generation", cost: 3, description: "Personalized investor outreach emails" },
-      { name: "Insighta Test", cost: 8, description: "Fundraising readiness assessment" },
-      { name: "Investor Matching", cost: 5, description: "Find VCs aligned with your startup" },
-      { name: "One-Pager Generation", cost: 3, description: "Professional one-page pitch document" },
+      { name: "Pitch Deck Analyzer", cost: CREDIT_COSTS.PITCH_DECK_ANALYZER, description: "AI analysis with actionable feedback" },
+      { name: "Email Template Generation", cost: CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION, description: "Personalized investor outreach emails" },
+      { name: "Insighta Test", cost: CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS, description: "Fundraising readiness assessment" },
+      { name: "Investor Matching", cost: CREDIT_COSTS.INVESTOR_MATCHING, description: "Find VCs aligned with your startup" },
+      { name: "One-Pager Generation", cost: CREDIT_COSTS.ONEPAGER_GENERATION, description: "Professional one-page pitch document" },
     ],
     community: [
       { name: "Find a Mentor", cost: 0, description: "Browse and connect with mentors", badge: "FREE" },

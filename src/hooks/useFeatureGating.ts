@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from './useSubscription';
 import { useCredits } from './useCredits';
+import { CREDIT_COSTS } from '@/config/constants';
 
 export interface FeatureAccess {
   hasAccess: boolean;
@@ -48,10 +49,10 @@ export function useFeatureGating() {
           professional: 150
         };
         
-        if (!hasCredits(1)) {
+        if (!hasCredits(CREDIT_COSTS.AI_CHAT_MESSAGE)) {
           return { 
             hasAccess: false, 
-            message: `Insufficient credits. You need 1 credit for BizMap AI conversations.`,
+            message: `Insufficient credits. You need ${CREDIT_COSTS.AI_CHAT_MESSAGE} credit for BizMap AI conversations.`,
             requiredTier: tier === 'free' ? 'creator' : undefined
           };
         }
@@ -239,20 +240,20 @@ export function useFeatureGating() {
         if (tier === 'free') {
           // Free tier: 1 generation/month (3 credits)
           // Check will be done at component level for usage limits
-          if (!hasCredits(3)) {
+          if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
             return {
               hasAccess: false,
-              message: 'Insufficient credits. You need 3 credits for Tech Stack generation. Upgrade to Creator for unlimited generations.',
+              message: `Insufficient credits. You need ${CREDIT_COSTS.TECH_STACK_GENERATION} credits for Tech Stack generation. Upgrade to Creator for unlimited generations.`,
               requiredTier: 'creator'
             };
           }
           return { hasAccess: true };
         }
         // Creator+ has unlimited (credit-gated)
-        if (!hasCredits(3)) {
+        if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
           return {
             hasAccess: false,
-            message: 'Insufficient credits. You need 3 credits for Tech Stack generation.',
+            message: `Insufficient credits. You need ${CREDIT_COSTS.TECH_STACK_GENERATION} credits for Tech Stack generation.`,
           };
         }
         return { hasAccess: true };
@@ -267,10 +268,10 @@ export function useFeatureGating() {
           };
         }
         // Creator+ has full access (8 credits)
-        if (!hasCredits(8)) {
+        if (!hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
           return {
             hasAccess: false,
-            message: 'Insufficient credits. You need 8 credits for PMF analysis.',
+            message: `Insufficient credits. You need ${CREDIT_COSTS.PMF_ANALYSIS} credits for PMF analysis.`,
           };
         }
         return { hasAccess: true };
@@ -284,20 +285,20 @@ export function useFeatureGating() {
         if (tier === 'free') {
           // Free tier: 1 assessment/month (8 credits)
           // Check will be done at component level for usage limits
-          if (!hasCredits(8)) {
+          if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
             return {
               hasAccess: false,
-              message: 'Insufficient credits. You need 8 credits for Insighta Test. Upgrade to Creator for unlimited assessments.',
+              message: `Insufficient credits. You need ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits for Insighta Test. Upgrade to Creator for unlimited assessments.`,
               requiredTier: 'creator'
             };
           }
           return { hasAccess: true };
         }
         // Creator+ has unlimited (credit-gated)
-        if (!hasCredits(8)) {
+        if (!hasCredits(CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS)) {
           return {
             hasAccess: false,
-            message: 'Insufficient credits. You need 8 credits for Insighta Test.',
+            message: `Insufficient credits. You need ${CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits for Insighta Test.`,
           };
         }
         return { hasAccess: true };
@@ -312,10 +313,10 @@ export function useFeatureGating() {
           };
         }
         // Professional tier has full matching (5 credits)
-        if (!hasCredits(5)) {
+        if (!hasCredits(CREDIT_COSTS.INVESTOR_MATCHING)) {
           return {
             hasAccess: false,
-            message: 'Insufficient credits. You need 5 credits for investor matching.',
+            message: `Insufficient credits. You need ${CREDIT_COSTS.INVESTOR_MATCHING} credits for investor matching.`,
           };
         }
         return { hasAccess: true };
@@ -334,10 +335,10 @@ export function useFeatureGating() {
           };
         }
         // Creator+ has full access (8 credits)
-        if (!hasCredits(8)) {
+        if (!hasCredits(CREDIT_COSTS.PITCH_DECK_ANALYZER)) {
           return {
             hasAccess: false,
-            message: `Insufficient credits. Pitch Deck Analyzer costs 8 credits. Your balance: ${balance}`,
+            message: `Insufficient credits. Pitch Deck Analyzer costs ${CREDIT_COSTS.PITCH_DECK_ANALYZER} credits. Your balance: ${balance}`,
           };
         }
         return { hasAccess: true };
@@ -352,10 +353,10 @@ export function useFeatureGating() {
           };
         }
         // Creator+ has full access (3 credits)
-        if (!hasCredits(3)) {
+        if (!hasCredits(CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION)) {
           return {
             hasAccess: false,
-            message: `Insufficient credits. Email generation costs 3 credits. Your balance: ${balance}`,
+            message: `Insufficient credits. Email generation costs ${CREDIT_COSTS.EMAIL_TEMPLATE_GENERATION} credits. Your balance: ${balance}`,
           };
         }
         return { hasAccess: true };

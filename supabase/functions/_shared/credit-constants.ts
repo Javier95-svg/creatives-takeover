@@ -37,6 +37,11 @@ export const CREDIT_COSTS = {
   // Other Premium Features
   PDF_EXPORT: 3,
   ADVANCED_ANALYTICS: 5,
+
+  // Insighta + BizMap Add-ons
+  PITCH_DECK_ANALYZER: 8,
+  EMAIL_TEMPLATE_GENERATION: 3,
+  PROMPT_GENERATION: 2,
 } as const;
 
 // Type for credit cost feature names

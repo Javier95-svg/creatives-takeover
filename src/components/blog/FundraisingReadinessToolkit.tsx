@@ -15,8 +15,8 @@ import { toast } from "sonner";
 import { useCredits } from "@/hooks/useCredits";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useSubscription } from "@/hooks/useSubscription";
-import { CreditGate } from "@/components/CreditGate";
-import { CREDIT_COSTS } from "@/config/constants";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
+import { useCreditActions } from "@/hooks/useCreditActions";
 
 interface Criterion {
   id: string;
@@ -184,9 +184,11 @@ const scoreLabels: { [key: number]: string } = {
 const FundraisingReadinessToolkit = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { hasCredits, balance } = useCredits();
+  const { balance, refreshBalance } = useCredits();
+  const { ensureCredits, handleCreditError } = useCreditActions();
   const { checkFeatureAccess } = useFeatureGating();
   const { subscriptionData } = useSubscription();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const [scores, setScores] = useState<{ [key: string]: number }>({
     mvp: 0,
     feedback: 0,
@@ -197,7 +199,6 @@ const FundraisingReadinessToolkit = () => {
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const averageScore = useMemo(() => {
@@ -261,19 +262,20 @@ const FundraisingReadinessToolkit = () => {
       return;
     }
 
-    // Check feature access and credits
-    const requiredCredits = CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS;
+      // Check feature access and credits
+      const requiredCredits = ensureCredits('FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' });
     const featureAccess = checkFeatureAccess('insighta_test');
     if (!featureAccess.hasAccess) {
-      toast.error(featureAccess.message || "Upgrade to Creator tier for unlimited Insighta Test assessments.");
-      setCreditGateOpen(true);
+      openUpgradePrompt({
+        reason: 'feature',
+        featureName: 'Insighta Test',
+        requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
+        description: featureAccess.message,
+      });
       return;
     }
 
-    if (!hasCredits(requiredCredits)) {
-      setCreditGateOpen(true);
-      return;
-    }
+      if (requiredCredits === null) return;
 
     // Check usage limits for free tier (1/month)
     const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
@@ -288,8 +290,14 @@ const FundraisingReadinessToolkit = () => {
         if (!usageError && usageData) {
           const usage = usageData as { current_usage: number; limit: number; remaining: number };
           if (usage.remaining <= 0 && usage.limit > 0) {
-            toast.error("You've used your 1 free Insighta Test this month. Upgrade to Creator for unlimited assessments.");
-            setCreditGateOpen(true);
+            openUpgradePrompt({
+              reason: 'limit',
+              featureName: 'Insighta Test',
+              requiredTier: 'creator',
+              limit: usage.limit,
+              limitLabel: 'Insighta Test assessments',
+              description: "You've used your free Insighta Test this month. Upgrade to keep assessing your readiness.",
+            });
             return;
           }
         }
@@ -311,22 +319,19 @@ const FundraisingReadinessToolkit = () => {
         }
       });
 
-      if (error) {
-        // Handle credit errors specifically
-        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
-          setCreditGateOpen(true);
-          throw new Error('Insufficient credits');
+        if (error) {
+          if (handleCreditError(error, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
+            throw new Error('Insufficient credits');
+          }
+          throw error;
         }
-        throw error;
-      }
 
-      if (data?.error) {
-        if (data.error.includes('credits') || data.required) {
-          setCreditGateOpen(true);
-          throw new Error('Insufficient credits');
+        if (data?.error) {
+          if (handleCreditError(null, data, 'FUNDRAISING_READINESS_ANALYSIS', { featureName: 'Insighta Test' })) {
+            throw new Error('Insufficient credits');
+          }
+          throw new Error(data.error);
         }
-        throw new Error(data.error);
-      }
 
       setAiAnalysis(data as AIAnalysis);
       
@@ -339,8 +344,9 @@ const FundraisingReadinessToolkit = () => {
         });
       }
       
-      toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
-    } catch (error) {
+        toast.success(`Analysis complete! (Used ${requiredCredits} credits)`);
+        await refreshBalance();
+      } catch (error) {
       console.error('Analysis error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze readiness. Please try again.';
       setAnalysisError(errorMessage);
@@ -766,14 +772,8 @@ const FundraisingReadinessToolkit = () => {
         )}
       </div>
 
-      <CreditGate
-        isOpen={creditGateOpen}
-        onClose={() => setCreditGateOpen(false)}
-        requiredCredits={CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS}
-        feature="Fundraising Readiness Analysis"
-      />
-    </section>
-  );
-};
+      </section>
+    );
+  };
 
 export default FundraisingReadinessToolkit;

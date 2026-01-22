@@ -42,7 +42,13 @@ export const SAMUEL_STARKMAN_USERNAME = 'samuelstarkman'; // Username based on f
 // Nic M Rayce's email constant
 export const NIC_M_RAYCE_EMAIL = 'nicmrayce@gmail.com';
 
-export const useMessaging = () => {
+type UseMessagingOptions = {
+  autoLoad?: boolean;
+  suppressLoadErrors?: boolean;
+};
+
+export const useMessaging = (options: UseMessagingOptions = {}) => {
+  const { autoLoad = true, suppressLoadErrors = false } = options;
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
@@ -123,7 +129,7 @@ export const useMessaging = () => {
 
   // Load user's conversations
   useEffect(() => {
-    if (!user) return;
+    if (!user || !autoLoad) return;
 
     const loadConversations = async () => {
       try {
@@ -139,7 +145,9 @@ export const useMessaging = () => {
         setConversations(data || []);
       } catch (error) {
         logError('Error loading conversations', error);
-        toast.error('Failed to load conversations. Please refresh the page.');
+        if (!suppressLoadErrors) {
+          toast.error('Failed to load conversations. Please refresh the page.');
+        }
       }
     };
 
@@ -164,7 +172,7 @@ export const useMessaging = () => {
     return () => {
       supabase.removeChannel(conversationSubscription);
     };
-  }, [user]);
+  }, [user, autoLoad, suppressLoadErrors]);
 
   // Load messages for active conversation
   useEffect(() => {

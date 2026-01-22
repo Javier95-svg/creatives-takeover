@@ -16,7 +16,7 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { useChatSessions, ChatSession } from "@/hooks/useChatSessions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCredits } from "@/hooks/useCredits";
-import { CreditGate } from "@/components/CreditGate";
+import { useCreditActions } from "@/hooks/useCreditActions";
 import { useFeedbackModal } from "@/hooks/useFeedbackModal";
 import { FeedbackQuestionnaire } from "@/components/FeedbackQuestionnaire";
 import { AudioRecorder } from "@/components/AudioRecorder";
@@ -65,7 +65,8 @@ const BizMapAI = () => {
   ]);
 
   const { user, isAuthenticated } = useAuth();
-  const { balance, hasCredits, handleCreditDeduction, CREDIT_COSTS } = useCredits();
+  const { balance, refreshBalance, CREDIT_COSTS } = useCredits();
+  const { ensureCredits, handleCreditError } = useCreditActions();
   const { generateReport } = useChatBotStore();
   const [showExamplesModal, setShowExamplesModal] = useState(false);
   
@@ -162,8 +163,6 @@ const BizMapAI = () => {
 
   const { showFeedback, feedbackCompleted, closeFeedback, completeFeedback } = useFeedbackModal(currentStep === wizardSteps.length);
   const { hasPendingCredits } = useFeedbackCredits();
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{ type: 'report' | 'asset'; assetType?: string } | null>(null);
   const {
     currentSessionId,
     setCurrentSessionId,
@@ -480,19 +479,16 @@ const BizMapAI = () => {
 
   // Simplified launch report generation - single step, fixed cost
   const generateLaunchReport = async (answers: any, isFreeForFeedback = false) => {
-    // Check authentication and credits (unless it's free for feedback)
-    if (!isAuthenticated && !isFreeForFeedback && !hasCredits(CREDIT_COSTS.LAUNCH_REPORT)) {
-      setPendingAction({ type: 'report' });
-      setCreditGateOpen(true);
+    if (!isAuthenticated) {
+      toast.error("Please sign in to generate a launch report.");
       return;
     }
 
     const reportCost = CREDIT_COSTS.LAUNCH_REPORT;
 
-    if (!isFreeForFeedback && !hasCredits(reportCost)) {
-      setPendingAction({ type: 'report' });
-      setCreditGateOpen(true);
-      return;
+    if (!isFreeForFeedback) {
+      const requiredCredits = ensureCredits('LAUNCH_REPORT', { featureName: 'Launch Report Generation' });
+      if (requiredCredits === null) return;
     }
 
     try {
@@ -512,6 +508,9 @@ const BizMapAI = () => {
 
       if (error) {
         console.error('Error generating launch report:', error);
+        if (handleCreditError(error, data, 'LAUNCH_REPORT', { featureName: 'Launch Report Generation' })) {
+          return;
+        }
         
         // Try fallback but make it comprehensive
         const fallbackReport = generateFallbackReport(answers);
@@ -521,15 +520,12 @@ const BizMapAI = () => {
       }
 
       if (data?.success) {
-        // Deduct credits for authenticated users (unless it's free for feedback)
-        if (isAuthenticated && !isFreeForFeedback) {
-          handleCreditDeduction(reportCost);
-        }
         const successMessage = isFreeForFeedback ? 
           "FREE Launch Report generated successfully! 🎉" : 
           `Launch Report generated successfully! (Used ${reportCost} credits)`;
         toast.success(successMessage);
         await computeAndStoreSuccessScore(answers);
+        await refreshBalance();
         
         // Auto-generate 30-day roadmap with wizard answers
         if (currentSessionId && user) {
@@ -555,6 +551,9 @@ const BizMapAI = () => {
         
         return data.report;
       } else {
+        if (handleCreditError(null, data, 'LAUNCH_REPORT', { featureName: 'Launch Report Generation' })) {
+          return;
+        }
         console.error('API returned error:', data?.error);
         const fallbackReport = generateFallbackReport(answers);
         toast.success("Generated your Launch Report successfully!");
@@ -575,12 +574,8 @@ const BizMapAI = () => {
 
   // Generate post-report assets (outreach email, social posts, landing page)
   const generateAsset = async (type: 'outreach' | 'social' | 'landing') => {
-    // Check if user has sufficient credits
-    if (!hasCredits(CREDIT_COSTS.ASSET_GENERATION)) {
-      setPendingAction({ type: 'asset', assetType: type });
-      setCreditGateOpen(true);
-      return;
-    }
+    const requiredCredits = ensureCredits('ASSET_GENERATION', { featureName: 'Asset Generation' });
+    if (requiredCredits === null) return;
 
     try {
       setIsLoading(true);
@@ -600,13 +595,16 @@ const BizMapAI = () => {
 
       if (error) {
         console.error('Error generating asset:', error);
+        if (handleCreditError(error, data, 'ASSET_GENERATION', { featureName: 'Asset Generation' })) {
+          return;
+        }
         toast.error("Failed to generate asset. Please try again.");
         return;
       }
 
       if (data?.success) {
-        handleCreditDeduction(CREDIT_COSTS.ASSET_GENERATION);
         toast.success(`Generated ${label} successfully! (Used ${CREDIT_COSTS.ASSET_GENERATION} credits)`);
+        await refreshBalance();
         
         setMessages(prev => [...prev, { 
           type: 'assistant', 
@@ -1654,29 +1652,6 @@ Subject: "Quick question about [their pain point]"
           </div>
         </div>
       </div>
-
-      {/* Credit Gate Modal */}
-      <CreditGate
-        isOpen={creditGateOpen}
-        onClose={() => {
-          setCreditGateOpen(false);
-          setPendingAction(null);
-        }}
-        requiredCredits={
-          pendingAction?.type === 'report' 
-            ? CREDIT_COSTS.LAUNCH_REPORT 
-            : CREDIT_COSTS.ASSET_GENERATION
-        }
-        feature={
-          pendingAction?.type === 'report' 
-            ? 'Launch Report Generation' 
-            : `Asset Generation (${pendingAction?.assetType || 'unknown'})`
-        }
-        onPurchase={() => {
-          // Direct users to upgrade their plan instead of purchasing credits
-          window.location.href = '/pricing';
-        }}
-      />
 
       <FeedbackQuestionnaire 
         open={showFeedback}

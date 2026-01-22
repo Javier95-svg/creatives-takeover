@@ -3,13 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCredits } from '@/hooks/useCredits';
+import { useCreditActions } from '@/hooks/useCreditActions';
 import { CREDIT_COSTS } from '@/config/constants';
 import { MarketValidationScore } from '@/types/founderOS';
 
 export const useMarketValidation = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { hasCredits } = useCredits();
+  const { refreshBalance } = useCredits();
+  const { ensureCredits, handleCreditError } = useCreditActions();
 
   // Fetch validation scores
   const { data: validationScores = [], isLoading } = useQuery({
@@ -59,9 +61,9 @@ export const useMarketValidation = () => {
       
       // Check credits before proceeding (skip for admin)
       if (!isAdmin) {
-        const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
-        if (!hasCredits(requiredCredits)) {
-          throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
+        const requiredCredits = ensureCredits('MARKET_VALIDATION', { featureName: 'Market Validation' });
+        if (requiredCredits === null) {
+          throw new Error('Insufficient credits');
         }
       }
 
@@ -75,19 +77,15 @@ export const useMarketValidation = () => {
       });
 
       if (error) {
-        // Handle credit errors specifically (skip for admin)
-        const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
-        if (!isAdmin && (error.status === 402 || (error.message && error.message.includes('credits')))) {
-          throw new Error(`Insufficient credits. Market validation requires ${requiredCredits} credits.`);
+        if (!isAdmin && handleCreditError(error, data, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
+          throw new Error('Insufficient credits');
         }
         throw error;
       }
 
       if (data?.error) {
-        // Handle credit errors specifically (skip for admin)
-        if (!isAdmin && (data.error.includes('credits') || data.required)) {
-          const requiredCredits = CREDIT_COSTS.MARKET_VALIDATION;
-          throw new Error(`Insufficient credits. Market validation requires ${data.required || requiredCredits} credits.`);
+        if (!isAdmin && handleCreditError(null, data, 'MARKET_VALIDATION', { featureName: 'Market Validation' })) {
+          throw new Error('Insufficient credits');
         }
         throw new Error(data.error);
       }
@@ -101,6 +99,7 @@ export const useMarketValidation = () => {
         toast.success('Market validation completed! (Admin - no credits used)');
       } else {
         toast.success(`Market validation completed! (Used ${CREDIT_COSTS.MARKET_VALIDATION} credits)`);
+        refreshBalance();
       }
     },
     onError: (error) => {

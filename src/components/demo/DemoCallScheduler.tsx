@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock, Users, Globe, Lock } from 'lucide-react';
 import { useDemoCalls } from '@/hooks/useDemoCalls';
-import { useCredits } from '@/hooks/useCredits';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { CREDIT_COSTS } from '@/config/constants';
 
 interface DemoCallSchedulerProps {
   sprintId?: string;
@@ -22,7 +23,7 @@ const DemoCallScheduler: React.FC<DemoCallSchedulerProps> = ({
   onCancel
 }) => {
   const { createCall, loading } = useDemoCalls();
-  const { hasCredits, CREDIT_COSTS, handleCreditDeduction } = useCredits();
+  const { ensureCredits, deductCredits } = useCreditActions();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -35,9 +36,8 @@ const DemoCallScheduler: React.FC<DemoCallSchedulerProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!hasCredits(CREDIT_COSTS.PREMIUM_FEATURE)) {
-      return;
-    }
+    const requiredCredits = ensureCredits('PREMIUM_FEATURE', { featureName: 'Demo Call Scheduling' });
+    if (requiredCredits === null) return;
 
     setSubmitting(true);
 
@@ -54,8 +54,10 @@ const DemoCallScheduler: React.FC<DemoCallSchedulerProps> = ({
       });
 
       if (call) {
-        handleCreditDeduction(CREDIT_COSTS.PREMIUM_FEATURE);
-        onScheduled?.();
+        const deducted = await deductCredits('PREMIUM_FEATURE', { featureName: 'Demo Call Scheduling' });
+        if (deducted) {
+          onScheduled?.();
+        }
       }
     } finally {
       setSubmitting(false);

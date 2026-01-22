@@ -112,7 +112,7 @@ export function useCredits() {
         await fetchBalance();
         // Only show welcome toast if this was a new initialization (not a re-initialization)
         if (data?.isNewUser) {
-          toast.success('Welcome! You received 5 free credits to get started!');
+          toast.success('Welcome! You received 10 free credits to get started!');
         }
         return true;
       }

@@ -24,7 +24,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
   // #endregion
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation, getUserIdByEmail } = useMessaging();
+  const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   const averageRating = mentor.rating || 0;
   const reviewCount = mentor.review_count || 0;

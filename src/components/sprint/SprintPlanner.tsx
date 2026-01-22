@@ -17,9 +17,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
+import { useCreditActions } from '@/hooks/useCreditActions';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { CreditGate } from '@/components/CreditGate';
-import { CREDIT_COSTS } from '@/config/constants';
 import CommitmentCreator from './CommitmentCreator';
 import CommitmentCard from './CommitmentCard';
 
@@ -35,7 +34,8 @@ interface SprintPlannerProps {
 const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, businessPlanData }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasCredits } = useCredits();
+  const { refreshBalance } = useCredits();
+  const { ensureCredits, handleCreditError } = useCreditActions();
   const { createSprint, createSprintTasks, sprints, fetchSprints } = useSprints();
   const { checkFeatureAccess } = useFeatureGating();
   const { 
@@ -49,7 +49,6 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showCommitmentCreator, setShowCommitmentCreator] = useState(false);
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: businessPlanData?.answers?.overview ? 
@@ -85,11 +84,10 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
     }
 
     // Check credits before proceeding
-    const requiredCredits = CREDIT_COSTS.SPRINT_TASK_GENERATION;
-    if (!hasCredits(requiredCredits)) {
-      setCreditGateOpen(true);
-      return;
-    }
+    const requiredCredits = ensureCredits('SPRINT_TASK_GENERATION', {
+      featureName: 'Sprint Task Generation',
+    });
+    if (requiredCredits === null) return;
 
     try {
       setIsGenerating(true);
@@ -107,16 +105,14 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
 
       if (error) {
         // Handle credit errors specifically
-        if (error.status === 402 || (error.message && error.message.includes('credits'))) {
-          setCreditGateOpen(true);
+        if (handleCreditError(error, data, 'SPRINT_TASK_GENERATION', { featureName: 'Sprint Task Generation' })) {
           throw new Error('Insufficient credits');
         }
         throw error;
       }
 
       if (data?.error) {
-        if (data.error.includes('credits') || data.required) {
-          setCreditGateOpen(true);
+        if (handleCreditError(null, data, 'SPRINT_TASK_GENERATION', { featureName: 'Sprint Task Generation' })) {
           throw new Error('Insufficient credits');
         }
         throw new Error(data.error);
@@ -129,6 +125,7 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
           title: "Tasks Generated!",
           description: `Generated ${data.tasks.length} actionable tasks (Used ${requiredCredits} credits)`,
         });
+        await refreshBalance();
       } else {
         toast({
           title: "No Tasks Generated",
@@ -642,12 +639,6 @@ const SprintPlanner: React.FC<SprintPlannerProps> = ({ onSprintCreated, business
         </CardContent>
       </Card>
 
-      <CreditGate
-        isOpen={creditGateOpen}
-        onClose={() => setCreditGateOpen(false)}
-        requiredCredits={CREDIT_COSTS.SPRINT_TASK_GENERATION}
-        feature="Sprint Task Generation"
-      />
     </div>
   );
 };

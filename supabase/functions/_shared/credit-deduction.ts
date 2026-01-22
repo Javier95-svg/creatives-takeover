@@ -233,10 +233,10 @@ async function checkAndResetMonthlyQuota(userId: string, supabase: any): Promise
 
       // Default quota amounts by tier (can be customized)
       const quotaAmounts: Record<string, number> = {
-        'free': 5,
-        'creator': 20,
-        'professional': 50,
-        'admin': 100
+        'free': 10,
+        'creator': 50,
+        'professional': 150,
+        'admin': 150
       };
 
       // Prefer subscriber tier if available, otherwise use profile tier

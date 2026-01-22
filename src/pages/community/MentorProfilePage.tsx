@@ -9,6 +9,7 @@ import { MentorProfile as MentorProfileType } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { ArrowLeft, Loader2, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ const MentorProfilePage = () => {
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
   const { fetchMentorById, fetchMentorBySlug } = useMentors();
   const { checkFeatureAccess } = useFeatureGating();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const [mentor, setMentor] = useState<MentorProfileType | null>(null);
   const [loadingMentor, setLoadingMentor] = useState(true);
 
@@ -149,10 +151,12 @@ const MentorProfilePage = () => {
     try {
       const access = checkFeatureAccess('discovery_calls_mentors');
       if (!access.hasAccess) {
-        toast.error(access.message || 'Upgrade to Creator tier or higher to book discovery calls with mentors.');
-        if (access.requiredTier) {
-          navigate('/pricing');
-        }
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: 'Mentor discovery calls',
+          requiredTier: access.requiredTier as 'creator' | 'professional' | undefined,
+          description: access.message,
+        });
         return;
       }
     } catch (error) {

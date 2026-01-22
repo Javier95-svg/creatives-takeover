@@ -3,9 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { PitchDeckAnalysis, calculateOverallScore, getVerdictFromScore } from '@/types/pitchDeckAnalyzer';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { useCredits } from '@/hooks/useCredits';
 
 export const usePitchDeckAnalyzer = () => {
   const { user } = useAuth();
+  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { refreshBalance } = useCredits();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PitchDeckAnalysis | null>(null);
@@ -21,6 +25,12 @@ export const usePitchDeckAnalyzer = () => {
       setUploading(true);
       setAnalyzing(false);
       setError(null);
+
+      const requiredCredits = ensureCredits('PITCH_DECK_ANALYZER', { featureName: 'Pitch Deck Analyzer' });
+      if (requiredCredits === null) {
+        setUploading(false);
+        return null;
+      }
 
       // Step 1: Upload PDF to Supabase Storage
       const fileName = `${user.id}/${Date.now()}_${file.name}`;
@@ -80,6 +90,11 @@ export const usePitchDeckAnalyzer = () => {
 
       if (analysisError) {
         console.error('Analysis error:', analysisError);
+        if (handleCreditError(analysisError, analysisData, 'PITCH_DECK_ANALYZER', { featureName: 'Pitch Deck Analyzer' })) {
+          setUploading(false);
+          setAnalyzing(false);
+          return null;
+        }
         throw new Error(`Analysis failed: ${analysisError.message}`);
       }
 
@@ -148,6 +163,7 @@ export const usePitchDeckAnalyzer = () => {
       setAnalysis(analysisResult);
       setAnalyzing(false);
       toast.success('Analysis complete!');
+      refreshBalance();
 
       return analysisResult;
     } catch (err: any) {

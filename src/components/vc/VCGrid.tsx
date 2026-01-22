@@ -3,9 +3,10 @@ import VCCard from "./VCCard";
 
 interface VCGridProps {
   vcs: Investor[];
+  canViewProfiles?: boolean;
 }
 
-const VCGrid = ({ vcs }: VCGridProps) => {
+const VCGrid = ({ vcs, canViewProfiles = true }: VCGridProps) => {
   if (vcs.length === 0) {
     return (
       <div className="text-center py-12">
@@ -20,7 +21,7 @@ const VCGrid = ({ vcs }: VCGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {vcs.map((vc) => (
-        <VCCard key={vc.id} vc={vc} />
+        <VCCard key={vc.id} vc={vc} canViewProfile={canViewProfiles} />
       ))}
     </div>
   );

@@ -9,8 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useCredits } from '@/hooks/useCredits';
-import { CreditGate } from '@/components/CreditGate';
-import { CREDIT_COSTS } from '@/config/constants';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,11 +49,12 @@ const TechStack: React.FC = () => {
   const navigate = useNavigate();
   const { subscriptionData } = useSubscription();
   const { checkFeatureAccess } = useFeatureGating();
-  const { hasCredits } = useCredits();
+  const { refreshBalance } = useCredits();
+  const { ensureCredits, deductCredits } = useCreditActions();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const { toast } = useToast();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
   
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
   const hasPaidAccess = user && ['creator', 'professional'].includes(currentTier);
@@ -120,19 +121,12 @@ const TechStack: React.FC = () => {
   const budget = useMemo(() => calculateBudget(), [selectedProducts]);
 
   const handleSeeBudget = async () => {
-    console.log('🔍 Debug - Button clicked');
-    console.log('🔍 Debug - User:', user);
-    console.log('🔍 Debug - Selected count:', selectedCount, '/', techStackData.length);
-
     if (!user) {
-      console.log('❌ No user - redirecting to login');
       navigate('/login');
       return;
     }
 
-    // Require all categories to be selected
     if (selectedCount !== techStackData.length) {
-      console.log('❌ Not all categories selected');
       toast({
         title: "Selection Required",
         description: `Please select one product from all ${techStackData.length} categories to generate your budget.`,
@@ -141,64 +135,18 @@ const TechStack: React.FC = () => {
       return;
     }
 
-    console.log('✅ All categories selected - SHOWING BUDGET IMMEDIATELY');
-
-    // TEMPORARY: Skip all permission checks and show budget immediately
-    // This allows the admin to see the feature while we debug permission issues
-    setShowBudget(true);
-
-    toast({
-      title: "Budget Generated!",
-      description: "Scroll down to view your tech stack budget and integration guide.",
-    });
-
-    // Optional: Still try to log usage in background (non-blocking)
-    setTimeout(async () => {
-      try {
-        console.log('🔍 Background: Attempting to track usage...');
-        await supabase.rpc('check_and_increment_usage', {
-          p_user_id: user.id,
-          p_feature_name: 'tech_stack_generations',
-          p_increment_by: 1
-        });
-        console.log('✅ Background: Usage tracked');
-      } catch (error) {
-        console.warn('⚠️ Background: Failed to track usage (non-critical):', error);
-      }
-    }, 100);
-
-    /* COMMENTED OUT - Will re-enable after fixing permissions
-    console.log('🔍 Checking feature access...');
-
-    // Check feature access and credits
     const featureAccess = checkFeatureAccess('tech_stack_generation');
-    console.log('🔍 Feature access:', featureAccess);
-
     if (!featureAccess.hasAccess) {
-      console.log('❌ No feature access');
-      toast({
-        title: "Upgrade Required",
+      openUpgradePrompt({
+        reason: 'feature',
+        featureName: 'Tech Stack Generator',
+        requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
         description: featureAccess.message || "Upgrade to Creator tier for unlimited Tech Stack generations.",
-        variant: "destructive",
       });
-      setCreditGateOpen(true);
       return;
     }
 
-    console.log('✅ Feature access granted');
-    console.log('🔍 Checking credits...');
-
-    if (!hasCredits(CREDIT_COSTS.TECH_STACK_GENERATION)) {
-      console.log('❌ Insufficient credits');
-      setCreditGateOpen(true);
-      return;
-    }
-
-    console.log('✅ Has credits');
-
-    // Check usage limits for free tier (1/month)
     if (currentTier === 'free') {
-      console.log('🔍 Free tier - checking usage limits...');
       try {
         const { data: usageData, error: usageError } = await supabase
           .rpc('get_feature_usage', {
@@ -206,78 +154,47 @@ const TechStack: React.FC = () => {
             p_feature_name: 'tech_stack_generations'
           });
 
-        console.log('🔍 Usage data:', usageData, 'Error:', usageError);
-
         if (!usageError && usageData) {
           const usage = usageData as { current_usage: number; limit: number; remaining: number };
           if (usage.remaining <= 0 && usage.limit > 0) {
-            console.log('❌ Usage limit reached');
-            toast({
-              title: "Usage Limit Reached",
-              description: "You've used your 1 free Tech Stack generation this month. Upgrade to Creator for unlimited generations.",
-              variant: "destructive",
+            openUpgradePrompt({
+              reason: 'limit',
+              limit: usage.limit,
+              limitLabel: 'Tech Stack generations',
+              featureName: 'Tech Stack Generator',
+              requiredTier: 'creator',
+              description: "You've used your free Tech Stack generation this month.",
             });
-            setCreditGateOpen(true);
             return;
           }
         }
       } catch (error) {
-        console.error('⚠️ Error checking usage:', error);
+        console.warn('Failed to check Tech Stack usage', error);
       }
     }
 
-    console.log('🔍 Attempting to deduct credits...');
+    const deducted = await deductCredits('TECH_STACK_GENERATION', {
+      featureName: 'Tech Stack Generation',
+      metadata: { selectedCategories: techStackData.length }
+    });
+    if (!deducted) return;
 
-    // Deduct credits and increment usage
     try {
-      const { data: creditData, error: creditError } = await supabase.functions.invoke('credit-service', {
-        body: {
-          action: 'deduct',
-          amount: CREDIT_COSTS.TECH_STACK_GENERATION,
-          feature: 'Tech Stack Generation'
-        }
-      });
-
-      console.log('🔍 Credit deduction response:', creditData, 'Error:', creditError);
-
-      if (creditError || !creditData?.success) {
-        console.log('❌ Credit deduction failed');
-        toast({
-          title: "Error",
-          description: "Failed to process. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('✅ Credits deducted');
-      console.log('🔍 Incrementing usage...');
-
-      // Increment usage
       await supabase.rpc('check_and_increment_usage', {
         p_user_id: user.id,
         p_feature_name: 'tech_stack_generations',
         p_increment_by: 1
       });
-
-      console.log('✅ Usage incremented');
-      console.log('✅ SHOWING BUDGET!');
-
-      setShowBudget(true);
-
-      toast({
-        title: "Budget Generated!",
-        description: "Scroll down to view your tech stack budget and integration guide.",
-      });
     } catch (error) {
-      console.error('❌ Error processing generation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process. Please try again.",
-        variant: "destructive",
-      });
+      console.warn('Failed to update Tech Stack usage', error);
     }
-    */
+
+    setShowBudget(true);
+    toast({
+      title: "Budget Generated!",
+      description: "Scroll down to view your tech stack budget and integration guide.",
+    });
+    await refreshBalance();
   };
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
@@ -341,12 +258,6 @@ const TechStack: React.FC = () => {
         />
       )}
 
-      <CreditGate
-        isOpen={creditGateOpen}
-        onClose={() => setCreditGateOpen(false)}
-        requiredCredits={CREDIT_COSTS.TECH_STACK_GENERATION}
-        feature="Tech Stack Generation"
-      />
     </div>
   );
 };

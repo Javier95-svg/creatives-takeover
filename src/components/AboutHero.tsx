@@ -35,19 +35,19 @@ const AboutHero = () => {
           }}>
             <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img src={solopreneurHero} alt="White woman solopreneur at a creative beach workspace, looking at her laptop with a gentle, natural smile under a colorful parasol" className="w-full h-auto object-cover aspect-square" loading="lazy" />
+                <img src={solopreneurHero} alt="White woman solopreneur at a creative beach workspace, looking at her laptop with a gentle, natural smile under a colorful parasol" className="w-full h-auto object-cover aspect-square" loading="eager" decoding="async" fetchPriority="high" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img src={solopreneurHeroMale} alt="African American solopreneur in an industrial loft studio with exposed brick and large windows" className="w-full h-auto object-cover aspect-square" loading="lazy" />
+                <img src={solopreneurHeroMale} alt="African American solopreneur in an industrial loft studio with exposed brick and large windows" className="w-full h-auto object-cover aspect-square" loading="lazy" decoding="async" fetchPriority="low" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img src={solopreneurHeroAsianTeen} alt="Teenage Asian founder in a colorful Tokyo co-working space with plants and neon accents" className="w-full h-auto object-cover aspect-square" loading="lazy" />
+                <img src={solopreneurHeroAsianTeen} alt="Teenage Asian founder in a colorful Tokyo co-working space with plants and neon accents" className="w-full h-auto object-cover aspect-square" loading="lazy" decoding="async" fetchPriority="low" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-border">
-                <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur in a warm library-style study with wood shelves and a vintage lamp" className="w-full h-auto object-cover aspect-square" loading="lazy" />
+                <img src={solopreneurHeroGrandpa} alt="Grandfather entrepreneur in a warm library-style study with wood shelves and a vintage lamp" className="w-full h-auto object-cover aspect-square" loading="lazy" decoding="async" fetchPriority="low" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
               </div>
           </div>

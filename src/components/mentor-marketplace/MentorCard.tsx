@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getCountryFlag } from "@/utils/countryFlags";
 import { useMessaging, SAMUEL_STARKMAN_EMAIL, SAMUEL_STARKMAN_USER_ID, SAMUEL_STARKMAN_USERNAME, NIC_M_RAYCE_EMAIL } from "@/hooks/useMessaging";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { generateMentorSlug } from "@/utils/mentorSlug";
@@ -25,7 +26,8 @@ interface MentorCardProps {
 export const MentorCard = ({ mentor, className }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { startConversation, getUserIdByEmail } = useMessaging();
+  const { openUpgradePrompt } = useUpgradePrompt();
+  const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
   const { checkFeatureAccess } = useFeatureGating();
   const hourlyRateFormatted = `$${(mentor.hourly_rate / 100).toFixed(0)}`;
   const mentorSlug = generateMentorSlug(mentor.name);
@@ -133,10 +135,12 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
     try {
       const access = checkFeatureAccess('discovery_calls_mentors');
       if (!access.hasAccess) {
-        toast.error(access.message || 'Upgrade to Creator tier or higher to book discovery calls with mentors.');
-        if (access.requiredTier) {
-          navigate('/pricing');
-        }
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: 'Mentor discovery calls',
+          requiredTier: access.requiredTier as 'creator' | 'professional' | undefined,
+          description: access.message,
+        });
         return;
       }
     } catch (error) {

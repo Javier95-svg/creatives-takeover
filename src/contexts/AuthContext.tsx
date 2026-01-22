@@ -168,7 +168,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
               }
               
-              // Only initialize credits for NEW users (5 free credits, or 150 for admin)
+              // Only initialize credits for NEW users (10 free credits, or 150 for admin)
               if (isNewProfile) {
                 try {
                   await supabase.functions.invoke('credit-service', {

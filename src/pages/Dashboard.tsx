@@ -6,13 +6,14 @@ import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { checkFeatureAccess } = useFeatureGating();
   const navigate = useNavigate();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const [useClassicDashboard, setUseClassicDashboard] = useState(false);
 
   // Load user's dashboard preference
@@ -45,10 +46,12 @@ const Dashboard = () => {
         fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dashboard.tsx:20',message:'Dashboard access check result',data:{hasAccess:access.hasAccess,message:access.message,requiredTier:access.requiredTier},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
         // #endregion
         if (!access.hasAccess) {
-          toast.error(access.message || 'Upgrade to Creator tier or higher to access the Dashboard.');
-          if (access.requiredTier) {
-            navigate('/pricing');
-          }
+          openUpgradePrompt({
+            reason: 'feature',
+            featureName: 'Dashboard',
+            requiredTier: access.requiredTier as 'creator' | 'professional' | undefined,
+            description: access.message,
+          });
         }
       } catch (error) {
         // #region agent log
@@ -57,7 +60,7 @@ const Dashboard = () => {
         console.error('Error checking dashboard access:', error);
       }
     }
-  }, [user, checkFeatureAccess, navigate]);
+  }, [user, checkFeatureAccess, openUpgradePrompt, navigate]);
 
   if (!user) {
     return (

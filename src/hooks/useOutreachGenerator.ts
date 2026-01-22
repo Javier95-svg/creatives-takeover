@@ -3,11 +3,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { OutreachGenerationRequest, OutreachGenerationResponse, OutreachMaterial } from '@/types/outreach';
 import { toast } from 'sonner';
 import { logError } from '@/lib/logger';
+import { useCreditActions } from '@/hooks/useCreditActions';
+import { useCredits } from '@/hooks/useCredits';
+import { CreditFeature } from '@/config/constants';
 
 export const useOutreachGenerator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedMaterial, setGeneratedMaterial] = useState<OutreachGenerationResponse | null>(null);
+  const { ensureCredits, handleCreditError } = useCreditActions();
+  const { refreshBalance } = useCredits();
+
+  const materialToFeature: Record<string, CreditFeature> = {
+    pitch_deck: 'PITCH_DECK_GENERATION',
+    cold_email: 'COLD_EMAIL_GENERATION',
+    one_pager: 'ONEPAGER_GENERATION',
+  };
+  const materialLabels: Record<string, string> = {
+    pitch_deck: 'Pitch Deck Generation',
+    cold_email: 'Cold Email Generation',
+    one_pager: 'One-Pager Generation',
+  };
 
   const generateMaterial = useCallback(async (
     request: OutreachGenerationRequest
@@ -16,13 +32,19 @@ export const useOutreachGenerator = () => {
     setError(null);
 
     try {
+      const featureKey = materialToFeature[request.material_type] || 'COLD_EMAIL_GENERATION';
+      const requiredCredits = ensureCredits(featureKey, { featureName: materialLabels[request.material_type] });
+      if (requiredCredits === null) {
+        throw new Error('Insufficient credits');
+      }
+
       const { data, error: invokeError } = await supabase.functions.invoke('outreach-generator', {
         body: request
       });
 
       if (invokeError) {
         // Handle credit errors specifically
-        if (invokeError.status === 402 || (invokeError.message && invokeError.message.includes('credits'))) {
+        if (handleCreditError(invokeError, data, featureKey, { featureName: materialLabels[request.material_type] })) {
           const errorMsg = 'Insufficient credits. Please upgrade your plan to get more credits.';
           setError(errorMsg);
           throw new Error(errorMsg);
@@ -31,7 +53,7 @@ export const useOutreachGenerator = () => {
       }
 
       if (data?.error) {
-        if (data.error.includes('credits') || data.required) {
+        if (handleCreditError(null, data, featureKey, { featureName: materialLabels[request.material_type] })) {
           const errorMsg = 'Insufficient credits';
           setError(errorMsg);
           throw new Error(errorMsg);
@@ -42,6 +64,7 @@ export const useOutreachGenerator = () => {
       const response: OutreachGenerationResponse = data as OutreachGenerationResponse;
       setGeneratedMaterial(response);
       toast.success(`Generated ${request.material_type.replace('_', ' ')} successfully!`);
+      refreshBalance();
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate material. Please try again.';

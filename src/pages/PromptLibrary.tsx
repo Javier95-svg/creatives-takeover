@@ -14,8 +14,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomPromptChains } from "@/hooks/useCustomPromptChains";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
-import { useCredits } from "@/hooks/useCredits";
-import { CreditGate } from "@/components/CreditGate";
+import { useCreditActions } from "@/hooks/useCreditActions";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 import { CREDIT_COSTS } from "@/config/constants";
 
 const PromptLibrary = () => {
@@ -28,9 +28,8 @@ const PromptLibrary = () => {
   const { user } = useAuth();
   const { publishedChains, fetchPublishedChains, loading: chainsLoading } = useCustomPromptChains();
   const { checkFeatureAccess } = useFeatureGating();
-  const { hasCredits } = useCredits();
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
-  const [pendingExport, setPendingExport] = useState<{ type: 'copy' | 'bizmap'; prompt: string } | null>(null);
+  const { deductCredits } = useCreditActions();
+  const { openUpgradePrompt } = useUpgradePrompt();
 
   const userTier = subscriptionData.subscription_tier || "free";
 
@@ -85,21 +84,19 @@ const PromptLibrary = () => {
       // Check if user can export premium prompts
       const exportAccess = checkFeatureAccess('prompt_library_export');
       if (!exportAccess.hasAccess) {
-        toast.error(exportAccess.message || "Upgrade to Creator tier to export premium prompts.");
-        setPendingExport({ type: 'copy', prompt });
-        setCreditGateOpen(true);
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: 'Prompt Library exports',
+          requiredTier: exportAccess.requiredTier as 'creator' | 'professional' | undefined,
+          description: exportAccess.message,
+        });
         return;
       }
 
-      // Check credits for premium prompt export
-      if (!hasCredits(CREDIT_COSTS.PREMIUM_FEATURE)) {
-        setPendingExport({ type: 'copy', prompt });
-        setCreditGateOpen(true);
-        return;
-      }
+      const deducted = await deductCredits('PROMPT_GENERATION', { featureName: 'Prompt Generation' });
+      if (!deducted) return;
 
-      // Deduct credits (would be done via edge function in production)
-      toast.success(`Premium prompt copied! (Used ${CREDIT_COSTS.PREMIUM_FEATURE} credits)`);
+      toast.success(`Premium prompt copied! (Used ${CREDIT_COSTS.PROMPT_GENERATION} credits)`);
     }
     
     navigator.clipboard.writeText(prompt);
@@ -111,21 +108,19 @@ const PromptLibrary = () => {
       // Check if user can export premium prompts
       const exportAccess = checkFeatureAccess('prompt_library_export');
       if (!exportAccess.hasAccess) {
-        toast.error(exportAccess.message || "Upgrade to Creator tier to export premium prompts.");
-        setPendingExport({ type: 'bizmap', prompt });
-        setCreditGateOpen(true);
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: 'Prompt Library exports',
+          requiredTier: exportAccess.requiredTier as 'creator' | 'professional' | undefined,
+          description: exportAccess.message,
+        });
         return;
       }
 
-      // Check credits for premium prompt export
-      if (!hasCredits(CREDIT_COSTS.PREMIUM_FEATURE)) {
-        setPendingExport({ type: 'bizmap', prompt });
-        setCreditGateOpen(true);
-        return;
-      }
+      const deducted = await deductCredits('PROMPT_GENERATION', { featureName: 'Prompt Generation' });
+      if (!deducted) return;
 
-      // Deduct credits (would be done via edge function in production)
-      toast.success(`Premium prompt loaded! (Used ${CREDIT_COSTS.PREMIUM_FEATURE} credits)`);
+      toast.success(`Premium prompt loaded! (Used ${CREDIT_COSTS.PROMPT_GENERATION} credits)`);
     }
 
     localStorage.setItem("bizmap_prompt", prompt);
@@ -569,25 +564,6 @@ const PromptLibrary = () => {
         </div>
       </div>
       <Footer />
-      <CreditGate
-        isOpen={creditGateOpen}
-        onClose={() => {
-          setCreditGateOpen(false);
-          setPendingExport(null);
-        }}
-        requiredCredits={CREDIT_COSTS.PREMIUM_FEATURE}
-        feature="Premium Prompt Export"
-        onPurchase={() => {
-          if (pendingExport) {
-            if (pendingExport.type === 'copy') {
-              copyPrompt(pendingExport.prompt, true);
-            } else {
-              useInBizMap(pendingExport.prompt, true);
-            }
-            setPendingExport(null);
-          }
-        }}
-      />
     </div>
   );
 };

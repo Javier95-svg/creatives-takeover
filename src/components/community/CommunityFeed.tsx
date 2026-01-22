@@ -14,12 +14,14 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useBadgeSystem } from "@/hooks/useBadgeSystem";
 import { useFeatureGating } from "@/hooks/useFeatureGating";
+import { useUpgradePrompt } from "@/contexts/UpgradePromptContext";
 
 const CommunityFeed: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { checkAndAwardBadges } = useBadgeSystem(user?.id);
   const { checkFeatureAccess } = useFeatureGating();
+  const { openUpgradePrompt } = useUpgradePrompt();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -403,7 +405,14 @@ const CommunityFeed: React.FC = () => {
                       {postingAccess.message || 'Upgrade to Creator tier or higher to create posts in the community'}
                     </p>
                     <Button 
-                      onClick={() => navigate('/pricing')}
+                      onClick={() =>
+                        openUpgradePrompt({
+                          reason: 'feature',
+                          featureName: 'Community posts',
+                          requiredTier: postingAccess.requiredTier as 'creator' | 'professional' | undefined,
+                          description: postingAccess.message,
+                        })
+                      }
                       className="gap-2"
                     >
                       <Sparkles className="w-4 h-4" />

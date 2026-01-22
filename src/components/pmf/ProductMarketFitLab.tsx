@@ -9,9 +9,9 @@ import { Loader2, Target, Users, CheckCircle2, FileText, FlaskConical, TrendingU
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
+import { useCreditActions } from '@/hooks/useCreditActions';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
-import { CreditGate } from '@/components/CreditGate';
-import { CREDIT_COSTS } from '@/config/constants';
+import { useUpgradePrompt } from '@/contexts/UpgradePromptContext';
 import { supabase } from '@/integrations/supabase/client';
 import PMFScore from './PMFScore';
 import PMFAnalysisResults from './PMFAnalysisResults';
@@ -151,9 +151,10 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { hasCredits } = useCredits();
+  const { refreshBalance } = useCredits();
+  const { ensureCredits, handleCreditError } = useCreditActions();
   const { checkFeatureAccess } = useFeatureGating();
-  const [creditGateOpen, setCreditGateOpen] = useState(false);
+  const { openUpgradePrompt } = useUpgradePrompt();
   
   const [structuredFormData, setStructuredFormData] = useState<any>(null);
 
@@ -170,13 +171,9 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
         console.error('[PMF Lab] Toast context not available');
         throw new Error('Toast context is required for PMF Lab');
       }
-      if (!hasCredits) {
-        console.error('[PMF Lab] Credits hook not available');
-      }
       console.log('[PMF Lab] Component initialized successfully', { 
         hasUser: !!user, 
-        hasToast: !!toast,
-        hasCredits: typeof hasCredits === 'boolean'
+        hasToast: !!toast
       });
     } catch (error) {
       console.error('[PMF Lab] Initialization error:', error);
@@ -211,21 +208,19 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
     }
 
     // Check feature access (free tier gets preview only)
-    const featureAccess = checkFeatureAccess('pmf_analysis');
-    if (!featureAccess.hasAccess) {
-      toast({
-        title: "Upgrade Required",
-        description: featureAccess.message || "Upgrade to Creator tier to run full Product-Market Fit analysis.",
-        variant: "destructive",
-      });
-      setCreditGateOpen(true);
-      return;
-    }
+      const featureAccess = checkFeatureAccess('pmf_analysis');
+      if (!featureAccess.hasAccess) {
+        openUpgradePrompt({
+          reason: 'feature',
+          featureName: 'Product-Market Fit Lab',
+          requiredTier: featureAccess.requiredTier as 'creator' | 'professional' | undefined,
+          description: featureAccess.message || "Upgrade to Creator tier to run full Product-Market Fit analysis.",
+        });
+        return;
+      }
 
-    if (!hasCredits(CREDIT_COSTS.PMF_ANALYSIS)) {
-      setCreditGateOpen(true);
-      return;
-    }
+    const requiredCredits = ensureCredits('PMF_ANALYSIS', { featureName: 'Product-Market Fit Lab' });
+    if (requiredCredits === null) return;
 
     setStructuredFormData(formData);
 
@@ -270,12 +265,16 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
       });
 
       if (error) {
+        if (handleCreditError(error, data, 'PMF_ANALYSIS', { featureName: 'Product-Market Fit Lab' })) {
+          return;
+        }
         throw error;
       }
 
       if (data?.creditError) {
-        setCreditGateOpen(true);
-        return;
+        if (handleCreditError(null, data, 'PMF_ANALYSIS', { featureName: 'Product-Market Fit Lab' })) {
+          return;
+        }
       }
 
       if (data?.success && data?.analysis) {
@@ -296,6 +295,7 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
           title: "Analysis Complete!",
           description: `Your PMF score is ${data.analysis.pmfScore?.overall || 'N/A'}/100 - ${data.analysis.pmfScore?.verdict || 'N/A'}. Review the insights below.`,
         });
+        await refreshBalance();
       } else {
         throw new Error(data?.error || 'Analysis failed');
       }
@@ -311,16 +311,8 @@ const ProductMarketFitLab: React.FC<ProductMarketFitLabProps> = ({
     }
   };
 
-
   return (
     <div className="space-y-6">
-      <CreditGate
-        isOpen={creditGateOpen}
-        onClose={() => setCreditGateOpen(false)}
-        requiredCredits={CREDIT_COSTS.PMF_ANALYSIS}
-        feature="PMF Analysis"
-      />
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

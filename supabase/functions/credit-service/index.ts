@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { withErrorBoundary, logInfo, logWarn } from "../_shared/logger.ts";
 import { withIdempotency } from "../_shared/idempotency.ts";
 import { CREDIT_COSTS } from '../_shared/credit-constants.ts';
+import { checkAndDeductCredits } from '../_shared/credit-deduction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,54 +54,29 @@ export class CreditService {
   }
 
   // Deduct credits for API operations
-  async deductCredits(transaction: CreditTransaction): Promise<{ success: boolean; newBalance?: number; error?: string }> {
-    if (transaction.amount > 0) {
-      transaction.amount = -transaction.amount; // Ensure negative for deduction
-    }
-
+  async deductCredits(transaction: CreditTransaction): Promise<{ success: boolean; newBalance?: number; newQuota?: number; error?: string; errorCode?: string }> {
     try {
-      // Start transaction
-      const { data: currentCredits, error: fetchError } = await this.supabase
-        .from('user_credits')
-        .select('balance')
-        .eq('user_id', transaction.user_id)
-        .single();
+      const amount = Math.abs(transaction.amount);
+      const featureLabel = transaction.feature || 'Credit Deduction';
 
-      if (fetchError || !currentCredits) {
-        return { success: false, error: 'User credit record not found' };
-      }
+      const result = await checkAndDeductCredits(
+        transaction.user_id,
+        amount,
+        featureLabel,
+        transaction.session_id,
+        transaction.metadata
+      );
 
-      const newBalance = currentCredits.balance + transaction.amount; // amount is negative
-      if (newBalance < 0) {
-        return { success: false, error: 'Insufficient credits' };
-      }
-
-      // Update balance
-      const { error: updateError } = await this.supabase
-        .from('user_credits')
-        .update({ balance: newBalance })
-        .eq('user_id', transaction.user_id);
-
-      if (updateError) {
-        console.error('Error updating credit balance:', updateError);
-        return { success: false, error: 'Failed to update balance' };
-      }
-
-      // Log transaction
-      const { error: logError } = await this.supabase
-        .from('credit_transactions')
-        .insert([transaction]);
-
-      if (logError) {
-        console.error('Error logging credit transaction:', logError);
-        // Don't fail the operation for logging errors
-      }
-
-      return { success: true, newBalance };
-
+      return {
+        success: result.success,
+        newBalance: result.newBalance,
+        newQuota: result.newQuota,
+        error: result.error,
+        errorCode: result.errorCode
+      };
     } catch (error) {
       console.error('Error in deductCredits:', error);
-      return { success: false, error: 'Transaction failed' };
+      return { success: false, error: 'Transaction failed', errorCode: 'DEDUCTION_FAILED' };
     }
   }
 
@@ -167,7 +143,7 @@ export class CreditService {
     return data || [];
   }
 
-  // Initialize credits for new users (5 free credits)
+  // Initialize credits for new users (10 free credits)
   async initializeUserCredits(userId: string): Promise<{ success: boolean; isNewUser: boolean }> {
     try {
       // Check if user already has a credit record
@@ -183,9 +159,9 @@ export class CreditService {
       }
 
       // Determine credits and tier - admin gets professional tier but normal credits
-      const initialCredits = 5; // Standard free credits for all new users
+      const initialCredits = 10; // Standard free credits for all new users
       const subscriptionTier = 'free'; // Will be updated to professional by other mechanisms
-      const welcomeReason = 'Welcome bonus - 5 free credits';
+      const welcomeReason = 'Welcome bonus - 10 free credits';
 
       // Check if there's already a welcome transaction to avoid duplicate grants
       const { data: existingTx } = await this.supabase
