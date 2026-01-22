@@ -25,7 +25,10 @@ const VCProfilePage = () => {
   const navigate = useNavigate();
   const [vc, setVc] = useState<Investor | null>(null);
   const [loading, setLoading] = useState(true);
-  const { trackVCView, canViewMore } = useVCViewTracking();
+  const { trackVCView, limit } = useVCViewTracking();
+  const [upgradePrompt, setUpgradePrompt] = useState<{
+    requiredTier?: 'creator' | 'professional';
+  } | null>(null);
 
   useEffect(() => {
     const fetchVC = async () => {
@@ -48,15 +51,13 @@ const VCProfilePage = () => {
         const result = await trackVCView(data.id);
 
         if (!result.success) {
-          // Show upgrade prompt
-          toast.error(result.message, {
-            action: result.requiredTier ? {
-              label: 'Upgrade',
-              onClick: () => navigate('/pricing'),
-            } : undefined,
-            duration: 6000,
-          });
-          // Still show the VC profile, just with tracking failure noted
+          if (result.reason === 'limit_reached') {
+            setUpgradePrompt({ requiredTier: result.requiredTier });
+          } else {
+            toast.error(result.message, {
+              duration: 6000,
+            });
+          }
         }
       }
 
@@ -100,6 +101,11 @@ const VCProfilePage = () => {
     return `$${min}M - $${max}M`;
   };
 
+  const upgradeTierLabel = upgradePrompt?.requiredTier === 'professional' ? 'Pro' : 'Creator';
+  const upgradeDetail = upgradePrompt?.requiredTier === 'professional'
+    ? 'Unlock unlimited VC views this month.'
+    : 'Unlock 25 VC views this month.';
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -117,6 +123,24 @@ const VCProfilePage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to VC Search
           </Button>
+
+          {upgradePrompt && (
+            <Card className="mb-6 border-primary/30 bg-primary/5">
+              <CardContent className="pt-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    You've used all {limit} VC profile views this month.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to {upgradeTierLabel} to keep exploring. {upgradeDetail}
+                  </p>
+                </div>
+                <Button onClick={() => navigate('/pricing')} className="w-full sm:w-auto">
+                  Upgrade to {upgradeTierLabel}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Main Profile Card */}
           <Card className="mb-6">

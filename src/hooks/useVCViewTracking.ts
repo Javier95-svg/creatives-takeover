@@ -7,6 +7,7 @@ export interface VCViewTrackingResult {
   success: boolean;
   message?: string;
   requiredTier?: 'creator' | 'professional';
+  reason?: 'limit_reached' | 'auth' | 'error';
 }
 
 export const useVCViewTracking = () => {
@@ -54,6 +55,7 @@ export const useVCViewTracking = () => {
         return {
           success: false,
           message: 'Please sign in to view VC profiles',
+          reason: 'auth',
         };
       }
 
@@ -72,8 +74,9 @@ export const useVCViewTracking = () => {
       if (!canView && !hasUnlimitedViews) {
         return {
           success: false,
-          message: `You've reached your monthly limit of ${limit} VC profile views. Upgrade to ${currentTier === 'free' ? 'Creator for 25 views' : 'Professional for unlimited views'}.`,
+          message: `You've used all ${limit} VC profile views this month. Upgrade to ${currentTier === 'free' ? 'Creator for 25 more views' : 'Professional for unlimited views'} and keep exploring.`,
           requiredTier: currentTier === 'free' ? 'creator' : 'professional',
+          reason: 'limit_reached',
         };
       }
 
@@ -100,6 +103,7 @@ export const useVCViewTracking = () => {
       return {
         success: false,
         message: error.message || 'Failed to track VC view',
+        reason: 'error',
       };
     }
   };
@@ -109,6 +113,7 @@ export const useVCViewTracking = () => {
     limit,
     hasUnlimitedViews,
     canViewMore,
+    currentTier,
     trackVCView,
     loading,
     remaining: hasUnlimitedViews ? Infinity : Math.max(0, limit - viewCount),

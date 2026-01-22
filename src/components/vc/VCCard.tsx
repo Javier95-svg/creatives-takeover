@@ -11,13 +11,18 @@ interface VCCardProps {
 }
 
 const VCCard = ({ vc }: VCCardProps) => {
-  const { canViewMore, remaining, hasUnlimitedViews } = useVCViewTracking();
+  const { canViewMore, remaining, hasUnlimitedViews, currentTier, limit } = useVCViewTracking();
   const formatCheckSize = () => {
     if (!vc.typical_check_size_min || !vc.typical_check_size_max) return null;
     const min = (vc.typical_check_size_min / 1000).toFixed(0);
     const max = (vc.typical_check_size_max / 1000).toFixed(0);
     return `$${min}K - $${max}K`;
   };
+
+  const upgradeLabel = currentTier === 'free' ? 'Upgrade to Creator' : 'Upgrade to Pro';
+  const upgradeDetail = currentTier === 'free'
+    ? 'Unlock 25 VC views this month'
+    : 'Unlock unlimited VC views';
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 group border-0 bg-gradient-to-br from-background to-muted/20 h-full flex flex-col">
@@ -104,13 +109,14 @@ const VCCard = ({ vc }: VCCardProps) => {
         ) : (
           <div className="space-y-2 mt-auto">
             {!hasUnlimitedViews && remaining === 0 && (
-              <p className="text-xs text-center text-muted-foreground">
-                Monthly limit reached
-              </p>
+              <div className="text-xs text-center text-muted-foreground space-y-1">
+                <p>You've used all {limit} VC views this month.</p>
+                <p>{upgradeDetail}</p>
+              </div>
             )}
             <Button asChild size="sm" className="w-full" variant="secondary">
               <Link to="/pricing">
-                Upgrade to View More
+                {upgradeLabel}
               </Link>
             </Button>
           </div>
