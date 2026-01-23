@@ -46,8 +46,8 @@ const SubscriptionFeatures = () => {
 
   const usageExamples = {
     free: {
-      credits: 10,
-      example: "10 AI chat messages OR 1 PMF analysis + 2 chat messages",
+      credits: 25,
+      example: "25 AI chat messages OR 1 Market Research + 1 Launch Report + 15 chat messages",
       typical: "Perfect for exploring ideas and validating concepts",
     },
     creator: {
@@ -83,7 +83,7 @@ const SubscriptionFeatures = () => {
         {/* Tier Selector Tabs */}
         <Tabs value={selectedTier} onValueChange={(value) => setSelectedTier(value as 'free' | 'creator' | 'professional')} className="mb-12">
           <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
-            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="free">Rookie (10)</TabsTrigger>
+            <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="free">Rookie (25)</TabsTrigger>
             <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="creator">Rising (50)</TabsTrigger>
             <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="professional">Pro (150)</TabsTrigger>
           </TabsList>

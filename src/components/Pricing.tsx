@@ -94,8 +94,8 @@ const Pricing = () => {
   const getFeatures = (tierName: string): string[] => {
     const featureMap: Record<string, string[]> = {
       free: [
-        "10 credits per month",
-        "BizMap AI (10 messages/month)",
+        "25 credits per month",
+        "BizMap AI (25 messages/month)",
         "PMF Lab (read-only)",
         "Prompt Library (view only)",
         "VC Search (5 views/month)",
@@ -353,129 +353,126 @@ const Pricing = () => {
       {/* Pricing Section */}
       <section className="relative py-section-mobile lg:py-section-desktop overflow-hidden" id="pricing-plans">
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center mb-16 animate-fade-in">
-          <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
-            Choose Your Plan
-          </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 font-poppins">
-            Start taking action and move your ideas forward with plans that scale as you do.
-          </p>
+          <div className="text-center mb-16 animate-fade-in">
+            <h1 className="text-4xl lg:text-6xl font-semibold tracking-tight mb-6 gradient-text font-space-grotesk">
+              Choose Your Plan
+            </h1>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 font-poppins">
+              Start taking action and move your ideas forward with plans that scale as you do.
+            </p>
 
-          {/* Billing Cycle Tabs */}
-          <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')} className="inline-block">
-            <TabsList className="grid w-full grid-cols-2 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
-              <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
-                Yearly
-                <Badge variant="secondary" className="ml-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Save up to 24%</Badge>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+            {/* Billing Cycle Tabs */}
+            <Tabs value={billingCycle} onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')} className="inline-block">
+              <TabsList className="grid w-full grid-cols-2 rounded-full border border-border/60 bg-background/70 p-1 shadow-sm backdrop-blur">
+                <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="monthly">Monthly</TabsTrigger>
+                <TabsTrigger className="rounded-full text-sm font-medium font-poppins data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" value="yearly">
+                  Yearly
+                  <Badge variant="secondary" className="ml-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Save up to 24%</Badge>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto">
-          {tiers.map((tier, index) => {
-            const { title, cta } = getTitleAndCTA(tier.tier_name);
-            const features = getFeatures(tier.tier_name);
-            const targetAudience = getTargetAudience(tier.tier_name);
-            const subtitle = getSubtitle(tier.tier_name);
-            const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
-            const isPopular = tier.tier_name === 'creator';
-            const { price, period } = getPrice(tier.tier_name);
+          {/* Pricing Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto">
+            {tiers.map((tier, index) => {
+              const { title, cta } = getTitleAndCTA(tier.tier_name);
+              const features = getFeatures(tier.tier_name);
+              const targetAudience = getTargetAudience(tier.tier_name);
+              const subtitle = getSubtitle(tier.tier_name);
+              const isCurrentPlan = subscriptionData?.subscription_tier === tier.tier_name;
+              const isPopular = tier.tier_name === 'creator';
+              const { price, period } = getPrice(tier.tier_name);
 
-            return (
-              <div
-                key={tier.tier_name}
-                className={`relative rounded-2xl border border-border/60 bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${
-                  isCurrentPlan
+              return (
+                <div
+                  key={tier.tier_name}
+                  className={`relative rounded-2xl border border-border/60 bg-card/80 p-6 sm:p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col backdrop-blur ${isCurrentPlan
                     ? 'border-green-500/60 ring-1 ring-green-500/30 shadow-md'
                     : isPopular
-                    ? 'border-primary/60 ring-1 ring-primary/30 shadow-md'
-                    : 'border-border/60'
-                }`}
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                {/* Current Plan or Popular Badge */}
-                {((isCurrentPlan && user) || isPopular) && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className={`px-3 py-1 text-xs font-medium ${
-                      isCurrentPlan
+                      ? 'border-primary/60 ring-1 ring-primary/30 shadow-md'
+                      : 'border-border/60'
+                    }`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
+                  {/* Current Plan or Popular Badge */}
+                  {((isCurrentPlan && user) || isPopular) && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className={`px-3 py-1 text-xs font-medium ${isCurrentPlan
                         ? 'bg-green-600 text-white'
                         : 'bg-primary text-primary-foreground'
-                    }`}>
-                      {isCurrentPlan ? (<> <Crown className="w-3 h-3 mr-1 inline" /> Your Plan </>) : (<> <Star className="w-3 h-3 mr-1 inline fill-current" /> Suggested </>)}
-                    </Badge>
-                  </div>
-                )}
-
-                {/* Plan Header */}
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl sm:text-3xl font-semibold mb-1 capitalize tracking-tight font-space-grotesk">{getTierDisplayName(tier.tier_name)}</h3>
-                  {subtitle && (
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3 font-poppins">{subtitle}</p>
+                        }`}>
+                        {isCurrentPlan ? (<> <Crown className="w-3 h-3 mr-1 inline" /> Your Plan </>) : (<> <Star className="w-3 h-3 mr-1 inline fill-current" /> Suggested </>)}
+                      </Badge>
+                    </div>
                   )}
-                  <div className="mb-4">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl sm:text-5xl font-semibold tracking-tight font-space-grotesk tabular-nums">
-                        ${price === 0 ? '0' : price.toFixed(2)}
-                      </span>
-                      {period && (
-                        <span className="text-muted-foreground text-base font-poppins">{period}</span>
+
+                  {/* Plan Header */}
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl sm:text-3xl font-semibold mb-1 capitalize tracking-tight font-space-grotesk">{getTierDisplayName(tier.tier_name)}</h3>
+                    {subtitle && (
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3 font-poppins">{subtitle}</p>
+                    )}
+                    <div className="mb-4">
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-4xl sm:text-5xl font-semibold tracking-tight font-space-grotesk tabular-nums">
+                          ${price === 0 ? '0' : price.toFixed(2)}
+                        </span>
+                        {period && (
+                          <span className="text-muted-foreground text-base font-poppins">{period}</span>
+                        )}
+                      </div>
+                      {billingCycle === 'yearly' && tier.tier_name !== 'free' && (
+                        <div className="text-sm text-green-600 dark:text-green-400 mt-1 font-poppins">
+                          ${(price / 12).toFixed(2)}/month billed annually
+                        </div>
+                      )}
+                      {tier.monthly_credits > 0 && (
+                        <div className="text-sm text-muted-foreground mt-2 font-poppins">
+                          {tier.tier_name === 'free' ? 25 : tier.monthly_credits} credits/month
+                        </div>
                       )}
                     </div>
-                    {billingCycle === 'yearly' && tier.tier_name !== 'free' && (
-                      <div className="text-sm text-green-600 dark:text-green-400 mt-1 font-poppins">
-                        ${(price / 12).toFixed(2)}/month billed annually
-                      </div>
-                    )}
-                    {tier.monthly_credits > 0 && (
-                      <div className="text-sm text-muted-foreground mt-2 font-poppins">
-                        {tier.tier_name === 'free' ? 10 : tier.monthly_credits} credits/month
-                      </div>
-                    )}
+                    {/* Target Audience - Simplified */}
+                    <p className="text-sm text-muted-foreground mb-6 font-poppins">
+                      {targetAudience}
+                    </p>
                   </div>
-                  {/* Target Audience - Simplified */}
-                  <p className="text-sm text-muted-foreground mb-6 font-poppins">
-                    {targetAudience}
-                  </p>
-                </div>
 
-                {/* Plan Highlights */}
-                <div className="mb-6 flex-grow">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 font-poppins">Plan highlights:</p>
-                  <div className="space-y-3">
-                    {features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-muted-foreground leading-relaxed font-poppins">
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
+                  {/* Plan Highlights */}
+                  <div className="mb-6 flex-grow">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4 font-poppins">Plan highlights:</p>
+                    <div className="space-y-3">
+                      {features.map((feature, featureIndex) => (
+                        <div key={featureIndex} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          <span className="text-sm text-muted-foreground leading-relaxed font-poppins">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <Button
-                  onClick={() => handleSubscribe(tier.tier_name)}
-                  disabled={!!(isCurrentPlan && user)}
-                  className={`w-full rounded-full py-3 px-4 font-semibold font-poppins transition-all shadow-sm hover:shadow-md ${
-                    isCurrentPlan
+                  <Button
+                    onClick={() => handleSubscribe(tier.tier_name)}
+                    disabled={!!(isCurrentPlan && user)}
+                    className={`w-full rounded-full py-3 px-4 font-semibold font-poppins transition-all shadow-sm hover:shadow-md ${isCurrentPlan
                       ? 'bg-green-600 text-white cursor-default hover:bg-green-700'
-                      : isPopular 
-                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                      : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
-                  }`}
-                >
-                  {isCurrentPlan && user ? 'Current Plan' : !user && tier.tier_name === 'free' ? 'Start Now' : cta}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+                      : isPopular
+                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                        : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                      }`}
+                  >
+                    {isCurrentPlan && user ? 'Current Plan' : !user && tier.tier_name === 'free' ? 'Start Now' : cta}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
 
-      </div>
-    </section>
+        </div>
+      </section>
     </>
   );
 };

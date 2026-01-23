@@ -12,14 +12,14 @@ const PricingComparison = () => {
     {
       category: "Credits & Dashboard",
       items: [
-        { feature: "Monthly Credits", free: "10 Credits", creator: "50 Credits", professional: "150 Credits" },
+        { feature: "Monthly Credits", free: "25 Credits", creator: "50 Credits", professional: "150 Credits" },
         { feature: "Dashboard Access", free: "Preview only", creator: "Full access", professional: "Full access" }
       ]
     },
     {
       category: "BizMap AI",
       items: [
-        { feature: `Business Planning (${CREDIT_COSTS.AI_CHAT_MESSAGE} credit/msg)`, free: "10 messages", creator: "50 messages", professional: "150 messages" },
+        { feature: `Business Planning (${CREDIT_COSTS.AI_CHAT_MESSAGE} credit/msg)`, free: "25 messages", creator: "50 messages", professional: "150 messages" },
         { feature: "Product–Market Fit Lab", free: "Read-only", creator: `Full access (${CREDIT_COSTS.PMF_ANALYSIS} credits)`, professional: `Full + insights (${CREDIT_COSTS.PMF_ANALYSIS} credits)` },
         { feature: "Tech Stack Generator", free: "View only", creator: `Full access (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)`, professional: `Advanced (${CREDIT_COSTS.TECH_STACK_GENERATION} credits)` },
         { feature: "Prompt Library", free: "View only", creator: "Full access", professional: "Full + custom templates" }
@@ -59,9 +59,8 @@ const PricingComparison = () => {
   const renderFeatureValue = (value: any, animated: boolean = false) => {
     if (typeof value === 'boolean') {
       return value ? (
-        <Check className={`w-5 h-5 text-primary mx-auto transition-all duration-300 ${
-          animated ? 'animate-scale-in' : ''
-        }`} />
+        <Check className={`w-5 h-5 text-primary mx-auto transition-all duration-300 ${animated ? 'animate-scale-in' : ''
+          }`} />
       ) : (
         <X className="w-5 h-5 text-gray-300 dark:text-muted-foreground/40 mx-auto" />
       );
@@ -90,7 +89,7 @@ const PricingComparison = () => {
             Compare Our Plans
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto font-poppins">
-            See exactly what's included in each pricing plan. 
+            See exactly what's included in each pricing plan.
             Choose the perfect tier for your entrepreneurial needs.
           </p>
         </div>
@@ -161,9 +160,8 @@ const PricingComparison = () => {
               <button
                 key={index}
                 onClick={() => setCurrentMobileIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentMobileIndex ? 'bg-primary w-6' : 'bg-muted-foreground/30'
-                }`}
+                className={`w-2 h-2 rounded-full transition-all ${index === currentMobileIndex ? 'bg-primary w-6' : 'bg-muted-foreground/30'
+                  }`}
                 aria-label={`Go to plan ${index + 1}`}
               />
             ))}
@@ -184,9 +182,8 @@ const PricingComparison = () => {
                       <th
                         key={plan.name}
                         style={{ animationDelay: `${index * 0.1}s` }}
-                        className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative animate-fade-in border-r border-border/60 last:border-r-0 font-space-grotesk ${
-                          plan.isPopular ? 'bg-primary/5' : 'bg-muted/40'
-                        }`}
+                        className={`text-center p-5 font-semibold text-base text-foreground min-w-[180px] relative animate-fade-in border-r border-border/60 last:border-r-0 font-space-grotesk ${plan.isPopular ? 'bg-primary/5' : 'bg-muted/40'
+                          }`}
                       >
                         {plan.name}
                         <div className="text-2xl font-semibold mt-2 text-foreground font-space-grotesk tabular-nums">
@@ -200,7 +197,7 @@ const PricingComparison = () => {
                 <tbody>
                   {features.map((category, catIndex) => (
                     <React.Fragment key={category.category}>
-                      <tr 
+                      <tr
                         style={{ animationDelay: `${(catIndex + 1) * 0.15}s` }}
                         className="animate-fade-in"
                       >
@@ -214,19 +211,16 @@ const PricingComparison = () => {
                       {category.items.map((item, index) => {
                         const isHighlighted = highlightedRow === item.feature;
                         return (
-                          <tr 
+                          <tr
                             key={item.feature}
                             style={{ animationDelay: `${(catIndex + 1) * 0.15 + (index + 1) * 0.05}s` }}
-                            className={`animate-fade-in cursor-pointer transition-all duration-300 border-b border-border/40 ${
-                              index % 2 === 0 ? "bg-background" : "bg-muted/20"
-                            } ${
-                              isHighlighted ? 'bg-primary/10 shadow-md scale-[1.01]' : 'hover:bg-muted/40'
-                            }`}
+                            className={`animate-fade-in cursor-pointer transition-all duration-300 border-b border-border/40 ${index % 2 === 0 ? "bg-background" : "bg-muted/20"
+                              } ${isHighlighted ? 'bg-primary/10 shadow-md scale-[1.01]' : 'hover:bg-muted/40'
+                              }`}
                             onClick={() => setHighlightedRow(isHighlighted ? null : item.feature)}
                           >
-                            <td className={`sticky left-0 z-10 bg-inherit p-4 font-medium text-sm text-foreground border-r border-border/60 ${
-                              isHighlighted ? 'text-primary' : ''
-                            }`}>
+                            <td className={`sticky left-0 z-10 bg-inherit p-4 font-medium text-sm text-foreground border-r border-border/60 ${isHighlighted ? 'text-primary' : ''
+                              }`}>
                               {item.feature}
                             </td>
                             <td className="p-4 text-center border-r border-border/40">{renderFeatureValue(item.free, isHighlighted)}</td>
