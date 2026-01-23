@@ -25,8 +25,8 @@ const ValuePropositionCards = () => {
       description: "BizMap AI is a hub of business development tools that helps founders plan, validate, and scale their startup in a simple, organized way.\n\nIt includes a Business Planner chatbot, a Product Market Fit Lab for testing and refining your positioning, a Prompt Library with 60 business cases across 8 industries, and a Tech Stack builder that estimates monthly and yearly costs based on the tools you choose.",
       cta: "Start Planning",
       link: "/bizmap-ai",
-      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop&q=80",
-      imageAlt: "AI-powered business planning and strategy visualization"
+      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Business development planning with strategy notes"
     },
     {
       icon: LayoutDashboard,
@@ -36,8 +36,8 @@ const ValuePropositionCards = () => {
       description: "Dashboard is where everything comes together, so founders can stay on top of day to day work, milestones, and accountability without feeling scattered.\n\nIt helps founders track progress in one place, set clear milestones, and keep momentum with simple accountability features. It also includes the Focus Funnel, a tool that breaks goals into projects and projects into next actions, so you always know what to prioritize and what to do next.",
       cta: "View Dashboard",
       link: "/dashboard",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&q=80",
-      imageAlt: "Analytics dashboard and productivity tracking"
+      image: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Task tracking and project management board"
     },
     {
       icon: Rocket,
@@ -47,8 +47,8 @@ const ValuePropositionCards = () => {
       description: "Insighta is where founders organize their fundraising process, so pitching feels more structured and less like guesswork.\n\nIt includes VC Search to explore venture capital firms and key details for building a targeted investor list, Email Templates for cold outreach that can be quickly customized, a Pitch Deck Analyzer to flag weak points and improve clarity, and the Insighta Test to check fundraising readiness and highlight what to fix before starting outreach.",
       cta: "Explore Insighta",
       link: "/insighta/test",
-      image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=600&fit=crop&q=80",
-      imageAlt: "Startup fundraising and investment growth"
+      image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Fundraising meeting with investors"
     },
     {
       icon: Users,
@@ -58,8 +58,8 @@ const ValuePropositionCards = () => {
       description: "Community is the space where founders connect with people who actually get it, so building your startup doesn't have to feel like a solo mission.\n\nHere, users can find mentors for guidance and feedback, and meet other founders to share wins, challenges, and lessons in real time. Having the right people around you helps you stay accountable, make better decisions faster, and avoid the isolation that often leads to stress and burnout.",
       cta: "Join Community",
       link: "/community",
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop&q=80",
-      imageAlt: "Team collaboration and community networking"
+      image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Founders collaborating in a video call"
     }
   ];
 
