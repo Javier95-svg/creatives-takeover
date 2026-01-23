@@ -1,15 +1,26 @@
+import { useState, useCallback, useEffect } from "react";
 import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 const ValuePropositionCards = () => {
+  const [api, setApi] = useState<CarouselApi>();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   // Core value propositions - condensed to 4 essential offerings
   const allCards = [
     {
       icon: Lightbulb,
       title: "PLAN",
       subtitle: "BizMap AI",
+      buttonLabel: "BizMap AI",
       description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
       cta: "Start Planning",
       link: "/bizmap-ai",
@@ -17,19 +28,10 @@ const ValuePropositionCards = () => {
       imageAlt: "AI-powered business planning and strategy visualization"
     },
     {
-      icon: Users,
-      title: "CONNECT",
-      subtitle: "Community",
-      description: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding.",
-      cta: "Join Community",
-      link: "/community",
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop&q=80",
-      imageAlt: "Team collaboration and community networking"
-    },
-    {
       icon: LayoutDashboard,
       title: "EXECUTE",
       subtitle: "Dashboard",
+      buttonLabel: "Dashboard",
       description: "Your command center for tracking progress, managing tasks, and monitoring your business growth. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
       cta: "View Dashboard",
       link: "/dashboard",
@@ -40,13 +42,49 @@ const ValuePropositionCards = () => {
       icon: Rocket,
       title: "FUNDRAISE",
       subtitle: "Insighta",
+      buttonLabel: "Insighta",
       description: "Access a complete fundraising toolkit designed for entrepreneurs and founders. Discover curated accelerator programs, assess your investment readiness, and find practical resources that help you craft a winning strategy.",
       cta: "Explore Insighta",
       link: "/insighta/test",
       image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=600&fit=crop&q=80",
       imageAlt: "Startup fundraising and investment growth"
+    },
+    {
+      icon: Users,
+      title: "CONNECT",
+      subtitle: "Community",
+      buttonLabel: "Community",
+      description: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding.",
+      cta: "Join Community",
+      link: "/community",
+      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop&q=80",
+      imageAlt: "Team collaboration and community networking"
     }
   ];
+
+  // Handle carousel API setup and sync selected index
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setSelectedIndex(api.selectedScrollSnap());
+  }, [api]);
+
+  // Set up the carousel API listener
+  useEffect(() => {
+    if (!api) return;
+    api.on("select", onSelect);
+    onSelect(); // Sync initial state
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api, onSelect]);
+
+  // Navigate to specific card
+  const goToCard = (index: number) => {
+    if (api) {
+      api.scrollTo(index);
+      setSelectedIndex(index);
+    }
+  };
 
   return (
     <section id="what-you-get" className="py-20 lg:py-28 scroll-mt-24 font-poppins">
@@ -61,55 +99,83 @@ const ValuePropositionCards = () => {
           </p>
         </div>
 
-        {/* Large Cards */}
-        <div className="space-y-8 max-w-5xl mx-auto">
-          {allCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Card
-                key={card.title}
-                className="glass border-border overflow-hidden"
+        {/* Horizontal Carousel */}
+        <div className="max-w-5xl mx-auto">
+          <Carousel
+            setApi={setApi}
+            opts={{
+              align: "start",
+              loop: false,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {allCards.map((card, index) => {
+                const Icon = card.icon;
+                return (
+                  <CarouselItem key={card.title} className="pl-4 basis-full">
+                    <Card className="glass border-border overflow-hidden">
+                      <div className="grid md:grid-cols-2">
+                        {/* Image - Left */}
+                        <figure className="relative h-64 md:h-auto md:min-h-[320px]">
+                          <img
+                            src={card.image}
+                            alt={card.imageAlt}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
+                        </figure>
+
+                        {/* Content - Right */}
+                        <div className="p-6 md:p-10 flex flex-col justify-center">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Icon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                {card.title}
+                              </p>
+                              <h3 className="font-space-grotesk text-2xl font-bold">
+                                {card.subtitle}
+                              </h3>
+                            </div>
+                          </div>
+
+                          <p className="text-base leading-relaxed text-foreground/85 mb-6">
+                            {card.description}
+                          </p>
+
+                          <Button variant="outline" className="w-fit" asChild>
+                            <Link to={card.link}>{card.cta}</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+          </Carousel>
+
+          {/* Navigation Buttons */}
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
+            {allCards.map((card, index) => (
+              <Button
+                key={card.buttonLabel}
+                variant={selectedIndex === index ? "default" : "outline"}
+                onClick={() => goToCard(index)}
+                className={`transition-all duration-200 ${
+                  selectedIndex === index
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "hover:border-primary/50"
+                }`}
               >
-                <div className="grid md:grid-cols-2">
-                  {/* Image - Left */}
-                  <figure className="relative h-64 md:h-auto md:min-h-[320px]">
-                    <img
-                      src={card.image}
-                      alt={card.imageAlt}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
-                  </figure>
-
-                  {/* Content - Right */}
-                  <div className="p-6 md:p-10 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                          {card.title}
-                        </p>
-                        <h3 className="font-space-grotesk text-2xl font-bold">
-                          {card.subtitle}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <p className="text-base leading-relaxed text-foreground/85 mb-6">
-                      {card.description}
-                    </p>
-
-                    <Button variant="outline" className="w-fit" asChild>
-                      <Link to={card.link}>{card.cta}</Link>
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+                {card.buttonLabel}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
     </section>
