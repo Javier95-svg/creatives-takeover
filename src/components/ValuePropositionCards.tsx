@@ -143,9 +143,11 @@ const ValuePropositionCards = () => {
                             </div>
                           </div>
 
-                          <p className="text-base leading-relaxed text-foreground/85 mb-6">
-                            {card.description}
-                          </p>
+                          <div className="text-base leading-relaxed text-foreground/85 mb-6 space-y-4">
+                            {card.description.split('\n\n').map((paragraph, idx) => (
+                              <p key={idx}>{paragraph}</p>
+                            ))}
+                          </div>
 
                           <Button variant="outline" className="w-fit" asChild>
                             <Link to={card.link}>{card.cta}</Link>
