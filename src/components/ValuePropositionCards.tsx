@@ -43,7 +43,7 @@ const ValuePropositionCards = () => {
       title: "FUNDRAISE",
       subtitle: "Insighta",
       buttonLabel: "Insighta",
-      description: "Insighta is where founders get serious about fundraising, turning a stressful process into a clear system they can follow. Instead of guessing who to contact or how to pitch, users can build an investor outreach plan, sharpen their story, and make sure they're actually ready to raise before they hit send.\n\nIt includes VC Search to research venture capital firms and build a focused list, Email Templates for cold outreach, a Pitch Deck Analyzer to improve clarity and impact, and the Insighta Test to measure fundraising readiness and spot gaps early.",
+      description: "Insighta is where founders organize their fundraising process, so pitching feels more structured and less like guesswork.\n\nIt includes VC Search to explore venture capital firms and key details for building a targeted investor list, Email Templates for cold outreach that can be quickly customized, a Pitch Deck Analyzer to flag weak points and improve clarity, and the Insighta Test to check fundraising readiness and highlight what to fix before starting outreach.",
       cta: "Explore Insighta",
       link: "/insighta/test",
       image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&h=600&fit=crop&q=80",
