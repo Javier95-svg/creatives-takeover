@@ -39,7 +39,7 @@ const Navigation = () => {
   const { trackClick } = usePageAnalytics();
   const deviceType = useDeviceType();
   const location = useLocation();
-  
+
   // Hover popup for BizMap AI menu item
   const bizMapHover = useHoverPopup({ delay: 1500, trigger: 'bizmap-nav' });
 
@@ -80,13 +80,13 @@ const Navigation = () => {
   useEffect(() => {
     const fetchAvatar = async () => {
       if (!user) return;
-      
+
       const { data } = await supabase
         .from('profiles')
         .select('avatar_url')
         .eq('id', user.id)
         .single();
-      
+
       if (data?.avatar_url) {
         setAvatarUrl(data.avatar_url);
       }
@@ -133,8 +133,9 @@ const Navigation = () => {
   return (
     <TooltipProvider delayDuration={200}>
       <nav
+        style={{ top: 'var(--banner-height, 0)' } as React.CSSProperties}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300",
+          "fixed left-0 right-0 z-50 border-b transition-all duration-300",
           scrolled
             ? "bg-background/95 backdrop-blur-lg shadow-sm border-border/70"
             : "bg-background/85 backdrop-blur-md border-border/60"
@@ -145,9 +146,9 @@ const Navigation = () => {
             {/* Logo with Enhanced Hover Effects - Fixed width to prevent layout shifts */}
             <div className="flex items-center border-0 flex-shrink-0 w-16 min-w-[4rem]">
               <Link to="/" className="flex items-center justify-center w-full" aria-label="Home">
-                <img 
-                  src={ctLogo} 
-                  alt="Creatives Takeover Logo" 
+                <img
+                  src={ctLogo}
+                  alt="Creatives Takeover Logo"
                   className="h-10 w-auto max-w-full object-contain animate-logo-breathing nav-logo-hover"
                 />
               </Link>
@@ -156,7 +157,7 @@ const Navigation = () => {
             {/* Tablet Navigation */}
             {deviceType === 'tablet' && (
               <div className="flex-1 flex items-center justify-center">
-                <TabletNavigation 
+                <TabletNavigation
                   navItems={navItems}
                   onItemClick={(name) => trackClick(name, 'Navigation')}
                 />
@@ -356,274 +357,274 @@ const Navigation = () => {
               </div>
             )}
 
-          {/* Desktop & Tablet CTA */}
-          <div className="hidden md:flex items-center gap-3 !border-0 ml-auto">
-            {loading ? (
-              <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
-            ) : user ? (
-              <div className="flex items-center gap-3">
-                <CreditDisplay variant="navigation" showPurchaseButton={true} />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowFriendRequests(true)}
-                  className="relative h-9 w-9 transition-all duration-200 hover:bg-muted/50 hover:scale-110"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  {pendingFriendRequests.length > 0 && (
-                    <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse">
-                      {pendingFriendRequests.length}
-                    </Badge>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className="relative h-9 w-9 transition-all duration-200 hover:bg-muted/50 hover:scale-110"
-                >
-                  <Link to="/messages">
-                    <MessageCircle className="w-4 h-4" />
-                  </Link>
-                </Button>
-                <NotificationBell />
-                <ThemeToggle />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-110">
-                      <Avatar className="h-9 w-9 hover:ring-2 hover:ring-primary transition-all">
-                        <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                          {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.user_metadata?.full_name || 'User'}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/messages" className="cursor-pointer">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        <span>Messages</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/account" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sign Out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <ThemeToggle />
-                <Button variant="ghost" size="sm" asChild className="transition-all duration-200 hover:scale-105">
-                  <Link to="/login" className="flex items-center gap-2">
-                    <LogIn className="w-4 h-4" />
-                    Sign In
-                  </Link>
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold px-4" 
-                  asChild
-                >
-                  <Link to="/signup">Sign Up</Link>
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0 active:opacity-70 transition-opacity"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label={isOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isOpen}
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation Backdrop */}
-        {isOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fadeIn"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
-            <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
-              {/* Theme Toggle at top of mobile menu */}
-              <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">Theme</span>
-                  <ThemeToggle />
-                </div>
-              </div>
-              <div className="py-2">
-                {navItems.map((item) => {
-                  const Icon = item.icon || iconMap[item.name];
-                  const active = isActive(item.href);
-                  
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={cn(
-                        "block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
-                        "hover:bg-muted/50 active:bg-muted rounded-lg mx-2",
-                        active 
-                          ? "text-foreground font-semibold bg-primary/5" 
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
-                      <span>{item.name}</span>
+            {/* Desktop & Tablet CTA */}
+            <div className="hidden md:flex items-center gap-3 !border-0 ml-auto">
+              {loading ? (
+                <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
+              ) : user ? (
+                <div className="flex items-center gap-3">
+                  <CreditDisplay variant="navigation" showPurchaseButton={true} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowFriendRequests(true)}
+                    className="relative h-9 w-9 transition-all duration-200 hover:bg-muted/50 hover:scale-110"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    {pendingFriendRequests.length > 0 && (
+                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse">
+                        {pendingFriendRequests.length}
+                      </Badge>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="relative h-9 w-9 transition-all duration-200 hover:bg-muted/50 hover:scale-110"
+                  >
+                    <Link to="/messages">
+                      <MessageCircle className="w-4 h-4" />
                     </Link>
-                  );
-                })}
-              </div>
-              <div className="px-3 py-3 space-y-2 border-t border-border">
-                {loading ? (
-                  <div className="w-full h-12 animate-pulse bg-muted rounded" />
-                ) : user ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg mb-3 border border-primary/10">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                  </Button>
+                  <NotificationBell />
+                  <ThemeToggle />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="cursor-pointer outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full transition-all duration-200 hover:scale-110">
+                        <Avatar className="h-9 w-9 hover:ring-2 hover:ring-primary transition-all">
                           <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-foreground">{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
-                          <span className="text-xs text-muted-foreground">{user.email}</span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {user.user_metadata?.full_name || 'User'}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
                         </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/messages" className="cursor-pointer">
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          <span>Messages</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/account" className="cursor-pointer">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Settings</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <ThemeToggle />
+                  <Button variant="ghost" size="sm" asChild className="transition-all duration-200 hover:scale-105">
+                    <Link to="/login" className="flex items-center gap-2">
+                      <LogIn className="w-4 h-4" />
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold px-4"
+                    asChild
+                  >
+                    <Link to="/signup">Sign Up</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] touch-manipulation !border-0 active:opacity-70 transition-opacity"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {/* Mobile Navigation Backdrop */}
+          {isOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-fadeIn"
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Mobile Navigation */}
+          {isOpen && (
+            <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-background border-t border-border animate-mobile-drawer safe-area-inset z-50 shadow-2xl">
+              <div className="px-2 pt-2 pb-safe space-y-1 max-h-[calc(100vh-64px)] overflow-y-auto">
+                {/* Theme Toggle at top of mobile menu */}
+                <div className="px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
+                </div>
+                <div className="py-2">
+                  {navItems.map((item) => {
+                    const Icon = item.icon || iconMap[item.name];
+                    const active = isActive(item.href);
+
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={cn(
+                          "block px-4 py-3.5 min-h-[48px] touch-manipulation flex items-center gap-3 text-base transition-all duration-200",
+                          "hover:bg-muted/50 active:bg-muted rounded-lg mx-2",
+                          active
+                            ? "text-foreground font-semibold bg-primary/5"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="px-3 py-3 space-y-2 border-t border-border">
+                  {loading ? (
+                    <div className="w-full h-12 animate-pulse bg-muted rounded" />
+                  ) : user ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg mb-3 border border-primary/10">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                            <AvatarImage src={avatarUrl} alt={user.user_metadata?.full_name || 'User'} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                              {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-foreground">{user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}</span>
+                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                          </div>
+                        </div>
+                        <CreditDisplay variant="inline" />
                       </div>
-                      <CreditDisplay variant="inline" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/dashboard" className="flex items-center">
+                          <User className="w-5 h-5 mr-3" />
+                          Dashboard
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/messages" className="flex items-center">
+                          <MessageCircle className="w-5 h-5 mr-3" />
+                          Messages
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]"
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/account" className="flex items-center">
+                          <Settings className="w-5 h-5 mr-3" />
+                          Settings
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setIsOpen(false);
+                          handleSignOut();
+                        }}
+                      >
+                        <LogOut className="w-5 h-5 mr-3" />
+                        Sign Out
+                      </Button>
                     </div>
-                    <Button  
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]" 
-                      onClick={() => setIsOpen(false)}
-                      asChild
-                    >
-                      <Link to="/dashboard" className="flex items-center">
-                        <User className="w-5 h-5 mr-3" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]" 
-                      onClick={() => setIsOpen(false)}
-                      asChild
-                    >
-                      <Link to="/messages" className="flex items-center">
-                        <MessageCircle className="w-5 h-5 mr-3" />
-                        Messages
-                      </Link>
-                    </Button>
-                    <Button  
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation text-base transition-all duration-200 hover:bg-muted/50 hover:scale-[1.02]" 
-                      onClick={() => setIsOpen(false)}
-                      asChild
-                    >
-                      <Link to="/account" className="flex items-center">
-                        <Settings className="w-5 h-5 mr-3" />
-                        Settings
-                      </Link>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation text-base text-destructive hover:text-destructive hover:bg-destructive/10" 
-                      onClick={() => {
-                        setIsOpen(false);
-                        handleSignOut();
-                      }}
-                    >
-                      <LogOut className="w-5 h-5 mr-3" />
-                      Sign Out
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation text-base" 
-                      onClick={() => setIsOpen(false)} 
-                      asChild
-                    >
-                      <Link to="/login" className="flex items-center">
-                        <LogIn className="w-5 h-5 mr-3" />
-                        Sign In
-                      </Link>
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      className="w-full bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 min-h-[48px] touch-manipulation text-base font-semibold" 
-                      onClick={() => setIsOpen(false)} 
-                      asChild
-                    >
-                      <Link to="/signup">Sign Up</Link>
-                    </Button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="space-y-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start min-h-[48px] touch-manipulation text-base"
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/login" className="flex items-center">
+                          <LogIn className="w-5 h-5 mr-3" />
+                          Sign In
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="w-full bg-gradient-unified hover:opacity-90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 min-h-[48px] touch-manipulation text-base font-semibold"
+                        onClick={() => setIsOpen(false)}
+                        asChild
+                      >
+                        <Link to="/signup">Sign Up</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Hover-triggered Campaign Popup */}
+        {bizMapHover.showPopup && (
+          <CreditCampaignPopup
+            trigger="hover"
+            onClose={bizMapHover.closePopup}
+          />
         )}
-      </div>
-      
-      {/* Hover-triggered Campaign Popup */}
-      {bizMapHover.showPopup && (
-        <CreditCampaignPopup 
-          trigger="hover"
-          onClose={bizMapHover.closePopup}
+
+        {/* Friend Requests Modal */}
+        <FriendRequestsModal
+          open={showFriendRequests}
+          onOpenChange={setShowFriendRequests}
         />
-      )}
-      
-      {/* Friend Requests Modal */}
-      <FriendRequestsModal 
-        open={showFriendRequests}
-        onOpenChange={setShowFriendRequests}
-      />
       </nav>
     </TooltipProvider>
   );

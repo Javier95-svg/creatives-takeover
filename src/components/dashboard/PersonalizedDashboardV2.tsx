@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePersonalizedDashboard } from '@/hooks/usePersonalizedDashboard';
 import { ArrowRight } from 'lucide-react';
@@ -29,8 +29,8 @@ const DashboardContentWrapper = ({ dashboardMode, children }: DashboardContentWr
     dashboardMode === 'focus'
       ? ['dashboard-focus']
       : dashboardMode === 'dashboard'
-      ? ['dashboard-focus', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'active-projects', 'quick-wins', 'your-tasks']
-      : ['dashboard-focus', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'ai-insights', 'business-health', 'active-projects', 'calendar-view', 'quick-wins', 'your-tasks', 'gmail-integration'];
+        ? ['dashboard-focus', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'active-projects', 'quick-wins', 'your-tasks']
+        : ['dashboard-focus', 'weekly-mission', 'monthly-revenue', 'core-metrics', 'ai-insights', 'business-health', 'active-projects', 'calendar-view', 'quick-wins', 'your-tasks', 'gmail-integration'];
 
   // Initialize active section tracking (now inside the provider)
   useActiveSection(sectionIds);
@@ -219,82 +219,85 @@ export const PersonalizedDashboardV2 = () => {
             <DashboardSidebar dashboardMode={dashboardMode} />
             <SidebarInset>
               <div className="min-h-screen relative overflow-hidden bg-background">
-              {/* Fixed Header with Exit Button and Mode Toggle */}
-              <div className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/60">
-                <div className="container mx-auto px-6 py-3 max-w-7xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <SidebarTrigger />
-                      <ModeToggle currentMode={dashboardMode} onModeChange={handleModeChange} />
+                {/* Fixed Header with Exit Button and Mode Toggle */}
+                <div
+                  style={{ top: 'var(--banner-height, 0)' } as React.CSSProperties}
+                  className="fixed left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/60"
+                >
+                  <div className="container mx-auto px-6 py-3 max-w-7xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <SidebarTrigger />
+                        <ModeToggle currentMode={dashboardMode} onModeChange={handleModeChange} />
+                      </div>
+                      <button
+                        onClick={() => navigate('/')}
+                        className="rounded-md border border-border/60 bg-background/80 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/30 hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex items-center gap-2"
+                        aria-label="Exit dashboard and return to platform"
+                        type="button"
+                      >
+                        <span>Platform</span>
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => navigate('/')}
-                      className="rounded-md border border-border/60 bg-background/80 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/30 hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex items-center gap-2"
-                      aria-label="Exit dashboard and return to platform"
-                      type="button"
-                    >
-                      <span>Platform</span>
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </button>
                   </div>
                 </div>
-              </div>
 
-        {/* Refined Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 bg-background" />
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)'
-            }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
-              backgroundSize: '64px 64px'
-            }}
-          />
-        </div>
-
-              {/* Dashboard Content */}
-              <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
-                {/* Header */}
-                <div>
-                  <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
-                    {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
-                  </h1>
-                  <p className="font-poppins text-muted-foreground mt-1">
-                    {dashboardMode === 'focus'
-                      ? 'Here\'s your focus for today'
-                      : dashboardMode === 'dashboard'
-                      ? 'Your dashboard overview'
-                      : 'Full control center'}
-                  </p>
+                {/* Refined Background */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute inset-0 bg-background" />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage:
+                        'radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.08), transparent 40%), radial-gradient(circle at 85% 30%, hsl(var(--accent) / 0.06), transparent 45%)'
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)',
+                      backgroundSize: '64px 64px'
+                    }}
+                  />
                 </div>
 
-                {/* Dynamic View Based on Mode */}
-                {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
-                {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
-                {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
-              </div>
+                {/* Dashboard Content */}
+                <div className="relative z-10 container mx-auto p-6 pb-24 space-y-8 max-w-7xl pt-24">
+                  {/* Header */}
+                  <div>
+                    <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
+                      {greeting}, {profile?.full_name?.split(' ')[0] || 'Founder'} 👋
+                    </h1>
+                    <p className="font-poppins text-muted-foreground mt-1">
+                      {dashboardMode === 'focus'
+                        ? 'Here\'s your focus for today'
+                        : dashboardMode === 'dashboard'
+                          ? 'Your dashboard overview'
+                          : 'Full control center'}
+                    </p>
+                  </div>
 
-              {/* Daily Goal Modal */}
-              <DailyGoalModal
-                open={showDailyGoal}
-                onOpenChange={setShowDailyGoal}
-                currentStreak={currentStreak}
-                mode={modalMode}
-                todaysCheckInId={todaysCheckInId}
-                onCheckInComplete={async () => {
-                  setHasCheckedInToday(true);
-                  hasInitializedRef.current = false;
-                  lastFetchTimeRef.current = 0;
-                }}
-              />
+                  {/* Dynamic View Based on Mode */}
+                  {dashboardMode === 'focus' && <FocusModeView {...metrics} />}
+                  {dashboardMode === 'dashboard' && <DashboardModeView {...metrics} />}
+                  {dashboardMode === 'control-center' && <ControlCenterView {...metrics} />}
+                </div>
+
+                {/* Daily Goal Modal */}
+                <DailyGoalModal
+                  open={showDailyGoal}
+                  onOpenChange={setShowDailyGoal}
+                  currentStreak={currentStreak}
+                  mode={modalMode}
+                  todaysCheckInId={todaysCheckInId}
+                  onCheckInComplete={async () => {
+                    setHasCheckedInToday(true);
+                    hasInitializedRef.current = false;
+                    lastFetchTimeRef.current = 0;
+                  }}
+                />
               </div>
             </SidebarInset>
           </DashboardContentWrapper>
