@@ -24,6 +24,7 @@ const ValuePropositionCards = () => {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const carouselContentRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [cardImages, setCardImages] = useState<ValueCardImage[]>([]);
   const [uploading, setUploading] = useState<number | null>(null);
   const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
@@ -258,6 +259,25 @@ const ValuePropositionCards = () => {
     };
   }, [api, onSelect]);
 
+  useEffect(() => {
+    if (!api) return;
+
+    if (autoScrollRef.current) {
+      clearInterval(autoScrollRef.current);
+    }
+
+    autoScrollRef.current = setInterval(() => {
+      api.scrollNext();
+    }, 5000);
+
+    return () => {
+      if (autoScrollRef.current) {
+        clearInterval(autoScrollRef.current);
+        autoScrollRef.current = null;
+      }
+    };
+  }, [api]);
+
   // Navigate to specific card
   const goToCard = (index: number) => {
     if (api) {
@@ -327,7 +347,7 @@ const ValuePropositionCards = () => {
             setApi={setApi}
             opts={{
               align: "start",
-              loop: false,
+              loop: true,
             }}
             className="w-full"
           >
