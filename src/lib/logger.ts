@@ -9,6 +9,30 @@ export type LogContext = Record<string, unknown>;
 const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
 
+const MAX_CONTEXT_LENGTH = 4000;
+
+const safeStringify = (value: unknown) => {
+  try {
+    const seen = new WeakSet<object>();
+    const json = JSON.stringify(value, (_key, val) => {
+      if (val instanceof Error) {
+        return { name: val.name, message: val.message, stack: val.stack };
+      }
+      if (typeof val === 'object' && val !== null) {
+        if (seen.has(val)) {
+          return '[Circular]';
+        }
+        seen.add(val);
+      }
+      return val;
+    });
+    if (!json) return '';
+    return json.length > MAX_CONTEXT_LENGTH ? `${json.slice(0, MAX_CONTEXT_LENGTH)}...` : json;
+  } catch (err) {
+    return '"[Unserializable context]"';
+  }
+};
+
 class Logger {
   private static instance: Logger;
   
@@ -23,7 +47,7 @@ class Logger {
 
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+    const contextStr = context ? ` ${safeStringify(context)}` : '';
     return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
   }
 

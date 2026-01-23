@@ -1,10 +1,11 @@
-import { StrictMode } from 'react'
+﻿import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
 import './index.css'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { logError, logInfo, logWarn } from './lib/logger'
+import { logInfo, logWarn } from './lib/logger'
+import { reportAppError } from './lib/errorReporting'
 
 const helmetContext = {};
 
@@ -31,21 +32,29 @@ if (initialTheme === 'dark') {
 
 // Global error handlers for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
-  logError('Unhandled promise rejection', event.reason, {
-    type: 'unhandled_rejection',
-    promise: event.promise?.toString(),
-  });
+  reportAppError(
+    event.reason,
+    'unhandled_rejection',
+    {
+      type: 'unhandled_rejection',
+      promise: event.promise?.toString(),
+    }
+  );
   // Prevent default browser console error (we've already logged it)
   // event.preventDefault();
 });
 
 window.addEventListener('error', (event) => {
-  logError('Unhandled error', event.error || event.message, {
-    type: 'global_error',
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno,
-  });
+  reportAppError(
+    event.error || event.message,
+    'window_error',
+    {
+      type: 'global_error',
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    }
+  );
 });
 
 // Initialize PostHog if a public key is provided via Vite env vars.
@@ -65,7 +74,7 @@ const initPosthog = () => {
       });
       // Debug helpers: confirm init and send a test event (only in development)
       if (import.meta.env.DEV) {
-        logInfo('PostHog init OK �?" test event will be sent', { 
+        logInfo('PostHog init OK ƒ?" test event will be sent', { 
           maskedKey: (import.meta.env.VITE_POSTHOG_API_KEY as string).slice(0,6) + '...' 
         });
       }
@@ -103,3 +112,4 @@ createRoot(document.getElementById("root")!).render(
     </ThemeProvider>
   </StrictMode>
 );
+

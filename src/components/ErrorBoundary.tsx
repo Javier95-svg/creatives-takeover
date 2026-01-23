@@ -2,7 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { logError } from '@/lib/logger';
+import { reportAppError, createErrorId } from '@/lib/errorReporting';
 
 interface Props {
   children: ReactNode;
@@ -13,30 +13,34 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorId: string | null;
 }
+
+const CHUNK_RELOAD_KEY = 'chunk_reload_attempted';
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
+    errorId: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorId: createErrorId() };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:28',message:'ErrorBoundary caught error',data:{errorMessage:error.message,errorStack:error.stack?.substring(0,500),componentStack:errorInfo.componentStack?.substring(0,500)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    logError('React Error Boundary caught error', error, {
-      componentStack: errorInfo.componentStack,
-      errorStack: error.stack,
-    });
-
-    // #region agent log
-    fetch('http://127.0.0.1:7254/ingest/ee6f2963-fab2-49c2-8925-7093ad7fc9ed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:35',message:'ErrorBoundary error details',data:{errorName:error.name,errorMessage:error.message,hasComponentStack:!!errorInfo.componentStack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    const errorId = this.state.errorId ?? createErrorId();
+    reportAppError(
+      error,
+      'error_boundary',
+      {
+        errorId,
+        componentStack: errorInfo.componentStack,
+        errorStack: error.stack,
+      },
+      errorId
+    );
 
     // Log to console in development for easier debugging
     if (import.meta.env.DEV) {
@@ -45,15 +49,52 @@ export class ErrorBoundary extends Component<Props, State> {
       console.error('Component stack:', errorInfo.componentStack);
     }
 
+    this.attemptChunkRecovery(error);
     this.props.onError?.(error, errorInfo);
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    try {
+      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+    } catch {
+      // Ignore storage failures
+    }
+    this.setState({ hasError: false, error: null, errorId: null });
   };
 
   private handleReload = () => {
     window.location.reload();
+  };
+
+  private isChunkLoadError = (error: Error) => {
+    const message = error.message || '';
+    return (
+      message.includes('Loading chunk') ||
+      message.includes('ChunkLoadError') ||
+      message.includes('Failed to fetch dynamically imported module') ||
+      message.includes('Importing a module script failed')
+    );
+  };
+
+  private attemptChunkRecovery = (error: Error) => {
+    if (typeof window === 'undefined') return false;
+    if (!this.isChunkLoadError(error)) return false;
+
+    let alreadyReloaded: string | null = null;
+    try {
+      alreadyReloaded = sessionStorage.getItem(CHUNK_RELOAD_KEY);
+    } catch {
+      alreadyReloaded = null;
+    }
+    if (alreadyReloaded) return false;
+
+    try {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
+    } catch {
+      // Ignore storage failures
+    }
+    window.location.reload();
+    return true;
   };
 
   public render() {
@@ -75,6 +116,11 @@ export class ErrorBoundary extends Component<Props, State> {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {this.state.errorId && (
+                <div className="text-xs text-muted-foreground">
+                  Reference ID: <span className="font-mono">{this.state.errorId}</span>
+                </div>
+              )}
               {import.meta.env.DEV && this.state.error && (
                 <div className="p-3 bg-muted rounded-md text-sm font-mono overflow-auto max-h-60">
                   <div className="font-semibold mb-2 text-foreground">Error Message:</div>
