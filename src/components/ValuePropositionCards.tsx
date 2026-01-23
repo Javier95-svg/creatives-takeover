@@ -54,7 +54,7 @@ const ValuePropositionCards = () => {
       title: "CONNECT",
       subtitle: "Community",
       buttonLabel: "Community",
-      description: "Connect with vetted startup mentors and coaches. Get hands-on guidance, actionable feedback on your roadmap and pitch, and practical support to accelerate your startup growth from idea to funding.",
+      description: "Community is the space where founders connect with people who actually get it, so building your startup doesn't have to feel like a solo mission.\n\nHere, users can find mentors for guidance and feedback, and meet other founders to share wins, challenges, and lessons in real time. Having the right people around you helps you stay accountable, make better decisions faster, and avoid the isolation that often leads to stress and burnout.",
       cta: "Join Community",
       link: "/community",
       image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop&q=80",
