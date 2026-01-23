@@ -112,15 +112,15 @@ const ValuePropositionCards = () => {
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-4">
+            <CarouselContent className="-ml-4 items-stretch">
               {allCards.map((card, index) => {
                 const Icon = card.icon;
                 return (
-                  <CarouselItem key={card.title} className="pl-4 basis-full">
-                    <Card className="glass border-border overflow-hidden">
-                      <div className="grid md:grid-cols-2">
+                  <CarouselItem key={card.title} className="pl-4 basis-full h-full">
+                    <Card className="glass border-border overflow-hidden h-full">
+                      <div className="grid md:grid-cols-2 h-full">
                         {/* Image - Left */}
-                        <figure className="relative h-64 md:h-auto md:min-h-[320px]">
+                        <figure className="relative h-64 md:h-full md:min-h-[320px]">
                           <img
                             src={card.image}
                             alt={card.imageAlt}
@@ -131,7 +131,7 @@ const ValuePropositionCards = () => {
                         </figure>
 
                         {/* Content - Right */}
-                        <div className="p-6 md:p-10 flex flex-col justify-center">
+                        <div className="p-6 md:p-10 flex flex-col justify-center md:h-full">
                           <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <Icon className="h-5 w-5 text-primary" />
