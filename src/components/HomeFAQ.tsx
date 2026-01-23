@@ -1,14 +1,11 @@
-import { ExternalLink, Mail } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { usePageAnalytics } from "@/hooks/usePageAnalytics";
 
 const HomeFAQ = () => {
-  const { trackClick } = usePageAnalytics();
   const faqs = [
     {
       question: "What is Creatives Takeover?",
@@ -92,37 +89,6 @@ const HomeFAQ = () => {
           </div>
         </div>
 
-        {/* Trust-Building Footer */}
-        <div className="mt-12 sm:mt-16 text-center px-4">
-          <div className="bg-muted/40 border border-border/70 rounded-xl p-6 sm:p-8 max-w-2xl mx-auto">
-            <h3 className="font-space-grotesk text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">
-              Still have questions?
-            </h3>
-            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-              We're here to help you succeed. Reach out to us directly.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <a
-                href="mailto:admin@creatives-takeover.com"
-                onClick={() => trackClick('Email Us', 'FAQ Contact')}
-                className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-3 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
-              >
-                <Mail className="w-5 h-5" />
-                Email Us
-              </a>
-              <a
-                href="https://t.me/creativestakeover"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackClick('Join Our Telegram', 'FAQ Contact')}
-                className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-3 text-sm font-medium text-foreground hover:border-primary/40 transition-colors"
-              >
-                <ExternalLink className="w-5 h-5" />
-                Join Our Telegram
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );
