@@ -93,7 +93,19 @@ export class ErrorBoundary extends Component<Props, State> {
     } catch {
       // Ignore storage failures
     }
-    window.location.reload();
+
+    // Force a cache-bypassing reload by replacing the current URL with a timestamped one.
+    // This increases the chance the browser/CDN fetches a fresh index.html and new asset references.
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('_r', String(Date.now()));
+      // Use replace so the browser history isn't polluted
+      window.location.replace(url.toString());
+    } catch {
+      // Fallback to normal reload if URL manipulation fails
+      window.location.reload();
+    }
+
     return true;
   };
 
