@@ -13,6 +13,7 @@ import VersionUpdateBanner from "@/components/VersionUpdateBanner";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
+import ProUpgradeBanner from "@/components/ProUpgradeBanner";
 
 const FloatingFeedbackWidget = lazy(() => import("@/components/FloatingFeedbackWidget"));
 const MobileBottomNav = lazy(() =>
@@ -94,11 +95,11 @@ const queryClient = new QueryClient({
 
 const FeedbackWidgetWrapper = () => {
   const location = useLocation();
-  
+
   // Show feedback widget on public pages
   const publicPages = ['/', '/about', '/pricing', '/community', '/careers', '/insighta', '/demo'];
   const showWidget = publicPages.includes(location.pathname) || location.pathname.startsWith('/insighta/');
-  
+
   return showWidget ? <FloatingFeedbackWidget /> : null;
 };
 
@@ -108,85 +109,86 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <UserProvider>
-          <ProgressProvider>
-            <TooltipProvider>
-              {hasUpdate && <VersionUpdateBanner onRefresh={refreshApp} />}
-              <MobileOptimization />
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Suspense fallback={null}>
-                  <ScrollToTop />
-                  <UpgradePromptProvider>
-                    <FeedbackWidgetWrapper />
-                    <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/community" element={<CommunityPage />} />
-                    <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
-                    <Route path="/community/book/:id" element={<MentorBookingPage />} />
-                    <Route path="/community/co-founders" element={<FindCoFounder />} />
-                    <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
-                    <Route path="/community/co-founders/edit/:postId" element={<EditCoFounderPost />} />
-                    <Route path="/community/my-bookings" element={<MyBookings />} />
-                    <Route path="/community/admin/new" element={<AdminMentorEditor />} />
-                    <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
-                    <Route path="/community/:slug" element={<MentorProfilePage />} />
-                    <Route path="/stories" element={<Stories />} />
-                    <Route path="/stories/rss.xml" element={<StoriesRSS />} />
-                    <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
-                    <Route path="/stories/:slug" element={<StoryArticle />} />
-                    <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
-                    <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
-                    <Route path="/admin/hero-images" element={<AdminHeroImages />} />
-                    <Route path="/admin/vc-management" element={<AdminVCManagement />} />
-                    <Route path="/careers" element={<Careers />} />
-                    <Route path="/prompt-library" element={<PromptLibrary />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/bizmap-ai" element={<Dream2Plan />} />
-                    <Route path="/bizmap-ai/pmf-lab" element={<PMFLabPage />} />
-                    <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
+        <AuthProvider>
+          <UserProvider>
+            <ProgressProvider>
+              <TooltipProvider>
+                {hasUpdate && <VersionUpdateBanner onRefresh={refreshApp} />}
+                <MobileOptimization />
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Suspense fallback={null}>
+                    <ScrollToTop />
+                    <UpgradePromptProvider>
+                      <ProUpgradeBanner />
+                      <FeedbackWidgetWrapper />
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/pricing" element={<PricingPage />} />
+                        <Route path="/community" element={<CommunityPage />} />
+                        <Route path="/community/mentors/:id" element={<MentorProfilePage />} />
+                        <Route path="/community/book/:id" element={<MentorBookingPage />} />
+                        <Route path="/community/co-founders" element={<FindCoFounder />} />
+                        <Route path="/community/co-founders/create" element={<CreateCoFounderPost />} />
+                        <Route path="/community/co-founders/edit/:postId" element={<EditCoFounderPost />} />
+                        <Route path="/community/my-bookings" element={<MyBookings />} />
+                        <Route path="/community/admin/new" element={<AdminMentorEditor />} />
+                        <Route path="/community/admin/edit/:id" element={<AdminMentorEditor />} />
+                        <Route path="/community/:slug" element={<MentorProfilePage />} />
+                        <Route path="/stories" element={<Stories />} />
+                        <Route path="/stories/rss.xml" element={<StoriesRSS />} />
+                        <Route path="/stories/tags/:tagSlug" element={<StoryTagPage />} />
+                        <Route path="/stories/:slug" element={<StoryArticle />} />
+                        <Route path="/stories/admin/new" element={<AdminStoryEditor />} />
+                        <Route path="/stories/admin/edit/:id" element={<AdminStoryEditor />} />
+                        <Route path="/admin/hero-images" element={<AdminHeroImages />} />
+                        <Route path="/admin/vc-management" element={<AdminVCManagement />} />
+                        <Route path="/careers" element={<Careers />} />
+                        <Route path="/prompt-library" element={<PromptLibrary />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/bizmap-ai" element={<Dream2Plan />} />
+                        <Route path="/bizmap-ai/pmf-lab" element={<PMFLabPage />} />
+                        <Route path="/bizmap-ai/tech-stack" element={<TechStackPage />} />
 
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/account" element={<Account />} />
-                    <Route path="/setup-quiz" element={<SetupQuiz />} />
-                    <Route path="/insighta" element={<Blog />} />
-                    <Route path="/insighta/vc-search" element={<VCSearchPage />} />
-                    <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
-                    <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
-                    <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
-                    <Route path="/insighta/test" element={<InsightaTestPage />} />
-                    <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
-                    <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
-                    <Route path="/demo" element={<Demo />} />
-                    <Route path="/messages/:username" element={<Messages />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/profile/:username" element={<Profile />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/creatives-takeover" element={<CreativesTakeover />} />
-                    <Route path="/rag-test" element={<RAGTest />} />
-                    <Route path="/test-phase1" element={<TestPhase1 />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <MobileBottomNav />
-                  </UpgradePromptProvider>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </ProgressProvider>
-        </UserProvider>
-      </AuthProvider>
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/onboarding" element={<Onboarding />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/account" element={<Account />} />
+                        <Route path="/setup-quiz" element={<SetupQuiz />} />
+                        <Route path="/insighta" element={<Blog />} />
+                        <Route path="/insighta/vc-search" element={<VCSearchPage />} />
+                        <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
+                        <Route path="/insighta/accelerator-hunt" element={<AcceleratorHuntPage />} />
+                        <Route path="/insighta/pitch-deck-analyzer" element={<PitchDeckAnalyzerPage />} />
+                        <Route path="/insighta/test" element={<InsightaTestPage />} />
+                        <Route path="/insighta/vc/:slug" element={<VCProfilePage />} />
+                        <Route path="/insighta/accelerator/:id" element={<AcceleratorProfilePage />} />
+                        <Route path="/demo" element={<Demo />} />
+                        <Route path="/messages/:username" element={<Messages />} />
+                        <Route path="/messages" element={<Messages />} />
+                        <Route path="/profile/:username" element={<Profile />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
+                        <Route path="/creatives-takeover" element={<CreativesTakeover />} />
+                        <Route path="/rag-test" element={<RAGTest />} />
+                        <Route path="/test-phase1" element={<TestPhase1 />} />
+                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <MobileBottomNav />
+                    </UpgradePromptProvider>
+                  </Suspense>
+                </BrowserRouter>
+              </TooltipProvider>
+            </ProgressProvider>
+          </UserProvider>
+        </AuthProvider>
       </QueryClientProvider>
       <Suspense fallback={null}>
         <Analytics />
