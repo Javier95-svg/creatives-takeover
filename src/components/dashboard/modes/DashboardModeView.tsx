@@ -4,8 +4,10 @@ import { TaskOverview } from '../TaskOverview';
 import { MonthlyRevenueTarget } from '../MonthlyRevenueTarget';
 import { CoreMetrics } from '../CoreMetrics';
 import { QuickWins } from '../QuickWins';
+import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardModeViewProps {
   streak: number;
@@ -24,6 +26,8 @@ export function DashboardModeView({
   tasksCompletedThisWeek,
   totalTasksThisWeek,
 }: DashboardModeViewProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       {/* Hero Section: Smart Focus + Weekly Mission Side by Side */}
@@ -34,6 +38,10 @@ export function DashboardModeView({
         <div id="weekly-mission">
           <WeeklyMissionPanel />
         </div>
+      </div>
+
+      <div id="focus-funnel">
+        <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
       </div>
 
       {/* Metrics Grid - 4 Cards */}

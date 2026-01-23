@@ -21,6 +21,8 @@ import { FounderResources } from '../FounderResources';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
+import { useNavigate } from 'react-router-dom';
 
 interface ControlCenterViewProps {
   streak: number;
@@ -42,6 +44,7 @@ export function ControlCenterView({
   totalTasksThisWeek,
 }: ControlCenterViewProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-8">
@@ -53,6 +56,10 @@ export function ControlCenterView({
         <div id="weekly-mission">
           <WeeklyMissionPanel />
         </div>
+      </div>
+
+      <div id="focus-funnel">
+        <FocusFunnelWidget onOpenAIPartner={() => navigate('/focus-funnel')} />
       </div>
 
       {/* Key Metrics - Same as Dashboard Mode */}

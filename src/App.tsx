@@ -80,6 +80,7 @@ const MyBookings = lazy(() => import("./pages/community/MyBookings"));
 const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor"));
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
+const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -162,6 +163,7 @@ function App() {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
+                        <Route path="/focus-funnel" element={<FocusFunnel />} />
                         <Route path="/insighta" element={<Blog />} />
                         <Route path="/insighta/vc-search" element={<VCSearchPage />} />
                         <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />

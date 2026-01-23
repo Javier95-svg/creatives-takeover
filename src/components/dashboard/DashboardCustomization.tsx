@@ -19,9 +19,14 @@ import {
 interface SidebarPreferences {
   showBizMapAI: boolean;
   showPMFLab: boolean;
+  showPromptLibrary: boolean;
   showTechStack: boolean;
   showAcceleratorHunt: boolean;
   showInsighta: boolean;
+  showInsightaTest: boolean;
+  showVCSearch: boolean;
+  showEmailTemplates: boolean;
+  showPitchDeckAnalyzer: boolean;
   showCommunity: boolean;
   showRead: boolean;
 }
@@ -29,9 +34,14 @@ interface SidebarPreferences {
 const DEFAULT_PREFERENCES: SidebarPreferences = {
   showBizMapAI: true,
   showPMFLab: false,
+  showPromptLibrary: false,
   showTechStack: false,
   showAcceleratorHunt: false,
   showInsighta: false,
+  showInsightaTest: false,
+  showVCSearch: false,
+  showEmailTemplates: false,
+  showPitchDeckAnalyzer: false,
   showCommunity: true,
   showRead: true,
 };
@@ -154,6 +164,18 @@ export const DashboardCustomization = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
+                    <Label htmlFor="prompt-library" className="font-medium">Prompt Library</Label>
+                    <p className="text-sm text-muted-foreground">Curated prompts for founders</p>
+                  </div>
+                  <Switch
+                    id="prompt-library"
+                    checked={preferences.showPromptLibrary}
+                    onCheckedChange={() => togglePreference('showPromptLibrary')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
                     <Label htmlFor="tech-stack" className="font-medium">Tech Stack Builder</Label>
                     <p className="text-sm text-muted-foreground">AI-powered tech recommendations</p>
                   </div>
@@ -175,6 +197,54 @@ export const DashboardCustomization = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
+                    <Label htmlFor="insighta" className="font-medium">Investor Matchmaker</Label>
+                    <p className="text-sm text-muted-foreground">Match with relevant investors</p>
+                  </div>
+                  <Switch
+                    id="insighta"
+                    checked={preferences.showInsighta}
+                    onCheckedChange={() => togglePreference('showInsighta')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="vc-search" className="font-medium">VC Search</Label>
+                    <p className="text-sm text-muted-foreground">Explore firms and investors</p>
+                  </div>
+                  <Switch
+                    id="vc-search"
+                    checked={preferences.showVCSearch}
+                    onCheckedChange={() => togglePreference('showVCSearch')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="email-templates" className="font-medium">Email Templates</Label>
+                    <p className="text-sm text-muted-foreground">Outreach templates for fundraising</p>
+                  </div>
+                  <Switch
+                    id="email-templates"
+                    checked={preferences.showEmailTemplates}
+                    onCheckedChange={() => togglePreference('showEmailTemplates')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="pitch-deck" className="font-medium">Pitch Deck Analyzer</Label>
+                    <p className="text-sm text-muted-foreground">Get feedback on your deck</p>
+                  </div>
+                  <Switch
+                    id="pitch-deck"
+                    checked={preferences.showPitchDeckAnalyzer}
+                    onCheckedChange={() => togglePreference('showPitchDeckAnalyzer')}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
                     <Label htmlFor="accelerator-hunt" className="font-medium">Accelerator Hunt</Label>
                     <p className="text-sm text-muted-foreground">Find accelerators for your startup</p>
                   </div>
@@ -187,13 +257,13 @@ export const DashboardCustomization = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="insighta" className="font-medium">Investor Matchmaker</Label>
-                    <p className="text-sm text-muted-foreground">Match with relevant investors</p>
+                    <Label htmlFor="insighta-test" className="font-medium">Insighta Test</Label>
+                    <p className="text-sm text-muted-foreground">Fundraising readiness check</p>
                   </div>
                   <Switch
-                    id="insighta"
-                    checked={preferences.showInsighta}
-                    onCheckedChange={() => togglePreference('showInsighta')}
+                    id="insighta-test"
+                    checked={preferences.showInsightaTest}
+                    onCheckedChange={() => togglePreference('showInsightaTest')}
                   />
                 </div>
               </CardContent>

@@ -1,6 +1,11 @@
 import { SmartFocusCard } from '../decision-engine/SmartFocusCard';
+import { WeeklyMissionPanel } from '../decision-engine/WeeklyMissionPanel';
+import { TaskOverview } from '../TaskOverview';
+import { CoreMetrics } from '../CoreMetrics';
+import { FocusFunnelWidget } from '@/components/focus-funnel/FocusFunnelWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Flame, Target, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface FocusModeViewProps {
   streak: number;
@@ -15,11 +20,25 @@ export function FocusModeView({
   totalTasksToday,
   weeklyProgress,
 }: FocusModeViewProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Hero Section: Smart Focus Card Only */}
       <div id="dashboard-focus">
         <SmartFocusCard />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div id="focus-funnel">
+          <FocusFunnelWidget
+            compact
+            onOpenAIPartner={() => navigate('/focus-funnel')}
+          />
+        </div>
+        <div id="weekly-mission">
+          <WeeklyMissionPanel />
+        </div>
       </div>
 
       {/* Minimal Key Metrics - 3 Cards Only */}
@@ -80,6 +99,18 @@ export function FocusModeView({
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div id="core-metrics">
+        <CoreMetrics />
+      </div>
+
+      <div id="your-tasks">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-space-grotesk text-lg font-semibold tracking-tight">Your Tasks</h3>
+          <p className="text-xs text-muted-foreground">Keep momentum on key actions</p>
+        </div>
+        <TaskOverview />
       </div>
 
       {/* Minimal Footer Message */}

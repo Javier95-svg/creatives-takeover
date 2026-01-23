@@ -3,20 +3,20 @@ import { useState, useEffect } from 'react';
 import {
   Target,
   Calendar,
-  Briefcase,
   CheckSquare,
   Sparkles,
-  CalendarDays,
-  TrendingUp,
   Users,
   BookOpen,
   MessageSquare,
-  Settings,
   Command,
   Zap,
   Rocket,
   DollarSign,
   FlaskConical,
+  Library,
+  Mail,
+  FileSearch,
+  ClipboardList,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -42,20 +42,26 @@ interface DashboardSidebarProps {
   dashboardMode: DashboardMode;
 }
 
-export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
+export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSidebarProps) => {
   const scrollToSection = useScrollToSection();
   const { activeSection } = useDashboardNavigation();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
-  const [sidebarPreferences, setSidebarPreferences] = useState({
+  const defaultSidebarPreferences = {
     showBizMapAI: true,
     showPMFLab: false,
+    showPromptLibrary: false,
     showTechStack: false,
     showAcceleratorHunt: false,
     showInsighta: false,
+    showInsightaTest: false,
+    showVCSearch: false,
+    showEmailTemplates: false,
+    showPitchDeckAnalyzer: false,
     showCommunity: true,
     showRead: true,
-  });
+  };
+  const [sidebarPreferences, setSidebarPreferences] = useState(defaultSidebarPreferences);
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -68,7 +74,7 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
         .single();
 
       if (data?.sidebar_preferences) {
-        setSidebarPreferences({ ...sidebarPreferences, ...data.sidebar_preferences });
+        setSidebarPreferences({ ...defaultSidebarPreferences, ...data.sidebar_preferences });
       }
     };
 
@@ -82,45 +88,25 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
     }
   };
 
-  // Define navigation items based on dashboard mode
-  const getDashboardViewItems = () => {
-    const baseItems = [
-      { id: 'dashboard-focus', label: "Today's Focus", icon: Target },
-    ];
-
-    if (dashboardMode === 'dashboard' || dashboardMode === 'control-center') {
-      baseItems.push(
-        { id: 'weekly-mission', label: 'Weekly Mission', icon: Calendar },
-        { id: 'monthly-revenue', label: 'Monthly Revenue', icon: TrendingUp },
-        { id: 'core-metrics', label: 'Core Metrics', icon: Target },
-        { id: 'quick-wins', label: 'Quick Wins', icon: Sparkles },
-        { id: 'your-tasks', label: 'Your Tasks', icon: CheckSquare }
-      );
-    }
-
-    if (dashboardMode === 'control-center') {
-      baseItems.push(
-        { id: 'ai-insights', label: 'AI Insights', icon: Sparkles },
-        { id: 'business-health', label: 'Business Health', icon: TrendingUp },
-        { id: 'calendar-view', label: 'Calendar', icon: CalendarDays },
-        { id: 'daily-priorities', label: 'Daily Priorities', icon: Target },
-        { id: 'progress-timeline', label: 'Progress', icon: TrendingUp },
-        { id: 'key-milestones', label: 'Milestones', icon: Target },
-        { id: 'revenue-hub', label: 'Budget', icon: TrendingUp },
-        { id: 'market-validation', label: 'Market Intel', icon: Target }
-      );
-    }
-
-    return baseItems;
-  };
+  const getDashboardViewItems = () => ([
+    { id: 'focus-funnel', label: 'Focus Funnel', icon: Target },
+    { id: 'core-metrics', label: 'Core Metrics', icon: Target },
+    { id: 'weekly-mission', label: 'Weekly Mission', icon: Calendar },
+    { id: 'your-tasks', label: 'Your Tasks', icon: CheckSquare },
+  ]);
 
   // Build tools items based on user preferences
   const toolsItems = [
-    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai', label: 'BizMap AI', icon: MessageSquare },
-    sidebarPreferences.showPMFLab && { path: '/bizmap-ai?mode=pmf-lab', label: 'PMF Lab', icon: FlaskConical },
-    sidebarPreferences.showTechStack && { path: '/bizmap-ai?mode=tech-stack', label: 'Tech Stack', icon: Zap },
-    sidebarPreferences.showAcceleratorHunt && { path: '/insighta?mode=accelerator', label: 'Accelerator Hunt', icon: Rocket },
-    sidebarPreferences.showInsighta && { path: '/insighta', label: 'Investor Match', icon: DollarSign },
+    sidebarPreferences.showBizMapAI && { path: '/bizmap-ai', label: 'BizMap AI Chatbot', icon: MessageSquare },
+    sidebarPreferences.showPMFLab && { path: '/bizmap-ai/pmf-lab', label: 'PMF Lab', icon: FlaskConical },
+    sidebarPreferences.showPromptLibrary && { path: '/prompt-library', label: 'Prompt Library', icon: Library },
+    sidebarPreferences.showTechStack && { path: '/bizmap-ai/tech-stack', label: 'Tech Stack Builder', icon: Zap },
+    sidebarPreferences.showInsighta && { path: '/insighta', label: 'Insighta Hub', icon: DollarSign },
+    sidebarPreferences.showVCSearch && { path: '/insighta/vc-search', label: 'VC Search', icon: FileSearch },
+    sidebarPreferences.showEmailTemplates && { path: '/insighta/email-templates', label: 'Email Templates', icon: Mail },
+    sidebarPreferences.showPitchDeckAnalyzer && { path: '/insighta/pitch-deck-analyzer', label: 'Pitch Deck Analyzer', icon: ClipboardList },
+    sidebarPreferences.showAcceleratorHunt && { path: '/insighta/accelerator-hunt', label: 'Accelerator Hunt', icon: Rocket },
+    sidebarPreferences.showInsightaTest && { path: '/insighta/test', label: 'Insighta Test', icon: Sparkles },
     sidebarPreferences.showCommunity && { path: '/community', label: 'Find a Mentor', icon: Users },
     sidebarPreferences.showRead && { path: '/stories', label: 'Read', icon: BookOpen },
   ].filter(Boolean) as { path: string; label: string; icon: any }[];
@@ -141,7 +127,7 @@ export const DashboardSidebar = ({ dashboardMode }: DashboardSidebarProps) => {
       <SidebarContent>
         {/* Today's Focus - Quick Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Your Focus</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard Sections</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {getDashboardViewItems().map((item) => (
