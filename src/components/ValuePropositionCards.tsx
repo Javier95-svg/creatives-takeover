@@ -1,8 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
+import { useState, useCallback, useEffect, useRef, type ChangeEvent } from "react";
+import { Lightbulb, Users, Rocket, LayoutDashboard, Upload, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   Carousel,
   CarouselContent,
@@ -10,14 +14,27 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 
+interface ValueCardImage {
+  position: number;
+  image_url: string;
+  alt_text: string | null;
+}
+
 const ValuePropositionCards = () => {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const carouselContentRef = useRef<HTMLDivElement | null>(null);
+  const [cardImages, setCardImages] = useState<ValueCardImage[]>([]);
+  const [uploading, setUploading] = useState<number | null>(null);
+  const [optimisticPreviews, setOptimisticPreviews] = useState<Record<number, string>>({});
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const { user } = useAuth();
+  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
   // Core value propositions - condensed to 4 essential offerings
   const allCards = [
     {
+      position: 1,
       icon: Lightbulb,
       title: "PLAN",
       subtitle: "BizMap AI",
@@ -29,6 +46,7 @@ const ValuePropositionCards = () => {
       imageAlt: "Business development planning with strategy notes"
     },
     {
+      position: 2,
       icon: LayoutDashboard,
       title: "EXECUTE",
       subtitle: "Dashboard",
@@ -40,6 +58,7 @@ const ValuePropositionCards = () => {
       imageAlt: "Task tracking and project management board"
     },
     {
+      position: 3,
       icon: Rocket,
       title: "FUNDRAISE",
       subtitle: "Insighta",
@@ -51,6 +70,7 @@ const ValuePropositionCards = () => {
       imageAlt: "Fundraising meeting with investors"
     },
     {
+      position: 4,
       icon: Users,
       title: "CONNECT",
       subtitle: "Community",
@@ -62,6 +82,165 @@ const ValuePropositionCards = () => {
       imageAlt: "Founders collaborating in a video call"
     }
   ];
+
+  useEffect(() => {
+    const fetchCardImages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('value_proposition_images')
+          .select('position, image_url, alt_text')
+          .eq('is_active', true)
+          .order('position', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching value proposition images:', error);
+          return;
+        }
+
+        if (data) {
+          setCardImages(data);
+        }
+      } catch (error) {
+        console.error('Error fetching value proposition images:', error);
+      }
+    };
+
+    fetchCardImages();
+  }, []);
+
+  const handleImageUpload = async (
+    position: number,
+    file: File,
+    event?: ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!isAdmin) {
+      toast.error('Only admins can upload images');
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
+      return;
+    }
+
+    const maxSize = 5242880;
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 5MB limit. Please upload a smaller image.');
+      return;
+    }
+
+    const previousImages = [...cardImages];
+    const previousImage = previousImages.find((img) => img.position === position);
+    const targetCard = allCards.find((card) => card.position === position);
+    const fallbackAlt = targetCard?.imageAlt || `Value proposition image ${position}`;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const previewUrl = reader.result as string;
+      setOptimisticPreviews((prev) => ({ ...prev, [position]: previewUrl }));
+      setCardImages((prev) => {
+        const updated = [...prev];
+        const existingIndex = updated.findIndex((img) => img.position === position);
+        if (existingIndex >= 0) {
+          updated[existingIndex] = { ...updated[existingIndex], image_url: previewUrl };
+        } else {
+          updated.push({ position, image_url: previewUrl, alt_text: fallbackAlt });
+        }
+        return updated;
+      });
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      setUploading(position);
+      toast.loading('Uploading image...', { id: `upload-value-card-${position}` });
+
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${position}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('value-proposition-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        toast.error(`Upload failed: ${uploadError.message || 'Storage error'}`, {
+          id: `upload-value-card-${position}`,
+        });
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('value-proposition-images')
+        .getPublicUrl(fileName);
+
+      setOptimisticPreviews((prev) => ({ ...prev, [position]: publicUrl }));
+      setCardImages((prev) => {
+        const updated = [...prev];
+        const existingIndex = updated.findIndex((img) => img.position === position);
+        if (existingIndex >= 0) {
+          updated[existingIndex] = { ...updated[existingIndex], image_url: publicUrl };
+        } else {
+          updated.push({ position, image_url: publicUrl, alt_text: fallbackAlt });
+        }
+        return updated;
+      });
+
+      const { error: upsertError } = await supabase
+        .from('value_proposition_images')
+        .upsert(
+          {
+            position,
+            image_url: publicUrl,
+            alt_text: fallbackAlt,
+            is_active: true,
+          },
+          { onConflict: 'position' }
+        );
+
+      if (upsertError) {
+        throw upsertError;
+      }
+
+      toast.success('Image uploaded successfully!', { id: `upload-value-card-${position}` });
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      setOptimisticPreviews((prev) => {
+        const updated = { ...prev };
+        delete updated[position];
+        return updated;
+      });
+
+      if (previousImage) {
+        setCardImages((prev) => {
+          const updated = [...prev];
+          const existingIndex = updated.findIndex((img) => img.position === position);
+          if (existingIndex >= 0) {
+            updated[existingIndex] = previousImage;
+          } else {
+            updated.push(previousImage);
+          }
+          return updated;
+        });
+      } else {
+        setCardImages((prev) => prev.filter((img) => img.position !== position));
+      }
+
+      toast.error(`Failed to upload image: ${error?.message || 'Unknown error'}`, {
+        id: `upload-value-card-${position}`,
+      });
+    } finally {
+      setUploading(null);
+      if (event?.target) {
+        event.target.value = '';
+      }
+    }
+  };
 
   // Handle carousel API setup and sync selected index
   const onSelect = useCallback(() => {
@@ -155,19 +334,70 @@ const ValuePropositionCards = () => {
             <CarouselContent ref={carouselContentRef} className="-ml-4 items-stretch">
               {allCards.map((card, index) => {
                 const Icon = card.icon;
+                const storedImage = cardImages.find((img) => img.position === card.position);
+                const imageSrc = optimisticPreviews[card.position] || storedImage?.image_url || card.image;
+                const altText = storedImage?.alt_text || card.imageAlt;
+                const isUploadingPosition = uploading === card.position;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
                     <Card className="glass border-border overflow-hidden h-full" data-value-card>
                       <div className="grid md:grid-cols-2 h-full">
                         {/* Image - Left */}
-                        <figure className="relative h-64 md:h-full md:min-h-[320px]">
+                        <figure className="relative h-64 md:h-full md:min-h-[320px] group">
                           <img
-                            src={card.image}
-                            alt={card.imageAlt}
+                            src={imageSrc}
+                            alt={altText}
                             className="w-full h-full object-cover"
                             loading="lazy"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent" />
+                          {isAdmin && (
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                              <div className="w-full max-w-[200px] px-4">
+                                <Input
+                                  ref={(el) => {
+                                    fileInputRefs.current[card.position] = el;
+                                  }}
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/gif"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handleImageUpload(card.position, file, e);
+                                    }
+                                  }}
+                                  disabled={isUploadingPosition}
+                                  className="hidden"
+                                  id={`value-card-upload-${card.position}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    const fileInput = fileInputRefs.current[card.position];
+                                    if (fileInput) {
+                                      fileInput.click();
+                                    }
+                                  }}
+                                  disabled={isUploadingPosition}
+                                  className="w-full"
+                                >
+                                  {isUploadingPosition ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Uploading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Change Image
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </figure>
 
                         {/* Content - Right */}
