@@ -23,7 +23,7 @@ const ProUpgradeBanner = () => {
     return (
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b border-border/50 backdrop-blur-sm sticky top-0 z-[100]">
             <div className="container mx-auto px-4 h-10 flex items-center justify-center gap-2 text-sm font-medium">
-                <span className="text-foreground/80">Considering Pro? Talk to us about upgrading</span>
+                <span className="text-foreground/80">Give us your feedback and get a free Pro upgrade</span>
                 <a
                     href="https://koalendar.com/e/meet-with-javier-pena"
                     target="_blank"
