@@ -87,21 +87,15 @@ const FEATURES = [
     painPoint: 'Turn your ideas into actionable plans with AI guidance'
   },
   {
-    id: 'prompt_library',
-    title: 'Prompt Library',
-    description: 'Pre-built AI prompts for pitches, emails, interviews',
-    painPoint: 'Save time on repetitive tasks and communications'
-  },
-  {
     id: 'community',
     title: 'Community',
     description: 'Connect with founders, feedback, demo days',
     painPoint: 'Build your network and get real feedback from peers'
   },
   {
-    id: 'insights',
-    title: 'Insights',
-    description: 'Data-driven recommendations and prioritization',
+    id: 'insighta',
+    title: 'Insighta',
+    description: 'Data-driven recommendations and fundraising insights',
     painPoint: 'Make informed decisions based on your business data'
   }
 ];
@@ -142,7 +136,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     primaryPain: '',
     secondaryPains: [],
     decisionMakingProcess: '',
-    selectedFeatures: [],
+    selectedFeatures: ['dashboard', 'bizmap_ai', 'community', 'insighta'],
     communicationStyle: '',
     commitmentLevel: '',
     acceptedTerms: false
@@ -510,26 +504,26 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, businessStage: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="stage-idea" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="idea" id="stage-idea" />
-                  <Label htmlFor="stage-idea" className="cursor-pointer flex-1">💡 Just an idea</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">💡 Just an idea</span>
+                </Label>
+                <Label htmlFor="stage-validation" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="validation" id="stage-validation" />
-                  <Label htmlFor="stage-validation" className="cursor-pointer flex-1">🔍 Validating the idea</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🔍 Validating the idea</span>
+                </Label>
+                <Label htmlFor="stage-mvp" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="mvp" id="stage-mvp" />
-                  <Label htmlFor="stage-mvp" className="cursor-pointer flex-1">🚀 Building MVP</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🚀 Building MVP</span>
+                </Label>
+                <Label htmlFor="stage-launched" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="launched" id="stage-launched" />
-                  <Label htmlFor="stage-launched" className="cursor-pointer flex-1">✨ Launched</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">✨ Launched</span>
+                </Label>
+                <Label htmlFor="stage-scaling" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="scaling" id="stage-scaling" />
-                  <Label htmlFor="stage-scaling" className="cursor-pointer flex-1">📈 Scaling</Label>
-                </div>
+                  <span className="flex-1">📈 Scaling</span>
+                </Label>
               </RadioGroup>
               {errors.businessStage && <p className="text-sm text-destructive mt-1">{errors.businessStage}</p>}
             </div>
@@ -541,18 +535,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, founderExperience: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="exp-first" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="first-time" id="exp-first" />
-                  <Label htmlFor="exp-first" className="cursor-pointer flex-1">🌱 First-time founder</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🌱 First-time founder</span>
+                </Label>
+                <Label htmlFor="exp-1-2" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="1-2" id="exp-1-2" />
-                  <Label htmlFor="exp-1-2" className="cursor-pointer flex-1">📚 1-2 previous ventures</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">📚 1-2 previous ventures</span>
+                </Label>
+                <Label htmlFor="exp-3plus" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="3+" id="exp-3plus" />
-                  <Label htmlFor="exp-3plus" className="cursor-pointer flex-1">🎯 3+ previous ventures</Label>
-                </div>
+                  <span className="flex-1">🎯 3+ previous ventures</span>
+                </Label>
               </RadioGroup>
               {errors.founderExperience && <p className="text-sm text-destructive mt-1">{errors.founderExperience}</p>}
             </div>
@@ -564,18 +558,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, timeCommitment: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="time-full" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="full-time" id="time-full" />
-                  <Label htmlFor="time-full" className="cursor-pointer flex-1">⏰ Full-time</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">⏰ Full-time</span>
+                </Label>
+                <Label htmlFor="time-part" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="part-time" id="time-part" />
-                  <Label htmlFor="time-part" className="cursor-pointer flex-1">📅 Part-time</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">📅 Part-time</span>
+                </Label>
+                <Label htmlFor="time-weekends" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="weekends" id="time-weekends" />
-                  <Label htmlFor="time-weekends" className="cursor-pointer flex-1">🌙 Weekends/evenings</Label>
-                </div>
+                  <span className="flex-1">🌙 Weekends/evenings</span>
+                </Label>
               </RadioGroup>
               {errors.timeCommitment && <p className="text-sm text-destructive mt-1">{errors.timeCommitment}</p>}
             </div>
@@ -587,22 +581,22 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, launchTimeline: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="launch-30" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="30-days" id="launch-30" />
-                  <Label htmlFor="launch-30" className="cursor-pointer flex-1">🚀 Within 30 days</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🚀 Within 30 days</span>
+                </Label>
+                <Label htmlFor="launch-60" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="60-days" id="launch-60" />
-                  <Label htmlFor="launch-60" className="cursor-pointer flex-1">📅 Within 60 days</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">📅 Within 60 days</span>
+                </Label>
+                <Label htmlFor="launch-90" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="90-plus-days" id="launch-90" />
-                  <Label htmlFor="launch-90" className="cursor-pointer flex-1">🗓️ Within 90+ days</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🗓️ Within 90+ days</span>
+                </Label>
+                <Label htmlFor="launch-unsure" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="not-sure" id="launch-unsure" />
-                  <Label htmlFor="launch-unsure" className="cursor-pointer flex-1">🤔 Not sure yet</Label>
-                </div>
+                  <span className="flex-1">🤔 Not sure yet</span>
+                </Label>
               </RadioGroup>
               {errors.launchTimeline && <p className="text-sm text-destructive mt-1">{errors.launchTimeline}</p>}
             </div>
@@ -614,14 +608,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, lookingForCofounder: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="cofounder-yes" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="yes" id="cofounder-yes" />
-                  <Label htmlFor="cofounder-yes" className="cursor-pointer flex-1">👋 Yes</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">👋 Yes</span>
+                </Label>
+                <Label htmlFor="cofounder-no" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="no" id="cofounder-no" />
-                  <Label htmlFor="cofounder-no" className="cursor-pointer flex-1">👤 No</Label>
-                </div>
+                  <span className="flex-1">👤 No</span>
+                </Label>
               </RadioGroup>
               {errors.lookingForCofounder && <p className="text-sm text-destructive mt-1">{errors.lookingForCofounder}</p>}
             </div>
@@ -646,10 +640,14 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 className="space-y-2"
               >
                 {PRIMARY_PAIN_OPTIONS.map((pain) => (
-                  <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <Label
+                    key={pain.value}
+                    htmlFor={`pain-${pain.value}`}
+                    className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
+                  >
                     <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
-                    <Label htmlFor={`pain-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
-                  </div>
+                    <span className="flex-1">{pain.label}</span>
+                  </Label>
                 ))}
               </RadioGroup>
               {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
@@ -659,14 +657,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               <Label className="text-base font-semibold mb-3 block font-space-grotesk">What other challenges do you face? (Select all that apply)</Label>
               <div className="space-y-2">
                 {SECONDARY_PAIN_OPTIONS.map((pain) => (
-                  <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <Label
+                    key={pain.value}
+                    htmlFor={`secondary-${pain.value}`}
+                    className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer"
+                  >
                     <Checkbox
                       id={`secondary-${pain.value}`}
                       checked={formData.secondaryPains.includes(pain.value)}
                       onCheckedChange={() => toggleSecondaryPain(pain.value)}
                     />
-                    <Label htmlFor={`secondary-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
-                  </div>
+                    <span className="flex-1">{pain.label}</span>
+                  </Label>
                 ))}
               </div>
             </div>
@@ -678,22 +680,22 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, decisionMakingProcess: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="decision-gut" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="gut-feel" id="decision-gut" />
-                  <Label htmlFor="decision-gut" className="cursor-pointer flex-1">🎲 Gut feeling</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🎲 Gut feeling</span>
+                </Label>
+                <Label htmlFor="decision-research" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="research" id="decision-research" />
-                  <Label htmlFor="decision-research" className="cursor-pointer flex-1">📊 Research and data</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">📊 Research and data</span>
+                </Label>
+                <Label htmlFor="decision-community" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="community" id="decision-community" />
-                  <Label htmlFor="decision-community" className="cursor-pointer flex-1">👥 Community input</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">👥 Community input</span>
+                </Label>
+                <Label htmlFor="decision-mentor" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="mentor" id="decision-mentor" />
-                  <Label htmlFor="decision-mentor" className="cursor-pointer flex-1">🎓 Mentor guidance</Label>
-                </div>
+                  <span className="flex-1">🎓 Mentor guidance</span>
+                </Label>
               </RadioGroup>
               {errors.decisionMakingProcess && <p className="text-sm text-destructive mt-1">{errors.decisionMakingProcess}</p>}
             </div>
@@ -706,41 +708,29 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             <div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Meet Your Toolkit 🛠️</h2>
               <p className="text-muted-foreground mb-6 font-poppins">
-                Select the features you're most interested in. You can always explore more later!
+                Here's what you get in your toolkit. You can explore more inside the platform.
               </p>
             </div>
 
             <div className="space-y-4">
-              {FEATURES.map((feature) => {
-                const isSelected = formData.selectedFeatures.includes(feature.id);
-                return (
-                  <Card
-                    key={feature.id}
-                    className={`cursor-pointer rounded-2xl border border-border/60 bg-card/80 transition-all duration-300 ${isSelected
-                      ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/20 shadow-md'
-                      : 'hover:border-primary/40 hover:shadow-sm'
-                      }`}
-                    onClick={() => toggleFeature(feature.id)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-space-grotesk">{feature.title}</CardTitle>
-                          <CardDescription className="mt-1">{feature.description}</CardDescription>
-                        </div>
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleFeature(feature.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
+              {FEATURES.map((feature) => (
+                <Card
+                  key={feature.id}
+                  className="rounded-2xl border border-border/60 bg-card/80"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-space-grotesk">{feature.title}</CardTitle>
+                        <CardDescription className="mt-1">{feature.description}</CardDescription>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">💡 {feature.painPoint}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">💡 {feature.painPoint}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
             {errors.selectedFeatures && <p className="text-sm text-destructive mt-1">{errors.selectedFeatures}</p>}
           </div>
@@ -763,18 +753,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, communicationStyle: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="comm-visual" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="visual" id="comm-visual" />
-                  <Label htmlFor="comm-visual" className="cursor-pointer flex-1">🎨 Visual (charts, graphs, infographics)</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🎨 Visual (charts, graphs, infographics)</span>
+                </Label>
+                <Label htmlFor="comm-text" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="text-focused" id="comm-text" />
-                  <Label htmlFor="comm-text" className="cursor-pointer flex-1">📝 Text-focused (detailed explanations)</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">📝 Text-focused (detailed explanations)</span>
+                </Label>
+                <Label htmlFor="comm-mixed" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="mixed" id="comm-mixed" />
-                  <Label htmlFor="comm-mixed" className="cursor-pointer flex-1">🔄 Mixed (both visual and text)</Label>
-                </div>
+                  <span className="flex-1">🔄 Mixed (both visual and text)</span>
+                </Label>
               </RadioGroup>
               {errors.communicationStyle && <p className="text-sm text-destructive mt-1">{errors.communicationStyle}</p>}
             </div>
@@ -786,18 +776,18 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
                 onValueChange={(value) => setFormData({ ...formData, commitmentLevel: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                <Label htmlFor="commit-serious" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="serious" id="commit-serious" />
-                  <Label htmlFor="commit-serious" className="cursor-pointer flex-1">🔥 Serious—ready to take action</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🔥 Serious—ready to take action</span>
+                </Label>
+                <Label htmlFor="commit-exploring" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="exploring" id="commit-exploring" />
-                  <Label htmlFor="commit-exploring" className="cursor-pointer flex-1">🔍 Exploring—seeing what's possible</Label>
-                </div>
-                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <span className="flex-1">🔍 Exploring—seeing what's possible</span>
+                </Label>
+                <Label htmlFor="commit-casual" className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60 cursor-pointer">
                   <RadioGroupItem value="casual" id="commit-casual" />
-                  <Label htmlFor="commit-casual" className="cursor-pointer flex-1">💭 Casual—just checking it out</Label>
-                </div>
+                  <span className="flex-1">💭 Casual—just checking it out</span>
+                </Label>
               </RadioGroup>
               {errors.commitmentLevel && <p className="text-sm text-destructive mt-1">{errors.commitmentLevel}</p>}
             </div>
@@ -918,3 +908,5 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
     </div>
   );
 };
+
+
