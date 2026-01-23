@@ -39,7 +39,7 @@ const ProUpgradeBanner = () => {
                     </>
                 ) : (
                     <>
-                        <span className="text-foreground/80">New here? Create an account and explore Pro</span>
+                        <span className="text-foreground/80">New here? Chat with us and unlock Pro</span>
                         <a
                             href="https://creatives-takeover.com/signup"
                             className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-semibold group ml-1"
