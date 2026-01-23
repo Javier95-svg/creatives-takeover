@@ -33,7 +33,7 @@ const Contact = () => {
           <section className="grid gap-6 md:grid-cols-2">
             <article className="p-6 rounded-lg border bg-card">
               <h2 className="text-xl font-semibold">Email</h2>
-              <a href="mailto:admin@creatives-takeover.com" className="mt-2 text-muted-foreground hover:text-primary transition-colors duration-200 block">admin@creatives-takeover.com</a>
+              <a href="mailto:javier@admin-creatives-takeover.com" className="mt-2 text-muted-foreground hover:text-primary transition-colors duration-200 block">javier@admin-creatives-takeover.com</a>
             </article>
             <article className="p-6 rounded-lg border bg-card">
               <h2 className="text-xl font-semibold">Community</h2>

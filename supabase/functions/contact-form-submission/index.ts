@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
       hasResendApiKey: !!resendApiKey,
       hasContactAdminEmail: !!contactAdminEmail,
       hasFromEmail: !!fromEmail,
-      adminEmail: contactAdminEmail || "admin@creatives-takeover.com (fallback)",
+      adminEmail: contactAdminEmail || "javier@admin-creatives-takeover.com (fallback)",
       fromEmailValue: fromEmail || "onboarding@resend.dev (fallback)"
     });
 
@@ -211,7 +211,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           <p style="color: #555; line-height: 1.6; margin-top: 20px;">
             Have an urgent question? Reply directly to this email or reach us at
-            <a href="mailto:admin@creatives-takeover.com" style="color: #667eea;">admin@creatives-takeover.com</a>
+            <a href="mailto:javier@admin-creatives-takeover.com" style="color: #667eea;">javier@admin-creatives-takeover.com</a>
           </p>
 
           <p style="color: #555; line-height: 1.6;">
@@ -231,7 +231,7 @@ const handler = async (req: Request): Promise<Response> => {
     const fromName = Deno.env.get("FROM_NAME") || "Creatives Takeover";
 
     // Get admin email (use validated value or fallback)
-    const adminEmail = contactAdminEmail || "admin@creatives-takeover.com";
+    const adminEmail = contactAdminEmail || "javier@admin-creatives-takeover.com";
     
     if (!contactAdminEmail) {
       console.warn("[CONTACT-FORM] CONTACT_ADMIN_EMAIL not set, using fallback:", adminEmail);
@@ -426,8 +426,8 @@ const handler = async (req: Request): Promise<Response> => {
         success: false,
         details: errorMessage || "Unknown error occurred while sending email",
         submissionId: dbData?.id || null,
-        fallbackEmail: "admin@creatives-takeover.com",
-        message: "There was an issue sending your message. Please email us directly at admin@creatives-takeover.com"
+        fallbackEmail: "javier@admin-creatives-takeover.com",
+        message: "There was an issue sending your message. Please email us directly at javier@admin-creatives-takeover.com"
       }),
       {
         status: 500,
@@ -448,8 +448,8 @@ const handler = async (req: Request): Promise<Response> => {
         error: error.message || "An unexpected error occurred",
         success: false,
         details: "Please check the function logs for more information",
-        fallbackEmail: "admin@creatives-takeover.com",
-        message: "There was an issue sending your message. Please email us directly at admin@creatives-takeover.com"
+        fallbackEmail: "javier@admin-creatives-takeover.com",
+        message: "There was an issue sending your message. Please email us directly at javier@admin-creatives-takeover.com"
       }),
       {
         status: 500,

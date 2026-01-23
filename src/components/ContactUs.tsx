@@ -54,10 +54,10 @@ const ContactUs = () => {
               <p className="text-sm">
                 Please email us directly at{" "}
                 <a
-                  href="mailto:admin@creatives-takeover.com"
+                  href="mailto:javier@admin-creatives-takeover.com"
                   className="underline font-medium"
                 >
-                  admin@creatives-takeover.com
+                  javier@admin-creatives-takeover.com
                 </a>
               </p>
             </div>
@@ -99,10 +99,10 @@ const ContactUs = () => {
           <div className="flex flex-col gap-2">
             <p>There was a technical issue. Please try again or email us at:</p>
             <a
-              href="mailto:admin@creatives-takeover.com"
+              href="mailto:javier@admin-creatives-takeover.com"
               className="underline font-medium"
             >
-              admin@creatives-takeover.com
+              javier@admin-creatives-takeover.com
             </a>
           </div>
         ),
@@ -314,11 +314,11 @@ const ContactUs = () => {
               Prefer email? Reach us directly at
             </p>
             <a
-              href="mailto:admin@creatives-takeover.com"
+              href="mailto:javier@admin-creatives-takeover.com"
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
             >
               <Mail className="w-4 h-4" />
-              admin@creatives-takeover.com
+              javier@admin-creatives-takeover.com
             </a>
           </div>
           </div>

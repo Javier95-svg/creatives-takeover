@@ -22,11 +22,11 @@ const Footer = () => {
             <h2 id="footer-contact" className="text-sm font-semibold tracking-wide text-foreground">Contact</h2>
             <p className="mt-3 text-sm text-muted-foreground">Questions or feedback? We’d love to hear from you.</p>
             <a
-              href="mailto:admin@creatives-takeover.com"
+              href="mailto:javier@admin-creatives-takeover.com"
               className="mt-4 inline-flex items-center gap-2 text-sm underline-offset-4 hover:underline"
             >
               <Mail className="h-4 w-4" aria-hidden="true" />
-              admin@creatives-takeover.com
+              javier@admin-creatives-takeover.com
             </a>
           </section>
 
