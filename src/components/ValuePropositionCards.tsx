@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 const ValuePropositionCards = () => {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const carouselContentRef = useRef<HTMLDivElement | null>(null);
 
   // Core value propositions - condensed to 4 essential offerings
   const allCards = [
@@ -86,6 +87,45 @@ const ValuePropositionCards = () => {
     }
   };
 
+  useEffect(() => {
+    const container = carouselContentRef.current;
+    if (!container) return;
+
+    const updateHeights = () => {
+      const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-value-card]'));
+      if (!cards.length) return;
+      let maxHeight = 0;
+      cards.forEach((card) => {
+        card.style.height = 'auto';
+        maxHeight = Math.max(maxHeight, card.getBoundingClientRect().height);
+      });
+      const finalHeight = Math.ceil(maxHeight);
+      cards.forEach((card) => {
+        card.style.height = `${finalHeight}px`;
+      });
+    };
+
+    updateHeights();
+
+    const handleResize = () => updateHeights();
+    window.addEventListener('resize', handleResize);
+
+    const images = Array.from(container.querySelectorAll<HTMLImageElement>('img'));
+    images.forEach((img) => {
+      if (img.complete) return;
+      img.addEventListener('load', handleResize);
+      img.addEventListener('error', handleResize);
+    });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      images.forEach((img) => {
+        img.removeEventListener('load', handleResize);
+        img.removeEventListener('error', handleResize);
+      });
+    };
+  }, []);
+
   return (
     <section id="what-you-get" className="py-20 lg:py-28 scroll-mt-24 font-poppins">
       <div className="container mx-auto px-4 sm:px-6">
@@ -112,12 +152,12 @@ const ValuePropositionCards = () => {
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-4 items-stretch">
+            <CarouselContent ref={carouselContentRef} className="-ml-4 items-stretch">
               {allCards.map((card, index) => {
                 const Icon = card.icon;
                 return (
                   <CarouselItem key={card.title} className="pl-4 basis-full h-full">
-                    <Card className="glass border-border overflow-hidden h-full">
+                    <Card className="glass border-border overflow-hidden h-full" data-value-card>
                       <div className="grid md:grid-cols-2 h-full">
                         {/* Image - Left */}
                         <figure className="relative h-64 md:h-full md:min-h-[320px]">
