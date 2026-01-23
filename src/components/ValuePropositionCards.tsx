@@ -32,7 +32,7 @@ const ValuePropositionCards = () => {
       title: "EXECUTE",
       subtitle: "Dashboard",
       buttonLabel: "Dashboard",
-      description: "Your command center for tracking progress, managing tasks, and monitoring your business growth. Track daily check-ins, maintain momentum streaks, and manage priorities, all in one place.",
+      description: "Dashboard is your startup command center for staying on top of daily operations, milestones, and accountability.\n\nIt helps founders track progress in one place, set clear milestones, and keep momentum with simple accountability features. It also includes the Focus Funnel, a tool that breaks goals into projects and projects into next actions, so you always know what to prioritize and what to do next.",
       cta: "View Dashboard",
       link: "/dashboard",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&q=80",
