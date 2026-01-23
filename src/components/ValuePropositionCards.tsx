@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Carousel,
   CarouselContent,
@@ -90,6 +91,9 @@ const ValuePropositionCards = () => {
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
+          <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
+            The Perfect Ecosystem
+          </Badge>
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
             Here's What You Get
           </h2>
