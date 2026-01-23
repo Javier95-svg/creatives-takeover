@@ -90,7 +90,7 @@ const ValuePropositionCards = () => {
       <div className="container mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight">
+          <h2 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-4 tracking-tight text-primary">
             Here's What You Get
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground">

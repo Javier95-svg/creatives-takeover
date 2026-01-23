@@ -148,7 +148,7 @@ const AISpecializationTrends = () => {
             <TrendingUp className="w-4 h-4 mr-1.5" />
             The Power of Small Teams
           </Badge>
-          <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 tracking-tight">
+          <h2 className="font-space-grotesk text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 tracking-tight text-primary">
             The Future of Work Is Here
           </h2>
           <p className="font-poppins text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
