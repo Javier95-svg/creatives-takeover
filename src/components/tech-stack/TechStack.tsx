@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -55,7 +56,7 @@ const TechStack: React.FC = () => {
   const { toast } = useToast();
   const [selectedProducts, setSelectedProducts] = useState<SelectedProducts>({});
   const [showBudget, setShowBudget] = useState(false);
-  
+
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
   const hasPaidAccess = user && ['creator', 'professional'].includes(currentTier);
 
@@ -90,10 +91,10 @@ const TechStack: React.FC = () => {
         const product = category.products.find(p => p.id === selectedProductId);
         if (product) {
           const priceStr = product.price.toLowerCase();
-          const isVariable = priceStr.includes('usage-based') || 
-                            priceStr.includes('free') || 
-                            priceStr.includes('%') ||
-                            priceStr.includes('per transaction');
+          const isVariable = priceStr.includes('usage-based') ||
+            priceStr.includes('free') ||
+            priceStr.includes('%') ||
+            priceStr.includes('per transaction');
 
           if (isVariable) {
             hasVariable = true;
@@ -241,6 +242,7 @@ const TechStack: React.FC = () => {
                   <>
                     <Calculator className="w-4 h-4 mr-2" />
                     {currentTier === 'free' ? 'Generate (1/month)' : 'Generate Budget'}
+                    <CreditCostBadge feature="TECH_STACK_GENERATION" className="ml-2 bg-background/20 text-primary-foreground" />
                   </>
                 )}
               </Button>
@@ -308,11 +310,10 @@ const CategorySection: React.FC<CategorySectionProps> = ({
                   <TableRow
                     key={product.id}
                     onClick={() => onProductSelect(category.id, product.id)}
-                    className={`cursor-pointer transition-all ${
-                      selected
-                        ? 'bg-primary/10 border-l-4 border-l-primary'
-                        : 'hover:bg-muted/50'
-                    }`}
+                    className={`cursor-pointer transition-all ${selected
+                      ? 'bg-primary/10 border-l-4 border-l-primary'
+                      : 'hover:bg-muted/50'
+                      }`}
                   >
                     <TableCell className="font-medium">
                       <div className="flex items-center">
@@ -376,12 +377,12 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
     }).filter(item => item.product);
 
     // Analyze stack composition
-    const hasEnterpriseTools = selectedProductDetails.some(item => 
-      item.product?.name.toLowerCase().includes('aws') || 
+    const hasEnterpriseTools = selectedProductDetails.some(item =>
+      item.product?.name.toLowerCase().includes('aws') ||
       item.product?.name.toLowerCase().includes('angular') ||
       item.product?.name.toLowerCase().includes('enterprise')
     );
-    
+
     const hasStartupTools = selectedProductDetails.some(item =>
       item.product?.name.toLowerCase().includes('vercel') ||
       item.product?.name.toLowerCase().includes('supabase') ||
@@ -395,7 +396,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
 
     let stage = 'early';
     let goalFocus = 'rapid validation';
-    
+
     if (isBudgetConscious) {
       stage = 'early-stage';
       goalFocus = 'cost-efficient MVP and rapid market validation';
@@ -423,7 +424,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
   // Generate insights about the stack
   function generateInsights(selectedProductDetails: Array<{ category: string; product: TechStackProduct | undefined }>) {
     const insights: string[] = [];
-    
+
     // Frontend insights
     const frontend = selectedProductDetails.find(item => item.category === 'Frontend');
     if (frontend?.product) {
@@ -497,9 +498,9 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
     // Upgrade path recommendations
     const frontend = selectedProductDetails.find(item => item.category === 'Frontend');
     const backend = selectedProductDetails.find(item => item.category === 'Backend');
-    
-    if (frontend?.product?.name.toLowerCase().includes('react') && 
-        backend?.product?.name.toLowerCase().includes('node')) {
+
+    if (frontend?.product?.name.toLowerCase().includes('react') &&
+      backend?.product?.name.toLowerCase().includes('node')) {
       recommendations.push({
         type: 'upgrade',
         title: 'Consider Full-Stack Framework',
@@ -521,8 +522,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
 
     // Risk management
     const hosting = selectedProductDetails.find(item => item.category === 'Hosting');
-    if (hosting?.product?.name.toLowerCase().includes('vercel') && 
-        frontend?.product?.name.toLowerCase().includes('next')) {
+    if (hosting?.product?.name.toLowerCase().includes('vercel') &&
+      frontend?.product?.name.toLowerCase().includes('next')) {
       recommendations.push({
         type: 'risk',
         title: 'Vendor Lock-in Consideration',
@@ -784,8 +785,8 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Budget Range:</strong> {
                   total < 200 ? 'Budget-Conscious (Great for bootstrapped startups and MVPs)' :
-                  total < 500 ? 'Mid-Range (Suitable for growth-stage startups)' :
-                  'Premium (Enterprise-grade tools for scaling teams)'
+                    total < 500 ? 'Mid-Range (Suitable for growth-stage startups)' :
+                      'Premium (Enterprise-grade tools for scaling teams)'
                 }
               </p>
             </div>
@@ -863,7 +864,7 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
                 medium: 'border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/20',
                 low: 'border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20'
               };
-              
+
               const iconColors = {
                 high: 'text-red-600 dark:text-red-400',
                 medium: 'text-yellow-600 dark:text-yellow-400',
@@ -886,11 +887,10 @@ const BudgetDisplay: React.FC<BudgetDisplayProps> = ({ budget, selectedProducts,
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-sm">{rec.title}</h4>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          rec.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${rec.priority === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
                           rec.priority === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
-                          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                        }`}>
+                            'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          }`}>
                           {rec.priority}
                         </span>
                       </div>

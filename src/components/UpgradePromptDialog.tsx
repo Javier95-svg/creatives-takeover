@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Crown, Coins, CreditCard, TrendingUp } from "lucide-react";
+import { CreditPriceList } from "@/components/CreditPriceList";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -152,22 +153,9 @@ const UpgradePromptDialog = ({
           )}
 
           {reason === "credits" && (
-            <div className="bg-muted/50 rounded-lg p-3 text-xs">
-              <h5 className="font-medium mb-2">Credit Usage Guide</h5>
-              <div className="space-y-1 text-muted-foreground">
-                <div>- BizMap AI Message: {CREDIT_COSTS.AI_CHAT_MESSAGE} credit</div>
-                <div>- Tech Stack Generation: {CREDIT_COSTS.TECH_STACK_GENERATION} credits</div>
-                <div>- Product-Market Fit Analysis: {CREDIT_COSTS.PMF_ANALYSIS} credits</div>
-                <div>- Insighta Test: {CREDIT_COSTS.FUNDRAISING_READINESS_ANALYSIS} credits</div>
-                <div>- Investor Matching: {CREDIT_COSTS.INVESTOR_MATCHING} credits</div>
-                <div>- Launch Report: {CREDIT_COSTS.LAUNCH_REPORT} credits</div>
-                <div>- Market Research: {CREDIT_COSTS.MARKET_RESEARCH} credits</div>
-                <div>- Market Validation: {CREDIT_COSTS.MARKET_VALIDATION} credits</div>
-                <div>- Financial Analysis: {CREDIT_COSTS.FINANCIAL_ANALYSIS} credits</div>
-                <div>- Roadmap Generation: {CREDIT_COSTS.ROADMAP_GENERATION} credits</div>
-                <div>- Sprint Task Generation: {CREDIT_COSTS.SPRINT_TASK_GENERATION} credits</div>
-                <div>- PDF Export: {CREDIT_COSTS.PDF_EXPORT} credits</div>
-              </div>
+            <div className="bg-muted/50 rounded-lg p-3">
+              <h5 className="font-medium mb-2 text-xs">Credit Usage Guide</h5>
+              <CreditPriceList />
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { Coins, Loader2, Plus } from "lucide-react";
+import { CreditPriceList } from "@/components/CreditPriceList";
 import { useCredits } from "@/hooks/useCredits";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,15 +66,15 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               </Badge>
             </Button>
           </DropdownMenuTrigger>
-          
+
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuLabel className="flex items-center gap-2">
               <Coins className="h-4 w-4" />
               Credit Balance
             </DropdownMenuLabel>
-            
+
             <DropdownMenuSeparator />
-            
+
             <div className="p-3 space-y-3">
               {/* Monthly Quota */}
               {monthlyQuota > 0 && (
@@ -84,7 +85,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                   </Badge>
                 </div>
               )}
-              
+
               {/* Purchased Balance */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Purchased Balance:</span>
@@ -92,7 +93,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                   {balance} credits
                 </Badge>
               </div>
-              
+
               {/* Total Available */}
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-sm font-medium">Total Available:</span>
@@ -100,13 +101,12 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
                   {getBalanceText()}
                 </Badge>
               </div>
-              
-              <div className="text-xs text-muted-foreground space-y-1">
-                <div>• Launch Report: {CREDIT_COSTS.LAUNCH_REPORT} credits</div>
-                <div>• Asset Generation: {CREDIT_COSTS.ASSET_GENERATION} credits each</div>
-                <div>• AI Chat Message: {CREDIT_COSTS.AI_CHAT_MESSAGE} credit</div>
+
+              <div className="pt-2 border-t">
+                <h4 className="text-xs font-semibold mb-2">Credit Costs</h4>
+                <CreditPriceList />
               </div>
-              
+
               {showPurchaseButton && (
                 <Button size="sm" className="w-full gap-2" variant="outline" onClick={() => navigate('/pricing')}>
                   <Plus className="h-3 w-3" />
@@ -143,7 +143,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
             Refresh
           </Button>
         </div>
-        
+
         <div className="space-y-3">
           {/* Monthly Quota */}
           {monthlyQuota > 0 && (
@@ -154,7 +154,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               </Badge>
             </div>
           )}
-          
+
           {/* Purchased Balance */}
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Purchased Balance:</span>
@@ -162,7 +162,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               {balance} credits
             </Badge>
           </div>
-          
+
           {/* Total Available */}
           <div className="flex justify-between items-center pt-2 border-t">
             <span className="text-sm font-medium">Total Available:</span>
@@ -170,17 +170,14 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               {getBalanceText()}
             </Badge>
           </div>
-          
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <h4 className="font-medium text-foreground">Credit Costs:</h4>
-            <div className="grid grid-cols-1 gap-1 pl-2">
-              <div>• Launch Report Generation: {CREDIT_COSTS.LAUNCH_REPORT} credits</div>
-              <div>• Asset Generation (each): {CREDIT_COSTS.ASSET_GENERATION} credits</div>
-              <div>• AI Chat Message: {CREDIT_COSTS.AI_CHAT_MESSAGE} credit</div>
-              <div>• Premium Features: {CREDIT_COSTS.PREMIUM_FEATURE} credits</div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground text-sm">Credit Costs:</h4>
+            <div className="pl-2">
+              <CreditPriceList />
             </div>
           </div>
-          
+
           {totalAvailable <= 2 && (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mt-3">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
@@ -188,7 +185,7 @@ export function CreditDisplay({ variant = "navigation", showPurchaseButton = fal
               </p>
             </div>
           )}
-          
+
           {showPurchaseButton && (
             <Button className="w-full gap-2" variant="default" onClick={() => navigate('/pricing')}>
               <Plus className="h-4 w-4" />

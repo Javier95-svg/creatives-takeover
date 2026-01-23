@@ -1,4 +1,5 @@
 import React from 'react';
+import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,23 +21,23 @@ const ResearchControls: React.FC<ResearchControlsProps> = ({
   creditCost
 }) => {
   const depthOptions = [
-    { 
-      value: 'basic', 
-      label: 'Basic Research', 
+    {
+      value: 'basic',
+      label: 'Basic Research',
       description: 'Quick market overview',
       icon: Search,
       credits: 1
     },
-    { 
-      value: 'comprehensive', 
-      label: 'Comprehensive Research', 
+    {
+      value: 'comprehensive',
+      label: 'Comprehensive Research',
       description: 'Detailed market analysis with citations',
       icon: TrendingUp,
       credits: 3
     },
-    { 
-      value: 'expert', 
-      label: 'Expert Research', 
+    {
+      value: 'expert',
+      label: 'Expert Research',
       description: 'Deep industry intelligence with extensive sources',
       icon: Users,
       credits: 5
@@ -85,9 +86,11 @@ const ResearchControls: React.FC<ResearchControlsProps> = ({
                 })}
               </SelectContent>
             </Select>
-            
-            <div className="text-xs text-muted-foreground bg-primary/10 p-2 rounded">
-              💡 Total cost: {creditCost} credits (includes research + report generation)
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/10 p-2 rounded">
+              <span>Total cost:</span>
+              <CreditCostBadge feature="MARKET_RESEARCH" />
+              <span>(includes research + report)</span>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CreditCostBadge } from "@/components/CreditCostTooltip";
 import { Button } from '@/components/ui/button';
 import { Download, FileText, Loader2, FileType } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,20 +33,20 @@ interface PDFGeneratorProps {
   className?: string;
 }
 
-const PDFGenerator: React.FC<PDFGeneratorProps> = ({ 
-  reportContent, 
-  businessName, 
-  userAnswers, 
+const PDFGenerator: React.FC<PDFGeneratorProps> = ({
+  reportContent,
+  businessName,
+  userAnswers,
   successScore,
   validationScore,
-  className = "" 
+  className = ""
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingWord, setIsGeneratingWord] = useState(false);
 
   const generatePDF = async () => {
     setIsGenerating(true);
-    
+
     try {
       // Call the edge function to get formatted HTML
       const { data, error } = await supabase.functions.invoke('generate-pdf-report', {
@@ -68,7 +69,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           ALLOWED_TAGS: ['div', 'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
           ALLOWED_ATTR: ['class', 'style']
         });
-        
+
         // Create a temporary div with the sanitized HTML content
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = sanitizedHTML;
@@ -143,14 +144,14 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
 
   const generateWord = async () => {
     setIsGeneratingWord(true);
-    
+
     try {
       // Lazy-load docx library
       const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
-      
+
       // Convert markdown-style report to Word document structure
       const sections: any[] = [];
-      
+
       // Add title
       sections.push(
         new Paragraph({
@@ -160,10 +161,10 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           spacing: { after: 400 }
         }),
         new Paragraph({
-          text: `Generated on ${new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          text: `Generated on ${new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           })}`,
           alignment: AlignmentType.CENTER,
           spacing: { after: 600 }
@@ -173,10 +174,10 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
       // Parse report content into sections
       const lines = reportContent.split('\n');
       let currentParagraph: string[] = [];
-      
+
       for (const line of lines) {
         const trimmed = line.trim();
-        
+
         if (!trimmed) {
           if (currentParagraph.length > 0) {
             sections.push(new Paragraph({
@@ -187,7 +188,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           }
           continue;
         }
-        
+
         // Handle headers
         if (trimmed.startsWith('# ')) {
           if (currentParagraph.length > 0) {
@@ -247,7 +248,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           currentParagraph.push(trimmed);
         }
       }
-      
+
       // Add remaining paragraph
       if (currentParagraph.length > 0) {
         sections.push(new Paragraph({
@@ -265,7 +266,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
             spacing: { before: 400, after: 200 }
           })
         );
-        
+
         Object.entries(successScore).forEach(([key, value]) => {
           if (typeof value === 'number') {
             sections.push(new Paragraph({
@@ -320,6 +321,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           <>
             <Download className="w-4 h-4 mr-2" />
             Download PDF
+            <CreditCostBadge feature="PDF_EXPORT" className="ml-2 bg-white/20 text-white" />
           </>
         )}
       </Button>

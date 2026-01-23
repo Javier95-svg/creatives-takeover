@@ -10,31 +10,31 @@ export const CREDIT_COSTS = {
   LAUNCH_REPORT: 5,
   ASSET_GENERATION: 5,
   PREMIUM_FEATURE: 3,
-  
+
   // AI Chat Features
   AI_CHAT_MESSAGE: 1,
-  
+
   // Research & Analysis
-  MARKET_RESEARCH: 10,
+  MARKET_RESEARCH: 5,
   MARKET_VALIDATION: 10,
   FINANCIAL_ANALYSIS: 8,
   FUNDRAISING_READINESS_ANALYSIS: 8,
   BUSINESS_INSIGHTS: 5,
   PMF_ANALYSIS: 8,
-  
+
   // Investor Matching & Outreach
   INVESTOR_MATCHING: 5,
   PITCH_DECK_GENERATION: 8,
   COLD_EMAIL_GENERATION: 3,
   ONEPAGER_GENERATION: 3,
-  
+
   // Sprint & Task Features
   SPRINT_TASK_GENERATION: 2,
   ROADMAP_GENERATION: 5,
-  
+
   // Tech Stack Generator
   TECH_STACK_GENERATION: 3,
-  
+
   // Other Premium Features
   PDF_EXPORT: 3,
   ADVANCED_ANALYTICS: 5,
@@ -172,7 +172,7 @@ export const SUBSCRIPTION_TIERS = {
 
 // Monthly credit allocation per tier
 export const TIER_MONTHLY_CREDITS = {
-  free: 10,
+  free: 25,
   creator: 50,
   professional: 150,
 } as const;
@@ -227,7 +227,7 @@ export const TIER_DETAILS = {
     name: 'Free',
     subtitle: 'Validate',
     price: 0,
-    credits: 10,
+    credits: 25,
     vcViewLimit: 5,
     description: 'Start your journey - validate your idea',
   },
