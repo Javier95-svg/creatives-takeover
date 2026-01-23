@@ -216,9 +216,9 @@ const FocusFunnel = () => {
               Break down goals into projects and next actions, with an AI partner to keep momentum.
             </p>
           </div>
-          <Badge variant="outline" className="text-xs uppercase tracking-wide text-muted-foreground">
-            Goals -> Projects -> Next Actions
-          </Badge>
+            <Badge variant="outline" className="text-xs uppercase tracking-wide text-muted-foreground">
+              Goals &rarr; Projects &rarr; Next Actions
+            </Badge>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
