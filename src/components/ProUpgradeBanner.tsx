@@ -9,7 +9,7 @@ const ProUpgradeBanner = () => {
     useEffect(() => {
         // Set banner height once loading is done, as we will show banner for both auth and unauth users
         if (!loading) {
-            document.documentElement.style.setProperty('--banner-height', '40px');
+            document.documentElement.style.setProperty('--banner-height', '36px');
         } else {
             document.documentElement.style.removeProperty('--banner-height');
         }
@@ -23,7 +23,7 @@ const ProUpgradeBanner = () => {
 
     return (
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b border-border/50 backdrop-blur-sm sticky top-0 z-[100]">
-            <div className="container mx-auto px-4 h-10 flex items-center justify-center gap-2 text-sm font-medium">
+            <div className="container mx-auto px-4 h-9 flex items-center justify-center gap-2 text-sm font-medium">
                 {isAuthenticated ? (
                     <>
                         <span className="text-foreground/80">Give us your feedback and get a free Pro upgrade</span>
