@@ -21,7 +21,7 @@ const ValuePropositionCards = () => {
       title: "PLAN",
       subtitle: "BizMap AI",
       buttonLabel: "BizMap AI",
-      description: "Transform scattered ideas into a strategic roadmap. Get AI-powered market research, competitor analysis, and actionable steps to launch your creative business in 30 days.",
+      description: "BizMap AI is where founders go to get practical business building tools in one place, so it's easier to plan, validate, and scale without overthinking everything. It's built to help you move faster, stay organized, and make smarter decisions as you grow.\n\nInside, you'll find four core tools. Business Planner is a chatbot that helps you shape your plan, set goals, and turn ideas into clear next steps. Product Market Fit Lab helps you figure out who you're really building for, test your assumptions, and tighten your positioning. Prompt Library includes 60 ready to use business cases across 8 different industries, so you can pick a scenario that matches your startup and get prompts that actually fit your needs. Tech Stack helps you choose the tools you need and shows the estimated monthly and yearly budget based on the combination you select.",
       cta: "Start Planning",
       link: "/bizmap-ai",
       image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop&q=80",
