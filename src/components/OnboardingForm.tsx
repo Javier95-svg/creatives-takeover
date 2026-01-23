@@ -579,8 +579,7 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
               </RadioGroup>
               {errors.timeCommitment && <p className="text-sm text-destructive mt-1">{errors.timeCommitment}</p>}
             </div>
-          </div>
-            
+
             <div>
               <Label className="text-base font-semibold mb-3 block font-space-grotesk">When do you want to launch? *</Label>
               <RadioGroup
@@ -630,292 +629,292 @@ export const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
         );
 
       case 2: // Pain Point Deep Dive
-return (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Let's dive into your challenges 💭</h2>
-      <p className="text-muted-foreground mb-6 font-poppins">
-        Understanding your pain points helps us provide better guidance.
-      </p>
-    </div>
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Let's dive into your challenges 💭</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
+                Understanding your pain points helps us provide better guidance.
+              </p>
+            </div>
 
-    <div>
-      <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your primary pain point? *</Label>
-      <RadioGroup
-        value={formData.primaryPain}
-        onValueChange={(value) => setFormData({ ...formData, primaryPain: value })}
-        className="space-y-2"
-      >
-        {PRIMARY_PAIN_OPTIONS.map((pain) => (
-          <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-            <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
-            <Label htmlFor={`pain-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
+            <div>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your primary pain point? *</Label>
+              <RadioGroup
+                value={formData.primaryPain}
+                onValueChange={(value) => setFormData({ ...formData, primaryPain: value })}
+                className="space-y-2"
+              >
+                {PRIMARY_PAIN_OPTIONS.map((pain) => (
+                  <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                    <RadioGroupItem value={pain.value} id={`pain-${pain.value}`} />
+                    <Label htmlFor={`pain-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+              {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What other challenges do you face? (Select all that apply)</Label>
+              <div className="space-y-2">
+                {SECONDARY_PAIN_OPTIONS.map((pain) => (
+                  <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                    <Checkbox
+                      id={`secondary-${pain.value}`}
+                      checked={formData.secondaryPains.includes(pain.value)}
+                      onCheckedChange={() => toggleSecondaryPain(pain.value)}
+                    />
+                    <Label htmlFor={`secondary-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">How do you typically make important decisions? *</Label>
+              <RadioGroup
+                value={formData.decisionMakingProcess}
+                onValueChange={(value) => setFormData({ ...formData, decisionMakingProcess: value })}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="gut-feel" id="decision-gut" />
+                  <Label htmlFor="decision-gut" className="cursor-pointer flex-1">🎲 Gut feeling</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="research" id="decision-research" />
+                  <Label htmlFor="decision-research" className="cursor-pointer flex-1">📊 Research and data</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="community" id="decision-community" />
+                  <Label htmlFor="decision-community" className="cursor-pointer flex-1">👥 Community input</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="mentor" id="decision-mentor" />
+                  <Label htmlFor="decision-mentor" className="cursor-pointer flex-1">🎓 Mentor guidance</Label>
+                </div>
+              </RadioGroup>
+              {errors.decisionMakingProcess && <p className="text-sm text-destructive mt-1">{errors.decisionMakingProcess}</p>}
+            </div>
           </div>
-        ))}
-      </RadioGroup>
-      {errors.primaryPain && <p className="text-sm text-destructive mt-1">{errors.primaryPain}</p>}
-    </div>
-
-    <div>
-      <Label className="text-base font-semibold mb-3 block font-space-grotesk">What other challenges do you face? (Select all that apply)</Label>
-      <div className="space-y-2">
-        {SECONDARY_PAIN_OPTIONS.map((pain) => (
-          <div key={pain.value} className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-            <Checkbox
-              id={`secondary-${pain.value}`}
-              checked={formData.secondaryPains.includes(pain.value)}
-              onCheckedChange={() => toggleSecondaryPain(pain.value)}
-            />
-            <Label htmlFor={`secondary-${pain.value}`} className="cursor-pointer flex-1">{pain.label}</Label>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    <div>
-      <Label className="text-base font-semibold mb-3 block font-space-grotesk">How do you typically make important decisions? *</Label>
-      <RadioGroup
-        value={formData.decisionMakingProcess}
-        onValueChange={(value) => setFormData({ ...formData, decisionMakingProcess: value })}
-        className="space-y-2"
-      >
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="gut-feel" id="decision-gut" />
-          <Label htmlFor="decision-gut" className="cursor-pointer flex-1">🎲 Gut feeling</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="research" id="decision-research" />
-          <Label htmlFor="decision-research" className="cursor-pointer flex-1">📊 Research and data</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="community" id="decision-community" />
-          <Label htmlFor="decision-community" className="cursor-pointer flex-1">👥 Community input</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="mentor" id="decision-mentor" />
-          <Label htmlFor="decision-mentor" className="cursor-pointer flex-1">🎓 Mentor guidance</Label>
-        </div>
-      </RadioGroup>
-      {errors.decisionMakingProcess && <p className="text-sm text-destructive mt-1">{errors.decisionMakingProcess}</p>}
-    </div>
-  </div>
-);
+        );
 
       case 3: // Meet Your Toolkit
-return (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Meet Your Toolkit 🛠️</h2>
-      <p className="text-muted-foreground mb-6 font-poppins">
-        Select the features you're most interested in. You can always explore more later!
-      </p>
-    </div>
-
-    <div className="space-y-4">
-      {FEATURES.map((feature) => {
-        const isSelected = formData.selectedFeatures.includes(feature.id);
         return (
-          <Card
-            key={feature.id}
-            className={`cursor-pointer rounded-2xl border border-border/60 bg-card/80 transition-all duration-300 ${isSelected
-              ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/20 shadow-md'
-              : 'hover:border-primary/40 hover:shadow-sm'
-              }`}
-            onClick={() => toggleFeature(feature.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg font-space-grotesk">{feature.title}</CardTitle>
-                  <CardDescription className="mt-1">{feature.description}</CardDescription>
-                </div>
-                <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={() => toggleFeature(feature.id)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">💡 {feature.painPoint}</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Meet Your Toolkit 🛠️</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
+                Select the features you're most interested in. You can always explore more later!
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {FEATURES.map((feature) => {
+                const isSelected = formData.selectedFeatures.includes(feature.id);
+                return (
+                  <Card
+                    key={feature.id}
+                    className={`cursor-pointer rounded-2xl border border-border/60 bg-card/80 transition-all duration-300 ${isSelected
+                      ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/20 shadow-md'
+                      : 'hover:border-primary/40 hover:shadow-sm'
+                      }`}
+                    onClick={() => toggleFeature(feature.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-space-grotesk">{feature.title}</CardTitle>
+                          <CardDescription className="mt-1">{feature.description}</CardDescription>
+                        </div>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleFeature(feature.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">💡 {feature.painPoint}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            {errors.selectedFeatures && <p className="text-sm text-destructive mt-1">{errors.selectedFeatures}</p>}
+          </div>
         );
-      })}
-    </div>
-    {errors.selectedFeatures && <p className="text-sm text-destructive mt-1">{errors.selectedFeatures}</p>}
-  </div>
-);
 
       case 4: // Personalization
-return (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Personalize your experience ✨</h2>
-      <p className="text-muted-foreground mb-6 font-poppins">
-        Help us tailor the platform to your preferences.
-      </p>
-    </div>
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Personalize your experience ✨</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
+                Help us tailor the platform to your preferences.
+              </p>
+            </div>
 
-    <div>
-      <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your preferred communication style? *</Label>
-      <RadioGroup
-        value={formData.communicationStyle}
-        onValueChange={(value) => setFormData({ ...formData, communicationStyle: value })}
-        className="space-y-2"
-      >
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="visual" id="comm-visual" />
-          <Label htmlFor="comm-visual" className="cursor-pointer flex-1">🎨 Visual (charts, graphs, infographics)</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="text-focused" id="comm-text" />
-          <Label htmlFor="comm-text" className="cursor-pointer flex-1">📝 Text-focused (detailed explanations)</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="mixed" id="comm-mixed" />
-          <Label htmlFor="comm-mixed" className="cursor-pointer flex-1">🔄 Mixed (both visual and text)</Label>
-        </div>
-      </RadioGroup>
-      {errors.communicationStyle && <p className="text-sm text-destructive mt-1">{errors.communicationStyle}</p>}
-    </div>
+            <div>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your preferred communication style? *</Label>
+              <RadioGroup
+                value={formData.communicationStyle}
+                onValueChange={(value) => setFormData({ ...formData, communicationStyle: value })}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="visual" id="comm-visual" />
+                  <Label htmlFor="comm-visual" className="cursor-pointer flex-1">🎨 Visual (charts, graphs, infographics)</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="text-focused" id="comm-text" />
+                  <Label htmlFor="comm-text" className="cursor-pointer flex-1">📝 Text-focused (detailed explanations)</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="mixed" id="comm-mixed" />
+                  <Label htmlFor="comm-mixed" className="cursor-pointer flex-1">🔄 Mixed (both visual and text)</Label>
+                </div>
+              </RadioGroup>
+              {errors.communicationStyle && <p className="text-sm text-destructive mt-1">{errors.communicationStyle}</p>}
+            </div>
 
-    <div>
-      <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your commitment level? *</Label>
-      <RadioGroup
-        value={formData.commitmentLevel}
-        onValueChange={(value) => setFormData({ ...formData, commitmentLevel: value })}
-        className="space-y-2"
-      >
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="serious" id="commit-serious" />
-          <Label htmlFor="commit-serious" className="cursor-pointer flex-1">🔥 Serious—ready to take action</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="exploring" id="commit-exploring" />
-          <Label htmlFor="commit-exploring" className="cursor-pointer flex-1">🔍 Exploring—seeing what's possible</Label>
-        </div>
-        <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
-          <RadioGroupItem value="casual" id="commit-casual" />
-          <Label htmlFor="commit-casual" className="cursor-pointer flex-1">💭 Casual—just checking it out</Label>
-        </div>
-      </RadioGroup>
-      {errors.commitmentLevel && <p className="text-sm text-destructive mt-1">{errors.commitmentLevel}</p>}
-    </div>
-  </div>
-);
+            <div>
+              <Label className="text-base font-semibold mb-3 block font-space-grotesk">What's your commitment level? *</Label>
+              <RadioGroup
+                value={formData.commitmentLevel}
+                onValueChange={(value) => setFormData({ ...formData, commitmentLevel: value })}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="serious" id="commit-serious" />
+                  <Label htmlFor="commit-serious" className="cursor-pointer flex-1">🔥 Serious—ready to take action</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="exploring" id="commit-exploring" />
+                  <Label htmlFor="commit-exploring" className="cursor-pointer flex-1">🔍 Exploring—seeing what's possible</Label>
+                </div>
+                <div className="flex items-center space-x-2 rounded-lg border border-border/60 bg-background/70 p-3 transition-colors hover:bg-accent/60">
+                  <RadioGroupItem value="casual" id="commit-casual" />
+                  <Label htmlFor="commit-casual" className="cursor-pointer flex-1">💭 Casual—just checking it out</Label>
+                </div>
+              </RadioGroup>
+              {errors.commitmentLevel && <p className="text-sm text-destructive mt-1">{errors.commitmentLevel}</p>}
+            </div>
+          </div>
+        );
 
       case 5: // Consent & Ready to Launch
-return (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Almost there! 🎉</h2>
-      <p className="text-muted-foreground mb-6 font-poppins">
-        Review our terms and get ready to launch your founder journey.
-      </p>
-    </div>
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2 font-space-grotesk">Almost there! 🎉</h2>
+              <p className="text-muted-foreground mb-6 font-poppins">
+                Review our terms and get ready to launch your founder journey.
+              </p>
+            </div>
 
-    <div className="space-y-4">
-      <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
-        <Checkbox
-          id="terms"
-          checked={formData.acceptedTerms}
-          onCheckedChange={(checked) => setFormData({ ...formData, acceptedTerms: checked === true })}
-          className="mt-1"
-        />
-        <Label htmlFor="terms" className="cursor-pointer text-sm leading-relaxed">
-          I agree to the{' '}
-          <Link to="/terms" className="text-[#32b8c6] hover:underline" target="_blank">
-            Terms of Service
-          </Link>
-          {' '}and{' '}
-          <Link to="/privacy-policy" className="text-[#32b8c6] hover:underline" target="_blank">
-            Privacy Policy
-          </Link>
-          . *
-        </Label>
-      </div>
-      {errors.acceptedTerms && <p className="text-sm text-destructive mt-1">{errors.acceptedTerms}</p>}
-    </div>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-2 rounded-2xl border border-border/60 bg-background/70 p-4">
+                <Checkbox
+                  id="terms"
+                  checked={formData.acceptedTerms}
+                  onCheckedChange={(checked) => setFormData({ ...formData, acceptedTerms: checked === true })}
+                  className="mt-1"
+                />
+                <Label htmlFor="terms" className="cursor-pointer text-sm leading-relaxed">
+                  I agree to the{' '}
+                  <Link to="/terms" className="text-[#32b8c6] hover:underline" target="_blank">
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link to="/privacy-policy" className="text-[#32b8c6] hover:underline" target="_blank">
+                    Privacy Policy
+                  </Link>
+                  . *
+                </Label>
+              </div>
+              {errors.acceptedTerms && <p className="text-sm text-destructive mt-1">{errors.acceptedTerms}</p>}
+            </div>
 
-    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
-      <p className="text-sm text-muted-foreground">
-        <strong className="text-foreground">What's next?</strong> After you complete onboarding, you'll be taken to your personalized dashboard where you can start exploring the features you selected.
-      </p>
-    </div>
-  </div>
-);
+            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">What's next?</strong> After you complete onboarding, you'll be taken to your personalized dashboard where you can start exploring the features you selected.
+              </p>
+            </div>
+          </div>
+        );
 
       default:
-return null;
+        return null;
     }
   };
 
-return (
-  <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6 font-poppins">
-    <Card className="rounded-2xl border border-border/60 bg-card/80 shadow-xl backdrop-blur">
-      <CardHeader className="space-y-4 pb-6 border-b border-border/60">
-        <div>
-          <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">Welcome to Creatives Takeover</CardTitle>
-          <CardDescription className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Step {currentStep + 1} of {totalSteps}
-          </CardDescription>
-        </div>
-        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
-          <div
-            className="h-full bg-[#32b8c6] transition-all rounded-full shadow-sm"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </CardHeader>
+  return (
+    <div className="w-full max-w-[680px] mx-auto p-4 sm:p-6 font-poppins">
+      <Card className="rounded-2xl border border-border/60 bg-card/80 shadow-xl backdrop-blur">
+        <CardHeader className="space-y-4 pb-6 border-b border-border/60">
+          <div>
+            <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight font-space-grotesk">Welcome to Creatives Takeover</CardTitle>
+            <CardDescription className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Step {currentStep + 1} of {totalSteps}
+            </CardDescription>
+          </div>
+          <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50">
+            <div
+              className="h-full bg-[#32b8c6] transition-all rounded-full shadow-sm"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </CardHeader>
 
-      <CardContent className="min-h-[400px] pt-6">
-        {renderStep()}
-      </CardContent>
+        <CardContent className="min-h-[400px] pt-6">
+          {renderStep()}
+        </CardContent>
 
-      <div className="px-6 pb-6 flex items-center justify-between gap-4">
-        <div>
-          {currentStep > 0 && (
+        <div className="px-6 pb-6 flex items-center justify-between gap-4">
+          <div>
+            {currentStep > 0 && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleBack}
+                disabled={isLoading || isSigningUp}
+                className="gap-2 rounded-full border border-border/60 bg-background/80"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {currentStep + 1} / {totalSteps}
+            </span>
             <Button
               type="button"
-              variant="secondary"
-              onClick={handleBack}
+              onClick={handleNext}
               disabled={isLoading || isSigningUp}
-              className="gap-2 rounded-full border border-border/60 bg-background/80"
+              className="gap-2 rounded-full px-6 font-semibold shadow-sm hover:shadow-md"
+              style={{ backgroundColor: currentStep === 5 ? '#32b8c6' : undefined }}
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back
+              {isLoading || isSigningUp ? (
+                'Loading...'
+              ) : currentStep === 5 ? (
+                <>
+                  Get Started 🚀
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </Button>
-          )}
+          </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            {currentStep + 1} / {totalSteps}
-          </span>
-          <Button
-            type="button"
-            onClick={handleNext}
-            disabled={isLoading || isSigningUp}
-            className="gap-2 rounded-full px-6 font-semibold shadow-sm hover:shadow-md"
-            style={{ backgroundColor: currentStep === 5 ? '#32b8c6' : undefined }}
-          >
-            {isLoading || isSigningUp ? (
-              'Loading...'
-            ) : currentStep === 5 ? (
-              <>
-                Get Started 🚀
-              </>
-            ) : (
-              <>
-                Next
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </Card>
-  </div>
-);
+      </Card>
+    </div>
+  );
 };
