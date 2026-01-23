@@ -102,7 +102,7 @@ const UserReviews = () => {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-16 sm:mb-20 px-6 sm:px-8 lg:px-12">
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            Join Them
+            Join Them 💙
           </Badge>
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6 break-words tracking-tight text-primary">
             Helping Founders Succeed

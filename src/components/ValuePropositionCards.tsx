@@ -92,7 +92,7 @@ const ValuePropositionCards = () => {
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
           <Badge variant="outline" className="mb-5 text-xs uppercase tracking-wide text-muted-foreground">
-            The Perfect Ecosystem
+            The Perfect Ecosystem ♻️
           </Badge>
           <h2 className="font-space-grotesk text-3xl sm:text-4xl lg:text-5xl font-semibold mb-4 tracking-tight text-primary">
             Here's What You Get
