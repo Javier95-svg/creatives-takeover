@@ -1,8 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Lightbulb, Users, Rocket, LayoutDashboard } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -143,15 +141,11 @@ const ValuePropositionCards = () => {
                             </div>
                           </div>
 
-                          <div className="text-base leading-relaxed text-foreground/85 mb-6 space-y-4">
+                          <div className="text-base leading-relaxed text-foreground/85 space-y-4">
                             {card.description.split('\n\n').map((paragraph, idx) => (
                               <p key={idx}>{paragraph}</p>
                             ))}
                           </div>
-
-                          <Button variant="outline" className="w-fit" asChild>
-                            <Link to={card.link}>{card.cta}</Link>
-                          </Button>
                         </div>
                       </div>
                     </Card>
