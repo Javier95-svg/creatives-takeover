@@ -437,7 +437,7 @@ const FocusFunnel = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <FolderKanban className="h-4 w-4 text-primary" />
-                  Projects
+                  Strategy
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -460,7 +460,7 @@ const FocusFunnel = () => {
                         Adding...
                       </>
                     ) : (
-                      'Add Project'
+                      'Set Strategy'
                     )}
                   </Button>
                 </div>

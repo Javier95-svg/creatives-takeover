@@ -120,7 +120,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
             <FolderKanban className="h-4 w-4 text-green-500" />
             <div>
-              <p className="text-xs text-muted-foreground">Projects</p>
+              <p className="text-xs text-muted-foreground">Strategy</p>
               <p className="text-lg font-semibold">{stats.inProgressProjects}</p>
             </div>
           </div>
