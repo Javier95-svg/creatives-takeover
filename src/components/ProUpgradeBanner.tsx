@@ -2,10 +2,13 @@
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const ProUpgradeBanner = () => {
     const { isAuthenticated, loading } = useAuth();
-    const showBanner = !loading;
+    const location = useLocation();
+    const hideForAuthRoutes = location.pathname === '/login' || location.pathname === '/signup';
+    const showBanner = !loading && !hideForAuthRoutes;
 
     useEffect(() => {
         if (showBanner) {
@@ -38,7 +41,7 @@ const ProUpgradeBanner = () => {
                         </a>
                     </>
                 ) : (
-                    <span className="text-foreground/80">Focus Funnel is now available on dashboard.</span>
+                    <span className="text-foreground/80">Focus Funnel now available on dashboard 🎯</span>
                 )}
             </div>
         </div>
