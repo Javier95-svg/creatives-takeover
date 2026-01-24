@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { SortableList } from '@/components/ui/sortable-list';
 import { cn } from '@/lib/utils';
 import {
   Brain,
@@ -41,6 +42,9 @@ const FocusFunnel = () => {
     createProject,
     createTask,
     updateTaskStatus,
+    reorderGoals,
+    reorderProjects,
+    reorderTasks,
   } = useFocusFunnel();
 
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
@@ -205,6 +209,25 @@ const FocusFunnel = () => {
     }
   };
 
+  // Drag-and-drop reorder handlers
+  const handleGoalsReorder = async (newGoals: typeof goals) => {
+    const ids = newGoals.map((g) => g.id);
+    const orders = newGoals.map((_, i) => i);
+    await reorderGoals(ids, orders);
+  };
+
+  const handleProjectsReorder = async (newProjects: typeof visibleProjects) => {
+    const ids = newProjects.map((p) => p.id);
+    const orders = newProjects.map((_, i) => i);
+    await reorderProjects(ids, orders);
+  };
+
+  const handleTasksReorder = async (newTasks: typeof visibleTasks) => {
+    const ids = newTasks.map((t) => t.id);
+    const orders = newTasks.map((_, i) => i);
+    await reorderTasks(ids, orders);
+  };
+
   return (
     <DashboardLayout
       title="Focus Funnel"
@@ -253,34 +276,38 @@ const FocusFunnel = () => {
                   {goals.length === 0 && (
                     <p className="text-sm text-muted-foreground">No goals yet.</p>
                   )}
-                  {goals.map((goal) => (
-                    <button
-                      key={goal.id}
-                      type="button"
-                      className={cn(
-                        'w-full text-left rounded-md border px-3 py-2 text-sm transition-colors',
-                        selectedGoalId === goal.id
-                          ? 'border-primary/60 bg-primary/5'
-                          : 'border-border/60 hover:border-primary/40'
-                      )}
-                      onClick={() => {
-                        setSelectedGoalId(goal.id);
-                        setSelectedProjectId(null);
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">{goal.title}</span>
-                        <Badge variant="outline" className="text-[10px]">
-                          P{goal.priority}
-                        </Badge>
-                      </div>
-                      {goal.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {goal.description}
-                        </p>
-                      )}
-                    </button>
-                  ))}
+                  <SortableList
+                    items={goals}
+                    onReorder={handleGoalsReorder}
+                    className="space-y-2"
+                    renderItem={(goal) => (
+                      <button
+                        type="button"
+                        className={cn(
+                          'w-full text-left rounded-md border px-3 py-2 text-sm transition-colors',
+                          selectedGoalId === goal.id
+                            ? 'border-primary/60 bg-primary/5'
+                            : 'border-border/60 hover:border-primary/40'
+                        )}
+                        onClick={() => {
+                          setSelectedGoalId(goal.id);
+                          setSelectedProjectId(null);
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{goal.title}</span>
+                          <Badge variant="outline" className="text-[10px]">
+                            P{goal.priority}
+                          </Badge>
+                        </div>
+                        {goal.description && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {goal.description}
+                          </p>
+                        )}
+                      </button>
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -327,31 +354,35 @@ const FocusFunnel = () => {
                       {selectedGoal ? 'No projects yet.' : 'Select a goal to see projects.'}
                     </p>
                   )}
-                  {visibleProjects.map((project) => (
-                    <button
-                      key={project.id}
-                      type="button"
-                      className={cn(
-                        'w-full text-left rounded-md border px-3 py-2 text-sm transition-colors',
-                        selectedProjectId === project.id
-                          ? 'border-primary/60 bg-primary/5'
-                          : 'border-border/60 hover:border-primary/40'
-                      )}
-                      onClick={() => setSelectedProjectId(project.id)}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">{project.title}</span>
-                        <Badge variant="outline" className="text-[10px]">
-                          P{project.priority}
-                        </Badge>
-                      </div>
-                      {project.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {project.description}
-                        </p>
-                      )}
-                    </button>
-                  ))}
+                  <SortableList
+                    items={visibleProjects}
+                    onReorder={handleProjectsReorder}
+                    className="space-y-2"
+                    renderItem={(project) => (
+                      <button
+                        type="button"
+                        className={cn(
+                          'w-full text-left rounded-md border px-3 py-2 text-sm transition-colors',
+                          selectedProjectId === project.id
+                            ? 'border-primary/60 bg-primary/5'
+                            : 'border-border/60 hover:border-primary/40'
+                        )}
+                        onClick={() => setSelectedProjectId(project.id)}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{project.title}</span>
+                          <Badge variant="outline" className="text-[10px]">
+                            P{project.priority}
+                          </Badge>
+                        </div>
+                        {project.description && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {project.description}
+                          </p>
+                        )}
+                      </button>
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -396,33 +427,35 @@ const FocusFunnel = () => {
                       {selectedGoal ? 'No tasks yet.' : 'Select a goal to see tasks.'}
                     </p>
                   )}
-                  {visibleTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="rounded-md border border-border/60 px-3 py-2 text-sm"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <p className="font-medium">{task.title}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="outline" className="text-[10px]">
-                              {task.priority}
-                            </Badge>
-                            {task.deadline && <span>Due {task.deadline}</span>}
+                  <SortableList
+                    items={visibleTasks}
+                    onReorder={handleTasksReorder}
+                    className="space-y-2"
+                    renderItem={(task) => (
+                      <div className="rounded-md border border-border/60 px-3 py-2 text-sm bg-background">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-1">
+                            <p className="font-medium">{task.title}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Badge variant="outline" className="text-[10px]">
+                                {task.priority}
+                              </Badge>
+                              {task.deadline && <span>Due {task.deadline}</span>}
+                            </div>
                           </div>
+                          <Button
+                            size="sm"
+                            variant={task.status === 'done' ? 'default' : 'outline'}
+                            onClick={() =>
+                              updateTaskStatus(task.id, task.status === 'done' ? 'todo' : 'done')
+                            }
+                          >
+                            {task.status === 'done' ? 'Done' : 'Mark done'}
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant={task.status === 'done' ? 'default' : 'outline'}
-                          onClick={() =>
-                            updateTaskStatus(task.id, task.status === 'done' ? 'todo' : 'done')
-                          }
-                        >
-                          {task.status === 'done' ? 'Done' : 'Mark done'}
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
