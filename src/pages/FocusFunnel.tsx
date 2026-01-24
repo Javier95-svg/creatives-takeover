@@ -16,6 +16,7 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 type AiMessage = {
   role: 'user' | 'assistant';
@@ -205,20 +206,15 @@ const FocusFunnel = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 max-w-7xl space-y-6">
+    <DashboardLayout
+      title="Focus Funnel"
+      subtitle="Break down goals into projects and next actions"
+    >
+      <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="font-space-grotesk text-3xl sm:text-4xl font-semibold tracking-tight">
-              Focus Funnel
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Break down goals into projects and next actions, with an AI partner to keep momentum.
-            </p>
-          </div>
-            <Badge variant="outline" className="text-xs uppercase tracking-wide text-muted-foreground">
-              Goals &rarr; Projects &rarr; Next Actions
-            </Badge>
+          <Badge variant="outline" className="text-xs uppercase tracking-wide text-muted-foreground">
+            Goals &rarr; Projects &rarr; Next Actions
+          </Badge>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
@@ -526,7 +522,7 @@ const FocusFunnel = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
   Target,
@@ -17,6 +17,8 @@ import {
   Mail,
   FileSearch,
   ClipboardList,
+  Home,
+  BarChart3,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,8 +33,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useScrollToSection } from '@/hooks/useScrollToSection';
-import { useDashboardNavigation } from '@/contexts/DashboardNavigationContext';
 import { DashboardMode } from './modes/ModeToggle';
 import { DashboardCustomization } from './DashboardCustomization';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,8 +43,7 @@ interface DashboardSidebarProps {
 }
 
 export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSidebarProps) => {
-  const scrollToSection = useScrollToSection();
-  const { activeSection } = useDashboardNavigation();
+  const location = useLocation();
   const { setOpenMobile, isMobile } = useSidebar();
   const { user } = useAuth();
   const defaultSidebarPreferences = {
@@ -81,19 +80,20 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
     loadPreferences();
   }, [user]);
 
-  const handleSectionClick = (sectionId: string) => {
-    scrollToSection(sectionId);
+  const handleNavClick = () => {
     if (isMobile) {
       setOpenMobile(false);
     }
   };
 
-  const getDashboardViewItems = () => ([
-    { id: 'focus-funnel', label: 'Focus Funnel', icon: Target },
-    { id: 'core-metrics', label: 'Core Metrics', icon: Target },
-    { id: 'weekly-mission', label: 'Weekly Mission', icon: Calendar },
-    { id: 'your-tasks', label: 'Your Tasks', icon: CheckSquare },
-  ]);
+  // Route-based navigation items
+  const dashboardNavItems = [
+    { path: '/dashboard', label: 'Home', icon: Home },
+    { path: '/focus-funnel', label: 'Focus Funnel', icon: Target },
+    { path: '/core-metrics', label: 'Core Metrics', icon: BarChart3 },
+    { path: '/weekly-mission', label: 'Weekly Mission', icon: Calendar },
+    { path: '/tasks', label: 'Your Tasks', icon: CheckSquare },
+  ];
 
   // Build tools items based on user preferences
   const toolsItems = [
@@ -125,20 +125,22 @@ export const DashboardSidebar = ({ dashboardMode: _dashboardMode }: DashboardSid
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Today's Focus - Quick Navigation */}
+        {/* Dashboard Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Dashboard Sections</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {getDashboardViewItems().map((item) => (
-                <SidebarMenuItem key={item.id}>
+              {dashboardNavItems.map((item) => (
+                <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
-                    onClick={() => handleSectionClick(item.id)}
-                    isActive={activeSection === item.id}
+                    asChild
+                    isActive={location.pathname === item.path}
                     tooltip={item.label}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <Link to={item.path} onClick={handleNavClick}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

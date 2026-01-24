@@ -81,6 +81,9 @@ const AdminMentorEditor = lazy(() => import("./pages/community/AdminMentorEditor
 const PMFLabPage = lazy(() => import("./pages/PMFLabPage"));
 const TechStackPage = lazy(() => import("./pages/TechStackPage"));
 const FocusFunnel = lazy(() => import("./pages/FocusFunnel"));
+const CoreMetricsPage = lazy(() => import("./pages/CoreMetricsPage"));
+const WeeklyMissionPage = lazy(() => import("./pages/WeeklyMissionPage"));
+const TasksPage = lazy(() => import("./pages/TasksPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -164,6 +167,9 @@ function App() {
                         <Route path="/account" element={<Account />} />
                         <Route path="/setup-quiz" element={<SetupQuiz />} />
                         <Route path="/focus-funnel" element={<FocusFunnel />} />
+                        <Route path="/core-metrics" element={<CoreMetricsPage />} />
+                        <Route path="/weekly-mission" element={<WeeklyMissionPage />} />
+                        <Route path="/tasks" element={<TasksPage />} />
                         <Route path="/insighta" element={<Blog />} />
                         <Route path="/insighta/vc-search" element={<VCSearchPage />} />
                         <Route path="/insighta/email-templates" element={<EmailTemplatesPage />} />
