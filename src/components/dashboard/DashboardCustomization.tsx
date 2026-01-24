@@ -21,8 +21,6 @@ interface SidebarPreferences {
   showPMFLab: boolean;
   showPromptLibrary: boolean;
   showTechStack: boolean;
-  showAcceleratorHunt: boolean;
-  showInsighta: boolean;
   showInsightaTest: boolean;
   showVCSearch: boolean;
   showEmailTemplates: boolean;
@@ -36,8 +34,6 @@ const DEFAULT_PREFERENCES: SidebarPreferences = {
   showPMFLab: false,
   showPromptLibrary: false,
   showTechStack: false,
-  showAcceleratorHunt: false,
-  showInsighta: false,
   showInsightaTest: false,
   showVCSearch: false,
   showEmailTemplates: false,
@@ -112,9 +108,9 @@ export const DashboardCustomization = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start">
+        <Button variant="ghost" className="w-full justify-start text-xs">
           <Settings className="h-4 w-4 mr-2" />
-          Customize Dashboard
+          Customize your Experience
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -192,21 +188,9 @@ export const DashboardCustomization = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Insighta Suite</CardTitle>
-                <CardDescription>Market insights and investor matching</CardDescription>
+                <CardDescription>Fundraising tools and investor insights</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="insighta" className="font-medium">Investor Matchmaker</Label>
-                    <p className="text-sm text-muted-foreground">Match with relevant investors</p>
-                  </div>
-                  <Switch
-                    id="insighta"
-                    checked={preferences.showInsighta}
-                    onCheckedChange={() => togglePreference('showInsighta')}
-                  />
-                </div>
-
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="vc-search" className="font-medium">VC Search</Label>
@@ -240,18 +224,6 @@ export const DashboardCustomization = () => {
                     id="pitch-deck"
                     checked={preferences.showPitchDeckAnalyzer}
                     onCheckedChange={() => togglePreference('showPitchDeckAnalyzer')}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="accelerator-hunt" className="font-medium">Accelerator Hunt</Label>
-                    <p className="text-sm text-muted-foreground">Find accelerators for your startup</p>
-                  </div>
-                  <Switch
-                    id="accelerator-hunt"
-                    checked={preferences.showAcceleratorHunt}
-                    onCheckedChange={() => togglePreference('showAcceleratorHunt')}
                   />
                 </div>
 
