@@ -76,7 +76,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
     );
   }
 
-  const hasData = goals.length > 0 || projects.length > 0 || tasks.length > 0;
+  const hasData = Desired Outcome &rarr; Strategy &rarr; Actions.length > 0;
 
   return (
     <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
@@ -89,7 +89,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
             <div>
               <CardTitle className="text-lg font-semibold">Focus Funnel</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Goals → Projects → Tasks
+                Desired Outcome &rarr; Strategy &rarr; Actions
               </p>
             </div>
           </div>
@@ -233,3 +233,4 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
     </Card>
   );
 }
+

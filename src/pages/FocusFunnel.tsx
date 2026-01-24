@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { SortableList } from '@/components/ui/sortable-list';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 import {
   Brain,
   CheckCircle2,
@@ -38,6 +39,7 @@ const FocusFunnel = () => {
     projects,
     tasks,
     overdueTasks,
+    error,
     createGoal,
     createProject,
     createTask,
@@ -52,6 +54,9 @@ const FocusFunnel = () => {
   const [goalTitle, setGoalTitle] = useState('');
   const [projectTitle, setProjectTitle] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [isSavingProject, setIsSavingProject] = useState(false);
+  const [isSavingTask, setIsSavingTask] = useState(false);
 
   const [aiMessages, setAiMessages] = useState<AiMessage[]>([]);
   const [aiInput, setAiInput] = useState('');
@@ -128,6 +133,116 @@ const FocusFunnel = () => {
       'Top tasks:',
       topTasks,
     ].join('\n');
+  };
+
+  const guidedPrompts = [
+    {
+      title: 'Define desired outcome',
+      description: 'Clarify the outcome and success criteria.',
+      buildPrompt: () =>
+        'Help me define a clear desired outcome for the next 90 days. Ask 3 clarifying questions and suggest success metrics.',
+    },
+    {
+      title: 'Map strategy',
+      description: selectedGoal ? `Strategize for "${selectedGoal.title}".` : 'Create strategies for my outcome.',
+      buildPrompt: () =>
+        selectedGoal
+          ? `Based on the desired outcome "${selectedGoal.title}", propose 3 strategies with tradeoffs.`
+          : 'Propose 3 strategies to reach my desired outcome. Ask me what constraints you need.',
+    },
+    {
+      title: 'Draft actions',
+      description: selectedProject
+        ? `Draft actions for "${selectedProject.title}".`
+        : selectedGoal
+          ? `Draft actions for "${selectedGoal.title}".`
+          : 'Turn the strategy into actions.',
+      buildPrompt: () =>
+        selectedProject
+          ? `Draft 5 next actions for the strategy "${selectedProject.title}", each with expected impact.`
+          : selectedGoal
+            ? `Draft 5 next actions for the desired outcome "${selectedGoal.title}", ordered by impact.`
+            : 'Draft 5 next actions to move the strategy forward. Ask what context you need.',
+    },
+  ];
+
+  const handleAddGoal = async () => {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to add a goal.', variant: 'destructive' });
+      return;
+    }
+    if (!goalTitle.trim()) {
+      toast({ title: 'Add a goal title', description: 'Give your desired outcome a clear name.' });
+      return;
+    }
+    if (isSavingGoal) return;
+    setIsSavingGoal(true);
+    const created = await createGoal({ title: goalTitle.trim(), priority: 3 });
+    if (created) {
+      setGoalTitle('');
+      setSelectedGoalId(created.id);
+    } else {
+      toast({ title: 'Unable to add goal', description: 'Please try again in a moment.', variant: 'destructive' });
+    }
+    setIsSavingGoal(false);
+  };
+
+  const handleAddProject = async () => {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to add a project.', variant: 'destructive' });
+      return;
+    }
+    if (!selectedGoal) {
+      toast({ title: 'Select a goal first', description: 'Projects live under a desired outcome.' });
+      return;
+    }
+    if (!projectTitle.trim()) {
+      toast({ title: 'Add a project title', description: 'Name the strategy you want to execute.' });
+      return;
+    }
+    if (isSavingProject) return;
+    setIsSavingProject(true);
+    const created = await createProject({
+      title: projectTitle.trim(),
+      goal_id: selectedGoal.id,
+      priority: 3,
+    });
+    if (created) {
+      setProjectTitle('');
+      setSelectedProjectId(created.id);
+    } else {
+      toast({ title: 'Unable to add project', description: 'Please try again in a moment.', variant: 'destructive' });
+    }
+    setIsSavingProject(false);
+  };
+
+  const handleAddTask = async () => {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to add a task.', variant: 'destructive' });
+      return;
+    }
+    if (!taskTitle.trim()) {
+      toast({ title: 'Add a task title', description: 'Capture the next action you want to take.' });
+      return;
+    }
+    if (!selectedGoal && !selectedProject) {
+      toast({ title: 'Select a goal or project', description: 'Tasks connect to your outcome or strategy.' });
+      return;
+    }
+    if (isSavingTask) return;
+    setIsSavingTask(true);
+    const created = await createTask({
+      title: taskTitle.trim(),
+      goal_id: selectedGoal?.id,
+      project_id: selectedProject?.id,
+      priority: 'medium',
+    });
+    if (created) {
+      setTaskTitle('');
+    } else {
+      toast({ title: 'Unable to add task', description: 'Please try again in a moment.', variant: 'destructive' });
+    }
+    setIsSavingTask(false);
   };
 
   const sendAiMessage = async (promptOverride?: string) => {
@@ -236,9 +351,14 @@ const FocusFunnel = () => {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Badge variant="outline" className="text-xs uppercase tracking-wide text-muted-foreground">
-            Goals &rarr; Projects &rarr; Next Actions
+            Desired Outcome &rarr; Strategy &rarr; Actions
           </Badge>
         </div>
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            Focus Funnel is temporarily unavailable. {error}
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
           <div className="grid gap-4 md:grid-cols-3">
@@ -259,16 +379,17 @@ const FocusFunnel = () => {
                   <Button
                     size="sm"
                     className="w-full"
-                    onClick={async () => {
-                      if (!goalTitle.trim()) return;
-                      const created = await createGoal({ title: goalTitle.trim(), priority: 3 });
-                      if (created) {
-                        setGoalTitle('');
-                        setSelectedGoalId(created.id);
-                      }
-                    }}
+                    onClick={handleAddGoal}
+                    disabled={isSavingGoal}
                   >
-                    Add Goal
+                    {isSavingGoal ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Goal'
+                    )}
                   </Button>
                 </div>
 
@@ -330,21 +451,17 @@ const FocusFunnel = () => {
                   <Button
                     size="sm"
                     className="w-full"
-                    disabled={!selectedGoal}
-                    onClick={async () => {
-                      if (!projectTitle.trim() || !selectedGoal) return;
-                      const created = await createProject({
-                        title: projectTitle.trim(),
-                        goal_id: selectedGoal.id,
-                        priority: 3,
-                      });
-                      if (created) {
-                        setProjectTitle('');
-                        setSelectedProjectId(created.id);
-                      }
-                    }}
+                    disabled={!selectedGoal || isSavingProject}
+                    onClick={handleAddProject}
                   >
-                    Add Project
+                    {isSavingProject ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Project'
+                    )}
                   </Button>
                 </div>
 
@@ -405,19 +522,17 @@ const FocusFunnel = () => {
                   <Button
                     size="sm"
                     className="w-full"
-                    disabled={!selectedGoal && !selectedProject}
-                    onClick={async () => {
-                      if (!taskTitle.trim()) return;
-                      await createTask({
-                        title: taskTitle.trim(),
-                        goal_id: selectedGoal?.id,
-                        project_id: selectedProject?.id,
-                        priority: 'medium',
-                      });
-                      setTaskTitle('');
-                    }}
+                    disabled={(!selectedGoal && !selectedProject) || isSavingTask}
+                    onClick={handleAddTask}
                   >
-                    Add Task
+                    {isSavingTask ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Task'
+                    )}
                   </Button>
                 </div>
 
@@ -494,19 +609,42 @@ const FocusFunnel = () => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {QUICK_PROMPTS.map((prompt) => (
-                  <Button
-                    key={prompt}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => sendAiMessage(prompt)}
-                    className="text-xs"
-                  >
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    {prompt}
-                  </Button>
-                ))}
+              <div className="space-y-3">
+                <div className="rounded-lg border border-border/60 bg-background/70 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Guided Flow
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {guidedPrompts.map((step) => (
+                      <Button
+                        key={step.title}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => sendAiMessage(step.buildPrompt())}
+                        className="w-full justify-start text-xs"
+                      >
+                        <Sparkles className="h-3 w-3 mr-2" />
+                        <span className="font-medium">{step.title}</span>
+                        <span className="ml-2 text-muted-foreground">{step.description}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_PROMPTS.map((prompt) => (
+                    <Button
+                      key={prompt}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => sendAiMessage(prompt)}
+                      className="text-xs"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
