@@ -76,7 +76,7 @@ export function FocusFunnelWidget({ compact = false, onOpenAIPartner }: FocusFun
     );
   }
 
-  const hasData = Desired Outcome &rarr; Strategy &rarr; Actions.length > 0;
+  const hasData = goals.length > 0 || projects.length > 0 || tasks.length > 0;
 
   return (
     <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
