@@ -18,10 +18,6 @@ interface MentorProfileProps {
 }
 
 export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
-  const renderStartTime = performance.now();
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfile.tsx:21',message:'MentorProfile render start',data:{mentorId:mentor.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-  // #endregion
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { startConversation, getUserIdByEmail } = useMessaging({ autoLoad: false });
@@ -36,8 +32,7 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     ? mentor.bio.substring(0, bioMaxLength) + '...'
     : mentor.bio;
   
-  // Get country flag - special cases for Samuel (American), Nic M Rayce (Singapore), Irfan Ahmad Malik (Pakistan), Gonzalo Wangüemert (Spain), Marc Bright (Great Britain), Vashti Joseph (France), Ramona Chihaia (Netherlands), and Dikshit Kukreja (India)
-  const getNationalityStartTime = performance.now();
+  // Get country flag - special cases for known mentor nationalities
   const getNationality = () => {
     if (mentor.nationality) {
       return mentor.nationality;
@@ -77,10 +72,6 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
     return null;
   };
   const nationality = getNationality();
-  const getNationalityDuration = performance.now() - getNationalityStartTime;
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfile.tsx:75',message:'getNationality complete',data:{duration:getNationalityDuration,nationality},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-  // #endregion
   const countryFlag = getCountryFlag(nationality);
 
   const renderStars = (rating: number) => {
@@ -358,9 +349,6 @@ export const MentorProfile = ({ mentor, onBookClick }: MentorProfileProps) => {
           </CardContent>
         </div>
       )}
-      {/* #region agent log */}
-      {(() => { fetch('http://127.0.0.1:7257/ingest/8b476a33-ecc3-4c85-be15-776e7e5dad0f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MentorProfile.tsx:361',message:'MentorProfile render complete',data:{duration:performance.now()-renderStartTime},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{}); return null; })()}
-      {/* #endregion */}
     </Card>
   );
 };

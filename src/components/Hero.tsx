@@ -30,10 +30,6 @@ const Hero = () => {
   // Fetch hero images from database
   useEffect(() => {
     const fetchHeroImages = async () => {
-      // #region agent log
-      const dbFetchStart = performance.now();
-      fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:32',message:'Database fetch started',data:{timestamp:dbFetchStart},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
       try {
         console.log('🖼️ Fetching hero images from database...');
         const { data, error } = await supabase
@@ -41,12 +37,6 @@ const Hero = () => {
           .select('position, image_url, alt_text')
           .eq('is_active', true)
           .order('position', { ascending: true });
-
-        // #region agent log
-        const dbFetchEnd = performance.now();
-        const dbFetchDuration = dbFetchEnd - dbFetchStart;
-        fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:40',message:'Database fetch completed',data:{hasError:!!error,errorMessage:error?.message,dataCount:data?.length||0,dbFetchDuration:dbFetchDuration.toFixed(2),imageUrls:data?.map(img=>({position:img.position,urlLength:img.image_url?.length||0}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
 
         if (error) {
           console.error('❌ Error fetching hero images:', error);
@@ -56,17 +46,11 @@ const Hero = () => {
         console.log('✅ Hero images fetched:', data);
         if (data && data.length > 0) {
           console.log(`📸 Found ${data.length} active hero images:`, data);
-          // #region agent log
-          fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:48',message:'Setting hero images state',data:{imageCount:data.length,positions:data.map(img=>img.position),urlsAvailable:data.map(img=>!!img.image_url)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-          // #endregion
           setHeroImages(data);
         } else {
           console.log('⚠️ No active hero images found in database');
         }
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:53',message:'Database fetch error',data:{errorMessage:error instanceof Error?error.message:String(error),errorType:error?.constructor?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion
         console.error('❌ Error fetching hero images:', error);
       }
     };
@@ -76,17 +60,9 @@ const Hero = () => {
 
   // Preload critical hero images (top row - positions 1 and 2) for faster loading
   useEffect(() => {
-    // #region agent log
-    const preloadStart = performance.now();
-    fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:62',message:'Preload effect triggered',data:{heroImagesCount:heroImages.length,preloadStart},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
     const topRowImages = heroImages.filter(img => img.position <= 2 && img.image_url);
     const bottomRowImages = heroImages.filter(img => img.position > 2 && img.image_url);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:66',message:'Image filtering result',data:{topRowCount:topRowImages.length,bottomRowCount:bottomRowImages.length,topRowPositions:topRowImages.map(img=>img.position),bottomRowPositions:bottomRowImages.map(img=>img.position)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
-    
+
     if (topRowImages.length === 0) return;
 
     // Extract storage domain from first image URL for preconnect
@@ -95,11 +71,7 @@ const Hero = () => {
       if (firstImageUrl) {
         const imageUrl = new URL(firstImageUrl);
         const storageDomain = imageUrl.origin;
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:76',message:'Preconnect setup',data:{storageDomain,hasPreconnect:!!document.querySelector(`link[rel="preconnect"][href="${storageDomain}"]`)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-        // #endregion
-        
+
         // Add preconnect link if it doesn't exist
         let preconnectLink = document.querySelector(`link[rel="preconnect"][href="${storageDomain}"]`);
         if (!preconnectLink) {
@@ -117,10 +89,6 @@ const Hero = () => {
 
     // Preload top row images
     topRowImages.forEach((image) => {
-      // #region agent log
-      const imgPreloadStart = performance.now();
-      fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:95',message:'Creating preload link',data:{position:image.position,urlLength:image.image_url.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3,H5'})}).catch(()=>{});
-      // #endregion
       const linkId = `hero-preload-${image.position}`;
       let preloadLink = document.getElementById(linkId) as HTMLLinkElement;
       
@@ -138,11 +106,6 @@ const Hero = () => {
         preloadLink.setAttribute('fetchpriority', 'high');
       }
     });
-    
-    // #region agent log
-    const preloadEnd = performance.now();
-    fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:108',message:'Preload setup complete',data:{preloadDuration:(preloadEnd-preloadStart).toFixed(2),preloadedCount:topRowImages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-    // #endregion
 
     // Cleanup function to remove preload links when component unmounts or images change
     return () => {
@@ -158,9 +121,6 @@ const Hero = () => {
 
   // Handle image upload for admin
   const handleImageUpload = async (position: number, file: File, event?: React.ChangeEvent<HTMLInputElement>) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:62',message:'handleImageUpload called',data:{position,fileName:file.name,fileType:file.type,fileSize:file.size,isAdmin,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     if (!isAdmin) {
       toast.error('Only admins can upload hero images');
       return;
@@ -211,10 +171,6 @@ const Hero = () => {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${position}/${Date.now()}.${fileExt}`;
 
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:90',message:'Before storage upload',data:{fileName,bucket:'hero-images',position,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
-
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('hero-images')
         .upload(fileName, file, {
@@ -222,10 +178,6 @@ const Hero = () => {
           upsert: true,
           contentType: file.type
         });
-
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:98',message:'Storage upload result',data:{hasError:!!uploadError,errorMessage:uploadError?.message,errorCode:uploadError?.statusCode,errorDetails:uploadError,hasData:!!uploadData,uploadPath:uploadData?.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
 
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
@@ -237,10 +189,6 @@ const Hero = () => {
       const { data: { publicUrl } } = supabase.storage
         .from('hero-images')
         .getPublicUrl(fileName);
-
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:108',message:'Public URL generated',data:{publicUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
 
       // OPTIMISTIC UI: Update state immediately with public URL (replaces preview)
       setOptimisticPreviews(prev => {
@@ -270,10 +218,6 @@ const Hero = () => {
         is_active: true
       };
 
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:118',message:'Before database operation',data:{position,hasExistingImage:!!existingImage,existingImageId:existingImage?.id,imageData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
-
       if (existingImage) {
         // Update existing - need to fetch the ID first
         const { data: existingData, error: fetchError } = await supabase
@@ -282,42 +226,24 @@ const Hero = () => {
           .eq('position', position)
           .single();
 
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:125',message:'Fetch existing image result',data:{hasError:!!fetchError,errorMessage:fetchError?.message,errorCode:fetchError?.code,hasData:!!existingData,existingId:existingData?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
-
         if (fetchError && fetchError.code !== 'PGRST116') {
           throw fetchError;
         }
 
         if (existingData?.id) {
-          // #region agent log
-          fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:133',message:'Before database update',data:{id:existingData.id,imageData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion
           const { error: updateError } = await supabase
             .from('hero_images')
             .update(imageData)
             .eq('id', existingData.id);
-
-          // #region agent log
-          fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:137',message:'Database update result',data:{hasError:!!updateError,errorMessage:updateError?.message,errorCode:updateError?.code,errorDetails:updateError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion
 
           if (updateError) {
             throw updateError;
           }
         } else {
           // Insert if no existing record found
-          // #region agent log
-          fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:145',message:'Before database insert (no existing)',data:{imageData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion
           const { error: insertError } = await supabase
             .from('hero_images')
             .insert(imageData);
-
-          // #region agent log
-          fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:149',message:'Database insert result (no existing)',data:{hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion
 
           if (insertError) {
             throw insertError;
@@ -325,16 +251,9 @@ const Hero = () => {
         }
       } else {
         // Insert new
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:157',message:'Before database insert (new)',data:{imageData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
         const { error: insertError } = await supabase
           .from('hero_images')
           .insert(imageData);
-
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:161',message:'Database insert result (new)',data:{hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
-        // #endregion
 
         if (insertError) {
           throw insertError;
@@ -342,18 +261,11 @@ const Hero = () => {
       }
 
       toast.success(`Image ${position} uploaded successfully!`, { id: `upload-hero-${position}` });
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:167',message:'Upload success, database saved',data:{position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
-      // #endregion
-      
+
       // Note: State already updated optimistically above, no need to reload from database
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/71bda769-8df3-4a55-a084-5705fe238e94',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:179',message:'Upload catch error',data:{errorMessage:error?.message,errorCode:error?.code,errorStatus:error?.statusCode,errorDetails:error,position},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1,H2'})}).catch(()=>{});
-      // #endregion
-      
+
       // Revert optimistic update on error
       setOptimisticPreviews(prev => {
         const updated = { ...prev };
@@ -540,12 +452,6 @@ const Hero = () => {
                 const isUploadingPosition = uploading === position;
                 // Load all images eagerly for faster display
                 const shouldLoadEagerly = true;
-                
-                // #region agent log
-                if (imageSrc) {
-                  fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:556',message:'Image rendering in grid',data:{position,hasOptimisticPreview:!!optimisticPreview,hasDbImage:!!image,shouldLoadEagerly,renderTime:performance.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1,H3'})}).catch(()=>{});
-                }
-                // #endregion
 
                 if (!imageSrc) {
                   return (
@@ -618,30 +524,6 @@ const Hero = () => {
                       width="800"
                       height="800"
                       key={optimisticPreview ? `optimistic-${position}-${Date.now()}` : `stable-${position}`}
-                      onLoadStart={(e) => {
-                        // #region agent log
-                        const img = e.currentTarget;
-                        const loadStartTime = performance.now();
-                        imageLoadStartTimes.current.set(position, loadStartTime);
-                        fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:679',message:'Image load started',data:{position,imageSrc:imageSrc.substring(0,100),shouldLoadEagerly,loadStartTime,imgWidth:img.naturalWidth||0,imgHeight:img.naturalHeight||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4,H5'})}).catch(()=>{});
-                        // #endregion
-                      }}
-                      onLoad={(e) => {
-                        // #region agent log
-                        const img = e.currentTarget;
-                        const loadEndTime = performance.now();
-                        const loadStartTime = imageLoadStartTimes.current.get(position) || loadEndTime;
-                        const loadDuration = loadEndTime - loadStartTime;
-                        imageLoadStartTimes.current.delete(position);
-                        fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:688',message:'Image load completed',data:{position,loadEndTime,loadDuration:loadDuration.toFixed(2),imgWidth:img.naturalWidth,imgHeight:img.naturalHeight,imgComplete:img.complete,shouldLoadEagerly,urlLength:imageSrc.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2,H4,H5'})}).catch(()=>{});
-                        // #endregion
-                      }}
-                      onError={(e) => {
-                        // #region agent log
-                        imageLoadStartTimes.current.delete(position);
-                        fetch('http://127.0.0.1:7260/ingest/44592efc-c57d-4c3c-82fe-1d199ab0c561',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Hero.tsx:695',message:'Image load error',data:{position,imageSrc:imageSrc.substring(0,100),shouldLoadEagerly},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-                        // #endregion
-                      }}
                     />
                     {isAdmin && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">

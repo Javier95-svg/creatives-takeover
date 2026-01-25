@@ -180,9 +180,6 @@ const BizMapAI = () => {
 
   // Sync currentSessionId changes from useChatSessions
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:189',message:'session sync useEffect',data:{currentSessionId,hasGetSession:typeof getSession==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     if (!currentSessionId) return;
     
     // Wait a tick to ensure getSession is available
@@ -194,9 +191,6 @@ const BizMapAI = () => {
         }
         
         const session = getSession(currentSessionId);
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:195',message:'session retrieved',data:{currentSessionId,hasSession:!!session,hasAnswers:!!session?.answers},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         if (session) {
           console.log('🟢 Dream2Plan: Syncing session state for', currentSessionId);
           // Map session answers to userAnswers structure with safe access
@@ -216,9 +210,6 @@ const BizMapAI = () => {
           setLaunchReport(session.launch_report || "");
         }
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/4f1e4fbc-0466-4947-9c15-fdedb23fe748',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Dream2Plan.tsx:212',message:'session sync error',data:{error:error instanceof Error?error.message:'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         console.error('Error syncing session state:', error);
         // Don't throw - just log the error to prevent crash
       }

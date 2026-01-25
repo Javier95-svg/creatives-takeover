@@ -5,10 +5,6 @@ import javierPhoto from "@/assets/team-javier-pena.png";
 import domagojPhoto from "@/assets/team-domagoj-markota.png";
 import danielaPhoto from "@/assets/team-daniela-hagg.png";
 
-// #region agent log
-if (typeof window !== 'undefined') { fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MeetTheTeam.tsx:6',message:'Image imports check',data:{javierPhoto:javierPhoto,domagojPhoto:domagojPhoto,danielaPhoto:danielaPhoto,javierType:typeof javierPhoto,domagojType:typeof domagojPhoto,danielaType:typeof danielaPhoto},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{}); }
-// #endregion
-
 type TeamMember = {
   name: string;
   role: string;
@@ -42,14 +38,7 @@ const teamMembers: TeamMember[] = [
   },
 ];
 
-// #region agent log
-if (typeof window !== 'undefined') { fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MeetTheTeam.tsx:37',message:'teamMembers array check',data:{length:teamMembers.length,members:teamMembers.map(m=>({name:m.name,role:m.role,photo:m.photo,photoType:typeof m.photo}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); }
-// #endregion
-
 const MeetTheTeam = () => {
-  // #region agent log
-  if (typeof window !== 'undefined') { fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MeetTheTeam.tsx:40',message:'MeetTheTeam render start',data:{teamMembersLength:teamMembers.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{}); }
-  // #endregion
   return (
     <section className="relative py-20 overflow-hidden" id="meet-the-team">
       {/* Wallpaper Background */}
@@ -76,11 +65,7 @@ const MeetTheTeam = () => {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {teamMembers.map((member) => {
-            // #region agent log
-            if (typeof window !== 'undefined') { fetch('http://127.0.0.1:7249/ingest/39896c49-d999-4dc3-8e56-d8f6d08b7d91',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MeetTheTeam.tsx:68',message:'Mapping team member',data:{name:member.name,role:member.role,photo:member.photo,photoType:typeof member.photo,hasLinkedIn:!!member.linkedin},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{}); }
-            // #endregion
-            return (
+          {teamMembers.map((member) => (
             <Card
               key={member.name}
               className="glass border-border/60 overflow-hidden flex flex-col"
@@ -132,8 +117,7 @@ const MeetTheTeam = () => {
                 )}
               </div>
             </Card>
-            );
-          })}
+          ))}
         </div>
       </div>
     </section>
