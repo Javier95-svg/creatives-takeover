@@ -142,9 +142,13 @@ export function useCredits() {
     if (grantedMonthlyCredits.has(user.id)) return;
 
     grantedMonthlyCredits.add(user.id);
-    supabase.rpc('grant_monthly_credits').catch((error) => {
-      logError('Failed to grant monthly credits', error, { userId: user.id });
-    });
+    (async () => {
+      try {
+        await supabase.rpc('grant_monthly_credits');
+      } catch (error) {
+        logError('Failed to grant monthly credits', error, { userId: user.id });
+      }
+    })();
   }, [user?.id]);
 
   const updateBalanceCache = (updater: (prev: CreditBalance) => CreditBalance) => {
