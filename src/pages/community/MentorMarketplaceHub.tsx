@@ -15,6 +15,17 @@ import { Mentor } from "@/types/mentor";
 import { useMentors } from "@/hooks/useMentors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
+const MENTORS_PER_PAGE = 10;
 
 const MentorMarketplaceHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,7 +34,8 @@ const MentorMarketplaceHub = () => {
   const { fetchMentors, loading } = useMentors();
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("recommended");
+  const [sortBy, setSortBy] = useState("alphabetical");
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
   
   const [filters, setFilters] = useState<MentorFilters>({
     expertise: [],
@@ -54,6 +66,80 @@ const MentorMarketplaceHub = () => {
       console.error('Error loading mentors:', error);
       setMentors([]);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    setSearchParams(params);
+    // Scroll to top of mentor grid
+    const grid = document.getElementById("mentor-grid");
+    if (grid) {
+      grid.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Reset to page 1 when filters, search, or sort changes
+  const handleFiltersChange = (newFilters: MentorFilters) => {
+    setFilters(newFilters);
+    if (currentPage !== 1) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  };
+
+  const handleSortChange = (newSort: string) => {
+    setSortBy(newSort);
+    if (currentPage !== 1) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    if (currentPage !== 1) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  };
+
+  // Generate page numbers to display with ellipsis
+  const getPageNumbers = (totalPages: number, currentPage: number) => {
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+
+      if (currentPage <= 3) {
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push("ellipsis");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
   };
 
 
@@ -109,7 +195,6 @@ const MentorMarketplaceHub = () => {
         );
         break;
       case "recommended":
-      default:
         // Featured first, then by rating
         result = result.sort((a, b) => {
           const aFeatured = a.is_featured === true ? 1 : 0;
@@ -118,11 +203,30 @@ const MentorMarketplaceHub = () => {
           return (b.rating || 0) - (a.rating || 0);
         });
         break;
+      case "alphabetical":
+      default:
+        // Sort alphabetically by name (A-Z)
+        result = result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
     }
-
 
     return result;
   }, [searchQuery, filters, mentors, sortBy]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredMentors.length / MENTORS_PER_PAGE);
+  const startIndex = (currentPage - 1) * MENTORS_PER_PAGE;
+  const endIndex = startIndex + MENTORS_PER_PAGE;
+  const paginatedMentors = filteredMentors.slice(startIndex, endIndex);
+
+  // Reset to page 1 if current page is out of bounds
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      const params = new URLSearchParams(searchParams);
+      params.set("page", "1");
+      setSearchParams(params);
+    }
+  }, [currentPage, totalPages, searchParams, setSearchParams]);
 
   const allExpertise = useMemo(() => {
     const expertiseSet = new Set<string>();
@@ -205,7 +309,7 @@ const MentorMarketplaceHub = () => {
                 <Input
                   placeholder="Search by name or keyword"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   className="pl-10 h-11 w-full min-h-[44px] text-base md:text-sm"
                 />
               </div>
@@ -215,12 +319,12 @@ const MentorMarketplaceHub = () => {
             <div className="mb-6">
               <TopFilterBar
                 filters={filters}
-                onFiltersChange={setFilters}
+                onFiltersChange={handleFiltersChange}
                 availableExpertise={allExpertise}
                 availableStages={["Idea Stage", "Pre-Seed", "Seed", "Series A"]}
                 priceRangeMax={500000}
                 mentorCount={filteredMentors.length}
-                onSortChange={setSortBy}
+                onSortChange={handleSortChange}
                 sortBy={sortBy}
               />
             </div>
@@ -246,11 +350,69 @@ const MentorMarketplaceHub = () => {
                 <p className="text-muted-foreground">Loading mentors...</p>
               </div>
             ) : filteredMentors.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6">
-                {filteredMentors.map((mentor) => (
-                  <MentorCard key={mentor.id} mentor={mentor} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-6">
+                  {paginatedMentors.map((mentor) => (
+                    <MentorCard key={mentor.id} mentor={mentor} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-8">
+                    <Pagination>
+                      <PaginationContent>
+                        {currentPage > 1 && (
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage - 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                        {getPageNumbers(totalPages, currentPage).map((page, index) => {
+                          if (page === "ellipsis") {
+                            return (
+                              <PaginationItem key={`ellipsis-${index}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(page as number);
+                                }}
+                                isActive={page === currentPage}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        {currentPage < totalPages && (
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(currentPage + 1);
+                              }}
+                            />
+                          </PaginationItem>
+                        )}
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
             ) : mentors.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">

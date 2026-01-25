@@ -218,6 +218,7 @@ export const TopFilterBar = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
             <SelectItem value="recommended">Our top picks</SelectItem>
             <SelectItem value="rating">Highest rated</SelectItem>
             <SelectItem value="price-low">Price: Low to High</SelectItem>
