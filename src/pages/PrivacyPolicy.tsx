@@ -320,7 +320,7 @@ const PrivacyPolicy = () => {
                   </div>
                 </div>
 
-                <p className="mt-4">To exercise any of these rights, please contact us at <strong className="text-primary">privacy@creatives-takeover.com</strong>. We will respond within 30 days (or as required by applicable law).</p>
+                <p className="mt-4">To exercise any of these rights, please contact us at <strong className="text-primary">admin@creatives-takeover.com</strong>. We will respond within 30 days (or as required by applicable law).</p>
               </div>
             </section>
 
@@ -362,7 +362,7 @@ const PrivacyPolicy = () => {
               <h2 className="text-2xl font-semibold gradient-text mb-6">10. Children's Privacy</h2>
               <div className="space-y-4 text-foreground/90">
                 <p>Creatives Takeover is designed for business professionals and entrepreneurs. Our services are not intended for individuals under 18 years of age.</p>
-                <p>We do not knowingly collect personal information from children. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately at <strong className="text-primary">privacy@creatives-takeover.com</strong>.</p>
+                <p>We do not knowingly collect personal information from children. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately at <strong className="text-primary">admin@creatives-takeover.com</strong>.</p>
                 <p>Upon verification, we will promptly delete such information from our systems.</p>
               </div>
             </section>
@@ -415,13 +415,13 @@ const PrivacyPolicy = () => {
                 <p>If you have questions about this Privacy Policy, wish to exercise your rights, or have concerns about how we handle your data, please contact us:</p>
                 <div className="grid md:grid-cols-2 gap-6 mt-4">
                   <div className="space-y-3">
-                    <h3 className="text-lg font-medium text-primary">General Inquiries</h3>
-                    <p><strong>Email:</strong> privacy@creatives-takeover.com</p>
-                    <p><strong>Website:</strong> https://creatives-takeover.com/contact</p>
+                    <h3 className="text-lg font-medium text-primary">Founder & CEO</h3>
+                    <p><strong>Email:</strong> javier@creatives-takeover.com</p>
                   </div>
                   <div className="space-y-3">
-                    <h3 className="text-lg font-medium text-primary">Data Protection Officer</h3>
-                    <p><strong>Email:</strong> dpo@creatives-takeover.com</p>
+                    <h3 className="text-lg font-medium text-primary">General Support</h3>
+                    <p><strong>Email:</strong> admin@creatives-takeover.com</p>
+                    <p><strong>Website:</strong> https://creatives-takeover.com/contact</p>
                   </div>
                 </div>
                 <div className="mt-6 space-y-3">
