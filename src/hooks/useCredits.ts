@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { safe } from '@/integrations/supabase/safe';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,80 +23,14 @@ interface CreditTransaction {
   metadata?: Record<string, unknown>;
 }
 
+const grantedMonthlyCredits = new Set<string>();
+
 export function useCredits() {
-  const [balance, setBalance] = useState<CreditBalance | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const hasShownErrorRef = useRef(false);
 
-  // Fetch current credit balance with retry logic
-  const fetchBalance = async (retryCount: number = 0): Promise<void> => {
-    if (!user) {
-      setBalance(null);
-      setLoading(false);
-      return;
-    }
-
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 1000; // 1 second
-
-    try {
-      const { data, error } = await safe.select(async () =>
-        await safe.client
-          .from('user_credits')
-          .select('balance, monthly_quota')
-          .eq('user_id', user.id)
-          .maybeSingle()
-      );
-
-      if (error) {
-        // Check if it's a "not found" error (PGRST116) vs other errors
-        const isNotFoundError = error.code === 'PGRST116' || error.message?.includes('not found');
-        
-        if (isNotFoundError) {
-          // User truly has no credit record - initialize only in this case
-          logWarn('No credit record found for user, initializing', { userId: user.id });
-          await initializeCredits();
-        } else if (retryCount < MAX_RETRIES) {
-          // Transient error - retry with exponential backoff
-          logError(`Error fetching credit balance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount)));
-          return fetchBalance(retryCount + 1);
-        } else {
-          // Max retries reached - log error but don't reset credits
-          logError('Failed to fetch credit balance after retries', error, { userId: user.id });
-          // Keep existing balance if available, don't reset
-          if (!balance) {
-            toast.error('Unable to load credit balance. Please refresh the page.');
-          }
-        }
-      } else if (data) {
-        // Successfully fetched balance
-        setBalance(data);
-      } else {
-        // No data returned but no error - user has no record
-        logWarn('No credit record found for user (null data), initializing', { userId: user.id });
-        await initializeCredits();
-      }
-    } catch (error) {
-      // Unexpected error - retry if possible
-      if (retryCount < MAX_RETRIES) {
-        logError(`Unexpected error in fetchBalance, retrying (${retryCount + 1}/${MAX_RETRIES})`, error, { userId: user.id });
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount)));
-        return fetchBalance(retryCount + 1);
-      } else {
-        logError('Unexpected error in fetchBalance after retries', error, { userId: user.id });
-        // Don't reset credits on unexpected errors
-        if (!balance) {
-          toast.error('Unable to load credit balance. Please refresh the page.');
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initialize credits for new users only
   const initializeCredits = async (): Promise<boolean> => {
     if (!user) return false;
 
@@ -108,36 +43,130 @@ export function useCredits() {
         throw new APIError('Failed to initialize credits', 'credit-service', 500);
       }
 
-      if (data?.success) {
-        await fetchBalance();
-        // Only show welcome toast if this was a new initialization (not a re-initialization)
-        if (data?.isNewUser) {
-          toast.success('Welcome! You received 10 free credits to get started!');
-        }
-        return true;
+      if (data?.success && data?.isNewUser) {
+        toast.success('Welcome! You received 10 free credits to get started!');
       }
-      return false;
+
+      return Boolean(data?.success);
     } catch (error) {
       logError('Error initializing credits', error, { userId: user.id });
       return false;
     }
   };
 
-  // Check if user has sufficient credits (quota + balance)
+  const fetchBalance = async (): Promise<CreditBalance> => {
+    if (!user) {
+      return { balance: 0, monthly_quota: 0 };
+    }
+
+    const { data, error } = await safe.select(async () =>
+      await safe.client
+        .from('user_credits')
+        .select('balance, monthly_quota')
+        .eq('user_id', user.id)
+        .maybeSingle()
+    );
+
+    if (error) {
+      const isNotFoundError = error.code === 'PGRST116' || error.message?.includes('not found');
+
+      if (isNotFoundError) {
+        logWarn('No credit record found for user, initializing', { userId: user.id });
+        const initialized = await initializeCredits();
+
+        if (initialized) {
+          const retry = await safe.select(async () =>
+            await safe.client
+              .from('user_credits')
+              .select('balance, monthly_quota')
+              .eq('user_id', user.id)
+              .maybeSingle()
+          );
+
+          if (retry.data) {
+            return retry.data;
+          }
+        }
+
+        return { balance: 0, monthly_quota: 0 };
+      }
+
+      throw error;
+    }
+
+    if (!data) {
+      logWarn('No credit record found for user (null data), initializing', { userId: user.id });
+      const initialized = await initializeCredits();
+
+      if (initialized) {
+        const retry = await safe.select(async () =>
+          await safe.client
+            .from('user_credits')
+            .select('balance, monthly_quota')
+            .eq('user_id', user.id)
+            .maybeSingle()
+        );
+
+        if (retry.data) {
+          return retry.data;
+        }
+      }
+
+      return { balance: 0, monthly_quota: 0 };
+    }
+
+    return data;
+  };
+
+  const creditsQuery = useQuery({
+    queryKey: ['credits', user?.id],
+    enabled: !!user?.id,
+    queryFn: fetchBalance,
+    staleTime: 30_000,
+    retry: false,
+    onError: (error) => {
+      logError('Failed to fetch credit balance', error, { userId: user?.id });
+      if (!hasShownErrorRef.current) {
+        toast.error('Unable to load credit balance. Please refresh the page.');
+        hasShownErrorRef.current = true;
+      }
+    },
+  });
+
+  const balanceData = creditsQuery.data ?? { balance: 0, monthly_quota: 0 };
+  const loading = creditsQuery.isLoading;
+  const refreshing = creditsQuery.isFetching;
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (grantedMonthlyCredits.has(user.id)) return;
+
+    grantedMonthlyCredits.add(user.id);
+    supabase.rpc('grant_monthly_credits').catch((error) => {
+      logError('Failed to grant monthly credits', error, { userId: user.id });
+    });
+  }, [user?.id]);
+
+  const updateBalanceCache = (updater: (prev: CreditBalance) => CreditBalance) => {
+    if (!user?.id) return;
+    queryClient.setQueryData<CreditBalance>(['credits', user.id], (prev) => {
+      const current = prev ?? { balance: 0, monthly_quota: 0 };
+      return updater(current);
+    });
+  };
+
   const hasCredits = (requiredAmount: number): boolean => {
-    if (!balance) return false;
-    const totalAvailable = (balance.balance || 0) + (balance.monthly_quota || 0);
+    const totalAvailable = (balanceData.balance || 0) + (balanceData.monthly_quota || 0);
     return totalAvailable >= requiredAmount;
   };
 
-  // Deduct credits (handled by edge functions, this is for UI feedback)
   const handleCreditDeduction = (amount: number) => {
-    if (balance) {
-      setBalance(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
-    }
+    updateBalanceCache((prev) => ({
+      ...prev,
+      balance: Math.max(0, (prev.balance || 0) - amount),
+    }));
   };
 
-  // Add credits (for purchases, etc.)
   const addCredits = async (amount: number, reason: string = 'Credit purchase'): Promise<boolean> => {
     if (!user) {
       logWarn('Attempted to add credits without user', { amount, reason });
@@ -160,11 +189,14 @@ export function useCredits() {
       }
 
       if (data?.success) {
-        setBalance(prev => prev ? { ...prev, balance: data.newBalance } : null);
+        updateBalanceCache((prev) => ({
+          ...prev,
+          balance: Number(data.newBalance ?? prev.balance ?? 0),
+        }));
         toast.success(`${amount} credits added to your account!`);
         return true;
       }
-      
+
       toast.error('Failed to add credits');
       return false;
     } catch (error) {
@@ -174,7 +206,6 @@ export function useCredits() {
     }
   };
 
-  // Fetch transaction history
   const fetchTransactionHistory = async (limit: number = 50): Promise<void> => {
     if (!user) return;
 
@@ -195,27 +226,21 @@ export function useCredits() {
     }
   };
 
-  // Refresh balance from server
   const refreshBalance = async () => {
-    setLoading(true);
-    await fetchBalance();
+    await creditsQuery.refetch();
   };
 
-  // Effect to load balance when user changes
-  useEffect(() => {
-    fetchBalance();
-  }, [user]);
-
   return {
-    balance: balance?.balance ?? 0,
-    monthlyQuota: balance?.monthly_quota ?? 0,
+    balance: balanceData.balance ?? 0,
+    monthlyQuota: balanceData.monthly_quota ?? 0,
     loading,
+    refreshing,
     hasCredits,
     addCredits,
     fetchTransactionHistory,
     transactions,
     refreshBalance,
     handleCreditDeduction,
-    CREDIT_COSTS
+    CREDIT_COSTS,
   };
 }

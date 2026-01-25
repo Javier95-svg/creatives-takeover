@@ -58,13 +58,18 @@ const isCreditError = (error?: any, data?: any) => {
 
 export const useCreditActions = () => {
   const { user } = useAuth();
-  const { hasCredits, refreshBalance } = useCredits();
+  const { hasCredits, refreshBalance, loading: creditsLoading } = useCredits();
   const { openUpgradePrompt } = useUpgradePrompt();
 
   const ensureCredits = useCallback(
     (feature: CreditFeature, options: CreditActionOptions = {}) => {
       if (!user) {
         toast.error('Please sign in to use this feature.');
+        return null;
+      }
+
+      if (creditsLoading) {
+        toast('Loading credit balance...');
         return null;
       }
 
@@ -86,7 +91,7 @@ export const useCreditActions = () => {
 
       return requiredCredits;
     },
-    [hasCredits, openUpgradePrompt, user]
+    [creditsLoading, hasCredits, openUpgradePrompt, user]
   );
 
   const handleCreditError = useCallback(
@@ -150,4 +155,3 @@ export const useCreditActions = () => {
     deductCredits,
   };
 };
-

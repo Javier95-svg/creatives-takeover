@@ -165,13 +165,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
               }
               
-              // Grant monthly credits if due (free and paid tiers)
-              try {
-                await supabase.rpc('grant_monthly_credits');
-              } catch (creditError) {
-                logError('Failed to grant monthly credits', creditError, { userId: session.user.id });
-              }
-              
               // Send emails for new signups only
               if (isNewProfile) {
                 try {
@@ -438,23 +431,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
     });
-    
-    // Auto-check subscription status after successful login
-    if (!error) {
-      try {
-        await Promise.all([
-          supabase.functions.invoke('check-subscription', {
-            headers: {
-              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-            }
-          }),
-          // Ensure monthly credits are granted if due
-          supabase.rpc('grant_monthly_credits')
-        ]);
-      } catch (subscriptionError) {
-        logError('Subscription/credits check on login', subscriptionError);
-      }
-    }
     
     return { error };
   };
