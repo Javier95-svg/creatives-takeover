@@ -216,12 +216,14 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
           <div className="flex-shrink-0">
             <div className="relative group">
               <Avatar className="h-20 w-20 lg:h-24 lg:w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 group-hover:scale-105 shadow-lg">
-                <AvatarImage 
-                  src={mentor.picture || undefined} 
+                <AvatarImage
+                  src={mentor.picture || undefined}
                   alt={mentor.name}
                   className="object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
-                <AvatarFallback className="bg-muted text-foreground font-semibold text-lg lg:text-xl">
+                <AvatarFallback className="bg-muted text-foreground font-semibold text-lg lg:text-xl animate-pulse">
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
