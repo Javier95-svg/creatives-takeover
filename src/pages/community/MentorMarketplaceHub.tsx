@@ -352,8 +352,12 @@ const MentorMarketplaceHub = () => {
             ) : filteredMentors.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 gap-6">
-                  {paginatedMentors.map((mentor) => (
-                    <MentorCard key={mentor.id} mentor={mentor} />
+                  {paginatedMentors.map((mentor, index) => (
+                    <MentorCard
+                      key={mentor.id}
+                      mentor={mentor}
+                      priority={index < 4}
+                    />
                   ))}
                 </div>
 

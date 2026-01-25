@@ -21,9 +21,11 @@ const CALENDLY_REDIRECT_KEY = 'pending_calendly_redirect';
 interface MentorCardProps {
   mentor: Mentor;
   className?: string;
+  /** Load image eagerly (for above-the-fold items) */
+  priority?: boolean;
 }
 
-export const MentorCard = ({ mentor, className }: MentorCardProps) => {
+export const MentorCard = ({ mentor, className, priority = false }: MentorCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { openUpgradePrompt } = useUpgradePrompt();
@@ -220,8 +222,9 @@ export const MentorCard = ({ mentor, className }: MentorCardProps) => {
                   src={mentor.picture || undefined}
                   alt={mentor.name}
                   className="object-cover"
-                  loading="lazy"
+                  loading={priority ? "eager" : "lazy"}
                   decoding="async"
+                  fetchPriority={priority ? "high" : "auto"}
                 />
                 <AvatarFallback className="bg-muted text-foreground font-semibold text-lg lg:text-xl animate-pulse">
                   {mentor.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}

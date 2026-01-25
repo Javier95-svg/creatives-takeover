@@ -27,13 +27,14 @@ interface AvatarImageProps extends React.ComponentPropsWithoutRef<typeof AvatarP
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   AvatarImageProps
->(({ className, loading = "lazy", decoding = "async", ...props }, ref) => (
+>(({ className, loading = "lazy", decoding = "async", fetchPriority, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     className={cn("aspect-square h-full w-full", className)}
     // @ts-ignore - native img attributes
     loading={loading}
     decoding={decoding}
+    fetchpriority={fetchPriority}
     {...props}
   />
 ))
