@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { sampleCofounderPosts } from "@/data/sampleCofounderPosts";
 
 interface CofounderPost {
   id: string;
@@ -36,6 +37,7 @@ interface CofounderPost {
   additional_info: string | null;
   created_at: string;
   status: string;
+  is_sample?: boolean;
   author?: {
     full_name: string;
     avatar_url: string;
@@ -80,9 +82,13 @@ const FindCoFounder = () => {
         })
       );
 
-      setPosts(postsWithAuthors);
+      // Merge real posts with sample posts (real posts appear first)
+      const allPosts: CofounderPost[] = [...postsWithAuthors, ...sampleCofounderPosts];
+      setPosts(allPosts);
     } catch (error) {
       console.error('Error fetching co-founder posts:', error);
+      // On error, still show sample posts
+      setPosts([...sampleCofounderPosts]);
     } finally {
       setLoading(false);
     }
@@ -234,12 +240,16 @@ const FindCoFounder = () => {
                         <div>
                           <CardTitle className="text-xl mb-1">{post.project_name}</CardTitle>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Link
-                              to={`/profile/${post.user_id}`}
-                              className="hover:text-primary hover:underline transition-colors cursor-pointer"
-                            >
-                              {post.author?.full_name}
-                            </Link>
+                            {post.is_sample ? (
+                              <span>{post.author?.full_name}</span>
+                            ) : (
+                              <Link
+                                to={`/profile/${post.user_id}`}
+                                className="hover:text-primary hover:underline transition-colors cursor-pointer"
+                              >
+                                {post.author?.full_name}
+                              </Link>
+                            )}
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -303,7 +313,15 @@ const FindCoFounder = () => {
                     )}
 
                     {/* Action Buttons */}
-                    {post.user_id === user?.id ? (
+                    {post.is_sample ? (
+                      // Sample post actions
+                      <div className="flex gap-3 pt-2 items-center">
+                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                          Sample Post
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">Create your own post to connect with real founders</span>
+                      </div>
+                    ) : post.user_id === user?.id ? (
                       // Owner controls
                       <div className="flex gap-3 pt-2">
                         <Button
