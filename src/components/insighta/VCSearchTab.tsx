@@ -20,6 +20,7 @@ const VCSearchTab = () => {
     currentTier,
     limit,
     loading: vcViewLoading,
+    isAuthenticated,
   } = useVCViewTracking();
 
   const isLimitReached = !vcViewLoading && !hasUnlimitedViews && remaining === 0;
@@ -82,7 +83,7 @@ const VCSearchTab = () => {
           <p>{error}</p>
         </div>
       ) : (
-        <VCGrid vcs={vcs} canViewProfiles={canViewProfiles} />
+        <VCGrid vcs={vcs} canViewProfiles={canViewProfiles} isAuthenticated={isAuthenticated} />
       )}
     </div>
   );

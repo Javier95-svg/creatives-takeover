@@ -24,14 +24,18 @@ export const useVCViewTracking = () => {
     fetchMonthlyViewCount();
   }, []);
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
   const fetchMonthlyViewCount = async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setIsAuthenticated(false);
         setLoading(false);
         return;
       }
+      setIsAuthenticated(true);
 
       const { data, error } = await supabase
         .rpc('get_monthly_vc_view_count', { p_user_id: user.id });
@@ -116,6 +120,7 @@ export const useVCViewTracking = () => {
     currentTier,
     trackVCView,
     loading,
+    isAuthenticated,
     remaining: hasUnlimitedViews ? Infinity : Math.max(0, limit - viewCount),
   };
 };

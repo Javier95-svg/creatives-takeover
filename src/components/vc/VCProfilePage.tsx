@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Investor } from "@/types/investor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +9,16 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
-import { toast } from "sonner";
 import {
   ArrowLeft,
   ExternalLink,
   Linkedin,
+  Lock,
   MapPin,
   DollarSign,
   Building2,
-  Send
+  Send,
+  UserPlus
 } from "lucide-react";
 
 const VCProfilePage = () => {
@@ -29,6 +30,7 @@ const VCProfilePage = () => {
   const [upgradePrompt, setUpgradePrompt] = useState<{
     requiredTier?: 'creator' | 'professional';
   } | null>(null);
+  const [requiresAuth, setRequiresAuth] = useState(false);
 
   useEffect(() => {
     const fetchVC = async () => {
@@ -53,10 +55,8 @@ const VCProfilePage = () => {
         if (!result.success) {
           if (result.reason === 'limit_reached') {
             setUpgradePrompt({ requiredTier: result.requiredTier });
-          } else {
-            toast.error(result.message, {
-              duration: 6000,
-            });
+          } else if (result.reason === 'auth') {
+            setRequiresAuth(true);
           }
         }
       }
@@ -106,6 +106,171 @@ const VCProfilePage = () => {
     ? 'Unlock unlimited VC views this month.'
     : 'Unlock 25 VC views this month.';
 
+  // Profile content (shared between blurred and normal views)
+  const profileContent = (
+    <>
+      {/* Main Profile Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-start gap-6">
+            {/* VC Logo */}
+            <div className="shrink-0 w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
+              {vc.logo_url ? (
+                <img
+                  src={vc.logo_url}
+                  alt={`${vc.firm_name} logo`}
+                  className="w-full h-full object-contain p-2"
+                />
+              ) : (
+                <Building2 className="h-10 w-10 text-muted-foreground/50" />
+              )}
+            </div>
+
+            {/* Firm Info */}
+            <div className="flex-1">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-3xl mb-2">{vc.firm_name}</CardTitle>
+                  <p className="text-xl text-muted-foreground mb-2">{vc.name}</p>
+                  {/* Investor Type Badge */}
+                  <Badge variant="outline" className="capitalize">
+                    {vc.investor_type.replace('_', ' ')}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Investment Thesis */}
+        {vc.investment_thesis && (
+          <div>
+            <h3 className="font-semibold mb-2">Investment Thesis</h3>
+            <p className="text-muted-foreground">{vc.investment_thesis}</p>
+          </div>
+        )}
+
+        {/* Key Details Grid */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Investment Stages</h4>
+            <div className="flex flex-wrap gap-1">
+              {vc.investment_stages.map((stage, idx) => (
+                <Badge key={idx} variant="outline" className="capitalize">
+                  {stage}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Check Size</h4>
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <span>{formatCheckSize()}</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Industries</h4>
+            <div className="flex flex-wrap gap-1">
+              {vc.industries.map((industry, idx) => (
+                <Badge key={idx} variant="secondary">
+                  {industry}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Geographic Focus</h4>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{vc.geographic_focus.join(', ')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Portfolio Companies */}
+        {vc.portfolio_companies && vc.portfolio_companies.length > 0 && (
+          <div>
+            <h3 className="font-semibold mb-3">Portfolio Companies</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {vc.portfolio_companies.slice(0, 6).map((company, idx) => (
+                <div key={idx} className="p-3 border rounded-lg">
+                  <p className="font-medium text-sm">{company.name}</p>
+                  {company.industry && (
+                    <p className="text-xs text-muted-foreground">{company.industry}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+            {vc.portfolio_companies.length > 6 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                +{vc.portfolio_companies.length - 6} more companies
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Contact Information */}
+        <div className="border-t pt-6">
+          <h3 className="font-semibold mb-4">Contact & Social Media</h3>
+          <div className="grid md:grid-cols-2 gap-3">
+            {vc.firm_website && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.firm_website} target="_blank" rel="noopener noreferrer">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Firm Website
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.linkedin_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.linkedin_url} target="_blank" rel="noopener noreferrer">
+                  <Linkedin className="h-4 w-4 mr-2" />
+                  LinkedIn
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.crunchbase_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Crunchbase
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Generate Outreach CTA */}
+        <div className="border-t pt-6">
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <h4 className="font-semibold text-lg mb-2">Ready to Reach Out?</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Generate a personalized pitch deck, cold email, or one-pager tailored
+                  to {vc.firm_name}'s investment focus.
+                </p>
+                <Button size="lg" className="w-full sm:w-auto">
+                  <Send className="h-4 w-4 mr-2" />
+                  Generate Outreach Materials
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </CardContent>
+      </Card>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -142,165 +307,49 @@ const VCProfilePage = () => {
             </Card>
           )}
 
-          {/* Main Profile Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-start gap-6">
-                {/* VC Logo */}
-                <div className="shrink-0 w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
-                  {vc.logo_url ? (
-                    <img
-                      src={vc.logo_url}
-                      alt={`${vc.firm_name} logo`}
-                      className="w-full h-full object-contain p-2"
-                    />
-                  ) : (
-                    <Building2 className="h-10 w-10 text-muted-foreground/50" />
-                  )}
-                </div>
+          {/* Blurred preview with sign-in overlay for unauthenticated users */}
+          {requiresAuth ? (
+            <div className="relative">
+              {/* Blurred profile content */}
+              <div className="select-none pointer-events-none blur-[6px]" aria-hidden="true">
+                {profileContent}
+              </div>
 
-                {/* Firm Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-3xl mb-2">{vc.firm_name}</CardTitle>
-                      <p className="text-xl text-muted-foreground mb-2">{vc.name}</p>
-                      {/* Investor Type Badge */}
-                      <Badge variant="outline" className="capitalize">
-                        {vc.investor_type.replace('_', ' ')}
-                      </Badge>
-                    </div>
+              {/* Sign-in overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-xl">
+                <div className="text-center max-w-md px-6 py-10 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-5">
+                    <Lock className="w-6 h-6 text-primary" />
                   </div>
-                </div>
-              </div>
-            </CardHeader>
-
-          <CardContent className="space-y-6">
-            {/* Investment Thesis */}
-            {vc.investment_thesis && (
-              <div>
-                <h3 className="font-semibold mb-2">Investment Thesis</h3>
-                <p className="text-muted-foreground">{vc.investment_thesis}</p>
-              </div>
-            )}
-
-            {/* Key Details Grid */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-semibold text-sm mb-2">Investment Stages</h4>
-                <div className="flex flex-wrap gap-1">
-                  {vc.investment_stages.map((stage, idx) => (
-                    <Badge key={idx} variant="outline" className="capitalize">
-                      {stage}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm mb-2">Check Size</h4>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>{formatCheckSize()}</span>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm mb-2">Industries</h4>
-                <div className="flex flex-wrap gap-1">
-                  {vc.industries.map((industry, idx) => (
-                    <Badge key={idx} variant="secondary">
-                      {industry}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm mb-2">Geographic Focus</h4>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{vc.geographic_focus.join(', ')}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Portfolio Companies */}
-            {vc.portfolio_companies && vc.portfolio_companies.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-3">Portfolio Companies</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {vc.portfolio_companies.slice(0, 6).map((company, idx) => (
-                    <div key={idx} className="p-3 border rounded-lg">
-                      <p className="font-medium text-sm">{company.name}</p>
-                      {company.industry && (
-                        <p className="text-xs text-muted-foreground">{company.industry}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {vc.portfolio_companies.length > 6 && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    +{vc.portfolio_companies.length - 6} more companies
+                  <h3 className="text-xl font-bold mb-2">
+                    Sign in to view {vc.firm_name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                    Create a free account to access full VC profiles, contact information,
+                    portfolio companies, and generate personalized outreach materials.
                   </p>
-                )}
-              </div>
-            )}
-
-            {/* Contact Information */}
-            <div className="border-t pt-6">
-              <h3 className="font-semibold mb-4">Contact & Social Media</h3>
-              <div className="grid md:grid-cols-2 gap-3">
-                {vc.firm_website && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.firm_website} target="_blank" rel="noopener noreferrer">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Firm Website
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.linkedin_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      <Linkedin className="h-4 w-4 mr-2" />
-                      LinkedIn
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-                {vc.crunchbase_url && (
-                  <Button variant="outline" asChild className="justify-start">
-                    <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Crunchbase
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Generate Outreach CTA */}
-            <div className="border-t pt-6">
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <h4 className="font-semibold text-lg mb-2">Ready to Reach Out?</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Generate a personalized pitch deck, cold email, or one-pager tailored
-                      to {vc.firm_name}'s investment focus.
-                    </p>
-                    <Button size="lg" className="w-full sm:w-auto">
-                      <Send className="h-4 w-4 mr-2" />
-                      Generate Outreach Materials
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      <Link to="/auth">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Sign Up Free
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                      <Link to="/auth">
+                        Sign In
+                      </Link>
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Free plan includes 5 VC profile views per month
+                  </p>
+                </div>
+              </div>
             </div>
-          </CardContent>
-          </Card>
+          ) : (
+            profileContent
+          )}
         </div>
       </main>
 
