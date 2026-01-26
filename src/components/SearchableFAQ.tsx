@@ -22,12 +22,12 @@ const SearchableFAQ = () => {
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
 
   const categories = [
-    { name: "All", icon: <HelpCircle className="w-4 h-4" />, count: 52 },
-    { name: "Pricing", icon: <DollarSign className="w-4 h-4" />, count: 12 },
-    { name: "Community", icon: <Users className="w-4 h-4" />, count: 8 },
-    { name: "Features", icon: <Settings className="w-4 h-4" />, count: 15 },
-    { name: "Downloads", icon: <Download className="w-4 h-4" />, count: 10 },
-    { name: "Security", icon: <Shield className="w-4 h-4" />, count: 7 }
+    { name: "All", icon: <HelpCircle className="w-4 h-4" />, count: 24 },
+    { name: "Pricing", icon: <DollarSign className="w-4 h-4" />, count: 6 },
+    { name: "Community", icon: <Users className="w-4 h-4" />, count: 4 },
+    { name: "Features", icon: <Settings className="w-4 h-4" />, count: 8 },
+    { name: "Credits", icon: <Download className="w-4 h-4" />, count: 3 },
+    { name: "Security", icon: <Shield className="w-4 h-4" />, count: 3 }
   ];
 
   const faqData = [
@@ -36,171 +36,201 @@ const SearchableFAQ = () => {
       id: 1,
       category: "Pricing",
       question: "What pricing plans do you offer?",
-      answer: "We offer three flexible pricing plans: Starter ($9.99/month), Elite ($19.99/month), and Teams ($39.99/month). All plans include our core creative tools, with additional features and team capabilities in higher tiers. You can save 20% by choosing annual billing.",
+      answer: "We offer three plans designed for different stages of your startup journey: Rookie (Free) with 25 credits/month for idea validation, Rising ($32.99/month or $300/year) with 50 credits/month for building your startup, and Pro ($74.99/month or $750/year) with 150 credits/month for scaling with unlimited access. Annual billing saves you approximately 25%.",
       popular: true,
-      tags: ["pricing", "plans", "subscription"]
+      tags: ["pricing", "plans", "subscription", "rookie", "rising", "pro"]
     },
     {
       id: 2,
-      category: "Pricing", 
-      question: "Is there a free trial available?",
-      answer: "Yes! We offer a 30-day free trial for all new users. No credit card required to start. You'll get full access to explore our platform, creative tools, and community features during your trial period.",
+      category: "Pricing",
+      question: "Is there a free plan available?",
+      answer: "Yes! Our Rookie plan is completely free forever—no credit card required. You get 25 credits per month, access to BizMap AI for business planning conversations, read-only access to PMF Lab, 5 VC profile views per month, basic Insighta Test, and community access. It's perfect for validating your startup idea before committing.",
       popular: true,
-      tags: ["free trial", "no credit card", "30 days"]
+      tags: ["free", "rookie", "no credit card", "credits"]
     },
     {
       id: 3,
       category: "Pricing",
       question: "Can I cancel my subscription anytime?",
-      answer: "Absolutely! You can cancel your subscription at any time with no cancellation fees. Your access will continue until the end of your current billing period, and you won't be charged for the next cycle.",
+      answer: "Absolutely! You can cancel your Rising or Pro subscription at any time with no cancellation fees. Your access and remaining credits continue until the end of your current billing period. You can manage your subscription directly from your account settings or through the Stripe customer portal.",
       popular: false,
-      tags: ["cancel", "refund", "billing"]
+      tags: ["cancel", "refund", "billing", "stripe"]
     },
     {
       id: 4,
       category: "Pricing",
-      question: "Do you offer student discounts?",
-      answer: "Yes, we offer a 50% student discount on all our plans. Simply verify your student status through our education partner to receive your discount code.",
+      question: "What's the difference between Rising and Pro plans?",
+      answer: "Rising ($32.99/month) gives you 50 credits, full BizMap AI access, PMF Lab, Pitch Deck Analyzer, AI Email Templates, 25 VC profile views/month, and priority support. Pro ($74.99/month) includes 150 credits, unlimited VC searches, advanced analytics, custom email templates, featured community profile, 24-hour priority support, and early access to new features like investor matching.",
+      popular: true,
+      tags: ["rising", "pro", "comparison", "features"]
+    },
+    {
+      id: 5,
+      category: "Pricing",
+      question: "Do credits roll over to the next month?",
+      answer: "Credits do not roll over—they reset at the beginning of each billing cycle. This encourages regular use of the platform and ensures you're actively working on your startup. If you consistently run out of credits, consider upgrading to a higher tier for more monthly credits.",
       popular: false,
-      tags: ["student", "discount", "education"]
+      tags: ["credits", "rollover", "monthly", "reset"]
+    },
+    {
+      id: 6,
+      category: "Pricing",
+      question: "What payment methods do you accept?",
+      answer: "We accept all major credit cards (Visa, MasterCard, American Express, Discover) and process payments securely through Stripe. All transactions are encrypted with bank-level security. We currently support payments in USD.",
+      popular: false,
+      tags: ["payment", "credit cards", "stripe", "secure"]
     },
 
     // Community Questions
     {
-      id: 5,
-      category: "Community",
-      question: "How do I join the creative community?",
-      answer: "Joining our creative community is completely free! Simply create an account and you'll instantly gain access to our community forums, chat channels, collaboration spaces, and monthly events. Premium subscribers get additional perks like priority support and exclusive content.",
-      popular: true,
-      tags: ["join", "community", "free", "account"]
-    },
-    {
-      id: 6,
-      category: "Community",
-      question: "What community events do you host?",
-      answer: "We host regular events including creative workshops, portfolio review sessions, design challenges, networking meetups, and masterclasses with industry experts. Most events are free for community members, with some premium events for subscribers.",
-      popular: false,
-      tags: ["events", "workshops", "networking", "masterclasses"]
-    },
-    {
       id: 7,
       category: "Community",
-      question: "Can I collaborate with other creatives?",
-      answer: "Yes! Our platform includes built-in collaboration tools. You can create shared workspaces, work on projects together in real-time, share feedback, and connect with creatives worldwide. It's one of our most popular features.",
+      question: "What is the Founder Stories feature?",
+      answer: "Founder Stories is our community-driven space where entrepreneurs share their startup journeys, lessons learned, and advice for fellow founders. You can read stories from other founders, share your own experiences, and connect with like-minded entrepreneurs. It's designed to provide real-world insights and inspiration from people who understand the founder journey.",
       popular: true,
-      tags: ["collaboration", "workspaces", "projects", "feedback"]
+      tags: ["founder stories", "community", "entrepreneurs", "networking"]
+    },
+    {
+      id: 8,
+      category: "Community",
+      question: "How do I connect with other founders?",
+      answer: "Our platform offers multiple ways to connect: participate in Founder Stories discussions, join our Telegram community for real-time conversations, engage with other founders through comments and feedback, and attend community events. Pro members get featured profiles that increase visibility within the community.",
+      popular: true,
+      tags: ["networking", "founders", "telegram", "community"]
+    },
+    {
+      id: 9,
+      category: "Community",
+      question: "Is the community beginner-friendly?",
+      answer: "Absolutely! Our community welcomes founders at every stage—from those with just an idea to experienced entrepreneurs. The platform is designed to guide first-time founders through the entire startup journey with tools like BizMap AI that adapt to your experience level. Our Founder Stories feature includes content from both new and seasoned entrepreneurs.",
+      popular: true,
+      tags: ["beginner friendly", "first-time founders", "supportive", "learning"]
+    },
+    {
+      id: 10,
+      category: "Community",
+      question: "Can I share my startup and get feedback?",
+      answer: "Yes! You can share your startup journey through Founder Stories, showcase your progress in the community, and receive constructive feedback from other founders. Additionally, tools like Insighta Test help you gather structured feedback on your landing pages and value propositions from real users.",
+      popular: false,
+      tags: ["feedback", "sharing", "founder stories", "insighta"]
     },
 
     // Features Questions
     {
-      id: 8,
-      category: "Features",
-      question: "What creative tools are included?",
-      answer: "Our platform includes AI-powered design tools, unlimited access to templates and assets, photo editing capabilities, collaboration features, cloud storage, analytics, and much more. The specific tools vary by plan level.",
-      popular: true,
-      tags: ["tools", "AI", "templates", "editing", "storage"]
-    },
-    {
-      id: 9,
-      category: "Features",
-      question: "Do you have mobile apps?",
-      answer: "Yes! We have mobile apps for both iOS and Android that sync seamlessly with your desktop work. You can access your projects, browse templates, collaborate with team members, and participate in community discussions on the go.",
-      popular: false,
-      tags: ["mobile", "iOS", "Android", "sync", "apps"]
-    },
-    {
-      id: 10,
-      category: "Features",
-      question: "How does the AI-powered design assistant work?",
-      answer: "Our AI assistant analyzes your design preferences, suggests improvements, automates repetitive tasks, and helps generate content ideas. It learns from your work style to provide increasingly personalized recommendations and shortcuts.",
-      popular: true,
-      tags: ["AI", "assistant", "automation", "suggestions", "personalized"]
-    },
-    {
       id: 11,
       category: "Features",
-      question: "Can I use your tools offline?",
-      answer: "Some features work offline through our desktop app, including basic editing and working on downloaded templates. However, collaboration features, AI tools, and cloud sync require an internet connection for full functionality.",
-      popular: false,
-      tags: ["offline", "desktop", "sync", "collaboration"]
+      question: "What is BizMap AI and how does it work?",
+      answer: "BizMap AI is your AI-powered co-founder that helps you plan and build your startup through natural conversation. It guides you through business planning, market analysis, go-to-market strategy, financial projections, and more. BizMap AI remembers your previous conversations and adapts its advice to your specific startup context. Each message costs 1 credit.",
+      popular: true,
+      tags: ["bizmap ai", "ai co-founder", "business planning", "conversation"]
     },
-
-    // Downloads Questions
     {
       id: 12,
-      category: "Downloads",
-      question: "Are the downloads truly free?",
-      answer: "Yes! We offer over 1000 completely free downloads including templates, fonts, images, and design assets. No hidden costs, no attribution required for most items, and commercial use is included for free resources.",
+      category: "Features",
+      question: "What is PMF Lab?",
+      answer: "PMF Lab (Product-Market Fit Lab) helps you analyze and improve your product-market fit. It provides frameworks, assessments, and actionable insights to ensure you're building something customers actually want. Free users get read-only access to learn the concepts, while paid users can run full PMF analyses on their startups (8 credits per analysis).",
       popular: true,
-      tags: ["free", "downloads", "commercial", "templates", "assets"]
+      tags: ["pmf lab", "product-market fit", "analysis", "validation"]
     },
     {
       id: 13,
-      category: "Downloads",
-      question: "What file formats do you provide?",
-      answer: "We provide downloads in multiple formats including PSD, AI, Figma, Sketch, PNG, JPG, SVG, PDF, and more. Most templates come in at least 2-3 different formats to ensure compatibility with your preferred tools.",
-      popular: false,
-      tags: ["formats", "PSD", "AI", "Figma", "PNG", "compatibility"]
+      category: "Features",
+      question: "How does the Pitch Deck Analyzer work?",
+      answer: "The Pitch Deck Analyzer uses AI to review your pitch deck and provide detailed feedback on structure, content, clarity, and investor appeal. It identifies strengths, weaknesses, and specific improvements to help you create a more compelling deck. Upload your deck, and receive comprehensive analysis (8 credits per analysis). Available on Rising and Pro plans.",
+      popular: true,
+      tags: ["pitch deck", "analyzer", "investor", "feedback"]
     },
     {
       id: 14,
-      category: "Downloads",
-      question: "Can I use downloads for client projects?",
-      answer: "Yes! All our free downloads include commercial licensing, meaning you can use them for client work, sell products created with them, and use them in commercial projects without additional fees or attribution requirements.",
+      category: "Features",
+      question: "What is VC Search and how many VCs can I view?",
+      answer: "VC Search helps you discover and research venture capital firms and angel investors relevant to your startup. You can filter by industry, stage, location, and investment thesis. Rookie users can view 5 VC profiles/month, Rising users get 25/month, and Pro users have unlimited access. This helps you build a targeted investor outreach list.",
       popular: true,
-      tags: ["commercial", "licensing", "client work", "selling"]
+      tags: ["vc search", "investors", "fundraising", "venture capital"]
+    },
+    {
+      id: 15,
+      category: "Features",
+      question: "What is Insighta Test?",
+      answer: "Insighta Test is our landing page and value proposition testing tool. It helps you validate your messaging, identify unclear elements, and optimize your landing page for conversions. You can gather structured feedback and analytics to understand how potential customers perceive your startup. Free users get 1 test, paid users get unlimited tests (5 credits per test).",
+      popular: false,
+      tags: ["insighta", "landing page", "testing", "validation", "conversion"]
+    },
+    {
+      id: 16,
+      category: "Features",
+      question: "What tools are included in the Prompt Library?",
+      answer: "The Prompt Library contains curated AI prompts for startup tasks like market research, competitor analysis, customer personas, marketing copy, email outreach, and more. Free users can view prompts, while paid users can use and customize them. It's designed to help you leverage AI effectively across your startup journey (2 credits per prompt generation).",
+      popular: false,
+      tags: ["prompt library", "ai prompts", "templates", "productivity"]
+    },
+    {
+      id: 17,
+      category: "Features",
+      question: "What is Focus Funnel?",
+      answer: "Focus Funnel is your personal goal-setting and task management system designed for founders. It helps you break down your startup goals into actionable projects and daily tasks, keeping you focused on what matters most. Features include goal tracking, project management, task prioritization, and progress visualization—all designed to combat founder overwhelm.",
+      popular: false,
+      tags: ["focus funnel", "goals", "tasks", "productivity", "planning"]
+    },
+    {
+      id: 18,
+      category: "Features",
+      question: "How does the Tech Stack Generator work?",
+      answer: "The Tech Stack Generator recommends the best technologies for your startup based on your product type, scale requirements, budget, and technical expertise. It provides detailed explanations for each recommendation, helping you make informed decisions about your technical infrastructure (3 credits per generation). Available on all paid plans.",
+      popular: false,
+      tags: ["tech stack", "technology", "recommendations", "development"]
+    },
+
+    // Credits Questions
+    {
+      id: 19,
+      category: "Credits",
+      question: "How does the credit system work?",
+      answer: "Credits power all AI features on the platform. Each action has a specific credit cost: BizMap AI messages (1 credit), Launch Reports (5 credits), PMF Analysis (8 credits), Pitch Deck Analysis (8 credits), Insighta Tests (5 credits), Tech Stack Generation (3 credits), Cold Email Generation (3 credits), and Prompt Generation (2 credits). Credits refresh monthly based on your plan.",
+      popular: true,
+      tags: ["credits", "costs", "ai features", "monthly"]
+    },
+    {
+      id: 20,
+      category: "Credits",
+      question: "What happens when I run out of credits?",
+      answer: "When you've used all your monthly credits, you'll need to wait until your next billing cycle for them to refresh, or upgrade to a higher tier for more credits. Core platform features like viewing Founder Stories, accessing your Focus Funnel, and browsing the Prompt Library remain available. Only AI-powered actions require credits.",
+      popular: true,
+      tags: ["out of credits", "upgrade", "refresh", "limitations"]
+    },
+    {
+      id: 21,
+      category: "Credits",
+      question: "Which features use the most credits?",
+      answer: "Premium AI analyses use the most credits: PMF Analysis (8 credits), Pitch Deck Analyzer (8 credits), Financial Analysis (8 credits), Fundraising Readiness Analysis (8 credits). Mid-tier features include Market Research (5 credits), Roadmap Generation (5 credits), and Insighta Tests (5 credits). BizMap AI chat messages are just 1 credit each, making it efficient for ongoing business planning.",
+      popular: false,
+      tags: ["credit costs", "features", "expensive", "affordable"]
     },
 
     // Security Questions
     {
-      id: 15,
+      id: 22,
       category: "Security",
-      question: "How secure is my data?",
-      answer: "We use bank-level encryption (SSL/TLS), secure cloud storage, regular security audits, and comply with GDPR and other privacy regulations. Your creative work and personal data are protected with industry-leading security measures.",
-      popular: false,
+      question: "How secure is my startup data?",
+      answer: "We use bank-level encryption (SSL/TLS) for all data transmission, secure cloud infrastructure hosted on Supabase and Vercel, and comply with GDPR regulations. Your business plans, financial projections, and strategic data are encrypted at rest and in transit. We never share your proprietary information with third parties or use it to train AI models.",
+      popular: true,
       tags: ["security", "encryption", "GDPR", "privacy", "data protection"]
     },
     {
-      id: 16,
+      id: 23,
       category: "Security",
-      question: "Do you share my creative work?",
-      answer: "Never! Your creative work belongs to you. We don't share, sell, or use your work for any purpose other than providing our service. You maintain full ownership and control over everything you create on our platform.",
+      question: "Do you share my business ideas with others?",
+      answer: "Never. Your startup ideas, business plans, and all data remain completely confidential. We don't share, sell, or expose your information to other users, competitors, or third parties. Your conversations with BizMap AI and all generated content belong solely to you. We're founders too—we understand how critical confidentiality is.",
       popular: true,
-      tags: ["privacy", "ownership", "creative work", "sharing"]
-    },
-
-    // Additional Popular Questions
-    {
-      id: 17,
-      category: "Features",
-      question: "How do I get started as a beginner?",
-      answer: "Start with our free resources including beginner tutorials, starter templates, and step-by-step guides. Join our community for support, take advantage of the free trial, and begin with simple projects to build your skills gradually.",
-      popular: true,
-      tags: ["beginner", "getting started", "tutorials", "guides"]
+      tags: ["privacy", "confidentiality", "business ideas", "ownership"]
     },
     {
-      id: 18,
-      category: "Community",
-      question: "Is the community beginner-friendly?",
-      answer: "Absolutely! Our community is known for being welcoming and supportive. We have dedicated spaces for beginners, mentorship programs, and community guidelines that ensure a positive environment for creators at all skill levels.",
-      popular: true,
-      tags: ["beginner friendly", "supportive", "mentorship", "welcoming"]
-    },
-    {
-      id: 19,
-      category: "Pricing",
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and select regional payment methods. All payments are processed securely through our payment partners.",
+      id: 24,
+      category: "Security",
+      question: "Can I delete my data if I leave the platform?",
+      answer: "Yes, you have full control over your data. You can request complete deletion of your account and all associated data at any time by contacting admin@creatives-takeover.com. We comply with GDPR data deletion requirements and will remove your information within 30 days of a verified request, unless legally required to retain it.",
       popular: false,
-      tags: ["payment", "credit cards", "PayPal", "secure"]
-    },
-    {
-      id: 20,
-      category: "Features",
-      question: "How much cloud storage do I get?",
-      answer: "Storage varies by plan: Starter includes 10GB, Elite includes 100GB, and Teams includes 500GB. All plans include automatic backup and sync across devices. Additional storage can be purchased if needed.",
-      popular: false,
-      tags: ["storage", "cloud", "backup", "sync", "plans"]
+      tags: ["data deletion", "gdpr", "account", "privacy rights"]
     }
   ];
 
