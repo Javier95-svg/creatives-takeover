@@ -17,7 +17,7 @@ export const useVCSearch = (filters?: VCFilters) => {
         // Build query for VCs only
         let query = supabase
           .from('investors')
-          .select('id, slug, name, firm_name, logo_url, investment_stages, investment_thesis, industries, typical_check_size_min, typical_check_size_max, geographic_focus')
+          .select('id, slug, name, firm_name, firm_website, logo_url, investment_stages, investment_thesis, industries, typical_check_size_min, typical_check_size_max, geographic_focus')
           .eq('investor_type', 'vc')
           .eq('is_active', true)
           .order('is_featured', { ascending: false })

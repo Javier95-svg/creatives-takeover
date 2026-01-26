@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,21 @@ interface VCCardProps {
 }
 
 const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
+  const getFallbackLogo = (website?: string) => {
+    if (!website) return null;
+    try {
+      const normalized = website.startsWith("http") ? website : `https://${website}`;
+      const hostname = new URL(normalized).hostname.replace(/^www\./, "");
+      return hostname ? `https://logo.clearbit.com/${hostname}` : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [resolvedLogo, setResolvedLogo] = useState<string | null>(
+    vc.logo_url || getFallbackLogo(vc.firm_website)
+  );
+
   const formatCheckSize = () => {
     if (!vc.typical_check_size_min || !vc.typical_check_size_max) return null;
     const min = (vc.typical_check_size_min / 1000).toFixed(0);
@@ -30,11 +46,12 @@ const VCCard = ({ vc, canViewProfile = true }: VCCardProps) => {
           </div>
           {/* VC Logo or Fallback Icon */}
           <div className="shrink-0 w-12 h-12 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
-            {vc.logo_url ? (
+            {resolvedLogo ? (
               <img
-                src={vc.logo_url}
+                src={resolvedLogo}
                 alt={`${vc.firm_name} logo`}
                 className="w-full h-full object-contain p-1"
+                onError={() => setResolvedLogo(null)}
               />
             ) : (
               <Building2 className="h-6 w-6 text-muted-foreground/50" />
