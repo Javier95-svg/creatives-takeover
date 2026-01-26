@@ -33,7 +33,7 @@ export const sampleCofounderPosts: SampleCofounderPost[] = [
     id: "sample-1",
     user_id: "sample-user-1",
     project_name: "GreenPlate",
-    project_description: `Hey everyone! I'm Priya, a product designer based in London. I've been working on GreenPlate for about 3 months now. It's a meal planning app that reduces food waste by matching what's already in your fridge with recipes, and auto-generates a grocery list for what you're missing.
+    project_description: `Hey everyone! I'm Emily, a product designer based in London. I've been working on GreenPlate for about 3 months now. It's a meal planning app that reduces food waste by matching what's already in your fridge with recipes, and auto-generates a grocery list for what you're missing.
 
 I've done the UX research, built wireframes, and validated the idea with 40+ user interviews. People genuinely love the concept, especially busy parents and eco-conscious millennials. The problem is I can't code. At all.
 
@@ -59,7 +59,7 @@ If you care about sustainability and want to build something people actually nee
     id: "sample-2",
     user_id: "sample-user-2",
     project_name: "Vaultly",
-    project_description: `I'm Marcus, a backend engineer with 6 years of experience at fintech companies (worked at Monzo and a YC startup). I've built the core infrastructure for Vaultly, a personal finance tool that helps freelancers and gig workers manage irregular income.
+    project_description: `I'm Sebastian, a backend engineer with 6 years of experience at fintech companies (worked at Monzo and a YC startup). I've built the core infrastructure for Vaultly, a personal finance tool that helps freelancers and gig workers manage irregular income.
 
 The tech is solid. I've got automated income categorization, tax estimation for self-employed people, and a cash flow forecasting engine. What I don't have is anyone who can sell it.
 
@@ -137,7 +137,7 @@ I need someone who can help me build a proper platform (matching algorithm, sche
     id: "sample-5",
     user_id: "sample-user-5",
     project_name: "Briefd",
-    project_description: `I'm Sofia, a freelance brand strategist. After 5 years of writing creative briefs for agencies and startups, I realized the process is broken. Clients don't know what they want, designers get vague instructions, and everyone wastes time going back and forth.
+    project_description: `I'm Soof, a freelance brand strategist. After 5 years of writing creative briefs for agencies and startups, I realized the process is broken. Clients don't know what they want, designers get vague instructions, and everyone wastes time going back and forth.
 
 Briefd is an AI tool that helps non-designers create clear, structured creative briefs in minutes. You answer a few guided questions about your brand, goals, and preferences, and it generates a brief that any designer can actually work with. Think of it as the translator between "I want something modern and clean" and actual design specifications.
 
@@ -191,7 +191,7 @@ If you've run an e-commerce brand or worked in logistics, hit me up. Bonus if yo
     id: "sample-7",
     user_id: "sample-user-7",
     project_name: "SkillSwap",
-    project_description: `Hi! I'm Amara, a community builder and former program manager at a coding bootcamp. I spent 3 years watching students graduate with technical skills but zero business sense, and business people with great ideas but no technical ability.
+    project_description: `Hi! I'm Camila, a community builder and former program manager at a coding bootcamp. I spent 3 years watching students graduate with technical skills but zero business sense, and business people with great ideas but no technical ability.
 
 SkillSwap is a platform where founders trade skills instead of paying for services. A developer builds your landing page, you write their marketing copy. A designer creates their brand identity, they handle your bookkeeping for a month. No money changes hands, just expertise.
 
@@ -245,7 +245,7 @@ I need a technical co-founder to build the platform and a marketing co-founder t
     id: "sample-9",
     user_id: "sample-user-9",
     project_name: "Canopy",
-    project_description: `Hey, I'm Zara. Former interior designer turned proptech enthusiast. After renovating 20+ apartments and dealing with the chaos of managing contractors, timelines, and budgets, I decided to build the tool I wish I had.
+    project_description: `Hey, I'm Olivia. Former interior designer turned proptech enthusiast. After renovating 20+ apartments and dealing with the chaos of managing contractors, timelines, and budgets, I decided to build the tool I wish I had.
 
 Canopy is a project management platform specifically for home renovations. Not generic PM tools that kind of work. A purpose-built tool where homeowners can plan their renovation, get AI-powered budget estimates, find vetted contractors, track progress with photo timelines, and manage payments with milestone-based releases.
 
@@ -271,7 +271,7 @@ Looking for a technical co-founder to build the platform (web + mobile) and some
     id: "sample-10",
     user_id: "sample-user-10",
     project_name: "RepBot",
-    project_description: `I'm Tom, a data scientist with a background in NLP. I've been building RepBot on the side for the past 4 months. It's an AI tool that monitors online reviews across Google, Trustpilot, Yelp, and social media, and helps small businesses respond intelligently and quickly.
+    project_description: `I'm Yusuf, a data scientist with a background in NLP. I've been building RepBot on the side for the past 4 months. It's an AI tool that monitors online reviews across Google, Trustpilot, Yelp, and social media, and helps small businesses respond intelligently and quickly.
 
 For small business owners, managing online reputation is a nightmare. A bad review sits there for days because they're too busy running their shop. RepBot sends instant alerts, drafts personalized responses (not generic "thank you for your feedback" stuff), and gives you a weekly sentiment dashboard.
 
