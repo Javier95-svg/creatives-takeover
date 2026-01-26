@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,9 @@ import { TIER_DETAILS } from "@/config/constants";
 
 const VCSearchTab = () => {
   const [filters, setFilters] = useState<VCFiltersType>({});
-  const { vcs, loading, error } = useVCSearch(filters);
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+  const { vcs, loading, error, total } = useVCSearch(filters, page, pageSize);
   const {
     canViewMore,
     remaining,
@@ -39,6 +41,11 @@ const VCSearchTab = () => {
     ? `Your plan includes ${currentLimitLabel}. Upgrade to ${upgradeDetails.name} for ${upgradeViewsLabel} and ${upgradeDetails.credits} credits/month.`
     : `Keep your research moving. ${upgradeDetails.name} gives you ${upgradeViewsLabel} and ${upgradeDetails.credits} credits/month.`;
   const canViewProfiles = vcViewLoading ? true : canViewMore;
+  const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters?.investment_stage, filters?.industry, filters?.geographic_focus, filters?.check_size_min, filters?.check_size_max, filters?.search]);
 
   return (
     <div className="space-y-6">
@@ -46,7 +53,7 @@ const VCSearchTab = () => {
       <VCFilters
         filters={filters}
         onFiltersChange={setFilters}
-        resultCount={vcs.length}
+        resultCount={total || vcs.length}
       />
 
       {showUpgradeBanner && (
@@ -83,7 +90,27 @@ const VCSearchTab = () => {
           <p>{error}</p>
         </div>
       ) : (
-        <VCGrid vcs={vcs} canViewProfiles={canViewProfiles} isAuthenticated={isAuthenticated} />
+        <>
+          <VCGrid vcs={vcs} canViewProfiles={canViewProfiles} isAuthenticated={isAuthenticated} />
+          {totalPages > 1 && (
+            <div className="flex flex-wrap justify-center gap-2 pt-4">
+              {Array.from({ length: totalPages }, (_, index) => {
+                const pageNumber = index + 1;
+                const isActive = pageNumber === page;
+                return (
+                  <Button
+                    key={pageNumber}
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
