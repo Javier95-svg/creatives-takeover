@@ -29,7 +29,7 @@ const HomeFAQ = () => {
     },
     {
       question: "What kind of community can I expect on the platform?",
-      answer: "Founder Stories is where entrepreneurs share their real wins, struggles, and advice. No corporate fluff, just honest conversations from people who get it.\n\nYou can read stories from other founders, share your own journey, get feedback, jump into discussions, or hang out in our Telegram for real time chats. Pro members get featured profiles so more people see you.\n\nThe vibe here is collaboration over competition. We genuinely celebrate when others win because there's room for everyone."
+      answer: "Founder Stories is where entrepreneurs share their real wins, struggles, and advice. No corporate fluff, just honest conversations from people who get it.\n\nYou can read stories from other founders, share your own journey, get feedback, and jump into discussions. Pro members get featured profiles so more people see you.\n\nThe vibe here is collaboration over competition. We genuinely celebrate when others win because there's room for everyone."
     },
     {
       question: "Are my business plans and data private and secure?",
@@ -41,7 +41,7 @@ const HomeFAQ = () => {
     },
     {
       question: "Who is behind Creatives Takeover and why should I trust the service?",
-      answer: "We're Creatives Takeover Ltd, a UK registered company (Company Number: 15827341) built by entrepreneurs who've been through the startup grind ourselves.\n\nWe're big on transparency and building in public. Follow us on LinkedIn, join the Telegram community, or read real founder stories on the platform. We're genuinely invested in seeing you succeed because when you win, we win too.\n\nGot questions? Hit up javier@creatives-takeover.com or admin@creatives-takeover.com anytime."
+      answer: "We're a small team of founders, builders, and growth people who genuinely care about helping others launch what matters.\n\nJavier Peña (Founder & CEO) started this because he wanted to give visibility to ideas and connect founders with the tools they need. Domagoj Markota (Fractional CTO) brings deep tech and AI expertise to make sure everything actually works. Daniela Hägg (Growth Associate) focuses on helping startups scale efficiently.\n\nWe're Creatives Takeover Ltd, a UK registered company (Company Number: 15827341). Our mission is simple: empower anyone, anywhere, to launch their own startup by making AI tools accessible, affordable, and easy to use. We believe entrepreneurship shouldn't be limited by technical skills or resources.\n\nGot questions? Hit up javier@creatives-takeover.com or admin@creatives-takeover.com anytime."
     },
     {
       question: "How much does it cost and what do I get?",
