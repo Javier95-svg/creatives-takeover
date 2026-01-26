@@ -5,10 +5,13 @@ import { Investor } from "@/types/investor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { VCWallpaper } from "@/components/vc-search/VCWallpaper";
 import { useVCViewTracking } from "@/hooks/useVCViewTracking";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   ExternalLink,
@@ -27,10 +30,21 @@ const VCProfilePage = () => {
   const [vc, setVc] = useState<Investor | null>(null);
   const [loading, setLoading] = useState(true);
   const { trackVCView, limit } = useVCViewTracking();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [upgradePrompt, setUpgradePrompt] = useState<{
     requiredTier?: 'creator' | 'professional';
   } | null>(null);
   const [requiresAuth, setRequiresAuth] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAdmin(user?.email?.toLowerCase() === "admin@creatives-takeover.com");
+    };
+
+    checkAdmin();
+  }, []);
 
   useEffect(() => {
     const fetchVC = async () => {
@@ -101,6 +115,70 @@ const VCProfilePage = () => {
     return `$${min}M - $${max}M`;
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !vc) {
+      toast.error("No file selected or VC missing");
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Please upload JPG, PNG, WebP, GIF, or SVG");
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 5242880) {
+      toast.error("File size exceeds 5MB. Please upload a smaller image");
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setUploadingLogo(true);
+      toast.loading("Uploading logo...", { id: "upload-logo" });
+
+      const fileExt = file.name.split('.').pop() || 'png';
+      const fileName = `${vc.id}/logo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('public-assets')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type
+        });
+
+      if (uploadError) {
+        toast.error(`Upload failed: ${uploadError.message}`, { id: "upload-logo" });
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('public-assets')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('investors')
+        .update({ logo_url: publicUrl })
+        .eq('id', vc.id);
+
+      if (updateError) {
+        toast.error(`Failed to save: ${updateError.message}`, { id: "upload-logo" });
+        throw updateError;
+      }
+
+      setVc((current) => (current ? { ...current, logo_url: publicUrl } : current));
+      toast.success("Logo uploaded and saved successfully!", { id: "upload-logo" });
+    } catch (error) {
+      console.error("Logo upload error:", error);
+    } finally {
+      setUploadingLogo(false);
+      event.target.value = '';
+    }
+  };
+
   const upgradeTierLabel = upgradePrompt?.requiredTier === 'professional' ? 'Pro' : 'Creator';
   const upgradeDetail = upgradePrompt?.requiredTier === 'professional'
     ? 'Unlock unlimited VC views this month.'
@@ -114,15 +192,35 @@ const VCProfilePage = () => {
         <CardHeader>
           <div className="flex items-start gap-6">
             {/* VC Logo */}
-            <div className="shrink-0 w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
-              {vc.logo_url ? (
-                <img
-                  src={vc.logo_url}
-                  alt={`${vc.firm_name} logo`}
-                  className="w-full h-full object-contain p-2"
-                />
-              ) : (
-                <Building2 className="h-10 w-10 text-muted-foreground/50" />
+            <div className="shrink-0">
+              <div className="w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
+                {vc.logo_url ? (
+                  <img
+                    src={vc.logo_url}
+                    alt={`${vc.firm_name} logo`}
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <Building2 className="h-10 w-10 text-muted-foreground/50" />
+                )}
+              </div>
+              {isAdmin && (
+                <div className="mt-3 w-48 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Admin: update logo</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    className="text-xs"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Recommended: 500x500 PNG or JPG, max 5MB
+                  </p>
+                  {uploadingLogo && (
+                    <p className="text-xs text-primary">Uploading logo...</p>
+                  )}
+                </div>
               )}
             </div>
 
