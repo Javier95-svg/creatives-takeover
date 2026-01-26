@@ -430,7 +430,7 @@ const Terms = () => {
               <div className="text-foreground/90 space-y-4">
                 <p><span className="text-primary font-medium">16.1.</span> These Terms shall be governed by and construed in accordance with the laws of England and Wales, without regard to its conflict of law provisions.</p>
                 <p><span className="text-primary font-medium">16.2.</span> Any disputes arising from or relating to these Terms or the Service shall be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
-                <p><span className="text-primary font-medium">16.3.</span> Before initiating legal proceedings, you agree to attempt to resolve disputes through good-faith negotiation by contacting us at legal@creatives-takeover.com.</p>
+                <p><span className="text-primary font-medium">16.3.</span> Before initiating legal proceedings, you agree to attempt to resolve disputes through good-faith negotiation by contacting us at admin@creatives-takeover.com.</p>
                 <p><span className="text-primary font-medium">16.4.</span> If you are a consumer in the European Union, you may be entitled to use the European Commission's Online Dispute Resolution platform (https://ec.europa.eu/odr).</p>
               </div>
             </section>
@@ -453,15 +453,13 @@ const Terms = () => {
                 <p>If you have any questions about these Terms of Service, please contact us:</p>
                 <div className="grid md:grid-cols-2 gap-6 mt-4">
                   <div className="space-y-3">
-                    <h3 className="text-lg font-medium text-primary">General Inquiries</h3>
-                    <p><strong>Email:</strong> legal@creatives-takeover.com</p>
-                    <p><strong>Support:</strong> support@creatives-takeover.com</p>
-                    <p><strong>Website:</strong> https://creatives-takeover.com/contact</p>
+                    <h3 className="text-lg font-medium text-primary">Founder & CEO</h3>
+                    <p><strong>Email:</strong> javier@creatives-takeover.com</p>
                   </div>
                   <div className="space-y-3">
-                    <h3 className="text-lg font-medium text-primary">Business Hours</h3>
-                    <p>Monday - Friday: 9:00 AM - 6:00 PM (GMT)</p>
-                    <p>We aim to respond to all inquiries within 2 business days.</p>
+                    <h3 className="text-lg font-medium text-primary">General Support</h3>
+                    <p><strong>Email:</strong> admin@creatives-takeover.com</p>
+                    <p><strong>Website:</strong> https://creatives-takeover.com/contact</p>
                   </div>
                 </div>
                 <div className="mt-6 space-y-3">
