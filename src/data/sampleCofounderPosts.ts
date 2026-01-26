@@ -51,7 +51,7 @@ If you care about sustainability and want to build something people actually nee
     status: "active",
     is_sample: true,
     author: {
-      full_name: "Priya Sharma",
+      full_name: "Emily Wynne",
       avatar_url: "https://randomuser.me/api/portraits/women/32.jpg",
     },
   },
@@ -77,7 +77,7 @@ I'm not looking for a "growth hacker" or someone who just wants to run Facebook 
     status: "active",
     is_sample: true,
     author: {
-      full_name: "Marcus Chen",
+      full_name: "Sebastian Schwarz",
       avatar_url: "https://randomuser.me/api/portraits/men/75.jpg",
     },
   },
@@ -129,7 +129,7 @@ I need someone who can help me build a proper platform (matching algorithm, sche
     status: "active",
     is_sample: true,
     author: {
-      full_name: "James Okoro",
+      full_name: "James Diaz",
       avatar_url: "https://randomuser.me/api/portraits/men/22.jpg",
     },
   },
@@ -155,7 +155,7 @@ Looking for a technical co-founder who can rebuild this properly, add integratio
     status: "active",
     is_sample: true,
     author: {
-      full_name: "Sofia Ruiz",
+      full_name: "Soof de Boer",
       avatar_url: "https://randomuser.me/api/portraits/women/65.jpg",
     },
   },
@@ -184,7 +184,7 @@ If you've run an e-commerce brand or worked in logistics, hit me up. Bonus if yo
     is_sample: true,
     author: {
       full_name: "Kai Nakamura",
-      avatar_url: "https://randomuser.me/api/portraits/men/52.jpg",
+      avatar_url: "https://randomuser.me/api/portraits/men/12.jpg",
     },
   },
   {
@@ -209,7 +209,7 @@ I'm looking for a technical co-founder who gets the community-first approach and
     status: "active",
     is_sample: true,
     author: {
-      full_name: "Amara Diallo",
+      full_name: "Camila Ortiz",
       avatar_url: "https://randomuser.me/api/portraits/women/15.jpg",
     },
   },
@@ -263,7 +263,7 @@ Looking for a technical co-founder to build the platform (web + mobile) and some
     status: "active",
     is_sample: true,
     author: {
-      full_name: "Zara Hussain",
+      full_name: "Olivia Smith",
       avatar_url: "https://randomuser.me/api/portraits/women/79.jpg",
     },
   },
@@ -289,7 +289,7 @@ I need someone who understands small business owners, can build pricing that mak
     status: "active",
     is_sample: true,
     author: {
-      full_name: "Tom Brennan",
+      full_name: "Yusuf Khan",
       avatar_url: "https://randomuser.me/api/portraits/men/86.jpg",
     },
   },
