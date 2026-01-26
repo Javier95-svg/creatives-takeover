@@ -52,7 +52,7 @@ If you care about sustainability and want to build something people actually nee
     is_sample: true,
     author: {
       full_name: "Priya Sharma",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya&backgroundColor=b6e3f4",
+      avatar_url: "https://randomuser.me/api/portraits/women/32.jpg",
     },
   },
   {
@@ -78,7 +78,7 @@ I'm not looking for a "growth hacker" or someone who just wants to run Facebook 
     is_sample: true,
     author: {
       full_name: "Marcus Chen",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus&backgroundColor=c0aede",
+      avatar_url: "https://randomuser.me/api/portraits/men/75.jpg",
     },
   },
   {
@@ -104,7 +104,7 @@ What I need is a technical co-founder who can build the marketplace. Bonus point
     is_sample: true,
     author: {
       full_name: "Lena Voss",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lena&backgroundColor=ffd5dc",
+      avatar_url: "https://randomuser.me/api/portraits/women/44.jpg",
     },
   },
   {
@@ -130,7 +130,7 @@ I need someone who can help me build a proper platform (matching algorithm, sche
     is_sample: true,
     author: {
       full_name: "James Okoro",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=James&backgroundColor=d1d4f9",
+      avatar_url: "https://randomuser.me/api/portraits/men/22.jpg",
     },
   },
   {
@@ -156,7 +156,7 @@ Looking for a technical co-founder who can rebuild this properly, add integratio
     is_sample: true,
     author: {
       full_name: "Sofia Ruiz",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia&backgroundColor=ffdfbf",
+      avatar_url: "https://randomuser.me/api/portraits/women/65.jpg",
     },
   },
   {
@@ -184,7 +184,7 @@ If you've run an e-commerce brand or worked in logistics, hit me up. Bonus if yo
     is_sample: true,
     author: {
       full_name: "Kai Nakamura",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kai&backgroundColor=c0e8d5",
+      avatar_url: "https://randomuser.me/api/portraits/men/52.jpg",
     },
   },
   {
@@ -210,7 +210,7 @@ I'm looking for a technical co-founder who gets the community-first approach and
     is_sample: true,
     author: {
       full_name: "Amara Diallo",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amara&backgroundColor=f0c6ff",
+      avatar_url: "https://randomuser.me/api/portraits/women/15.jpg",
     },
   },
   {
@@ -238,7 +238,7 @@ I need a technical co-founder to build the platform and a marketing co-founder t
     is_sample: true,
     author: {
       full_name: "Daniel Park",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Daniel&backgroundColor=b6e3f4",
+      avatar_url: "https://randomuser.me/api/portraits/men/41.jpg",
     },
   },
   {
@@ -264,7 +264,7 @@ Looking for a technical co-founder to build the platform (web + mobile) and some
     is_sample: true,
     author: {
       full_name: "Zara Hussain",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Zara&backgroundColor=ffd5dc",
+      avatar_url: "https://randomuser.me/api/portraits/women/79.jpg",
     },
   },
   {
@@ -290,7 +290,7 @@ I need someone who understands small business owners, can build pricing that mak
     is_sample: true,
     author: {
       full_name: "Tom Brennan",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Tom&backgroundColor=d1d4f9",
+      avatar_url: "https://randomuser.me/api/portraits/men/86.jpg",
     },
   },
 ];
