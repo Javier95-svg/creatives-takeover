@@ -433,13 +433,13 @@ const Hero = () => {
             <div className="mb-8 sm:mb-10">
               {isAuthenticated ? (
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[180px]" asChild>
                     <Link to={userUsername ? `/profile/${userUsername}` : '/dashboard'}>
                       <User className="w-5 h-5" />
-                      Profile
+                      Your Profile
                     </Link>
                   </Button>
-                  <Button size="lg" className="w-full sm:w-auto" asChild>
+                  <Button size="lg" className="w-full sm:w-auto min-w-[180px]" asChild>
                     <Link to="/dashboard" onClick={handleDashboardCTAClick}>
                       <LayoutDashboard className="w-5 h-5" />
                       Dashboard
