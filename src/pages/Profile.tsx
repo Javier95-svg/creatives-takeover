@@ -49,6 +49,7 @@ interface Profile {
   friends_count: number;
   creative_niche: string | null;
   business_stage: string | null;
+  role: string | null;
 }
 
 interface Post {
@@ -341,6 +342,13 @@ const Profile = () => {
                           {profile.full_name || 'Anonymous User'}
                         </h1>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          {profile.role && (
+                            <Badge variant="default" className="capitalize">
+                              {profile.role === 'founders' ? 'Founder' :
+                               profile.role === 'investors' ? 'Investor' :
+                               profile.role === 'accelerators' ? 'Accelerator' : profile.role}
+                            </Badge>
+                          )}
                           {profile.creative_niche && (
                             <Badge variant="outline">{profile.creative_niche}</Badge>
                           )}

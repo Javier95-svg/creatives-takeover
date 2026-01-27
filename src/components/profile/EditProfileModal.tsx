@@ -28,6 +28,7 @@ interface EditProfileModalProps {
     twitter_url: string | null;
     linkedin_url: string | null;
     instagram_url: string | null;
+    role: string | null;
   };
   onSuccess: () => void;
 }
@@ -44,6 +45,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
     twitter_url: profile.twitter_url || "",
     linkedin_url: profile.linkedin_url || "",
     instagram_url: profile.instagram_url || "",
+    role: profile.role || "",
   });
   const [avatarFile, setAvatarFile] = useState<string | null>(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -136,6 +138,7 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
         twitter_url: formData.twitter_url,
         linkedin_url: formData.linkedin_url,
         instagram_url: formData.instagram_url,
+        role: formData.role || null,
       };
 
       const { error } = await supabase
@@ -261,6 +264,23 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
                 <p className="text-xs text-muted-foreground mt-1">
                   {formData.bio.length}/{bioMode === 'rich' ? '1000' : '500'} characters
                 </p>
+              </div>
+
+              <div>
+                <Label htmlFor="role">I am a</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) => setFormData({ ...formData, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="founders">Founder</SelectItem>
+                    <SelectItem value="investors">Investor</SelectItem>
+                    <SelectItem value="accelerators">Accelerator</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

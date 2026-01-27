@@ -289,7 +289,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (nameParts.length >= 2) {
           const firstName = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
           const lastName = nameParts[nameParts.length - 1].toLowerCase().replace(/[^a-z0-9]/g, '');
-          username = firstName + lastName;
+          username = firstName + '-' + lastName;
         } else if (nameParts.length === 1) {
           username = nameParts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
         }

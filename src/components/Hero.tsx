@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Sparkles, LayoutDashboard, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutDashboard, User, Users, DollarSign, Play, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -26,6 +26,23 @@ const Hero = () => {
   const imageLoadStartTimes = useRef<Map<number, number>>(new Map());
   
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
+
+  // Fetch current user's username for profile link
+  const [userUsername, setUserUsername] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+      if (data?.username) {
+        setUserUsername(data.username);
+      }
+    };
+    fetchUsername();
+  }, [user]);
 
   // Fetch hero images from database
   useEffect(() => {
@@ -416,10 +433,16 @@ const Hero = () => {
             <div className="mb-8 sm:mb-10">
               {isAuthenticated ? (
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
+                    <Link to={userUsername ? `/profile/${userUsername}` : '/dashboard'}>
+                      <User className="w-5 h-5" />
+                      Profile
+                    </Link>
+                  </Button>
                   <Button size="lg" className="w-full sm:w-auto" asChild>
                     <Link to="/dashboard" onClick={handleDashboardCTAClick}>
                       <LayoutDashboard className="w-5 h-5" />
-                      Open Dashboard
+                      Dashboard
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                   </Button>

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Sparkles, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
@@ -16,12 +16,16 @@ import { SocialProof } from "@/components/SocialProof";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: ""
   });
@@ -73,12 +77,23 @@ const Signup = () => {
     }
   };
 
-  // Form validation (simplified - no confirm password, no full name required)
+  // Form validation
   const validateForm = () => {
     const newErrors = {
+      firstName: "",
+      lastName: "",
       email: "",
       password: ""
     };
+
+    // Name validation
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
 
     // Email validation
     if (!formData.email.trim()) {
@@ -95,7 +110,7 @@ const Signup = () => {
     }
 
     setErrors(newErrors);
-    return !newErrors.email && !newErrors.password;
+    return !newErrors.firstName && !newErrors.lastName && !newErrors.email && !newErrors.password;
   };
 
   // Handle form submission
@@ -115,10 +130,11 @@ const Signup = () => {
       // Track sign-up started
       trackSignupStarted(triggerType);
 
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
       const { error } = await signUp(
         formData.email,
         formData.password,
-        '' // Full name moved to post-signup onboarding
+        fullName
       );
 
       if (error) {
@@ -293,6 +309,52 @@ const Signup = () => {
                 </div>
                 <div className="w-full bg-muted rounded-full h-1.5">
                   <div className="bg-primary h-1.5 rounded-full" style={{ width: '50%' }}></div>
+                </div>
+              </div>
+
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-sm font-medium">
+                    First Name
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      placeholder="First name"
+                      className={`pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                      disabled={isLoading}
+                      autoComplete="given-name"
+                    />
+                  </div>
+                  {errors.firstName && (
+                    <p className="text-sm text-red-500 animate-fade-in">{errors.firstName}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-sm font-medium">
+                    Last Name
+                  </Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Last name"
+                    className={`h-12 bg-background/50 backdrop-blur-sm border-2 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                    disabled={isLoading}
+                    autoComplete="family-name"
+                  />
+                  {errors.lastName && (
+                    <p className="text-sm text-red-500 animate-fade-in">{errors.lastName}</p>
+                  )}
                 </div>
               </div>
 

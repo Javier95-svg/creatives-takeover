@@ -4274,6 +4274,7 @@ export type Database = {
           quiz_is_first_startup: string | null
           quiz_launch_timeline: string | null
           quiz_looking_for_cofounder: string | null
+          role: string | null
           sidebar_preferences: Json | null
           stripe_customer_id: string | null
           subscribed: boolean | null
@@ -4328,6 +4329,7 @@ export type Database = {
           quiz_is_first_startup?: string | null
           quiz_launch_timeline?: string | null
           quiz_looking_for_cofounder?: string | null
+          role?: string | null
           sidebar_preferences?: Json | null
           stripe_customer_id?: string | null
           subscribed?: boolean | null
@@ -4382,6 +4384,7 @@ export type Database = {
           quiz_is_first_startup?: string | null
           quiz_launch_timeline?: string | null
           quiz_looking_for_cofounder?: string | null
+          role?: string | null
           sidebar_preferences?: Json | null
           stripe_customer_id?: string | null
           subscribed?: boolean | null
