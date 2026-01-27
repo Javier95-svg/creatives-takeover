@@ -21,7 +21,23 @@ import {
   DollarSign,
   Building2,
   Send,
-  UserPlus
+  UserPlus,
+  Star,
+  Twitter,
+  Facebook,
+  Youtube,
+  Instagram,
+  BookOpen,
+  Mail,
+  Clock,
+  TrendingUp,
+  Globe,
+  Wifi,
+  Briefcase,
+  CalendarDays,
+  Users,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 
 const VCProfilePage = () => {
@@ -188,12 +204,23 @@ const VCProfilePage = () => {
   const profileContent = (
     <>
       {/* Main Profile Card */}
-      <Card className="mb-6">
+      <Card className="mb-6 overflow-hidden">
+        {/* Header Image Banner */}
+        {vc.header_image_url && (
+          <div className="w-full h-40 sm:h-52 bg-muted overflow-hidden">
+            <img
+              src={vc.header_image_url}
+              alt={`${vc.firm_name} banner`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         <CardHeader>
           <div className="flex items-start gap-6">
             {/* VC Logo */}
             <div className="shrink-0">
-              <div className="w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm">
+              <div className={`w-20 h-20 rounded-xl border-2 border-border bg-background flex items-center justify-center overflow-hidden shadow-sm ${vc.header_image_url ? '-mt-12 relative z-10' : ''}`}>
                 {vc.logo_url ? (
                   <img
                     src={vc.logo_url}
@@ -228,12 +255,28 @@ const VCProfilePage = () => {
             <div className="flex-1">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <CardTitle className="text-3xl mb-2">{vc.firm_name}</CardTitle>
+                  <div className="flex items-center gap-3 mb-2">
+                    <CardTitle className="text-3xl">{vc.firm_name}</CardTitle>
+                    {vc.is_featured && (
+                      <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
+                        <Star className="h-3 w-3 mr-1 fill-amber-500" />
+                        Featured
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xl text-muted-foreground mb-2">{vc.name}</p>
-                  {/* Investor Type Badge */}
-                  <Badge variant="outline" className="capitalize">
-                    {vc.investor_type.replace('_', ' ')}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Investor Type Badge */}
+                    <Badge variant="outline" className="capitalize">
+                      {vc.investor_type.replace('_', ' ')}
+                    </Badge>
+                    {vc.remote_friendly && (
+                      <Badge variant="outline" className="text-green-600 border-green-500/30 bg-green-500/5">
+                        <Wifi className="h-3 w-3 mr-1" />
+                        Remote Friendly
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -241,6 +284,33 @@ const VCProfilePage = () => {
         </CardHeader>
 
       <CardContent className="space-y-6">
+        {/* Investment Activity Stats */}
+        {(vc.total_portfolio_count > 0 || vc.recent_investments_count > 0 || vc.last_investment_date) && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {vc.total_portfolio_count > 0 && (
+              <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                <Briefcase className="h-5 w-5 mx-auto mb-2 text-primary" />
+                <p className="text-2xl font-bold">{vc.total_portfolio_count}</p>
+                <p className="text-xs text-muted-foreground">Portfolio Companies</p>
+              </div>
+            )}
+            {vc.recent_investments_count > 0 && (
+              <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                <TrendingUp className="h-5 w-5 mx-auto mb-2 text-green-500" />
+                <p className="text-2xl font-bold">{vc.recent_investments_count}</p>
+                <p className="text-xs text-muted-foreground">Recent Investments</p>
+              </div>
+            )}
+            {vc.last_investment_date && (
+              <div className="p-4 rounded-lg bg-muted/50 border text-center">
+                <CalendarDays className="h-5 w-5 mx-auto mb-2 text-blue-500" />
+                <p className="text-2xl font-bold">{new Date(vc.last_investment_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
+                <p className="text-xs text-muted-foreground">Last Investment</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Investment Thesis */}
         {vc.investment_thesis && (
           <div>
@@ -288,6 +358,20 @@ const VCProfilePage = () => {
               <span>{vc.geographic_focus.join(', ')}</span>
             </div>
           </div>
+
+          {vc.locations && vc.locations.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Office Locations</h4>
+              <div className="flex flex-wrap gap-2">
+                {vc.locations.map((location, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Globe className="h-3.5 w-3.5" />
+                    <span>{location}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Portfolio Companies */}
@@ -312,9 +396,86 @@ const VCProfilePage = () => {
           </div>
         )}
 
-        {/* Contact Information */}
+        {/* Contact Process */}
+        {(vc.contact_preference || vc.requires_warm_intro || vc.application_url || vc.response_rate_percentage || vc.typical_timeline_days || vc.email) && (
+          <div className="border-t pt-6">
+            <h3 className="font-semibold mb-4">Contact Process</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {vc.contact_preference && (
+                <div className="flex items-start gap-3">
+                  <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Preferred Contact</p>
+                    <p className="text-sm text-muted-foreground capitalize">{vc.contact_preference.replace('-', ' ')}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3">
+                {vc.requires_warm_intro ? (
+                  <AlertCircle className="h-4 w-4 mt-0.5 text-amber-500" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mt-0.5 text-green-500" />
+                )}
+                <div>
+                  <p className="text-sm font-medium">Warm Intro</p>
+                  <p className="text-sm text-muted-foreground">
+                    {vc.requires_warm_intro ? 'Required' : 'Not required — cold outreach welcome'}
+                  </p>
+                </div>
+              </div>
+
+              {vc.response_rate_percentage != null && (
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Response Rate</p>
+                    <p className="text-sm text-muted-foreground">{vc.response_rate_percentage}%</p>
+                  </div>
+                </div>
+              )}
+
+              {vc.typical_timeline_days != null && (
+                <div className="flex items-start gap-3">
+                  <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Typical Response Time</p>
+                    <p className="text-sm text-muted-foreground">
+                      {vc.typical_timeline_days < 7
+                        ? `${vc.typical_timeline_days} days`
+                        : `${Math.round(vc.typical_timeline_days / 7)} weeks`}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {vc.email && (
+                <div className="flex items-start gap-3">
+                  <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Email</p>
+                    <a href={`mailto:${vc.email}`} className="text-sm text-primary hover:underline">
+                      {vc.email}
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {vc.application_url && (
+              <Button asChild className="mt-4 w-full sm:w-auto">
+                <a href={vc.application_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Apply Directly
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Contact & Social Media */}
         <div className="border-t pt-6">
-          <h3 className="font-semibold mb-4">Contact & Social Media</h3>
+          <h3 className="font-semibold mb-4">Links & Social Media</h3>
           <div className="grid md:grid-cols-2 gap-3">
             {vc.firm_website && (
               <Button variant="outline" asChild className="justify-start">
@@ -339,6 +500,60 @@ const VCProfilePage = () => {
                 <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
                   <Building2 className="h-4 w-4 mr-2" />
                   Crunchbase
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.twitter_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.twitter_url} target="_blank" rel="noopener noreferrer">
+                  <Twitter className="h-4 w-4 mr-2" />
+                  Twitter / X
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.facebook_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.facebook_url} target="_blank" rel="noopener noreferrer">
+                  <Facebook className="h-4 w-4 mr-2" />
+                  Facebook
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.youtube_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.youtube_url} target="_blank" rel="noopener noreferrer">
+                  <Youtube className="h-4 w-4 mr-2" />
+                  YouTube
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.instagram_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.instagram_url} target="_blank" rel="noopener noreferrer">
+                  <Instagram className="h-4 w-4 mr-2" />
+                  Instagram
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.medium_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.medium_url} target="_blank" rel="noopener noreferrer">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Medium
+                  <ExternalLink className="h-3 w-3 ml-auto" />
+                </a>
+              </Button>
+            )}
+            {vc.angellist_url && (
+              <Button variant="outline" asChild className="justify-start">
+                <a href={vc.angellist_url} target="_blank" rel="noopener noreferrer">
+                  <Users className="h-4 w-4 mr-2" />
+                  AngelList
                   <ExternalLink className="h-3 w-3 ml-auto" />
                 </a>
               </Button>
