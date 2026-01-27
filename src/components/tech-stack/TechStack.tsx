@@ -200,6 +200,7 @@ const TechStack: React.FC = () => {
 
   const selectedCount = Object.values(selectedProducts).filter(id => id !== null).length;
   const allCategoriesSelected = selectedCount === techStackData.length;
+  const canGenerateBudget = Boolean(user) && allCategoriesSelected;
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-8">
@@ -221,7 +222,7 @@ const TechStack: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   {selectedCount} of {techStackData.length} categories selected
                 </p>
-                {!allCategoriesSelected && hasPaidAccess && user && (
+                {!allCategoriesSelected && user && (
                   <p className="text-xs text-muted-foreground mt-1">
                     Select one product in all {techStackData.length} categories to view budget and strategy
                   </p>
@@ -230,8 +231,8 @@ const TechStack: React.FC = () => {
               <Button
                 onClick={handleSeeBudget}
                 size="lg"
-                className="w-full sm:w-auto min-w-[140px]"
-                disabled={!user || !allCategoriesSelected}
+                className={`w-full sm:w-auto min-w-[140px] ${!canGenerateBudget ? 'opacity-70' : ''}`}
+                aria-disabled={!canGenerateBudget}
               >
                 {!user ? (
                   <>
