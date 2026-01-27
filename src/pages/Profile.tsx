@@ -391,17 +391,30 @@ const Profile = () => {
                       </div>
                     </div>
 
-                    {(profile.bio_html || profile.bio) && (
-                      <div 
-                        className="text-muted-foreground mb-4 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ 
-                          __html: DOMPurify.sanitize(profile.bio_html || profile.bio || '', {
-                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
-                            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
-                          })
-                        }}
-                      />
-                    )}
+                    {(profile.bio_html || profile.bio) && (() => {
+                      const bioContent = profile.bio_html || profile.bio || '';
+                      const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(bioContent);
+
+                      if (hasHtmlTags) {
+                        return (
+                          <div 
+                            className="text-muted-foreground mb-4 prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ 
+                              __html: DOMPurify.sanitize(bioContent, {
+                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre', 'span', 'div'],
+                                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
+                              })
+                            }}
+                          />
+                        );
+                      }
+
+                      return (
+                        <p className="text-muted-foreground mb-4 whitespace-pre-line">
+                          {bioContent}
+                        </p>
+                      );
+                    })()}
 
                     {/* Social Media Links */}
                     {(profile.twitter_url || profile.linkedin_url || profile.instagram_url || profile.facebook_url || profile.youtube_url || profile.github_url) && (
