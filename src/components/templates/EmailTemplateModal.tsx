@@ -1,9 +1,12 @@
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Copy, Mail, X } from "lucide-react";
 import { EmailTemplate } from "@/types/insighta";
-import { useEmailTemplates } from "@/hooks/useEmailTemplates";
+import { toast } from "sonner";
 
 interface EmailTemplateModalProps {
   template: EmailTemplate | null;
@@ -12,27 +15,74 @@ interface EmailTemplateModalProps {
 }
 
 const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalProps) => {
-  const { copyToClipboard } = useEmailTemplates();
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   if (!template) return null;
 
+  useEffect(() => {
+    if (!template) return;
+    const initialValues: Record<string, string> = {};
+    template.variables.forEach((variable) => {
+      initialValues[variable] = "";
+    });
+    setVariableValues(initialValues);
+  }, [template?.id]);
+
+  const applyReplacements = (text: string) => {
+    return text.replace(/{{[^}]+}}/g, (match) => {
+      const value = variableValues[match];
+      return value && value.trim().length > 0 ? value : match;
+    });
+  };
+
   const handleCopyFull = () => {
-    copyToClipboard(template, false);
+    const subject = applyReplacements(template.subject);
+    const body = applyReplacements(template.body);
+    const textToCopy = `Subject: ${subject}\n\n${body}`;
+    navigator.clipboard.writeText(textToCopy).then(
+      () => toast.success("Template copied to clipboard!"),
+      () => toast.error("Failed to copy to clipboard")
+    );
   };
 
   const handleCopySubject = () => {
-    copyToClipboard(template, true);
+    const subject = applyReplacements(template.subject);
+    navigator.clipboard.writeText(subject).then(
+      () => toast.success("Subject copied to clipboard!"),
+      () => toast.error("Failed to copy to clipboard")
+    );
   };
 
-  // Highlight variables in text
-  const highlightVariables = (text: string) => {
+  const handleVariableClick = (variable: string) => {
+    const input = inputRefs.current[variable];
+    if (input) {
+      input.focus();
+      input.select();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  const renderEditableVariables = (text: string) => {
     const parts = text.split(/({{[^}]+}})/g);
     return parts.map((part, idx) => {
       if (part.match(/{{[^}]+}}/)) {
+        const value = variableValues[part];
+        const hasValue = value && value.trim().length > 0;
         return (
-          <span key={idx} className="bg-primary/10 text-primary px-1 rounded font-mono text-sm">
-            {part}
-          </span>
+          <button
+            key={idx}
+            type="button"
+            onClick={() => handleVariableClick(part)}
+            className={`inline-flex items-center rounded px-1 py-0.5 font-mono text-xs transition-colors ${
+              hasValue
+                ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
+                : "bg-primary/10 text-primary hover:bg-primary/20"
+            }`}
+            title="Click to edit"
+          >
+            {hasValue ? value : part}
+          </button>
         );
       }
       return part;
@@ -78,7 +128,7 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
               </Button>
             </div>
             <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-mono">{highlightVariables(template.subject)}</p>
+              <p className="text-sm font-mono">{renderEditableVariables(template.subject)}</p>
             </div>
           </div>
 
@@ -92,24 +142,38 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
               </Button>
             </div>
             <div className="p-4 bg-muted rounded-lg">
-              <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
-                {highlightVariables(template.body)}
-              </pre>
+              <div className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
+                {renderEditableVariables(template.body)}
+              </div>
             </div>
           </div>
 
           {/* Variables List */}
           <div>
             <h3 className="font-semibold text-sm mb-2">Variables to Customize</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {template.variables.map((variable, idx) => (
-                <div key={idx} className="p-2 bg-primary/5 rounded border border-primary/20">
-                  <code className="text-xs text-primary">{variable}</code>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {template.variables.map((variable) => (
+                <div key={variable} className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">{variable}</Label>
+                  <Input
+                    ref={(el) => {
+                      inputRefs.current[variable] = el;
+                    }}
+                    value={variableValues[variable] || ""}
+                    onChange={(event) =>
+                      setVariableValues((prev) => ({
+                        ...prev,
+                        [variable]: event.target.value
+                      }))
+                    }
+                    placeholder={`Enter ${variable.replace(/[{}]/g, "").replace(/_/g, " ")}`}
+                    className="text-sm"
+                  />
                 </div>
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Replace these placeholders with your actual information before sending.
+              Click any highlighted placeholder in the template to jump to its input.
             </p>
           </div>
 

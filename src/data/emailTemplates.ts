@@ -87,6 +87,87 @@ Best,
     tags: ['VC', 'Demo Day', 'Follow-up'],
     popularity: 82
   },
+  {
+    id: 'cold-angel-short',
+    title: 'Cold Angel Intro (Short)',
+    category: 'cold-outreach',
+    subject: 'Quick intro: {{company_name}}',
+    body: `Hi {{investor_name}},
+
+I'm {{founder_name}}, founder of {{company_name}}. We are building {{product_description}} for {{target_customer}}.
+
+We are raising {{funding_amount}} for our {{stage}} round and I believe there is a fit based on your interest in {{investment_focus}}.
+
+Quick highlights:
+- Traction: {{key_metric}}
+- Why now: {{timing_reason}}
+- Ask: {{specific_ask}}
+
+Open to a short call next week?
+
+Thanks,
+{{founder_name}}`,
+    useCase: 'Use for angels or individual investors who prefer a tight, low-friction intro.',
+    variables: ['{{investor_name}}', '{{founder_name}}', '{{company_name}}', '{{product_description}}', '{{target_customer}}', '{{funding_amount}}', '{{stage}}', '{{investment_focus}}', '{{key_metric}}', '{{timing_reason}}', '{{specific_ask}}'],
+    previewSnippet: 'Short cold intro for angel investors with a clear ask and key highlights.',
+    tags: ['Angel', 'Cold Email', 'Short'],
+    popularity: 81
+  },
+  {
+    id: 'cold-traction-snapshot',
+    title: 'Cold Outreach with Traction Snapshot',
+    category: 'cold-outreach',
+    subject: '{{company_name}} traction snapshot',
+    body: `Hi {{vc_name}},
+
+Reaching out with a quick snapshot of {{company_name}}.
+
+What we do: {{one_liner}}
+Who we serve: {{target_customer}}
+
+Traction (last 90 days):
+- {{metric_1}}: {{value_1}}
+- {{metric_2}}: {{value_2}}
+- {{metric_3}}: {{value_3}}
+
+We are raising {{funding_amount}} for {{stage}}. If {{firm_name}} is exploring {{investment_focus}}, I would love to share more.
+
+Would a 15-minute intro next week work?
+
+Best,
+{{founder_name}}`,
+    useCase: 'Best when you have real traction and want to lead with data.',
+    variables: ['{{vc_name}}', '{{company_name}}', '{{one_liner}}', '{{target_customer}}', '{{metric_1}}', '{{value_1}}', '{{metric_2}}', '{{value_2}}', '{{metric_3}}', '{{value_3}}', '{{funding_amount}}', '{{stage}}', '{{firm_name}}', '{{investment_focus}}', '{{founder_name}}'],
+    previewSnippet: 'Lead with metrics to show momentum and get a reply.',
+    tags: ['VC', 'Cold Email', 'Traction'],
+    popularity: 87
+  },
+  {
+    id: 'cold-public-launch',
+    title: 'Cold Outreach After Public Launch',
+    category: 'cold-outreach',
+    subject: '{{company_name}} just launched - would love your take',
+    body: `Hi {{vc_name}},
+
+We just launched {{company_name}} and the response has been strong. We are building {{product_description}} for {{target_customer}}.
+
+In the first {{timeframe}}:
+- {{early_signal_1}}
+- {{early_signal_2}}
+- {{early_signal_3}}
+
+We are opening our {{stage}} round and think {{firm_name}} could be a strong partner given your focus on {{investment_focus}}.
+
+Can I send a quick deck?
+
+Thanks,
+{{founder_name}}`,
+    useCase: 'Use right after a launch while momentum and curiosity are high.',
+    variables: ['{{vc_name}}', '{{company_name}}', '{{product_description}}', '{{target_customer}}', '{{timeframe}}', '{{early_signal_1}}', '{{early_signal_2}}', '{{early_signal_3}}', '{{stage}}', '{{firm_name}}', '{{investment_focus}}', '{{founder_name}}'],
+    previewSnippet: 'Capitalize on launch momentum with quick signals and a deck ask.',
+    tags: ['VC', 'Cold Email', 'Launch'],
+    popularity: 79
+  },
 
   // WARM INTRODUCTION TEMPLATES
   {
@@ -153,6 +234,74 @@ I'll let you two take it from here!`,
     previewSnippet: 'Ready-to-forward blurb that makes it easy for connectors to introduce you.',
     tags: ['Warm Intro', 'Forwardable', 'Network'],
     popularity: 90
+  },
+  {
+    id: 'warm-intro-follow-up',
+    title: 'Warm Intro Follow-up',
+    category: 'warm-introduction',
+    subject: 'Quick follow-up on intro request',
+    body: `Hi {{connection_name}},
+
+Just a quick follow-up on my intro request to {{vc_name}} at {{firm_name}}.
+
+No rush at all - I know you are busy. If it is helpful, here is a short blurb you can forward:
+
+{{forwardable_blurb}}
+
+Thanks again for considering this!
+
+{{founder_name}}`,
+    useCase: 'Use when a warm intro request is still pending after a week.',
+    variables: ['{{connection_name}}', '{{vc_name}}', '{{firm_name}}', '{{forwardable_blurb}}', '{{founder_name}}'],
+    previewSnippet: 'Polite follow-up that makes it easy to forward.',
+    tags: ['Warm Intro', 'Follow-up', 'Network'],
+    popularity: 76
+  },
+  {
+    id: 'warm-intro-deck-forward',
+    title: 'Warm Intro with Deck Forward',
+    category: 'warm-introduction',
+    subject: 'Intro to {{vc_name}} + short deck',
+    body: `Hi {{connection_name}},
+
+If you are comfortable making the introduction to {{vc_name}} at {{firm_name}}, I attached a short deck they can skim in under 3 minutes.
+
+One-line summary: {{one_liner}}
+Funding round: {{funding_round}} for {{funding_amount}}
+
+Here is a short intro blurb you can forward:
+
+{{forwardable_blurb}}
+
+Really appreciate your help here.
+
+{{founder_name}}`,
+    useCase: 'Use when the connector prefers to pass along a short deck with the intro.',
+    variables: ['{{connection_name}}', '{{vc_name}}', '{{firm_name}}', '{{one_liner}}', '{{funding_round}}', '{{funding_amount}}', '{{forwardable_blurb}}', '{{founder_name}}'],
+    previewSnippet: 'Warm intro request that includes a concise deck mention.',
+    tags: ['Warm Intro', 'Deck', 'Network'],
+    popularity: 84
+  },
+  {
+    id: 'warm-intro-advisor-endorsement',
+    title: 'Warm Intro via Advisor Endorsement',
+    category: 'warm-introduction',
+    subject: 'Intro request - {{advisor_name}} suggested a fit',
+    body: `Hi {{connection_name}},
+
+{{advisor_name}} suggested I reach out to you because of your relationship with {{vc_name}} at {{firm_name}}.
+
+We are building {{company_name}} ({{product_description}}) and raising {{funding_amount}} for {{stage}}.
+
+If you think it is a fit, would you be open to introducing us? I can share a short blurb or deck if useful.
+
+Thank you,
+{{founder_name}}`,
+    useCase: 'Use when an advisor or mentor can reinforce the credibility of the intro.',
+    variables: ['{{connection_name}}', '{{advisor_name}}', '{{vc_name}}', '{{firm_name}}', '{{company_name}}', '{{product_description}}', '{{funding_amount}}', '{{stage}}', '{{founder_name}}'],
+    previewSnippet: 'Leverage advisor credibility to secure a warm intro.',
+    tags: ['Warm Intro', 'Advisor', 'Network'],
+    popularity: 82
   },
 
   // FOLLOW-UP TEMPLATES
@@ -233,6 +382,79 @@ Thanks,
     tags: ['Follow-up', 'Persistence', 'Check-in'],
     popularity: 75
   },
+  {
+    id: 'follow-up-after-deck',
+    title: 'Follow-up After Sending Deck',
+    category: 'follow-up',
+    subject: 'Checking in on {{company_name}} deck',
+    body: `Hi {{vc_name}},
+
+Just checking in to see if you had a chance to review the {{company_name}} deck I sent on {{sent_date}}.
+
+Happy to answer any questions or provide more detail on:
+- {{topic_1}}
+- {{topic_2}}
+
+Would a quick call this week be helpful?
+
+Best,
+{{founder_name}}`,
+    useCase: 'Use 4-7 days after sending a deck to keep the conversation moving.',
+    variables: ['{{vc_name}}', '{{company_name}}', '{{sent_date}}', '{{topic_1}}', '{{topic_2}}', '{{founder_name}}'],
+    previewSnippet: 'Simple deck follow-up that offers help and a short call.',
+    tags: ['Follow-up', 'Deck', 'VC'],
+    popularity: 84
+  },
+  {
+    id: 'follow-up-long-silence',
+    title: 'Follow-up After Long Silence',
+    category: 'follow-up',
+    subject: 'Still worth a quick chat?',
+    body: `Hi {{vc_name}},
+
+I know it has been a while since my last note about {{company_name}}.
+
+We have made solid progress:
+- {{update_1}}
+- {{update_2}}
+
+If this is still relevant for {{firm_name}}, I would love to reconnect. If not, no worries at all.
+
+Thanks,
+{{founder_name}}`,
+    useCase: 'Use after 3-5 weeks of no response. Keep it polite and low pressure.',
+    variables: ['{{vc_name}}', '{{company_name}}', '{{update_1}}', '{{update_2}}', '{{firm_name}}', '{{founder_name}}'],
+    previewSnippet: 'Re-open the conversation without pressure after a long silence.',
+    tags: ['Follow-up', 'Re-engagement', 'VC'],
+    popularity: 73
+  },
+  {
+    id: 'follow-up-partner-meeting',
+    title: 'Follow-up After Partner Meeting',
+    category: 'follow-up',
+    subject: 'Great speaking with the team - {{company_name}}',
+    body: `Hi {{vc_name}},
+
+Thanks for organizing the partner meeting. It was great to speak with {{partner_names}} about {{company_name}}.
+
+Key takeaways we heard:
+- {{takeaway_1}}
+- {{takeaway_2}}
+
+We will follow up on:
+- {{next_step_1}}
+- {{next_step_2}}
+
+Let me know if there is anything else the team needs.
+
+Best,
+{{founder_name}}`,
+    useCase: 'Use within 24 hours after a partner meeting to show alignment and momentum.',
+    variables: ['{{vc_name}}', '{{partner_names}}', '{{company_name}}', '{{takeaway_1}}', '{{takeaway_2}}', '{{next_step_1}}', '{{next_step_2}}', '{{founder_name}}'],
+    previewSnippet: 'Clear recap after partner meetings with next steps.',
+    tags: ['Follow-up', 'Partner Meeting', 'VC'],
+    popularity: 86
+  },
 
   // THANK YOU TEMPLATES
   {
@@ -281,6 +503,29 @@ Thanks again!
     previewSnippet: 'Show gratitude to connectors who introduce you to investors.',
     tags: ['Thank You', 'Network', 'Gratitude'],
     popularity: 83
+  },
+  {
+    id: 'thank-you-meeting',
+    title: 'Thank You After Meeting',
+    category: 'thank-you',
+    subject: 'Thanks for the time today',
+    body: `Hi {{vc_name}},
+
+Thank you for the time today to discuss {{company_name}}. I appreciated your feedback on {{specific_topic}}.
+
+We will follow up with:
+- {{follow_up_item_1}}
+- {{follow_up_item_2}}
+
+If anything else would be useful, just let me know.
+
+Best,
+{{founder_name}}`,
+    useCase: 'Send within 24 hours of a meeting to show professionalism and reinforce next steps.',
+    variables: ['{{vc_name}}', '{{company_name}}', '{{specific_topic}}', '{{follow_up_item_1}}', '{{follow_up_item_2}}', '{{founder_name}}'],
+    previewSnippet: 'Short thank you that confirms next steps.',
+    tags: ['Thank You', 'Meeting', 'VC'],
+    popularity: 85
   },
 
   // UPDATE TEMPLATES
@@ -386,6 +631,36 @@ Best,
     previewSnippet: 'Create urgency by updating interested VCs on fundraising progress.',
     tags: ['Update', 'Fundraising', 'FOMO'],
     popularity: 77
+  },
+  {
+    id: 'update-product-launch',
+    title: 'Product Launch Update',
+    category: 'update',
+    subject: '{{company_name}} product launch update',
+    body: `Hi {{vc_name}},
+
+Quick update: {{company_name}} just launched {{product_name}}.
+
+Launch highlights:
+- {{launch_highlight_1}}
+- {{launch_highlight_2}}
+- {{launch_highlight_3}}
+
+Early signal:
+- {{metric_1}}: {{value_1}}
+- {{metric_2}}: {{value_2}}
+
+Next milestone: {{next_milestone}}
+
+If helpful, I can share the full launch memo and metrics dashboard.
+
+Best,
+{{founder_name}}`,
+    useCase: 'Use after a product launch to keep investors engaged with momentum.',
+    variables: ['{{vc_name}}', '{{company_name}}', '{{product_name}}', '{{launch_highlight_1}}', '{{launch_highlight_2}}', '{{launch_highlight_3}}', '{{metric_1}}', '{{value_1}}', '{{metric_2}}', '{{value_2}}', '{{next_milestone}}', '{{founder_name}}'],
+    previewSnippet: 'Announce a launch with early signals and the next milestone.',
+    tags: ['Update', 'Launch', 'Traction'],
+    popularity: 84
   }
 ];
 
