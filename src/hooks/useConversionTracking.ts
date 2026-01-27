@@ -36,9 +36,11 @@ export const useConversionTracking = () => {
   const pageLoadTime = useRef(Date.now());
   const triggerTimes = useRef<Map<string, number>>(new Map());
   const funnelStage = useRef<number>(0);
+  const trackingEnabled = import.meta.env.VITE_ENABLE_CONVERSION_TRACKING === 'true';
 
   // Track conversion event
   const trackEvent = useCallback(async (event: ConversionEvent) => {
+    if (!trackingEnabled) return;
     try {
       const now = Date.now();
       const timeToTrigger = event.timeToTrigger ?? 
@@ -69,7 +71,7 @@ export const useConversionTracking = () => {
       console.error('Conversion tracking error:', error);
       // Fail silently - don't block user experience
     }
-  }, [user]);
+  }, [user, trackingEnabled]);
 
   // Track trigger view (stage 1)
   const trackTriggerView = useCallback(async (
@@ -78,6 +80,7 @@ export const useConversionTracking = () => {
     abTestVariant?: string,
     abTestName?: string
   ) => {
+    if (!trackingEnabled) return;
     const now = Date.now();
     triggerTimes.current.set(triggerType, now);
     funnelStage.current = 1;
@@ -104,13 +107,14 @@ export const useConversionTracking = () => {
     } catch (error) {
       console.error('Funnel tracking error:', error);
     }
-  }, [trackEvent, user]);
+  }, [trackEvent, user, trackingEnabled]);
 
   // Track user engagement (stage 2)
   const trackEngagement = useCallback(async (
     triggerType: string,
     engagementScore?: number
   ) => {
+    if (!trackingEnabled) return;
     funnelStage.current = 2;
     const triggerTime = triggerTimes.current.get(triggerType);
     const timeToAction = triggerTime 
@@ -133,10 +137,11 @@ export const useConversionTracking = () => {
     } catch (error) {
       console.error('Funnel tracking error:', error);
     }
-  }, [trackEvent]);
+  }, [trackEvent, trackingEnabled]);
 
   // Track sign-up started (stage 3)
   const trackSignupStarted = useCallback(async (triggerType: string) => {
+    if (!trackingEnabled) return;
     funnelStage.current = 3;
     await trackEvent({
       triggerType,
@@ -152,10 +157,11 @@ export const useConversionTracking = () => {
     } catch (error) {
       console.error('Funnel tracking error:', error);
     }
-  }, [trackEvent]);
+  }, [trackEvent, trackingEnabled]);
 
   // Track sign-up completed (stage 4)
   const trackSignupCompleted = useCallback(async (triggerType: string) => {
+    if (!trackingEnabled) return;
     funnelStage.current = 4;
     const triggerTime = triggerTimes.current.get(triggerType);
     const timeToAction = triggerTime 
@@ -182,10 +188,11 @@ export const useConversionTracking = () => {
     } catch (error) {
       console.error('Funnel tracking error:', error);
     }
-  }, [trackEvent]);
+  }, [trackEvent, trackingEnabled]);
 
   // Track dismissal
   const trackDismissal = useCallback(async (triggerType: string) => {
+    if (!trackingEnabled) return;
     await trackEvent({
       triggerType,
       eventType: 'dismissed',
@@ -201,10 +208,11 @@ export const useConversionTracking = () => {
     } catch (error) {
       console.error('Funnel tracking error:', error);
     }
-  }, [trackEvent]);
+  }, [trackEvent, trackingEnabled]);
 
   // Track abandonment
   const trackAbandonment = useCallback(async (triggerType: string, reason?: string) => {
+    if (!trackingEnabled) return;
     await trackEvent({
       triggerType,
       eventType: 'abandoned',
@@ -220,7 +228,7 @@ export const useConversionTracking = () => {
     } catch (error) {
       console.error('Funnel tracking error:', error);
     }
-  }, [trackEvent]);
+  }, [trackEvent, trackingEnabled]);
 
   return {
     trackTriggerView,

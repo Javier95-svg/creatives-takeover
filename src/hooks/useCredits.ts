@@ -139,6 +139,7 @@ export function useCredits() {
 
   useEffect(() => {
     if (!user?.id) return;
+    if (import.meta.env.VITE_ENABLE_MONTHLY_CREDITS_GRANT !== 'true') return;
     if (grantedMonthlyCredits.has(user.id)) return;
 
     grantedMonthlyCredits.add(user.id);

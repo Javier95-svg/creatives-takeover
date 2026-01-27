@@ -60,15 +60,22 @@ const Hero = () => {
 
   // Preload critical hero images (top row - positions 1 and 2) for faster loading
   useEffect(() => {
-    const topRowImages = heroImages.filter(img => img.position <= 2 && img.image_url);
-    const bottomRowImages = heroImages.filter(img => img.position > 2 && img.image_url);
+    const isValidImageHref = (href?: string) => {
+      if (!href) return false;
+      const trimmed = href.trim();
+      if (!trimmed) return false;
+      if (trimmed === 'undefined' || trimmed === 'null') return false;
+      return true;
+    };
+
+    const topRowImages = heroImages.filter(img => img.position <= 2 && isValidImageHref(img.image_url));
 
     if (topRowImages.length === 0) return;
 
     // Extract storage domain from first image URL for preconnect
     try {
       const firstImageUrl = topRowImages[0]?.image_url;
-      if (firstImageUrl) {
+      if (isValidImageHref(firstImageUrl)) {
         const imageUrl = new URL(firstImageUrl);
         const storageDomain = imageUrl.origin;
 
@@ -100,7 +107,12 @@ const Hero = () => {
         document.head.appendChild(preloadLink);
       }
       
-      preloadLink.setAttribute('href', image.image_url);
+      if (isValidImageHref(image.image_url)) {
+        preloadLink.setAttribute('href', image.image_url);
+      } else {
+        preloadLink.remove();
+        return;
+      }
       // Add fetchpriority for critical images
       if (image.position <= 2) {
         preloadLink.setAttribute('fetchpriority', 'high');
