@@ -16,6 +16,7 @@ interface EmailTemplateModalProps {
 
 const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalProps) => {
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [subjectDraft, setSubjectDraft] = useState("");
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
@@ -25,6 +26,7 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
       initialValues[variable] = "";
     });
     setVariableValues(initialValues);
+    setSubjectDraft(template.subject);
   }, [template?.id]);
 
   if (!template) return null;
@@ -37,7 +39,7 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
   };
 
   const handleCopyFull = () => {
-    const subject = applyReplacements(template.subject);
+    const subject = applyReplacements(subjectDraft || template.subject);
     const body = applyReplacements(template.body);
     const textToCopy = `Subject: ${subject}\n\n${body}`;
     navigator.clipboard.writeText(textToCopy).then(
@@ -47,7 +49,7 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
   };
 
   const handleCopySubject = () => {
-    const subject = applyReplacements(template.subject);
+    const subject = applyReplacements(subjectDraft || template.subject);
     navigator.clipboard.writeText(subject).then(
       () => toast.success("Subject copied to clipboard!"),
       () => toast.error("Failed to copy to clipboard")
@@ -128,7 +130,15 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
               </Button>
             </div>
             <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-mono">{renderEditableVariables(template.subject)}</p>
+              <p className="text-sm font-mono">{renderEditableVariables(subjectDraft || template.subject)}</p>
+            </div>
+            <div className="mt-3">
+              <Label className="text-xs text-muted-foreground">Edit subject</Label>
+              <Input
+                value={subjectDraft}
+                onChange={(event) => setSubjectDraft(event.target.value)}
+                className="mt-1 text-sm"
+              />
             </div>
           </div>
 
