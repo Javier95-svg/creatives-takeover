@@ -29,7 +29,6 @@ const Signup = () => {
     email: "",
     password: ""
   });
-  const [currentStep, setCurrentStep] = useState(1); // 1 = signup, 2 = onboarding (future)
 
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -301,17 +300,6 @@ const Signup = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} autoComplete="on" className="space-y-5">
-              {/* Progress Indicator */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                  <span>Step 1 of 2</span>
-                  <span>Quick sign-up</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-1.5">
-                  <div className="bg-primary h-1.5 rounded-full" style={{ width: '50%' }}></div>
-                </div>
-              </div>
-
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
