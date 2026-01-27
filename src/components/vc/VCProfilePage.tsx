@@ -283,285 +283,334 @@ const VCProfilePage = () => {
           </div>
         </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Investment Activity Stats */}
-        {(vc.total_portfolio_count > 0 || vc.recent_investments_count > 0 || vc.last_investment_date) && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {vc.total_portfolio_count > 0 && (
-              <div className="p-4 rounded-lg bg-muted/50 border text-center">
-                <Briefcase className="h-5 w-5 mx-auto mb-2 text-primary" />
-                <p className="text-2xl font-bold">{vc.total_portfolio_count}</p>
-                <p className="text-xs text-muted-foreground">Portfolio Companies</p>
-              </div>
-            )}
-            {vc.recent_investments_count > 0 && (
-              <div className="p-4 rounded-lg bg-muted/50 border text-center">
-                <TrendingUp className="h-5 w-5 mx-auto mb-2 text-green-500" />
-                <p className="text-2xl font-bold">{vc.recent_investments_count}</p>
-                <p className="text-xs text-muted-foreground">Recent Investments</p>
-              </div>
-            )}
-            {vc.last_investment_date && (
-              <div className="p-4 rounded-lg bg-muted/50 border text-center">
-                <CalendarDays className="h-5 w-5 mx-auto mb-2 text-blue-500" />
-                <p className="text-2xl font-bold">{new Date(vc.last_investment_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
-                <p className="text-xs text-muted-foreground">Last Investment</p>
-              </div>
-            )}
-          </div>
-        )}
+      <CardContent className="space-y-8">
 
-        {/* Investment Thesis */}
+        {/* ── At a Glance: key numbers ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-4 rounded-lg bg-muted/50 border text-center">
+            <DollarSign className="h-5 w-5 mx-auto mb-1.5 text-primary" />
+            <p className="text-lg font-bold leading-tight">{formatCheckSize()}</p>
+            <p className="text-xs text-muted-foreground mt-1">Check Size</p>
+          </div>
+
+          <div className="p-4 rounded-lg bg-muted/50 border text-center">
+            <Briefcase className="h-5 w-5 mx-auto mb-1.5 text-primary" />
+            <p className="text-lg font-bold leading-tight">{vc.total_portfolio_count || '—'}</p>
+            <p className="text-xs text-muted-foreground mt-1">Portfolio Companies</p>
+          </div>
+
+          {vc.recent_investments_count > 0 ? (
+            <div className="p-4 rounded-lg bg-muted/50 border text-center">
+              <TrendingUp className="h-5 w-5 mx-auto mb-1.5 text-green-500" />
+              <p className="text-lg font-bold leading-tight">{vc.recent_investments_count}</p>
+              <p className="text-xs text-muted-foreground mt-1">Recent Deals</p>
+            </div>
+          ) : (
+            <div className="p-4 rounded-lg bg-muted/50 border text-center">
+              <MapPin className="h-5 w-5 mx-auto mb-1.5 text-primary" />
+              <p className="text-lg font-bold leading-tight">{vc.geographic_focus[0] || '—'}</p>
+              <p className="text-xs text-muted-foreground mt-1">Primary Market</p>
+            </div>
+          )}
+
+          <div className="p-4 rounded-lg bg-muted/50 border text-center">
+            <CalendarDays className="h-5 w-5 mx-auto mb-1.5 text-blue-500" />
+            <p className="text-lg font-bold leading-tight">
+              {vc.last_investment_date
+                ? new Date(vc.last_investment_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                : '—'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Last Investment</p>
+          </div>
+        </div>
+
+        {/* ── Investment Thesis (highlighted) ── */}
         {vc.investment_thesis && (
-          <div>
-            <h3 className="font-semibold mb-2">Investment Thesis</h3>
-            <p className="text-muted-foreground">{vc.investment_thesis}</p>
+          <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-5">
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-primary" />
+              Investment Thesis
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">{vc.investment_thesis}</p>
           </div>
         )}
 
-        {/* Key Details Grid */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Investment Stages</h4>
-            <div className="flex flex-wrap gap-1">
-              {vc.investment_stages.map((stage, idx) => (
-                <Badge key={idx} variant="outline" className="capitalize">
-                  {stage}
-                </Badge>
-              ))}
-            </div>
-          </div>
+        {/* ── What They Invest In ── */}
+        <div className="border-t pt-6">
+          <h3 className="font-semibold text-lg mb-4">What They Invest In</h3>
 
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Check Size</h4>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span>{formatCheckSize()}</span>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Industries</h4>
-            <div className="flex flex-wrap gap-1">
-              {vc.industries.map((industry, idx) => (
-                <Badge key={idx} variant="secondary">
-                  {industry}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-sm mb-2">Geographic Focus</h4>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{vc.geographic_focus.join(', ')}</span>
-            </div>
-          </div>
-
-          {vc.locations && vc.locations.length > 0 && (
+          <div className="space-y-5">
+            {/* Stages */}
             <div>
-              <h4 className="font-semibold text-sm mb-2">Office Locations</h4>
+              <p className="text-sm font-medium text-muted-foreground mb-2">Funding Stages</p>
               <div className="flex flex-wrap gap-2">
-                {vc.locations.map((location, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Globe className="h-3.5 w-3.5" />
-                    <span>{location}</span>
-                  </div>
+                {vc.investment_stages.map((stage, idx) => (
+                  <Badge key={idx} variant="outline" className="capitalize px-3 py-1 text-sm">
+                    {stage}
+                  </Badge>
                 ))}
               </div>
             </div>
-          )}
+
+            {/* Industries */}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-2">Industries & Sectors</p>
+              <div className="flex flex-wrap gap-2">
+                {vc.industries.map((industry, idx) => (
+                  <Badge key={idx} variant="secondary" className="px-3 py-1 text-sm">
+                    {industry}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Geography */}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-2">Geographic Focus</p>
+              <div className="flex flex-wrap gap-3">
+                {vc.geographic_focus.map((geo, idx) => (
+                  <span key={idx} className="flex items-center gap-1.5 text-sm">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    {geo}
+                  </span>
+                ))}
+              </div>
+              {vc.locations && vc.locations.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Offices:</span>
+                  {vc.locations.map((loc, idx) => (
+                    <span key={idx} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Globe className="h-3 w-3" />
+                      {loc}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Portfolio Companies */}
+        {/* ── Portfolio Companies (expanded) ── */}
         {vc.portfolio_companies && vc.portfolio_companies.length > 0 && (
-          <div>
-            <h3 className="font-semibold mb-3">Portfolio Companies</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {vc.portfolio_companies.slice(0, 6).map((company, idx) => (
-                <div key={idx} className="p-3 border rounded-lg">
-                  <p className="font-medium text-sm">{company.name}</p>
-                  {company.industry && (
-                    <p className="text-xs text-muted-foreground">{company.industry}</p>
-                  )}
+          <div className="border-t pt-6">
+            <h3 className="font-semibold text-lg mb-1">Portfolio</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {vc.total_portfolio_count > 0
+                ? `${vc.total_portfolio_count} companies in their portfolio${vc.portfolio_companies.length < vc.total_portfolio_count ? `, ${vc.portfolio_companies.length} shown below` : ''}.`
+                : `${vc.portfolio_companies.length} known portfolio companies.`}
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              {vc.portfolio_companies.map((company, idx) => (
+                <div key={idx} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors group">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{company.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        {company.industry && (
+                          <Badge variant="secondary" className="text-xs">{company.industry}</Badge>
+                        )}
+                        {company.stage && (
+                          <Badge variant="outline" className="text-xs capitalize">{company.stage}</Badge>
+                        )}
+                      </div>
+                      {company.description && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{company.description}</p>
+                      )}
+                    </div>
+                    {company.website && (
+                      <a
+                        href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
-            {vc.portfolio_companies.length > 6 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                +{vc.portfolio_companies.length - 6} more companies
-              </p>
-            )}
           </div>
         )}
 
-        {/* Contact Process */}
-        {(vc.contact_preference || vc.requires_warm_intro || vc.application_url || vc.response_rate_percentage || vc.typical_timeline_days || vc.email) && (
-          <div className="border-t pt-6">
-            <h3 className="font-semibold mb-4">Contact Process</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {vc.contact_preference && (
-                <div className="flex items-start gap-3">
-                  <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Preferred Contact</p>
-                    <p className="text-sm text-muted-foreground capitalize">{vc.contact_preference.replace('-', ' ')}</p>
-                  </div>
-                </div>
-              )}
+        {/* ── How to Get Funded (actionable contact guide) ── */}
+        <div className="border-t pt-6">
+          <h3 className="font-semibold text-lg mb-1">How to Get Funded</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            What you need to know before reaching out to {vc.firm_name}.
+          </p>
 
-              <div className="flex items-start gap-3">
-                {vc.requires_warm_intro ? (
-                  <AlertCircle className="h-4 w-4 mt-0.5 text-amber-500" />
-                ) : (
-                  <CheckCircle className="h-4 w-4 mt-0.5 text-green-500" />
-                )}
+          <div className="space-y-4">
+            {/* Warm intro requirement — always shown */}
+            <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+              {vc.requires_warm_intro ? (
+                <AlertCircle className="h-5 w-5 mt-0.5 text-amber-500 shrink-0" />
+              ) : (
+                <CheckCircle className="h-5 w-5 mt-0.5 text-green-500 shrink-0" />
+              )}
+              <div>
+                <p className="text-sm font-semibold">
+                  {vc.requires_warm_intro ? 'Warm introduction required' : 'Cold outreach welcome'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {vc.requires_warm_intro
+                    ? `${vc.firm_name} typically requires an introduction from a mutual connection. Check LinkedIn for shared contacts or ask portfolio founders for a referral.`
+                    : `${vc.firm_name} accepts cold outreach. You can reach them directly without a warm introduction.`}
+                </p>
+              </div>
+            </div>
+
+            {/* Contact preference */}
+            {vc.contact_preference && (
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                <Mail className="h-5 w-5 mt-0.5 text-primary shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">Warm Intro</p>
-                  <p className="text-sm text-muted-foreground">
-                    {vc.requires_warm_intro ? 'Required' : 'Not required — cold outreach welcome'}
+                  <p className="text-sm font-semibold">
+                    Preferred contact: <span className="capitalize">{vc.contact_preference.replace(/-/g, ' ')}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {vc.contact_preference === 'email' && 'They prefer to receive pitches and introductions via email.'}
+                    {vc.contact_preference === 'linkedin' && 'Reach out through LinkedIn for the best chance of getting noticed.'}
+                    {vc.contact_preference === 'application' && 'Submit your pitch through their formal application process.'}
+                    {vc.contact_preference === 'warm-intro-only' && 'They exclusively accept introductions through their network.'}
                   </p>
                 </div>
               </div>
+            )}
 
-              {vc.response_rate_percentage != null && (
-                <div className="flex items-start gap-3">
-                  <TrendingUp className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Response Rate</p>
-                    <p className="text-sm text-muted-foreground">{vc.response_rate_percentage}%</p>
+            {/* Response stats row */}
+            {(vc.response_rate_percentage != null || vc.typical_timeline_days != null) && (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {vc.response_rate_percentage != null && (
+                  <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                    <TrendingUp className="h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">{vc.response_rate_percentage}% response rate</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {vc.response_rate_percentage >= 50
+                          ? 'Above average — they review most inbound pitches.'
+                          : vc.response_rate_percentage >= 20
+                            ? 'Moderate — make sure your pitch is tightly aligned with their thesis.'
+                            : 'Selective — your pitch needs to be highly targeted to their focus areas.'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {vc.typical_timeline_days != null && (
-                <div className="flex items-start gap-3">
-                  <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Typical Response Time</p>
-                    <p className="text-sm text-muted-foreground">
-                      {vc.typical_timeline_days < 7
-                        ? `${vc.typical_timeline_days} days`
-                        : `${Math.round(vc.typical_timeline_days / 7)} weeks`}
-                    </p>
+                )}
+                {vc.typical_timeline_days != null && (
+                  <div className="flex items-start gap-3 p-4 rounded-lg border bg-muted/30">
+                    <Clock className="h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {vc.typical_timeline_days < 7
+                          ? `${vc.typical_timeline_days}-day response time`
+                          : `${Math.round(vc.typical_timeline_days / 7)}-week response time`}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Typical time from first contact to initial response.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
+            {/* Direct contact actions */}
+            <div className="flex flex-wrap gap-3 pt-2">
+              {vc.application_url && (
+                <Button asChild>
+                  <a href={vc.application_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Apply Directly
+                  </a>
+                </Button>
+              )}
               {vc.email && (
-                <div className="flex items-start gap-3">
-                  <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Email</p>
-                    <a href={`mailto:${vc.email}`} className="text-sm text-primary hover:underline">
-                      {vc.email}
-                    </a>
-                  </div>
-                </div>
+                <Button variant="outline" asChild>
+                  <a href={`mailto:${vc.email}`}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    {vc.email}
+                  </a>
+                </Button>
               )}
             </div>
-
-            {vc.application_url && (
-              <Button asChild className="mt-4 w-full sm:w-auto">
-                <a href={vc.application_url} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Apply Directly
-                </a>
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Contact & Social Media */}
-        <div className="border-t pt-6">
-          <h3 className="font-semibold mb-4">Links & Social Media</h3>
-          <div className="grid md:grid-cols-2 gap-3">
-            {vc.firm_website && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.firm_website} target="_blank" rel="noopener noreferrer">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Firm Website
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.linkedin_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.linkedin_url} target="_blank" rel="noopener noreferrer">
-                  <Linkedin className="h-4 w-4 mr-2" />
-                  LinkedIn
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.crunchbase_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Crunchbase
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.twitter_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.twitter_url} target="_blank" rel="noopener noreferrer">
-                  <Twitter className="h-4 w-4 mr-2" />
-                  Twitter / X
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.facebook_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.facebook_url} target="_blank" rel="noopener noreferrer">
-                  <Facebook className="h-4 w-4 mr-2" />
-                  Facebook
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.youtube_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.youtube_url} target="_blank" rel="noopener noreferrer">
-                  <Youtube className="h-4 w-4 mr-2" />
-                  YouTube
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.instagram_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.instagram_url} target="_blank" rel="noopener noreferrer">
-                  <Instagram className="h-4 w-4 mr-2" />
-                  Instagram
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.medium_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.medium_url} target="_blank" rel="noopener noreferrer">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Medium
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
-            {vc.angellist_url && (
-              <Button variant="outline" asChild className="justify-start">
-                <a href={vc.angellist_url} target="_blank" rel="noopener noreferrer">
-                  <Users className="h-4 w-4 mr-2" />
-                  AngelList
-                  <ExternalLink className="h-3 w-3 ml-auto" />
-                </a>
-              </Button>
-            )}
           </div>
         </div>
 
-        {/* Generate Outreach CTA */}
+        {/* ── Links & Social ── */}
+        {(vc.firm_website || vc.linkedin_url || vc.crunchbase_url || vc.twitter_url || vc.facebook_url || vc.youtube_url || vc.instagram_url || vc.medium_url || vc.angellist_url) && (
+          <div className="border-t pt-6">
+            <h3 className="font-semibold mb-3">Links</h3>
+            <div className="flex flex-wrap gap-2">
+              {vc.firm_website && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.firm_website} target="_blank" rel="noopener noreferrer">
+                    <Building2 className="h-3.5 w-3.5 mr-1.5" />Website
+                  </a>
+                </Button>
+              )}
+              {vc.linkedin_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.linkedin_url} target="_blank" rel="noopener noreferrer">
+                    <Linkedin className="h-3.5 w-3.5 mr-1.5" />LinkedIn
+                  </a>
+                </Button>
+              )}
+              {vc.crunchbase_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.crunchbase_url} target="_blank" rel="noopener noreferrer">
+                    <Building2 className="h-3.5 w-3.5 mr-1.5" />Crunchbase
+                  </a>
+                </Button>
+              )}
+              {vc.twitter_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.twitter_url} target="_blank" rel="noopener noreferrer">
+                    <Twitter className="h-3.5 w-3.5 mr-1.5" />X
+                  </a>
+                </Button>
+              )}
+              {vc.facebook_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.facebook_url} target="_blank" rel="noopener noreferrer">
+                    <Facebook className="h-3.5 w-3.5 mr-1.5" />Facebook
+                  </a>
+                </Button>
+              )}
+              {vc.youtube_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.youtube_url} target="_blank" rel="noopener noreferrer">
+                    <Youtube className="h-3.5 w-3.5 mr-1.5" />YouTube
+                  </a>
+                </Button>
+              )}
+              {vc.instagram_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.instagram_url} target="_blank" rel="noopener noreferrer">
+                    <Instagram className="h-3.5 w-3.5 mr-1.5" />Instagram
+                  </a>
+                </Button>
+              )}
+              {vc.medium_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.medium_url} target="_blank" rel="noopener noreferrer">
+                    <BookOpen className="h-3.5 w-3.5 mr-1.5" />Medium
+                  </a>
+                </Button>
+              )}
+              {vc.angellist_url && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={vc.angellist_url} target="_blank" rel="noopener noreferrer">
+                    <Users className="h-3.5 w-3.5 mr-1.5" />AngelList
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Generate Outreach CTA ── */}
         <div className="border-t pt-6">
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="pt-6">
