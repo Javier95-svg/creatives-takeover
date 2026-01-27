@@ -18,8 +18,6 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  if (!template) return null;
-
   useEffect(() => {
     if (!template) return;
     const initialValues: Record<string, string> = {};
@@ -28,6 +26,8 @@ const EmailTemplateModal = ({ template, isOpen, onClose }: EmailTemplateModalPro
     });
     setVariableValues(initialValues);
   }, [template?.id]);
+
+  if (!template) return null;
 
   const applyReplacements = (text: string) => {
     return text.replace(/{{[^}]+}}/g, (match) => {
