@@ -24,9 +24,6 @@ import {
   UserPlus,
   Star,
   Twitter,
-  Facebook,
-  Youtube,
-  Instagram,
   BookOpen,
   Mail,
   Clock,
@@ -35,7 +32,6 @@ import {
   Wifi,
   Briefcase,
   CalendarDays,
-  Users,
   CheckCircle,
   AlertCircle
 } from "lucide-react";
@@ -538,8 +534,8 @@ const VCProfilePage = () => {
           </div>
         </div>
 
-        {/* ── Links & Social ── */}
-        {(vc.firm_website || vc.linkedin_url || vc.crunchbase_url || vc.twitter_url || vc.facebook_url || vc.youtube_url || vc.instagram_url || vc.medium_url || vc.angellist_url) && (
+        {/* ── Links ── */}
+        {(vc.firm_website || vc.linkedin_url || vc.crunchbase_url || vc.twitter_url) && (
           <div className="border-t pt-6">
             <h3 className="font-semibold mb-3">Links</h3>
             <div className="flex flex-wrap gap-2">
@@ -568,41 +564,6 @@ const VCProfilePage = () => {
                 <Button variant="outline" size="sm" asChild>
                   <a href={vc.twitter_url} target="_blank" rel="noopener noreferrer">
                     <Twitter className="h-3.5 w-3.5 mr-1.5" />X
-                  </a>
-                </Button>
-              )}
-              {vc.facebook_url && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={vc.facebook_url} target="_blank" rel="noopener noreferrer">
-                    <Facebook className="h-3.5 w-3.5 mr-1.5" />Facebook
-                  </a>
-                </Button>
-              )}
-              {vc.youtube_url && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={vc.youtube_url} target="_blank" rel="noopener noreferrer">
-                    <Youtube className="h-3.5 w-3.5 mr-1.5" />YouTube
-                  </a>
-                </Button>
-              )}
-              {vc.instagram_url && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={vc.instagram_url} target="_blank" rel="noopener noreferrer">
-                    <Instagram className="h-3.5 w-3.5 mr-1.5" />Instagram
-                  </a>
-                </Button>
-              )}
-              {vc.medium_url && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={vc.medium_url} target="_blank" rel="noopener noreferrer">
-                    <BookOpen className="h-3.5 w-3.5 mr-1.5" />Medium
-                  </a>
-                </Button>
-              )}
-              {vc.angellist_url && (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={vc.angellist_url} target="_blank" rel="noopener noreferrer">
-                    <Users className="h-3.5 w-3.5 mr-1.5" />AngelList
                   </a>
                 </Button>
               )}
