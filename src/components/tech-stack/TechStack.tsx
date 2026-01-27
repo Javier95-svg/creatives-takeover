@@ -60,7 +60,6 @@ const TechStack: React.FC = () => {
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
   const hasPaidAccess = user && ['creator', 'professional'].includes(currentTier);
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
-  const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
 
   const handleProductSelect = (categoryId: string, productId: string) => {
     setSelectedProducts(prev => {
