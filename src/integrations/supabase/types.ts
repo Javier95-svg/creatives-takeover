@@ -92,6 +92,30 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          properties: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          properties?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          properties?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_cache: {
         Row: {
           cache_key: string
@@ -2601,6 +2625,359 @@ export type Database = {
           },
         ]
       }
+      focus_funnel_ai_sessions: {
+        Row: {
+          context_id: string | null
+          context_type: string
+          created_at: string
+          decisions_made: Json
+          id: string
+          insights: Json
+          last_message_at: string | null
+          messages: Json
+          session_mode: string
+          session_title: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_id?: string | null
+          context_type?: string
+          created_at?: string
+          decisions_made?: Json
+          id?: string
+          insights?: Json
+          last_message_at?: string | null
+          messages?: Json
+          session_mode?: string
+          session_title?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_id?: string | null
+          context_type?: string
+          created_at?: string
+          decisions_made?: Json
+          id?: string
+          insights?: Json
+          last_message_at?: string | null
+          messages?: Json
+          session_mode?: string
+          session_title?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_funnel_goals: {
+        Row: {
+          ai_context: Json
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          goal_type: string | null
+          id: string
+          key_results: Json
+          last_ai_review: string | null
+          priority: number
+          progress_percentage: number
+          started_at: string | null
+          status: string
+          success_criteria: Json
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_context?: Json
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          goal_type?: string | null
+          id?: string
+          key_results?: Json
+          last_ai_review?: string | null
+          priority?: number
+          progress_percentage?: number
+          started_at?: string | null
+          status?: string
+          success_criteria?: Json
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_context?: Json
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          goal_type?: string | null
+          id?: string
+          key_results?: Json
+          last_ai_review?: string | null
+          priority?: number
+          progress_percentage?: number
+          started_at?: string | null
+          status?: string
+          success_criteria?: Json
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_funnel_momentum: {
+        Row: {
+          ai_recommendations: string[]
+          analysis_date: string
+          created_at: string
+          distraction_time_minutes: number
+          focus_time_minutes: number
+          id: string
+          momentum_score: number
+          patterns: Json
+          period_type: string
+          reviewed: boolean
+          reviewed_at: string | null
+          tasks_completed: number
+          tasks_deferred: number
+          tasks_overdue: number
+          tasks_planned: number
+          time_leaks: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_recommendations?: string[]
+          analysis_date: string
+          created_at?: string
+          distraction_time_minutes?: number
+          focus_time_minutes?: number
+          id?: string
+          momentum_score?: number
+          patterns?: Json
+          period_type?: string
+          reviewed?: boolean
+          reviewed_at?: string | null
+          tasks_completed?: number
+          tasks_deferred?: number
+          tasks_overdue?: number
+          tasks_planned?: number
+          time_leaks?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_recommendations?: string[]
+          analysis_date?: string
+          created_at?: string
+          distraction_time_minutes?: number
+          focus_time_minutes?: number
+          id?: string
+          momentum_score?: number
+          patterns?: Json
+          period_type?: string
+          reviewed?: boolean
+          reviewed_at?: string | null
+          tasks_completed?: number
+          tasks_deferred?: number
+          tasks_overdue?: number
+          tasks_planned?: number
+          time_leaks?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_funnel_projects: {
+        Row: {
+          actual_hours: number
+          ai_context: Json
+          blocked_at: string | null
+          blocked_reason: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          estimated_hours: number | null
+          goal_id: string | null
+          id: string
+          priority: number
+          progress_percentage: number
+          start_date: string | null
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_hours?: number
+          ai_context?: Json
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          estimated_hours?: number | null
+          goal_id?: string | null
+          id?: string
+          priority?: number
+          progress_percentage?: number
+          start_date?: string | null
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_hours?: number
+          ai_context?: Json
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          estimated_hours?: number | null
+          goal_id?: string | null
+          id?: string
+          priority?: number
+          progress_percentage?: number
+          start_date?: string | null
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_funnel_projects_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "focus_funnel_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      focus_funnel_tasks: {
+        Row: {
+          actual_minutes: number | null
+          ai_generated: boolean
+          ai_rationale: string | null
+          blocked_by_task_ids: string[]
+          blocks_task_ids: string[]
+          business_impact_score: number
+          completed_at: string | null
+          computed_priority_score: number
+          created_at: string
+          deadline: string | null
+          deferred_to: string | null
+          description: string | null
+          display_order: number
+          effort_score: number
+          estimated_minutes: number
+          goal_id: string | null
+          id: string
+          notes: string | null
+          priority: string
+          project_id: string | null
+          scheduled_date: string | null
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+          urgency_score: number
+          user_id: string
+        }
+        Insert: {
+          actual_minutes?: number | null
+          ai_generated?: boolean
+          ai_rationale?: string | null
+          blocked_by_task_ids?: string[]
+          blocks_task_ids?: string[]
+          business_impact_score?: number
+          completed_at?: string | null
+          computed_priority_score?: number
+          created_at?: string
+          deadline?: string | null
+          deferred_to?: string | null
+          description?: string | null
+          display_order?: number
+          effort_score?: number
+          estimated_minutes?: number
+          goal_id?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          project_id?: string | null
+          scheduled_date?: string | null
+          status?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          urgency_score?: number
+          user_id: string
+        }
+        Update: {
+          actual_minutes?: number | null
+          ai_generated?: boolean
+          ai_rationale?: string | null
+          blocked_by_task_ids?: string[]
+          blocks_task_ids?: string[]
+          business_impact_score?: number
+          completed_at?: string | null
+          computed_priority_score?: number
+          created_at?: string
+          deadline?: string | null
+          deferred_to?: string | null
+          description?: string | null
+          display_order?: number
+          effort_score?: number
+          estimated_minutes?: number
+          goal_id?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          project_id?: string | null
+          scheduled_date?: string | null
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          urgency_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_funnel_tasks_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "focus_funnel_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "focus_funnel_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "focus_funnel_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       founder_analytics: {
         Row: {
           cohort_participation_rate: number | null
@@ -4075,6 +4452,84 @@ export type Database = {
         }
         Relationships: []
       }
+      pitch_deck_analyses: {
+        Row: {
+          analysis_version: string | null
+          business_model_score: number | null
+          created_at: string | null
+          feedback_submitted_at: string | null
+          file_name: string
+          file_size: number | null
+          fundraising_readiness_score: number | null
+          id: string
+          key_insights: Json | null
+          market_opportunity_score: number | null
+          overall_score: number | null
+          recommendations: string[] | null
+          storage_path: string | null
+          story_clarity_score: number | null
+          strengths: string[] | null
+          team_credibility_score: number | null
+          traction_proof_score: number | null
+          updated_at: string | null
+          user_feedback: string | null
+          user_id: string
+          user_rating: number | null
+          verdict: string | null
+          weaknesses: string[] | null
+        }
+        Insert: {
+          analysis_version?: string | null
+          business_model_score?: number | null
+          created_at?: string | null
+          feedback_submitted_at?: string | null
+          file_name: string
+          file_size?: number | null
+          fundraising_readiness_score?: number | null
+          id?: string
+          key_insights?: Json | null
+          market_opportunity_score?: number | null
+          overall_score?: number | null
+          recommendations?: string[] | null
+          storage_path?: string | null
+          story_clarity_score?: number | null
+          strengths?: string[] | null
+          team_credibility_score?: number | null
+          traction_proof_score?: number | null
+          updated_at?: string | null
+          user_feedback?: string | null
+          user_id: string
+          user_rating?: number | null
+          verdict?: string | null
+          weaknesses?: string[] | null
+        }
+        Update: {
+          analysis_version?: string | null
+          business_model_score?: number | null
+          created_at?: string | null
+          feedback_submitted_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          fundraising_readiness_score?: number | null
+          id?: string
+          key_insights?: Json | null
+          market_opportunity_score?: number | null
+          overall_score?: number | null
+          recommendations?: string[] | null
+          storage_path?: string | null
+          story_clarity_score?: number | null
+          strengths?: string[] | null
+          team_credibility_score?: number | null
+          traction_proof_score?: number | null
+          updated_at?: string | null
+          user_feedback?: string | null
+          user_id?: string
+          user_rating?: number | null
+          verdict?: string | null
+          weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
       poll_votes: {
         Row: {
           comment: string | null
@@ -5232,6 +5687,57 @@ export type Database = {
         }
         Relationships: []
       }
+      tech_stack_reports: {
+        Row: {
+          budget_breakdown: Json
+          budget_total: number
+          created_at: string
+          has_variable: boolean
+          id: string
+          name: string | null
+          selected_products: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_breakdown?: Json
+          budget_total?: number
+          created_at?: string
+          has_variable?: boolean
+          id?: string
+          name?: string | null
+          selected_products: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_breakdown?: Json
+          budget_total?: number
+          created_at?: string
+          has_variable?: boolean
+          id?: string
+          name?: string | null
+          selected_products?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_stack_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "active_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tech_stack_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trends: {
         Row: {
           action_steps: string[] | null
@@ -6061,6 +6567,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      value_proposition_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          position: number
+          updated_at: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          position: number
+          updated_at?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          position?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       vc_views: {
         Row: {
