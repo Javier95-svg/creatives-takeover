@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, Users, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -341,6 +341,9 @@ const Profile = () => {
                         <h1 className="text-2xl font-bold mb-1">
                           {profile.full_name || 'Anonymous User'}
                         </h1>
+                        <p className="text-sm text-muted-foreground">
+                          @{profile.username || username}
+                        </p>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           {profile.role && (
                             <Badge variant="default" className="capitalize">
@@ -463,20 +466,16 @@ const Profile = () => {
                     {/* Stats */}
                     <div className="flex gap-6">
                       <div className="text-center">
+                        <div className="text-2xl font-bold">{stats.totalPosts}</div>
+                        <div className="text-xs text-muted-foreground">Posts</div>
+                      </div>
+                      <div className="text-center">
                         <div className="text-2xl font-bold">{profile.followers_count}</div>
                         <div className="text-xs text-muted-foreground">Followers</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold">{profile.following_count}</div>
                         <div className="text-xs text-muted-foreground">Following</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{profile.friends_count}</div>
-                        <div className="text-xs text-muted-foreground">Friends</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{posts.length}</div>
-                        <div className="text-xs text-muted-foreground">Posts</div>
                       </div>
                     </div>
                   </div>

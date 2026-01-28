@@ -50,7 +50,6 @@ const Account = () => {
   // Social counts state
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-  const [friendsCount, setFriendsCount] = useState(0);
   const [postsCount, setPostsCount] = useState(0);
   
   // Social links state
@@ -149,7 +148,6 @@ const Account = () => {
           // Set social counts
           setFollowersCount(data.followers_count || 0);
           setFollowingCount(data.following_count || 0);
-          setFriendsCount(data.friends_count || 0);
 
           // Check if user should see onboarding checklist
           setShowOnboarding(data.onboarding_completed === false);
@@ -202,7 +200,6 @@ const Account = () => {
             const newData = payload.new as any;
             setFollowersCount(newData.followers_count || 0);
             setFollowingCount(newData.following_count || 0);
-            setFriendsCount(newData.friends_count || 0);
           }
         }
       )
@@ -915,20 +912,16 @@ const Account = () => {
             <CardContent className="space-y-6">
               <div className="flex flex-wrap items-center gap-6">
                 <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
+                  <MessageSquare className="h-4 w-4" />
+                  {postsCount} Posts
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
                   <Users className="h-4 w-4" />
                   {followersCount} Followers
                 </Badge>
                 <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
                   <UserCheck className="h-4 w-4" />
                   {followingCount} Following
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
-                  <MessageSquare className="h-4 w-4" />
-                  {friendsCount} Friends
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2">
-                  <MessageSquare className="h-4 w-4" />
-                  {postsCount} Posts
                 </Badge>
               </div>
               
