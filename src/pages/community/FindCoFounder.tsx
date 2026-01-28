@@ -398,25 +398,6 @@ const FindCoFounder = () => {
             </Card>
           </div>
 
-          {/* CTA Section */}
-          <Card className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border-primary/20">
-            <CardContent className="pt-6 text-center py-8">
-              <h3 className="text-2xl font-bold mb-2">Want to be notified when we launch?</h3>
-              <p className="text-muted-foreground mb-6">
-                Be the first to know when co-founder matching goes live
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  Notify Me
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
