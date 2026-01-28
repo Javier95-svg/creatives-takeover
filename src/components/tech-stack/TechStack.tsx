@@ -74,6 +74,8 @@ const TechStack: React.FC = () => {
   const [savingReport, setSavingReport] = useState(false);
   const [reportName, setReportName] = useState('');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewReport, setPreviewReport] = useState<TechStackReport | null>(null);
 
   const currentTier = subscriptionData.subscription_tier?.toLowerCase() || 'free';
   const isAdmin = user?.email?.toLowerCase() === 'admin@creatives-takeover.com';
@@ -314,16 +316,6 @@ const TechStack: React.FC = () => {
     setSavingReport(false);
   };
 
-  const handleLoadReport = (report: TechStackReport) => {
-    setSelectedProducts(report.selected_products || {});
-    setShowBudget(true);
-    setReportName(report.name || '');
-    toast({
-      title: 'Report loaded',
-      description: report.name || 'Tech Stack Report'
-    });
-  };
-
   const handleDeleteReport = async (reportId: string) => {
     if (!user) return;
     const { error } = await supabase
@@ -349,6 +341,7 @@ const TechStack: React.FC = () => {
   const allCategoriesSelected = selectedCount === techStackData.length;
   const canGenerateBudget = Boolean(user) && allCategoriesSelected;
   const canSaveReport = Boolean(user) && showBudget && allCategoriesSelected;
+  const previewBreakdown = previewReport?.budget_breakdown || [];
 
   return (
     <div className="space-y-6 sm:space-y-8 pb-8">
@@ -379,6 +372,84 @@ const TechStack: React.FC = () => {
             <Button onClick={handleSaveReport} disabled={savingReport || !allCategoriesSelected}>
               <Save className="w-4 h-4 mr-2" />
               {savingReport ? 'Saving...' : 'Save Report'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={previewOpen}
+        onOpenChange={(open) => {
+          setPreviewOpen(open);
+          if (!open) setPreviewReport(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{previewReport?.name || 'Tech Stack Report'}</DialogTitle>
+            <DialogDescription>
+              Preview your saved budget report before reusing it.
+            </DialogDescription>
+          </DialogHeader>
+          {previewReport ? (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border p-3 bg-muted/40">
+                <div>
+                  <p className="text-xs text-muted-foreground">Saved on</p>
+                  <p className="font-medium">
+                    {new Date(previewReport.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Estimated monthly total</p>
+                  <p className="text-lg font-semibold">
+                    ${Number(previewReport.budget_total || 0).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {previewReport.has_variable && (
+                <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-900 dark:bg-yellow-950/20 dark:text-yellow-200">
+                  Variable costs included. Total only reflects fixed monthly pricing.
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Selected tools</p>
+                {previewBreakdown.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No selections saved.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {previewBreakdown.map((item, idx) => (
+                      <div key={idx} className="rounded-lg border bg-background p-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="font-medium">{item.product}</p>
+                            <p className="text-xs text-muted-foreground">{item.category}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold">{item.price}</p>
+                            {item.isVariable && (
+                              <p className="text-xs text-muted-foreground">Variable</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No report selected.</p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -420,9 +491,16 @@ const TechStack: React.FC = () => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleLoadReport(report)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPreviewReport(report);
+                          setPreviewOpen(true);
+                        }}
+                      >
                         <FolderOpen className="w-4 h-4 mr-2" />
-                        Load
+                        Preview
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDeleteReport(report.id)}>
                         <Trash2 className="w-4 h-4 mr-2" />
