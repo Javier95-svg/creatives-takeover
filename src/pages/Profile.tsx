@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, MessageCircle, Twitter, Linkedin, Instagram, Globe, Settings } from "lucide-react";
+import { ArrowLeft, Calendar, MessageCircle, X, Linkedin, Instagram, Globe, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -440,7 +440,7 @@ const Profile = () => {
                         )}
                         {profile.twitter_url && (
                           <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                            <Twitter className="h-5 w-5" />
+                            <X className="h-5 w-5" />
                           </a>
                         )}
                         {profile.linkedin_url && (
