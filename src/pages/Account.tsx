@@ -785,14 +785,14 @@ const Account = () => {
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="website" className="flex items-center gap-2">
                       <Globe className="w-4 h-4" />
-                      Website
+                      Project URL
                     </Label>
                     <Input
                       id="website"
                       type="url"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      placeholder="https://yourwebsite.com"
+                      placeholder="https://yourstartup.com"
                     />
                   </div>
                 </div>

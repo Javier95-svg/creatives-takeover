@@ -335,13 +335,13 @@ export const EditProfileModal = ({ open, onClose, profile, onSuccess }: EditProf
               <h4 className="font-medium">Social Links</h4>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <Label htmlFor="website_url">Website</Label>
+                  <Label htmlFor="website_url">Project URL</Label>
                   <Input
                     id="website_url"
                     type="url"
                     value={formData.website_url}
                     onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
-                    placeholder="https://yourwebsite.com"
+                    placeholder="https://yourstartup.com"
                   />
                 </div>
                 <div>

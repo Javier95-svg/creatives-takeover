@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Calendar, MessageCircle, Twitter, Linkedin, Instagram, Facebook, Youtube, Github, Settings } from "lucide-react";
+import { ArrowLeft, Calendar, MessageCircle, Twitter, Linkedin, Instagram, Globe, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SocialButtons } from "@/components/social/SocialButtons";
@@ -431,8 +431,13 @@ const Profile = () => {
                     })()}
 
                     {/* Social Media Links */}
-                    {(profile.twitter_url || profile.linkedin_url || profile.instagram_url || profile.facebook_url || profile.youtube_url || profile.github_url) && (
+                    {(profile.website_url || profile.twitter_url || profile.linkedin_url || profile.instagram_url) && (
                       <div className="flex gap-3 mb-4">
+                        {profile.website_url && (
+                          <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                            <Globe className="h-5 w-5" />
+                          </a>
+                        )}
                         {profile.twitter_url && (
                           <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                             <Twitter className="h-5 w-5" />
@@ -448,28 +453,7 @@ const Profile = () => {
                             <Instagram className="h-5 w-5" />
                           </a>
                         )}
-                        {profile.facebook_url && (
-                          <a href={profile.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                            <Facebook className="h-5 w-5" />
-                          </a>
-                        )}
-                        {profile.youtube_url && (
-                          <a href={profile.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                            <Youtube className="h-5 w-5" />
-                          </a>
-                        )}
-                        {profile.github_url && (
-                          <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                            <Github className="h-5 w-5" />
-                          </a>
-                        )}
                       </div>
-                    )}
-
-                    {profile.website_url && (
-                      <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">
-                        {profile.website_url}
-                      </a>
                     )}
 
                     <Separator className="my-4" />
