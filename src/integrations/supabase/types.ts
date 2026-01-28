@@ -6493,6 +6493,50 @@ export type Database = {
         }
         Relationships: []
       }
+      tech_stack_reports: {
+        Row: {
+          budget_breakdown: Json
+          budget_total: number
+          created_at: string
+          has_variable: boolean
+          id: string
+          name: string | null
+          selected_products: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_breakdown?: Json
+          budget_total?: number
+          created_at?: string
+          has_variable?: boolean
+          id?: string
+          name?: string | null
+          selected_products: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_breakdown?: Json
+          budget_total?: number
+          created_at?: string
+          has_variable?: boolean
+          id?: string
+          name?: string | null
+          selected_products?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_stack_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_trend_preferences: {
         Row: {
           created_at: string
